@@ -53,7 +53,7 @@ class Unicode(callbacks.Plugin):
         responses = []
         for result in json['results']:
           ucode = result[2].replace('0x','U+')
-          responses.append('Character %s (%s): %s [HTML: %s / Decimal: %s / Hex: %s]' % (ucode, result[5], result[4], result[3], result[1], result[2]))
+          responses.append('%s (%s): %s [HTML: %s / Decimal: %s / Hex: %s]' % (ucode, result[5], result[4], result[3], result[1], result[2]))
         response = '; '.join(responses).encode('utf8','ignore')
         irc.reply(response)
       except ValueError:
