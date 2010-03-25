@@ -105,16 +105,19 @@ class Timebomb(callbacks.Plugin):
         def detonate(self, irc):
             self.active = False
             self.thrown = False
-            self.irc.sendMsg(ircmsgs.privmsg(self.channel, '\x031,1.....\x0315,1_.\x0314,1-^^---....,\x0315,1,-_\x031,1.......'))
-            self.irc.sendMsg(ircmsgs.privmsg(self.channel, '\x031,1.\x0315,1_--\x0314,1,.\';,`.,\';,.;;`;,.\x0315,1--_\x031,1...'))
-            self.irc.sendMsg(ircmsgs.privmsg(self.channel, '\x0315,1<,.\x0314,1;\'`".,;`..,;`*.,\';`.\x0315,1;\'>)\x031,1.'))
-            self.irc.sendMsg(ircmsgs.privmsg(self.channel, '\x0315,1I.:;\x0314,1.,`;~,`.;\'`,.;\'`,..\x0315,1\';`I\x031,1.'))
-            self.irc.sendMsg(ircmsgs.privmsg(self.channel, '\x031,1.\x0315,1\\_.\x0314,1`\'`..`\';.,`\';,`\';,\x0315,1_../\x031,1..'))
-            self.irc.sendMsg(ircmsgs.privmsg(self.channel, '\x031,1....\x0315,1```\x0314,1--. . , ; .--\x0315,1\'\'\'\x031,1.....'))
-            self.irc.sendMsg(ircmsgs.privmsg(self.channel, '\x031,1..........\x034,1I\x031,1.\x038,1I\x037,1I\x031,1.\x038,1I\x034,1I\x031,1...........'))
-            self.irc.sendMsg(ircmsgs.privmsg(self.channel, '\x031,1..........\x034,1I\x031,1.\x037,1I\x038,1I\x031,1.\x037,1I\x034,1I\x031,1...........'))
-            self.irc.sendMsg(ircmsgs.privmsg(self.channel, '\x031,1.......,\x034,1-=\x034,1II\x037,1..I\x034,1.I=-,\x031,1........'))
-            self.irc.sendMsg(ircmsgs.privmsg(self.channel, '\x031,1.......\x034,1`-=\x037,1#$\x038,1%&\x037,1%$#\x034,1=-\'\x031,1........'))
+            if self.registryValue('showArt'):
+                self.irc.sendMsg(ircmsgs.privmsg(self.channel, '\x031,1.....\x0315,1_.\x0314,1-^^---....,\x0315,1,-_\x031,1.......'))
+                self.irc.sendMsg(ircmsgs.privmsg(self.channel, '\x031,1.\x0315,1_--\x0314,1,.\';,`.,\';,.;;`;,.\x0315,1--_\x031,1...'))
+                self.irc.sendMsg(ircmsgs.privmsg(self.channel, '\x0315,1<,.\x0314,1;\'`".,;`..,;`*.,\';`.\x0315,1;\'>)\x031,1.'))
+                self.irc.sendMsg(ircmsgs.privmsg(self.channel, '\x0315,1I.:;\x0314,1.,`;~,`.;\'`,.;\'`,..\x0315,1\';`I\x031,1.'))
+                self.irc.sendMsg(ircmsgs.privmsg(self.channel, '\x031,1.\x0315,1\\_.\x0314,1`\'`..`\';.,`\';,`\';,\x0315,1_../\x031,1..'))
+                self.irc.sendMsg(ircmsgs.privmsg(self.channel, '\x031,1....\x0315,1```\x0314,1--. . , ; .--\x0315,1\'\'\'\x031,1.....'))
+                self.irc.sendMsg(ircmsgs.privmsg(self.channel, '\x031,1..........\x034,1I\x031,1.\x038,1I\x037,1I\x031,1.\x038,1I\x034,1I\x031,1...........'))
+                self.irc.sendMsg(ircmsgs.privmsg(self.channel, '\x031,1..........\x034,1I\x031,1.\x037,1I\x038,1I\x031,1.\x037,1I\x034,1I\x031,1...........'))
+                self.irc.sendMsg(ircmsgs.privmsg(self.channel, '\x031,1.......,\x034,1-=\x034,1II\x037,1..I\x034,1.I=-,\x031,1........'))
+                self.irc.sendMsg(ircmsgs.privmsg(self.channel, '\x031,1.......\x034,1`-=\x037,1#$\x038,1%&\x037,1%$#\x034,1=-\'\x031,1........'))
+            else:
+                self.irc.sendMsg(ircmsgs.privmsg(self.channel, 'KABOOM!'))
             self.irc.queueMsg(ircmsgs.kick(self.channel, self.victim, 'BOOM!'))
             def reinvite():
                 if not self.victim in irc.state.channels[self.channel].users:

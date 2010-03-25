@@ -71,5 +71,7 @@ conf.registerGlobalValue(Timebomb, 'minTime',
 conf.registerGlobalValue(Timebomb, 'maxTime',
     registry.PositiveInteger(60, """Determines the maximum time of a timebomb timer, in seconds."""))
 
+conf.registerGlobalValue(Timebomb, 'showArt',
+        registry.Boolean(True, """Determines whether an ASCII art bomb should be shown on detonation, or a simple message."""))
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
