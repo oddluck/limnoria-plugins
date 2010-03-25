@@ -58,12 +58,6 @@ import plugin
 reload(plugin) # In case we're being reloaded.
 # Add more reloads here if you add third-party modules and want them to be
 # reloaded when this plugin is reloaded.  Don't forget to import them as well!
-import sys
-if not '/home/eggdrop/supybot/modules' in sys.path:
-    sys.path.append('/home/eggdrop/supybot/modules')
-import scihd
-
-reload(scihd)
 
 
 if world.testing:
