@@ -81,7 +81,7 @@ class Timebomb(callbacks.Plugin):
             self.responded = False
             def detonate():
                 self.detonate(irc)
-            schedule.addEvent(detonate, time.time() + self.detonateTime, 'bomb')
+            schedule.addEvent(detonate, time.time() + self.detonateTime, '%s_bomb' % self.channel)
             s = 'stuffs a bomb down %s\'s pants.  The timer is set for %s seconds!  There are %s wires.  They are: %s.' % (self.victim, self.detonateTime, len(wires), utils.str.commaAndify(wires))
             self.irc.queueMsg(ircmsgs.action(self.channel, s))
 
@@ -93,9 +93,9 @@ class Timebomb(callbacks.Plugin):
                 self.irc.queueMsg(ircmsgs.privmsg(self.channel, 'He then quickly rearms the bomb and throws it back at %s with just seconds on the clock!' % self.sender))
                 self.victim = self.sender
                 self.thrown = True
-                schedule.rescheduleEvent('bomb', time.time() + 5)
+                schedule.rescheduleEvent('%s_bomb' % self.channel, time.time() + 5)
             else:
-                schedule.removeEvent('bomb')
+                schedule.removeEvent('%s_bomb' % self.channel)
                 self.detonate(irc)
 
         def duck(self, irc, ducker):
@@ -103,7 +103,7 @@ class Timebomb(callbacks.Plugin):
                 self.irc.queueMsg(ircmsgs.privmsg(self.channel, '%s ducks!  The bomb misses, and explodes harmlessly a few meters away.' % self.victim))
                 self.active = False
                 self.thrown = False
-                schedule.removeEvent('bomb')
+                schedule.removeEvent('%s_bomb' % self.channel)
 
         def detonate(self, irc):
             self.active = False
@@ -131,18 +131,18 @@ class Timebomb(callbacks.Plugin):
                 schedule.addEvent(reinvite, time.time()+5)
                 
     
-    def duck(self, irc, msg, args):
+    def duck(self, irc, msg, args, channel):
         """takes no arguments
 
         DUCK!"""
         try:
-            if not self.bombs[0].active:
+            if not self.bombs[channel].active:
                 return
         except KeyError:
             return
-        self.bombs[0].duck(irc, msg.nick)
+        self.bombs[channel].duck(irc, msg.nick)
         irc.noReply()
-    duck = wrap(duck)
+    duck = wrap(duck, ['Channel'])
 
    
     def randombomb(self, irc, msg, args, channel, nicks):
@@ -154,8 +154,8 @@ class Timebomb(callbacks.Plugin):
             irc.noReply()
             return
         try:
-            if self.bombs[0].active:
-                irc.reply('There\'s already an active bomb, in %s\'s pants!' % self.bombs[0].victim)
+            if self.bombs[channel].active:
+                irc.reply('There\'s already an active bomb, in %s\'s pants!' % self.bombs[channel].victim)
                 return
         except KeyError:
             pass
@@ -197,7 +197,7 @@ class Timebomb(callbacks.Plugin):
             colors = self.registryValue('colors')
         wires = self.rng.sample(colors, wireCount)
         goodWire = self.rng.choice(wires)
-        self.bombs[0] = self.Bomb(irc, victim, wires, detonateTime, goodWire, channel, msg.nick, self.registryValue('showArt', msg.args[0]), self.registryValue('showCorrectWire', msg.args[0]))
+        self.bombs[channel] = self.Bomb(irc, victim, wires, detonateTime, goodWire, channel, msg.nick, self.registryValue('showArt', msg.args[0]), self.registryValue('showCorrectWire', msg.args[0]))
         try:
             irc.noReply()
         except AttributeError:
@@ -213,8 +213,8 @@ class Timebomb(callbacks.Plugin):
             irc.noReply()
             return
         try:
-            if self.bombs[0].active:
-                irc.reply('There\'s already an active bomb, in %s\'s pants!' % self.bombs[0].victim)
+            if self.bombs[channel].active:
+                irc.reply('There\'s already an active bomb, in %s\'s pants!' % self.bombs[channel].victim)
                 return
         except KeyError:
             pass
@@ -238,33 +238,33 @@ class Timebomb(callbacks.Plugin):
             colors = self.registryValue('colors')
         wires = self.rng.sample(colors, wireCount)
         goodWire = self.rng.choice(wires)
-        self.bombs[0] = self.Bomb(irc, victim, wires, detonateTime, goodWire, channel, msg.nick, self.registryValue('showArt', msg.args[0]), self.registryValue('showCorrectWire', msg.args[0]))
+        self.bombs[channel] = self.Bomb(irc, victim, wires, detonateTime, goodWire, channel, msg.nick, self.registryValue('showArt', msg.args[0]), self.registryValue('showCorrectWire', msg.args[0]))
     timebomb = wrap(timebomb, ['Channel', ('checkChannelCapability', 'timebombs'), 'somethingWithoutSpaces'])
 
 
-    def cutwire(self, irc, msg, args, cutWire):
+    def cutwire(self, irc, msg, args, channel, cutWire):
         """<colored wire>
 
         Will cut the given wire if you've been timebombed."""
         try:
-            if not self.bombs[0].active:
+            if not self.bombs[channel].active:
                 return
-            if not ircutils.nickEqual(self.bombs[0].victim, msg.nick):
+            if not ircutils.nickEqual(self.bombs[channel].victim, msg.nick):
                 irc.reply('You can\'t cut the wire on someone else\'s bomb!')
                 return
         except KeyError:
             pass
-        self.bombs[0].cutwire(irc, cutWire)
+        self.bombs[channel].cutwire(irc, cutWire)
         irc.noReply()
-    cutwire = wrap(cutwire, ['something'])
+    cutwire = wrap(cutwire, ['Channel', 'something'])
 
 
     def detonate(self, irc, msg, args, channel):
         """Takes no arguments
 
         Detonates the active bomb."""
-        if self.bombs[0].active:
-            schedule.rescheduleEvent('bomb', time.time())
+        if self.bombs[channel].active:
+            schedule.rescheduleEvent('%s_bomb' % channel, time.time())
         irc.noReply()
     detonate = wrap(detonate, [('checkChannelCapability', 'op')])
 
