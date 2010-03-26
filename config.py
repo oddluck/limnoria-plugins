@@ -98,15 +98,15 @@ conf.registerGlobalValue(Timebomb, 'minWires',
             a timebomb will have."""))
 
 conf.registerGlobalValue(Timebomb, 'maxWires',
-        registry.PositiveInteger(5, """Determines the maximum number of wires 
+        registry.PositiveInteger(4, """Determines the maximum number of wires 
             a timebomb will have."""))
 
 conf.registerGlobalValue(Timebomb, 'minTime',
-        registry.PositiveInteger(30, """Determines the minimum time of a 
+        registry.PositiveInteger(45, """Determines the minimum time of a 
             timebomb timer, in seconds."""))
 
 conf.registerGlobalValue(Timebomb, 'maxTime',
-        registry.PositiveInteger(60, """Determines the maximum time of a 
+        registry.PositiveInteger(70, """Determines the maximum time of a 
             timebomb timer, in seconds."""))
 
 conf.registerGlobalValue(Timebomb, 'minRandombombTime',
