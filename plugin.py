@@ -60,12 +60,13 @@ class Timebomb(callbacks.Plugin):
         self.talktimes[msg.nick] = time.time()
 
 
-#    def doJoin(self, irc, msg):
-#        self.talktimes[msg.nick] = time.time()
+    def doJoin(self, irc, msg):
+        if self.registryValue('joinIsActivity'):
+            self.talktimes[msg.nick] = time.time()
 
 
     class Bomb():
-        def __init__(self, irc, victim, wires, detonateTime, goodWire, channel, sender):
+        def __init__(self, irc, victim, wires, detonateTime, goodWire, channel, sender, showArt):
             self.victim = victim
             self.detonateTime = detonateTime
             self.wires = wires
@@ -74,6 +75,7 @@ class Timebomb(callbacks.Plugin):
             self.channel = channel
             self.sender = sender
             self.irc = irc
+            self.showArt = showArt
             self.thrown = False
             self.responded = False
             def detonate():
@@ -105,7 +107,7 @@ class Timebomb(callbacks.Plugin):
         def detonate(self, irc):
             self.active = False
             self.thrown = False
-            if self.registryValue('showArt'):
+            if self.showArt:
                 self.irc.sendMsg(ircmsgs.privmsg(self.channel, '\x031,1.....\x0315,1_.\x0314,1-^^---....,\x0315,1,-_\x031,1.......'))
                 self.irc.sendMsg(ircmsgs.privmsg(self.channel, '\x031,1.\x0315,1_--\x0314,1,.\';,`.,\';,.;;`;,.\x0315,1--_\x031,1...'))
                 self.irc.sendMsg(ircmsgs.privmsg(self.channel, '\x0315,1<,.\x0314,1;\'`".,;`..,;`*.,\';`.\x0315,1;\'>)\x031,1.'))
@@ -151,26 +153,31 @@ class Timebomb(callbacks.Plugin):
                 return
         except KeyError:
             pass
-        if len(nicks) == 0:
-            nicks = list(irc.state.channels[channel].users)
-#            items = self.talktimes.iteritems()
-#            nicks = []
-#            for i in range(0, len(self.talktimes)):
-#                try:
-#                    item = items.next()
-#                    if time.time() - item[1] < 60*60 and item[0] in irc.state.channels[channel].users:
-#                        nicks.append(item[0])
-#                except StopIteration:
-#                    irc.reply('hey quantumlemur, something funny happened... I got a StopIteration exception')
-#            if len(nicks) == 1 and nicks[0] == msg.nick:
-#                nicks = []
-#        if len(nicks) == 0:
-#            irc.reply('Well, no one\'s talked in the past hour, so I guess I\'ll just choose someone from the whole channel')
-#            nicks = list(irc.state.channels[channel].users)
-#        elif len(nicks) == 2:
-#            irc.reply('Well, it\'s just been you two talking recently, so I\'m going to go ahead and just bomb someone at random from the whole channel')
-#            nicks = list(irc.state.channels[channel].users)
-#        irc.reply('These people are eligible: %s' % utils.str.commaAndify(nicks))
+        if self.registryValue('bombActiveUsers'):
+            if len(nicks) == 0:
+                nicks = list(irc.state.channels[channel].users)
+                items = self.talktimes.iteritems()
+                nicks = []
+                for i in range(0, len(self.talktimes)):
+                    try:
+                        item = items.next()
+                        if time.time() - item[1] < 60*60 and item[0] in irc.state.channels[channel].users:
+                            nicks.append(item[0])
+                    except StopIteration:
+                        irc.reply('hey quantumlemur, something funny happened... I got a StopIteration exception')
+                if len(nicks) == 1 and nicks[0] == msg.nick:
+                    nicks = []
+                if irc.nick in nicks:
+                    nicks.remove(irc.nick)
+            if len(nicks) == 0:
+                irc.reply('Well, no one\'s talked in the past hour, so I guess I\'ll just choose someone from the whole channel')
+                nicks = list(irc.state.channels[channel].users)
+            elif len(nicks) == 2:
+                irc.reply('Well, it\'s just been you two talking recently, so I\'m going to go ahead and just bomb someone at random from the whole channel')
+                nicks = list(irc.state.channels[channel].users)
+    #        irc.reply('These people are eligible: %s' % utils.str.commaAndify(nicks))
+        elif len(nicks) == 0:
+                nicks = list(irc.state.channels[channel].users)
         victim = self.rng.choice(nicks)
         while victim == self.lastBomb or victim in self.registryValue('exclusions'):
             victim = self.rng.choice(nicks)
@@ -183,7 +190,7 @@ class Timebomb(callbacks.Plugin):
             colors = self.registryValue('colors')
         wires = self.rng.sample(colors, wireCount)
         goodWire = self.rng.choice(wires)
-        self.bombs[0] = self.Bomb(irc, victim, wires, detonateTime, goodWire, channel, msg.nick)
+        self.bombs[0] = self.Bomb(irc, victim, wires, detonateTime, goodWire, channel, msg.nick, self.registryValue('showArt'))
         try:
             irc.noReply()
         except AttributeError:
@@ -222,7 +229,7 @@ class Timebomb(callbacks.Plugin):
             colors = self.registryValue('colors')
         wires = self.rng.sample(colors, wireCount)
         goodWire = self.rng.choice(wires)
-        self.bombs[0] = self.Bomb(irc, victim, wires, detonateTime, goodWire, channel, msg.nick)
+        self.bombs[0] = self.Bomb(irc, victim, wires, detonateTime, goodWire, channel, msg.nick, self.registryValue('showArt'))
     timebomb = wrap(timebomb, ['Channel', ('checkChannelCapability', 'timebombs'), 'somethingWithoutSpaces'])
 
 

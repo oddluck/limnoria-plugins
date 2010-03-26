@@ -74,4 +74,10 @@ conf.registerGlobalValue(Timebomb, 'maxTime',
 conf.registerGlobalValue(Timebomb, 'showArt',
         registry.Boolean(True, """Determines whether an ASCII art bomb should be shown on detonation, or a simple message."""))
 
+conf.registerChannelValue(Timebomb, 'bombActiveUsers',
+        registry.Boolean(False, """Determines whether only active users should be randombombed"""))
+
+conf.registerChannelValue(Timebomb, 'joinIsActivity',
+        registry.Boolean(False, """Determines whether channel joins should count as activity for randombombs"""))
+
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
