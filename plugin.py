@@ -167,22 +167,24 @@ class Timebomb(callbacks.Plugin):
                         irc.reply('hey quantumlemur, something funny happened... I got a StopIteration exception')
                 if len(nicks) == 1 and nicks[0] == msg.nick:
                     nicks = []
-                if irc.nick in nicks:
-                    nicks.remove(irc.nick)
             if len(nicks) == 0:
                 irc.reply('Well, no one\'s talked in the past hour, so I guess I\'ll just choose someone from the whole channel')
                 nicks = list(irc.state.channels[channel].users)
             elif len(nicks) == 2:
                 irc.reply('Well, it\'s just been you two talking recently, so I\'m going to go ahead and just bomb someone at random from the whole channel')
                 nicks = list(irc.state.channels[channel].users)
-    #        irc.reply('These people are eligible: %s' % utils.str.commaAndify(nicks))
         elif len(nicks) == 0:
-                nicks = list(irc.state.channels[channel].users)
+            nicks = list(irc.state.channels[channel].users)
+        if irc.nick in nicks and not self.registryValue('allowSelfBombs'):
+            irc.reply('removing myself')
+            nicks.remove(irc.nick)
+        #####
+        #irc.reply('These people are eligible: %s' % utils.str.commaAndify(nicks))
         victim = self.rng.choice(nicks)
         while victim == self.lastBomb or victim in self.registryValue('exclusions'):
             victim = self.rng.choice(nicks)
         self.lastBomb = victim
-        detonateTime = self.rng.randint(self.registryValue('minTime')*2, self.registryValue('maxTime')*2)
+        detonateTime = self.rng.randint(self.registryValue('minRandombombTime'), self.registryValue('maxRandombombTime'))
         wireCount = self.rng.randint(self.registryValue('minWires'), self.registryValue('maxWires'))
         if wireCount < 12:
             colors = self.registryValue('shortcolors')
@@ -209,8 +211,8 @@ class Timebomb(callbacks.Plugin):
                 return
         except KeyError:
             pass
-        if victim == irc.nick:
-            irc.reply('You really expect me to bomb myself?   Stuffing explosives into my own pants isn\'t exactly my idea of fun.')
+        if victim == irc.nick and not self.registryValue('allowSelfBombs'):
+            irc.reply('You really expect me to bomb myself?  Stuffing explosives into my own pants isn\'t exactly my idea of fun.')
             return
         victim = string.lower(victim)
         found = False
