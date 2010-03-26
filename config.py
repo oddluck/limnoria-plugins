@@ -93,23 +93,23 @@ conf.registerChannelValue(Timebomb, 'allowBombs',
         registry.Boolean(False, """Determines whether timebombs are allowed 
             in the channel."""))
 
-conf.registerGlobalValue(Timebomb, 'minWires',
+conf.registerChannelValue(Timebomb, 'minWires',
         registry.PositiveInteger(2, """Determines the minimum number of wires 
             a timebomb will have."""))
 
-conf.registerGlobalValue(Timebomb, 'maxWires',
+conf.registerChannelValue(Timebomb, 'maxWires',
         registry.PositiveInteger(4, """Determines the maximum number of wires 
             a timebomb will have."""))
 
-conf.registerGlobalValue(Timebomb, 'minTime',
+conf.registerChannelValue(Timebomb, 'minTime',
         registry.PositiveInteger(45, """Determines the minimum time of a 
             timebomb timer, in seconds."""))
 
-conf.registerGlobalValue(Timebomb, 'maxTime',
+conf.registerChannelValue(Timebomb, 'maxTime',
         registry.PositiveInteger(70, """Determines the maximum time of a 
             timebomb timer, in seconds."""))
 
-conf.registerGlobalValue(Timebomb, 'minRandombombTime',
+conf.registerChannelValue(Timebomb, 'minRandombombTime',
         registry.PositiveInteger(60, """Determines the minimum time of a 
             randombomb timer, which should in general be greater than the 
             minimum targeted bomb time, to allow someone who's not paying 
@@ -121,7 +121,7 @@ conf.registerChannelValue(Timebomb, 'maxRandombombTime',
             maxiumum targeted bomb time, to allow someone who's not paying 
             attention to respond."""))
 
-conf.registerGlobalValue(Timebomb, 'showArt',
+conf.registerChannelValue(Timebomb, 'showArt',
         registry.Boolean(True, """Determines whether an ASCII art bomb should 
             be shown on detonation, or a simple message."""))
 
@@ -135,5 +135,14 @@ conf.registerChannelValue(Timebomb, 'joinIsActivity',
 
 conf.registerChannelValue(Timebomb, 'allowSelfBombs',
         registry.Boolean(False, """Allow the bot to bomb itself?"""))
+
+conf.registerChannelValue(Timebomb, 'idleTime',
+        registry.PositiveInteger(60, """The number of minutes before someone 
+            is counted as idle for randombombs, if idle-checking is 
+            enabled."""))
+
+conf.registerChannelValue(Timebomb, 'showCorrectWire',
+        registry.Boolean(False, """Determines whether the correct wire will be
+            shown when a bomb detonates."""))
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:

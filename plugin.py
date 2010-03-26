@@ -61,12 +61,12 @@ class Timebomb(callbacks.Plugin):
 
 
     def doJoin(self, irc, msg):
-        if self.registryValue('joinIsActivity'):
+        if self.registryValue('joinIsActivity', msg.args[0]):
             self.talktimes[msg.nick] = time.time()
 
 
     class Bomb():
-        def __init__(self, irc, victim, wires, detonateTime, goodWire, channel, sender, showArt):
+        def __init__(self, irc, victim, wires, detonateTime, goodWire, channel, sender, showArt, showCorrectWire):
             self.victim = victim
             self.detonateTime = detonateTime
             self.wires = wires
@@ -76,6 +76,7 @@ class Timebomb(callbacks.Plugin):
             self.sender = sender
             self.irc = irc
             self.showArt = showArt
+            self.showCorrectWire = showCorrectWire
             self.thrown = False
             self.responded = False
             def detonate():
@@ -107,6 +108,8 @@ class Timebomb(callbacks.Plugin):
         def detonate(self, irc):
             self.active = False
             self.thrown = False
+            if self.showCorrectWire:
+                self.irc.reply('Should\'ve gone for the %s wire!' % self.goodWire)
             if self.showArt:
                 self.irc.sendMsg(ircmsgs.privmsg(self.channel, '\x031,1.....\x0315,1_.\x0314,1-^^---....,\x0315,1,-_\x031,1.......'))
                 self.irc.sendMsg(ircmsgs.privmsg(self.channel, '\x031,1.\x0315,1_--\x0314,1,.\';,`.,\';,.;;`;,.\x0315,1--_\x031,1...'))
@@ -147,13 +150,16 @@ class Timebomb(callbacks.Plugin):
 
         Bombs a random person in the channel
         """
+        if not self.registryValue('allowBombs', msg.args[0]):
+            irc.noReply()
+            return
         try:
             if self.bombs[0].active:
                 irc.reply('There\'s already an active bomb, in %s\'s pants!' % self.bombs[0].victim)
                 return
         except KeyError:
             pass
-        if self.registryValue('bombActiveUsers'):
+        if self.registryValue('bombActiveUsers', msg.args[0]):
             if len(nicks) == 0:
                 nicks = list(irc.state.channels[channel].users)
                 items = self.talktimes.iteritems()
@@ -161,7 +167,7 @@ class Timebomb(callbacks.Plugin):
                 for i in range(0, len(self.talktimes)):
                     try:
                         item = items.next()
-                        if time.time() - item[1] < 60*60 and item[0] in irc.state.channels[channel].users:
+                        if time.time() - item[1] < self.registryValue('idleTime', msg.args[0])*60 and item[0] in irc.state.channels[channel].users:
                             nicks.append(item[0])
                     except StopIteration:
                         irc.reply('hey quantumlemur, something funny happened... I got a StopIteration exception')
@@ -175,43 +181,44 @@ class Timebomb(callbacks.Plugin):
                 nicks = list(irc.state.channels[channel].users)
         elif len(nicks) == 0:
             nicks = list(irc.state.channels[channel].users)
-        if irc.nick in nicks and not self.registryValue('allowSelfBombs'):
-            irc.reply('removing myself')
+        if irc.nick in nicks and not self.registryValue('allowSelfBombs', msg.args[0]):
             nicks.remove(irc.nick)
         #####
         #irc.reply('These people are eligible: %s' % utils.str.commaAndify(nicks))
         victim = self.rng.choice(nicks)
-        while victim == self.lastBomb or victim in self.registryValue('exclusions'):
+        while victim == self.lastBomb or victim in self.registryValue('exclusions', msg.args[0]):
             victim = self.rng.choice(nicks)
         self.lastBomb = victim
-        detonateTime = self.rng.randint(self.registryValue('minRandombombTime'), self.registryValue('maxRandombombTime'))
-        wireCount = self.rng.randint(self.registryValue('minWires'), self.registryValue('maxWires'))
+        detonateTime = self.rng.randint(self.registryValue('minRandombombTime', msg.args[0]), self.registryValue('maxRandombombTime', msg.args[0]))
+        wireCount = self.rng.randint(self.registryValue('minWires', msg.args[0]), self.registryValue('maxWires', msg.args[0]))
         if wireCount < 12:
             colors = self.registryValue('shortcolors')
         else:
             colors = self.registryValue('colors')
         wires = self.rng.sample(colors, wireCount)
         goodWire = self.rng.choice(wires)
-        self.bombs[0] = self.Bomb(irc, victim, wires, detonateTime, goodWire, channel, msg.nick, self.registryValue('showArt'))
+        self.bombs[0] = self.Bomb(irc, victim, wires, detonateTime, goodWire, channel, msg.nick, self.registryValue('showArt', msg.args[0]), self.registryValue('showCorrectWire', msg.args[0]))
         try:
             irc.noReply()
         except AttributeError:
             pass
-    randombomb = wrap(randombomb, ['Channel', ('checkChannelCapability', 'timebombs'), any('NickInChannel')])
+    randombomb = wrap(randombomb, ['Channel', any('NickInChannel')])
 
  
     def timebomb(self, irc, msg, args, channel, victim):
         """<nick>
 
         For bombing people!"""
-        irc.noReply()
+        if not self.registryValue('allowBombs', msg.args[0]):
+            irc.noReply()
+            return
         try:
             if self.bombs[0].active:
                 irc.reply('There\'s already an active bomb, in %s\'s pants!' % self.bombs[0].victim)
                 return
         except KeyError:
             pass
-        if victim == irc.nick and not self.registryValue('allowSelfBombs'):
+        if victim == irc.nick and not self.registryValue('allowSelfBombs', msg.args[0]):
             irc.reply('You really expect me to bomb myself?  Stuffing explosives into my own pants isn\'t exactly my idea of fun.')
             return
         victim = string.lower(victim)
@@ -223,15 +230,15 @@ class Timebomb(callbacks.Plugin):
         if not found:
             irc.reply('Error: nick not found.')
             return
-        detonateTime = self.rng.randint(self.registryValue('minTime'), self.registryValue('maxTime'))
-        wireCount = self.rng.randint(self.registryValue('minWires'), self.registryValue('maxWires'))
+        detonateTime = self.rng.randint(self.registryValue('minTime', msg.args[0]), self.registryValue('maxTime', msg.args[0]))
+        wireCount = self.rng.randint(self.registryValue('minWires', msg.args[0]), self.registryValue('maxWires', msg.args[0]))
         if wireCount < 12:
             colors = self.registryValue('shortcolors')
         else:
             colors = self.registryValue('colors')
         wires = self.rng.sample(colors, wireCount)
         goodWire = self.rng.choice(wires)
-        self.bombs[0] = self.Bomb(irc, victim, wires, detonateTime, goodWire, channel, msg.nick, self.registryValue('showArt'))
+        self.bombs[0] = self.Bomb(irc, victim, wires, detonateTime, goodWire, channel, msg.nick, self.registryValue('showArt', msg.args[0]), self.registryValue('showCorrectWire', msg.args[0]))
     timebomb = wrap(timebomb, ['Channel', ('checkChannelCapability', 'timebombs'), 'somethingWithoutSpaces'])
 
 
