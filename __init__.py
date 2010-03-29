@@ -44,7 +44,7 @@ import supybot.world as world
 __version__ = ""
 
 # XXX Replace this with an appropriate author or supybot.Author instance.
-__author__ = supybot.Authors('quantumlemur', 'quantumlemur',
+__author__ = supybot.Author('quantumlemur', 'quantumlemur',
         'quantumlemur@users.sourceforge.net')
 
 # This is a dictionary mapping supybot.Author instances to lists of
