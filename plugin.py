@@ -79,11 +79,19 @@ class Timebomb(callbacks.Plugin):
             self.showCorrectWire = showCorrectWire
             self.thrown = False
             self.responded = False
+            self.rng = random.Random()
+            self.rng.seed()
             def detonate():
                 self.detonate(irc)
             schedule.addEvent(detonate, time.time() + self.detonateTime, '%s_bomb' % self.channel)
             s = 'stuffs a bomb down %s\'s pants.  The timer is set for %s seconds!  There are %s wires.  They are: %s.' % (self.victim, self.detonateTime, len(wires), utils.str.commaAndify(wires))
             self.irc.queueMsg(ircmsgs.action(self.channel, s))
+            if self.victim == irc.nick:
+                time.sleep(1)
+                cutWire = self.rng.choice(self.wires)
+                self.irc.queueMsg(ircmsgs.privmsg(self.channel, '@cutwire %s' % cutWire))
+                time.sleep(1)
+                self.cutwire(self.irc, cutWire)
 
         def cutwire(self, irc, cutWire):
             self.cutWire = cutWire
@@ -94,6 +102,11 @@ class Timebomb(callbacks.Plugin):
                 self.victim = self.sender
                 self.thrown = True
                 schedule.rescheduleEvent('%s_bomb' % self.channel, time.time() + 5)
+                if self.victim == irc.nick:
+                    time.sleep(1)
+                    self.irc.queueMsg(ircmsgs.privmsg(self.channel, '@duck'))
+                    time.sleep(1)
+                    self.duck(self.irc, irc.nick)
             else:
                 schedule.removeEvent('%s_bomb' % self.channel)
                 self.detonate(irc)
