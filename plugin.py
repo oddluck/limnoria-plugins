@@ -81,6 +81,8 @@ class Timebomb(callbacks.Plugin):
             self.responded = False
             self.rng = random.Random()
             self.rng.seed()
+            if self.registryValue('debug'):
+                self.reply('I just created a bomb in %s' % channel)
             def detonate():
                 self.detonate(irc)
             schedule.addEvent(detonate, time.time() + self.detonateTime, '%s_bomb' % self.channel)
