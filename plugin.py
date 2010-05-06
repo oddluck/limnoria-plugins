@@ -66,7 +66,7 @@ class Timebomb(callbacks.Plugin):
 
 
     class Bomb():
-        def __init__(self, irc, victim, wires, detonateTime, goodWire, channel, sender, showArt, showCorrectWire):
+        def __init__(self, irc, victim, wires, detonateTime, goodWire, channel, sender, showArt, showCorrectWire, debug):
             self.victim = victim
             self.detonateTime = detonateTime
             self.wires = wires
@@ -77,12 +77,13 @@ class Timebomb(callbacks.Plugin):
             self.irc = irc
             self.showArt = showArt
             self.showCorrectWire = showCorrectWire
+            self.debug = debug
             self.thrown = False
             self.responded = False
             self.rng = random.Random()
             self.rng.seed()
-            if self.registryValue('debug'):
-                self.reply('I just created a bomb in %s' % channel)
+            if self.debug:
+                self.irc.reply('I just created a bomb in %s' % channel)
             def detonate():
                 self.detonate(irc)
             schedule.addEvent(detonate, time.time() + self.detonateTime, '%s_bomb' % self.channel)
@@ -214,7 +215,7 @@ class Timebomb(callbacks.Plugin):
             colors = self.registryValue('colors')
         wires = self.rng.sample(colors, wireCount)
         goodWire = self.rng.choice(wires)
-        self.bombs[channel] = self.Bomb(irc, victim, wires, detonateTime, goodWire, channel, msg.nick, self.registryValue('showArt', msg.args[0]), self.registryValue('showCorrectWire', msg.args[0]))
+        self.bombs[channel] = self.Bomb(irc, victim, wires, detonateTime, goodWire, channel, msg.nick, self.registryValue('showArt', msg.args[0]), self.registryValue('showCorrectWire', msg.args[0]), self.registryValue('debug'))
         try:
             irc.noReply()
         except AttributeError:
@@ -256,7 +257,7 @@ class Timebomb(callbacks.Plugin):
             colors = self.registryValue('colors')
         wires = self.rng.sample(colors, wireCount)
         goodWire = self.rng.choice(wires)
-        self.bombs[channel] = self.Bomb(irc, victim, wires, detonateTime, goodWire, channel, msg.nick, self.registryValue('showArt', msg.args[0]), self.registryValue('showCorrectWire', msg.args[0]))
+        self.bombs[channel] = self.Bomb(irc, victim, wires, detonateTime, goodWire, channel, msg.nick, self.registryValue('showArt', msg.args[0]), self.registryValue('showCorrectWire', msg.args[0]), self.registryValue('debug'))
     timebomb = wrap(timebomb, ['Channel', ('checkChannelCapability', 'timebombs'), 'somethingWithoutSpaces'])
 
 
