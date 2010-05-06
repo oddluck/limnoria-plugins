@@ -257,7 +257,11 @@ class Timebomb(callbacks.Plugin):
             colors = self.registryValue('colors')
         wires = self.rng.sample(colors, wireCount)
         goodWire = self.rng.choice(wires)
+        if self.registryValue('debug'):
+            irc.reply('I\'m about to create a bomb in %s' % channel)
         self.bombs[channel] = self.Bomb(irc, victim, wires, detonateTime, goodWire, channel, msg.nick, self.registryValue('showArt', msg.args[0]), self.registryValue('showCorrectWire', msg.args[0]), self.registryValue('debug'))
+        if self.registryValue('debug'):
+            irc.reply('This message means that I got past the bomb creation line in the timebomb command')
     timebomb = wrap(timebomb, ['Channel', ('checkChannelCapability', 'timebombs'), 'somethingWithoutSpaces'])
 
 
