@@ -148,6 +148,7 @@ class Timebomb(callbacks.Plugin):
         """takes no arguments
 
         DUCK!"""
+        channel = ircutils.toLower(channel)
         try:
             if not self.bombs[channel].active:
                 return
@@ -163,6 +164,7 @@ class Timebomb(callbacks.Plugin):
 
         Bombs a random person in the channel
         """
+        channel = ircutils.toLower(channel)
         if not self.registryValue('allowBombs', msg.args[0]):
             irc.noReply()
             return
@@ -222,6 +224,7 @@ class Timebomb(callbacks.Plugin):
         """<nick>
 
         For bombing people!"""
+        channel = ircutils.toLower(channel)
         if not self.registryValue('allowBombs', msg.args[0]):
             irc.noReply()
             return
@@ -259,6 +262,7 @@ class Timebomb(callbacks.Plugin):
         """<colored wire>
 
         Will cut the given wire if you've been timebombed."""
+        channel = ircutils.toLower(channel)
         try:
             if not self.bombs[channel].active:
                 return
@@ -276,6 +280,7 @@ class Timebomb(callbacks.Plugin):
         """Takes no arguments
 
         Detonates the active bomb."""
+        channel = ircutils.toLower(channel)
         if self.bombs[channel].active:
             schedule.rescheduleEvent('%s_bomb' % channel, time.time())
         irc.noReply()
