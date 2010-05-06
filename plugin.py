@@ -269,9 +269,9 @@ class Timebomb(callbacks.Plugin):
             if not ircutils.nickEqual(self.bombs[channel].victim, msg.nick):
                 irc.reply('You can\'t cut the wire on someone else\'s bomb!')
                 return
+            self.bombs[channel].cutwire(irc, cutWire)
         except KeyError:
             pass
-        self.bombs[channel].cutwire(irc, cutWire)
         irc.noReply()
     cutwire = wrap(cutwire, ['Channel', 'something'])
 
@@ -281,8 +281,11 @@ class Timebomb(callbacks.Plugin):
 
         Detonates the active bomb."""
         channel = ircutils.toLower(channel)
-        if self.bombs[channel].active:
-            schedule.rescheduleEvent('%s_bomb' % channel, time.time())
+        try:
+            if self.bombs[channel].active:
+                schedule.rescheduleEvent('%s_bomb' % channel, time.time())
+        except KeyError:
+            pass
         irc.noReply()
     detonate = wrap(detonate, [('checkChannelCapability', 'op')])
 

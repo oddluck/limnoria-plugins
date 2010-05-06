@@ -145,4 +145,8 @@ conf.registerChannelValue(Timebomb, 'showCorrectWire',
         registry.Boolean(False, """Determines whether the correct wire will be
             shown when a bomb detonates."""))
 
+conf.registerGlobalValue(Timebomb, 'debug',
+        registry.Boolean(False, """Determines whether debugging info will be
+            shown."""))
+
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
