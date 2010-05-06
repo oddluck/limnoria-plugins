@@ -285,7 +285,9 @@ class Timebomb(callbacks.Plugin):
             if self.bombs[channel].active:
                 schedule.rescheduleEvent('%s_bomb' % channel, time.time())
         except KeyError:
-            pass
+            if self.registryValue('debug'):
+                irc.reply('I tried to detonate a bomb in "%s"' % channel)
+                irc.reply('List of bombs: %s' % self.bombs.keys())
         irc.noReply()
     detonate = wrap(detonate, [('checkChannelCapability', 'op')])
 
