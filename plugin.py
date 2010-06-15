@@ -169,7 +169,7 @@ class Timebomb(callbacks.Plugin):
         """
         channel = ircutils.toLower(channel)
         if not self.registryValue('allowBombs', msg.args[0]):
-            irc.noReply()
+            irc.reply('Timebombs aren\'t allowed in this channel.  Set plugins.Timebomb.allowBombs to true if you want them.')
             return
         try:
             if self.bombs[channel].active:
@@ -229,7 +229,7 @@ class Timebomb(callbacks.Plugin):
         For bombing people!"""
         channel = ircutils.toLower(channel)
         if not self.registryValue('allowBombs', msg.args[0]):
-            irc.noReply()
+            irc.reply('Timebombs aren\'t allowed in this channel.  Set plugins.Timebomb.allowBombs to true if you want them.')
             return
         try:
             if self.bombs[channel].active:
