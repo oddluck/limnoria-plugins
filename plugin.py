@@ -99,20 +99,23 @@ class Timebomb(callbacks.Plugin):
         def cutwire(self, irc, cutWire):
             self.cutWire = cutWire
             self.responded = True
-            if self.goodWire.lower() == self.cutWire.lower():
-                self.irc.queueMsg(ircmsgs.privmsg(self.channel, '%s has cut the %s wire!  This has defused the bomb!' % (self.victim, self.cutWire)))
-                self.irc.queueMsg(ircmsgs.privmsg(self.channel, 'He then quickly rearms the bomb and throws it back at %s with just seconds on the clock!' % self.sender))
-                self.victim = self.sender
-                self.thrown = True
-                schedule.rescheduleEvent('%s_bomb' % self.channel, time.time() + 5)
-                if self.victim == irc.nick:
-                    time.sleep(1)
-                    self.irc.queueMsg(ircmsgs.privmsg(self.channel, '@duck'))
-                    time.sleep(1)
-                    self.duck(self.irc, irc.nick)
+            if self.Thrown == True:
+                self.irc.queueMsg(ircmsgs.privmsg(self.channel, 'You don\'t have the coordination to cut wires on bombs in midair while they\'re flying towards your head!  Ducking might be a better idea.'))
             else:
-                schedule.removeEvent('%s_bomb' % self.channel)
-                self.detonate(irc)
+                if self.goodWire.lower() == self.cutWire.lower():
+                    self.irc.queueMsg(ircmsgs.privmsg(self.channel, '%s has cut the %s wire!  This has defused the bomb!' % (self.victim, self.cutWire)))
+                    self.irc.queueMsg(ircmsgs.privmsg(self.channel, 'He then quickly rearms the bomb and throws it back at %s with just seconds on the clock!' % self.sender))
+                    self.victim = self.sender
+                    self.thrown = True
+                    schedule.rescheduleEvent('%s_bomb' % self.channel, time.time() + 5)
+                    if self.victim == irc.nick:
+                        time.sleep(1)
+                        self.irc.queueMsg(ircmsgs.privmsg(self.channel, '@duck'))
+                        time.sleep(1)
+                        self.duck(self.irc, irc.nick)
+                else:
+                    schedule.removeEvent('%s_bomb' % self.channel)
+                    self.detonate(irc)
 
         def duck(self, irc, ducker):
             if self.thrown and ircutils.nickEqual(self.victim, ducker):
