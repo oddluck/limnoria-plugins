@@ -99,7 +99,7 @@ class Timebomb(callbacks.Plugin):
         def cutwire(self, irc, cutWire):
             self.cutWire = cutWire
             self.responded = True
-            if self.Thrown == True:
+            if self.thrown == True:
                 self.irc.queueMsg(ircmsgs.privmsg(self.channel, 'You don\'t have the coordination to cut wires on bombs in midair while they\'re flying towards your head!  Ducking might be a better idea.'))
             else:
                 if self.goodWire.lower() == self.cutWire.lower():
