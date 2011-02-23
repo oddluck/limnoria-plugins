@@ -1,3 +1,18 @@
+This is a Supybot plugin implementation of psychological number games described in Metamagical Themas by Douglas Hofstadter.
+
+==== Usage ====
+
+To use this plugin, you need to change a game setting to allow it.  This requires channel,op capability (or owner).
+The command is:
+    ucsetoption allow_game true
+There are other options you can change, view them with this command:
+    ucshowoptions
+To unset/clear an option, use:
+    ucsetoption foobar unset
+
+
+==== Rules for the games ====
+
 -- Undercut --
 Two players take turns choosing a number from 1 to 5, secretly.
 The numbers are revealed and players get points equal to the number they chose, except as noted below:
