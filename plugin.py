@@ -81,7 +81,7 @@ class _Plugin(callbacks.Plugin):
         self.game[table]['goal']=goal
         self.game[table]['players'][nick]={'score':0}
         self.game[table]['players'][nick]['numbers']=[0]
-        irc.reply('%s has started a new game of %s at table %s.  For the rules of the game, type ".ucrules".  To accept this challenge, join with .ucjoin.' % (nick, gametype.capitalize(), table+1, gametype.lower()), prefixNick=False)
+        irc.reply('%s has started a new game of %s at table %s.  For the rules of the game, type ".ucrules".  To accept this challenge, join with .ucjoin.' % (nick, gametype.capitalize(), table+1), prefixNick=False)
 
         self.game[table]['phase']='join'
     ucstart = wrap(ucstart, ['public', optional('something')])
