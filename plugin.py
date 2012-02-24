@@ -377,7 +377,7 @@ class WordTwist(BaseGame):
         for i in range(0, len(words)-1):
             if not self._valid_pair(words[i+1], words[i]):
                 self.send("%s: %s is not a twist of %s." %
-                        (nick, words[1], words[0]))
+                        (nick, words[i+1], words[i]))
                 return False
         return True
 
