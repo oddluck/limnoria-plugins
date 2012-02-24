@@ -1,0 +1,29 @@
+Supybot Word Games Plugin
+=========================
+
+A few word games to play in IRC with Supybot!
+
+These games rely on a dictionary file, default 'words.txt' in the directory
+where supybot runs.  It should consist of one word per line.  The location of
+this file can be set with config plugins.Wordgames.wordFile.
+
+Commands:
+
+    wordshrink [length]
+    Start a new WordShrink game.
+
+    wordtwist [length]
+    Start a new WordTwist game.
+
+    wordquit
+    Give up on any currently running game.
+
+A puzzle will be presented in the form a > --- > --- > d, and your job is to
+come up with a response of the form b > c.  (You can optionally include the
+start and end words in your response, as long as each word is separated by a
+greater-than sign.)
+
+The goal of both games is to change the word by one letter until you have
+turned the starting word into the ending word.  In WordShrink, you must remove
+one letter and rearrange the letters to form a new word.  In WordTwist, you
+must change exactly one letter (no re-arranging) to form a new word.
