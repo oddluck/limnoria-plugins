@@ -208,6 +208,9 @@ class WordShrink(BaseGame):
 
     def handle_message(self, msg):
         words = map(str.strip, msg.args[1].split('>'))
+        for word in words:
+            if not re.match(r"^[a-z]+$", word):
+                return
         if len(words) == len(self.solution) - 2:
             words = [self.solution[0]] + words + [self.solution[-1]]
         if self._valid_solution(msg.nick, words):
@@ -313,6 +316,9 @@ class WordTwist(BaseGame):
 
     def handle_message(self, msg):
         words = map(str.strip, msg.args[1].split('>'))
+        for word in words:
+            if not re.match(r"^[a-z]+$", word):
+                return
         if len(words) == len(self.solution) - 2:
             words = [self.solution[0]] + words + [self.solution[-1]]
         if self._valid_solution(msg.nick, words):
