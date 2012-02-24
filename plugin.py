@@ -53,8 +53,6 @@ class Wordgames(callbacks.Plugin):
         self.__parent = super(Wordgames, self)
         self.__parent.__init__(irc)
         self.games = {}
-        self.words = map(str.strip,
-                         file(self.registryValue('wordFile')).readlines())
 
     def die(self):
         self.__parent.die()
@@ -65,35 +63,43 @@ class Wordgames(callbacks.Plugin):
             self.games[channel].handle_message(msg)
 
     def wordshrink(self, irc, msgs, args, channel, length):
-       """[length] (default: 4)
+        """[length] (default: 4)
 
-       Start a word-shrink game. Make new words by dropping one letter from
-       the previous word.
-       """
-       if channel in self.games and self.games[channel].is_running():
-           irc.reply('A word game is already running here.')
-           self.games[channel].show()
-       elif length < 4 or length > 7:
-           irc.reply('Please use a length between 4 and 7.')
-       else:
-           self.games[channel] = WordShrink(self.words, irc, channel, length)
-           self.games[channel].start()
+        Start a word-shrink game. Make new words by dropping one letter from
+        the previous word.
+        """
+        try:
+            if channel in self.games and self.games[channel].is_running():
+                irc.reply('A word game is already running here.')
+                self.games[channel].show()
+            elif length < 4 or length > 7:
+                irc.reply('Please use a length between 4 and 7.')
+            else:
+                self.games[channel] = WordShrink(
+                    self._get_words(), irc, channel, length)
+                self.games[channel].start()
+        except Exception, e:
+            irc.reply(str(e))
     wordshrink = wrap(wordshrink, ['channel', optional('int', 4)])
 
     def wordtwist(self, irc, msgs, args, channel, length):
-       """[length] (default: 4)
+        """[length] (default: 4)
 
-       Start a word-twist game. Make new words by changing one letter in
-       the previous word.
-       """
-       if channel in self.games and self.games[channel].is_running():
-           irc.reply('A word game is already running here.')
-           self.games[channel].show()
-       elif length < 4 or length > 7:
-           irc.reply('Please use a length between 4 and 7.')
-       else:
-           self.games[channel] = WordTwist(self.words, irc, channel, length)
-           self.games[channel].start()
+        Start a word-twist game. Make new words by changing one letter in
+        the previous word.
+        """
+        try:
+            if channel in self.games and self.games[channel].is_running():
+                irc.reply('A word game is already running here.')
+                self.games[channel].show()
+            elif length < 4 or length > 7:
+                irc.reply('Please use a length between 4 and 7.')
+            else:
+                self.games[channel] = WordTwist(
+                    self._get_words(), irc, channel, length)
+                self.games[channel].start()
+        except Exception, e:
+            irc.reply(str(e))
     wordtwist = wrap(wordtwist, ['channel', optional('int', 4)])
 
     def wordquit(self, irc, msgs, args, channel):
@@ -107,6 +113,9 @@ class Wordgames(callbacks.Plugin):
         else:
             irc.reply('No word game currently running.')
     wordquit = wrap(wordquit, ['channel'])
+
+    def _get_words(self):
+        return map(str.strip, file(self.registryValue('wordFile')).readlines())
 
 class BaseGame(object):
     "Base class for the games in this plugin."
