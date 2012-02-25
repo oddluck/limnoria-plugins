@@ -305,8 +305,9 @@ class WordShrink(WordChain):
     def is_trivial_solution(self, solution):
         "Consider pure substring solutions trivial."
         for i in range(0, len(solution)-1):
-            if solution[i].find(solution[i+1]) >= 0:
-                return True
+            for j in range(i+1, len(solution)):
+                if solution[i].find(solution[j]) >= 0:
+                    return True
         return False
 
 class WordTwist(WordChain):
