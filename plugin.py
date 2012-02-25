@@ -43,6 +43,9 @@ LCYAN = '\x0311'
 LBLUE = '\x0312'
 LGRAY = '\x0315'
 
+def info(message):
+    log.info('Wordgames: ' + message)
+
 def error(message):
     log.error('Wordgames: ' + message)
 
@@ -59,8 +62,9 @@ class Wordgames(callbacks.Plugin):
 
     def doPrivmsg(self, irc, msg):
         channel = msg.args[0]
-        if channel in self.games:
-            self.games[channel].handle_message(msg)
+        game = self.games.get(channel)
+        if game:
+            game.handle_message(msg)
 
     def wordshrink(self, irc, msgs, args, channel, length):
         """[length] (default: 4)
@@ -68,18 +72,10 @@ class Wordgames(callbacks.Plugin):
         Start a word-shrink game. Make new words by dropping one letter from
         the previous word.
         """
-        try:
-            if channel in self.games and self.games[channel].is_running():
-                irc.reply('A word game is already running here.')
-                self.games[channel].show()
-            elif length < 4 or length > 7:
-                irc.reply('Please use a length between 4 and 7.')
-            else:
-                self.games[channel] = WordShrink(
-                    self._get_words(), irc, channel, length)
-                self.games[channel].start()
-        except Exception, e:
-            irc.reply(str(e))
+        if length < 4 or length > 7:
+            irc.reply('Please use a length between 4 and 7.')
+        else:
+            self._start_game(WordShrink, irc, channel, length)
     wordshrink = wrap(wordshrink, ['channel', optional('int', 4)])
 
     def wordtwist(self, irc, msgs, args, channel, length):
@@ -88,18 +84,10 @@ class Wordgames(callbacks.Plugin):
         Start a word-twist game. Make new words by changing one letter in
         the previous word.
         """
-        try:
-            if channel in self.games and self.games[channel].is_running():
-                irc.reply('A word game is already running here.')
-                self.games[channel].show()
-            elif length < 4 or length > 7:
-                irc.reply('Please use a length between 4 and 7.')
-            else:
-                self.games[channel] = WordTwist(
-                    self._get_words(), irc, channel, length)
-                self.games[channel].start()
-        except Exception, e:
-            irc.reply(str(e))
+        if length < 4 or length > 7:
+            irc.reply('Please use a length between 4 and 7.')
+        else:
+            self._start_game(WordTwist, irc, channel, length)
     wordtwist = wrap(wordtwist, ['channel', optional('int', 4)])
 
     def wordquit(self, irc, msgs, args, channel):
@@ -107,15 +95,24 @@ class Wordgames(callbacks.Plugin):
 
         Stop any currently running word game.
         """
-        if channel in self.games and self.games[channel].is_running():
-            self.games[channel].stop()
-            del self.games[channel]
+        game = self.games.get(channel)
+        if game and game.is_running():
+            game.stop()
         else:
             irc.reply('No word game currently running.')
     wordquit = wrap(wordquit, ['channel'])
 
     def _get_words(self):
         return map(str.strip, file(self.registryValue('wordFile')).readlines())
+
+    def _start_game(self, Game, irc, channel, length):
+        game = self.games.get(channel)
+        if game and game.is_running():
+            irc.reply('A word game is already running here.')
+            game.show()
+        else:
+            self.games[channel] = Game(self._get_words(), irc, channel, length)
+            self.games[channel].start()
 
 class BaseGame(object):
     "Base class for the games in this plugin."
@@ -166,138 +163,33 @@ class BaseGame(object):
         text += sep + LGRAY + words[-1]
         return text
 
-class WordShrink(BaseGame):
+class WordChain(BaseGame):
+    "Base class for word-chain games like WordShrink and WordTwist."
     def __init__(self, words, irc, channel, length):
-        super(WordShrink, self).__init__(words, irc, channel)
+        super(WordChain, self).__init__(words, irc, channel)
         self.solution_length = length
         self.solution = []
         self.solutions = []
+        self.word_map = {}
 
     def start(self):
-        super(WordShrink, self).start()
-        singular_words = filter(lambda s: s[-1] != 's', self.words)
-        while len(self.solution) < self.solution_length:
-            self.solution = []
-            word = ''
-            for i in range(0, self.solution_length):
-                words = singular_words
-                if self.solution:
-                    words = filter(
-                        lambda s: self._is_subset(s, self.solution[-1]), words)
-                else:
-                    words = filter(
-                        lambda s: len(s) >= 2+self.solution_length, words)
-                if not words: break
-                self.solution.append(random.choice(words))
-        self._find_solutions()
-        self.show()
-
-    def show(self):
-        words = [self.solution[0]]
-        for word in self.solution[1:-1]:
-            words.append("-" * len(word))
-        words.append(self.solution[-1])
-        self.announce(self._join_words(words))
-        num = len(self.solutions)
-        self.send("(%s%d%s possible solution%s)" %
-                  (WHITE, num, LGRAY, '' if num == 1 else 's'))
-
-    def stop(self):
-        super(WordShrink, self).stop()
-        self.announce(self._join_words(self.solution))
-
-    def handle_message(self, msg):
-        words = map(str.strip, msg.args[1].split('>'))
-        for word in words:
-            if not re.match(r"^[a-z]+$", word):
-                return
-        if len(words) == len(self.solution) - 2:
-            words = [self.solution[0]] + words + [self.solution[-1]]
-        if self._valid_solution(msg.nick, words):
-            if self.running:
-                self.announce("%s%s%s got it!" % (WHITE, msg.nick, LGRAY))
-                self.announce(self._join_words(words))
-                self.gameover()
-            else:
-                self.send("%s: Your solution is also valid." % msg.nick)
-
-    def _is_subset(self, word1, word2):
-        "Determine if word1 is word2 minus one letter."
-        if len(word1) != len(word2) - 1:
-            return False
-        for c in "abcdefghijklmnopqrstuvwxyz":
-            if word1.count(c) > word2.count(c):
-                return False
-        return True
-
-    def _find_solutions(self, seed=None):
-        "Recursively find and save all solutions for the puzzle."
-        if seed is None:
-            seed = [self.solution[0]]
-            self._find_solutions(seed)
-        elif len(seed) == len(self.solution) - 1:
-            if self._is_subset(self.solution[-1], seed[-1]):
-                self.solutions.append(seed + [self.solution[-1]])
-        else:
-            length = len(seed[-1]) - 1
-            words = filter(lambda s: len(s) == length, self.words)
-            words = filter(lambda s: self._is_subset(s, seed[-1]), words)
-            for word in words:
-                self._find_solutions(seed + [word])
-
-    def _valid_solution(self, nick, words):
-        # Ignore things that don't look like attempts to answer
-        if len(words) != len(self.solution):
-            return False
-        # Check for incorrect start/end words
-        if len(words) == len(self.solution):
-            if words[0] != self.solution[0]:
-                self.send('%s: %s is not the starting word.' % (nick, words[0]))
-                return False
-            if words[-1] != self.solution[-1]:
-                self.send('%s: %s is not the final word.' % (nick, words[-1]))
-                return False
-        # Add the start/end words (if not present) to simplify the test logic
-        if len(words) == len(self.solution) - 2:
-            words = [self.solution[0]] + words + [self.solution[-1]]
-        for word in words:
-            if word not in self.words:
-                self.send("%s: %s is not a word I know." % (nick, word))
-                return False
-        for i in range(0, len(words)-1):
-            if not self._is_subset(words[i+1], words[i]):
-                self.send("%s: %s is not a subset of %s." %
-                        (nick, words[i+1], words[i]))
-                return False
-        return True
-
-class WordTwist(BaseGame):
-    def __init__(self, words, irc, channel, length):
-        super(WordTwist, self).__init__(words, irc, channel)
-        self.solution_length = length
-        self.solution = []
-        self.solutions = []
-
-    def start(self):
-        super(WordTwist, self).start()
-        while True:
+        super(WordChain, self).start()
+        self.build_word_map()
+        words = filter(lambda s: len(s) >= 2+self.solution_length, self.words)
+        while not self.solution:
             while len(self.solution) < self.solution_length:
-                self.solution = []
-                word = ''
-                words = filter(lambda s: len(s) >= 4, self.words)
-                for i in range(0, self.solution_length):
-                    if self.solution:
-                        words = filter(
-                            lambda s: self._valid_pair(s, self.solution[-1]),
-                            self.words)
-                    if not words: break
-                    self.solution.append(random.choice(words))
+                self.solution = [random.choice(words)]
+                for i in range(1, self.solution_length):
+                    values = self.word_map[self.solution[-1]]
+                    if not values: break
+                    self.solution.append(random.choice(values))
             self.solutions = []
             self._find_solutions()
-            if min(map(len, self.solutions)) == self.solution_length:
-                break
-            else:
-                self.solution = []
+            # Ensure no solution is trivial
+            for solution in self.solutions:
+                if self.is_trivial_solution(solution):
+                    self.solution = []
+                    break
         self.show()
 
     def show(self):
@@ -311,7 +203,7 @@ class WordTwist(BaseGame):
                   (WHITE, num, LGRAY, '' if num == 1 else 's'))
 
     def stop(self):
-        super(WordTwist, self).stop()
+        super(WordChain, self).stop()
         self.announce(self._join_words(self.solution))
 
     def handle_message(self, msg):
@@ -329,26 +221,30 @@ class WordTwist(BaseGame):
             else:
                 self.send("%s: Your solution is also valid." % msg.nick)
 
-    def _valid_pair(self, word1, word2):
-        "Determine if word2 is a one-letter twist of word1."
-        if len(word1) != len(word2):
-            return False
-        differences = 0
-        for c1, c2 in zip(word1, word2):
-            if c1 != c2:
-                differences += 1
-        return differences == 1
+    # Override in game class
+    def build_word_map(self):
+        "Build a map of word -> [word1, word2] for all valid transitions."
+        pass
+
+    # Override in game class
+    def is_trivial_solution(self, solution):
+        return False
+
+    def get_successors(self, word):
+        "Lookup a word in the map and return list of possible successor words."
+        return self.word_map.get(word, [])
 
     def _find_solutions(self, seed=None):
         "Recursively find and save all solutions for the puzzle."
         if seed is None:
             seed = [self.solution[0]]
+            self.solutions = []
             self._find_solutions(seed)
         elif len(seed) == len(self.solution) - 1:
-            if self._valid_pair(self.solution[-1], seed[-1]):
+            if self.solution[-1] in self.get_successors(seed[-1]):
                 self.solutions.append(seed + [self.solution[-1]])
         else:
-            words = filter(lambda s: self._valid_pair(s, seed[-1]), self.words)
+            words = self.get_successors(seed[-1])
             for word in words:
                 if word == self.solution[-1]:
                     self.solutions.append(seed + [word])
@@ -375,11 +271,70 @@ class WordTwist(BaseGame):
                 self.send("%s: %s is not a word I know." % (nick, word))
                 return False
         for i in range(0, len(words)-1):
-            if not self._valid_pair(words[i+1], words[i]):
-                self.send("%s: %s is not a twist of %s." %
+            if words[i+1] not in self.get_successors(words[i]):
+                self.send("%s: %s does not follow from %s." %
                         (nick, words[i+1], words[i]))
                 return False
         return True
+
+class WordShrink(WordChain):
+    def __init__(self, words, irc, channel, length):
+        super(WordShrink, self).__init__(words, irc, channel, length)
+
+    def build_word_map(self):
+        "Build a map of word -> [word1, word2] for all valid transitions."
+        keymap = {}
+        for word in self.words:
+            s = "".join(sorted(word))
+            if s in keymap:
+                keymap[s].append(word)
+            else:
+                keymap[s] = [word]
+        self.word_map = {}
+        for word1 in self.words:
+            s = "".join(sorted(word1))
+            if s in self.word_map:
+                self.word_map[word1] = self.word_map[s]
+            else:
+                self.word_map[s] = self.word_map[word1] = []
+                for i in range(0, len(s)):
+                    t = s[0:i] + s[i+1:]
+                    for word2 in keymap.get(t, []):
+                        self.word_map[s].append(word2)
+
+    def is_trivial_solution(self, solution):
+        "Consider pure substring solutions trivial."
+        for i in range(0, len(solution)-1):
+            if solution[i].find(solution[i+1]) >= 0:
+                return True
+        return False
+
+class WordTwist(WordChain):
+    def __init__(self, words, irc, channel, length):
+        super(WordTwist, self).__init__(words, irc, channel, length)
+
+    def build_word_map(self):
+        "Build the map of word -> [word1, word2, ...] for all valid pairs."
+        keymap = {}
+        wildcard = '*'
+        for word in self.words:
+            for pos in range(0, len(word)):
+                key = word[0:pos] + wildcard + word[pos+1:]
+                if key not in keymap:
+                    keymap[key] = [word]
+                else:
+                    keymap[key].append(word)
+        self.word_map = {}
+        for word in self.words:
+            self.word_map[word] = []
+            for pos in range(0, len(word)):
+                key = word[0:pos] + wildcard + word[pos+1:]
+                self.word_map[word] += filter(
+                    lambda w: w != word, keymap.get(key, []))
+
+    def is_trivial_solution(self, solution):
+        "If it's possible to get there in fewer hops, this is trivial."
+        return len(solution) < self.solution_length
 
 Class = Wordgames
 
