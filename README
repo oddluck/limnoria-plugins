@@ -27,3 +27,10 @@ The goal of both games is to change the word by one letter until you have
 turned the starting word into the ending word.  In WordShrink, you must remove
 one letter and rearrange the letters to form a new word.  In WordTwist, you
 must change exactly one letter (no re-arranging) to form a new word.
+
+Credit:
+
+Copyright 2012 Mike Mueller <mike@subfocal.net>
+Released under the WTF public license: http://sam.zoy.org/wtfpl/
+
+Thanks to Ben Schomp <ben@benschomp.com> for the inspiration.

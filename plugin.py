@@ -1,5 +1,5 @@
 ###
-# Copyright (c) 2012, Mike Mueller <mike.mueller@panopticdev.com>
+# Copyright (c) 2012, Mike Mueller <mike@subfocal.net>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
