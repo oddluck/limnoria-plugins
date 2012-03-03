@@ -277,6 +277,8 @@ class WordChain(BaseGame):
         else:
             words = self._get_successors(seed[-1])
             for word in words:
+                if word in seed:
+                    continue
                 if word == self.solution[-1]:
                     self.solutions.append(seed + [word])
                 else:
