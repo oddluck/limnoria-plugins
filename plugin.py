@@ -121,7 +121,7 @@ class Wordgames(callbacks.Plugin):
             wordfile = self.registryValue('wordFile')
             irc.reply('Cannot open word file: %s' % wordfile)
             irc.reply('Please create this file or set config plugins.' +
-                      'Wordgames.wordFile at an existing word file.')
+                      'Wordgames.wordFile to point to an existing file.')
 
 class BaseGame(object):
     "Base class for the games in this plugin."
