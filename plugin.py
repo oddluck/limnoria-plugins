@@ -66,29 +66,31 @@ class Wordgames(callbacks.Plugin):
         if game:
             game.handle_message(msg)
 
-    def wordshrink(self, irc, msgs, args, channel, length):
-        """[length] (default: 4)
+    def wordshrink(self, irc, msgs, args, channel, difficulty):
+        """[easy|medium|hard|evil] (default: easy)
 
         Start a word-shrink game. Make new words by dropping one letter from
-        the previous word.
+        the previous word and rearranging the remaining letters.
         """
-        if length < 4 or length > 7:
-            irc.reply('Please use a length between 4 and 7.')
+        if difficulty not in ['easy', 'medium', 'hard', 'evil']:
+            irc.reply('Difficulty must be easy, medium, hard, or evil.')
         else:
-            self._start_game(WordShrink, irc, channel, length)
-    wordshrink = wrap(wordshrink, ['channel', optional('int', 4)])
+            self._start_game(WordShrink, irc, channel, difficulty)
+    wordshrink = wrap(wordshrink,
+        ['channel', optional('somethingWithoutSpaces', 'easy')])
 
-    def wordtwist(self, irc, msgs, args, channel, length):
-        """[length] (default: 4)
+    def wordtwist(self, irc, msgs, args, channel, difficulty):
+        """[easy|medium|hard|evil] (default: easy)
 
         Start a word-twist game. Make new words by changing one letter in
         the previous word.
         """
-        if length < 4 or length > 7:
-            irc.reply('Please use a length between 4 and 7.')
+        if difficulty not in ['easy', 'medium', 'hard', 'evil']:
+            irc.reply('Difficulty must be easy, medium, hard, or evil.')
         else:
-            self._start_game(WordTwist, irc, channel, length)
-    wordtwist = wrap(wordtwist, ['channel', optional('int', 4)])
+            self._start_game(WordTwist, irc, channel, difficulty)
+    wordtwist = wrap(wordtwist,
+        ['channel', optional('somethingWithoutSpaces', 'easy')])
 
     def wordquit(self, irc, msgs, args, channel):
         """(takes no arguments)
@@ -156,41 +158,70 @@ class BaseGame(object):
         "Handle incoming messages on the channel."
         pass
 
-    def _join_words(self, words):
-        sep = "%s > %s" % (LGREEN, YELLOW)
-        text = words[0] + sep
-        text += sep.join(words[1:-1])
-        text += sep + LGRAY + words[-1]
-        return text
-
 class WordChain(BaseGame):
     "Base class for word-chain games like WordShrink and WordTwist."
-    def __init__(self, words, irc, channel, length):
+
+    class Settings:
+        """
+        Parameters affecting the behavior of this class:
+
+           puzzle_lengths: Number of words allowed in the puzzle, including
+                           start and end word. List of integers.
+           word_lengths:   Word lengths allowed in the puzzle. List of integers
+                           or None for the default (3 letters or more).
+           num_solutions:  A limit to the number of possible solutions, or
+                           None for unlimited.
+        """
+        def __init__(self, puzzle_lengths, word_lengths=None,
+                     num_solutions=None):
+            self.puzzle_lengths = puzzle_lengths
+            self.word_lengths = word_lengths
+            self.num_solutions = num_solutions
+
+    def __init__(self, words, irc, channel, settings):
         super(WordChain, self).__init__(words, irc, channel)
-        self.solution_length = length
+        self.settings = settings
+        self.solution_length = random.choice(settings.puzzle_lengths)
         self.solution = []
         self.solutions = []
         self.word_map = {}
+        if settings.word_lengths:
+            self.words = filter(lambda w: len(w) in settings.word_lengths,
+                                self.words)
+        else:
+            self.words = filter(lambda w: len(w) >= 3, self.words)
+        self.build_word_map()
 
     def start(self):
         super(WordChain, self).start()
-        self.build_word_map()
-        words = filter(lambda s: len(s) >= 2+self.solution_length, self.words)
-        while not self.solution:
+        happy = False
+        # Build a puzzle
+        while not happy:
+            self.solution = []
             while len(self.solution) < self.solution_length:
-                self.solution = [random.choice(words)]
+                self.solution = [random.choice(self.words)]
                 for i in range(1, self.solution_length):
                     values = self.word_map[self.solution[-1]]
                     if not values: break
                     self.solution.append(random.choice(values))
             self.solutions = []
             self._find_solutions()
+            # Enforce maximum solutions limit (difficulty parameter)
+            happy = True
+            if self.settings.num_solutions and \
+                    len(self.solutions) not in self.settings.num_solutions:
+                happy = False
             # Ensure no solution is trivial
             for solution in self.solutions:
                 if self.is_trivial_solution(solution):
-                    self.solution = []
+                    happy = False
                     break
         self.show()
+        # For debugging purposes
+        solution_set = set(map(lambda s: self._join_words(s), self.solutions))
+        if len(solution_set) != len(self.solutions):
+            info('Oops, only %d of %d solutions are unique.' %
+                    (len(solution_set), len(self.solutions)))
 
     def show(self):
         words = [self.solution[0]]
@@ -230,7 +261,7 @@ class WordChain(BaseGame):
     def is_trivial_solution(self, solution):
         return False
 
-    def get_successors(self, word):
+    def _get_successors(self, word):
         "Lookup a word in the map and return list of possible successor words."
         return self.word_map.get(word, [])
 
@@ -241,15 +272,22 @@ class WordChain(BaseGame):
             self.solutions = []
             self._find_solutions(seed)
         elif len(seed) == len(self.solution) - 1:
-            if self.solution[-1] in self.get_successors(seed[-1]):
+            if self.solution[-1] in self._get_successors(seed[-1]):
                 self.solutions.append(seed + [self.solution[-1]])
         else:
-            words = self.get_successors(seed[-1])
+            words = self._get_successors(seed[-1])
             for word in words:
                 if word == self.solution[-1]:
                     self.solutions.append(seed + [word])
                 else:
                     self._find_solutions(seed + [word])
+
+    def _join_words(self, words):
+        sep = "%s > %s" % (LGREEN, YELLOW)
+        text = words[0] + sep
+        text += sep.join(words[1:-1])
+        text += sep + LGRAY + words[-1]
+        return text
 
     def _valid_solution(self, nick, words):
         # Ignore things that don't look like attempts to answer
@@ -271,15 +309,23 @@ class WordChain(BaseGame):
                 self.send("%s: %s is not a word I know." % (nick, word))
                 return False
         for i in range(0, len(words)-1):
-            if words[i+1] not in self.get_successors(words[i]):
+            if words[i+1] not in self._get_successors(words[i]):
                 self.send("%s: %s does not follow from %s." %
                         (nick, words[i+1], words[i]))
                 return False
         return True
 
 class WordShrink(WordChain):
-    def __init__(self, words, irc, channel, length):
-        super(WordShrink, self).__init__(words, irc, channel, length)
+    def __init__(self, words, irc, channel, difficulty):
+        assert difficulty in ['easy', 'medium', 'hard', 'evil'], "Bad mojo."
+        settings = {
+            'easy':   WordChain.Settings([4], range(3, 10), range(10, 100)),
+            'medium': WordChain.Settings([5], range(4, 12), range(5, 12)),
+            'hard':   WordChain.Settings([6], range(5, 14), range(2, 5)),
+            'evil':   WordChain.Settings([7], range(6, 16), range(1, 3)),
+        }
+        super(WordShrink, self).__init__(
+            words, irc, channel, settings[difficulty])
 
     def build_word_map(self):
         "Build a map of word -> [word1, word2] for all valid transitions."
@@ -297,9 +343,11 @@ class WordShrink(WordChain):
                 self.word_map[word1] = self.word_map[s]
             else:
                 self.word_map[s] = self.word_map[word1] = []
+                keys = set()
                 for i in range(0, len(s)):
-                    t = s[0:i] + s[i+1:]
-                    for word2 in keymap.get(t, []):
+                    keys.add(s[0:i] + s[i+1:])
+                for key in keys:
+                    for word2 in keymap.get(key, []):
                         self.word_map[s].append(word2)
 
     def is_trivial_solution(self, solution):
@@ -311,8 +359,16 @@ class WordShrink(WordChain):
         return False
 
 class WordTwist(WordChain):
-    def __init__(self, words, irc, channel, length):
-        super(WordTwist, self).__init__(words, irc, channel, length)
+    def __init__(self, words, irc, channel, difficulty):
+        assert difficulty in ['easy', 'medium', 'hard', 'evil'], "Bad mojo."
+        settings = {
+            'easy':   WordChain.Settings([4], [3, 4], range(10, 100)),
+            'medium': WordChain.Settings([5], [4, 5], range(5, 12)),
+            'hard':   WordChain.Settings([6], [4, 5, 6], range(2, 5)),
+            'evil':   WordChain.Settings([7], [4, 5, 6], range(1, 3)),
+        }
+        super(WordTwist, self).__init__(
+            words, irc, channel, settings[difficulty])
 
     def build_word_map(self):
         "Build the map of word -> [word1, word2, ...] for all valid pairs."
