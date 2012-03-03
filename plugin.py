@@ -202,6 +202,7 @@ class WordChain(BaseGame):
                 self.solution = [random.choice(self.words)]
                 for i in range(1, self.solution_length):
                     values = self.word_map[self.solution[-1]]
+                    values = filter(lambda w: w not in self.solution, values)
                     if not values: break
                     self.solution.append(random.choice(values))
             self.solutions = []
