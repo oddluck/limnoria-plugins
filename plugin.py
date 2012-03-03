@@ -108,13 +108,20 @@ class Wordgames(callbacks.Plugin):
         return map(str.strip, file(self.registryValue('wordFile')).readlines())
 
     def _start_game(self, Game, irc, channel, length):
-        game = self.games.get(channel)
-        if game and game.is_running():
-            irc.reply('A word game is already running here.')
-            game.show()
-        else:
-            self.games[channel] = Game(self._get_words(), irc, channel, length)
-            self.games[channel].start()
+        try:
+            game = self.games.get(channel)
+            if game and game.is_running():
+                irc.reply('A word game is already running here.')
+                game.show()
+            else:
+                words = self._get_words()
+                self.games[channel] = Game(words, irc, channel, length)
+                self.games[channel].start()
+        except IOError, e:
+            wordfile = self.registryValue('wordFile')
+            irc.reply('Cannot open word file: %s' % wordfile)
+            irc.reply('Please create this file or set config plugins.' +
+                      'Wordgames.wordFile at an existing word file.')
 
 class BaseGame(object):
     "Base class for the games in this plugin."
