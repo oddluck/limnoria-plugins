@@ -27,13 +27,15 @@ Configuration:
 
 Commands:
 
-    wordshrink [length]
-    Start a new WordShrink game.
+  wordshrink [difficulty]
+    Start a new WordShrink game.  Difficulty values: easy medium hard evil
+    Default difficulty is easy.
 
-    wordtwist [length]
-    Start a new WordTwist game.
+  wordtwist [length]
+    Start a new WordTwist game.  Difficulty values: easy medium hard evil
+    Default difficulty is easy.
 
-    wordquit
+  wordquit
     Give up on any currently running game.
 
 A puzzle will be presented in the form a > --- > --- > d, and your job is to
