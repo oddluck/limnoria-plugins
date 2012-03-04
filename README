@@ -28,25 +28,42 @@ Configuration:
 Commands:
 
   wordshrink [difficulty]
-    Start a new WordShrink game.  Difficulty values: easy medium hard evil
-    Default difficulty is easy.
+    Start a new WordShrink game.  Difficulty values: [easy] medium hard evil
 
-  wordtwist [length]
-    Start a new WordTwist game.  Difficulty values: easy medium hard evil
-    Default difficulty is easy.
+  wordtwist [difficulty]
+    Start a new WordTwist game.  Difficulty values: [easy] medium hard evil
 
   wordquit
     Give up on any currently running game.
+
+Game Rules:
 
 A puzzle will be presented in the form a > --- > --- > d, and your job is to
 come up with a response of the form b > c.  (You can optionally include the
 start and end words in your response, as long as each word is separated by a
 greater-than sign.)
 
-The goal of both games is to change the word by one letter until you have
-turned the starting word into the ending word.  In WordShrink, you must remove
-one letter and rearrange the letters to form a new word.  In WordTwist, you
-must change exactly one letter (no re-arranging) to form a new word.
+In WordShrink, you remove one letter from each successive word and rearrange
+the letters to form a new word.  Example session:
+
+  <mike> @wordshrink
+  <supybot> WordShrink: lights > ----- > ---- > sit
+  <supybot> (12 possible solutions)
+  <mike> sight > this
+  <supybot> WordShrink: mike got it!
+  <supybot> WordShrink: lights > sight > this > sit
+  <ben> lights > hilts > hits > sit
+  <supybot> ben: Your solution is also valid.
+
+In WordTwist, you change exactly one letter in each successive word to form a
+new word (no rearranging).  Example session:
+
+  <mike> @wordtwist medium
+  <supybot> WordTwist: mass > ---- > ---- > ---- > jade
+  <supybot> (5 possible solutions)
+  <mike> mars > mare > made
+  <supybot> WordTwist: mike got it!
+  <supybot> WordTwist: mass > mars > mare > made > jade
 
 Credit:
 
