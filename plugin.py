@@ -49,6 +49,8 @@ def info(message):
 def error(message):
     log.error('Wordgames: ' + message)
 
+class WordgamesError(Exception): pass
+
 class Wordgames(callbacks.Plugin):
     "Please see the README file to configure and use this plugin."
 
@@ -105,7 +107,16 @@ class Wordgames(callbacks.Plugin):
     wordquit = wrap(wordquit, ['channel'])
 
     def _get_words(self):
-        return map(str.strip, file(self.registryValue('wordFile')).readlines())
+        try:
+            regexp = re.compile(self.registryValue('wordRegexp'))
+        except Exception, e:
+            raise WordgamesError("Bad value for wordRegexp: %s" % str(e))
+        path = self.registryValue('wordFile')
+        try:
+            wordFile = file(path)
+        except Exception, e:
+            raise WordgamesError("Unable to open word file: %s" % path)
+        return filter(regexp.match, map(str.strip, wordFile.readlines()))
 
     def _start_game(self, Game, irc, channel, length):
         try:
@@ -117,11 +128,10 @@ class Wordgames(callbacks.Plugin):
                 words = self._get_words()
                 self.games[channel] = Game(words, irc, channel, length)
                 self.games[channel].start()
-        except IOError, e:
-            wordfile = self.registryValue('wordFile')
-            irc.reply('Cannot open word file: %s' % wordfile)
-            irc.reply('Please create this file or set config plugins.' +
-                      'Wordgames.wordFile to point to an existing file.')
+        except WordgamesError, e:
+            irc.reply('Wordgames error: %s' % str(e))
+            irc.reply('Please check the configuration and try again. ' +
+                      'See README for help.')
 
 class BaseGame(object):
     "Base class for the games in this plugin."

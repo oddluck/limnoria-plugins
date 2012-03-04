@@ -3,9 +3,27 @@ Supybot Word Games Plugin
 
 A few word games to play in IRC with Supybot!
 
-These games rely on a dictionary file, default 'words.txt' in the directory
-where supybot runs.  It should consist of one word per line.  The location of
-this file can be set with config plugins.Wordgames.wordFile.
+These games rely on a dictionary file (not included).  On Ubuntu, you can
+normally just install the 'wamerican' package.  See the configurable variables
+to customize.
+
+Configuration:
+
+  plugins.Wordgames.wordFile:
+    Path to the dictionary file.
+
+    Default: /usr/share/dict/american-english
+
+  plugins.Wordgames.wordRegexp:
+    A regular expression defining what a valid word looks like.  This will
+    be used to filter words from the dictionary file that contain undesirable
+    characters (proper names, hyphens, accents, etc.).  You will probably have
+    to quote the string when setting, e.g.:
+
+       @config plugins.Wordgames.wordRegexp "^[a-x]+$"
+       (No words containing 'y' or 'z' would be allowed by this.)
+
+    Default: ^[a-z]+$
 
 Commands:
 

@@ -23,6 +23,8 @@
 import supybot.conf as conf
 import supybot.registry as registry
 
+import re
+
 def configure(advanced):
     # This will be called by supybot to configure this module.  advanced is
     # a bool that specifies whether the user identified himself as an advanced
@@ -34,6 +36,13 @@ def configure(advanced):
 Wordgames = conf.registerPlugin('Wordgames')
 
 conf.registerGlobalValue(Wordgames, 'wordFile',
-    registry.String('words.txt', "Path to the dictionary file."))
+    registry.String('/usr/share/dict/american-english',
+                    'Path to the dictionary file.'))
+
+conf.registerGlobalValue(Wordgames, 'wordRegexp',
+    registry.String('^[a-z]+$',
+                    'Regular expression defining what a valid word looks ' +
+                    'like (i.e. ignore proper names, contractions, etc. ' +
+                    'Modify this if you need to allow non-English chars.'))
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
