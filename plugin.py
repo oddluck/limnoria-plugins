@@ -314,20 +314,18 @@ class WordChain(BaseGame):
         if len(words) != len(self.solution):
             return False
         # Check for incorrect start/end words
-        if len(words) == len(self.solution):
-            if words[0] != self.solution[0]:
-                self.send('%s: %s is not the starting word.' % (nick, words[0]))
-                return False
-            if words[-1] != self.solution[-1]:
-                self.send('%s: %s is not the final word.' % (nick, words[-1]))
-                return False
-        # Add the start/end words (if not present) to simplify the test logic
-        if len(words) == len(self.solution) - 2:
-            words = [self.solution[0]] + words + [self.solution[-1]]
+        if words[0] != self.solution[0]:
+            self.send('%s: %s is not the starting word.' % (nick, words[0]))
+            return False
+        if words[-1] != self.solution[-1]:
+            self.send('%s: %s is not the final word.' % (nick, words[-1]))
+            return False
+        # Check dictionary
         for word in words:
             if word not in self.words:
                 self.send("%s: %s is not a word I know." % (nick, word))
                 return False
+        # Enforce pairwise relationships
         for i in range(0, len(words)-1):
             if words[i+1] not in self._get_successors(words[i]):
                 self.send("%s: %s does not follow from %s." %
