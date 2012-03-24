@@ -118,7 +118,7 @@ class Wordgames(callbacks.Plugin):
             raise WordgamesError("Unable to open word file: %s" % path)
         return filter(regexp.match, map(str.strip, wordFile.readlines()))
 
-    def _start_game(self, Game, irc, channel, length):
+    def _start_game(self, Game, irc, channel, *args, **kwargs):
         try:
             game = self.games.get(channel)
             if game and game.is_running():
@@ -126,7 +126,7 @@ class Wordgames(callbacks.Plugin):
                 game.show()
             else:
                 words = self._get_words()
-                self.games[channel] = Game(words, irc, channel, length)
+                self.games[channel] = Game(words, irc, channel, *args, **kwargs)
                 self.games[channel].start()
         except WordgamesError, e:
             irc.reply('Wordgames error: %s' % str(e))
