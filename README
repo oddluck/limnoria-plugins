@@ -25,7 +25,23 @@ Configuration:
 
     Default: ^[a-z]+$
 
+  plugins.Wordgames.worddleDelay
+    The length (in seconds) of the pre-game period where players can join a
+    new Worddle game.
+
+    Default: 15
+
+  plugins.Wordgames.worddleDuration
+    The length (in seconds) of the active period of a Worddle game, when
+    players can submit guesses.
+
+    Default: 90
+
 Commands:
+
+  worddle
+    Start a new Worddle game. Use "worddle join" to join a game that someone
+    else has started.
 
   wordshrink [difficulty]
     Start a new WordShrink game.  Difficulty values: [easy] medium hard evil
@@ -38,10 +54,21 @@ Commands:
 
 Game Rules:
 
-A puzzle will be presented in the form a > --- > --- > d, and your job is to
-come up with a response of the form b > c.  (You can optionally include the
-start and end words in your response, as long as each word is separated by a
-greater-than sign.)
+Worddle is a clone of a well-known puzzle game involving a 4x4 grid of
+randomly-placed letters.  Find words on the board by starting at a particular
+letter and moving to adjacent letters (in all 8 directions, diagonals ok).
+Words must be 3 letters or longer to be considered.  At the end of the game,
+if a word was found by multiple players, it is not counted.  The remaining
+words contribute to your score (1 point per letter).
+
+WordShrink and WordTwist are word chain (or word ladder) style games.
+A puzzle will be presented in the form:
+
+  a > --- > --- > d
+
+... and your job is to come up with a response of the form b > c.  (You can
+optionally include the start and end words in your response, as long as each
+word is separated by a greater-than sign.)
 
 In WordShrink, you remove one letter from each successive word and rearrange
 the letters to form a new word.  Example session:

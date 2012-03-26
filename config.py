@@ -45,4 +45,13 @@ conf.registerGlobalValue(Wordgames, 'wordRegexp',
                     'like (i.e. ignore proper names, contractions, etc. ' +
                     'Modify this if you need to allow non-English chars.'))
 
+conf.registerGlobalValue(Wordgames, 'worddleDelay',
+    registry.NonNegativeInteger(15,
+                                'Delay (in seconds) before a Worddle game ' +
+                                'begins.'))
+
+conf.registerGlobalValue(Wordgames, 'worddleDuration',
+    registry.NonNegativeInteger(90,
+                                'Duration (in seconds) of a Worddle game ' +
+                                '(not including the initial delay).'))
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:

@@ -20,6 +20,13 @@
 # POSSIBILITY OF SUCH DAMAGE.
 ###
 
+from operator import add, mul
+import random
+import re
+import time
+import traceback
+
+import supybot.conf as conf
 import supybot.utils as utils
 from supybot.commands import *
 import supybot.plugins as plugins
@@ -30,8 +37,9 @@ import supybot.schedule as schedule
 import supybot.log as log
 import supybot.world as world
 
-import random
-import re
+from trie import Trie
+
+DEBUG = False
 
 WHITE = '\x0300'
 GREEN = '\x0303'
@@ -41,6 +49,7 @@ LYELLOW = '\x0308'
 LGREEN = '\x0309'
 LCYAN = '\x0311'
 LBLUE = '\x0312'
+GRAY = '\x0314'
 LGRAY = '\x0315'
 
 def info(message):
@@ -54,19 +63,67 @@ class WordgamesError(Exception): pass
 class Wordgames(callbacks.Plugin):
     "Please see the README file to configure and use this plugin."
 
+    def inFilter(self, irc, msg):
+        # Filter out private messages to the bot when they don't use the
+        # command prefix and the nick is currently playing a guessing game.
+        channel = msg.args[0]
+        commandChars = conf.supybot.reply.whenAddressedBy.chars
+        if msg.command == 'PRIVMSG' and msg.args[1][0] not in str(commandChars):
+            if not irc.isChannel(channel) and msg.nick:
+                game = self._find_player_game(msg.nick)
+                if game and 'guess' in dir(game):
+                    game.guess(msg.nick, msg.args[1])
+                    return None
+        # In all other cases, default to normal message handling
+        return self.__parent.inFilter(irc, msg)
+
     def __init__(self, irc):
         self.__parent = super(Wordgames, self)
         self.__parent.__init__(irc)
         self.games = {}
 
     def die(self):
+        # Ugly, but we need to ensure that the game actually stops
+        try:
+            schedule.removeEvent(Worddle.NAME)
+        except KeyError: pass
+        except Exception, e:
+            error("In die(): " + str(e))
         self.__parent.die()
 
-    def doPrivmsg(self, irc, msg):
-        channel = msg.args[0]
-        game = self.games.get(channel)
-        if game:
-            game.handle_message(msg)
+    if DEBUG:
+        def wordsolve(self, irc, msgs, args, channel):
+            "Show solution(s) for the currently running game."
+            game = self.games.get(channel)
+            if game and game.is_running():
+                game.solve()
+            else:
+                irc.reply('No game is currently running.')
+        wordsolve = wrap(wordsolve, ['channel'])
+
+    def worddle(self, irc, msgs, args, channel, join):
+        """[join]
+
+        Start a Worddle game or join a running game."""
+        delay = self.registryValue('worddleDelay')
+        duration = self.registryValue('worddleDuration')
+        if join:
+            if join == 'join':
+                game = self.games.get(channel)
+                if game:
+                    if game.__class__ == Worddle:
+                        game.join(msgs.nick)
+                    else:
+                        irc.reply('Current word game is not Worddle!')
+                else:
+                    irc.reply('No game is currently running.')
+            else:
+                irc.reply('Unrecognized option to worddle.')
+        else:
+            self._start_game(Worddle, irc, channel, msgs.nick, delay, duration)
+    worddle = wrap(worddle, ['channel', optional('somethingWithoutSpaces', '')])
+    # Alias for misspelling of the game name
+    wordle = worddle
 
     def wordshrink(self, irc, msgs, args, channel, difficulty):
         """[easy|medium|hard|evil] (default: easy)
@@ -105,6 +162,16 @@ class Wordgames(callbacks.Plugin):
         else:
             irc.reply('No word game currently running.')
     wordquit = wrap(wordquit, ['channel'])
+
+    def _find_player_game(self, player):
+        "Find a game (in any channel) that lists player as an active player."
+        my_game = None
+        for game in self.games.values():
+            if game.is_running() and 'players' in dir(game):
+                if player in game.players:
+                    my_game = game
+                    break
+        return my_game
 
     def _get_words(self):
         try:
@@ -146,6 +213,10 @@ class BaseGame(object):
         "The game is finished."
         self.running = False
 
+    def solve(self):
+        "Show solution(s) for current game."
+        pass
+
     def start(self):
         "Start the current game."
         self.running = True
@@ -169,11 +240,260 @@ class BaseGame(object):
 
     def send(self, msg):
         "Relay a message to the channel."
-        self.irc.queueMsg(ircmsgs.privmsg(self.channel, msg))
+        self.irc.sendMsg(ircmsgs.privmsg(self.channel, msg))
+
+    def send_private(self, nick, msg):
+        "Send a private message to a person."
+        self.irc.sendMsg(ircmsgs.privmsg(nick, msg))
 
     def handle_message(self, msg):
         "Handle incoming messages on the channel."
         pass
+
+class Worddle(BaseGame):
+    "The Worddle game implementation."
+
+    BOARD_SIZE = 4
+    NAME = 'worddle' # Unique identifier for supybot events
+    FREQUENCY_TABLE = {
+        19: 'E',
+        13: 'T',
+        12: 'AR',
+        11: 'INO',
+        9:  'S',
+        6:  'D',
+        5:  'CHL',
+        4:  'FMPU',
+        3:  'GY',
+        2:  'W',
+        1:  'BJKQVXZ',
+    }
+
+    def __init__(self, words, irc, channel, nick, delay, duration):
+        super(Worddle, self).__init__(words, irc, channel)
+        self.letters = reduce(add, (map(mul,
+                Worddle.FREQUENCY_TABLE.keys(),
+                Worddle.FREQUENCY_TABLE.values())))
+        self._generate_board()
+        self._generate_wordtrie()
+        self.active = False
+        self.delay = delay
+        self.duration = duration
+        self.solutions = filter(lambda s: len(s) > 2, self._find_words())
+        self.players = []
+        self.player_answers = {}
+        self.warnings = [30, 10, 3]
+        while self.warnings[0] >= duration:
+            self.warnings = self.warnings[1:]
+        self.announce('The game will start in %s%d%s seconds...' %
+                (WHITE, self.delay, LGRAY))
+        self.join(nick)
+
+    def guess(self, nick, text):
+        if not self.active:
+            self.send_private(nick, "Relax! The game hasn't started yet!")
+            return
+        if nick not in self.players:
+            self.join(nick, True)
+        guesses = set(map(str.lower, text.split()))
+        accepted = filter(lambda s: s in self.solutions, guesses)
+        rejected = filter(lambda s: s not in self.solutions, guesses)
+        if len(accepted) > 3:
+            message = '%sGreat!%s' % (LGREEN, WHITE)
+        elif len(accepted) > 0:
+            message = '%sOk!' % WHITE
+        else:
+            message = '%sOops!%s' % (RED, LGRAY)
+        if accepted:
+            message += ' You got: %s%s' % (' '.join(sorted(accepted)), LGRAY)
+            self.player_answers[nick].update(accepted)
+        if rejected:
+            message += ' (not accepted: %s)' % ' '.join(sorted(rejected))
+        self.send_private(nick, message)
+
+    def join(self, nick, quiet=False):
+        if nick not in self.players:
+            self.players.append(nick)
+            self.player_answers[nick] = set()
+            self.announce('%s%s%s joined the game.' % (WHITE, nick, LGRAY))
+            self.send_private(nick,
+                '-- %sPrivate Worddle session%s --' % (WHITE, LGRAY))
+            self.send_private(nick,
+                'Write your guesses here (separate words by spaces).')
+            if self.active and not quiet:
+                self._display_board(nick)
+        else:
+            self.send('%s: You have already joined the game.' % nick)
+
+    def show(self):
+        if self.active:
+            self._display_board()
+
+    def solve(self):
+        self.announce('Solutions: ' + ' '.join(sorted(self.solutions)))
+
+    def start(self):
+        super(Worddle, self).start()
+        commandChar = str(conf.supybot.reply.whenAddressedBy.chars)[0]
+        self.announce('Use "%s%sworddle join%s" to join the game.'
+                % (WHITE, commandChar, LGRAY))
+        schedule.addEvent(self._begin_game,
+                time.time() + self.delay, Worddle.NAME)
+
+    def stop(self):
+        super(Worddle, self).stop()
+        try:
+            schedule.removeEvent(Worddle.NAME)
+        except KeyError:
+            pass
+        self.announce('Stopped game.')
+
+    def _begin_game(self):
+        self.active = True
+        self.start_time = time.time()
+        self.end_time = self.start_time + self.duration
+        message = "%sLet's GO!%s You have %s%d%s seconds!" % \
+            (WHITE, LGRAY, WHITE, self.duration, LGRAY)
+        self.announce(message)
+        self._display_board()
+        for player in self.players:
+            self.send_private(player, message)
+            self._display_board(player)
+        self._schedule_next_event()
+
+    def _schedule_next_event(self):
+        "Schedules the next warning or the end game event as appropriate."
+        if self.warnings:
+            # Warn almost half a second early, in case there is a little
+            # latency before the event is triggered. (Otherwise a 30 second
+            # warning sometimes shows up as 29 seconds remaining.)
+            warn_time = self.end_time - self.warnings[0] - 0.499
+            schedule.addEvent(self._time_warning, warn_time, Worddle.NAME)
+            self.warnings = self.warnings[1:]
+        else:
+            schedule.addEvent(self._end_game, self.end_time, Worddle.NAME)
+
+    def _time_warning(self):
+        seconds = round(self.start_time + self.duration - time.time())
+        message = '%s%d%s seconds remaining...' % (WHITE, seconds, LGRAY)
+        self.announce(message)
+        for player in self.players:
+            self.send_private(player, message)
+        self._schedule_next_event()
+
+    def _end_game(self):
+        self.active = False
+        self.running = False
+        results = self._compute_results()
+        max_score = -1
+        for player in self.players:
+            self.send_private(player, "-- %sTime's up!%s --" % (WHITE, LGRAY))
+
+        # Announce player results
+        for player, result in results.iteritems():
+            score, unique, dup = result
+            if score > max_score:
+                max_score = score
+            words = sorted(unique + dup)
+            words_text = ''
+            for word in words:
+                if word in unique:
+                    color = LCYAN
+                else:
+                    color = GRAY
+                words_text += '%s%s%s ' % (color, word, LGRAY)
+            if not words_text:
+                words_text = '%s-none-%s' % (GRAY, LGRAY)
+            self.announce('%s%s%s gets %s%d%s points (%s)' %
+                    (WHITE, player, LGRAY, LGREEN, score, LGRAY,
+                     words_text.strip()))
+
+        # Announce winner(s)
+        winners = [("%s%s%s" % (WHITE, p, LGRAY))
+                for p in results.keys() if results[p][0] == max_score]
+        message = ', '.join(winners[:-1])
+        if len(winners) > 1:
+            message += ' and '
+        message += winners[-1]
+        if len(winners) > 1:
+            message += ' tied '
+        else:
+            message += ' wins '
+        message += 'with %s%d%s points!' % (WHITE, max_score, LGRAY)
+        self.announce(message)
+
+    def _compute_results(self):
+        "Return a dict of player: (score, unique words, dup words)"
+        answer_counts = {}
+        for answers in self.player_answers.values():
+            for answer in answers:
+                if answer in answer_counts:
+                    answer_counts[answer] += 1
+                else:
+                    answer_counts[answer] = 1
+        results = {}
+        for player, answers in self.player_answers.iteritems():
+            score = 0
+            unique = []
+            dup = []
+            for answer in answers:
+                if answer_counts[answer] == 1:
+                    score += len(answer)
+                    unique.append(answer)
+                else:
+                    dup.append(answer)
+            results[player] = (score, unique, dup)
+        return results
+
+    def _display_board(self, nick=None):
+        for row in self.board:
+            text = LGREEN + '  ' + '  '.join(row)
+            text = text.replace('Q ', 'Qu')
+            if nick:
+                self.send_private(nick, text)
+            else:
+                self.announce(text)
+
+    def _find_words(self, visited=None, row=0, col=0, prefix=''):
+        "Discover and return the set of all solutions for the current board."
+        result = set()
+        if visited == None:
+            for row in range(0, Worddle.BOARD_SIZE):
+                for col in range(0, Worddle.BOARD_SIZE):
+                    result = result.union(self._find_words([], row, col, ''))
+        else:
+            visited = visited + [(row, col)]
+            current = prefix + self.board[row][col].lower()
+            if current[-1] == 'q': current += 'u'
+            node = self.wordtrie.find(current)
+            if node:
+                if node.complete:
+                    result.add(current)
+                # Explore all 8 directions out from here
+                offsets = [(-1, -1), (-1, 0), (-1, 1),
+                           ( 0, -1),          ( 0, 1),
+                           ( 1, -1), ( 1, 0), ( 1, 1)]
+                for offset in offsets:
+                    point = (row + offset[0], col + offset[1])
+                    if point in visited: continue
+                    if point[0] < 0 or point[0] >= Worddle.BOARD_SIZE: continue
+                    if point[1] < 0 or point[1] >= Worddle.BOARD_SIZE: continue
+                    result = result.union(
+                        self._find_words(visited, point[0], point[1], current))
+        return result
+
+    def _generate_board(self):
+        self.board = []
+        values = random.sample(self.letters, Worddle.BOARD_SIZE**2)
+        for i in range(0, Worddle.BOARD_SIZE):
+            start = Worddle.BOARD_SIZE * i
+            end = start + Worddle.BOARD_SIZE
+            self.board.append(values[start:end])
+
+    def _generate_wordtrie(self):
+        self.wordtrie = Trie()
+        for word in self.words:
+            self.wordtrie.add(word)
 
 class WordChain(BaseGame):
     "Base class for word-chain games like WordShrink and WordTwist."
@@ -250,6 +570,15 @@ class WordChain(BaseGame):
         num = len(self.solutions)
         self.send("(%s%d%s possible solution%s)" %
                   (WHITE, num, LGRAY, '' if num == 1 else 's'))
+
+    def solve(self):
+        show = 3
+        for solution in self.solutions[:show]:
+            self.announce(self._join_words(solution))
+        not_shown = len(self.solutions) - show
+        if not_shown > 0:
+            self.announce('(%d more solution%s not shown.)' %
+                    (not_shown, 's' if not_shown > 1 else ''))
 
     def stop(self):
         super(WordChain, self).stop()
