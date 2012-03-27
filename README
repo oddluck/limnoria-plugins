@@ -92,9 +92,27 @@ new word (no rearranging).  Example session:
   <supybot> WordTwist: mike got it!
   <supybot> WordTwist: mass > mars > mare > made > jade
 
+A Technical Note About Worddle:
+
+This game sends a lot of PRIVMSGs (between the channel and all the players,
+the messages add up).  It attempts to send them in a single PRIVMSG if
+possible to combine targets.
+
+Supybot: I run Supybot with the latest git (there are show-stopper bugs in
+0.83.4.1) and the Twisted driver (but Socket should work as well).
+
+IRC Server: I had to tune my IRC server to handle this game, due to the large
+amount of messages it sends.  You may find that it has problems on your server
+due to flood controls (bot may be either fake lagged or kicked from the
+server).  If the game seems extremely slow, it is either an old Supybot or the
+server is throttling you.
+
+I would like to add an option to tune the verbosity of the game to mitigate
+this for restrictive servers.
+
 Credit:
 
 Copyright 2012 Mike Mueller <mike@subfocal.net>
 Released under the WTF public license: http://sam.zoy.org/wtfpl/
 
-Thanks to Ben Schomp <ben@benschomp.com> for the inspiration.
+Thanks to Ben Schomp <ben@benschomp.com> for the inspiration and QA testing.
