@@ -110,6 +110,12 @@ class Wordgames(callbacks.Plugin):
             error("In die(): " + str(e))
         self.__parent.die()
 
+    def doPrivmsg(self, irc, msg):
+        channel = msg.args[0]
+        game = self.games.get(channel)
+        if game:
+            game.handle_message(msg)
+
     if DEBUG:
         def wordsolve(self, irc, msgs, args, channel):
             "Show solution(s) for the currently running game."
