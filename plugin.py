@@ -38,7 +38,7 @@ import supybot.world as world
 
 from trie import Trie
 
-DEBUG = True
+DEBUG = False
 
 WHITE = '\x0300'
 GREEN = '\x0303'
