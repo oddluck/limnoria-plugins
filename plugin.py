@@ -135,7 +135,7 @@ class Wordgames(callbacks.Plugin):
         if join:
             if join == 'join':
                 game = self.games.get(channel)
-                if game:
+                if game and game.is_running():
                     if game.__class__ == Worddle:
                         game.join(msgs.nick)
                     else:
@@ -313,9 +313,6 @@ class Worddle(BaseGame):
 
     def __init__(self, words, irc, channel, nick, delay, duration):
         super(Worddle, self).__init__(words, irc, channel)
-        self.letters = reduce(add, (map(mul,
-                Worddle.FREQUENCY_TABLE.keys(),
-                Worddle.FREQUENCY_TABLE.values())))
         self._generate_board()
         self._generate_wordtrie()
         self.delay = delay
@@ -354,6 +351,7 @@ class Worddle(BaseGame):
         self.send_to(nick, message)
 
     def join(self, nick):
+        assert self.is_running()
         assert self.state != Worddle.State.DONE
         if nick not in self.players:
             self.players.append(nick)
@@ -581,8 +579,11 @@ class Worddle(BaseGame):
 
     def _generate_board(self):
         "Randomly generate a Worddle board (a list of lists)."
+        letters = reduce(add, (map(mul,
+                Worddle.FREQUENCY_TABLE.keys(),
+                Worddle.FREQUENCY_TABLE.values())))
         self.board = []
-        values = random.sample(self.letters, Worddle.BOARD_SIZE**2)
+        values = random.sample(letters, Worddle.BOARD_SIZE**2)
         for i in range(0, Worddle.BOARD_SIZE):
             start = Worddle.BOARD_SIZE * i
             end = start + Worddle.BOARD_SIZE
