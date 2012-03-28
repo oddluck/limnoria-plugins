@@ -311,6 +311,70 @@ class Worddle(BaseGame):
         ACTIVE = 2
         DONE = 3
 
+    class PlayerResult:
+        "Represents result for a single player."
+
+        def __init__(self, player, unique=None, dup=None):
+            self.player = player
+            self.unique = unique if unique else set()
+            self.dup = dup if dup else set()
+
+        def __cmp__(self, other):
+            return cmp(self.get_score(), other.get_score())
+
+        def get_score(self):
+            return sum(map(len, self.unique))
+
+        def render(self):
+            words = sorted(list(self.unique) + list(self.dup))
+            words_text = ''
+            for word in words:
+                if word in self.unique:
+                    color = LCYAN
+                else:
+                    color = GRAY
+                words_text += '%s%s%s ' % (color, word, LGRAY)
+            if not words_text:
+                words_text = '%s-none-%s' % (GRAY, LGRAY)
+            return '%s%s%s gets %s%d%s points (%s)' % \
+                    (WHITE, self.player, LGRAY, LGREEN, self.get_score(),
+                     LGRAY, words_text.strip())
+
+    class Results:
+        "Represents results for all players."
+
+        def __init__(self):
+            self.player_results = {}
+
+        def add_player_words(self, player, words):
+            unique = set()
+            dup = set()
+            for word in words:
+                bad = False
+                for result in self.player_results.values():
+                    if word in result.unique:
+                        result.unique.remove(word)
+                        result.dup.add(word)
+                        bad = True
+                    elif word in result.dup:
+                        bad = True
+                if bad:
+                    dup.add(word)
+                else:
+                    unique.add(word)
+            self.player_results[player] = \
+                    Worddle.PlayerResult(player, unique, dup)
+
+        def render(self):
+            "Return a list of messages to send to IRC."
+            return [r.render()
+                for r in sorted(self.player_results.values(), reverse=True)]
+
+        def winners(self):
+            result_list = sorted(self.player_results.values())
+            high_score = result_list[-1].get_score()
+            return filter(lambda r: r.get_score() == high_score, result_list)
+
     def __init__(self, words, irc, channel, nick, delay, duration):
         super(Worddle, self).__init__(words, irc, channel)
         self._generate_board()
@@ -472,72 +536,36 @@ class Worddle(BaseGame):
     def _end_game(self):
         self.gameover()
         self.state = Worddle.State.DONE
-        results = self._compute_results()
-        max_score = -1
         self.announce("%sTime's up!" % WHITE, now=True)
-        for player in self.players:
-            score, unique, dup = results[player]
-            self.announce_to(player,
+
+        # Compute results
+        results = Worddle.Results()
+        for player, answers in self.player_answers.iteritems():
+            results.add_player_words(player, answers)
+
+        # Notify players
+        for result in results.player_results.values():
+            self.announce_to(result.player,
                 ("%sTime's up!%s You scored %s%d%s points! Check "
                 "%s%s%s for complete results.") %
-                (WHITE, LGRAY, LGREEN, score, LGRAY, WHITE,
+                (WHITE, LGRAY, LGREEN, result.get_score(), LGRAY, WHITE,
                 self.channel, LGRAY), now=True)
 
-        # Announce player results
-        for player, result in results.iteritems():
-            score, unique, dup = result
-            if score > max_score:
-                max_score = score
-            words = sorted(unique + dup)
-            words_text = ''
-            for word in words:
-                if word in unique:
-                    color = LCYAN
-                else:
-                    color = GRAY
-                words_text += '%s%s%s ' % (color, word, LGRAY)
-            if not words_text:
-                words_text = '%s-none-%s' % (GRAY, LGRAY)
-            self.announce('%s%s%s gets %s%d%s points (%s)' %
-                    (WHITE, player, LGRAY, LGREEN, score, LGRAY,
-                     words_text.strip()))
-
-        # Announce winner(s)
-        winners = [("%s%s%s" % (WHITE, p, LGRAY))
-                for p in results.keys() if results[p][0] == max_score]
-        message = ', '.join(winners[:-1])
+        # Announce game results in channel
+        for message in results.render():
+            self.announce(message)
+        winners = results.winners()
+        winner_names = [("%s%s%s" % (WHITE, r.player, LGRAY)) for r in winners]
+        message = ', '.join(winner_names[:-1])
         if len(winners) > 1:
             message += ' and '
-        message += winners[-1]
+        message += winner_names[-1]
         if len(winners) > 1:
             message += ' tied '
         else:
             message += ' wins '
-        message += 'with %s%d%s points!' % (WHITE, max_score, LGRAY)
+        message += 'with %s%d%s points!' %(WHITE, winners[0].get_score(), LGRAY)
         self.announce(message)
-
-    def _compute_results(self):
-        "Return a dict of player: (score, unique words, dup words)"
-        answer_counts = {}
-        for answers in self.player_answers.values():
-            for answer in answers:
-                if answer in answer_counts:
-                    answer_counts[answer] += 1
-                else:
-                    answer_counts[answer] = 1
-        results = {}
-        for player, answers in self.player_answers.iteritems():
-            score = 0
-            unique = []
-            dup = []
-            for answer in answers:
-                if answer_counts[answer] == 1:
-                    score += len(answer)
-                    unique.append(answer)
-                else:
-                    dup.append(answer)
-            results[player] = (score, unique, dup)
-        return results
 
     def _display_board(self, nick=None):
         "Display the board to everyone or just one nick if specified."
