@@ -432,9 +432,11 @@ class Worddle(BaseGame):
             else:
                 self.announce_to(nick, 'Current Players: %s%s' %
                     (WHITE, (LGRAY + ', ' + WHITE).join(self.players)))
-            # Delay by 5 seconds each time someone joins pre-game
+            # Keep at least 5 seconds on the pre-game clock if someone joins
             if self.state == Worddle.State.PREGAME:
-                self.delay += 5
+                time_left = self.init_time + self.delay - time.time()
+                if time_left < 5:
+                    self.delay += (5 - time_left)
                 self._schedule_next_event()
         else:
             self.send('%s: You have already joined the game.' % nick)
@@ -510,11 +512,11 @@ class Worddle(BaseGame):
         if self.state == Worddle.State.PREGAME:
             # Schedule "get ready" message
             schedule.addEvent(self._get_ready,
-                self.init_time + self.delay - 5, Worddle.NAME)
+                self.init_time + self.delay, Worddle.NAME)
         elif self.state == Worddle.State.READY:
             # Schedule game start
             schedule.addEvent(self._begin_game,
-                self.init_time + self.delay, Worddle.NAME)
+                self.init_time + self.delay + 3, Worddle.NAME)
         elif self.state == Worddle.State.ACTIVE:
             if self.warnings:
                 # Warn almost half a second early, in case there is a little
