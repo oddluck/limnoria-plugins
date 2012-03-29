@@ -572,8 +572,8 @@ class Worddle(BaseGame):
     def _display_board(self, nick=None):
         "Display the board to everyone or just one nick if specified."
         for row in self.board:
-            text = LGREEN + '  ' + '  '.join(row)
-            text = text.replace('Q ', 'Qu')
+            text = LGREEN + '  ' + '  '.join(row) + ' '
+            text = text.replace('Q ', 'Qu').rstrip()
             if nick:
                 self.announce_to(nick, text, now=True)
             else:
