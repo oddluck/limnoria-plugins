@@ -400,11 +400,22 @@ class Worddle(BaseGame):
             self.warnings = self.warnings[1:]
 
     def guess(self, nick, text):
-        if self.state < Worddle.State.ACTIVE:
-            self.send_to(nick, "Relax! The game hasn't started yet!")
-            return
+        # This can't happen right now, but it might be useful some day
         if nick not in self.players:
             self.join(nick)
+        # Pre-game messages are relayed as chatter (not treated as guesses)
+        if self.state < Worddle.State.ACTIVE:
+            if self.state == Worddle.State.PREGAME:
+                if len(self.players) > 1:
+                    self._broadcast("%s%s%s says: %s" %
+                        (WHITE, nick, LGRAY, text), ignore=[self.channel, nick])
+                    self.send_to(nick, "Message sent to other players.")
+                else:
+                    self.send_to(nick,
+                        "Message not sent (no one else is playing yet).")
+            else:
+                self.send_to(nick, "Relax! The game hasn't started yet!")
+            return
         guesses = set(map(str.lower, text.split()))
         accepted = filter(lambda s: s in self.solutions, guesses)
         rejected = filter(lambda s: s not in self.solutions, guesses)
