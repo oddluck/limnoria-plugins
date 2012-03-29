@@ -70,7 +70,14 @@ def get_max_targets(irc):
         # Inspircd
         if 'MAXTARGETS' in irc.state.supported:
             result = int(irc.state.supported['MAXTARGETS'])
-        # TODO: Whatever Freenode reports
+        # FreenodeA (ircd-seven)
+        elif 'TARGMAX' in irc.state.supported:
+            # TARGMAX looks like "...,WHOIS:1,PRIVMSG:4,NOTICE:4,..."
+            regexp = r'.*PRIVMSG:(\d+).*'
+            match = re.match(regexp, irc.state.supported['TARGMAX'])
+            if match:
+                result = int(match.group(1))
+                print 'Determined max targets:', result
         else:
             debug('Unable to find max targets, using default (1).')
     except Exception, e:
