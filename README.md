@@ -19,23 +19,23 @@ Commands
 
 The following commands are exposed by this plugin:
 
->`worddle [join]`
->
->> Start a new Worddle game (with no arguments). Use "worddle join"
->> to join a game that someone else has started.
+`worddle [join]`
 
->`wordshrink [difficulty]`
->
->> Start a new WordShrink game.  Difficulty values: [easy] medium hard evil
+> Start a new Worddle game (with no arguments). Use "worddle join"
+> to join a game that someone else has started.
 
->`wordtwist [difficulty]`
->
->> Start a new WordTwist game.  Difficulty values: [easy] medium hard evil
+`wordshrink [difficulty]`
 
->`wordquit`
->
->> Shut down any currently running game. One solution will be displayed for
->> the word chain games, to satisfy your curiosity.
+> Start a new WordShrink game.  Difficulty values: [easy] medium hard evil
+
+`wordtwist [difficulty]`
+
+> Start a new WordTwist game.  Difficulty values: [easy] medium hard evil
+
+`wordquit`
+
+> Shut down any currently running game. One solution will be displayed for
+> the word chain games, to satisfy your curiosity.
 
 Game Rules
 ----------
@@ -103,38 +103,38 @@ allowed).  Example session:
 Configuration Variables
 -----------------------
 
-> `plugins.Wordgames.wordFile`
->
->> Path to the dictionary file.
->>  
->> Default: `/usr/share/dict/american-english`
+`plugins.Wordgames.wordFile`
 
-> `plugins.Wordgames.wordRegexp`
->
->> A regular expression defining what a valid word looks like.  This will
->> be used to filter words from the dictionary file that contain undesirable
->> characters (proper names, hyphens, accents, etc.).  You will probably have
->> to quote the string when setting, e.g.:
->>
->>     @config plugins.Wordgames.wordRegexp "^[a-x]+$"
->>
->> (No words containing 'y' or 'z' would be allowed by this.)
->>
->> Default: `^[a-z]+$`
+> Path to the dictionary file.
+>  
+> Default: `/usr/share/dict/american-english`
 
-> `plugins.Wordgames.worddleDelay`
->
->> The length (in seconds) of the pre-game period where players can join a
->> new Worddle game.
->>
->> Default: `15`
+`plugins.Wordgames.wordRegexp`
 
-> `plugins.Wordgames.worddleDuration`
+> A regular expression defining what a valid word looks like.  This will
+> be used to filter words from the dictionary file that contain undesirable
+> characters (proper names, hyphens, accents, etc.).  You will probably have
+> to quote the string when setting, e.g.:
 >
->> The length (in seconds) of the active period of a Worddle game, when
->> players can submit guesses.
->>
->> Default: `90`
+>     @config plugins.Wordgames.wordRegexp "^[a-x]+$"
+>
+> (No words containing 'y' or 'z' would be allowed by this.)
+>
+> Default: `^[a-z]+$`
+
+`plugins.Wordgames.worddleDelay`
+
+> The length (in seconds) of the pre-game period where players can join a
+> new Worddle game.
+>
+> Default: `15`
+
+`plugins.Wordgames.worddleDuration`
+
+> The length (in seconds) of the active period of a Worddle game, when
+> players can submit guesses.
+>
+> Default: `90`
 
 A Technical Note About Worddle
 ------------------------------
