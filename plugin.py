@@ -301,7 +301,6 @@ class Worddle(BaseGame):
     "The Worddle game implementation."
 
     BOARD_SIZE = 4
-    NAME = 'worddle' # Unique identifier for supybot events
     FREQUENCY_TABLE = {
         19: 'E',
         13: 'T',
@@ -394,6 +393,7 @@ class Worddle(BaseGame):
         self._generate_wordtrie()
         self.delay = delay
         self.duration = duration
+        self.event_name = 'Worddle.%d' % id(self)
         self.init_time = time.time()
         self.max_targets = get_max_targets(irc)
         self.solutions = self._find_solutions()
@@ -487,7 +487,7 @@ class Worddle(BaseGame):
     def stop(self, now=False):
         self.parent.stop()
         try:
-            schedule.removeEvent(Worddle.NAME)
+            schedule.removeEvent(self.event_name)
         except KeyError:
             pass
         if not now:
@@ -531,28 +531,30 @@ class Worddle(BaseGame):
         """
         # Unschedule any previous event
         try:
-            schedule.removeEvent(Worddle.NAME)
+            schedule.removeEvent(self.event_name)
         except KeyError:
             pass
         if self.state == Worddle.State.PREGAME:
             # Schedule "get ready" message
             schedule.addEvent(self._get_ready,
-                self.init_time + self.delay, Worddle.NAME)
+                self.init_time + self.delay, self.event_name)
         elif self.state == Worddle.State.READY:
             # Schedule game start
             schedule.addEvent(self._begin_game,
-                self.init_time + self.delay + 3, Worddle.NAME)
+                self.init_time + self.delay + 3, self.event_name)
         elif self.state == Worddle.State.ACTIVE:
             if self.warnings:
                 # Warn almost half a second early, in case there is a little
                 # latency before the event is triggered. (Otherwise a 30 second
                 # warning sometimes shows up as 29 seconds remaining.)
                 warn_time = self.end_time - self.warnings[0] - 0.499
-                schedule.addEvent(self._time_warning, warn_time, Worddle.NAME)
+                schedule.addEvent(
+                    self._time_warning, warn_time, self.event_name)
                 self.warnings = self.warnings[1:]
             else:
                 # Schedule game end
-                schedule.addEvent(self._end_game, self.end_time, Worddle.NAME)
+                schedule.addEvent(
+                    self._end_game, self.end_time, self.event_name)
 
     def _time_warning(self):
         seconds = round(self.start_time + self.duration - time.time())
