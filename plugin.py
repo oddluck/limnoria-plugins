@@ -101,21 +101,22 @@ class Wordgames(callbacks.Plugin):
                     game.guess(msg.nick, msg.args[1])
                     return None
         # In all other cases, default to normal message handling
-        return self.__parent.inFilter(irc, msg)
+        return self.parent.inFilter(irc, msg)
 
     def __init__(self, irc):
-        self.__parent = super(Wordgames, self)
-        self.__parent.__init__(irc)
+        # Tech note: Save a reference to my parent class because Supybot's
+        # Owner plugin will reload this module BEFORE calling die(), which
+        # means super() calls will fail with a TypeError. I consider this a
+        # bug in Supybot.
+        self.parent = super(Wordgames, self)
+        self.parent.__init__(irc)
         self.games = {}
 
     def die(self):
-        # Ugly, but we need to ensure that the game actually stops
-        try:
-            schedule.removeEvent(Worddle.NAME)
-        except KeyError: pass
-        except Exception, e:
-            error("In die(): " + str(e))
-        self.__parent.die()
+        for channel, game in self.games.iteritems():
+            if game.is_running():
+                game.stop(now=True)
+        self.parent.die()
 
     def doPrivmsg(self, irc, msg):
         channel = msg.args[0]
@@ -253,8 +254,11 @@ class BaseGame(object):
         "Start the current game."
         self.running = True
 
-    def stop(self):
-        "Shut down the current game."
+    def stop(self, now=False):
+        """
+        Shut down the current game. If now is True, do not pass go, do not
+        announce anything, just stop anything that needs stopping.
+        """
         self.running = False
 
     def show(self):
@@ -383,7 +387,9 @@ class Worddle(BaseGame):
             return filter(lambda r: r.get_score() == high_score, result_list)
 
     def __init__(self, words, irc, channel, nick, delay, duration):
-        super(Worddle, self).__init__(words, irc, channel)
+        # See tech note in the Wordgames class.
+        self.parent = super(Worddle, self)
+        self.parent.__init__(words, irc, channel)
         self._generate_board()
         self._generate_wordtrie()
         self.delay = delay
@@ -469,7 +475,7 @@ class Worddle(BaseGame):
         self.announce('Solutions: ' + ' '.join(sorted(self.solutions)))
 
     def start(self):
-        super(Worddle, self).start()
+        self.parent.start()
         commandChar = str(conf.supybot.reply.whenAddressedBy.chars)[0]
         self.announce('The game will start in %s%d%s seconds...' %
                 (LYELLOW, self.delay, LGRAY), now=True)
@@ -478,13 +484,14 @@ class Worddle(BaseGame):
         self.join(self.starter)
         self._schedule_next_event()
 
-    def stop(self):
-        super(Worddle, self).stop()
+    def stop(self, now=False):
+        self.parent.stop()
         try:
             schedule.removeEvent(Worddle.NAME)
         except KeyError:
             pass
-        self._broadcast('Game stopped.')
+        if not now:
+            self._broadcast('Game stopped.')
 
     def _broadcast(self, text, now=False, ignore=None):
         """
@@ -663,7 +670,9 @@ class WordChain(BaseGame):
             self.num_solutions = num_solutions
 
     def __init__(self, words, irc, channel, settings):
-        super(WordChain, self).__init__(words, irc, channel)
+        # See tech note in the Wordgames class.
+        self.parent = super(WordChain, self)
+        self.parent.__init__(words, irc, channel)
         self.settings = settings
         self.solution_length = random.choice(settings.puzzle_lengths)
         self.solution = []
@@ -677,7 +686,7 @@ class WordChain(BaseGame):
         self.build_word_map()
 
     def start(self):
-        super(WordChain, self).start()
+        self.parent.start()
         happy = False
         # Build a puzzle
         while not happy:
@@ -727,9 +736,10 @@ class WordChain(BaseGame):
             self.announce('(%d more solution%s not shown.)' %
                     (not_shown, 's' if not_shown > 1 else ''))
 
-    def stop(self):
-        super(WordChain, self).stop()
-        self.announce(self._join_words(self.solution))
+    def stop(self, now=False):
+        self.parent.stop()
+        if not now:
+            self.announce(self._join_words(self.solution))
 
     def handle_message(self, msg):
         words = map(str.strip, msg.args[1].split('>'))
