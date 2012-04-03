@@ -134,27 +134,31 @@ class Wordgames(callbacks.Plugin):
                 irc.reply('No game is currently running.')
         wordsolve = wrap(wordsolve, ['channel'])
 
-    def worddle(self, irc, msgs, args, channel, join):
-        """[join]
+    def worddle(self, irc, msgs, args, channel, command):
+        """[command]
 
-        Start a Worddle game or join a running game."""
+        Play a Worddle game. Commands: [start|join|stop] (default: start).
+        """
         delay = self.registryValue('worddleDelay')
         duration = self.registryValue('worddleDuration')
-        if join:
-            if join == 'join':
-                game = self.games.get(channel)
-                if game and game.is_running():
-                    if game.__class__ == Worddle:
-                        game.join(msgs.nick)
-                    else:
-                        irc.reply('Current word game is not Worddle!')
+        if command == 'join':
+            game = self.games.get(channel)
+            if game and game.is_running():
+                if game.__class__ == Worddle:
+                    game.join(msgs.nick)
                 else:
-                    irc.reply('No game is currently running.')
+                    irc.reply('Current word game is not Worddle!')
             else:
-                irc.reply('Unrecognized option to worddle.')
-        else:
+                irc.reply('No game is currently running.')
+        elif command == 'start':
             self._start_game(Worddle, irc, channel, msgs.nick, delay, duration)
-    worddle = wrap(worddle, ['channel', optional('somethingWithoutSpaces', '')])
+        elif command == 'stop':
+            # Alias for @wordquit
+            self._stop_game(irc, channel)
+        else:
+            irc.reply('Unrecognized command to worddle.')
+    worddle = wrap(worddle,
+        ['channel', optional('somethingWithoutSpaces', 'start')])
     # Alias for misspelling of the game name
     wordle = worddle
 
@@ -189,11 +193,7 @@ class Wordgames(callbacks.Plugin):
 
         Stop any currently running word game.
         """
-        game = self.games.get(channel)
-        if game and game.is_running():
-            game.stop()
-        else:
-            irc.reply('No word game currently running.')
+        self._stop_game(irc, channel)
     wordquit = wrap(wordquit, ['channel'])
 
     def _find_player_game(self, player):
@@ -232,6 +232,13 @@ class Wordgames(callbacks.Plugin):
             irc.reply('Wordgames error: %s' % str(e))
             irc.reply('Please check the configuration and try again. ' +
                       'See README for help.')
+
+    def _stop_game(self, irc, channel):
+        game = self.games.get(channel)
+        if game and game.is_running():
+            game.stop()
+        else:
+            irc.reply('No word game currently running.')
 
 class BaseGame(object):
     "Base class for the games in this plugin."

@@ -19,10 +19,11 @@ Commands
 
 The following commands are exposed by this plugin:
 
-`worddle [join]`
+`worddle [start|join|stop]`
 
-> Start a new Worddle game (with no arguments). Use "worddle join"
-> to join a game that someone else has started.
+> Start a new Worddle game, join an existing game, or stop the current game.
+> `start` is the default if nothing is specified.  `stop` is an alias for
+> @wordquit, added for ease of use.
 
 `wordshrink [difficulty]`
 
