@@ -38,7 +38,7 @@ import supybot.world as world
 
 from trie import Trie
 
-DEBUG = False
+DEBUG = True
 
 WHITE = '\x0300'
 GREEN = '\x0303'
@@ -59,6 +59,10 @@ def info(message):
 
 def error(message):
     log.error('Wordgames: ' + message)
+
+def point_str(value):
+    "Return 'point' or 'points' depending on value."
+    return 'point' if value == 1 else 'points'
 
 # Ideally Supybot would do this for me. It seems that all IRC servers have
 # their own way of reporting this information...
@@ -322,6 +326,16 @@ class Worddle(BaseGame):
         1:  'BJKQVXZ',
     }
 
+    POINT_VALUES = {
+        3: 1,
+        4: 1,
+        5: 2,
+        6: 3,
+        7: 5,
+    }
+
+    MAX_POINTS = 11 # 8 letters or longer
+
     class State:
         PREGAME = 0
         READY = 1
@@ -340,7 +354,10 @@ class Worddle(BaseGame):
             return cmp(self.get_score(), other.get_score())
 
         def get_score(self):
-            return sum(map(len, self.unique))
+            score = 0
+            for word in self.unique:
+                score += Worddle.POINT_VALUES.get(len(word), Worddle.MAX_POINTS)
+            return score
 
         def render(self):
             words = sorted(list(self.unique) + list(self.dup))
@@ -353,9 +370,10 @@ class Worddle(BaseGame):
                 words_text += '%s%s%s ' % (color, word, LGRAY)
             if not words_text:
                 words_text = '%s-none-%s' % (GRAY, LGRAY)
-            return '%s%s%s gets %s%d%s points (%s)' % \
-                    (WHITE, self.player, LGRAY, LGREEN, self.get_score(),
-                     LGRAY, words_text.strip())
+            score = self.get_score()
+            return '%s%s%s gets %s%d%s %s (%s)' % \
+                    (WHITE, self.player, LGRAY, LGREEN, score,
+                     LGRAY, point_str(score), words_text.strip())
 
     class Results:
         "Represents results for all players."
@@ -581,10 +599,11 @@ class Worddle(BaseGame):
 
         # Notify players
         for result in results.player_results.values():
+            score = result.get_score()
             self.announce_to(result.player,
-                ("%sTime's up!%s You scored %s%d%s points! Check "
+                ("%sTime's up!%s You scored %s%d%s %s! Check "
                 "%s%s%s for complete results.") %
-                (WHITE, LGRAY, LGREEN, result.get_score(), LGRAY, WHITE,
+                (WHITE, LGRAY, LGREEN, score, LGRAY, point_str(score), WHITE,
                 self.channel, LGRAY), now=True)
 
         # Announce game results in channel
@@ -600,7 +619,8 @@ class Worddle(BaseGame):
             message += ' tied '
         else:
             message += ' wins '
-        message += 'with %s%d%s points!' %(WHITE, winners[0].get_score(), LGRAY)
+        message += 'with %s%d%s %s!' % (WHITE, winners[0].get_score(), LGRAY,
+            point_str(winners[0].get_score()))
         self.announce(message)
 
     def _display_board(self, nick=None):

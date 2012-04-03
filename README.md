@@ -60,7 +60,15 @@ To be a valid guess, words must:
 * appear in the dictionary file.
 
 At the end of the game, if a word was found by multiple players, it is not
-counted.  The remaining words contribute to your score, at 1 point per letter.
+counted.  The remaining words contribute to your score using these values:
+
+     Length | Value
+    --------+-------
+      3, 4  | 1 point
+      5     | 2 points
+      6     | 3 points
+      7     | 5 points
+      8+    | 11 points
 
 ### WordShrink
 
