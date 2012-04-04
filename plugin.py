@@ -38,7 +38,7 @@ import supybot.world as world
 
 from trie import Trie
 
-DEBUG = True
+DEBUG = False
 
 WHITE = '\x0300'
 GREEN = '\x0303'
@@ -335,25 +335,23 @@ class Worddle(BaseGame):
     MAX_POINTS = 11 # 8 letters or longer
     MESSAGES = {
         'chat':     '%s%%(nick)s%s says: %%(text)s' % (WHITE, LGRAY),
-        'go':       '%sLet\'s GO!%s You have %s%%(seconds)d%s seconds!' %
-                    (WHITE, LGRAY, LYELLOW, LGRAY),
         'joined':   '%s%%(nick)s%s joined the game.' % (WHITE, LGRAY),
         'gameover': ("%sTime's up!%s You got %s%%(points)d%s point%%(plural)s! "
                      + "Check %s%%(channel)s%s for complete results.") %
                     (WHITE, LGRAY, LGREEN, LGRAY, WHITE, LGRAY),
         'players':  'Current Players: %(players)s',
         'ready':    '%sGet Ready!' % WHITE,
-        'startup1': 'The game will start in %s%%(seconds)d%s seconds...' %
-                    (LYELLOW, LGRAY),
-        'startup2': 'Use "%s%%(commandChar)sworddle join%s" to join the game.' %
-                    (WHITE, LGRAY),
-        'startup3': ('%sGame Started!%s Use "%s%%(commandChar)sworddle join"'
-                     + '%s to play!') % (WHITE, LGRAY, WHITE, LGRAY),
+        'result':   ('%s%%(nick)s%s %%(verb)s %s%%(points)d%s ' +
+                     'point%%(plural)s (%%(words)s)') %
+                    (WHITE, LGRAY, LGREEN, LGRAY),
+        'startup': ('Starting in %s%%(seconds)d%s seconds, ' +
+                     'use "%s%%(commandChar)sworddle join%s" to play!') %
+                    (LYELLOW, LGRAY, WHITE, LGRAY),
         'stopped':  'Game stopped.',
         'warning':  '%s%%(seconds)d%s seconds remaining...' % (LYELLOW, LGRAY),
-        'welcome1': '-- %sNew Game%s --' % (WHITE, LGRAY),
-        'welcome2': ('%s%%(nick)s%s, this is your workspace. Just say: ' +
-                     'word1 word2 ...') % (WHITE, LGRAY),
+        'welcome1': '--- %sNew Game%s ---' % (WHITE, LGRAY),
+        'welcome2': ('%s%%(nick)s%s, write your answers here, e.g.: ' +
+                     'cat dog ...') % (WHITE, LGRAY),
     }
 
     class State:
@@ -379,7 +377,8 @@ class Worddle(BaseGame):
                 score += Worddle.POINT_VALUES.get(len(word), Worddle.MAX_POINTS)
             return score
 
-        def render(self):
+        def render_words(self):
+            "Return the words in this result, colorized appropriately."
             words = sorted(list(self.unique) + list(self.dup))
             words_text = ''
             for word in words:
@@ -390,10 +389,7 @@ class Worddle(BaseGame):
                 words_text += '%s%s%s ' % (color, word, LGRAY)
             if not words_text:
                 words_text = '%s-none-%s' % (GRAY, LGRAY)
-            score = self.get_score()
-            return '%s%s%s gets %s%d%s %s (%s)' % \
-                    (WHITE, self.player, LGRAY, LGREEN, score,
-                     LGRAY, point_str(score), words_text.strip())
+            return words_text.strip()
 
     class Results:
         "Represents results for all players."
@@ -420,15 +416,8 @@ class Worddle(BaseGame):
             self.player_results[player] = \
                     Worddle.PlayerResult(player, unique, dup)
 
-        def render(self):
-            "Return a list of messages to send to IRC."
-            return [r.render()
-                for r in sorted(self.player_results.values(), reverse=True)]
-
-        def winners(self):
-            result_list = sorted(self.player_results.values())
-            high_score = result_list[-1].get_score()
-            return filter(lambda r: r.get_score() == high_score, result_list)
+        def sorted_results(self):
+            return sorted(self.player_results.values(), reverse=True)
 
     def __init__(self, words, irc, channel, nick, delay, duration):
         # See tech note in the Wordgames class.
@@ -478,15 +467,13 @@ class Worddle(BaseGame):
         assert self.is_running()
         assert self.state != Worddle.State.DONE
         if nick not in self.players:
+            self._broadcast('welcome1', [nick], now=True, nick=nick)
+            self._broadcast('welcome2', [nick], now=True, nick=nick)
+            self._broadcast('joined', self.players, nick=nick)
             self.players.append(nick)
             self.player_answers[nick] = set()
-            self._broadcast('welcome1', now=True, nick=nick)
-            self._broadcast('welcome2', [nick], now=True, nick=nick)
-            self._broadcast('joined', nick=nick)
             if self.state == Worddle.State.ACTIVE:
-                self._display_board(nick)
-                time_left = int(round(self.end_time - time.time()))
-                self._broadcast('go', [nick], now=True, seconds=time_left)
+                self._display_board(nick, show_help=True)
             else:
                 self._broadcast('players', [nick])
             # Keep at least 5 seconds on the pre-game clock if someone joins
@@ -509,8 +496,7 @@ class Worddle(BaseGame):
 
     def start(self):
         self.parent.start()
-        self._broadcast('startup1', [self.channel], True, seconds=self.delay)
-        self._broadcast('startup2', [self.channel], True)
+        self._broadcast('startup', [self.channel], True, seconds=self.delay)
         self.join(self.starter)
         self._schedule_next_event()
 
@@ -521,7 +507,7 @@ class Worddle(BaseGame):
         except KeyError:
             pass
         if not now:
-            self._broadcast('stopped')
+            self._broadcast('stopped', self.players + [self.channel])
 
     def _broadcast_text(self, text, recipients=None, now=False):
         """
@@ -562,9 +548,7 @@ class Worddle(BaseGame):
         self.state = Worddle.State.ACTIVE
         self.start_time = time.time()
         self.end_time = self.start_time + self.duration
-        self._display_board()
-        self._broadcast('go', now=True, seconds=self.duration)
-        self._broadcast('startup3', [self.channel])
+        self._display_board(show_help=True)
         self._schedule_next_event()
 
     def _schedule_next_event(self):
@@ -607,7 +591,6 @@ class Worddle(BaseGame):
     def _end_game(self):
         self.gameover()
         self.state = Worddle.State.DONE
-        self.announce("%sTime's up!" % WHITE, now=True)
 
         # Compute results
         results = Worddle.Results()
@@ -619,28 +602,37 @@ class Worddle(BaseGame):
             self._broadcast('gameover', [result.player], now=True,
                 points=result.get_score())
 
-        # Announce game results in channel
-        for message in results.render():
-            self.announce(message)
-        winners = results.winners()
-        winner_names = [("%s%s%s" % (WHITE, r.player, LGRAY)) for r in winners]
-        message = ', '.join(winner_names[:-1])
-        if len(winners) > 1:
-            message += ' and '
-        message += winner_names[-1]
-        if len(winners) > 1:
-            message += ' tied '
-        else:
-            message += ' wins '
-        message += 'with %s%d%s %s!' % (WHITE, winners[0].get_score(), LGRAY,
-            point_str(winners[0].get_score()))
-        self.announce(message)
+        # Announce results
+        player_results = results.sorted_results()
+        high_score = player_results[0].get_score()
+        tie = len(player_results) > 1 and \
+              player_results[1].get_score() == high_score
+        for result in player_results:
+            score = result.get_score()
+            if score == high_score:
+                if tie:
+                    verb = "%stied%s with" % (LYELLOW, LGRAY)
+                else:
+                    verb = "%swins%s with" % (LGREEN, LGRAY)
+            else:
+                verb = "got"
+            words_text = result.render_words()
+            self._broadcast('result', [self.channel], nick=result.player,
+                    verb=verb, points=score, words=words_text)
 
-    def _display_board(self, nick=None):
+    def _display_board(self, nick=None, show_help=False):
         "Display the board to everyone or just one nick if specified."
-        for row in self.board:
+        commandChar = str(conf.supybot.reply.whenAddressedBy.chars)[0]
+        help_msgs = [''] * Worddle.BOARD_SIZE
+        help_msgs[1] = '%sLet\'s GO!' % (WHITE)
+        help_msgs[2] = '%s%s%s seconds left!' % \
+            (LYELLOW, int(round(self.end_time - time.time())), LGRAY)
+        for i, row in enumerate(self.board):
             text = LGREEN + '  ' + '  '.join(row) + ' '
-            text = text.replace('Q ', 'Qu').rstrip()
+            text = text.replace('Q ', 'Qu')
+            if show_help:
+                text += '      ' + help_msgs[i]
+            text = text.rstrip()
             if nick:
                 self.announce_to(nick, text, now=True)
             else:
