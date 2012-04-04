@@ -325,7 +325,6 @@ class Worddle(BaseGame):
         2:  'W',
         1:  'BJKQVXZ',
     }
-
     POINT_VALUES = {
         3: 1,
         4: 1,
@@ -333,8 +332,29 @@ class Worddle(BaseGame):
         6: 3,
         7: 5,
     }
-
     MAX_POINTS = 11 # 8 letters or longer
+    MESSAGES = {
+        'chat':     '%s%%(nick)s%s says: %%(text)s' % (WHITE, LGRAY),
+        'go':       '%sLet\'s GO!%s You have %s%%(seconds)d%s seconds!' %
+                    (WHITE, LGRAY, LYELLOW, LGRAY),
+        'joined':   '%s%%(nick)s%s joined the game.' % (WHITE, LGRAY),
+        'gameover': ("%sTime's up!%s You got %s%%(points)d%s point%%(plural)s! "
+                     + "Check %s%%(channel)s%s for complete results.") %
+                    (WHITE, LGRAY, LGREEN, LGRAY, WHITE, LGRAY),
+        'players':  'Current Players: %(players)s',
+        'ready':    '%sGet Ready!' % WHITE,
+        'startup1': 'The game will start in %s%%(seconds)d%s seconds...' %
+                    (LYELLOW, LGRAY),
+        'startup2': 'Use "%s%%(commandChar)sworddle join%s" to join the game.' %
+                    (WHITE, LGRAY),
+        'startup3': ('%sGame Started!%s Use "%s%%(commandChar)sworddle join"'
+                     + '%s to play!') % (WHITE, LGRAY, WHITE, LGRAY),
+        'stopped':  'Game stopped.',
+        'warning':  '%s%%(seconds)d%s seconds remaining...' % (LYELLOW, LGRAY),
+        'welcome1': '-- %sNew Game%s --' % (WHITE, LGRAY),
+        'welcome2': ('%s%%(nick)s%s, this is your workspace. Just say: ' +
+                     'word1 word2 ...') % (WHITE, LGRAY),
+    }
 
     class State:
         PREGAME = 0
@@ -436,16 +456,7 @@ class Worddle(BaseGame):
             self.join(nick)
         # Pre-game messages are relayed as chatter (not treated as guesses)
         if self.state < Worddle.State.ACTIVE:
-            if self.state == Worddle.State.PREGAME:
-                if len(self.players) > 1:
-                    self._broadcast("%s%s%s says: %s" %
-                        (WHITE, nick, LGRAY, text), ignore=[self.channel, nick])
-                    self.send_to(nick, "Message sent to other players.")
-                else:
-                    self.send_to(nick,
-                        "Message not sent (no one else is playing yet).")
-            else:
-                self.send_to(nick, "Relax! The game hasn't started yet!")
+            self._broadcast('chat', self.players, nick=nick, text=text)
             return
         guesses = set(map(str.lower, text.split()))
         accepted = filter(lambda s: s in self.solutions, guesses)
@@ -469,22 +480,15 @@ class Worddle(BaseGame):
         if nick not in self.players:
             self.players.append(nick)
             self.player_answers[nick] = set()
-            self.announce_to(nick, '-- %sNew Game%s --' %
-                (WHITE, LGRAY), now=True)
-            self.announce_to(nick,
-                "%s%s%s, here's your workspace. Just say: word1 word2 ..." %
-                (WHITE, nick, LGRAY), now=True)
-            self._broadcast('%s%s%s joined the game.' % (WHITE, nick, LGRAY),
-                ignore=[nick])
+            self._broadcast('welcome1', now=True, nick=nick)
+            self._broadcast('welcome2', [nick], now=True, nick=nick)
+            self._broadcast('joined', nick=nick)
             if self.state == Worddle.State.ACTIVE:
                 self._display_board(nick)
                 time_left = int(round(self.end_time - time.time()))
-                self.announce_to(nick,
-                    "%sLet's GO!%s You have %s%d%s seconds!" %
-                    (WHITE, LGRAY, LYELLOW, time_left, LGRAY), now=True)
+                self._broadcast('go', [nick], now=True, seconds=time_left)
             else:
-                self.announce_to(nick, 'Current Players: %s%s' %
-                    (WHITE, (LGRAY + ', ' + WHITE).join(self.players)))
+                self._broadcast('players', [nick])
             # Keep at least 5 seconds on the pre-game clock if someone joins
             if self.state == Worddle.State.PREGAME:
                 time_left = self.init_time + self.delay - time.time()
@@ -505,11 +509,8 @@ class Worddle(BaseGame):
 
     def start(self):
         self.parent.start()
-        commandChar = str(conf.supybot.reply.whenAddressedBy.chars)[0]
-        self.announce('The game will start in %s%d%s seconds...' %
-                (LYELLOW, self.delay, LGRAY), now=True)
-        self.announce('Use "%s%sworddle join%s" to join the game.'
-                % (WHITE, commandChar, LGRAY), now=True)
+        self._broadcast('startup1', [self.channel], True, seconds=self.delay)
+        self._broadcast('startup2', [self.channel], True)
         self.join(self.starter)
         self._schedule_next_event()
 
@@ -520,37 +521,50 @@ class Worddle(BaseGame):
         except KeyError:
             pass
         if not now:
-            self._broadcast('Game stopped.')
+            self._broadcast('stopped')
 
-    def _broadcast(self, text, now=False, ignore=None):
+    def _broadcast_text(self, text, recipients=None, now=False):
         """
-        Broadcast a message to channel and all players. Set now to bypass
-        Supybot's queue and send the message immediately.  ignore is a list
-        of names who should NOT receive the message.
+        Broadcast the given string message to the recipient list (default is
+        all players, not the game channel). Set now to bypass Supybot's queue
+        and send the message immediately.
         """
-        recipients = [self.channel] + self.players
-        if ignore:
-            recipients = filter(lambda r: r not in ignore, recipients)
+        if recipients is None:
+            recipients = self.players
         for i in range(0, len(recipients), self.max_targets):
             targets = ','.join(recipients[i:i+self.max_targets])
             self.announce_to(targets, text, now)
 
+    def _broadcast(self, name, recipients=None, now=False, **kwargs):
+        """
+        Broadcast the message named by 'name' using the constants defined
+        in MESSAGES to the specified recipient list.  If recipients is
+        unspecified, default is all players (game channel not included).
+        Keyword args should be provided for any format substitution in this
+        particular message.
+        """
+        # Automatically provide some dictionary values
+        kwargs['channel'] = self.channel
+        kwargs['commandChar'] = str(conf.supybot.reply.whenAddressedBy.chars)[0]
+        kwargs['players'] = "%s%s%s" % \
+            (WHITE, (LGRAY + ', ' + WHITE).join(self.players), LGRAY)
+        if 'points' in kwargs:
+            kwargs['plural'] = '' if kwargs['points'] == 1 else 's'
+        formatted = Worddle.MESSAGES[name] % kwargs
+        self._broadcast_text(formatted, recipients, now)
+
     def _get_ready(self):
         self.state = Worddle.State.READY
-        self._broadcast('%sGet Ready!' % WHITE, now=True, ignore=[self.channel])
+        self._broadcast('ready', now=True)
         self._schedule_next_event()
 
     def _begin_game(self):
         self.state = Worddle.State.ACTIVE
         self.start_time = time.time()
         self.end_time = self.start_time + self.duration
-        commandChar = str(conf.supybot.reply.whenAddressedBy.chars)[0]
         self._display_board()
-        self._broadcast("%sLet's GO!%s You have %s%d%s seconds!" %
-            (WHITE, LGRAY, LYELLOW, self.duration, LGRAY),
-            now=True, ignore=[self.channel])
-        self.announce('%sGame Started!%s Use "%s%sworddle join%s" to play!' %
-                (WHITE, LGRAY, WHITE, commandChar, LGRAY))
+        self._broadcast('go', now=True, seconds=self.duration)
+        self._broadcast('startup3', [self.channel])
         self._schedule_next_event()
 
     def _schedule_next_event(self):
@@ -587,8 +601,7 @@ class Worddle(BaseGame):
 
     def _time_warning(self):
         seconds = round(self.start_time + self.duration - time.time())
-        message = '%s%d%s seconds remaining...' % (LYELLOW, seconds, LGRAY)
-        self._broadcast(message, now=True)
+        self._broadcast('warning', now=True, seconds=seconds)
         self._schedule_next_event()
 
     def _end_game(self):
@@ -603,12 +616,8 @@ class Worddle(BaseGame):
 
         # Notify players
         for result in results.player_results.values():
-            score = result.get_score()
-            self.announce_to(result.player,
-                ("%sTime's up!%s You scored %s%d%s %s! Check "
-                "%s%s%s for complete results.") %
-                (WHITE, LGRAY, LGREEN, score, LGRAY, point_str(score), WHITE,
-                self.channel, LGRAY), now=True)
+            self._broadcast('gameover', [result.player], now=True,
+                points=result.get_score())
 
         # Announce game results in channel
         for message in results.render():
@@ -635,7 +644,7 @@ class Worddle(BaseGame):
             if nick:
                 self.announce_to(nick, text, now=True)
             else:
-                self._broadcast(text, now=True)
+                self._broadcast_text(text, self.players + [self.channel], True)
 
     def _find_solutions(self, visited=None, row=0, col=0, prefix=''):
         "Discover and return the set of all solutions for the current board."
