@@ -478,6 +478,10 @@ class Worddle(BaseGame):
                 ignore=[nick])
             if self.state == Worddle.State.ACTIVE:
                 self._display_board(nick)
+                time_left = int(round(self.end_time - time.time()))
+                self.announce_to(nick,
+                    "%sLet's GO!%s You have %s%d%s seconds!" %
+                    (WHITE, LGRAY, LYELLOW, time_left, LGRAY), now=True)
             else:
                 self.announce_to(nick, 'Current Players: %s%s' %
                     (WHITE, (LGRAY + ', ' + WHITE).join(self.players)))
