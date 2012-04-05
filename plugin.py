@@ -352,9 +352,9 @@ class Worddle(BaseGame):
         'result':   ('%s%%(nick)s%s %%(verb)s %s%%(points)d%s ' +
                      'point%%(plural)s (%%(words)s)') %
                     (WHITE, LGRAY, LGREEN, LGRAY),
-        'startup': ('Starting in %s%%(seconds)d%s seconds, ' +
+        'startup': ('Starting in %%(seconds)d seconds, ' +
                      'use "%s%%(commandChar)sworddle join%s" to play!') %
-                    (LYELLOW, LGRAY, WHITE, LGRAY),
+                    (WHITE, LGRAY),
         'stopped':  'Game stopped.',
         'warning':  '%s%%(seconds)d%s seconds remaining...' % (LYELLOW, LGRAY),
         'welcome1': '--- %sNew Game%s ---' % (WHITE, LGRAY),
@@ -649,10 +649,10 @@ class Worddle(BaseGame):
         help_msgs[2] = '%s%s%s seconds left!' % \
             (LYELLOW, int(round(self.end_time - time.time())), LGRAY)
         for i, row in enumerate(self.board):
-            text = LGREEN + '  ' + '  '.join(row) + ' '
+            text = LGREEN + '   ' + '  '.join(row) + ' '
             text = text.replace('Q ', 'Qu')
             if show_help:
-                text += '      ' + help_msgs[i]
+                text += '     ' + help_msgs[i]
             text = text.rstrip()
             if nick:
                 self.announce_to(nick, text, now=True)
