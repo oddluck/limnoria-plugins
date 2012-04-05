@@ -141,7 +141,7 @@ class Wordgames(callbacks.Plugin):
     def worddle(self, irc, msgs, args, channel, command):
         """[command]
 
-        Play a Worddle game. Commands: [start|join|stop] (default: start).
+        Play a Worddle game. Commands: [start|join|stop|stats] (default: start).
         """
         delay = self.registryValue('worddleDelay')
         duration = self.registryValue('worddleDuration')
@@ -159,6 +159,14 @@ class Wordgames(callbacks.Plugin):
         elif command == 'stop':
             # Alias for @wordquit
             self._stop_game(irc, channel)
+        elif command == 'stats':
+            game = self.games.get(channel)
+            if not game or game.__class__ != Worddle:
+                irc.reply('No Worddle game available for stats.')
+            elif game.is_running():
+                irc.reply('Please wait until the game finishes.')
+            else:
+                game.stats()
         else:
             irc.reply('Unrecognized command to worddle.')
     worddle = wrap(worddle,
@@ -508,6 +516,19 @@ class Worddle(BaseGame):
             pass
         if not now:
             self._broadcast('stopped', self.players + [self.channel])
+
+    def stats(self):
+        assert self.state == Worddle.State.DONE
+        points = 0
+        for word in self.solutions:
+            points += Worddle.POINT_VALUES.get(len(word), Worddle.MAX_POINTS)
+        longest_len = len(max(self.solutions, key=len))
+        longest_words = filter(lambda w: len(w) == longest_len, self.solutions)
+        self.announce(('There were %s%d%s possible words, with total point'
+            ' value %s%d%s. The longest word%s: %s%s%s.') %
+            (WHITE, len(self.solutions), LGRAY, LGREEN, points, LGRAY,
+            ' was' if len(longest_words) == 1 else 's were',
+             LCYAN, (LGRAY + ', ' + LCYAN).join(longest_words), LGRAY))
 
     def _broadcast_text(self, text, recipients=None, now=False):
         """
