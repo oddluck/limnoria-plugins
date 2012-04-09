@@ -385,7 +385,7 @@ class Worddle(BaseGame):
                 score += Worddle.POINT_VALUES.get(len(word), Worddle.MAX_POINTS)
             return score
 
-        def render_words(self):
+        def render_words(self, longest_len=0):
             "Return the words in this result, colorized appropriately."
             words = sorted(list(self.unique) + list(self.dup))
             words_text = ''
@@ -394,6 +394,8 @@ class Worddle(BaseGame):
                     color = LCYAN
                 else:
                     color = GRAY
+                if len(word) == longest_len:
+                    word += YELLOW + '*'
                 words_text += '%s%s%s ' % (color, word, LGRAY)
             if not words_text:
                 words_text = '%s-none-%s' % (GRAY, LGRAY)
@@ -439,6 +441,7 @@ class Worddle(BaseGame):
         self.init_time = time.time()
         self.max_targets = get_max_targets(irc)
         self.solutions = self._find_solutions()
+        self.longest_len = len(max(self.solutions, key=len))
         self.starter = nick
         self.state = Worddle.State.PREGAME
         self.players = []
@@ -522,8 +525,7 @@ class Worddle(BaseGame):
         points = 0
         for word in self.solutions:
             points += Worddle.POINT_VALUES.get(len(word), Worddle.MAX_POINTS)
-        longest_len = len(max(self.solutions, key=len))
-        longest_words = filter(lambda w: len(w) == longest_len, self.solutions)
+        longest_words = filter(lambda w: len(w) == self.longest_len, self.solutions)
         self.announce(('There were %s%d%s possible words, with total point'
             ' value %s%d%s. The longest word%s: %s%s%s.') %
             (WHITE, len(self.solutions), LGRAY, LGREEN, points, LGRAY,
@@ -637,7 +639,7 @@ class Worddle(BaseGame):
                     verb = "%swins%s with" % (LGREEN, LGRAY)
             else:
                 verb = "got"
-            words_text = result.render_words()
+            words_text = result.render_words(longest_len=self.longest_len)
             self._broadcast('result', [self.channel], nick=result.player,
                     verb=verb, points=score, words=words_text)
 
