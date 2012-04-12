@@ -395,7 +395,7 @@ class Worddle(BaseGame):
                 else:
                     color = GRAY
                 if len(word) == longest_len:
-                    word += YELLOW + '*'
+                    word += LYELLOW + '*'
                 words_text += '%s%s%s ' % (color, word, LGRAY)
             if not words_text:
                 words_text = '%s-none-%s' % (GRAY, LGRAY)
