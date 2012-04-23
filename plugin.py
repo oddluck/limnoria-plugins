@@ -433,15 +433,13 @@ class Worddle(BaseGame):
         # See tech note in the Wordgames class.
         self.parent = super(Worddle, self)
         self.parent.__init__(words, irc, channel)
-        self._generate_board()
-        self._generate_wordtrie()
+        self.board = self._generate_board()
         self.delay = delay
         self.duration = duration
         self.event_name = 'Worddle.%d' % id(self)
         self.init_time = time.time()
         self.max_targets = get_max_targets(irc)
-        self.solutions = self._find_solutions()
-        self.longest_len = len(max(self.solutions, key=len))
+        self.longest_len = len(max(self.board.solutions, key=len))
         self.starter = nick
         self.state = Worddle.State.PREGAME
         self.players = []
@@ -459,8 +457,8 @@ class Worddle(BaseGame):
             self._broadcast('chat', self.players, nick=nick, text=text)
             return
         guesses = set(map(str.lower, text.split()))
-        accepted = filter(lambda s: s in self.solutions, guesses)
-        rejected = filter(lambda s: s not in self.solutions, guesses)
+        accepted = filter(lambda s: s in self.board.solutions, guesses)
+        rejected = filter(lambda s: s not in self.board.solutions, guesses)
         if len(accepted) > 3:
             message = '%sGreat!%s' % (LGREEN, WHITE)
         elif len(accepted) > 0:
@@ -484,7 +482,7 @@ class Worddle(BaseGame):
             self.players.append(nick)
             self.player_answers[nick] = set()
             if self.state == Worddle.State.ACTIVE:
-                self._display_board(nick, show_help=True)
+                self._display_board(nick)
             else:
                 self._broadcast('players', [nick])
             # Keep at least 5 seconds on the pre-game clock if someone joins
@@ -503,7 +501,7 @@ class Worddle(BaseGame):
         pass
 
     def solve(self):
-        self.announce('Solutions: ' + ' '.join(sorted(self.solutions)))
+        self.announce('Solutions: ' + ' '.join(sorted(self.board.solutions)))
 
     def start(self):
         self.parent.start()
@@ -523,12 +521,13 @@ class Worddle(BaseGame):
     def stats(self):
         assert self.state == Worddle.State.DONE
         points = 0
-        for word in self.solutions:
+        for word in self.board.solutions:
             points += Worddle.POINT_VALUES.get(len(word), Worddle.MAX_POINTS)
-        longest_words = filter(lambda w: len(w) == self.longest_len, self.solutions)
+        longest_words = filter(lambda w: len(w) == self.longest_len,
+            self.board.solutions)
         self.announce(('There were %s%d%s possible words, with total point'
             ' value %s%d%s. The longest word%s: %s%s%s.') %
-            (WHITE, len(self.solutions), LGRAY, LGREEN, points, LGRAY,
+            (WHITE, len(self.board.solutions), LGRAY, LGREEN, points, LGRAY,
             ' was' if len(longest_words) == 1 else 's were',
              LCYAN, (LGRAY + ', ' + LCYAN).join(longest_words), LGRAY))
 
@@ -571,7 +570,7 @@ class Worddle(BaseGame):
         self.state = Worddle.State.ACTIVE
         self.start_time = time.time()
         self.end_time = self.start_time + self.duration
-        self._display_board(show_help=True)
+        self._display_board()
         self._schedule_next_event()
 
     def _schedule_next_event(self):
@@ -643,34 +642,59 @@ class Worddle(BaseGame):
             self._broadcast('result', [self.channel], nick=result.player,
                     verb=verb, points=score, words=words_text)
 
-    def _display_board(self, nick=None, show_help=False):
+    def _display_board(self, nick=None):
         "Display the board to everyone or just one nick if specified."
         commandChar = str(conf.supybot.reply.whenAddressedBy.chars)[0]
         help_msgs = [''] * Worddle.BOARD_SIZE
         help_msgs[1] = '%sLet\'s GO!' % (WHITE)
         help_msgs[2] = '%s%s%s seconds left!' % \
             (LYELLOW, int(round(self.end_time - time.time())), LGRAY)
-        for i, row in enumerate(self.board):
-            text = LGREEN + '   ' + '  '.join(row) + ' '
-            text = text.replace('Q ', 'Qu')
-            if show_help:
-                text += '     ' + help_msgs[i]
-            text = text.rstrip()
+        for row, help_msg in zip(self.board.render(), help_msgs):
+            text = '   %s     %s' % (row, help_msg)
             if nick:
                 self.announce_to(nick, text, now=True)
             else:
                 self._broadcast_text(text, self.players + [self.channel], True)
 
+    def _generate_board(self):
+        "Generate several boards and return the most bountiful board."
+        attempts = 5
+        wordtrie = Trie()
+        map(wordtrie.add, self.words)
+        boards = [WorddleBoard(wordtrie, Worddle.BOARD_SIZE)
+            for i in range(0, attempts)]
+        board_quality = lambda b: len(b.solutions)
+        return max(boards, key=board_quality)
+
+class WorddleBoard(object):
+    "Represents the board in a Worddle game."
+
+    def __init__(self, wordtrie, n):
+        "Generate a new n x n Worddle board."
+        self.size = n
+        self.wordtrie = wordtrie
+        self.rows = self._generate_rows()
+        self.solutions = self._find_solutions()
+
+    def render(self):
+        "Render the board for display in IRC as a list of strings."
+        result = []
+        for row in self.rows:
+            text = LGREEN + '  '.join(row) + ' ' # Last space pad in case of Qu
+            text = text.replace('Q ', 'Qu')
+            result.append(text)
+        return result
+
     def _find_solutions(self, visited=None, row=0, col=0, prefix=''):
         "Discover and return the set of all solutions for the current board."
         result = set()
         if visited == None:
-            for row in range(0, Worddle.BOARD_SIZE):
-                for col in range(0, Worddle.BOARD_SIZE):
+            for row in range(0, self.size):
+                for col in range(0, self.size):
                     result.update(self._find_solutions([], row, col, ''))
         else:
             visited = visited + [(row, col)]
-            current = prefix + self.board[row][col].lower()
+            current = prefix + self.rows[row][col].lower()
             if current[-1] == 'q': current += 'u'
             node = self.wordtrie.find(current)
             if node:
@@ -683,28 +707,24 @@ class Worddle(BaseGame):
                 for offset in offsets:
                     point = (row + offset[0], col + offset[1])
                     if point in visited: continue
-                    if point[0] < 0 or point[0] >= Worddle.BOARD_SIZE: continue
-                    if point[1] < 0 or point[1] >= Worddle.BOARD_SIZE: continue
+                    if point[0] < 0 or point[0] >= self.size: continue
+                    if point[1] < 0 or point[1] >= self.size: continue
                     result.update(self._find_solutions(
                         visited, point[0], point[1], current))
         return result
 
-    def _generate_board(self):
+    def _generate_rows(self):
         "Randomly generate a Worddle board (a list of lists)."
         letters = reduce(add, (map(mul,
                 Worddle.FREQUENCY_TABLE.keys(),
                 Worddle.FREQUENCY_TABLE.values())))
-        self.board = []
-        values = random.sample(letters, Worddle.BOARD_SIZE**2)
-        for i in range(0, Worddle.BOARD_SIZE):
-            start = Worddle.BOARD_SIZE * i
-            end = start + Worddle.BOARD_SIZE
-            self.board.append(values[start:end])
-
-    def _generate_wordtrie(self):
-        "Populate self.wordtrie with the dictionary words."
-        self.wordtrie = Trie()
-        map(self.wordtrie.add, self.words)
+        rows = []
+        values = random.sample(letters, self.size**2)
+        for i in range(0, self.size):
+            start = self.size * i
+            end = start + self.size
+            rows.append(values[start:end])
+        return rows
 
 class WordChain(BaseGame):
     "Base class for word-chain games like WordShrink and WordTwist."
