@@ -763,12 +763,16 @@ class WordChain(BaseGame):
         self.build_word_map()
 
     def start(self):
-        self.parent.start()
-        happy = False
         # Build a puzzle
-        while not happy:
+        attempts = 100000 # Prevent infinite loops
+        while attempts:
             self.solution = []
             while len(self.solution) < self.solution_length:
+                attempts -= 1
+                if attempts == 0:
+                    raise WordgamesError(('Unable to generate %s puzzle. This' +
+                        ' is either a bug, or the word file is too small.') %
+                        self.__class__.__name__)
                 self.solution = [random.choice(self.words)]
                 for i in range(1, self.solution_length):
                     values = self.word_map[self.solution[-1]]
@@ -787,12 +791,16 @@ class WordChain(BaseGame):
                 if self.is_trivial_solution(solution):
                     happy = False
                     break
+            if happy:
+                break
+        if not happy:
+            raise WordgamesError(('Unable to generate %s puzzle meeting the ' +
+                'game parameters. This is probably a bug.') %
+                self.__class__.__name__)
+
+        # Start the game
         self.show()
-        # For debugging purposes
-        solution_set = set(map(lambda s: self._join_words(s), self.solutions))
-        if len(solution_set) != len(self.solutions):
-            info('Oops, only %d of %d solutions are unique.' %
-                    (len(solution_set), len(self.solutions)))
+        self.parent.start()
 
     def show(self):
         words = [self.solution[0]]
