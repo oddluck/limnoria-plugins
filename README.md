@@ -28,11 +28,11 @@ The following commands are exposed by this plugin:
 
 `wordshrink [difficulty]`
 
-> Start a new WordShrink game.  Difficulty values: [easy] medium hard evil
+> Start a new WordShrink game.  Difficulty values: easy [medium] hard evil
 
 `wordtwist [difficulty]`
 
-> Start a new WordTwist game.  Difficulty values: [easy] medium hard evil
+> Start a new WordTwist game.  Difficulty values: easy [medium] hard evil
 
 `wordquit`
 

@@ -175,7 +175,7 @@ class Wordgames(callbacks.Plugin):
     wordle = worddle
 
     def wordshrink(self, irc, msgs, args, channel, difficulty):
-        """[easy|medium|hard|evil] (default: easy)
+        """[easy|medium|hard|evil] (default: medium)
 
         Start a word-shrink game. Make new words by dropping one letter from
         the previous word and rearranging the remaining letters.
@@ -185,10 +185,10 @@ class Wordgames(callbacks.Plugin):
         else:
             self._start_game(WordShrink, irc, channel, difficulty)
     wordshrink = wrap(wordshrink,
-        ['channel', optional('somethingWithoutSpaces', 'easy')])
+        ['channel', optional('somethingWithoutSpaces', 'medium')])
 
     def wordtwist(self, irc, msgs, args, channel, difficulty):
-        """[easy|medium|hard|evil] (default: easy)
+        """[easy|medium|hard|evil] (default: medium)
 
         Start a word-twist game. Make new words by changing one letter in
         the previous word.
@@ -198,7 +198,7 @@ class Wordgames(callbacks.Plugin):
         else:
             self._start_game(WordTwist, irc, channel, difficulty)
     wordtwist = wrap(wordtwist,
-        ['channel', optional('somethingWithoutSpaces', 'easy')])
+        ['channel', optional('somethingWithoutSpaces', 'medium')])
 
     def wordquit(self, irc, msgs, args, channel):
         """(takes no arguments)
