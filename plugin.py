@@ -513,6 +513,7 @@ class Worddle(BaseGame):
 
     def stop(self, now=False):
         self.parent.stop()
+        self.state = Worddle.State.DONE
         try:
             schedule.removeEvent(self.event_name)
         except KeyError:
