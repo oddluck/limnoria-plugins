@@ -908,10 +908,10 @@ class WordShrink(WordChain):
     def __init__(self, words, irc, channel, difficulty):
         assert difficulty in ['easy', 'medium', 'hard', 'evil'], "Bad mojo."
         settings = {
-            'easy':   WordChain.Settings([4], range(3, 10), range(10, 100)),
-            'medium': WordChain.Settings([5], range(4, 12), range(5, 12)),
-            'hard':   WordChain.Settings([6], range(5, 14), range(2, 5)),
-            'evil':   WordChain.Settings([7], range(6, 16), range(1, 3)),
+            'easy':   WordChain.Settings([4], range(3, 9), range(15, 100)),
+            'medium': WordChain.Settings([5], range(4, 10), range(8, 25)),
+            'hard':   WordChain.Settings([6], range(4, 12), range(4, 12)),
+            'evil':   WordChain.Settings([7], range(4, 15), range(1, 10)),
         }
         super(WordShrink, self).__init__(
             words, irc, channel, settings[difficulty])
