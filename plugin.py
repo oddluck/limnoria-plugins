@@ -241,6 +241,8 @@ class Wordgames(callbacks.Plugin):
                 self.games[channel] = Game(words, irc, channel, *args, **kwargs)
                 self.games[channel].start()
         except WordgamesError, e:
+            # Get rid of the game in case it's in an indeterminate state
+            del self.games[channel]
             irc.reply('Wordgames error: %s' % str(e))
             irc.reply('Please check the configuration and try again. ' +
                       'See README for help.')
