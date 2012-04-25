@@ -391,17 +391,20 @@ class Worddle(BaseGame):
             "Return the words in this result, colorized appropriately."
             words = sorted(list(self.unique) + list(self.dup))
             words_text = ''
+            last_color = LGRAY
             for word in words:
-                if word in self.unique:
-                    color = LCYAN
-                else:
-                    color = GRAY
+                color = LCYAN if word in self.unique else GRAY
+                if color != last_color:
+                    words_text += color
+                    last_color = color
                 if len(word) == longest_len:
                     word += LYELLOW + '*'
-                words_text += '%s%s%s ' % (color, word, LGRAY)
+                    last_color = LYELLOW
+                words_text += '%s ' % word
             if not words_text:
-                words_text = '%s-none-%s' % (GRAY, LGRAY)
-            return words_text.strip()
+                words_text = '%s-none-' % (GRAY)
+            words_text = words_text.strip() + LGRAY
+            return words_text
 
     class Results:
         "Represents results for all players."
