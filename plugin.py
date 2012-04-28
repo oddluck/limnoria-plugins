@@ -678,9 +678,8 @@ class WorddleBoard(object):
     def __init__(self, wordtrie, n):
         "Generate a new n x n Worddle board."
         self.size = n
-        self.wordtrie = wordtrie
         self.rows = self._generate_rows()
-        self.solutions = self._find_solutions()
+        self.solutions = self._find_solutions(wordtrie)
 
     def render(self):
         "Render the board for display in IRC as a list of strings."
@@ -691,20 +690,21 @@ class WorddleBoard(object):
             result.append(text)
         return result
 
-    def _find_solutions(self, visited=None, row=0, col=0, prefix=''):
+    def _find_solutions(self, wordtrie, visited=None, row=0, col=0, prefix=''):
         "Discover and return the set of all solutions for the current board."
         result = set()
         if visited == None:
             for row in range(0, self.size):
                 for col in range(0, self.size):
-                    result.update(self._find_solutions([], row, col, ''))
+                    result.update(
+                        self._find_solutions(wordtrie, [], row, col, ''))
         else:
             visited = visited + [(row, col)]
             current = prefix + self.rows[row][col].lower()
             if current[-1] == 'q': current += 'u'
-            node = self.wordtrie.find(current)
+            node = wordtrie.find_prefix(current)
             if node:
-                if node.complete and len(current) > 2:
+                if node['*'] and len(current) > 2:
                     result.add(current)
                 # Explore all 8 directions out from here
                 offsets = [(-1, -1), (-1, 0), (-1, 1),
@@ -716,7 +716,7 @@ class WorddleBoard(object):
                     if point[0] < 0 or point[0] >= self.size: continue
                     if point[1] < 0 or point[1] >= self.size: continue
                     result.update(self._find_solutions(
-                        visited, point[0], point[1], current))
+                        wordtrie, visited, point[0], point[1], current))
         return result
 
     def _generate_rows(self):
