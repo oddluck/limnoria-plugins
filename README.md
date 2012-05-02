@@ -21,10 +21,13 @@ The following commands are exposed by this plugin:
 
 `worddle [start|join|stop|stats]`
 
-> Start a new Worddle game, join an existing game, or stop the current game.
-> `start` is the default if nothing is specified.  `stop` is an alias for
-> @wordquit, added for ease of use.  Use 'stats' to see a few bits of
-> information about the board after the game.
+> Play a Worddle game.  Use the following subcommands:
+>
+>     start    (Default) Start a new Worddle game, optional arguments:
+>         --min=N    minimum acceptable word length (overrides config)
+>     join     Join a running game
+>     stop     Stop a currently running game (alias for @wordquit)
+>     stats    Display some post-game statistics about the board
 
 `wordshrink [difficulty]`
 
@@ -145,6 +148,12 @@ Configuration Variables
 > players can submit guesses.
 >
 > Default: `90`
+
+`plugins.Wordgames.worddleMinLength`
+
+> The minimum length of a word that will be accepted in Worddle.
+>
+> Default: `3`
 
 A Technical Note About Worddle
 ------------------------------

@@ -137,13 +137,12 @@ class Wordgames(callbacks.Plugin):
                 irc.reply('No game is currently running.')
         wordsolve = wrap(wordsolve, ['channel'])
 
-    def worddle(self, irc, msgs, args, channel, command):
+    def worddle(self, irc, msgs, args, channel, command, extra_args):
         """[command]
 
         Play a Worddle game. Commands: [start|join|stop|stats] (default: start).
         """
-        delay = self.registryValue('worddleDelay')
-        duration = self.registryValue('worddleDuration')
+        extra_args = extra_args.split()
         if command == 'join':
             game = self.games.get(channel)
             if game and game.is_running():
@@ -154,7 +153,11 @@ class Wordgames(callbacks.Plugin):
             else:
                 irc.reply('No game is currently running.')
         elif command == 'start':
-            self._start_game(Worddle, irc, channel, msgs.nick, delay, duration)
+            delay = self.registryValue('worddleDelay')
+            duration = self.registryValue('worddleDuration')
+            min_length = self.registryValue('worddleMinLength')
+            self._start_game(Worddle, irc, channel, msgs.nick,
+                delay, duration, min_length, extra_args)
         elif command == 'stop':
             # Alias for @wordquit
             self._stop_game(irc, channel)
@@ -169,7 +172,8 @@ class Wordgames(callbacks.Plugin):
         else:
             irc.reply('Unrecognized command to worddle.')
     worddle = wrap(worddle,
-        ['channel', optional('somethingWithoutSpaces', 'start')])
+        ['channel', optional('somethingWithoutSpaces', 'start'),
+         optional('text', '')])
     # Alias for misspelling of the game name
     wordle = worddle
 
@@ -433,16 +437,19 @@ class Worddle(BaseGame):
         def sorted_results(self):
             return sorted(self.player_results.values(), reverse=True)
 
-    def __init__(self, words, irc, channel, nick, delay, duration):
+    def __init__(self, words, irc, channel, nick, delay, duration, min_length,
+            extra_args):
         # See tech note in the Wordgames class.
         self.parent = super(Worddle, self)
         self.parent.__init__(words, irc, channel)
-        self.board = self._generate_board()
         self.delay = delay
         self.duration = duration
+        self.min_length = min_length
+        self.max_targets = get_max_targets(irc)
+        self._handle_args(extra_args)
+        self.board = self._generate_board()
         self.event_name = 'Worddle.%d' % id(self)
         self.init_time = time.time()
-        self.max_targets = get_max_targets(irc)
         self.longest_len = len(max(self.board.solutions, key=len))
         self.starter = nick
         self.state = Worddle.State.PREGAME
@@ -566,6 +573,13 @@ class Worddle(BaseGame):
         formatted = Worddle.MESSAGES[name] % kwargs
         self._broadcast_text(formatted, recipients, now)
 
+    def _handle_args(self, extra_args):
+        for arg in extra_args:
+            if arg.startswith('--min='):
+                self.min_length = int(arg[6:])
+            else:
+                raise WordgamesError('Unrecognized argument: %s' % arg)
+
     def _get_ready(self):
         self.state = Worddle.State.READY
         self._broadcast('ready', now=True)
@@ -666,7 +680,7 @@ class Worddle(BaseGame):
         attempts = 5
         wordtrie = Trie()
         map(wordtrie.add, self.words)
-        boards = [WorddleBoard(wordtrie, Worddle.BOARD_SIZE)
+        boards = [WorddleBoard(wordtrie, Worddle.BOARD_SIZE, self.min_length)
             for i in range(0, attempts)]
         board_quality = lambda b: len(b.solutions)
         return max(boards, key=board_quality)
@@ -674,9 +688,10 @@ class Worddle(BaseGame):
 class WorddleBoard(object):
     "Represents the board in a Worddle game."
 
-    def __init__(self, wordtrie, n):
+    def __init__(self, wordtrie, n, min_length):
         "Generate a new n x n Worddle board."
         self.size = n
+        self.min_length = min_length
         self.rows = self._generate_rows()
         self.solutions = self._find_solutions(wordtrie)
 
@@ -703,7 +718,7 @@ class WorddleBoard(object):
             if current[-1] == 'q': current += 'u'
             node = wordtrie.find_prefix(current)
             if node:
-                if node['*'] and len(current) > 2:
+                if node['*'] and len(current) >= self.min_length:
                     result.add(current)
                 # Explore all 8 directions out from here
                 offsets = [(-1, -1), (-1, 0), (-1, 1),

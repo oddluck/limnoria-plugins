@@ -54,4 +54,9 @@ conf.registerGlobalValue(Wordgames, 'worddleDuration',
     registry.NonNegativeInteger(90,
                                 'Duration (in seconds) of a Worddle game ' +
                                 '(not including the initial delay).'))
+
+conf.registerGlobalValue(Wordgames, 'worddleMinLength',
+    registry.PositiveInteger(3, 'Minimum length of an acceptable word in a ' +
+                             'Worddle game.'))
+
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
