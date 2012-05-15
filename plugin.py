@@ -137,27 +137,30 @@ class Wordgames(callbacks.Plugin):
                 irc.reply('No game is currently running.')
         wordsolve = wrap(wordsolve, ['channel'])
 
-    def worddle(self, irc, msgs, args, channel, command, extra_args):
+    def worddle(self, irc, msgs, args, channel, command):
         """[command]
 
-        Play a Worddle game. Commands: [start|join|stop|stats] (default: start).
+        Play a Worddle game. Commands: [easy|medium|hard|evil | stop|stats]
+        (default: easy).
         """
-        extra_args = extra_args.split()
-        if command == 'join':
+        level = None
+        if command in ['easy', 'medium', 'hard', 'evil']:
+            level = command
+            command = None
+
+        if not command:
             game = self.games.get(channel)
             if game and game.is_running():
                 if game.__class__ == Worddle:
-                    game.join(msgs.nick)
+                    game.join(msgs.nick, level)
                 else:
                     irc.reply('Current word game is not Worddle!')
             else:
-                irc.reply('No game is currently running.')
-        elif command == 'start':
-            delay = self.registryValue('worddleDelay')
-            duration = self.registryValue('worddleDuration')
-            min_length = self.registryValue('worddleMinLength')
-            self._start_game(Worddle, irc, channel, msgs.nick,
-                delay, duration, min_length, extra_args)
+                delay = self.registryValue('worddleDelay')
+                duration = self.registryValue('worddleDuration')
+                min_length = self.registryValue('worddleMinLength')
+                self._start_game(Worddle, irc, channel, msgs.nick,
+                    delay, duration, min_length, level)
         elif command == 'stop':
             # Alias for @wordquit
             self._stop_game(irc, channel)
@@ -172,8 +175,8 @@ class Wordgames(callbacks.Plugin):
         else:
             irc.reply('Unrecognized command to worddle.')
     worddle = wrap(worddle,
-        ['channel', optional('somethingWithoutSpaces', 'start'),
-         optional('text', '')])
+        ['channel', optional(('literal',
+            ['easy', 'medium', 'hard', 'evil', 'stop', 'stats']))])
     # Alias for misspelling of the game name
     wordle = worddle
 
@@ -358,13 +361,15 @@ class Worddle(BaseGame):
                      'point%%(plural)s (%%(words)s)') %
                     (WHITE, LGRAY, LGREEN, LGRAY),
         'startup': ('Starting in %%(seconds)d seconds, ' +
-                     'use "%s%%(commandChar)sworddle join%s" to play!') %
+                     'use "%s%%(commandChar)sworddle%s" to play!') %
                     (WHITE, LGRAY),
         'stopped':  'Game stopped.',
         'warning':  '%s%%(seconds)d%s seconds remaining...' % (LYELLOW, LGRAY),
-        'welcome1': '--- %sNew Game%s ---' % (WHITE, LGRAY),
+        'welcome1': '--- %sNew Game %%(min_msg)s%s---' % (WHITE, LGRAY),
         'welcome2': ('%s%%(nick)s%s, write your answers here, e.g.: ' +
                      'cat dog ...') % (WHITE, LGRAY),
+        'ignorelevel': '%s(Joined existing game, ignored \'%s%%(level)s%s\')'
+                        % (GRAY, LGRAY, GRAY),
     }
 
     class State:
@@ -438,15 +443,16 @@ class Worddle(BaseGame):
             return sorted(self.player_results.values(), reverse=True)
 
     def __init__(self, words, irc, channel, nick, delay, duration, min_length,
-            extra_args):
+            level):
         # See tech note in the Wordgames class.
         self.parent = super(Worddle, self)
         self.parent.__init__(words, irc, channel)
         self.delay = delay
         self.duration = duration
         self.min_length = min_length
+        self.min_msg = ''
         self.max_targets = get_max_targets(irc)
-        self._handle_args(extra_args)
+        self._handle_level(level)
         self.board = self._generate_board()
         self.event_name = 'Worddle.%d' % id(self)
         self.init_time = time.time()
@@ -483,11 +489,15 @@ class Worddle(BaseGame):
             message += ' (not accepted: %s)' % ' '.join(sorted(rejected))
         self.send_to(nick, message)
 
-    def join(self, nick):
+    def join(self, nick, level=None):
         assert self.is_running()
         assert self.state != Worddle.State.DONE
         if nick not in self.players:
-            self._broadcast('welcome1', [nick], now=True, nick=nick)
+            self._broadcast('welcome1', [nick], now=True,
+                    min_msg=self.min_msg)
+            if level:
+                self._broadcast('ignorelevel', [nick], now=True, nick=nick,
+                        level=level)
             self._broadcast('welcome2', [nick], now=True, nick=nick)
             self._broadcast('joined', self.players, nick=nick)
             self.players.append(nick)
@@ -573,12 +583,20 @@ class Worddle(BaseGame):
         formatted = Worddle.MESSAGES[name] % kwargs
         self._broadcast_text(formatted, recipients, now)
 
-    def _handle_args(self, extra_args):
-        for arg in extra_args:
-            if arg.startswith('--min='):
-                self.min_length = int(arg[6:])
-            else:
-                raise WordgamesError('Unrecognized argument: %s' % arg)
+    def _handle_level(self, level):
+        if level == None:
+            return
+        elif level == 'easy':
+            self.min_length = 3
+        elif level == 'medium':
+            self.min_length = 4
+        elif level == 'hard':
+            self.min_length = 5
+        elif level == 'evil':
+            self.min_length = 6
+        else:
+            raise WordgamesError('Unrecognized level: %s' % level)
+        self.min_msg = '(min: %s) ' % self.min_length
 
     def _get_ready(self):
         self.state = Worddle.State.READY
