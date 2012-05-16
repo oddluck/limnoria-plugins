@@ -19,13 +19,19 @@ Commands
 
 The following commands are exposed by this plugin:
 
-`worddle [start|join|stop|stats]`
+`worddle [easy|medium|hard|evil | stop|stats]`
 
-> Play a Worddle game.  Use the following subcommands:
+> Play a Worddle game.  With no specified command, a default game
+> will start (default is set in the config, usually 'easy' or a
+> min word length of 3). If a game is already started, you will join
+> the game in progress.
 >
->     start    (Default) Start a new Worddle game, optional arguments:
->         --min=N    minimum acceptable word length (overrides config)
->     join     Join a running game
+> In addition, you may Use the following subcommands:
+>
+>     easy     minimum acceptable word length: 3 (overrides config)
+>     medium   minimum acceptable word length: 4      "       "
+>     hard     minimum acceptable word length: 5      "       "
+>     evil     minimum acceptable word length: 6      "       "
 >     stop     Stop a currently running game (alias for @wordquit)
 >     stats    Display some post-game statistics about the board
 
@@ -60,7 +66,7 @@ where the game was started.
 To be a valid guess, words must:
 
 * be made of adjacent letters on the board (in all 8 directions, diagonals ok)
-* be at least 3 letters in length
+* be at least 3 letters in length (or 4, or 5, etc. depending on the level)
 * appear in the dictionary file.
 
 At the end of the game, if a word was found by multiple players, it is not
