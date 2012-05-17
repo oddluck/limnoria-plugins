@@ -21,12 +21,11 @@ The following commands are exposed by this plugin:
 
 `worddle [easy|medium|hard|evil | stop|stats]`
 
-> Play a Worddle game.  With no specified command, a default game
-> will start (default is set in the config, usually 'easy' or a
-> min word length of 3). If a game is already started, you will join
-> the game in progress.
+> Play a Worddle game.  With no argument, a new game will start with the
+> default difficulty (see worddleDifficulty in the Configuration section).
+> If a game is already started, you will join the game in progress.
 >
-> In addition, you may Use the following subcommands:
+> In addition, you may use the following subcommands:
 >
 >     easy     minimum acceptable word length: 3 (overrides config)
 >     medium   minimum acceptable word length: 4      "       "
@@ -155,11 +154,11 @@ Configuration Variables
 >
 > Default: `90`
 
-`plugins.Wordgames.worddleMinLength`
+`plugins.Wordgames.worddleDifficulty`
 
-> The minimum length of a word that will be accepted in Worddle.
+> The default difficulty for a Worddle game.
 >
-> Default: `3`
+> Default: `easy` (words must be 3 letters or longer)
 
 A Technical Note About Worddle
 ------------------------------
