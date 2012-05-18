@@ -392,6 +392,7 @@ class Worddle(BaseGame):
                      'use "%s%%(commandChar)sworddle%s" to play!') %
                     (WHITE, LGRAY),
         'stopped':  'Game stopped.',
+        'stopped2':  ('%s::: Game Stopped :::%s') % (LRED, LGRAY),
         'warning':  '%s%%(seconds)d%s seconds remaining...' % (LYELLOW, LGRAY),
         'welcome1': ('%s::: New Game :::%s (%s%%(difficulty)s%s: ' +
                      '%s%%(min_length)d%s letters or longer)') %
@@ -562,7 +563,8 @@ class Worddle(BaseGame):
         except KeyError:
             pass
         if not now:
-            self._broadcast('stopped', self.players + [self.channel])
+            self._broadcast('stopped', [self.channel])
+            self._broadcast('stopped2', self.players)
 
     def stats(self):
         assert self.state == Worddle.State.DONE
@@ -684,13 +686,12 @@ class Worddle(BaseGame):
               player_results[1].get_score() == high_score
         for result in player_results:
             score = result.get_score()
+            verb = "got"
             if score == high_score:
                 if tie:
                     verb = "%stied%s with" % (LYELLOW, LGRAY)
-                else:
+                elif high_score > 0:
                     verb = "%swins%s with" % (LGREEN, LGRAY)
-            else:
-                verb = "got"
             words_text = result.render_words(longest_len=self.longest_len)
             self._broadcast('result', [self.channel], nick=result.player,
                     verb=verb, points=score, words=words_text)
