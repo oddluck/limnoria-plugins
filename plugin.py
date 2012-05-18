@@ -392,6 +392,7 @@ class Worddle(BaseGame):
                      'use "%s%%(commandChar)sworddle%s" to play!') %
                     (WHITE, LGRAY),
         'stopped':  'Game stopped.',
+        'stopped2':  ('%s::: Game Stopped :::%s') % (LRED, LGRAY),
         'warning':  '%s%%(seconds)d%s seconds remaining...' % (LYELLOW, LGRAY),
         'welcome1': ('%s::: New Game :::%s (%s%%(difficulty)s%s: ' +
                      '%s%%(min_length)d%s letters or longer)') %
@@ -562,7 +563,8 @@ class Worddle(BaseGame):
         except KeyError:
             pass
         if not now:
-            self._broadcast('stopped', self.players + [self.channel])
+            self._broadcast('stopped', [self.channel])
+            self._broadcast('stopped2', self.players)
 
     def stats(self):
         assert self.state == Worddle.State.DONE
