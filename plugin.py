@@ -686,13 +686,12 @@ class Worddle(BaseGame):
               player_results[1].get_score() == high_score
         for result in player_results:
             score = result.get_score()
+            verb = "got"
             if score == high_score:
                 if tie:
                     verb = "%stied%s with" % (LYELLOW, LGRAY)
-                else:
+                elif high_score > 0:
                     verb = "%swins%s with" % (LGREEN, LGRAY)
-            else:
-                verb = "got"
             words_text = result.render_words(longest_len=self.longest_len)
             self._broadcast('result', [self.channel], nick=result.player,
                     verb=verb, points=score, words=words_text)
