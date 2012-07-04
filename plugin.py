@@ -72,14 +72,16 @@ class UrbanDictionary(callbacks.Plugin):
         # data['list'] = data['list'][:1]  # only print 2 results 
 
         if result_type != None and result_type == "exact" and len(jsondata['list']) > 0: 
-            output = term + ": "
-            outputdefs = string.join([item['definition'] + " [ex:] " + item['example'] for item in jsondata['list']], " | ")
-            output += outputdefs
+            output = ircutils.mircColor(term, 'red') + ": "
+            outdef = string.join([item['definition'].encode('utf-8') + " " + self._bu("[ex:]") + " " + item['example'] + " " + self._bu("[/ex]") + " " for item in jsondata['list']], " | ")
+            output += outdef
             irc.reply(output)
 
         elif result_type == "no_results":
-            output = term + ": not found. Related words: "
-            output += string.join([item['term'].encode('utf-8') + " " for item in jsondata['list']], " | ")
+            output = ircutils.mircColor(term, 'red') + ": not found. "
+            output += ircutils.bold("Related words:") + " " 
+            outrelated = string.join([item['term'].encode('utf-8') + " " for item in jsondata['list']], " | ")
+            output += outrelated
             irc.reply(output)
 
         else:
