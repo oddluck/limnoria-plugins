@@ -58,7 +58,7 @@ class UrbanDictionary(callbacks.Plugin):
 
         try:
             response_data = response.read()
-            jsondata = json.loads(response_data.replace(r'\r', ''))
+            jsondata = json.loads(response_data.replace(r'\r', '').replace(r'\n', ''))
             #jsondata = json.loads(response_data)
         except:
             irc.reply(ircutils.mircColor("ERROR:", 'red') + " Failed to read and parse JSON response data.")
@@ -72,8 +72,9 @@ class UrbanDictionary(callbacks.Plugin):
         # data['list'] = data['list'][:1]  # only print 2 results 
 
         if result_type != None and result_type == "exact" and len(jsondata['list']) > 0: 
-            output = term.replace("'","") + ": "
-            output += string.join([item['definition'] + " " + item['example'] for item in jsondata['list']], " | ")
+            output = term + ": "
+            outputdefs = string.join([item['definition'] + " [ex:] " + item['example'] for item in jsondata['list']], " | ")
+            output += outputdefs
             irc.reply(output)
 
         elif result_type == "no_results":
