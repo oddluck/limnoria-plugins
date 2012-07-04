@@ -73,7 +73,7 @@ class UrbanDictionary(callbacks.Plugin):
 
         if result_type != None and result_type == "exact" and len(jsondata['list']) > 0: 
             output = ircutils.mircColor(term, 'red') + ": "
-            outdef = string.join([item['definition'].encode('utf-8') + " " + self._bu("[ex:]") + " " + item['example'] + " " + self._bu("[/ex]") + " " for item in jsondata['list']], " | ")
+            outdef = string.join([item['definition'] + " " + self._bu("[ex:]") + " " + item['example'] + " " + self._bu("[/ex]") + " " for item in jsondata['list']], " | ")
             output += outdef
             irc.reply(output)
 
