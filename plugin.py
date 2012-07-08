@@ -40,7 +40,6 @@ class UrbanDictionary(callbacks.Plugin):
         Fetches definition for term on UrbanDictionary.com
         """
 
-        # build url based on sport with key.
         url = 'http://api.urbandictionary.com/v0/define?term=%s' % (urllib.quote(term))
 
         #self.log.info(url)
@@ -50,38 +49,31 @@ class UrbanDictionary(callbacks.Plugin):
             request = urllib2.Request(url)
             response = urllib2.urlopen(request)
         except URLError, e:
-            irc.reply(ircutils.mircColor("ERROR:", 'red') + " fetching bettingexpress.com URL: %s" % (e.reason))
+            irc.reply(ircutils.mircColor("ERROR:", 'red') + " fetching URL: %s" % (e.reason))
             return
         except HTTPError, e:
-            irc.reply(ircutils.mircColor("ERROR:", 'red') + " fetching bettingexpress.com URL: %s" % (e.code))
+            irc.reply(ircutils.mircColor("ERROR:", 'red') + " fetching URL: %s" % (e.code))
             return
 
-        try:
-            response_data = response.read()
-            jsondata = json.loads(response_data.replace(r'\r', '').replace(r'\n', ''))
-            #jsondata = json.loads(response_data)
-        except:
-            irc.reply(ircutils.mircColor("ERROR:", 'red') + " Failed to read and parse JSON response data.")
-            return
+        response_data = response.read().replace(r'\r', '').replace(r'\n', '')
+        jsondata = json.loads(response_data)
 
         definitions = jsondata.get('list', None) 
         result_type = jsondata.get('result_type', None) # exact, no_results
         has_related_words = jsondata.get('has_related_words', None) # false, true
         total = jsondata.get('total', None)
 
-        # data['list'] = data['list'][:1]  # only print 2 results 
-
         if result_type != None and result_type == "exact" and len(jsondata['list']) > 0: 
             output = ircutils.mircColor(term, 'red') + ": "
             outdef = string.join([item['definition'] + " " + self._bu("[ex:]") + " " + item['example'] + " " + self._bu("[/ex]") + " " for item in jsondata['list']], " | ")
-            output += outdef.encode('utf8')
+            output += outdef.encode('utf-8')
             irc.reply(output)
 
         elif result_type == "no_results":
             output = ircutils.mircColor(term, 'red') + ": not found. "
             output += ircutils.bold("Related words:") + " " 
             outrelated = string.join([item['term'].encode('utf-8') + " " for item in jsondata['list']], " | ")
-            output += outrelated
+            output += outrelated.encode('utf-8')
             irc.reply(output)
 
         else:
