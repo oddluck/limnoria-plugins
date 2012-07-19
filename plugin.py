@@ -32,6 +32,8 @@ import supybot.plugins as plugins
 import supybot.callbacks as callbacks
 import threading, random, pickle, os, time
 import supybot.ircdb as ircdb
+import supybot.ircmsgs as ircmsgs
+
 
 
 
@@ -44,7 +46,7 @@ class DuckHunt(callbacks.Plugin):
     when there is no duck launched costs a point.
     """
 
-#    threaded = True
+    threaded = True
 
     # Those parameters are per-channel parameters
     started = {}       # Has the hunt started?
@@ -486,11 +488,19 @@ class DuckHunt(callbacks.Plugin):
 	if irc.isChannel(currentChannel):
 	    if(self.started[currentChannel] == True):
 		if (self.duck[currentChannel] == False):
+
+		    # Store the time when the duck has been launched
 		    self.times[currentChannel] = time.time()
-		    self.throttle = random.randint(self.minthrottle, self.maxthrottle)
-		    irc.reply("\_o< quack!")
+
+		    # Store the fact that there's a duck now
 		    self.duck[currentChannel] = True
-		    # Store time here
+
+		    # Send message directly (instead of queuing it with irc.reply)
+		    irc.sendMsg(ircmsgs.privmsg(currentChannel, "\_o< quack!"))
+
+		    # Define a new throttle for the next launch
+		    self.throttle = random.randint(self.minthrottle, self.maxthrottle)
+
 		    try:
 			self.shoots[currentChannel] += 1
 		    except:
