@@ -51,6 +51,7 @@ class DuckHunt(callbacks.Plugin):
     # Those parameters are per-channel parameters
     started = {}       # Has the hunt started?
     duck = {}          # Is there currently a duck to shoot?
+    banging = {}       # Is there someone "banging" ;) right now?
     shoots = {}        # Number of successfull shoots in a hunt
     scores = {}        # Scores for the current hunt
     times = {}         # Elapsed time since the last duck was launched
@@ -170,6 +171,9 @@ class DuckHunt(callbacks.Plugin):
 
 		# Hunt started
 		self.started[currentChannel] = True
+
+		# Init banging
+		self.banging[currentChannel] = False
 
 		irc.reply("The hunt starts now!")
 	else:
@@ -324,10 +328,13 @@ class DuckHunt(callbacks.Plugin):
 	if irc.isChannel(currentChannel):
 	    if(self.started.get(currentChannel) == True):
 		if (self.duck[currentChannel] == False):
+
 		    if now > self.lastSpoke + self.throttle:
 			if random.random() < self.probability:
-			    self._launch(irc, msg, '')
-			    self.lastSpoke = now
+			    # If someone is "banging" right now, do not launch a duck
+			    if (not self.banging[currentChannel]):
+				self._launch(irc, msg, '')
+				self.lastSpoke = now
 
 
     # This is the debug function: when debug is enabled,
@@ -347,15 +354,12 @@ class DuckHunt(callbacks.Plugin):
         Shoots the duck!
         """
         currentChannel = msg.args[0]
-        if self.registryValue('ducks', currentChannel):
-	    maxShoots = self.registryValue('ducks', currentChannel)
-	else:
-	    maxShoots = 10
+	self.banging[currentChannel] = True
 
 	if irc.isChannel(currentChannel):
 	    if(self.started.get(currentChannel) == True):
 
-		    # bangdelay: how much time between the duck and launched and this shot?
+		    # bangdelay: how much time between the duck was launched and this shot?
 		    if self.times[currentChannel]:
 			bangdelay = time.time() - self.times[currentChannel]
 		    else:
@@ -385,6 +389,12 @@ class DuckHunt(callbacks.Plugin):
 			    self.toptimes[currentChannel][msg.nick] = bangdelay
 
 			self.duck[currentChannel] = False
+
+			if self.registryValue('ducks', currentChannel):
+			    maxShoots = self.registryValue('ducks', currentChannel)
+			else:
+			    maxShoots = 10
+
 			# End of Hunt
 			if (self.shoots[currentChannel]  == maxShoots):
 			    self._end(irc, msg, args)
@@ -420,6 +430,8 @@ class DuckHunt(callbacks.Plugin):
 		irc.reply("The hunt has not started yet!")
 	else:
 	    irc.error('You have to be on a channel')
+
+	self.banging[currentChannel] = False
 
     bang = wrap(bang)
 
