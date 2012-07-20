@@ -72,52 +72,58 @@ class DuckHunt(callbacks.Plugin):
 
     # Adds new scores and times to the already saved ones
     # and saves them back to the disk
-    def _write_scores(self, msg):
-	currentChannel = msg.args[0]
+    def _calc_scores(self, channel):
 	# scores
 	# Adding current scores to the channel scores
-	for player in self.scores[currentChannel].keys():
-	    if not player in self.channelscores[currentChannel]:
+	for player in self.scores[channel].keys():
+	    if not player in self.channelscores[channel]:
 		# It's a new player
-		self.channelscores[currentChannel][player] = self.scores[currentChannel][player]
+		self.channelscores[channel][player] = self.scores[channel][player]
 	    else:
 		# It's a player that already has a saved score
-		self.channelscores[currentChannel][player] += self.scores[currentChannel][player]
-
-        outputfile = open(self.path + msg.args[0] + ".scores", "wb")
-        pickle.dump(self.channelscores[currentChannel], outputfile)
-        outputfile.close()
+		self.channelscores[channel][player] += self.scores[channel][player]
 
 	# times
 	# Adding times scores to the channel scores
-	for player in self.toptimes[currentChannel].keys():
-	    if not player in self.channeltimes[currentChannel]:
+	for player in self.toptimes[channel].keys():
+	    if not player in self.channeltimes[channel]:
 		# It's a new player
-		self.channeltimes[currentChannel][player] = self.toptimes[currentChannel][player]
+		self.channeltimes[channel][player] = self.toptimes[channel][player]
 	    else:
 		# It's a player that already has a saved score
 		# And we save the time of the current hunt if it's better than it's previous time
-		if(self.toptimes[currentChannel][player] < self.channeltimes[currentChannel][player]):
-		    self.channeltimes[currentChannel][player] = self.toptimes[currentChannel][player]
+		if(self.toptimes[channel][player] < self.channeltimes[channel][player]):
+		    self.channeltimes[channel][player] = self.toptimes[channel][player]
 
-        outputfile = open(self.path + msg.args[0] + ".times", "wb")
-        pickle.dump(self.channeltimes[currentChannel], outputfile)
+
+    def _write_scores(self, channel):
+	# scores
+        outputfile = open(self.path + channel + ".scores", "wb")
+        pickle.dump(self.channelscores[channel], outputfile)
+        outputfile.close()
+
+	# times
+        outputfile = open(self.path + channel + ".times", "wb")
+        pickle.dump(self.channeltimes[channel], outputfile)
         outputfile.close()
 
 
+
     # Reads scores and times from disk
-    def _read_scores(self, msg):
+    def _read_scores(self, channel):
 	# scores
-        if os.path.isfile(self.path + msg.args[0] + ".scores"):
-            inputfile = open(self.path + msg.args[0] + ".scores", "rb")
-            self.channelscores[msg.args[0]] = pickle.load(inputfile)
-            inputfile.close()
+	if not self.channelscores.get(channel):
+	    if os.path.isfile(self.path + channel + ".scores"):
+		inputfile = open(self.path + channel + ".scores", "rb")
+		self.channelscores[channel] = pickle.load(inputfile)
+		inputfile.close()
 
 	# times
-	if os.path.isfile(self.path + msg.args[0] + ".times"):
-            inputfile = open(self.path + msg.args[0] + ".times", "rb")
-            self.channeltimes[msg.args[0]] = pickle.load(inputfile)
-            inputfile.close()
+	if not self.channeltimes.get(channel):
+	    if os.path.isfile(self.path + channel + ".times"):
+		inputfile = open(self.path + channel + ".times", "rb")
+		self.channeltimes[channel] = pickle.load(inputfile)
+		inputfile.close()
 
 
     # Starts a hunt
@@ -157,7 +163,7 @@ class DuckHunt(callbacks.Plugin):
 		self.times[currentChannel] = False
 
 		if not self.channelscores[currentChannel] or not self.channeltimes[currentChannel]:
-		    self._read_scores(msg)
+		    self._read_scores(currentChannel)
 
 		# Reinit current hunt scores
 		if self.scores.get(currentChannel):
@@ -216,13 +222,12 @@ class DuckHunt(callbacks.Plugin):
 	"""<nick>: Shows the score for a given nick """
 	currentChannel = msg.args[0]
 	if irc.isChannel(currentChannel):
+	    self._read_scores(currentChannel)
 	    try:
 		self.channelscores[currentChannel]
 	    except:
 		self.channelscores[currentChannel] = {}
 
-	    if not self.channelscores[currentChannel]:
-		self._read_scores(msg)
 
 	    try:
 		irc.reply(self.channelscores[currentChannel][nick])
@@ -241,9 +246,12 @@ class DuckHunt(callbacks.Plugin):
 	    currentChannel = msg.args[0]
 	    if irc.isChannel(currentChannel):
 		try:
+		    self._read_scores(currentChannel)
 		    self.channelscores[currentChannel][nickto] += self.channelscores[currentChannel][nickfrom]
 		    del self.channelscores[currentChannel][nickfrom]
-		    irc.reply("Okay! (will be effective at the end of the hunt)")
+		    self._write_scores(currentChannel)
+		    #TODO: Reply with the config success message
+		    irc.reply("Okay!")
 
 		except:
 		    irc.error("Something went wrong")
@@ -264,10 +272,13 @@ class DuckHunt(callbacks.Plugin):
 	    currentChannel = msg.args[0]
 	    if irc.isChannel(currentChannel):
 		try:
+		    self._read_scores(currentChannel)
 		    if self.channeltimes[currentChannel][nickfrom] < self.channeltimes[currentChannel][nickto]:
 			self.channeltimes[currentChannel][nickto] = self.channeltimes[currentChannel][nickfrom]
 		    del self.channeltimes[currentChannel][nickfrom]
-		    irc.reply("Okay! (will be effective at the end of the hunt)")
+		    self._write_scores(currentChannel)
+
+		    irc.reply("Okay!")
 
 		except:
 		    irc.error("Something went wrong")
@@ -283,112 +294,123 @@ class DuckHunt(callbacks.Plugin):
 
 
     # Remove <nick>'s best time
-    def rmtime(self, irc, msg, args, nick):
-	"""<nick>: Remove <nick>'s best time """
+    def rmtime(self, irc, msg, args, channel, nick):
+	"""[<channel>] <nick>: Remove <nick>'s best time """
 	if self._capability(msg, 'owner'):
-	    currentChannel = msg.args[0]
-	    if irc.isChannel(currentChannel):
+
+	    if (not channel):
+		channel = msg.args[0]
+
+	    if irc.isChannel(channel):
+		self._read_scores(channel)
+		del self.channeltimes[channel][nick]
+		self._write_scores(channel)
+		irc.reply("Okay!")
+
+
+
+	    else:
+		irc.error('Are you sure ' + str(channel) + ' is a channel?')
+
+	else:
+	    irc.error("Who are you again?")
+
+    rmtime = wrap(rmtime, [optional('anything'), 'anything'])
+
+
+    # Remove <nick>'s best score
+    def rmscore(self, irc, msg, args, channel, nick):
+	"""[<channel>] <nick>: Remove <nick>'s score """
+	if self._capability(msg, 'owner'):
+
+	    if (not channel):
+		channel = msg.args[0]
+
+	    if irc.isChannel(channel):
 		try:
-		    del self.channeltimes[currentChannel][nick]
-		    irc.reply("Okay! (will be effective at the end of the hunt)")
+		    self._read_scores(channel)
+		    del self.channelscores[channel][nick]
+		    self._write_scores(channel)
+		    irc.reply("Okay!")
 
 		except:
 		    irc.error("Something went wrong")
 
 
 	    else:
-		irc.error('You have to be on a channel')
+		irc.error('Are you sure this is a channel?')
 
 	else:
 	    irc.error("Who are you again?")
 
-    rmtime = wrap(rmtime, ['anything'])
-
-
-    # Remove <nick>'s best time
-    def rmscore(self, irc, msg, args, nick):
-	"""<nick>: Remove <nick>'s score """
-	if self._capability(msg, 'owner'):
-	    currentChannel = msg.args[0]
-	    if irc.isChannel(currentChannel):
-		try:
-		    del self.channelscores[currentChannel][nick]
-		    irc.reply("Okay! (will be effective at the end of the hunt)")
-
-		except:
-		    irc.error("Something went wrong")
-
-
-	    else:
-		irc.error('You have to be on a channel')
-
-	else:
-	    irc.error("Who are you again?")
-
-    rmscore = wrap(rmscore, ['anything'])
+    rmscore = wrap(rmscore, [optional('anything'), 'anything'])
 
 
 
 
     # Shows all scores for the channel
-    def listscores(self, irc, msg, args):
-        """
-	Shows the score list for the current channel
-        """
+    def listscores(self, irc, msg, args, channel):
+        """[<channel>]: Shows the score list for <channel> (or for the current channel if no channel is given)"""
+	if (not channel):
+	    channel = msg.args[0]
 
-	currentChannel = msg.args[0]
-	try:
-	    self.channelscores[currentChannel]
-	except:
-	    self.channelscores[currentChannel] = {}
+	if irc.isChannel(channel):
+	    try:
+		self.channelscores[channel]
+	    except:
+		self.channelscores[channel] = {}
 
-        if not self.channelscores[currentChannel]:
-            self._read_scores(msg)
+	    self._read_scores(channel)
 
-	# Sort the scores (reversed: the higher the better)
-        scores = sorted(self.channelscores[currentChannel].iteritems(), key=lambda (k,v):(v,k), reverse=True)
+	    # Sort the scores (reversed: the higher the better)
+	    scores = sorted(self.channelscores[channel].iteritems(), key=lambda (k,v):(v,k), reverse=True)
 
-        msgstring = ""
-        for item in scores:
-	    # Why do we show the nicks as xnickx?
-	    # Just to prevent everyone that has ever played a hunt in the channel to be pinged every time anyone asks for the score list
-	    msgstring += "x" + item[0] + "x: "+ str(item[1]) + ", "
-        if msgstring != "":
-	    irc.reply("\_o< ~ DuckHunt scores for " + msg.args[0] + " ~ >o_/")
-            irc.reply(msgstring)
-        else:
-            irc.reply("There aren't any scores for this channel yet.")
-    listscores = wrap(listscores)
+	    msgstring = ""
+	    for item in scores:
+		# Why do we show the nicks as xnickx?
+		# Just to prevent everyone that has ever played a hunt in the channel to be pinged every time anyone asks for the score list
+		msgstring += "x" + item[0] + "x: "+ str(item[1]) + ", "
+	    if msgstring != "":
+		irc.reply("\_o< ~ DuckHunt scores for " + channel + " ~ >o_/")
+		irc.reply(msgstring)
+	    else:
+		irc.reply("There aren't any scores for this channel yet.")
+	else:
+	    irc.reply("Are you sure this is a channel?")
+    listscores = wrap(listscores, [optional('anything')])
 
 
     # Shows all times for the channel
-    def listtimes(self, irc, msg, args):
-        """
-	Shows the times list for the current channel
-        """
+    def listtimes(self, irc, msg, args, channel):
+        """[<channel>]: Shows the time list for <channel> (or for the current channel if no channel is given)"""
 
-	currentChannel = msg.args[0]
-	try:
-	    self.channeltimes[currentChannel]
-	except:
-	    self.channeltimes[currentChannel] = {}
+	if (not channel):
+	    channel = msg.args[0]
 
-        if not self.channeltimes[currentChannel]:
-            self._read_scores(msg)
+	if irc.isChannel(channel):
+	    self._read_scores(channel)
 
-	# Sort the times (not reversed: the lower the better)
-        times = sorted(self.channeltimes[currentChannel].iteritems(), key=lambda (k,v):(v,k), reverse=False)
+	    try:
+		self.channeltimes[channel]
+	    except:
+		self.channeltimes[channel] = {}
 
-        msgstring = ""
-        for item in times:
-	    # Same as in listscores for the xnickx
-	    msgstring += "x" + item[0] + "x: "+ str(round(item[1],2)) + ", "
-        if msgstring != "":
-	    irc.reply("\_o< ~ DuckHunt times for " + msg.args[0] + " ~ >o_/")
-            irc.reply(msgstring)
-        else:
-            irc.reply("There aren't any times for this channel yet.")
-    listscores = wrap(listscores)
+
+	    # Sort the times (not reversed: the lower the better)
+	    times = sorted(self.channeltimes[channel].iteritems(), key=lambda (k,v):(v,k), reverse=False)
+
+	    msgstring = ""
+	    for item in times:
+		# Same as in listscores for the xnickx
+		msgstring += "x" + item[0] + "x: "+ str(round(item[1],2)) + ", "
+	    if msgstring != "":
+		irc.reply("\_o< ~ DuckHunt times for " + msg.args[0] + " ~ >o_/")
+		irc.reply(msgstring)
+	    else:
+		irc.reply("There aren't any times for this channel yet.")
+	else:
+	    irc.reply("Are you sure this is a channel?")
+    listtimes = wrap(listtimes, [optional('anything')])
 
 
     # This is the callback when someones speaks in the channel
@@ -541,7 +563,8 @@ class DuckHunt(callbacks.Plugin):
 	    irc.reply("Best time: %s with %.2f seconds%s" % (key, value, recordmsg))
 
 	# Write the scores and times to disk
-	self._write_scores(msg)
+	self._calc_scores(currentChannel)
+	self._write_scores(currentChannel)
 
 	# Reinit current hunt scores
 	if self.scores.get(currentChannel):
