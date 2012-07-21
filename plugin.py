@@ -242,98 +242,81 @@ class DuckHunt(callbacks.Plugin):
     # nickto gets the points of nickfrom and nickfrom is removed from the scorelist
     def mergescores(self, irc, msg, args, channel, nickto, nickfrom):
 	"""[<channel>] <nickto> <nickfrom>: nickto gets the points of nickfrom and nickfrom is removed from the scorelist """
-	if self._capability(msg, 'owner'):
-	    if irc.isChannel(channel):
-		try:
-		    self._read_scores(channel)
-		    self.channelscores[channel][nickto] += self.channelscores[channel][nickfrom]
-		    del self.channelscores[channel][nickfrom]
-		    self._write_scores(channel)
-		    #TODO: Reply with the config success message
-		    irc.reply("Okay!")
+	if irc.isChannel(channel):
+	    try:
+		self._read_scores(channel)
+		self.channelscores[channel][nickto] += self.channelscores[channel][nickfrom]
+		del self.channelscores[channel][nickfrom]
+		self._write_scores(channel)
+		#TODO: Reply with the config success message
+		irc.reply("Okay!")
 
-		except:
-		    irc.error("Something went wrong")
+	    except:
+		irc.error("Something went wrong")
 
-
-	    else:
-		irc.error('You have to be on a channel')
 
 	else:
-	    irc.error("Who are you again?")
+	    irc.error('You have to be on a channel')
 
-    mergescores = wrap(mergescores, ['channel', 'nick', 'nick'])
+
+    mergescores = wrap(mergescores, ['channel', 'nick', 'nick', 'admin'])
 
     # Merge times
     def mergetimes(self, irc, msg, args, channel, nickto, nickfrom):
 	"""[<channel>] <nickto> <nickfrom>: nickto gets the best time of nickfrom if nickfrom time is better than nickto time, and nickfrom is removed from the timelist """
-	if self._capability(msg, 'owner'):
-	
-	    if irc.isChannel(channel):
-		try:
-		    self._read_scores(channel)
-		    if self.channeltimes[channel][nickfrom] < self.channeltimes[channel][nickto]:
-			self.channeltimes[channel][nickto] = self.channeltimes[channel][nickfrom]
-		    del self.channeltimes[channel][nickfrom]
-		    self._write_scores(channel)
+	if irc.isChannel(channel):
+	    try:
+		self._read_scores(channel)
+		if self.channeltimes[channel][nickfrom] < self.channeltimes[channel][nickto]:
+		    self.channeltimes[channel][nickto] = self.channeltimes[channel][nickfrom]
+		del self.channeltimes[channel][nickfrom]
+		self._write_scores(channel)
 
-		    irc.reply("Okay!")
+		irc.reply("Okay!")
 
-		except:
-		    irc.error("Something went wrong")
+	    except:
+		irc.error("Something went wrong")
 
-
-	    else:
-		irc.error('You have to be on a channel')
 
 	else:
-	    irc.error("Who are you again?")
+	    irc.error('You have to be on a channel')
 
-    mergetimes = wrap(mergetimes, ['channel', 'nick', 'nick'])
+
+    mergetimes = wrap(mergetimes, ['channel', 'nick', 'nick', 'admin'])
 
 
     # Remove <nick>'s best time
     def rmtime(self, irc, msg, args, channel, nick):
 	"""[<channel>] <nick>: Remove <nick>'s best time """
-	if self._capability(msg, 'owner'):
-
-	    if irc.isChannel(channel):
-		self._read_scores(channel)
-		del self.channeltimes[channel][nick]
-		self._write_scores(channel)
-		irc.reply("Okay!")
-
-	    else:
-		irc.error('Are you sure ' + str(channel) + ' is a channel?')
+	if irc.isChannel(channel):
+	    self._read_scores(channel)
+	    del self.channeltimes[channel][nick]
+	    self._write_scores(channel)
+	    irc.reply("Okay!")
 
 	else:
-	    irc.error("Who are you again?")
+	    irc.error('Are you sure ' + str(channel) + ' is a channel?')
 
-    rmtime = wrap(rmtime, ['channel', 'nick'])
+    rmtime = wrap(rmtime, ['channel', 'nick', 'admin'])
 
 
     # Remove <nick>'s best score
     def rmscore(self, irc, msg, args, channel, nick):
 	"""[<channel>] <nick>: Remove <nick>'s score """
-	if self._capability(msg, 'owner'):
+	if irc.isChannel(channel):
+	    try:
+		self._read_scores(channel)
+		del self.channelscores[channel][nick]
+		self._write_scores(channel)
+		irc.reply("Okay!")
 
-	    if irc.isChannel(channel):
-		try:
-		    self._read_scores(channel)
-		    del self.channelscores[channel][nick]
-		    self._write_scores(channel)
-		    irc.reply("Okay!")
-
-		except:
-		    irc.error("Something went wrong")
-
-	    else:
-		irc.error('Are you sure this is a channel?')
+	    except:
+		irc.error("Something went wrong")
 
 	else:
-	    irc.error("Who are you again?")
+	    irc.error('Are you sure this is a channel?')
 
-    rmscore = wrap(rmscore, ['channel', 'nick'])
+    rmscore = wrap(rmscore, ['channel', 'nick', 'admin'])
 
 
 
@@ -603,16 +586,6 @@ class DuckHunt(callbacks.Plugin):
 		irc.reply("The hunting has not started yet!")
 	else:
 	    irc.error('You have to be on a channel')
-
-
-    def _capability(self, msg, c):
-	try:
-	    u = ircdb.users.getUser(msg.prefix)
-	    if u._checkCapability(c):
-		return True
-	except:
-	    return False
-
 
 
 Class = DuckHunt
