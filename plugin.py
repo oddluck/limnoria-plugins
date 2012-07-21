@@ -236,20 +236,19 @@ class DuckHunt(callbacks.Plugin):
 	else:
 	    irc.error('You have to be on a channel')
 
-    score = wrap(score, ['anything'])
+    score = wrap(score, ['nick'])
 
     # Merge scores
     # nickto gets the points of nickfrom and nickfrom is removed from the scorelist
-    def mergescores(self, irc, msg, args, nickto, nickfrom):
-	"""<nickto> <nickfrom>: nickto gets the points of nickfrom and nickfrom is removed from the scorelist """
+    def mergescores(self, irc, msg, args, channel, nickto, nickfrom):
+	"""[<channel>] <nickto> <nickfrom>: nickto gets the points of nickfrom and nickfrom is removed from the scorelist """
 	if self._capability(msg, 'owner'):
-	    currentChannel = msg.args[0]
-	    if irc.isChannel(currentChannel):
+	    if irc.isChannel(channel):
 		try:
-		    self._read_scores(currentChannel)
-		    self.channelscores[currentChannel][nickto] += self.channelscores[currentChannel][nickfrom]
-		    del self.channelscores[currentChannel][nickfrom]
-		    self._write_scores(currentChannel)
+		    self._read_scores(channel)
+		    self.channelscores[channel][nickto] += self.channelscores[channel][nickfrom]
+		    del self.channelscores[channel][nickfrom]
+		    self._write_scores(channel)
 		    #TODO: Reply with the config success message
 		    irc.reply("Okay!")
 
@@ -263,20 +262,20 @@ class DuckHunt(callbacks.Plugin):
 	else:
 	    irc.error("Who are you again?")
 
-    mergescores = wrap(mergescores, ['anything', 'anything'])
+    mergescores = wrap(mergescores, ['channel', 'nick', 'nick'])
 
     # Merge times
-    def mergetimes(self, irc, msg, args, nickto, nickfrom):
-	"""<nickto> <nickfrom>: nickto gets the best time of nickfrom if nickfrom time is better than nickto time, and nickfrom is removed from the timelist """
+    def mergetimes(self, irc, msg, args, channel, nickto, nickfrom):
+	"""[<channel>] <nickto> <nickfrom>: nickto gets the best time of nickfrom if nickfrom time is better than nickto time, and nickfrom is removed from the timelist """
 	if self._capability(msg, 'owner'):
-	    currentChannel = msg.args[0]
-	    if irc.isChannel(currentChannel):
+	
+	    if irc.isChannel(channel):
 		try:
-		    self._read_scores(currentChannel)
-		    if self.channeltimes[currentChannel][nickfrom] < self.channeltimes[currentChannel][nickto]:
-			self.channeltimes[currentChannel][nickto] = self.channeltimes[currentChannel][nickfrom]
-		    del self.channeltimes[currentChannel][nickfrom]
-		    self._write_scores(currentChannel)
+		    self._read_scores(channel)
+		    if self.channeltimes[channel][nickfrom] < self.channeltimes[channel][nickto]:
+			self.channeltimes[channel][nickto] = self.channeltimes[channel][nickfrom]
+		    del self.channeltimes[channel][nickfrom]
+		    self._write_scores(channel)
 
 		    irc.reply("Okay!")
 
@@ -290,7 +289,7 @@ class DuckHunt(callbacks.Plugin):
 	else:
 	    irc.error("Who are you again?")
 
-    mergetimes = wrap(mergetimes, ['anything', 'anything'])
+    mergetimes = wrap(mergetimes, ['channel', 'nick', 'nick'])
 
 
     # Remove <nick>'s best time
@@ -298,16 +297,11 @@ class DuckHunt(callbacks.Plugin):
 	"""[<channel>] <nick>: Remove <nick>'s best time """
 	if self._capability(msg, 'owner'):
 
-	    if (not channel):
-		channel = msg.args[0]
-
 	    if irc.isChannel(channel):
 		self._read_scores(channel)
 		del self.channeltimes[channel][nick]
 		self._write_scores(channel)
 		irc.reply("Okay!")
-
-
 
 	    else:
 		irc.error('Are you sure ' + str(channel) + ' is a channel?')
@@ -315,16 +309,13 @@ class DuckHunt(callbacks.Plugin):
 	else:
 	    irc.error("Who are you again?")
 
-    rmtime = wrap(rmtime, [optional('anything'), 'anything'])
+    rmtime = wrap(rmtime, ['channel', 'nick'])
 
 
     # Remove <nick>'s best score
     def rmscore(self, irc, msg, args, channel, nick):
 	"""[<channel>] <nick>: Remove <nick>'s score """
 	if self._capability(msg, 'owner'):
-
-	    if (not channel):
-		channel = msg.args[0]
 
 	    if irc.isChannel(channel):
 		try:
@@ -336,14 +327,13 @@ class DuckHunt(callbacks.Plugin):
 		except:
 		    irc.error("Something went wrong")
 
-
 	    else:
 		irc.error('Are you sure this is a channel?')
 
 	else:
 	    irc.error("Who are you again?")
 
-    rmscore = wrap(rmscore, [optional('anything'), 'anything'])
+    rmscore = wrap(rmscore, ['channel', 'nick'])
 
 
 
@@ -351,8 +341,6 @@ class DuckHunt(callbacks.Plugin):
     # Shows all scores for the channel
     def listscores(self, irc, msg, args, channel):
         """[<channel>]: Shows the score list for <channel> (or for the current channel if no channel is given)"""
-	if (not channel):
-	    channel = msg.args[0]
 
 	if irc.isChannel(channel):
 	    try:
@@ -377,15 +365,12 @@ class DuckHunt(callbacks.Plugin):
 		irc.reply("There aren't any scores for this channel yet.")
 	else:
 	    irc.reply("Are you sure this is a channel?")
-    listscores = wrap(listscores, [optional('anything')])
+    listscores = wrap(listscores, ['channel'])
 
 
     # Shows all times for the channel
     def listtimes(self, irc, msg, args, channel):
         """[<channel>]: Shows the time list for <channel> (or for the current channel if no channel is given)"""
-
-	if (not channel):
-	    channel = msg.args[0]
 
 	if irc.isChannel(channel):
 	    self._read_scores(channel)
@@ -410,7 +395,7 @@ class DuckHunt(callbacks.Plugin):
 		irc.reply("There aren't any times for this channel yet.")
 	else:
 	    irc.reply("Are you sure this is a channel?")
-    listtimes = wrap(listtimes, [optional('anything')])
+    listtimes = wrap(listtimes, ['channel'])
 
 
     # This is the callback when someones speaks in the channel
