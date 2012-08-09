@@ -49,10 +49,18 @@ conf.registerChannelValue(DuckHunt, 'autoRestart',
 conf.registerChannelValue(DuckHunt, 'ducks',
      registry.Integer(3, """Number of ducks during a hunt?"""))
 
-
 conf.registerChannelValue(DuckHunt,
     'frequency', registry.Probability(0.3, """
     Determines how often a duck will be launched. 0 means that no duck will ever be launched. 1 means that a ducks will be launched one after another. """))
+
+conf.registerChannelValue(DuckHunt,
+    'minthrottle', registry.Integer(15, """
+    The minimum amount of time before a new duck may be launched (in seconds)"""))
+
+conf.registerChannelValue(DuckHunt,
+    'maxthrottle', registry.Integer(45, """
+    The maximum amount of time before a new duck may be launched (in seconds)"""))
+
 
 
 # vim:set shiftwidth=4 softtabstop=4 expandtab textwidth=79:

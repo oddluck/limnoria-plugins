@@ -58,6 +58,8 @@ class DuckHunt(callbacks.Plugin):
     channelscores = {} # Saved scores for the channel
     toptimes = {}      # Times for the current hunt
     channeltimes = {}  # Saved times for the channel
+    worsttimes = {}     # Worst times for the current hunt
+    channelworsttimes = {} # Saved worst times for the channel
 
     # Where to save scores?
     path = "supybot/data/DuckHunt/"
@@ -69,6 +71,10 @@ class DuckHunt(callbacks.Plugin):
     maxthrottle = 45
     throttle = random.randint(minthrottle, maxthrottle)
     debug = 0
+
+    # Other params
+    perfectbonus = 5
+
 
     # Adds new scores and times to the already saved ones
     # and saves them back to the disk
@@ -95,6 +101,19 @@ class DuckHunt(callbacks.Plugin):
 		if(self.toptimes[channel][player] < self.channeltimes[channel][player]):
 		    self.channeltimes[channel][player] = self.toptimes[channel][player]
 
+	# worst times
+	# Adding worst times scores to the channel scores
+	for player in self.worsttimes[channel].keys():
+	    if not player in self.channelworsttimes[channel]:
+		# It's a new player
+		self.channelworsttimes[channel][player] = self.worsttimes[channel][player]
+	    else:
+		# It's a player that already has a saved score
+		# And we save the time of the current hunt if it's worst than it's previous time
+		if(self.worsttimes[channel][player] > self.channelworsttimes[channel][player]):
+		    self.channelworsttimes[channel][player] = self.worsttimes[channel][player]
+
+
 
     def _write_scores(self, channel):
 	# scores
@@ -106,6 +125,13 @@ class DuckHunt(callbacks.Plugin):
         outputfile = open(self.path + channel + ".times", "wb")
         pickle.dump(self.channeltimes[channel], outputfile)
         outputfile.close()
+
+	# worst times
+        outputfile = open(self.path + channel + ".worsttimes", "wb")
+        pickle.dump(self.channelworsttimes[channel], outputfile)
+        outputfile.close()
+
+
 
 
 
@@ -125,6 +151,14 @@ class DuckHunt(callbacks.Plugin):
 		self.channeltimes[channel] = pickle.load(inputfile)
 		inputfile.close()
 
+	# worst times
+	if not self.channelworsttimes.get(channel):
+	    if os.path.isfile(self.path + channel + ".worsttimes"):
+		inputfile = open(self.path + channel + ".worsttimes", "rb")
+		self.channelworsttimes[channel] = pickle.load(inputfile)
+		inputfile.close()
+
+
 
     # Starts a hunt
     def start(self, irc, msg, args):
@@ -137,7 +171,20 @@ class DuckHunt(callbacks.Plugin):
 	    if(self.started.get(currentChannel) == True):
 		irc.reply("There is already a hunt right now!")
 	    else:
-		
+
+		# Init min throttle and max throttle
+		if self.registryValue('minthrottle', currentChannel):
+		    self.minthrottle = self.registryValue('minthrottle', currentChannel)
+		else:
+		    self.minthrottle = 15
+
+		if self.registryValue('maxthrottle', currentChannel):
+		    self.maxthrottle = self.registryValue('maxthrottle', currentChannel)
+		else:
+		    self.maxthrottle = 45
+
+		self.throttle = random.randint(self.minthrottle, self.maxthrottle)
+
 		# Init frequency
 		if self.registryValue('frequency', currentChannel):
 		    self.probability = self.registryValue('frequency', currentChannel)
@@ -156,21 +203,26 @@ class DuckHunt(callbacks.Plugin):
 		except:
 		    self.channeltimes[currentChannel] = {}
 
+		# Init saved times
+		try:
+		    self.channelworsttimes[currentChannel]
+		except:
+		    self.channelworsttimes[currentChannel] = {}
+
+
 		# Init times
 		self.toptimes[currentChannel] = {}
+		self.worsttimes[currentChannel] = {}
 
 		# Init bangdelay
 		self.times[currentChannel] = False
 
-		if not self.channelscores[currentChannel] or not self.channeltimes[currentChannel]:
+		if not self.channelscores[currentChannel] or not self.channeltimes[currentChannel] or not self.channelworsttimes[currentChannel]:
 		    self._read_scores(currentChannel)
 
 		# Reinit current hunt scores
 		if self.scores.get(currentChannel):
 		    self.scores[currentChannel] = {}
-
-		# Reinit current hunt times
-		self.toptimes[currentChannel] = {}
 
 		# No duck launched
 		self.duck[currentChannel] = False
@@ -263,13 +315,21 @@ class DuckHunt(callbacks.Plugin):
 
     # Merge times
     def mergetimes(self, irc, msg, args, channel, nickto, nickfrom):
-	"""[<channel>] <nickto> <nickfrom>: nickto gets the best time of nickfrom if nickfrom time is better than nickto time, and nickfrom is removed from the timelist """
+	"""[<channel>] <nickto> <nickfrom>: nickto gets the best time of nickfrom if nickfrom time is better than nickto time, and nickfrom is removed from the timelist. Also works with worst times. """
 	if irc.isChannel(channel):
 	    try:
 		self._read_scores(channel)
+
+		# Merge best times
 		if self.channeltimes[channel][nickfrom] < self.channeltimes[channel][nickto]:
 		    self.channeltimes[channel][nickto] = self.channeltimes[channel][nickfrom]
 		del self.channeltimes[channel][nickfrom]
+
+		# Merge worst times
+		if self.channelworsttimes[channel][nickfrom] > self.channelworsttimes[channel][nickto]:
+		    self.channelworsttimes[channel][nickto] = self.channelworsttimes[channel][nickfrom]
+		del self.channelworsttimes[channel][nickfrom]
+
 		self._write_scores(channel)
 
 		irc.reply("Okay!")
@@ -363,6 +423,12 @@ class DuckHunt(callbacks.Plugin):
 	    except:
 		self.channeltimes[channel] = {}
 
+	    try:
+		self.channelworsttimes[channel]
+	    except:
+		self.channelworsttimes[channel] = {}
+
+
 
 	    # Sort the times (not reversed: the lower the better)
 	    times = sorted(self.channeltimes[channel].iteritems(), key=lambda (k,v):(v,k), reverse=False)
@@ -372,10 +438,24 @@ class DuckHunt(callbacks.Plugin):
 		# Same as in listscores for the xnickx
 		msgstring += "x" + item[0] + "x: "+ str(round(item[1],2)) + ", "
 	    if msgstring != "":
-		irc.reply("\_o< ~ DuckHunt times for " + msg.args[0] + " ~ >o_/")
+		irc.reply("\_o< ~ DuckHunt times for " + channel + " ~ >o_/")
 		irc.reply(msgstring)
 	    else:
-		irc.reply("There aren't any times for this channel yet.")
+		irc.reply("There aren't any best times for this channel yet.")
+
+	    times = sorted(self.channelworsttimes[channel].iteritems(), key=lambda (k,v):(v,k), reverse=True)
+	    msgstring = ""
+	    for item in times:
+		# Same as in listscores for the xnickx
+		msgstring += "x" + item[0] + "x: "+ str(round(item[1],2)) + ", "
+	    if msgstring != "":
+		irc.reply("\_o< ~ DuckHunt worst (or best?) times for " + channel + " ~ >o_/")
+		irc.reply(msgstring)
+	    else:
+		irc.reply("There aren't any worst times for this channel yet.")
+
+
+
 	else:
 	    irc.reply("Are you sure this is a channel?")
     listtimes = wrap(listtimes, ['channel'])
@@ -449,6 +529,16 @@ class DuckHunt(callbacks.Plugin):
 			except:
 			    self.toptimes[currentChannel][msg.nick] = bangdelay
 
+
+			# Now save the bang delay for the player (if it's worst than it's previous bangdelay)
+			try:
+			    previoustime = self.worsttimes[currentChannel][msg.nick]
+			    if(bangdelay > previoustime):
+				self.worsttimes[currentChannel][msg.nick] = bangdelay
+			except:
+			    self.worsttimes[currentChannel][msg.nick] = bangdelay
+
+
 			self.duck[currentChannel] = False
 
 			if self.registryValue('ducks', currentChannel):
@@ -507,32 +597,69 @@ class DuckHunt(callbacks.Plugin):
 	irc.reply("The hunt stops now!")
 
 	# Showing scores
-	irc.reply(self.scores.get(currentChannel))
+	if (self.scores.get(currentChannel)):
+	    irc.reply(self.scores.get(currentChannel))
 
-	# Getting channel best time (to see if the best time of this hunt is better)
-	channelbestnick = None
-	channelbesttime = None
-	if self.channeltimes.get(currentChannel):
-	    channelbestnick, channelbesttime = min(self.channeltimes.get(currentChannel).iteritems(), key=lambda (k,v):(v,k))
-
-	# Showing best time
-	recordmsg = ''
-	if (self.toptimes.get(currentChannel)):
-	    key,value = min(self.toptimes.get(currentChannel).iteritems(), key=lambda (k,v):(v,k))
-	    if (channelbesttime and value < channelbesttime):
-		recordmsg = '. This is the new record for this channel! (previous record was held by ' + channelbestnick + ' with ' + str(round(channelbesttime,2)) +  ' seconds)'
+	    # Is there a perfect?
+	    winnernick, winnerscore = max(self.scores.get(currentChannel).iteritems(), key=lambda (k,v):(v,k))
+	    if self.registryValue('ducks', currentChannel):
+		maxShoots = self.registryValue('ducks', currentChannel)
 	    else:
-		try:
-		    if(value < self.channeltimes[currentChannel][key]):
-			recordmsg = ' (this is your new record in this channel! Your previous record was ' + str(round(self.channeltimes[currentChannel][key],2)) + ')'
-		except:
-		    recordmsg = ''
+		maxShoots = 10
 
-	    irc.reply("Best time: %s with %.2f seconds%s" % (key, value, recordmsg))
+	    if (winnerscore == maxShoots):
+		irc.reply("\o/ %s: %i ducks out of %i: perfect!!! +%i \o/" % (winnernick, winnerscore, maxShoots, self.perfectbonus))
+		self.scores[currentChannel][winnernick] += self.perfectbonus
 
-	# Write the scores and times to disk
-	self._calc_scores(currentChannel)
-	self._write_scores(currentChannel)
+	    # Getting channel best time (to see if the best time of this hunt is better)
+	    channelbestnick = None
+	    channelbesttime = None
+	    if self.channeltimes.get(currentChannel):
+		channelbestnick, channelbesttime = min(self.channeltimes.get(currentChannel).iteritems(), key=lambda (k,v):(v,k))
+
+	    # Showing best time
+	    recordmsg = ''
+	    if (self.toptimes.get(currentChannel)):
+		key,value = min(self.toptimes.get(currentChannel).iteritems(), key=lambda (k,v):(v,k))
+		if (channelbesttime and value < channelbesttime):
+		    recordmsg = '. This is the new record for this channel! (previous record was held by ' + channelbestnick + ' with ' + str(round(channelbesttime,2)) +  ' seconds)'
+		else:
+		    try:
+			if(value < self.channeltimes[currentChannel][key]):
+			    recordmsg = ' (this is your new record in this channel! Your previous record was ' + str(round(self.channeltimes[currentChannel][key],2)) + ')'
+		    except:
+			recordmsg = ''
+
+		irc.reply("Best time: %s with %.2f seconds%s" % (key, value, recordmsg))
+
+	    # Getting channel worst time (to see if the worst time of this hunt is worst)
+	    channelworstnick = None
+	    channelworsttime = None
+	    if self.channelworsttimes.get(currentChannel):
+		channelworstnick, channelworsttime = max(self.channelworsttimes.get(currentChannel).iteritems(), key=lambda (k,v):(v,k))
+
+
+	    # Showing worst time
+	    recordmsg = ''
+	    if (self.worsttimes.get(currentChannel)):
+		key,value = max(self.worsttimes.get(currentChannel).iteritems(), key=lambda (k,v):(v,k))
+		if (channelworsttime and value > channelworsttime):
+		    recordmsg = '. This is the new worst time for this channel! (previous worst time was held by ' + channelworstnick + ' with ' + str(round(channelworsttime,2)) +  ' seconds)'
+		else:
+		    try:
+			if(value < self.channeltimes[currentChannel][key]):
+			    recordmsg = ' (this is your new worst time in this channel! Your previous worst time was ' + str(round(self.channelworsttimes[currentChannel][key],2)) + ')'
+		    except:
+			recordmsg = ''
+
+		irc.reply("Worst time: %s with %.2f seconds%s" % (key, value, recordmsg))
+
+
+	    # Write the scores and times to disk
+	    self._calc_scores(currentChannel)
+	    self._write_scores(currentChannel)
+	else:
+	    irc.reply("Not a single duck was shot during this hunt!")
 
 	# Reinit current hunt scores
 	if self.scores.get(currentChannel):
@@ -541,6 +668,8 @@ class DuckHunt(callbacks.Plugin):
 	# Reinit current hunt times
 	if self.toptimes.get(currentChannel):
 	    self.toptimes[currentChannel] = {}
+	if self.worsttimes.get(currentChannel):
+	    self.worsttimes[currentChannel] = {}
 
 	# No duck lauched
 	self.duck[currentChannel] = False
