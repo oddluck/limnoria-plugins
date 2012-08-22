@@ -73,7 +73,8 @@ class DuckHunt(callbacks.Plugin):
     debug = 0
 
     # Other params
-    perfectbonus = 5
+    perfectbonus = 5 # How many extra-points are given when someones does a perfect hunt?
+    toplist = 5      # How many high{scores|times} are displayed by default?
 
 
     # Adds new scores and times to the already saved ones
@@ -385,6 +386,9 @@ class DuckHunt(callbacks.Plugin):
     def listscores(self, irc, msg, args, channel):
         """[<channel>]: Shows the score list for <channel> (or for the current channel if no channel is given)"""
 
+
+	# TODO: Let the caller choose how many elements to display
+
 	if irc.isChannel(channel):
 	    try:
 		self.channelscores[channel]
@@ -395,6 +399,7 @@ class DuckHunt(callbacks.Plugin):
 
 	    # Sort the scores (reversed: the higher the better)
 	    scores = sorted(self.channelscores[channel].iteritems(), key=lambda (k,v):(v,k), reverse=True)
+	    del scores[self.toplist:] 
 
 	    msgstring = ""
 	    for item in scores:
@@ -402,7 +407,7 @@ class DuckHunt(callbacks.Plugin):
 		# Just to prevent everyone that has ever played a hunt in the channel to be pinged every time anyone asks for the score list
 		msgstring += "x" + item[0] + "x: "+ str(item[1]) + ", "
 	    if msgstring != "":
-		irc.reply("\_o< ~ DuckHunt scores for " + channel + " ~ >o_/")
+		irc.reply("\_o< ~ DuckHunt top-" + str(self.toplist) + " scores for " + channel + " ~ >o_/")
 		irc.reply(msgstring)
 	    else:
 		irc.reply("There aren't any scores for this channel yet.")
@@ -432,27 +437,31 @@ class DuckHunt(callbacks.Plugin):
 
 	    # Sort the times (not reversed: the lower the better)
 	    times = sorted(self.channeltimes[channel].iteritems(), key=lambda (k,v):(v,k), reverse=False)
+	    del times[self.toplist:] 
 
 	    msgstring = ""
 	    for item in times:
 		# Same as in listscores for the xnickx
 		msgstring += "x" + item[0] + "x: "+ str(round(item[1],2)) + ", "
 	    if msgstring != "":
-		irc.reply("\_o< ~ DuckHunt times for " + channel + " ~ >o_/")
+		irc.reply("\_o< ~ DuckHunt top-" + str(self.toplist) + " times for " + channel + " ~ >o_/")
 		irc.reply(msgstring)
 	    else:
 		irc.reply("There aren't any best times for this channel yet.")
 
+
 	    times = sorted(self.channelworsttimes[channel].iteritems(), key=lambda (k,v):(v,k), reverse=True)
+	    del times[self.toplist:] 
+
 	    msgstring = ""
 	    for item in times:
 		# Same as in listscores for the xnickx
 		msgstring += "x" + item[0] + "x: "+ str(round(item[1],2)) + ", "
 	    if msgstring != "":
-		irc.reply("\_o< ~ DuckHunt worst (or best?) times for " + channel + " ~ >o_/")
+		irc.reply("\_o< ~ DuckHunt top-" + str(self.toplist) + " longest times for " + channel + " ~ >o_/")
 		irc.reply(msgstring)
 	    else:
-		irc.reply("There aren't any worst times for this channel yet.")
+		irc.reply("There aren't any longest times for this channel yet.")
 
 
 
@@ -555,7 +564,6 @@ class DuckHunt(callbacks.Plugin):
 				self.started[currentChannel] = True
 				if self.scores.get(currentChannel):
 				    self.scores[currentChannel] = {}
-				irc.reply("The hunt starts now!")
 
 
 		    # There was no duck or the duck has already been shot
@@ -594,19 +602,27 @@ class DuckHunt(callbacks.Plugin):
 	except:
 	    self.channelscores[currentChannel] = {}
 
-	irc.reply("The hunt stops now!")
+
+	if not self.registryValue('autoRestart', currentChannel):
+	    irc.reply("The hunt stops now!")
 
 	# Showing scores
 	if (self.scores.get(currentChannel)):
-	    irc.reply(self.scores.get(currentChannel))
 
-	    # Is there a perfect?
+	    # Getting winner
 	    winnernick, winnerscore = max(self.scores.get(currentChannel).iteritems(), key=lambda (k,v):(v,k))
 	    if self.registryValue('ducks', currentChannel):
 		maxShoots = self.registryValue('ducks', currentChannel)
 	    else:
 		maxShoots = 10
 
+	    # Showing scores
+	    #irc.reply("Winner: %s with %i points" % (winnernick, winnerscore))
+	    #irc.reply(self.scores.get(currentChannel))
+	    #TODO: Better display
+	    irc.reply(sorted(self.scores.get(currentChannel).iteritems(), key=lambda (k,v):(v,k), reverse=True))
+
+	    # Is there a perfect?
 	    if (winnerscore == maxShoots):
 		irc.reply("\o/ %s: %i ducks out of %i: perfect!!! +%i \o/" % (winnernick, winnerscore, maxShoots, self.perfectbonus))
 		self.scores[currentChannel][winnernick] += self.perfectbonus
@@ -644,15 +660,17 @@ class DuckHunt(callbacks.Plugin):
 	    if (self.worsttimes.get(currentChannel)):
 		key,value = max(self.worsttimes.get(currentChannel).iteritems(), key=lambda (k,v):(v,k))
 		if (channelworsttime and value > channelworsttime):
-		    recordmsg = '. This is the new worst time for this channel! (previous worst time was held by ' + channelworstnick + ' with ' + str(round(channelworsttime,2)) +  ' seconds)'
+		    recordmsg = '. This is the new longest time for this channel! (previous longest time was held by ' + channelworstnick + ' with ' + str(round(channelworsttime,2)) +  ' seconds)'
 		else:
 		    try:
 			if(value < self.channeltimes[currentChannel][key]):
-			    recordmsg = ' (this is your new worst time in this channel! Your previous worst time was ' + str(round(self.channelworsttimes[currentChannel][key],2)) + ')'
+			    recordmsg = ' (this is your new longest time in this channel! Your previous longest time was ' + str(round(self.channelworsttimes[currentChannel][key],2)) + ')'
 		    except:
 			recordmsg = ''
 
-		irc.reply("Worst time: %s with %.2f seconds%s" % (key, value, recordmsg))
+		# Only display worst time if something new
+		if (recordmsg != ''):
+		    irc.reply("Longest time: %s with %.2f seconds%s" % (key, value, recordmsg))
 
 
 	    # Write the scores and times to disk
