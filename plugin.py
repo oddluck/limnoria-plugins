@@ -77,9 +77,11 @@ class DuckHunt(callbacks.Plugin):
     toplist = 5      # How many high{scores|times} are displayed by default?
 
 
-    # Adds new scores and times to the already saved ones
-    # and saves them back to the disk
     def _calc_scores(self, channel):
+	"""
+	Adds new scores and times to the already saved ones and saves them back to the disk
+	"""
+
 	# scores
 	# Adding current scores to the channel scores
 	for player in self.scores[channel].keys():
@@ -117,6 +119,10 @@ class DuckHunt(callbacks.Plugin):
 
 
     def _write_scores(self, channel):
+	"""
+	Write scores
+	"""
+
 	# scores
         outputfile = open(self.path + channel + ".scores", "wb")
         pickle.dump(self.channelscores[channel], outputfile)
@@ -136,8 +142,11 @@ class DuckHunt(callbacks.Plugin):
 
 
 
-    # Reads scores and times from disk
     def _read_scores(self, channel):
+	"""
+	Reads scores and times from disk
+	"""
+
 	# scores
 	if not self.channelscores.get(channel):
 	    if os.path.isfile(self.path + channel + ".scores"):
@@ -161,11 +170,11 @@ class DuckHunt(callbacks.Plugin):
 
 
 
-    # Starts a hunt
     def start(self, irc, msg, args):
         """
         Starts the hunt
         """
+
 	currentChannel = msg.args[0]
 	if irc.isChannel(currentChannel):
 
@@ -239,11 +248,13 @@ class DuckHunt(callbacks.Plugin):
 	    irc.error('You have to be on a channel')
     start = wrap(start)
 
-    # Stops the current hunt
+
+
     def stop(self, irc, msg, args):
         """
-        Stops the hunt
+        Stops the current hunt
         """
+
 	currentChannel = msg.args[0]
 	if irc.isChannel(currentChannel):
 	    self._end(irc, msg, args)
@@ -251,11 +262,13 @@ class DuckHunt(callbacks.Plugin):
 	    irc.error('You have to be on a channel')
     stop = wrap(stop)
 
-    # Tells if there is currently a duck
+
+
     def launched(self, irc, msg, args):
         """
         Is there a duck right now?
         """
+
 	currentChannel = msg.args[0]
 	if irc.isChannel(currentChannel):
 	    if(self.started.get(currentChannel) == True):
@@ -270,9 +283,11 @@ class DuckHunt(callbacks.Plugin):
     launched = wrap(launched)
 
 
-    # Shows the score for a given nick
+
     def score(self, irc, msg, args, nick):
-	"""<nick>: Shows the score for a given nick """
+	"""
+	<nick>: Shows the score for a given nick
+	"""
 	currentChannel = msg.args[0]
 	if irc.isChannel(currentChannel):
 	    self._read_scores(currentChannel)
@@ -291,10 +306,12 @@ class DuckHunt(callbacks.Plugin):
 
     score = wrap(score, ['nick'])
 
-    # Merge scores
-    # nickto gets the points of nickfrom and nickfrom is removed from the scorelist
+
+
     def mergescores(self, irc, msg, args, channel, nickto, nickfrom):
-	"""[<channel>] <nickto> <nickfrom>: nickto gets the points of nickfrom and nickfrom is removed from the scorelist """
+	"""
+	[<channel>] <nickto> <nickfrom>: nickto gets the points of nickfrom and nickfrom is removed from the scorelist
+	"""
 	if irc.isChannel(channel):
 	    try:
 		self._read_scores(channel)
@@ -314,9 +331,12 @@ class DuckHunt(callbacks.Plugin):
 
     mergescores = wrap(mergescores, ['channel', 'nick', 'nick', 'admin'])
 
-    # Merge times
+
+
     def mergetimes(self, irc, msg, args, channel, nickto, nickfrom):
-	"""[<channel>] <nickto> <nickfrom>: nickto gets the best time of nickfrom if nickfrom time is better than nickto time, and nickfrom is removed from the timelist. Also works with worst times. """
+	"""
+	[<channel>] <nickto> <nickfrom>: nickto gets the best time of nickfrom if nickfrom time is better than nickto time, and nickfrom is removed from the timelist. Also works with worst times. 
+	"""
 	if irc.isChannel(channel):
 	    try:
 		self._read_scores(channel)
@@ -346,9 +366,11 @@ class DuckHunt(callbacks.Plugin):
     mergetimes = wrap(mergetimes, ['channel', 'nick', 'nick', 'admin'])
 
 
-    # Remove <nick>'s best time
+
     def rmtime(self, irc, msg, args, channel, nick):
-	"""[<channel>] <nick>: Remove <nick>'s best time """
+	"""
+	[<channel>] <nick>: Remove <nick>'s best time
+	"""
 	if irc.isChannel(channel):
 	    self._read_scores(channel)
 	    del self.channeltimes[channel][nick]
@@ -361,9 +383,11 @@ class DuckHunt(callbacks.Plugin):
     rmtime = wrap(rmtime, ['channel', 'nick', 'admin'])
 
 
-    # Remove <nick>'s best score
+
     def rmscore(self, irc, msg, args, channel, nick):
-	"""[<channel>] <nick>: Remove <nick>'s score """
+	"""
+	[<channel>] <nick>: Remove <nick>'s score
+	"""
 	if irc.isChannel(channel):
 	    try:
 		self._read_scores(channel)
@@ -381,10 +405,10 @@ class DuckHunt(callbacks.Plugin):
 
 
 
-
-    # Shows all scores for the channel
     def listscores(self, irc, msg, args, channel):
-        """[<channel>]: Shows the score list for <channel> (or for the current channel if no channel is given)"""
+        """
+	[<channel>]: Shows the score list for <channel> (or for the current channel if no channel is given)
+	"""
 
 
 	# TODO: Let the caller choose how many elements to display
@@ -416,9 +440,11 @@ class DuckHunt(callbacks.Plugin):
     listscores = wrap(listscores, ['channel'])
 
 
-    # Shows all times for the channel
+
     def listtimes(self, irc, msg, args, channel):
-        """[<channel>]: Shows the time list for <channel> (or for the current channel if no channel is given)"""
+        """
+	[<channel>]: Shows the time list for <channel> (or for the current channel if no channel is given)
+	"""
 
 	if irc.isChannel(channel):
 	    self._read_scores(channel)
@@ -487,10 +513,11 @@ class DuckHunt(callbacks.Plugin):
 				self.lastSpoke = now
 
 
-    # This is the debug function: when debug is enabled,
-    # it launches a duck when called
+
     def dbg(self, irc, msg, args):
-	""" This is a debug command. If debug mode is not enabled, it won't do anything """
+	""" 
+	This is a debug command. If debug mode is not enabled, it won't do anything 
+	"""
 	currentChannel = msg.args[0]
 	if (self.debug):
 	    if irc.isChannel(currentChannel):
@@ -498,7 +525,7 @@ class DuckHunt(callbacks.Plugin):
     dbg = wrap(dbg)
 		
 
-    # Shoots the duck!
+
     def bang(self, irc, msg, args):
         """
         Shoots the duck!
@@ -594,8 +621,13 @@ class DuckHunt(callbacks.Plugin):
 
     bang = wrap(bang)
 
-    # End of the hunt (is called when the hunts stop "naturally" or when someone uses the !stop command)
+
+
     def _end(self, irc, msg, args):
+	""" 
+	End of the hunt (is called when the hunts stop "naturally" or when someone uses the !stop command)
+	"""
+
 	currentChannel = msg.args[0]
 	try:
 	    self.channelscores[currentChannel]
@@ -700,7 +732,6 @@ class DuckHunt(callbacks.Plugin):
 
 
 
-    # Launch a duck
     def _launch(self, irc, msg, args):
 	"""
 	Launch a duck
