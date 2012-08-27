@@ -405,13 +405,10 @@ class DuckHunt(callbacks.Plugin):
 
 
 
-    def listscores(self, irc, msg, args, channel):
+    def listscores(self, irc, msg, args, size, channel):
         """
-	[<channel>]: Shows the score list for <channel> (or for the current channel if no channel is given)
+	[<size>] [<channel>]: Shows the <size>-sized score list for <channel> (or for the current channel if no channel is given)
 	"""
-
-
-	# TODO: Let the caller choose how many elements to display
 
 	if irc.isChannel(channel):
 	    try:
@@ -421,9 +418,15 @@ class DuckHunt(callbacks.Plugin):
 
 	    self._read_scores(channel)
 
+	    # How many results do we display?
+	    if (not size):
+		listsize = self.toplist
+	    else:
+		listsize = size
+
 	    # Sort the scores (reversed: the higher the better)
 	    scores = sorted(self.channelscores[channel].iteritems(), key=lambda (k,v):(v,k), reverse=True)
-	    del scores[self.toplist:] 
+	    del scores[listsize:] 
 
 	    msgstring = ""
 	    for item in scores:
@@ -431,19 +434,19 @@ class DuckHunt(callbacks.Plugin):
 		# Just to prevent everyone that has ever played a hunt in the channel to be pinged every time anyone asks for the score list
 		msgstring += "x" + item[0] + "x: "+ str(item[1]) + ", "
 	    if msgstring != "":
-		irc.reply("\_o< ~ DuckHunt top-" + str(self.toplist) + " scores for " + channel + " ~ >o_/")
+		irc.reply("\_o< ~ DuckHunt top-" + str(listsize) + " scores for " + channel + " ~ >o_/")
 		irc.reply(msgstring)
 	    else:
 		irc.reply("There aren't any scores for this channel yet.")
 	else:
 	    irc.reply("Are you sure this is a channel?")
-    listscores = wrap(listscores, ['channel'])
+    listscores = wrap(listscores, [optional('int'), 'channel'])
 
 
 
-    def listtimes(self, irc, msg, args, channel):
+    def listtimes(self, irc, msg, args, size, channel):
         """
-	[<channel>]: Shows the time list for <channel> (or for the current channel if no channel is given)
+	[<size>] [<channel>]: Shows the <size>-sized time list for <channel> (or for the current channel if no channel is given)
 	"""
 
 	if irc.isChannel(channel):
@@ -459,32 +462,36 @@ class DuckHunt(callbacks.Plugin):
 	    except:
 		self.channelworsttimes[channel] = {}
 
-
+	    # How many results do we display?
+	    if (not size):
+		listsize = self.toplist
+	    else:
+		listsize = size
 
 	    # Sort the times (not reversed: the lower the better)
 	    times = sorted(self.channeltimes[channel].iteritems(), key=lambda (k,v):(v,k), reverse=False)
-	    del times[self.toplist:] 
+	    del times[listsize:] 
 
 	    msgstring = ""
 	    for item in times:
 		# Same as in listscores for the xnickx
 		msgstring += "x" + item[0] + "x: "+ str(round(item[1],2)) + ", "
 	    if msgstring != "":
-		irc.reply("\_o< ~ DuckHunt top-" + str(self.toplist) + " times for " + channel + " ~ >o_/")
+		irc.reply("\_o< ~ DuckHunt top-" + str(listsize) + " times for " + channel + " ~ >o_/")
 		irc.reply(msgstring)
 	    else:
 		irc.reply("There aren't any best times for this channel yet.")
 
 
 	    times = sorted(self.channelworsttimes[channel].iteritems(), key=lambda (k,v):(v,k), reverse=True)
-	    del times[self.toplist:] 
+	    del times[listsize:] 
 
 	    msgstring = ""
 	    for item in times:
 		# Same as in listscores for the xnickx
 		msgstring += "x" + item[0] + "x: "+ str(round(item[1],2)) + ", "
 	    if msgstring != "":
-		irc.reply("\_o< ~ DuckHunt top-" + str(self.toplist) + " longest times for " + channel + " ~ >o_/")
+		irc.reply("\_o< ~ DuckHunt top-" + str(listsize) + " longest times for " + channel + " ~ >o_/")
 		irc.reply(msgstring)
 	    else:
 		irc.reply("There aren't any longest times for this channel yet.")
@@ -493,7 +500,7 @@ class DuckHunt(callbacks.Plugin):
 
 	else:
 	    irc.reply("Are you sure this is a channel?")
-    listtimes = wrap(listtimes, ['channel'])
+    listtimes = wrap(listtimes, [optional('int'), 'channel'])
 
 
     # This is the callback when someones speaks in the channel
