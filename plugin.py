@@ -695,7 +695,7 @@ class DuckHunt(callbacks.Plugin):
 		    recordmsg = '. This is the new longest time for this channel! (previous longest time was held by ' + channelworstnick + ' with ' + str(round(channelworsttime,2)) +  ' seconds)'
 		else:
 		    try:
-			if(value < self.channeltimes[currentChannel][key]):
+			if(value > self.channelworsttimes[currentChannel][key]):
 			    recordmsg = ' (this is your new longest time in this channel! Your previous longest time was ' + str(round(self.channelworsttimes[currentChannel][key],2)) + ')'
 		    except:
 			recordmsg = ''
