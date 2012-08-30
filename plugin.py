@@ -30,7 +30,7 @@
 from supybot.commands import *
 import supybot.plugins as plugins
 import supybot.callbacks as callbacks
-import threading, random, pickle, os, time
+import threading, random, pickle, os, time, datetime
 import supybot.ircdb as ircdb
 import supybot.ircmsgs as ircmsgs
 
@@ -432,7 +432,7 @@ class DuckHunt(callbacks.Plugin):
 	    for item in scores:
 		# Why do we show the nicks as xnickx?
 		# Just to prevent everyone that has ever played a hunt in the channel to be pinged every time anyone asks for the score list
-		msgstring += "x" + item[0] + "x: "+ str(item[1]) + ", "
+		msgstring += "x" + item[0] + "x: "+ str(item[1]) + " | "
 	    if msgstring != "":
 		irc.reply("\_o< ~ DuckHunt top-" + str(listsize) + " scores for " + channel + " ~ >o_/")
 		irc.reply(msgstring)
@@ -475,7 +475,7 @@ class DuckHunt(callbacks.Plugin):
 	    msgstring = ""
 	    for item in times:
 		# Same as in listscores for the xnickx
-		msgstring += "x" + item[0] + "x: "+ str(round(item[1],2)) + ", "
+		msgstring += "x" + item[0] + "x: "+ str(round(item[1],2)) + " | "
 	    if msgstring != "":
 		irc.reply("\_o< ~ DuckHunt top-" + str(listsize) + " times for " + channel + " ~ >o_/")
 		irc.reply(msgstring)
@@ -489,7 +489,10 @@ class DuckHunt(callbacks.Plugin):
 	    msgstring = ""
 	    for item in times:
 		# Same as in listscores for the xnickx
-		msgstring += "x" + item[0] + "x: "+ str(round(item[1],2)) + ", "
+		#msgstring += "x" + item[0] + "x: "+ time.strftime('%H:%M:%S', time.gmtime(item[1])) + ", "
+		roundseconds = round(item[1])
+		delta = datetime.timedelta(seconds=roundseconds)
+		msgstring += "x" + item[0] + "x: " + str(delta) + " | "
 	    if msgstring != "":
 		irc.reply("\_o< ~ DuckHunt top-" + str(listsize) + " longest times for " + channel + " ~ >o_/")
 		irc.reply(msgstring)
