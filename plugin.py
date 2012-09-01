@@ -318,11 +318,10 @@ class DuckHunt(callbacks.Plugin):
 		self.channelscores[channel][nickto] += self.channelscores[channel][nickfrom]
 		del self.channelscores[channel][nickfrom]
 		self._write_scores(channel)
-		#TODO: Reply with the config success message
-		irc.reply("Okay!")
+		irc.replySuccess()
 
 	    except:
-		irc.error("Something went wrong")
+		irc.replyError()
 
 
 	else:
@@ -353,10 +352,10 @@ class DuckHunt(callbacks.Plugin):
 
 		self._write_scores(channel)
 
-		irc.reply("Okay!")
+		irc.replySuccess()
 
 	    except:
-		irc.error("Something went wrong")
+		irc.replyError()
 
 
 	else:
@@ -375,7 +374,7 @@ class DuckHunt(callbacks.Plugin):
 	    self._read_scores(channel)
 	    del self.channeltimes[channel][nick]
 	    self._write_scores(channel)
-	    irc.reply("Okay!")
+	    irc.replySuccess()
 
 	else:
 	    irc.error('Are you sure ' + str(channel) + ' is a channel?')
@@ -393,10 +392,10 @@ class DuckHunt(callbacks.Plugin):
 		self._read_scores(channel)
 		del self.channelscores[channel][nick]
 		self._write_scores(channel)
-		irc.reply("Okay!")
+		irc.replySuccess()
 
 	    except:
-		irc.error("Something went wrong")
+		irc.replyError()
 
 	else:
 	    irc.error('Are you sure this is a channel?')
