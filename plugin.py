@@ -33,6 +33,8 @@ import supybot.callbacks as callbacks
 import supybot.schedule as schedule
 import supybot.ircdb as ircdb
 import supybot.ircmsgs as ircmsgs
+import supybot.log as log
+
 
 import threading, random, pickle, os, time, datetime
 
@@ -78,7 +80,7 @@ class DuckHunt(callbacks.Plugin):
 
     def _calc_scores(self, channel):
 	"""
-	Adds new scores and times to the already saved ones and saves them back to the disk
+	Adds new scores and times to the already saved ones
 	"""
 
 	# scores
@@ -119,7 +121,7 @@ class DuckHunt(callbacks.Plugin):
 
     def _write_scores(self, channel):
 	"""
-	Write scores
+	Write scores and times to the disk
 	"""
 
 	# scores
@@ -246,7 +248,7 @@ class DuckHunt(callbacks.Plugin):
 		def myEventCaller():
 		    self._launchEvent(irc, msg)
 		try:
-		    schedule.addPeriodicEvent(myEventCaller, self.minthrottle, 'DuckHunt_' + currentChannel, False)
+		    schedule.addPeriodicEvent(myEventCaller, 5, 'DuckHunt_' + currentChannel, False)
 		except AssertionError:
 		    irc.reply('The scheduler ' + 'DuckHunt_' + currentChannel + ' was already running. This shouldn\'t happen. This is a bug.');
 
@@ -266,6 +268,7 @@ class DuckHunt(callbacks.Plugin):
 			if random.random() < self.probability:
 			    # If someone is "banging" right now, do not launch a duck
 			    if (not self.banging[currentChannel]):
+				#log.error("Delay since the last launch for " + currentChannel + " "  + str(now - self.lastSpoke))
 				self._launch(irc, msg, '')
 				self.lastSpoke = now
 
