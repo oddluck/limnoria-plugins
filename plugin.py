@@ -655,6 +655,10 @@ class DuckHunt(callbacks.Plugin):
 	"""
 
 	currentChannel = msg.args[0]
+
+	# End the hunting
+	self.started[currentChannel] = False
+
 	try:
 	    self.channelscores[currentChannel]
 	except:
@@ -749,9 +753,6 @@ class DuckHunt(callbacks.Plugin):
 
 	# No duck lauched
 	self.duck[currentChannel] = False
-
-	# Hunt not started
-	self.started[currentChannel] = False
 
 	# Reinit number of shoots
 	self.shoots[currentChannel] = 0
