@@ -24,12 +24,12 @@ launched
   Is there a duck right now?
 
 listscores
-  [<channel>]: Shows the score list for <channel> (or for the current channel
-  if no channel is given)
+  [<size>] [<channel>]: Shows the <size>-sized score list for <channel> (or for
+  the current channel if no channel is given)
 
 listtimes
-  [<channel>]: Shows the time list for <channel> (or for the current channel if
-  no channel is given)
+  [<size>] [<channel>]: Shows the <size>-sized time list for <channel> (or for
+  the current channel if no channel is given)
 
 mergescores
   [<channel>] <nickto> <nickfrom>: nickto gets the points of nickfrom and
@@ -53,7 +53,7 @@ start
   Starts the hunt
 
 stop
-  Stops the hunt
+  Stops the current hunt
 
 Configuration
 -------------
@@ -68,23 +68,17 @@ supybot.plugins.DuckHunt.autoRestart
   Does a new hunt automatically start when the previous one is over?
 
 supybot.plugins.DuckHunt.ducks
-  This config variable defaults to 3 and is channel specific.
+  This config variable defaults to 5 and is channel specific.
 
   Number of ducks during a hunt?
 
-supybot.plugins.DuckHunt.frequency
-  This config variable defaults to 0.29999999999999999 and is channel specific.
-
-  Determines how often a duck will be launched. 0 means that no duck will ever
-  be launched. 1 means that a ducks will be launched one after another.
-
 supybot.plugins.DuckHunt.minthrottle
-  This config variable defaults to 15 and is channel specific.
+  This config variable defaults to 30 and is channel specific.
 
   The minimum amount of time before a new duck may be launched (in seconds)
 
 supybot.plugins.DuckHunt.maxthrottle
-  This config variable defaults to 45 and is channel specific.
+  This config variable defaults to 300 and is channel specific.
 
   The maximum amount of time before a new duck may be launched (in seconds)
 

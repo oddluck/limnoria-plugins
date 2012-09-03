@@ -63,7 +63,6 @@ class DuckHunt(callbacks.Plugin):
     channelworsttimes = {} # Saved worst times for the channel
 
     # Does a duck needs to be launched?
-    probability = {}
     lastSpoke = {}
     minthrottle = {}
     maxthrottle = {}
@@ -188,20 +187,15 @@ class DuckHunt(callbacks.Plugin):
 		if self.registryValue('minthrottle', currentChannel):
 		    self.minthrottle[currentChannel] = self.registryValue('minthrottle', currentChannel)
 		else:
-		    self.minthrottle[currentChannel] = 15
+		    self.minthrottle[currentChannel] = 30
 
 		if self.registryValue('maxthrottle', currentChannel):
 		    self.maxthrottle[currentChannel] = self.registryValue('maxthrottle', currentChannel)
 		else:
-		    self.maxthrottle[currentChannel] = 45
+		    self.maxthrottle[currentChannel] = 300
 
 		self.throttle[currentChannel] = random.randint(self.minthrottle[currentChannel], self.maxthrottle[currentChannel])
-
-		# Init frequency
-		if self.registryValue('frequency', currentChannel):
-		    self.probability[currentChannel] = self.registryValue('frequency', currentChannel)
-		else:
-		    self.probability[currentChannel] = 0.3
+		#log.info("throttle : " + str(self.throttle[currentChannel]))
 
 		# Init saved scores
 		try:
@@ -254,7 +248,7 @@ class DuckHunt(callbacks.Plugin):
 		try:
 		    schedule.addPeriodicEvent(myEventCaller, 5, 'DuckHunt_' + currentChannel, False)
 		except AssertionError:
-		    irc.reply('The scheduler ' + 'DuckHunt_' + currentChannel + ' was already running. This shouldn\'t happen. This is a bug.');
+		    pass
 
 		irc.reply("The hunt starts now!")
 	else:
@@ -269,12 +263,11 @@ class DuckHunt(callbacks.Plugin):
 	    if(self.started.get(currentChannel) == True):
 		if (self.duck[currentChannel] == False):
 		    if now > self.lastSpoke[currentChannel] + self.throttle[currentChannel]:
-			if random.random() < self.probability[currentChannel]:
-			    # If someone is "banging" right now, do not launch a duck
-			    if (not self.banging[currentChannel]):
-				#log.error("Delay since the last launch for " + currentChannel + " "  + str(now - self.lastSpoke[currentChannel]) + " throttle[currentChannel]: " + str(self.throttle[currentChannel]) + " minthrottle[currentChannel]: " + str(self.minthrottle[currentChannel]) + " maxthrottle[currentChannel]: " + str(self.maxthrottle[currentChannel]))
-				self._launch(irc, msg, '')
-				self.lastSpoke[currentChannel] = now
+			# If someone is "banging" right now, do not launch a duck
+			if (not self.banging[currentChannel]):
+			    #log.info("Delay since the last launch for " + currentChannel + " "  + str(now - self.lastSpoke[currentChannel]) + " / throttle[currentChannel]: " + str(self.throttle[currentChannel]) + " / minthrottle[currentChannel]: " + str(self.minthrottle[currentChannel]) + " / maxthrottle[currentChannel]: " + str(self.maxthrottle[currentChannel]))
+			    self._launch(irc, msg, '')
+			    self.lastSpoke[currentChannel] = now
 
 
 
@@ -783,6 +776,7 @@ class DuckHunt(callbacks.Plugin):
 
 		    # Define a new throttle[currentChannel] for the next launch
 		    self.throttle[currentChannel] = random.randint(self.minthrottle[currentChannel], self.maxthrottle[currentChannel])
+		    #log.info("throttle for " + currentChannel + " : " + str(self.throttle[currentChannel]))
 
 		    try:
 			self.shoots[currentChannel] += 1

@@ -47,18 +47,14 @@ conf.registerChannelValue(DuckHunt, 'autoRestart',
      registry.Boolean(False, """Does a new hunt automatically start when the previous one is over?"""))
 
 conf.registerChannelValue(DuckHunt, 'ducks',
-     registry.Integer(3, """Number of ducks during a hunt?"""))
+     registry.Integer(5, """Number of ducks during a hunt?"""))
 
 conf.registerChannelValue(DuckHunt,
-    'frequency', registry.Probability(0.3, """
-    Determines how often a duck will be launched. 0 means that no duck will ever be launched. 1 means that a ducks will be launched one after another. """))
-
-conf.registerChannelValue(DuckHunt,
-    'minthrottle', registry.Integer(15, """
+    'minthrottle', registry.Integer(30, """
     The minimum amount of time before a new duck may be launched (in seconds)"""))
 
 conf.registerChannelValue(DuckHunt,
-    'maxthrottle', registry.Integer(45, """
+    'maxthrottle', registry.Integer(300, """
     The maximum amount of time before a new duck may be launched (in seconds)"""))
 
 

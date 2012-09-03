@@ -334,11 +334,11 @@ when there is no duck launched costs a point.</p>
 <dt>launched</dt>
 <dd>Is there a duck right now?</dd>
 <dt>listscores</dt>
-<dd>[&lt;channel&gt;]: Shows the score list for &lt;channel&gt; (or for the current channel
-if no channel is given)</dd>
+<dd>[&lt;size&gt;] [&lt;channel&gt;]: Shows the &lt;size&gt;-sized score list for &lt;channel&gt; (or for
+the current channel if no channel is given)</dd>
 <dt>listtimes</dt>
-<dd>[&lt;channel&gt;]: Shows the time list for &lt;channel&gt; (or for the current channel if
-no channel is given)</dd>
+<dd>[&lt;size&gt;] [&lt;channel&gt;]: Shows the &lt;size&gt;-sized time list for &lt;channel&gt; (or for
+the current channel if no channel is given)</dd>
 <dt>mergescores</dt>
 <dd>[&lt;channel&gt;] &lt;nickto&gt; &lt;nickfrom&gt;: nickto gets the points of nickfrom and
 nickfrom is removed from the scorelist</dd>
@@ -355,7 +355,7 @@ timelist. Also works with worst times.</dd>
 <dt>start</dt>
 <dd>Starts the hunt</dd>
 <dt>stop</dt>
-<dd>Stops the hunt</dd>
+<dd>Stops the current hunt</dd>
 </dl>
 </div>
 <div class="section" id="configuration">
@@ -370,20 +370,15 @@ timelist. Also works with worst times.</dd>
 <p class="last">Does a new hunt automatically start when the previous one is over?</p>
 </dd>
 <dt>supybot.plugins.DuckHunt.ducks</dt>
-<dd><p class="first">This config variable defaults to 3 and is channel specific.</p>
+<dd><p class="first">This config variable defaults to 5 and is channel specific.</p>
 <p class="last">Number of ducks during a hunt?</p>
 </dd>
-<dt>supybot.plugins.DuckHunt.frequency</dt>
-<dd><p class="first">This config variable defaults to 0.29999999999999999 and is channel specific.</p>
-<p class="last">Determines how often a duck will be launched. 0 means that no duck will ever
-be launched. 1 means that a ducks will be launched one after another.</p>
-</dd>
 <dt>supybot.plugins.DuckHunt.minthrottle</dt>
-<dd><p class="first">This config variable defaults to 15 and is channel specific.</p>
+<dd><p class="first">This config variable defaults to 30 and is channel specific.</p>
 <p class="last">The minimum amount of time before a new duck may be launched (in seconds)</p>
 </dd>
 <dt>supybot.plugins.DuckHunt.maxthrottle</dt>
-<dd><p class="first">This config variable defaults to 45 and is channel specific.</p>
+<dd><p class="first">This config variable defaults to 300 and is channel specific.</p>
 <p class="last">The maximum amount of time before a new duck may be launched (in seconds)</p>
 </dd>
 </dl>
