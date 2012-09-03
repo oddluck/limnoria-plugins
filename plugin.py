@@ -62,15 +62,16 @@ class DuckHunt(callbacks.Plugin):
     worsttimes = {}     # Worst times for the current hunt
     channelworsttimes = {} # Saved worst times for the channel
 
+    # Does a duck needs to be launched?
+    probability = {}
+    lastSpoke = {}
+    minthrottle = {}
+    maxthrottle = {}
+    throttle = {}
+
     # Where to save scores?
     path = "supybot/data/DuckHunt/"
 
-    # Does a duck needs to be launched?
-    probability = 1    
-    lastSpoke = time.time()
-    minthrottle = 15
-    maxthrottle = 45
-    throttle = random.randint(minthrottle, maxthrottle)
     debug = 0
 
     # Other params
@@ -183,24 +184,24 @@ class DuckHunt(callbacks.Plugin):
 		irc.reply("There is already a hunt right now!")
 	    else:
 
-		# Init min throttle and max throttle
+		# Init min throttle[currentChannel] and max throttle[currentChannel]
 		if self.registryValue('minthrottle', currentChannel):
-		    self.minthrottle = self.registryValue('minthrottle', currentChannel)
+		    self.minthrottle[currentChannel] = self.registryValue('minthrottle', currentChannel)
 		else:
-		    self.minthrottle = 15
+		    self.minthrottle[currentChannel] = 15
 
 		if self.registryValue('maxthrottle', currentChannel):
-		    self.maxthrottle = self.registryValue('maxthrottle', currentChannel)
+		    self.maxthrottle[currentChannel] = self.registryValue('maxthrottle', currentChannel)
 		else:
-		    self.maxthrottle = 45
+		    self.maxthrottle[currentChannel] = 45
 
-		self.throttle = random.randint(self.minthrottle, self.maxthrottle)
+		self.throttle[currentChannel] = random.randint(self.minthrottle[currentChannel], self.maxthrottle[currentChannel])
 
 		# Init frequency
 		if self.registryValue('frequency', currentChannel):
-		    self.probability = self.registryValue('frequency', currentChannel)
+		    self.probability[currentChannel] = self.registryValue('frequency', currentChannel)
 		else:
-		    self.probability = 0.3
+		    self.probability[currentChannel] = 0.3
 
 		# Init saved scores
 		try:
@@ -227,6 +228,9 @@ class DuckHunt(callbacks.Plugin):
 
 		# Init bangdelay
 		self.times[currentChannel] = False
+
+		# Init lastSpoke
+		self.lastSpoke[currentChannel] = time.time()
 
 		if not self.channelscores[currentChannel] or not self.channeltimes[currentChannel] or not self.channelworsttimes[currentChannel]:
 		    self._read_scores(currentChannel)
@@ -264,13 +268,13 @@ class DuckHunt(callbacks.Plugin):
 	if irc.isChannel(currentChannel):
 	    if(self.started.get(currentChannel) == True):
 		if (self.duck[currentChannel] == False):
-		    if now > self.lastSpoke + self.throttle:
-			if random.random() < self.probability:
+		    if now > self.lastSpoke[currentChannel] + self.throttle[currentChannel]:
+			if random.random() < self.probability[currentChannel]:
 			    # If someone is "banging" right now, do not launch a duck
 			    if (not self.banging[currentChannel]):
-				#log.error("Delay since the last launch for " + currentChannel + " "  + str(now - self.lastSpoke))
+				#log.error("Delay since the last launch for " + currentChannel + " "  + str(now - self.lastSpoke[currentChannel]) + " throttle[currentChannel]: " + str(self.throttle[currentChannel]) + " minthrottle[currentChannel]: " + str(self.minthrottle[currentChannel]) + " maxthrottle[currentChannel]: " + str(self.maxthrottle[currentChannel]))
 				self._launch(irc, msg, '')
-				self.lastSpoke = now
+				self.lastSpoke[currentChannel] = now
 
 
 
@@ -777,8 +781,8 @@ class DuckHunt(callbacks.Plugin):
 		    # Send message directly (instead of queuing it with irc.reply)
 		    irc.sendMsg(ircmsgs.privmsg(currentChannel, "\_o< quack!"))
 
-		    # Define a new throttle for the next launch
-		    self.throttle = random.randint(self.minthrottle, self.maxthrottle)
+		    # Define a new throttle[currentChannel] for the next launch
+		    self.throttle[currentChannel] = random.randint(self.minthrottle[currentChannel], self.maxthrottle[currentChannel])
 
 		    try:
 			self.shoots[currentChannel] += 1
