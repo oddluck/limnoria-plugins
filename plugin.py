@@ -30,12 +30,11 @@
 from supybot.commands import *
 import supybot.plugins as plugins
 import supybot.callbacks as callbacks
-import threading, random, pickle, os, time, datetime
+import supybot.schedule as schedule
 import supybot.ircdb as ircdb
 import supybot.ircmsgs as ircmsgs
 
-
-
+import threading, random, pickle, os, time, datetime
 
 
 class DuckHunt(callbacks.Plugin):
@@ -243,10 +242,32 @@ class DuckHunt(callbacks.Plugin):
 		# Init banging
 		self.banging[currentChannel] = False
 
+		# Init schedule
+		def myEventCaller():
+		    self._launchEvent(irc, msg)
+		try:
+		    schedule.addPeriodicEvent(myEventCaller, self.minthrottle, 'DuckHunt_' + currentChannel, False)
+		except AssertionError:
+		    irc.reply('The scheduler ' + 'DuckHunt_' + currentChannel + ' was already running. This shouldn\'t happen. This is a bug.');
+
 		irc.reply("The hunt starts now!")
 	else:
 	    irc.error('You have to be on a channel')
     start = wrap(start)
+
+
+    def _launchEvent(self, irc, msg):
+	currentChannel = msg.args[0]
+	now = time.time()
+	if irc.isChannel(currentChannel):
+	    if(self.started.get(currentChannel) == True):
+		if (self.duck[currentChannel] == False):
+		    if now > self.lastSpoke + self.throttle:
+			if random.random() < self.probability:
+			    # If someone is "banging" right now, do not launch a duck
+			    if (not self.banging[currentChannel]):
+				self._launch(irc, msg, '')
+				self.lastSpoke = now
 
 
 
@@ -257,7 +278,17 @@ class DuckHunt(callbacks.Plugin):
 
 	currentChannel = msg.args[0]
 	if irc.isChannel(currentChannel):
-	    self._end(irc, msg, args)
+	    if (self.started.get(currentChannel) == True):
+		self._end(irc, msg, args)
+
+		# If someone uses the stop command,
+		# we stop the scheduler, even if autoRestart is enabled
+		try:
+		    schedule.removeEvent('DuckHunt_' + currentChannel)
+		except KeyError:
+		    irc.reply('Error: the spammer wasn\'t running! This is a bug.')
+	    else:
+		irc.reply('Nothing to stop: there\'s no hunt right now.')
 	else:
 	    irc.error('You have to be on a channel')
     stop = wrap(stop)
@@ -503,23 +534,6 @@ class DuckHunt(callbacks.Plugin):
 	else:
 	    irc.reply("Are you sure this is a channel?")
     listtimes = wrap(listtimes, [optional('int'), 'channel'])
-
-
-    # This is the callback when someones speaks in the channel
-    # We use this to determine if a duck has to be launched
-    def doPrivmsg(self, irc, msg):
-	currentChannel = msg.args[0]
-	now = time.time()
-	if irc.isChannel(currentChannel):
-	    if(self.started.get(currentChannel) == True):
-		if (self.duck[currentChannel] == False):
-
-		    if now > self.lastSpoke + self.throttle:
-			if random.random() < self.probability:
-			    # If someone is "banging" right now, do not launch a duck
-			    if (not self.banging[currentChannel]):
-				self._launch(irc, msg, '')
-				self.lastSpoke = now
 
 
 
