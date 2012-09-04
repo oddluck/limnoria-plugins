@@ -243,6 +243,14 @@ class DuckHunt(callbacks.Plugin):
 		self.banging[currentChannel] = False
 
 		# Init schedule
+
+		# First of all, stop the scheduler if it was still running
+		try:
+		    schedule.removeEvent('DuckHunt_' + currentChannel)
+		except KeyError:
+		    pass
+
+		# Then restart it
 		def myEventCaller():
 		    self._launchEvent(irc, msg)
 		try:
@@ -267,7 +275,6 @@ class DuckHunt(callbacks.Plugin):
 			if (not self.banging[currentChannel]):
 			    #log.info("Delay since the last launch for " + currentChannel + " "  + str(now - self.lastSpoke[currentChannel]) + " / throttle[currentChannel]: " + str(self.throttle[currentChannel]) + " / minthrottle[currentChannel]: " + str(self.minthrottle[currentChannel]) + " / maxthrottle[currentChannel]: " + str(self.maxthrottle[currentChannel]))
 			    self._launch(irc, msg, '')
-			    self.lastSpoke[currentChannel] = now
 
 
 
@@ -473,6 +480,26 @@ class DuckHunt(callbacks.Plugin):
     listscores = wrap(listscores, [optional('int'), 'channel'])
 
 
+    def total(self, irc, msg, args, channel):
+	"""
+	Shows the total amount of ducks shot in <channel> (or in the current channel if no channel is given)
+	"""
+
+	if irc.isChannel(channel):
+	    self._read_scores(channel)
+	    if (self.channelscores.get(channel)):
+		scores = self.channelscores[channel]
+		total = 0
+		for player in scores.keys():
+		    total += scores[player]
+		irc.reply(str(total) + " ducks have been shot in " + channel + "!")
+	    else:
+		irc.reply("There are no scores for this channel yet")
+
+	else:
+	    irc.reply("Are you sure this is a channel?")
+    total = wrap(total, ['channel'])
+
 
     def listtimes(self, irc, msg, args, size, channel):
         """
@@ -600,6 +627,9 @@ class DuckHunt(callbacks.Plugin):
 
 			self.duck[currentChannel] = False
 
+			# Reset the basetime for the waiting time before the next duck
+			self.lastSpoke[currentChannel] = time.time()
+
 			if self.registryValue('ducks', currentChannel):
 			    maxShoots = self.registryValue('ducks', currentChannel)
 			else:
@@ -636,7 +666,7 @@ class DuckHunt(callbacks.Plugin):
 			else:
 			    irc.reply("There was no duck! %s: %i" % (msg.nick, self.scores[currentChannel][msg.nick]))
 	    else:
-		irc.reply("The hunt has not started yet!")
+		irc.reply("There is no hunt right now! You can start a hunt with the 'start' command")
 	else:
 	    irc.error('You have to be on a channel')
 
