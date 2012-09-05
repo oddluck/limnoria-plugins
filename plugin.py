@@ -34,6 +34,7 @@ import supybot.schedule as schedule
 import supybot.ircdb as ircdb
 import supybot.ircmsgs as ircmsgs
 import supybot.log as log
+import supybot.conf as conf
 
 
 import threading, random, pickle, os, time, datetime
@@ -69,8 +70,10 @@ class DuckHunt(callbacks.Plugin):
     throttle = {}
 
     # Where to save scores?
-    path = "supybot/data/DuckHunt/"
+    fileprefix = "DuckHunt_"
+    path = conf.supybot.directories.data
 
+    # Enable the 'dbg' command, which launch a duck, if true
     debug = 0
 
     # Other params
@@ -125,17 +128,17 @@ class DuckHunt(callbacks.Plugin):
 	"""
 
 	# scores
-        outputfile = open(self.path + channel + ".scores", "wb")
+        outputfile = open(self.path.dirize(self.fileprefix + channel + ".scores"), "wb")
         pickle.dump(self.channelscores[channel], outputfile)
         outputfile.close()
 
 	# times
-        outputfile = open(self.path + channel + ".times", "wb")
+        outputfile = open(self.path.dirize(self.fileprefix + channel + ".times"), "wb")
         pickle.dump(self.channeltimes[channel], outputfile)
         outputfile.close()
 
 	# worst times
-        outputfile = open(self.path + channel + ".worsttimes", "wb")
+        outputfile = open(self.path.dirize(self.fileprefix + channel + ".worsttimes"), "wb")
         pickle.dump(self.channelworsttimes[channel], outputfile)
         outputfile.close()
 
@@ -147,25 +150,25 @@ class DuckHunt(callbacks.Plugin):
 	"""
 	Reads scores and times from disk
 	"""
-
+	filename = self.path.dirize(self.fileprefix + channel)
 	# scores
 	if not self.channelscores.get(channel):
-	    if os.path.isfile(self.path + channel + ".scores"):
-		inputfile = open(self.path + channel + ".scores", "rb")
+	    if os.path.isfile(filename + ".scores"):
+		inputfile = open(filename + ".scores", "rb")
 		self.channelscores[channel] = pickle.load(inputfile)
 		inputfile.close()
 
 	# times
 	if not self.channeltimes.get(channel):
-	    if os.path.isfile(self.path + channel + ".times"):
-		inputfile = open(self.path + channel + ".times", "rb")
+	    if os.path.isfile(filename + ".times"):
+		inputfile = open(filename + ".times", "rb")
 		self.channeltimes[channel] = pickle.load(inputfile)
 		inputfile.close()
 
 	# worst times
 	if not self.channelworsttimes.get(channel):
-	    if os.path.isfile(self.path + channel + ".worsttimes"):
-		inputfile = open(self.path + channel + ".worsttimes", "rb")
+	    if os.path.isfile(filename + ".worsttimes"):
+		inputfile = open(filename + ".worsttimes", "rb")
 		self.channelworsttimes[channel] = pickle.load(inputfile)
 		inputfile.close()
 
