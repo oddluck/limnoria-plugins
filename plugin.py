@@ -777,7 +777,7 @@ class DuckHunt(callbacks.Plugin):
 		    irc.reply("Longest time: %s with %.2f seconds%s" % (key, value, recordmsg))
 
 	    # Showing average shooting time:
-	    irc.reply("Average shooting time: %.2f seconds" % ((self.averagetime[currentChannel] / maxShoots)))
+	    irc.reply("Average shooting time: %.2f seconds" % ((self.averagetime[currentChannel] / self.shoots[currentChannel])))
 
 	    # Write the scores and times to disk
 	    self._calc_scores(currentChannel)
