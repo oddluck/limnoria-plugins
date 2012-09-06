@@ -23,3 +23,7 @@ Several per-channel configuration variables are available (look at the "channel"
  * minthrottle: The minimum amount of time before a new duck may be launched (in seconds)
  * maxthrottle: The maximum amount of time before a new duck may be launched (in seconds)
  * kickMode: If someone shoots when there is no duck, should he be kicked from the channel? (this requires the bot to be op on the channel)
+
+Update
+------
+Get latest version at : https://github.com/veggiematts/supybot-duckhunt
