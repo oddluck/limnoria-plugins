@@ -57,6 +57,10 @@ conf.registerChannelValue(DuckHunt,
     'maxthrottle', registry.Integer(300, """
     The maximum amount of time before a new duck may be launched (in seconds)"""))
 
+conf.registerChannelValue(DuckHunt, 'kickMode',
+     registry.Boolean(True, """If someone shoots when there is no duck, should he be kicked from the channel?"""))
+
+
 
 
 # vim:set shiftwidth=4 softtabstop=4 expandtab textwidth=79:

@@ -39,6 +39,7 @@ import supybot.conf as conf
 
 import threading, random, pickle, os, time, datetime
 
+# TODO: Average time
 
 class DuckHunt(callbacks.Plugin):
     """
@@ -668,6 +669,11 @@ class DuckHunt(callbacks.Plugin):
 			    irc.reply("There was no duck! %s: %i (%.2f seconds) " % (msg.nick, self.scores[currentChannel][msg.nick], bangdelay))
 			else:
 			    irc.reply("There was no duck! %s: %i" % (msg.nick, self.scores[currentChannel][msg.nick]))
+
+			# If kickMode is enabled for this channel, and the bot have op capability, let's kick!
+			if self.registryValue('kickMode', currentChannel) and irc.nick in irc.state.channels[currentChannel].ops:
+			    irc.queueMsg(ircmsgs.kick(currentChannel, msg.nick, 'There was no duck! You just shot yourself!'))
+
 	    else:
 		irc.reply("There is no hunt right now! You can start a hunt with the 'start' command")
 	else:
