@@ -39,7 +39,6 @@ import supybot.conf as conf
 
 import threading, random, pickle, os, time, datetime
 
-# TODO: Average time
 
 class DuckHunt(callbacks.Plugin):
     """
@@ -63,6 +62,7 @@ class DuckHunt(callbacks.Plugin):
     channeltimes = {}  # Saved times for the channel
     worsttimes = {}     # Worst times for the current hunt
     channelworsttimes = {} # Saved worst times for the channel
+    averagetime = {}   # Average shooting time for the current hunt
 
     # Does a duck needs to be launched?
     lastSpoke = {}
@@ -245,6 +245,9 @@ class DuckHunt(callbacks.Plugin):
 
 		# Init banging
 		self.banging[currentChannel] = False
+
+		# Init averagetime
+		self.averagetime[currentChannel] = 0;
 
 		# Init schedule
 
@@ -611,6 +614,8 @@ class DuckHunt(callbacks.Plugin):
 
 			irc.reply("\_x< %s: %i (%.2f seconds)" % (msg.nick,  self.scores[currentChannel][msg.nick], bangdelay))
 
+			self.averagetime[currentChannel] += bangdelay
+
 			# Now save the bang delay for the player (if it's quicker than it's previous bangdelay)
 			try:
 			    previoustime = self.toptimes[currentChannel][msg.nick]
@@ -648,6 +653,7 @@ class DuckHunt(callbacks.Plugin):
 				self.started[currentChannel] = True
 				if self.scores.get(currentChannel):
 				    self.scores[currentChannel] = {}
+				self.averagetime[currentChannel] = 0
 
 
 		    # There was no duck or the duck has already been shot
@@ -770,6 +776,8 @@ class DuckHunt(callbacks.Plugin):
 		if (recordmsg != ''):
 		    irc.reply("Longest time: %s with %.2f seconds%s" % (key, value, recordmsg))
 
+	    # Showing average shooting time:
+	    irc.reply("Average shooting time: %.2f seconds" % ((self.averagetime[currentChannel] / maxShoots)))
 
 	    # Write the scores and times to disk
 	    self._calc_scores(currentChannel)
