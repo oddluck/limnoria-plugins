@@ -356,6 +356,9 @@ timelist. Also works with worst times.</dd>
 <dd>Starts the hunt</dd>
 <dt>stop</dt>
 <dd>Stops the current hunt</dd>
+<dt>total</dt>
+<dd>Shows the total amount of ducks shot in &lt;channel&gt; (or in the current channel
+if no channel is given)</dd>
 </dl>
 </div>
 <div class="section" id="configuration">
@@ -380,6 +383,11 @@ timelist. Also works with worst times.</dd>
 <dt>supybot.plugins.DuckHunt.maxthrottle</dt>
 <dd><p class="first">This config variable defaults to 300 and is channel specific.</p>
 <p class="last">The maximum amount of time before a new duck may be launched (in seconds)</p>
+</dd>
+<dt>supybot.plugins.DuckHunt.kickMode</dt>
+<dd><p class="first">This config variable defaults to True and is channel specific.</p>
+<p class="last">If someone shoots when there is no duck, should he be kicked from the
+channel? (this requires the bot to be op on the channel)</p>
 </dd>
 </dl>
 </div>

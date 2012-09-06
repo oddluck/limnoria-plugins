@@ -58,7 +58,7 @@ conf.registerChannelValue(DuckHunt,
     The maximum amount of time before a new duck may be launched (in seconds)"""))
 
 conf.registerChannelValue(DuckHunt, 'kickMode',
-     registry.Boolean(True, """If someone shoots when there is no duck, should he be kicked from the channel?"""))
+     registry.Boolean(True, """If someone shoots when there is no duck, should he be kicked from the channel? (this requires the bot to be op on the channel)"""))
 
 
 

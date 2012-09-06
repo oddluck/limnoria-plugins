@@ -55,6 +55,10 @@ start
 stop
   Stops the current hunt
 
+total
+  Shows the total amount of ducks shot in <channel> (or in the current channel
+  if no channel is given)
+
 Configuration
 -------------
 supybot.plugins.DuckHunt.public
@@ -81,4 +85,10 @@ supybot.plugins.DuckHunt.maxthrottle
   This config variable defaults to 300 and is channel specific.
 
   The maximum amount of time before a new duck may be launched (in seconds)
+
+supybot.plugins.DuckHunt.kickMode
+  This config variable defaults to True and is channel specific.
+
+  If someone shoots when there is no duck, should he be kicked from the
+  channel? (this requires the bot to be op on the channel)
 
