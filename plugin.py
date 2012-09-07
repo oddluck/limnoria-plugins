@@ -63,6 +63,7 @@ class DuckHunt(callbacks.Plugin):
     worsttimes = {}     # Worst times for the current hunt
     channelworsttimes = {} # Saved worst times for the channel
     averagetime = {}   # Average shooting time for the current hunt
+    fridayMode = {}
 
     # Does a duck needs to be launched?
     lastSpoke = {}
@@ -173,6 +174,28 @@ class DuckHunt(callbacks.Plugin):
 		self.channelworsttimes[channel] = pickle.load(inputfile)
 		inputfile.close()
 
+    
+    def _initthrottle(self, irc, msg, args, channel):
+
+	if (not self.fridayMode.get(channel)):
+	    self.fridayMode[channel] = False
+	if self.fridayMode[channel] == False:
+	    # Init min throttle[currentChannel] and max throttle[currentChannel]
+	    if self.registryValue('minthrottle', channel):
+		self.minthrottle[channel] = self.registryValue('minthrottle', channel)
+	    else:
+		self.minthrottle[channel] = 30
+
+	    if self.registryValue('maxthrottle', channel):
+		self.maxthrottle[channel] = self.registryValue('maxthrottle', channel)
+	    else:
+		self.maxthrottle[channel] = 300
+
+	else:
+	    self.minthrottle[channel] = 3
+	    self.maxthrottle[channel] = 60
+
+	self.throttle[channel] = random.randint(self.minthrottle[channel], self.maxthrottle[channel])
 
 
     def start(self, irc, msg, args):
@@ -187,18 +210,8 @@ class DuckHunt(callbacks.Plugin):
 		irc.reply("There is already a hunt right now!")
 	    else:
 
-		# Init min throttle[currentChannel] and max throttle[currentChannel]
-		if self.registryValue('minthrottle', currentChannel):
-		    self.minthrottle[currentChannel] = self.registryValue('minthrottle', currentChannel)
-		else:
-		    self.minthrottle[currentChannel] = 30
+		self._initthrottle(irc, msg, args, currentChannel)
 
-		if self.registryValue('maxthrottle', currentChannel):
-		    self.maxthrottle[currentChannel] = self.registryValue('maxthrottle', currentChannel)
-		else:
-		    self.maxthrottle[currentChannel] = 300
-
-		self.throttle[currentChannel] = random.randint(self.minthrottle[currentChannel], self.maxthrottle[currentChannel])
 		#log.info("throttle : " + str(self.throttle[currentChannel]))
 
 		# Init saved scores
@@ -307,7 +320,29 @@ class DuckHunt(callbacks.Plugin):
 	    irc.error('You have to be on a channel')
     stop = wrap(stop)
 
+    def fridaymode(self, irc, msg, args, channel):
+	"""
+	Enable/disable friday mode! (there are lots of ducks on friday :))
+	"""
+	if irc.isChannel(channel):
 
+	    if (not self.fridayMode.get(channel)):
+		self.fridayMode[channel] = False
+
+	    if self.fridayMode[channel] == True:
+		self.fridayMode[channel] = False
+		irc.reply("Friday mode is now disabled.")
+
+	    else:
+		self.fridayMode[channel] = True
+		irc.reply("Friday mode is now enabled! Shoot alllllllllllll the ducks!")
+
+	    self._initthrottle(irc, msg, args, channel)
+	else:
+	    irc.error('You have to be on a channel')
+
+
+    fridaymode = wrap(fridaymode, ['channel'])
 
     def launched(self, irc, msg, args):
         """
@@ -650,7 +685,9 @@ class DuckHunt(callbacks.Plugin):
 
 			    # If autorestart is enabled, we restart a hunt automatically!
 			    if self.registryValue('autoRestart', currentChannel):
+				# This code shouldn't be here
 				self.started[currentChannel] = True
+				self._initthrottle(irc, msg, args, currentChannel)
 				if self.scores.get(currentChannel):
 				    self.scores[currentChannel] = {}
 				self.averagetime[currentChannel] = 0
@@ -669,16 +706,28 @@ class DuckHunt(callbacks.Plugin):
 				self.scores[currentChannel] = {} 
 				self.scores[currentChannel][msg.nick] = -1
 
+			# Base message
+			message = 'There was no duck!'
+
+			# Adding additional message if kick
+			if self.registryValue('kickMode', currentChannel) and irc.nick in irc.state.channels[currentChannel].ops:
+			    message += ' You just shot yourself!'
+
+			# Adding nick and score
+			message += " %s: %i" % (msg.nick, self.scores[currentChannel][msg.nick])
 
 			# If we were able to have a bangdelay (ie: a duck was launched before someone did bang)
 			if (bangdelay):
-			    irc.reply("There was no duck! %s: %i (%.2f seconds) " % (msg.nick, self.scores[currentChannel][msg.nick], bangdelay))
-			else:
-			    irc.reply("There was no duck! %s: %i" % (msg.nick, self.scores[currentChannel][msg.nick]))
+			    # Adding time
+			    message += " (" + str(round(bangdelay,2)) + " seconds)"
 
 			# If kickMode is enabled for this channel, and the bot have op capability, let's kick!
 			if self.registryValue('kickMode', currentChannel) and irc.nick in irc.state.channels[currentChannel].ops:
-			    irc.queueMsg(ircmsgs.kick(currentChannel, msg.nick, 'There was no duck! You just shot yourself!'))
+			    irc.queueMsg(ircmsgs.kick(currentChannel, msg.nick, message))
+			else:
+			    # Else, just say it
+			    irc.reply(message)
+
 
 	    else:
 		irc.reply("There is no hunt right now! You can start a hunt with the 'start' command")
