@@ -266,6 +266,9 @@ class DuckHunt(callbacks.Plugin):
 		# Init banging
 		self.banging[currentChannel] = False
 
+		# Init shoots
+		self.shoots[currentChannel] = 0
+
 		# Init averagetime
 		self.averagetime[currentChannel] = 0;
 
@@ -373,7 +376,9 @@ class DuckHunt(callbacks.Plugin):
 
     def score(self, irc, msg, args, nick):
 	"""
-	<nick>: Shows the score for a given nick
+	<nick>
+
+	Shows the score for a given nick
 	"""
 	currentChannel = msg.args[0]
 	if irc.isChannel(currentChannel):
@@ -397,7 +402,9 @@ class DuckHunt(callbacks.Plugin):
 
     def mergescores(self, irc, msg, args, channel, nickto, nickfrom):
 	"""
-	[<channel>] <nickto> <nickfrom>: nickto gets the points of nickfrom and nickfrom is removed from the scorelist
+	[<channel>] <nickto> <nickfrom>
+	
+	nickto gets the points of nickfrom and nickfrom is removed from the scorelist
 	"""
 	if irc.isChannel(channel):
 	    try:
@@ -421,7 +428,9 @@ class DuckHunt(callbacks.Plugin):
 
     def mergetimes(self, irc, msg, args, channel, nickto, nickfrom):
 	"""
-	[<channel>] <nickto> <nickfrom>: nickto gets the best time of nickfrom if nickfrom time is better than nickto time, and nickfrom is removed from the timelist. Also works with worst times. 
+	[<channel>] <nickto> <nickfrom>
+	
+	nickto gets the best time of nickfrom if nickfrom time is better than nickto time, and nickfrom is removed from the timelist. Also works with worst times. 
 	"""
 	if irc.isChannel(channel):
 	    try:
@@ -455,7 +464,9 @@ class DuckHunt(callbacks.Plugin):
 
     def rmtime(self, irc, msg, args, channel, nick):
 	"""
-	[<channel>] <nick>: Remove <nick>'s best time
+	[<channel>] <nick>
+	
+	Remove <nick>'s best time
 	"""
 	if irc.isChannel(channel):
 	    self._read_scores(channel)
@@ -472,7 +483,9 @@ class DuckHunt(callbacks.Plugin):
 
     def rmscore(self, irc, msg, args, channel, nick):
 	"""
-	[<channel>] <nick>: Remove <nick>'s score
+	[<channel>] <nick>
+	
+	Remove <nick>'s score
 	"""
 	if irc.isChannel(channel):
 	    try:
@@ -493,7 +506,9 @@ class DuckHunt(callbacks.Plugin):
 
     def listscores(self, irc, msg, args, size, channel):
         """
-	[<size>] [<channel>]: Shows the <size>-sized score list for <channel> (or for the current channel if no channel is given)
+	[<size>] [<channel>]
+	
+	Shows the <size>-sized score list for <channel> (or for the current channel if no channel is given)
 	"""
 
 	if irc.isChannel(channel):
@@ -552,7 +567,9 @@ class DuckHunt(callbacks.Plugin):
 
     def listtimes(self, irc, msg, args, size, channel):
         """
-	[<size>] [<channel>]: Shows the <size>-sized time list for <channel> (or for the current channel if no channel is given)
+	[<size>] [<channel>]
+	
+	Shows the <size>-sized time list for <channel> (or for the current channel if no channel is given)
 	"""
 
 	if irc.isChannel(channel):
@@ -833,7 +850,8 @@ class DuckHunt(callbacks.Plugin):
 		    irc.reply("Longest time: %s with %.2f seconds%s" % (key, value, recordmsg))
 
 	    # Showing average shooting time:
-	    irc.reply("Average shooting time: %.2f seconds" % ((self.averagetime[currentChannel] / self.shoots[currentChannel])))
+	    if (self.shoots[currentChannel] > 1):
+		irc.reply("Average shooting time: %.2f seconds" % ((self.averagetime[currentChannel] / self.shoots[currentChannel])))
 
 	    # Write the scores and times to disk
 	    self._calc_scores(currentChannel)
