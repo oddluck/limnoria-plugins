@@ -60,6 +60,8 @@ conf.registerChannelValue(DuckHunt,
 conf.registerChannelValue(DuckHunt, 'kickMode',
      registry.Boolean(True, """If someone shoots when there is no duck, should he be kicked from the channel? (this requires the bot to be op on the channel)"""))
 
+conf.registerChannelValue(DuckHunt, 'autoFriday',
+     registry.Boolean(True, """ Do we need to automatically launch more ducks on friday? """))
 
 
 

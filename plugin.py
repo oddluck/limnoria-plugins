@@ -179,6 +179,13 @@ class DuckHunt(callbacks.Plugin):
 
 	if (not self.fridayMode.get(channel)):
 	    self.fridayMode[channel] = False
+
+
+	# autoFriday?
+	if self.registryValue('autoFriday', channel) and int(time.strftime("%w")) == 5 and int(time.strftime("%H")) > 8 and int(time.strftime("%H")) < 18:
+	    self.fridayMode[channel] = True
+
+
 	if self.fridayMode[channel] == False:
 	    # Init min throttle[currentChannel] and max throttle[currentChannel]
 	    if self.registryValue('minthrottle', channel):
@@ -342,7 +349,7 @@ class DuckHunt(callbacks.Plugin):
 	    irc.error('You have to be on a channel')
 
 
-    fridaymode = wrap(fridaymode, ['channel'])
+    fridaymode = wrap(fridaymode, ['channel', 'admin'])
 
     def launched(self, irc, msg, args):
         """
