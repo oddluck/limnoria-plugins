@@ -20,34 +20,37 @@ bang
 dbg
   This is a debug command. If debug mode is not enabled, it won't do anything
 
+fridaymode
+  Enable/disable friday mode! (there are lots of ducks on friday :))
+
 launched
   Is there a duck right now?
 
 listscores
-  [<size>] [<channel>]: Shows the <size>-sized score list for <channel> (or for
+  [<size>] [<channel>] Shows the <size>-sized score list for <channel> (or for
   the current channel if no channel is given)
 
 listtimes
-  [<size>] [<channel>]: Shows the <size>-sized time list for <channel> (or for
+  [<size>] [<channel>] Shows the <size>-sized time list for <channel> (or for
   the current channel if no channel is given)
 
 mergescores
-  [<channel>] <nickto> <nickfrom>: nickto gets the points of nickfrom and
+  [<channel>] <nickto> <nickfrom> nickto gets the points of nickfrom and
   nickfrom is removed from the scorelist
 
 mergetimes
-  [<channel>] <nickto> <nickfrom>: nickto gets the best time of nickfrom if
+  [<channel>] <nickto> <nickfrom> nickto gets the best time of nickfrom if
   nickfrom time is better than nickto time, and nickfrom is removed from the
   timelist. Also works with worst times.
 
 rmscore
-  [<channel>] <nick>: Remove <nick>'s score
+  [<channel>] <nick> Remove <nick>'s score
 
 rmtime
-  [<channel>] <nick>: Remove <nick>'s best time
+  [<channel>] <nick> Remove <nick>'s best time
 
 score
-  <nick>: Shows the score for a given nick
+  <nick> Shows the score for a given nick
 
 start
   Starts the hunt
@@ -91,4 +94,9 @@ supybot.plugins.DuckHunt.kickMode
 
   If someone shoots when there is no duck, should he be kicked from the
   channel? (this requires the bot to be op on the channel)
+
+supybot.plugins.DuckHunt.autoFriday
+  This config variable defaults to True and is channel specific.
+
+  Do we need to automatically launch more ducks on friday?
 
