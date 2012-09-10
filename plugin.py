@@ -793,16 +793,18 @@ class DuckHunt(callbacks.Plugin):
 	    else:
 		maxShoots = 10
 
-	    # Showing scores
-	    #irc.reply("Winner: %s with %i points" % (winnernick, winnerscore))
-	    #irc.reply(self.scores.get(currentChannel))
-	    #TODO: Better display
-	    irc.reply(sorted(self.scores.get(currentChannel).iteritems(), key=lambda (k,v):(v,k), reverse=True))
-
 	    # Is there a perfect?
 	    if (winnerscore == maxShoots):
 		irc.reply("\o/ %s: %i ducks out of %i: perfect!!! +%i \o/" % (winnernick, winnerscore, maxShoots, self.perfectbonus))
 		self.scores[currentChannel][winnernick] += self.perfectbonus
+	    else:
+		# Showing scores
+		#irc.reply("Winner: %s with %i points" % (winnernick, winnerscore))
+		#irc.reply(self.scores.get(currentChannel))
+		#TODO: Better display
+		irc.reply(sorted(self.scores.get(currentChannel).iteritems(), key=lambda (k,v):(v,k), reverse=True))
+
+
 
 	    # Getting channel best time (to see if the best time of this hunt is better)
 	    channelbestnick = None
