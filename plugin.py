@@ -60,7 +60,9 @@ class HuntNFish(callbacks.Plugin):
             weightType = self.registryValue('weightType')
             thisHunt = (msg.nick + " goes hunting " + currentWhere + " for a " + str(weight) + weightType +  currentWhat)
             irc.reply(thisHunt)
-            time.sleep(5)#pauses the output between line 1 and 2 for 5 seconds
+            irc.reply("aims....")
+            irc.reply("fires.....")
+            time.sleep(7)#pauses the output between line 1 and 2 for 5 seconds
             huntChance = random.randint(1,100)
             successRate = self.registryValue('SuccessRate')
 
@@ -77,16 +79,18 @@ class HuntNFish(callbacks.Plugin):
         performs a random fishing trip
         """
         if(self.registryValue('enable', msg.args[0])):
-            fishes = (' Salmon', ' Herring', ' Yellowfin Tuna', ' Pink Salmon', ' Chub', ' Barbel', ' Perch', ' Northern Pike', ' Brown Trout', ' Arctic Char', ' Roach', ' Brayling', ' Bleak', ' Cat Fish', ' Sun Fish', ' Old Tire', ' Rusty Tin Can', ' Genie Lamp', ' Love Message In A Bottle', ' Old Log', ' Rubber Boot' , ' Dead Body', ' Loch Ness Monster', ' Old Fishing Lure', ' Piece of the Titanic', 'Chunk of Atlantis', ' Squid', ' Whale', ' Dolphin',  ' Porpoise' , ' Stingray', ' Submarine', ' Seal', ' Seahorse', ' Jellyfish', ' Starfish', ' Electric Eel', ' Great White Shark', ' Scuba Diver' , ' X', ' Lag Monster', ' Virus', ' Soggy Pack of Smokes', ' Pile of Weed', ' Boat Anchor', 'Pair Of Floaties', ' Mermaid', ' Merman', ' Halibut', ' Tiddler', ' Sock', ' Trout')
+            fishes = (' Salmon', ' Herring', ' Yellowfin Tuna', ' Pink Salmon', ' Chub', ' Barbel', ' Perch', ' Northern Pike', ' Brown Trout', ' Arctic Char', ' Roach', ' Brayling', ' Bleak', ' Cat Fish', ' Sun Fish', ' Old Tire', ' Rusty Tin Can', ' Genie Lamp', ' Love Message In A Bottle', ' Old Log', ' Rubber Boot' , ' Dead Body', ' Loch Ness Monster', ' Old Fishing Lure', ' Piece of the Titanic', ' Chunk of Atlantis', ' Squid', ' Whale', ' Dolphin',  ' Porpoise' , ' Stingray', ' Submarine', ' Seal', ' Seahorse', ' Jellyfish', ' Starfish', ' Electric Eel', ' Great White Shark', ' Scuba Diver' , ' Lag Monster', ' Virus', ' Soggy Pack of Smokes', ' Bag of Weed', ' Boat Anchor', ' Pair Of Floaties', ' Mermaid', ' Merman', ' Halibut', ' Tiddler', ' Sock', ' Trout')
             fishSpots = ('a Stream', 'a Lake', 'a River', 'a Pond', 'an Ocean', 'a Bathtub', 'a Kiddies Swimming Pool', 'a Toilet', 'a Pile of Vomit', 'a Pool of Urine', 'a Kitchen Sink', 'a Bathroom Sink', 'a Mud Puddle', 'a Pail of Water', 'a Bowl of Jell-O', 'a Wash Basin', 'a Rain Barrel', 'an Aquarium', 'a SnowBank', 'a WaterFall', 'a Cup of Coffee', 'a Glass of Milk')
 
             currentWhat = random.choice(fishes)
             currentWhere = random.choice(fishSpots)
             weight = random.randint(1,200)
             weightType = self.registryValue('weightType')
-            thisFishing = (msg.nick + " goes fishing in " + currentWhere + " for a " + str(weight) + weightType +  currentWhat)
+            thisFishing = (msg.nick + " goes fishing in " + currentWhere)
             irc.reply(thisFishing)
-            time.sleep(5)#pauses the output between line 1 and 2 for 5 seconds
+            irc.reply("casts in....")
+            irc.reply("a " + str(weight) + weightType + currentWhat + " is biting...")
+            time.sleep(7)#pauses the output between line 1 and 2 for 5 seconds
             huntChance = random.randint(1,100)
             successRate = self.registryValue('SuccessRate')
 
