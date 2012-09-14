@@ -85,7 +85,7 @@ class DuckHunt(callbacks.Plugin):
     toplist = 5      # How many high{scores|times} are displayed by default?
     dow = int(time.strftime("%u")) # Day of week
     woy = int(time.strftime("%V")) # Week of year
-    dayname = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+    dayname = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Caturday', 'Saturday', 'Sunday']
 
 
     def _calc_scores(self, channel):
@@ -268,6 +268,9 @@ class DuckHunt(callbacks.Plugin):
 		irc.reply("There is already a hunt right now!")
 	    else:
 
+		# First of all, let's read the score if needed
+		self._read_scores(currentChannel)
+
 		self._initthrottle(irc, msg, args, currentChannel)
 
 		#log.info("throttle : " + str(self.throttle[currentChannel]))
@@ -302,9 +305,6 @@ class DuckHunt(callbacks.Plugin):
 
 		# Init lastSpoke
 		self.lastSpoke[currentChannel] = time.time()
-
-		if not self.channelscores[currentChannel] or not self.channeltimes[currentChannel] or not self.channelworsttimes[currentChannel]:
-		    self._read_scores(currentChannel)
 
 		# Reinit current hunt scores
 		if self.scores.get(currentChannel):
@@ -565,6 +565,7 @@ class DuckHunt(callbacks.Plugin):
 	if irc.isChannel(channel):
 
 	    self._read_scores(channel)
+	    weekscores = {}
 
 	    if (not week):
 		week = self.woy
@@ -576,11 +577,25 @@ class DuckHunt(callbacks.Plugin):
 		    for i in (1,2,3,4,5,6,7):
 			log.info(channel + " " + str(week) + " " + str(i) )
 			if self.channelweek[channel][week].get(i):
+			    # Getting winner of the day
 			    winnernick, winnerscore = max(self.channelweek[channel][week][i].iteritems(), key=lambda (k,v):(v,k))
 			    msgstring += self.dayname[i - 1] + ": x" + winnernick + "x ("+ str(winnerscore) + ") | "
 
+			    # Getting all scores, to get the winner of the week
+			    for player in self.channelweek[channel][week][i].keys():
+				try:
+				    weekscores[player] += self.channelweek[channel][week][i][player]
+				except:
+				    weekscores[player] = self.channelweek[channel][week][i][player]
+			 
+
+
 		    if msgstring != "":
 			irc.reply("Week " + str(self.woy) + " scores: " + msgstring)
+			# Who's the winner at this point?
+			winnernick, winnerscore = max(weekscores.iteritems(), key=lambda (k,v):(v,k))
+			irc.reply("Leader: x%sx with %i points." % (winnernick, winnerscore)) 
+
 		    else:
 			irc.reply("There aren't any week scores for this week yet.")
 		else:
