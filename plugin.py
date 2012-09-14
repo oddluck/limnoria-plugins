@@ -64,6 +64,8 @@ class DuckHunt(callbacks.Plugin):
     channelworsttimes = {} # Saved worst times for the channel
     averagetime = {}   # Average shooting time for the current hunt
     fridayMode = {}
+    week = {}
+    channelweek = {}
 
     # Does a duck needs to be launched?
     lastSpoke = {}
@@ -81,6 +83,9 @@ class DuckHunt(callbacks.Plugin):
     # Other params
     perfectbonus = 5 # How many extra-points are given when someones does a perfect hunt?
     toplist = 5      # How many high{scores|times} are displayed by default?
+    dow = int(time.strftime("%u")) # Day of week
+    woy = int(time.strftime("%V")) # Week of year
+    dayname = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
 
     def _calc_scores(self, channel):
@@ -122,6 +127,18 @@ class DuckHunt(callbacks.Plugin):
 		if(self.worsttimes[channel][player] > self.channelworsttimes[channel][player]):
 		    self.channelworsttimes[channel][player] = self.worsttimes[channel][player]
 
+	# week scores
+	for player in self.scores[channel].keys():
+	    if not player in self.channelweek[channel][self.woy][self.dow]:
+		# It's a new player
+		self.channelweek[channel][self.woy][self.dow][player] = self.scores[channel][player]
+		log.info(channel + " " +  str(self.woy) + " " + str(self.dow) + " " + player + " 1 ")
+	    else:
+		# It's a player that already has a saved score
+		self.channelweek[channel][self.woy][self.dow][player] += self.scores[channel][player]
+		log.info(channel + " " + str(self.woy) + " " + str(self.dow) + " " + player + " + ")
+
+
 
 
     def _write_scores(self, channel):
@@ -143,6 +160,13 @@ class DuckHunt(callbacks.Plugin):
         outputfile = open(self.path.dirize(self.fileprefix + channel + ".worsttimes"), "wb")
         pickle.dump(self.channelworsttimes[channel], outputfile)
         outputfile.close()
+
+	# week scores
+        outputfile = open(self.path.dirize(self.fileprefix + channel + ".weekscores"), "wb")
+        pickle.dump(self.channelweek[channel], outputfile)
+        outputfile.close()
+
+
 
 
 
@@ -174,8 +198,35 @@ class DuckHunt(callbacks.Plugin):
 		self.channelworsttimes[channel] = pickle.load(inputfile)
 		inputfile.close()
 
+	# week scores
+	if not self.channelweek.get(channel):
+	    if os.path.isfile(filename + ".weekscores"):
+		inputfile = open(filename + ".weekscores", "rb")
+		self.channelweek[channel] = pickle.load(inputfile)
+		inputfile.close()
+
+
     
     def _initthrottle(self, irc, msg, args, channel):
+
+        self.dow = int(time.strftime("%u")) # Day of week
+	self.woy = int(time.strftime("%V")) # Week of year
+
+	# Init week scores
+	try:
+	    self.channelweek[channel]
+	except:
+	    self.channelweek[channel] = {}
+	try:
+	    self.channelweek[channel][self.woy]
+	except:
+	    self.channelweek[channel][self.woy] = {}
+	try:
+	    self.channelweek[channel][self.woy][self.dow]
+	except:
+	    self.channelweek[channel][self.woy][self.dow] = {}
+
+
 
 	if (not self.fridayMode.get(channel)):
 	    self.fridayMode[channel] = False
@@ -226,6 +277,8 @@ class DuckHunt(callbacks.Plugin):
 		    self.channelscores[currentChannel]
 		except:
 		    self.channelscores[currentChannel] = {}
+
+
 
 		# Init saved times
 		try:
@@ -501,6 +554,42 @@ class DuckHunt(callbacks.Plugin):
 	    irc.error('Are you sure this is a channel?')
 
     rmscore = wrap(rmscore, ['channel', 'nick', 'admin'])
+
+    def weekscores(self, irc, msg, args, week, channel):
+        """
+	[<week>] [<channel>]
+	
+	Shows the score list of the week for <channel> (or for the current channel if no channel is given)
+	"""
+
+	if irc.isChannel(channel):
+
+	    self._read_scores(channel)
+
+	    if (not week):
+		week = self.woy
+
+	    if self.channelweek.get(channel):
+		if self.channelweek[channel].get(week):
+		    # for each day of week
+		    msgstring = ''
+		    for i in (1,2,3,4,5,6,7):
+			log.info(channel + " " + str(week) + " " + str(i) )
+			if self.channelweek[channel][week].get(i):
+			    winnernick, winnerscore = max(self.channelweek[channel][week][i].iteritems(), key=lambda (k,v):(v,k))
+			    msgstring += self.dayname[i - 1] + ": x" + winnernick + "x ("+ str(winnerscore) + ") | "
+
+		    if msgstring != "":
+			irc.reply("Week " + str(self.woy) + " scores: " + msgstring)
+		    else:
+			irc.reply("There aren't any week scores for this week yet.")
+		else:
+		    irc.reply("There aren't any week scores for this week yet.")
+	    else:
+		irc.reply("There aren't any week scores for this channel yet.")
+	else:
+	    irc.reply("Are you sure this is a channel?")
+    weekscores = wrap(weekscores, [optional('int'), 'channel'])
 
 
 

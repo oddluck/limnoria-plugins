@@ -41,6 +41,7 @@ class DuckHuntTestCase(ChannelPluginTestCase):
 	self.assertRegexp("bang", "^There was no duck!")
 	self.assertResponse("stop", "The hunt stops now!")
 	self.assertNotError("listscores")
+	self.assertNotError("weekscores")
 
 
 # vim:set shiftwidth=4 softtabstop=4 expandtab textwidth=79:
