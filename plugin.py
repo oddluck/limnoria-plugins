@@ -33,6 +33,7 @@ from supybot.commands import *
 import supybot.plugins as plugins
 import supybot.ircutils as ircutils
 import supybot.callbacks as callbacks
+import supybot.conf as conf
 import random as random
 import re
 import time
@@ -69,6 +70,22 @@ class HuntNFish(callbacks.Plugin):
             if huntChance < successRate:
                 win = ("way to go, " + msg.nick + ". You killed the " + str(weight) + weightType + currentWhat)
                 irc.reply(win)
+                with open(conf.supybot.directories.data.dirize('hunttrophy.txt'), 'r') as file:
+                    data = file.readlines()
+                    bigHunt = data[2].rstrip('\n')
+                    if weight > int(bigHunt):
+                        with open(conf.supybot.directories.data.dirize('hunttrophy.txt'), 'w') as file:
+                            data[0] = msg.nick
+                            data[1] = currentWhat 
+                            data[2] = weight
+                            file.writelines(str(data[0]))
+                            file.writelines('\n')
+                            file.writelines(str(data[1]))
+                            file.writelines('\n')
+                            file.writelines(str(data[2]))
+                            irc.reply("you got a new highscore")
+
+
             else:
                 lose = ("oops, you missed, " + msg.nick)
                 irc.reply(lose)
@@ -97,9 +114,45 @@ class HuntNFish(callbacks.Plugin):
             if huntChance < successRate:
                 win = ("way to go, " + msg.nick + ". You caught the " + str(weight) + weightType + currentWhat)
                 irc.reply(win)
+                with open(conf.supybot.directories.data.dirize('fishtrophy.txt'), 'r') as file:
+                    data = file.readlines()
+                    bigFish = data[2].rstrip('\n')
+                    if weight > int(bigFish):
+                        with open(conf.supybot.directories.data.dirize('fishtrophy.txt'), 'w') as file:
+                            data[0] = msg.nick
+                            data[1] = currentWhat 
+                            data[2] = weight
+                            file.writelines(str(data[0]))
+                            file.writelines('\n')
+                            file.writelines(str(data[1]))
+                            file.writelines('\n')
+                            file.writelines(str(data[2]))
+                            irc.reply("you got a new highscore")
+
+
             else:
                 lose = ("oops, it got away, " + msg.nick)
                 irc.reply(lose)
+
+    def trophy(self,irc,msg,args):
+        """
+        checks the current highscores for hunting and fishing
+        """
+        if(self.registryValue('enable', msg.args[0])):
+            weightType = self.registryValue('weightType')
+            with open(conf.supybot.directories.data.dirize('hunttrophy.txt'), 'r') as file1:
+                data1 = file1.readlines()
+                hunter = data1[0].rstrip('\n')
+                hunted = data1[1].rstrip('\n')
+                score = data1[2].rstrip('\n')
+                irc.reply("hunting hiscore held by: " + hunter + " with a " + score + weightType + hunted)
+            with open(conf.supybot.directories.data.dirize('fishtrophy.txt'), 'r') as file2:
+                data2 = file2.readlines()
+                fisherman = data2[0].rstrip('\n')
+                catch = data2[1].rstrip('\n')
+                size = data2[2].rstrip('\n')
+                irc.reply("fishing hiscore held by: " + fisherman + " with a " + size + weightType + catch)
+
 
 
 Class = HuntNFish
