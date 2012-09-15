@@ -66,6 +66,7 @@ class DuckHunt(callbacks.Plugin):
     fridayMode = {}
     week = {}
     channelweek = {}
+    leader = {}
 
     # Does a duck needs to be launched?
     lastSpoke = {}
@@ -132,11 +133,9 @@ class DuckHunt(callbacks.Plugin):
 	    if not player in self.channelweek[channel][self.woy][self.dow]:
 		# It's a new player
 		self.channelweek[channel][self.woy][self.dow][player] = self.scores[channel][player]
-		log.info(channel + " " +  str(self.woy) + " " + str(self.dow) + " " + player + " 1 ")
 	    else:
 		# It's a player that already has a saved score
 		self.channelweek[channel][self.woy][self.dow][player] += self.scores[channel][player]
-		log.info(channel + " " + str(self.woy) + " " + str(self.dow) + " " + player + " + ")
 
 
 
@@ -227,14 +226,15 @@ class DuckHunt(callbacks.Plugin):
 	    self.channelweek[channel][self.woy][self.dow] = {}
 
 
+	# autoFriday?
+	if self.registryValue('autoFriday', channel):
+	    if int(time.strftime("%w")) == 5 and int(time.strftime("%H")) > 8 and int(time.strftime("%H")) < 17:
+		self.fridayMode[channel] = True
+	    else:
+		self.fridayMode[channel] = None
 
 	if (not self.fridayMode.get(channel)):
 	    self.fridayMode[channel] = False
-
-
-	# autoFriday?
-	if self.registryValue('autoFriday', channel) and int(time.strftime("%w")) == 5 and int(time.strftime("%H")) > 8 and int(time.strftime("%H")) < 18:
-	    self.fridayMode[channel] = True
 
 
 	if self.fridayMode[channel] == False:
@@ -273,15 +273,11 @@ class DuckHunt(callbacks.Plugin):
 
 		self._initthrottle(irc, msg, args, currentChannel)
 
-		#log.info("throttle : " + str(self.throttle[currentChannel]))
-
 		# Init saved scores
 		try:
 		    self.channelscores[currentChannel]
 		except:
 		    self.channelscores[currentChannel] = {}
-
-
 
 		# Init saved times
 		try:
@@ -294,7 +290,6 @@ class DuckHunt(callbacks.Plugin):
 		    self.channelworsttimes[currentChannel]
 		except:
 		    self.channelworsttimes[currentChannel] = {}
-
 
 		# Init times
 		self.toptimes[currentChannel] = {}
@@ -356,7 +351,6 @@ class DuckHunt(callbacks.Plugin):
 		    if now > self.lastSpoke[currentChannel] + self.throttle[currentChannel]:
 			# If someone is "banging" right now, do not launch a duck
 			if (not self.banging[currentChannel]):
-			    #log.info("Delay since the last launch for " + currentChannel + " "  + str(now - self.lastSpoke[currentChannel]) + " / throttle[currentChannel]: " + str(self.throttle[currentChannel]) + " / minthrottle[currentChannel]: " + str(self.minthrottle[currentChannel]) + " / maxthrottle[currentChannel]: " + str(self.maxthrottle[currentChannel]))
 			    self._launch(irc, msg, '')
 
 
@@ -555,11 +549,54 @@ class DuckHunt(callbacks.Plugin):
 
     rmscore = wrap(rmscore, ['channel', 'nick', 'admin'])
 
-    def weekscores(self, irc, msg, args, week, channel):
+
+
+
+    def dayscores(self, irc, msg, args, channel):
         """
-	[<week>] [<channel>]
+	[<channel>]
 	
-	Shows the score list of the week for <channel> (or for the current channel if no channel is given)
+	Shows the score list of the day for <channel>. 
+	"""
+
+	if irc.isChannel(channel):
+
+	    self._read_scores(channel)
+	    self.dow = int(time.strftime("%u")) # Day of week
+	    self.woy = int(time.strftime("%V")) # Week of year
+	    day = self.dow
+	    week = self.woy
+
+	    if self.channelweek.get(channel):
+		if self.channelweek[channel].get(week):
+		    if self.channelweek[channel][week].get(day):
+			# Getting all scores, to get the winner of the week
+			msgstring = ''
+			scores = sorted(self.channelweek[channel][week][day].iteritems(), key=lambda (k,v):(v,k), reverse=True)
+			for item in scores:
+			    msgstring += "x" + item[0] + "x: "+ str(item[1]) + " | "
+
+			if msgstring != "":
+			    irc.reply("Scores for today: " + msgstring)
+			else:
+			    irc.reply("There aren't any day scores for today yet.")
+		    else:
+			irc.reply("There aren't any day scores for today yet.")
+		else:
+		    irc.reply("There aren't any day scores for today yet.")
+	    else:
+		irc.reply("There aren't any day scores for this channel yet.")
+	else:
+	    irc.reply("Are you sure this is a channel?")
+    dayscores = wrap(dayscores, ['channel'])
+
+
+
+    def weekscores(self, irc, msg, args, week, nick, channel):
+        """
+	[<week>] [<nick>] [<channel>]
+	
+	Shows the score list of the week for <channel>. If <nick> is provided, it will only show <nick>'s scores.
 	"""
 
 	if irc.isChannel(channel):
@@ -572,39 +609,55 @@ class DuckHunt(callbacks.Plugin):
 
 	    if self.channelweek.get(channel):
 		if self.channelweek[channel].get(week):
-		    # for each day of week
-		    msgstring = ''
-		    for i in (1,2,3,4,5,6,7):
-			log.info(channel + " " + str(week) + " " + str(i) )
-			if self.channelweek[channel][week].get(i):
-			    # Getting winner of the day
-			    winnernick, winnerscore = max(self.channelweek[channel][week][i].iteritems(), key=lambda (k,v):(v,k))
-			    msgstring += self.dayname[i - 1] + ": x" + winnernick + "x ("+ str(winnerscore) + ") | "
+		    # Showing the winner for each day
+		    if not nick:
+			msgstring = ''
+			# for each day of week
+			for i in (1,2,3,4,5,6,7):
+			    if self.channelweek[channel][week].get(i):
+				# Getting winner of the day
+				winnernick, winnerscore = max(self.channelweek[channel][week][i].iteritems(), key=lambda (k,v):(v,k))
+				msgstring += self.dayname[i - 1] + ": x" + winnernick + "x ("+ str(winnerscore) + ") | "
 
-			    # Getting all scores, to get the winner of the week
-			    for player in self.channelweek[channel][week][i].keys():
-				try:
-				    weekscores[player] += self.channelweek[channel][week][i][player]
-				except:
-				    weekscores[player] = self.channelweek[channel][week][i][player]
-			 
+				# Getting all scores, to get the winner of the week
+				for player in self.channelweek[channel][week][i].keys():
+				    try:
+					weekscores[player] += self.channelweek[channel][week][i][player]
+				    except:
+					weekscores[player] = self.channelweek[channel][week][i][player]
+			     
 
 
-		    if msgstring != "":
-			irc.reply("Week " + str(self.woy) + " scores: " + msgstring)
-			# Who's the winner at this point?
-			winnernick, winnerscore = max(weekscores.iteritems(), key=lambda (k,v):(v,k))
-			irc.reply("Leader: x%sx with %i points." % (winnernick, winnerscore)) 
+			if msgstring != "":
+			    irc.reply("Scores for week " + str(self.woy) + ": " + msgstring)
+			    # Who's the winner at this point?
+			    winnernick, winnerscore = max(weekscores.iteritems(), key=lambda (k,v):(v,k))
+			    irc.reply("Leader: x%sx with %i points." % (winnernick, winnerscore)) 
 
+			else:
+			    irc.reply("There aren't any week scores for this week yet.")
 		    else:
-			irc.reply("There aren't any week scores for this week yet.")
+			# Showing the scores of <nick>
+			msgstring = ''
+			for i in (1,2,3,4,5,6,7):
+			    if self.channelweek[channel][week].get(i):
+				# Getting winner of the day
+				if self.channelweek[channel][week][i].get(nick):
+				    msgstring += self.dayname[i - 1] + ": "+ str(self.channelweek[channel][week][i].get(nick)) + " | "
+
+			if msgstring != "":
+			    irc.reply(nick + " scores for week " + str(self.woy) + ": " + msgstring)
+			else:
+			    irc.reply("There aren't any week scores for this nick.")
+
+
 		else:
 		    irc.reply("There aren't any week scores for this week yet.")
 	    else:
 		irc.reply("There aren't any week scores for this channel yet.")
 	else:
 	    irc.reply("Are you sure this is a channel?")
-    weekscores = wrap(weekscores, [optional('int'), 'channel'])
+    weekscores = wrap(weekscores, [optional('int'), optional('nick'), 'channel'])
 
 
 
@@ -956,8 +1009,8 @@ class DuckHunt(callbacks.Plugin):
 		    irc.reply("Longest time: %s with %.2f seconds%s" % (key, value, recordmsg))
 
 	    # Showing average shooting time:
-	    if (self.shoots[currentChannel] > 1):
-		irc.reply("Average shooting time: %.2f seconds" % ((self.averagetime[currentChannel] / self.shoots[currentChannel])))
+	    #if (self.shoots[currentChannel] > 1):
+		#irc.reply("Average shooting time: %.2f seconds" % ((self.averagetime[currentChannel] / self.shoots[currentChannel])))
 
 	    # Write the scores and times to disk
 	    self._calc_scores(currentChannel)
@@ -1003,7 +1056,6 @@ class DuckHunt(callbacks.Plugin):
 
 		    # Define a new throttle[currentChannel] for the next launch
 		    self.throttle[currentChannel] = random.randint(self.minthrottle[currentChannel], self.maxthrottle[currentChannel])
-		    #log.info("throttle for " + currentChannel + " : " + str(self.throttle[currentChannel]))
 
 		    try:
 			self.shoots[currentChannel] += 1
