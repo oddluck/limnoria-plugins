@@ -86,6 +86,7 @@ class DuckHunt(callbacks.Plugin):
     toplist = 5      # How many high{scores|times} are displayed by default?
     dow = int(time.strftime("%u")) # Day of week
     woy = int(time.strftime("%V")) # Week of year
+    year = time.strftime("%Y") 
     dayname = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Caturday', 'Saturday', 'Sunday']
 
 
@@ -161,7 +162,7 @@ class DuckHunt(callbacks.Plugin):
         outputfile.close()
 
 	# week scores
-        outputfile = open(self.path.dirize(self.fileprefix + channel + ".weekscores"), "wb")
+        outputfile = open(self.path.dirize(self.fileprefix + channel + self.year + ".weekscores"), "wb")
         pickle.dump(self.channelweek[channel], outputfile)
         outputfile.close()
 
@@ -199,8 +200,8 @@ class DuckHunt(callbacks.Plugin):
 
 	# week scores
 	if not self.channelweek.get(channel):
-	    if os.path.isfile(filename + ".weekscores"):
-		inputfile = open(filename + ".weekscores", "rb")
+	    if os.path.isfile(filename + self.year + ".weekscores"):
+		inputfile = open(filename + self.year + ".weekscores", "rb")
 		self.channelweek[channel] = pickle.load(inputfile)
 		inputfile.close()
 
@@ -210,6 +211,7 @@ class DuckHunt(callbacks.Plugin):
 
         self.dow = int(time.strftime("%u")) # Day of week
 	self.woy = int(time.strftime("%V")) # Week of year
+	year = time.strftime("%Y") 
 
 	# Init week scores
 	try:
