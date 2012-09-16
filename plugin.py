@@ -130,7 +130,7 @@ class DuckHunt(callbacks.Plugin):
 
 	# week scores
 	for player in self.scores[channel].keys():
-	    if not player in self.channelweek[channel][self.woy][self.dow]:
+	    if not player in self.channelweek[channel][self.woy].get(self.dow):
 		# It's a new player
 		self.channelweek[channel][self.woy][self.dow][player] = self.scores[channel][player]
 	    else:
@@ -225,6 +225,9 @@ class DuckHunt(callbacks.Plugin):
 	except:
 	    self.channelweek[channel][self.woy][self.dow] = {}
 
+
+	if not self.leader.get(channel):
+	    self.leader[channel] = None
 
 	# autoFriday?
 	if self.registryValue('autoFriday', channel):
@@ -639,14 +642,16 @@ class DuckHunt(callbacks.Plugin):
 		    else:
 			# Showing the scores of <nick>
 			msgstring = ''
+			total = 0
 			for i in (1,2,3,4,5,6,7):
 			    if self.channelweek[channel][week].get(i):
-				# Getting winner of the day
 				if self.channelweek[channel][week][i].get(nick):
 				    msgstring += self.dayname[i - 1] + ": "+ str(self.channelweek[channel][week][i].get(nick)) + " | "
+				    total += self.channelweek[channel][week][i].get(nick)
 
 			if msgstring != "":
 			    irc.reply(nick + " scores for week " + str(self.woy) + ": " + msgstring)
+			    irc.reply("Total: " + str(total) + " points.")
 			else:
 			    irc.reply("There aren't any week scores for this nick.")
 
@@ -1015,6 +1020,28 @@ class DuckHunt(callbacks.Plugin):
 	    # Write the scores and times to disk
 	    self._calc_scores(currentChannel)
 	    self._write_scores(currentChannel)
+
+	    # Did someone took the lead?
+	    weekscores = {}
+	    if self.channelweek.get(currentChannel):
+		if self.channelweek[currentChannel].get(self.woy):
+		    msgstring = ''
+		    # for each day of week
+		    for i in (1,2,3,4,5,6,7):
+			if self.channelweek[currentChannel][self.woy].get(i):
+			    # Getting all scores, to get the winner of the week
+			    for player in self.channelweek[currentChannel][self.woy][i].keys():
+				try:
+				    weekscores[player] += self.channelweek[currentChannel][self.woy][i][player]
+				except:
+				    weekscores[player] = self.channelweek[currentChannel][self.woy][i][player]
+		    winnernick, winnerscore = max(weekscores.iteritems(), key=lambda (k,v):(v,k))
+		    if (winnernick != self.leader[currentChannel]):
+			irc.reply("x%sx has the lead for the week with %i points." % (winnernick, winnerscore)) 
+			self.leader[currentChannel] = winnernick
+
+
+
 	else:
 	    irc.reply("Not a single duck was shot during this hunt!")
 
