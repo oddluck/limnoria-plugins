@@ -17,6 +17,9 @@ Commands
 bang
   Shoots the duck!
 
+dayscores
+  [<channel>] Shows the score list of the day for <channel>.
+
 dbg
   This is a debug command. If debug mode is not enabled, it won't do anything
 
@@ -61,6 +64,10 @@ stop
 total
   Shows the total amount of ducks shot in <channel> (or in the current channel
   if no channel is given)
+
+weekscores
+  [<week>] [<nick>] [<channel>] Shows the score list of the week for <channel>.
+  If <nick> is provided, it will only show <nick>'s scores.
 
 Configuration
 -------------
