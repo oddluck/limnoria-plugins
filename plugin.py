@@ -634,7 +634,7 @@ class DuckHunt(callbacks.Plugin):
 
 
 			if msgstring != "":
-			    irc.reply("Scores for week " + str(self.woy) + ": " + msgstring)
+			    irc.reply("Scores for week " + str(week) + ": " + msgstring)
 			    # Who's the winner at this point?
 			    winnernick, winnerscore = max(weekscores.iteritems(), key=lambda (k,v):(v,k))
 			    irc.reply("Leader: x%sx with %i points." % (winnernick, winnerscore)) 
@@ -1039,7 +1039,7 @@ class DuckHunt(callbacks.Plugin):
 				    weekscores[player] = self.channelweek[currentChannel][self.woy][i][player]
 		    winnernick, winnerscore = max(weekscores.iteritems(), key=lambda (k,v):(v,k))
 		    if (winnernick != self.leader[currentChannel]):
-			irc.reply("x%sx has the lead for the week with %i points." % (winnernick, winnerscore)) 
+			irc.reply("%s has the lead for the week with %i points." % (winnernick, winnerscore)) 
 			self.leader[currentChannel] = winnernick
 
 
