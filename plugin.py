@@ -1039,7 +1039,10 @@ class DuckHunt(callbacks.Plugin):
 				    weekscores[player] = self.channelweek[currentChannel][self.woy][i][player]
 		    winnernick, winnerscore = max(weekscores.iteritems(), key=lambda (k,v):(v,k))
 		    if (winnernick != self.leader[currentChannel]):
-			irc.reply("%s has the lead for the week with %i points." % (winnernick, winnerscore)) 
+			if self.leader[currentChannel] != None:
+			    irc.reply("%s took the lead for the week over %s with %i points." % (winnernick, self.leader[currentChannel], winnerscore)) 
+			else:
+			    irc.reply("%s has the lead for the week with %i points." % (winnernick, winnerscore)) 
 			self.leader[currentChannel] = winnernick
 
 
