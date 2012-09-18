@@ -459,15 +459,33 @@ class DuckHunt(callbacks.Plugin):
 	nickto gets the points of nickfrom and nickfrom is removed from the scorelist
 	"""
 	if irc.isChannel(channel):
+	    self._read_scores(channel)
+
+	    # Total scores
 	    try:
-		self._read_scores(channel)
 		self.channelscores[channel][nickto] += self.channelscores[channel][nickfrom]
 		del self.channelscores[channel][nickfrom]
 		self._write_scores(channel)
-		irc.replySuccess()
+		irc.reply("Total scores merged")
 
 	    except:
-		irc.replyError()
+		irc.error("Can't merge total scores")
+
+	    # Day scores
+	    try:
+
+		self.dow = int(time.strftime("%u")) # Day of week
+		self.woy = int(time.strftime("%V")) # Week of year
+		day = self.dow
+		week = self.woy
+		self.channelweek[channel][week][day][nickto] += self.channelweek[channel][week][day][nickfrom]
+		del self.channelweek[channel][week][day][nickfrom]
+		self._write_scores(channel)
+		irc.reply("Day scores merged")
+
+	    except:
+		irc.error("Can't merge day scores")
+
 
 
 	else:
