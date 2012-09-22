@@ -24,6 +24,7 @@ Several per-channel configuration variables are available (look at the "channel"
  * maxthrottle: The maximum amount of time before a new duck may be launched (in seconds)
  * kickMode: If someone shoots when there is no duck, should he be kicked from the channel? (this requires the bot to be op on the channel)
  * autoFriday: Do we need to automatically launch more ducks on friday?
+ * missProbability: The probability to miss the duck
 
 Update
 ------
