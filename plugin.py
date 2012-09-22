@@ -60,13 +60,14 @@ class DuckHunt(callbacks.Plugin):
     channelscores = {} # Saved scores for the channel
     toptimes = {}      # Times for the current hunt
     channeltimes = {}  # Saved times for the channel
-    worsttimes = {}     # Worst times for the current hunt
+    worsttimes = {}    # Worst times for the current hunt
     channelworsttimes = {} # Saved worst times for the channel
     averagetime = {}   # Average shooting time for the current hunt
-    fridayMode = {}
-    week = {}
-    channelweek = {}
-    leader = {}
+    fridayMode = {}    # Are we on friday mode?
+    missprobability = {} # Probability to miss a duck when shooting
+    week = {}          # Scores for the week
+    channelweek = {}   # Saved scores for the week
+    leader = {}        # Who is the leader for the week?
 
     # Does a duck needs to be launched?
     lastSpoke = {}
@@ -240,6 +241,12 @@ class DuckHunt(callbacks.Plugin):
 
 	if (not self.fridayMode.get(channel)):
 	    self.fridayMode[channel] = False
+
+	# Miss probability
+	if self.registryValue('missProbability', channel):
+	    self.missprobability[channel] = self.registryValue('missProbability', channel)
+	else:
+	    self.missprobability[channel] = 0.2
 
 
 	if self.fridayMode[channel] == False:
@@ -843,60 +850,65 @@ class DuckHunt(callbacks.Plugin):
 		    # There was a duck
 		    if (self.duck[currentChannel] == True):
 
-			# Adds one point for the nick that shot the duck
-			try:
-			    self.scores[currentChannel][msg.nick] += 1
-			except:
-			    try:
-				self.scores[currentChannel][msg.nick] = 1
-			    except:
-				self.scores[currentChannel] = {} 
-				self.scores[currentChannel][msg.nick] = 1
-
-			irc.reply("\_x< %s: %i (%.2f seconds)" % (msg.nick,  self.scores[currentChannel][msg.nick], bangdelay))
-
-			self.averagetime[currentChannel] += bangdelay
-
-			# Now save the bang delay for the player (if it's quicker than it's previous bangdelay)
-			try:
-			    previoustime = self.toptimes[currentChannel][msg.nick]
-			    if(bangdelay < previoustime):
-				self.toptimes[currentChannel][msg.nick] = bangdelay
-			except:
-			    self.toptimes[currentChannel][msg.nick] = bangdelay
-
-
-			# Now save the bang delay for the player (if it's worst than it's previous bangdelay)
-			try:
-			    previoustime = self.worsttimes[currentChannel][msg.nick]
-			    if(bangdelay > previoustime):
-				self.worsttimes[currentChannel][msg.nick] = bangdelay
-			except:
-			    self.worsttimes[currentChannel][msg.nick] = bangdelay
-
-
-			self.duck[currentChannel] = False
-
-			# Reset the basetime for the waiting time before the next duck
-			self.lastSpoke[currentChannel] = time.time()
-
-			if self.registryValue('ducks', currentChannel):
-			    maxShoots = self.registryValue('ducks', currentChannel)
+			# Did the player missed it?
+			if (random.random() < self.missprobability[currentChannel]):
+			    irc.reply("%s, you missed the duck!" % (msg.nick))
 			else:
-			    maxShoots = 10
 
-			# End of Hunt
-			if (self.shoots[currentChannel]  == maxShoots):
-			    self._end(irc, msg, args)
+			    # Adds one point for the nick that shot the duck
+			    try:
+				self.scores[currentChannel][msg.nick] += 1
+			    except:
+				try:
+				    self.scores[currentChannel][msg.nick] = 1
+				except:
+				    self.scores[currentChannel] = {} 
+				    self.scores[currentChannel][msg.nick] = 1
 
-			    # If autorestart is enabled, we restart a hunt automatically!
-			    if self.registryValue('autoRestart', currentChannel):
-				# This code shouldn't be here
-				self.started[currentChannel] = True
-				self._initthrottle(irc, msg, args, currentChannel)
-				if self.scores.get(currentChannel):
-				    self.scores[currentChannel] = {}
-				self.averagetime[currentChannel] = 0
+			    irc.reply("\_x< %s: %i (%.2f seconds)" % (msg.nick,  self.scores[currentChannel][msg.nick], bangdelay))
+
+			    self.averagetime[currentChannel] += bangdelay
+
+			    # Now save the bang delay for the player (if it's quicker than it's previous bangdelay)
+			    try:
+				previoustime = self.toptimes[currentChannel][msg.nick]
+				if(bangdelay < previoustime):
+				    self.toptimes[currentChannel][msg.nick] = bangdelay
+			    except:
+				self.toptimes[currentChannel][msg.nick] = bangdelay
+
+
+			    # Now save the bang delay for the player (if it's worst than it's previous bangdelay)
+			    try:
+				previoustime = self.worsttimes[currentChannel][msg.nick]
+				if(bangdelay > previoustime):
+				    self.worsttimes[currentChannel][msg.nick] = bangdelay
+			    except:
+				self.worsttimes[currentChannel][msg.nick] = bangdelay
+
+
+			    self.duck[currentChannel] = False
+
+			    # Reset the basetime for the waiting time before the next duck
+			    self.lastSpoke[currentChannel] = time.time()
+
+			    if self.registryValue('ducks', currentChannel):
+				maxShoots = self.registryValue('ducks', currentChannel)
+			    else:
+				maxShoots = 10
+
+			    # End of Hunt
+			    if (self.shoots[currentChannel]  == maxShoots):
+				self._end(irc, msg, args)
+
+				# If autorestart is enabled, we restart a hunt automatically!
+				if self.registryValue('autoRestart', currentChannel):
+				    # This code shouldn't be here
+				    self.started[currentChannel] = True
+				    self._initthrottle(irc, msg, args, currentChannel)
+				    if self.scores.get(currentChannel):
+					self.scores[currentChannel] = {}
+				    self.averagetime[currentChannel] = 0
 
 
 		    # There was no duck or the duck has already been shot

@@ -49,13 +49,14 @@ conf.registerChannelValue(DuckHunt, 'autoRestart',
 conf.registerChannelValue(DuckHunt, 'ducks',
      registry.Integer(5, """Number of ducks during a hunt?"""))
 
-conf.registerChannelValue(DuckHunt,
-    'minthrottle', registry.Integer(30, """
-    The minimum amount of time before a new duck may be launched (in seconds)"""))
+conf.registerChannelValue(DuckHunt, 'minthrottle', 
+     registry.Integer(30, """The minimum amount of time before a new duck may be launched (in seconds)"""))
 
-conf.registerChannelValue(DuckHunt,
-    'maxthrottle', registry.Integer(300, """
-    The maximum amount of time before a new duck may be launched (in seconds)"""))
+conf.registerChannelValue(DuckHunt, 'maxthrottle', 
+     registry.Integer(300, """The maximum amount of time before a new duck may be launched (in seconds)"""))
+
+conf.registerChannelValue(DuckHunt, 'missProbability', 
+     registry.Probability(0.2, """The probability to miss the duck"""))
 
 conf.registerChannelValue(DuckHunt, 'kickMode',
      registry.Boolean(True, """If someone shoots when there is no duck, should he be kicked from the channel? (this requires the bot to be op on the channel)"""))

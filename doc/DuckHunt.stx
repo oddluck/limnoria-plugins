@@ -117,6 +117,13 @@ Documentation for the DuckHunt plugin for Supybot
 
       The maximum amount of time before a new duck may be launched (in seconds)
 
+    * supybot.plugins.DuckHunt.missProbability
+
+      This config variable defaults to 0.20000000000000001 and is channel
+      specific.
+
+      The probability to miss the duck
+
     * supybot.plugins.DuckHunt.kickMode
 
       This config variable defaults to True and is channel specific.
