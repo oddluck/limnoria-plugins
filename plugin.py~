@@ -58,7 +58,6 @@ class HuntNFish(callbacks.Plugin):
             with open(conf.supybot.directories.data.dirize('hunttrophy.txt'), 'r') as file:
                 data = file.readlines()
                 highScore = data[2].rstrip('\n')
-                random.seed(time.time())
             currentWhat = random.choice(animals)
             currentWhere = random.choice(places)
             weight = random.randint(int(highScore)/2,int(highScore)+10)
@@ -106,7 +105,6 @@ class HuntNFish(callbacks.Plugin):
             with open(conf.supybot.directories.data.dirize('fishtrophy.txt'), 'r') as file:
                 data = file.readlines()
                 highScore = data[2].rstrip('\n')
-                random.seed(time.time())
             currentWhat = random.choice(fishes)
             currentWhere = random.choice(fishSpots)
             weight = random.randint(int(highScore)/2,int(highScore)+10)
