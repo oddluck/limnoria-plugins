@@ -58,7 +58,8 @@ class HuntNFish(callbacks.Plugin):
             with open(conf.supybot.directories.data.dirize('hunttrophy.txt'), 'r') as file:
                 data = file.readlines()
                 highScore = data[2].rstrip('\n')
-                random.seed(time.time())
+            huntrandom = random.getstate()   
+            random.seed(time.time())
             currentWhat = random.choice(animals)
             currentWhere = random.choice(places)
             weight = random.randint(int(highScore)/2,int(highScore)+10)
@@ -67,9 +68,10 @@ class HuntNFish(callbacks.Plugin):
             irc.reply(thisHunt)
             irc.reply("aims....")
             irc.reply("fires.....")
-            time.sleep(7)#pauses the output between line 1 and 2 for 5 seconds
+            time.sleep(time.sleep(random.randint(4,8))#pauses the output between line 1 and 2 for 4-8 seconds
             huntChance = random.randint(1,100)
             successRate = self.registryValue('SuccessRate')
+            random.setstate(huntrandom)
 
             if huntChance < successRate:
                 win = ("way to go, " + msg.nick + ". You killed the " + str(weight) + weightType + currentWhat)
@@ -106,7 +108,8 @@ class HuntNFish(callbacks.Plugin):
             with open(conf.supybot.directories.data.dirize('fishtrophy.txt'), 'r') as file:
                 data = file.readlines()
                 highScore = data[2].rstrip('\n')
-                random.seed(time.time())
+            fishrandom = random.getstate()
+            random.seed(time.time())
             currentWhat = random.choice(fishes)
             currentWhere = random.choice(fishSpots)
             weight = random.randint(int(highScore)/2,int(highScore)+10)
@@ -115,9 +118,10 @@ class HuntNFish(callbacks.Plugin):
             irc.reply(thisFishing)
             irc.reply("casts in....")
             irc.reply("a " + str(weight) + weightType + currentWhat + " is biting...")
-            time.sleep(7)#pauses the output between line 1 and 2 for 5 seconds
+            time.sleep(time.sleep(random.randint(4,8))#pauses the output between line 1 and 2 for 4-8 seconds
             huntChance = random.randint(1,100)
             successRate = self.registryValue('SuccessRate')
+            random.setstate(fishrandom)
 
             if huntChance < successRate:
                 win = ("way to go, " + msg.nick + ". You caught the " + str(weight) + weightType + currentWhat)
