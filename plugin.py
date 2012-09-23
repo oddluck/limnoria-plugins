@@ -42,6 +42,19 @@ from supybot.i18n import PluginInternationalization, internationalizeDocstring
 
 _ = PluginInternationalization('HuntNFish')
 
+try:
+    with open(conf.supybot.directories.data.dirize('hunttrophy.txt')) as f: pass
+except IOError:
+    with open(conf.supybot.directories.data.dirize('hunttrophy.txt'), 'w') as file:
+        file.writelines('Nobody\n nothing\n2')
+
+try:
+    with open(conf.supybot.directories.data.dirize('fishtrophy.txt')) as f: pass
+except IOError:
+    with open(conf.supybot.directories.data.dirize('fishtrophy.txt'), 'w') as file:
+        file.writelines('Nobody\n nothing\n2')
+
+
 @internationalizeDocstring
 class HuntNFish(callbacks.Plugin):
     """Adds hunt and fish commands for a basic hunting and fishing game."""
