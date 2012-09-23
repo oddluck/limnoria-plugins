@@ -68,7 +68,7 @@ class HuntNFish(callbacks.Plugin):
             irc.reply(thisHunt)
             irc.reply("aims....")
             irc.reply("fires.....")
-            time.sleep(time.sleep(random.randint(4,8))#pauses the output between line 1 and 2 for 4-8 seconds
+            time.sleep(random.randint(4,8))#pauses the output between line 1 and 2 for 4-8 seconds
             huntChance = random.randint(1,100)
             successRate = self.registryValue('SuccessRate')
             random.setstate(huntrandom)
@@ -118,7 +118,7 @@ class HuntNFish(callbacks.Plugin):
             irc.reply(thisFishing)
             irc.reply("casts in....")
             irc.reply("a " + str(weight) + weightType + currentWhat + " is biting...")
-            time.sleep(time.sleep(random.randint(4,8))#pauses the output between line 1 and 2 for 4-8 seconds
+            time.sleep(random.randint(4,8))#pauses the output between line 1 and 2 for 4-8 seconds
             huntChance = random.randint(1,100)
             successRate = self.registryValue('SuccessRate')
             random.setstate(fishrandom)
