@@ -175,7 +175,14 @@ class HuntNFish(callbacks.Plugin):
                 size = data2[2].rstrip('\n')
                 irc.reply("fishing hiscore held by: " + fisherman + " with a " + size + weightType + catch)
 
+    def resetscores(self,irc,msg,args):
+        with open(conf.supybot.directories.data.dirize('hunttrophy.db'), 'w') as f:
+            f.writelines('Nobody\n nothing\n2')
+        with open(conf.supybot.directories.data.dirize('fishtrophy.db'), 'w') as f:
+            f.writelines('Nobody\n nothing\n2')
+        irc.replySuccess()
 
+    resetscores = wrap(resetscores, ['owner'])        
 
 Class = HuntNFish
 
