@@ -28,30 +28,27 @@
 
 ###
 
+import os
+import re
+import time
+import string
+import random as random
+import supybot.conf as conf
 import supybot.utils as utils
 from supybot.commands import *
 import supybot.plugins as plugins
 import supybot.ircutils as ircutils
 import supybot.callbacks as callbacks
-import supybot.conf as conf
-import random as random
-import re
-import time
-import string
 from supybot.i18n import PluginInternationalization, internationalizeDocstring
 
 _ = PluginInternationalization('HuntNFish')
 
-try:
-    with open(conf.supybot.directories.data.dirize('hunttrophy.txt')) as f: pass
-except IOError:
-    with open(conf.supybot.directories.data.dirize('hunttrophy.txt'), 'w') as file:
+if not os.path.isfile(conf.supybot.directories.data.dirize('hunttrophy.db')):
+    with open(conf.supybot.directories.data.dirize('hunttrophy.db'), 'w') as file:
         file.writelines('Nobody\n nothing\n2')
 
-try:
-    with open(conf.supybot.directories.data.dirize('fishtrophy.txt')) as f: pass
-except IOError:
-    with open(conf.supybot.directories.data.dirize('fishtrophy.txt'), 'w') as file:
+if not os.path.isfile(conf.supybot.directories.data.dirize('fishtrophy.db')):
+    with open(conf.supybot.directories.data.dirize('fishtrophy.db'), 'w') as file:
         file.writelines('Nobody\n nothing\n2')
 
 
@@ -68,7 +65,7 @@ class HuntNFish(callbacks.Plugin):
             animals = [' bear', ' gopher', ' rabbit', ' hunter', ' deer', ' fox', ' duck', ' moose', ' pokemon named Pikachu', ' park ranger', ' Yogi Bear', ' Boo Boo Bear', ' dog named Benji', ' cow', ' raccoon', ' koala bear', ' camper', ' channel lamer', ' your mom']
             places = ['in some bushes', 'in a hunting blind', 'in a hole', 'up in a tree', 'in a hiding place', 'out in the open', 'in the middle of a field', 'downtown', 'on a street corner', 'at the local mall']
 
-            with open(conf.supybot.directories.data.dirize('hunttrophy.txt'), 'r') as file:
+            with open(conf.supybot.directories.data.dirize('hunttrophy.db'), 'r') as file:
                 data = file.readlines()
                 highScore = data[2].rstrip('\n')
             huntrandom = random.getstate()   
@@ -89,11 +86,11 @@ class HuntNFish(callbacks.Plugin):
             if huntChance < successRate:
                 win = ("way to go, " + msg.nick + ". You killed the " + str(weight) + weightType + currentWhat)
                 irc.reply(win)
-                with open(conf.supybot.directories.data.dirize('hunttrophy.txt'), 'r') as file:
+                with open(conf.supybot.directories.data.dirize('hunttrophy.db'), 'r') as file:
                     data = file.readlines()
                     bigHunt = data[2].rstrip('\n')
                     if weight > int(bigHunt):
-                        with open(conf.supybot.directories.data.dirize('hunttrophy.txt'), 'w') as file:
+                        with open(conf.supybot.directories.data.dirize('hunttrophy.db'), 'w') as file:
                             data[0] = msg.nick
                             data[1] = currentWhat 
                             data[2] = weight
@@ -104,11 +101,11 @@ class HuntNFish(callbacks.Plugin):
                             file.writelines(str(data[2]))
                             irc.reply("you got a new highscore")
 
-
             else:
                 lose = ("oops, you missed, " + msg.nick)
                 irc.reply(lose)
 
+    hunt = wrap(hunt)
 
     def fish(self,irc,msg,args):
         """
@@ -118,7 +115,7 @@ class HuntNFish(callbacks.Plugin):
             fishes = (' Salmon', ' Herring', ' Yellowfin Tuna', ' Pink Salmon', ' Chub', ' Barbel', ' Perch', ' Northern Pike', ' Brown Trout', ' Arctic Char', ' Roach', ' Brayling', ' Bleak', ' Cat Fish', ' Sun Fish', ' Old Tire', ' Rusty Tin Can', ' Genie Lamp', ' Love Message In A Bottle', ' Old Log', ' Rubber Boot' , ' Dead Body', ' Loch Ness Monster', ' Old Fishing Lure', ' Piece of the Titanic', ' Chunk of Atlantis', ' Squid', ' Whale', ' Dolphin',  ' Porpoise' , ' Stingray', ' Submarine', ' Seal', ' Seahorse', ' Jellyfish', ' Starfish', ' Electric Eel', ' Great White Shark', ' Scuba Diver' , ' Lag Monster', ' Virus', ' Soggy Pack of Smokes', ' Bag of Weed', ' Boat Anchor', ' Pair Of Floaties', ' Mermaid', ' Merman', ' Halibut', ' Tiddler', ' Sock', ' Trout')
             fishSpots = ('a Stream', 'a Lake', 'a River', 'a Pond', 'an Ocean', 'a Bathtub', 'a Kiddies Swimming Pool', 'a Toilet', 'a Pile of Vomit', 'a Pool of Urine', 'a Kitchen Sink', 'a Bathroom Sink', 'a Mud Puddle', 'a Pail of Water', 'a Bowl of Jell-O', 'a Wash Basin', 'a Rain Barrel', 'an Aquarium', 'a SnowBank', 'a WaterFall', 'a Cup of Coffee', 'a Glass of Milk')
 
-            with open(conf.supybot.directories.data.dirize('fishtrophy.txt'), 'r') as file:
+            with open(conf.supybot.directories.data.dirize('fishtrophy.db'), 'r') as file:
                 data = file.readlines()
                 highScore = data[2].rstrip('\n')
             fishrandom = random.getstate()
@@ -139,11 +136,11 @@ class HuntNFish(callbacks.Plugin):
             if huntChance < successRate:
                 win = ("way to go, " + msg.nick + ". You caught the " + str(weight) + weightType + currentWhat)
                 irc.reply(win)
-                with open(conf.supybot.directories.data.dirize('fishtrophy.txt'), 'r') as file:
+                with open(conf.supybot.directories.data.dirize('fishtrophy.db'), 'r') as file:
                     data = file.readlines()
                     bigFish = data[2].rstrip('\n')
                     if weight > int(bigFish):
-                        with open(conf.supybot.directories.data.dirize('fishtrophy.txt'), 'w') as file:
+                        with open(conf.supybot.directories.data.dirize('fishtrophy.db'), 'w') as file:
                             data[0] = msg.nick
                             data[1] = currentWhat 
                             data[2] = weight
@@ -165,13 +162,13 @@ class HuntNFish(callbacks.Plugin):
         """
         if(self.registryValue('enable', msg.args[0])):
             weightType = self.registryValue('weightType')
-            with open(conf.supybot.directories.data.dirize('hunttrophy.txt'), 'r') as file1:
+            with open(conf.supybot.directories.data.dirize('hunttrophy.db'), 'r') as file1:
                 data1 = file1.readlines()
                 hunter = data1[0].rstrip('\n')
                 hunted = data1[1].rstrip('\n')
                 score = data1[2].rstrip('\n')
                 irc.reply("hunting hiscore held by: " + hunter + " with a " + score + weightType + hunted)
-            with open(conf.supybot.directories.data.dirize('fishtrophy.txt'), 'r') as file2:
+            with open(conf.supybot.directories.data.dirize('fishtrophy.db'), 'r') as file2:
                 data2 = file2.readlines()
                 fisherman = data2[0].rstrip('\n')
                 catch = data2[1].rstrip('\n')
