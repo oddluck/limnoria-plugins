@@ -48,11 +48,11 @@ fishtrophy = conf.supybot.directories.data.dirize('fishtrophy.db')
 
 if not os.path.isfile(hunttrophy):
     with open(hunttrophy, 'w') as f:
-        f.write('Nobody\n nothing\n2')
+        f.write('Nobody\nnothing\n2')
 
 if not os.path.isfile(fishtrophy):
     with open(fishtrophy, 'w') as f:
-        f.write('Nobody\n nothing\n2')
+        f.write('Nobody\nnothing\n2')
 
 
 @internationalizeDocstring
@@ -65,7 +65,7 @@ class HuntNFish(callbacks.Plugin):
         performs a random hunt
         """
         if(self.registryValue('enable', msg.args[0])):
-            animals = [' bear', ' gopher', ' rabbit', ' hunter', ' deer', ' fox', ' duck', ' moose', ' pokemon named Pikachu', ' park ranger', ' Yogi Bear', ' Boo Boo Bear', ' dog named Benji', ' cow', ' raccoon', ' koala bear', ' camper', ' channel lamer', ' your mom']
+            animals = ['bear', 'gopher', 'rabbit', 'hunter', 'deer', 'fox', 'duck', 'moose', 'pokemon named Pikachu', 'park ranger', 'Yogi Bear', 'Boo Boo Bear', 'dog named Benji', 'cow', 'raccoon', 'koala bear', 'camper', 'channel lamer', 'your mom']
             places = ['in some bushes', 'in a hunting blind', 'in a hole', 'up in a tree', 'in a hiding place', 'out in the open', 'in the middle of a field', 'downtown', 'on a street corner', 'at the local mall']
 
             with open(hunttrophy, 'r') as f:
@@ -75,9 +75,9 @@ class HuntNFish(callbacks.Plugin):
             random.seed(time.time())
             currentWhat = random.choice(animals)
             currentWhere = random.choice(places)
-            weight = random.randint(int(highScore)/2,int(highScore)+10)
             weightType = self.registryValue('weightType')
-            thisHunt = (msg.nick + " goes hunting " + currentWhere + " for a " + str(weight) + weightType + currentWhat)
+            weight = (random.randint(int(highScore)/2,int(highScore)+10))
+            thisHunt = '%s goes hunting %s for a %s%s %s' % (msg.nick, currentWhere, weight, weightType, currentWhat)
             irc.reply(thisHunt)
             irc.reply("aims....")
             irc.reply("fires.....")
@@ -87,7 +87,7 @@ class HuntNFish(callbacks.Plugin):
             random.setstate(huntrandom)
 
             if huntChance < successRate:
-                win = ("way to go, " + msg.nick + ". You killed the " + str(weight) + weightType + currentWhat)
+                win = 'way to go, %s. You killed the %s%s %s' % (msg.nick, weight, weightType, currentWhat)
                 irc.reply(win)
                 with open(hunttrophy, 'r') as f:
                     data = f.readlines()
@@ -101,7 +101,7 @@ class HuntNFish(callbacks.Plugin):
                             irc.reply("you got a new highscore")
 
             else:
-                lose = ("oops, you missed, " + msg.nick)
+                lose = ' '.join(["oops, you missed", msg.nick])
                 irc.reply(lose)
 
     hunt = wrap(hunt)
@@ -111,7 +111,7 @@ class HuntNFish(callbacks.Plugin):
         performs a random fishing trip
         """
         if(self.registryValue('enable', msg.args[0])):
-            fishes = (' Salmon', ' Herring', ' Yellowfin Tuna', ' Pink Salmon', ' Chub', ' Barbel', ' Perch', ' Northern Pike', ' Brown Trout', ' Arctic Char', ' Roach', ' Brayling', ' Bleak', ' Cat Fish', ' Sun Fish', ' Old Tire', ' Rusty Tin Can', ' Genie Lamp', ' Love Message In A Bottle', ' Old Log', ' Rubber Boot' , ' Dead Body', ' Loch Ness Monster', ' Old Fishing Lure', ' Piece of the Titanic', ' Chunk of Atlantis', ' Squid', ' Whale', ' Dolphin',  ' Porpoise' , ' Stingray', ' Submarine', ' Seal', ' Seahorse', ' Jellyfish', ' Starfish', ' Electric Eel', ' Great White Shark', ' Scuba Diver' , ' Lag Monster', ' Virus', ' Soggy Pack of Smokes', ' Bag of Weed', ' Boat Anchor', ' Pair Of Floaties', ' Mermaid', ' Merman', ' Halibut', ' Tiddler', ' Sock', ' Trout')
+            fishes = ('Salmon', 'Herring', 'Yellowfin Tuna', 'Pink Salmon', 'Chub', 'Barbel', 'Perch', 'Northern Pike', 'Brown Trout', 'Arctic Char', 'Roach', 'Brayling', 'Bleak', 'Cat Fish', 'Sun Fish', 'Old Tire', 'Rusty Tin Can', 'Genie Lamp', 'Love Message In A Bottle', 'Old Log', 'Rubber Boot' , 'Dead Body', 'Loch Ness Monster', 'Old Fishing Lure', 'Piece of the Titanic', 'Chunk of Atlantis', 'Squid', 'Whale', 'Dolphin',  'Porpoise' , 'Stingray', 'Submarine', 'Seal', 'Seahorse', 'Jellyfish', 'Starfish', 'Electric Eel', 'Great White Shark', 'Scuba Diver' , 'Lag Monster', 'Virus', 'Soggy Pack of Smokes', 'Bag of Weed', 'Boat Anchor', 'Pair Of Floaties', 'Mermaid', ' Merman', 'Halibut', 'Tiddler', 'Sock', 'Trout')
             fishSpots = ('a Stream', 'a Lake', 'a River', 'a Pond', 'an Ocean', 'a Bathtub', 'a Kiddies Swimming Pool', 'a Toilet', 'a Pile of Vomit', 'a Pool of Urine', 'a Kitchen Sink', 'a Bathroom Sink', 'a Mud Puddle', 'a Pail of Water', 'a Bowl of Jell-O', 'a Wash Basin', 'a Rain Barrel', 'an Aquarium', 'a SnowBank', 'a WaterFall', 'a Cup of Coffee', 'a Glass of Milk')
 
             with open(fishtrophy, 'r') as f:
@@ -123,17 +123,17 @@ class HuntNFish(callbacks.Plugin):
             currentWhere = random.choice(fishSpots)
             weight = random.randint(int(highScore)/2,int(highScore)+10)
             weightType = self.registryValue('weightType')
-            thisFishing = (msg.nick + " goes fishing in " + currentWhere)
+            thisFishing = '%s goes fishing in %s' % (msg.nick, currentWhere)
             irc.reply(thisFishing)
             irc.reply("casts in....")
-            irc.reply("a " + str(weight) + weightType + currentWhat + " is biting...")
+            irc.reply('a %s%s %s is biting...' % (str(weight), weightType, currentWhat))
             time.sleep(random.randint(4,8))#pauses the output between line 1 and 2 for 4-8 seconds
             huntChance = random.randint(1,100)
             successRate = self.registryValue('SuccessRate')
             random.setstate(fishrandom)
 
             if huntChance < successRate:
-                win = ("way to go, " + msg.nick + ". You caught the " + str(weight) + weightType + currentWhat)
+                win = 'way to go, %s. You caught the %s%s %s' % (msg.nick, str(weight), weightType, currentWhat)
                 irc.reply(win)
                 with open(fishtrophy, 'r') as f:
                     data = f.readlines()
@@ -147,7 +147,7 @@ class HuntNFish(callbacks.Plugin):
                             irc.reply("you got a new highscore")
 
             else:
-                lose = ("oops, it got away, " + msg.nick)
+                lose = ' '.join(["oops, it got away", msg.nick])
                 irc.reply(lose)
 
     fish = wrap(fish)
@@ -162,14 +162,14 @@ class HuntNFish(callbacks.Plugin):
                 data = f.readlines()
                 hunter = data[0].rstrip('\n')
                 hunted = data[1].rstrip('\n')
-                score = data[2].rstrip('\n')
-                irc.reply("hunting hiscore held by: " + hunter + " with a " + score + weightType + hunted)
+                size = data[2].rstrip('\n')
+                irc.reply('hunting highscore held by: %s with a %s%s %s' % (hunter, size, weightType, hunted))
             with open(fishtrophy, 'r') as f:
                 data = f.readlines()
                 fisherman = data[0].rstrip('\n')
                 catch = data[1].rstrip('\n')
                 size = data[2].rstrip('\n')
-                irc.reply("fishing hiscore held by: " + fisherman + " with a " + size + weightType + catch)
+                irc.reply('fishing highscore held by: %s with a %s%s %s' % (fisherman, size, weightType, catch))
 
     trophy = wrap(trophy)
 
@@ -178,9 +178,9 @@ class HuntNFish(callbacks.Plugin):
         resets the highscores for both hunting and fishing. this command is limited to the owner, to prevent just anyone from clearing the scores
         """
         with open(hunttrophy, 'w') as f:
-            f.write('Nobody\n nothing\n2')
+            f.write('Nobody\nnothing\n2')
         with open(fishtrophy, 'w') as f:
-            f.write('Nobody\n nothing\n2')
+            f.write('Nobody\nnothing\n2')
         irc.replySuccess()
 
     resetscores = wrap(resetscores, ['owner'])        
