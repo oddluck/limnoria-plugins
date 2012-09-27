@@ -58,7 +58,7 @@ class HuntNFish(callbacks.Plugin):
     threaded = True
 
     def hunt(self,irc,msg,args):
-        """
+        """takes no arguments
         performs a random hunt
         """
         if(self.registryValue('enable', msg.args[0])):
@@ -108,7 +108,7 @@ class HuntNFish(callbacks.Plugin):
     hunt = wrap(hunt)
 
     def fish(self,irc,msg,args):
-        """
+        """takes no arguments
         performs a random fishing trip
         """
         if(self.registryValue('enable', msg.args[0])):
@@ -157,7 +157,7 @@ class HuntNFish(callbacks.Plugin):
                 irc.reply(lose)
 
     def trophy(self,irc,msg,args):
-        """
+        """takes no arguments
         checks the current highscores for hunting and fishing
         """
         if(self.registryValue('enable', msg.args[0])):
@@ -176,6 +176,9 @@ class HuntNFish(callbacks.Plugin):
                 irc.reply("fishing hiscore held by: " + fisherman + " with a " + size + weightType + catch)
 
     def resetscores(self,irc,msg,args):
+        """takes no arguments
+        resets the highscores for both hunting and fishing. this command is limited to the owner, to prevent just anyone from clearing the scores
+        """
         with open(conf.supybot.directories.data.dirize('hunttrophy.db'), 'w') as f:
             f.writelines('Nobody\n nothing\n2')
         with open(conf.supybot.directories.data.dirize('fishtrophy.db'), 'w') as f:
