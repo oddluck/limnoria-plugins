@@ -97,11 +97,7 @@ class HuntNFish(callbacks.Plugin):
                             data[0] = msg.nick
                             data[1] = currentWhat 
                             data[2] = weight
-                            f.writelines(str(data[0]))
-                            f.writelines('\n')
-                            f.writelines(str(data[1]))
-                            f.writelines('\n')
-                            f.writelines(str(data[2]))
+                            f.write(str(data[0]) + '\n' + str(data[1]) + '\n' + str(data[2]))
                             irc.reply("you got a new highscore")
 
             else:
@@ -147,17 +143,14 @@ class HuntNFish(callbacks.Plugin):
                             data[0] = msg.nick
                             data[1] = currentWhat 
                             data[2] = weight
-                            f.writelines(str(data[0]))
-                            f.writelines('\n')
-                            f.writelines(str(data[1]))
-                            f.writelines('\n')
-                            f.writelines(str(data[2]))
+                            f.writelines(str(data[0]) + '\n' + str(data[1]) + '\n' + str(data[2]))
                             irc.reply("you got a new highscore")
-
 
             else:
                 lose = ("oops, it got away, " + msg.nick)
                 irc.reply(lose)
+
+    fish = wrap(fish)
 
     def trophy(self,irc,msg,args):
         """takes no arguments
@@ -177,6 +170,8 @@ class HuntNFish(callbacks.Plugin):
                 catch = data[1].rstrip('\n')
                 size = data[2].rstrip('\n')
                 irc.reply("fishing hiscore held by: " + fisherman + " with a " + size + weightType + catch)
+
+    trophy = wrap(trophy)
 
     def resetscores(self,irc,msg,args):
         """takes no arguments
