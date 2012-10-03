@@ -40,14 +40,14 @@ import supybot.world as world
 __version__ = ""
 
 # XXX Replace this with an appropriate author or supybot.Author instance.
-__author__ = supybot.authors.unknown
+__author__ = supybot.Author('Matthias Meusburger', 'veggiematts', '')
 
 # This is a dictionary mapping supybot.Author instances to lists of
 # contributions.
 __contributors__ = {}
 
 # This is a url where the most recent plugin package can be downloaded.
-__url__ = '' # 'http://supybot.com/Members/yourname/DuckHunt/download'
+__url__ = 'https://github.com/veggiematts/supybot-duckhunt' 
 
 import config
 import plugin
