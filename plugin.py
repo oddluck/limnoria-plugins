@@ -63,7 +63,8 @@ class DuckHunt(callbacks.Plugin):
     worsttimes = {}    # Worst times for the current hunt
     channelworsttimes = {} # Saved worst times for the channel
     averagetime = {}   # Average shooting time for the current hunt
-    fridayMode = {}    # Are we on friday mode?
+    fridayMode = {}    # Are we on friday mode? (automatic)
+    manualFriday = {}  # Are we on friday mode? (manual)
     missprobability = {} # Probability to miss a duck when shooting
     week = {}          # Scores for the week
     channelweek = {}   # Saved scores for the week
@@ -249,7 +250,7 @@ class DuckHunt(callbacks.Plugin):
 	    self.missprobability[channel] = 0.2
 
 
-	if self.fridayMode[channel] == False:
+	if self.fridayMode[channel] == False and self.manualFriday[channel] == False:
 	    # Init min throttle[currentChannel] and max throttle[currentChannel]
 	    if self.registryValue('minthrottle', channel):
 		self.minthrottle[channel] = self.registryValue('minthrottle', channel)
@@ -389,29 +390,29 @@ class DuckHunt(callbacks.Plugin):
 	    irc.error('You have to be on a channel')
     stop = wrap(stop)
 
-    def fridaymode(self, irc, msg, args, channel):
+    def fridaymode(self, irc, msg, args, channel, status):
 	"""
+	[<status>] 
 	Enable/disable friday mode! (there are lots of ducks on friday :))
 	"""
 	if irc.isChannel(channel):
 
-	    if (not self.fridayMode.get(channel)):
-		self.fridayMode[channel] = False
-
-	    if self.fridayMode[channel] == True:
-		self.fridayMode[channel] = False
-		irc.reply("Friday mode is now disabled.")
-
+	    if (status == 'status'):
+		irc.reply('Manual friday mode for ' + channel + ' is ' + str(self.manualFriday.get(channel)));
 	    else:
-		self.fridayMode[channel] = True
-		irc.reply("Friday mode is now enabled! Shoot alllllllllllll the ducks!")
+		if (self.manualFriday.get(channel) == None or self.manualFriday[channel] == False):
+		    self.manualFriday[channel] = True
+		    irc.reply("Friday mode is now enabled! Shoot alllllllllllll the ducks!")
+		else:
+		    self.manualFriday[channel] = False
+		    irc.reply("Friday mode is now disabled.")
 
-	    self._initthrottle(irc, msg, args, channel)
+		self._initthrottle(irc, msg, args, channel)
 	else:
 	    irc.error('You have to be on a channel')
 
 
-    fridaymode = wrap(fridaymode, ['channel', 'admin'])
+    fridaymode = wrap(fridaymode, ['channel', 'admin', optional('anything')])
 
     def launched(self, irc, msg, args):
         """
