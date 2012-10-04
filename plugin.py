@@ -243,6 +243,9 @@ class DuckHunt(callbacks.Plugin):
 	if (not self.fridayMode.get(channel)):
 	    self.fridayMode[channel] = False
 
+	if (not self.manualFriday.get(channel)):
+	    self.manualFriday[channel] = False
+
 	# Miss probability
 	if self.registryValue('missProbability', channel):
 	    self.missprobability[channel] = self.registryValue('missProbability', channel)
