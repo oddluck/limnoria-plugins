@@ -234,17 +234,18 @@ class DuckHunt(callbacks.Plugin):
 	    self.leader[channel] = None
 
 	# autoFriday?
-	if self.registryValue('autoFriday', channel):
-	    if int(time.strftime("%w")) == 5 and int(time.strftime("%H")) > 8 and int(time.strftime("%H")) < 17:
-		self.fridayMode[channel] = True
-	    else:
-		self.fridayMode[channel] = None
-
 	if (not self.fridayMode.get(channel)):
 	    self.fridayMode[channel] = False
 
 	if (not self.manualFriday.get(channel)):
 	    self.manualFriday[channel] = False
+
+
+	if self.registryValue('autoFriday', channel):
+	    if int(time.strftime("%w")) == 5 and int(time.strftime("%H")) > 8 and int(time.strftime("%H")) < 17:
+		self.fridayMode[channel] = True
+	    else:
+		self.fridayMode[channel] = False
 
 	# Miss probability
 	if self.registryValue('missProbability', channel):
@@ -402,6 +403,7 @@ class DuckHunt(callbacks.Plugin):
 
 	    if (status == 'status'):
 		irc.reply('Manual friday mode for ' + channel + ' is ' + str(self.manualFriday.get(channel)));
+		irc.reply('Auto friday mode for ' + channel + ' is ' + str(self.fridayMode.get(channel)));
 	    else:
 		if (self.manualFriday.get(channel) == None or self.manualFriday[channel] == False):
 		    self.manualFriday[channel] = True
