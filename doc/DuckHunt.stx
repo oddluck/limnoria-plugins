@@ -28,7 +28,8 @@ Documentation for the DuckHunt plugin for Supybot
 
     * fridaymode
 
-      Enable/disable friday mode! (there are lots of ducks on friday :))
+      [<status>] Enable/disable friday mode! (there are lots of ducks on friday
+      :))
 
     * launched
 

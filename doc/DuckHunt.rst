@@ -24,7 +24,7 @@ dbg
   This is a debug command. If debug mode is not enabled, it won't do anything
 
 fridaymode
-  Enable/disable friday mode! (there are lots of ducks on friday :))
+  [<status>] Enable/disable friday mode! (there are lots of ducks on friday :))
 
 launched
   Is there a duck right now?
