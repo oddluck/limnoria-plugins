@@ -96,6 +96,11 @@ supybot.plugins.DuckHunt.maxthrottle
 
   The maximum amount of time before a new duck may be launched (in seconds)
 
+supybot.plugins.DuckHunt.reloadTime
+  This config variable defaults to 5 and is channel specific.
+
+  The time it takes to reload your rifle once you have shot (in seconds)
+
 supybot.plugins.DuckHunt.missProbability
   This config variable defaults to 0.20000000000000001 and is channel specific.
 

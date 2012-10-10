@@ -55,6 +55,9 @@ conf.registerChannelValue(DuckHunt, 'minthrottle',
 conf.registerChannelValue(DuckHunt, 'maxthrottle', 
      registry.Integer(300, """The maximum amount of time before a new duck may be launched (in seconds)"""))
 
+conf.registerChannelValue(DuckHunt, 'reloadTime', 
+     registry.Integer(5, """The time it takes to reload your rifle once you have shot (in seconds)"""))
+
 conf.registerChannelValue(DuckHunt, 'missProbability', 
      registry.Probability(0.2, """The probability to miss the duck"""))
 

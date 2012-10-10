@@ -69,6 +69,8 @@ class DuckHunt(callbacks.Plugin):
     week = {}          # Scores for the week
     channelweek = {}   # Saved scores for the week
     leader = {}        # Who is the leader for the week?
+    reloading = {}     # Who is currently reloading?
+    reloadtime = {}    # Time to reload after shooting (in seconds)
 
     # Does a duck needs to be launched?
     lastSpoke = {}
@@ -133,7 +135,8 @@ class DuckHunt(callbacks.Plugin):
 
 	# week scores
 	for player in self.scores[channel].keys():
-	    if not player in self.channelweek[channel][self.woy].get(self.dow):
+	    #FIXME: If the hunt starts a day and ends the day after, this will produce an error:
+	    if not player in self.channelweek[channel][self.woy][self.dow]:
 		# It's a new player
 		self.channelweek[channel][self.woy][self.dow][player] = self.scores[channel][player]
 	    else:
@@ -253,6 +256,11 @@ class DuckHunt(callbacks.Plugin):
 	else:
 	    self.missprobability[channel] = 0.2
 
+	# Reload time
+	if self.registryValue('reloadTime', channel):
+	    self.reloadtime[channel] = self.registryValue('reloadTime', channel)
+	else:
+	    self.reloadtime[channel] = 5
 
 	if self.fridayMode[channel] == False and self.manualFriday[channel] == False:
 	    # Init min throttle[currentChannel] and max throttle[currentChannel]
@@ -321,6 +329,9 @@ class DuckHunt(callbacks.Plugin):
 		# Reinit current hunt scores
 		if self.scores.get(currentChannel):
 		    self.scores[currentChannel] = {}
+
+		# Reinit reloading
+		self.reloading[currentChannel] = {}
 
 		# No duck launched
 		self.duck[currentChannel] = False
@@ -853,6 +864,16 @@ class DuckHunt(callbacks.Plugin):
 		    else:
 			bangdelay = False
 
+
+		    # Is the player reloading?
+		    if (self.reloading[currentChannel].get(msg.nick) and time.time() - self.reloading[currentChannel][msg.nick] < self.reloadtime[currentChannel]):
+			irc.reply("%s, you are reloading... (Reloading takes %i seconds)" % (msg.nick, self.reloadtime[currentChannel]))
+			return 0
+		    
+
+		    # This player is now reloading
+		    self.reloading[currentChannel][msg.nick] = time.time();
+
 		    # There was a duck
 		    if (self.duck[currentChannel] == True):
 
@@ -914,6 +935,9 @@ class DuckHunt(callbacks.Plugin):
 				    self._initthrottle(irc, msg, args, currentChannel)
 				    if self.scores.get(currentChannel):
 					self.scores[currentChannel] = {}
+				    if self.reloading.get(currentChannel):
+					self.reloading[currentChannel] = {}
+
 				    self.averagetime[currentChannel] = 0
 
 
