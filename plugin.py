@@ -211,10 +211,9 @@ class DuckHunt(callbacks.Plugin):
 		inputfile.close()
 
 
-    
-    def _initthrottle(self, irc, msg, args, channel):
 
-        self.dow = int(time.strftime("%u")) # Day of week
+    def _initdayweekyear(self, channel):
+	self.dow = int(time.strftime("%u")) # Day of week
 	self.woy = int(time.strftime("%V")) # Week of year
 	year = time.strftime("%Y") 
 
@@ -233,6 +232,11 @@ class DuckHunt(callbacks.Plugin):
 	    self.channelweek[channel][self.woy][self.dow] = {}
 
 
+    
+    def _initthrottle(self, irc, msg, args, channel):
+
+	self._initdayweekyear(channel)
+        
 	if not self.leader.get(channel):
 	    self.leader[channel] = None
 
@@ -497,9 +501,7 @@ class DuckHunt(callbacks.Plugin):
 
 	    # Day scores
 	    try:
-
-		self.dow = int(time.strftime("%u")) # Day of week
-		self.woy = int(time.strftime("%V")) # Week of year
+		self._initdayweekyear(channel)
 		day = self.dow
 		week = self.woy
 		self.channelweek[channel][week][day][nickto] += self.channelweek[channel][week][day][nickfrom]
@@ -609,8 +611,7 @@ class DuckHunt(callbacks.Plugin):
 	if irc.isChannel(channel):
 
 	    self._read_scores(channel)
-	    self.dow = int(time.strftime("%u")) # Day of week
-	    self.woy = int(time.strftime("%V")) # Week of year
+	    self._initdayweekyear(channel)
 	    day = self.dow
 	    week = self.woy
 
