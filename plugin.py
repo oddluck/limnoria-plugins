@@ -53,7 +53,6 @@ class DuckHunt(callbacks.Plugin):
     # Those parameters are per-channel parameters
     started = {}       # Has the hunt started?
     duck = {}          # Is there currently a duck to shoot?
-    banging = {}       # Is there someone "banging" ;) right now?
     shoots = {}        # Number of successfull shoots in a hunt
     scores = {}        # Scores for the current hunt
     times = {}         # Elapsed time since the last duck was launched
@@ -343,9 +342,6 @@ class DuckHunt(callbacks.Plugin):
 		# Hunt started
 		self.started[currentChannel] = True
 
-		# Init banging
-		self.banging[currentChannel] = False
-
 		# Init shoots
 		self.shoots[currentChannel] = 0
 
@@ -381,9 +377,7 @@ class DuckHunt(callbacks.Plugin):
 	    if(self.started.get(currentChannel) == True):
 		if (self.duck[currentChannel] == False):
 		    if now > self.lastSpoke[currentChannel] + self.throttle[currentChannel]:
-			# If someone is "banging" right now, do not launch a duck
-			if (not self.banging[currentChannel]):
-			    self._launch(irc, msg, '')
+			self._launch(irc, msg, '')
 
 
 
@@ -504,7 +498,12 @@ class DuckHunt(callbacks.Plugin):
 		self._initdayweekyear(channel)
 		day = self.dow
 		week = self.woy
-		self.channelweek[channel][week][day][nickto] += self.channelweek[channel][week][day][nickfrom]
+
+		try:
+		    self.channelweek[channel][week][day][nickto] += self.channelweek[channel][week][day][nickfrom]
+		except:
+		    self.channelweek[channel][week][day][nickto] = self.channelweek[channel][week][day][nickfrom]
+
 		del self.channelweek[channel][week][day][nickfrom]
 		self._write_scores(channel)
 		irc.reply("Day scores merged")
@@ -854,7 +853,6 @@ class DuckHunt(callbacks.Plugin):
         Shoots the duck!
         """
         currentChannel = msg.args[0]
-	self.banging[currentChannel] = True
 
 	if irc.isChannel(currentChannel):
 	    if(self.started.get(currentChannel) == True):
@@ -982,8 +980,6 @@ class DuckHunt(callbacks.Plugin):
 		irc.reply("There is no hunt right now! You can start a hunt with the 'start' command")
 	else:
 	    irc.error('You have to be on a channel')
-
-	self.banging[currentChannel] = False
 
     bang = wrap(bang)
 
