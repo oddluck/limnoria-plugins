@@ -992,7 +992,7 @@ class DuckHunt(callbacks.Plugin):
 
 	currentChannel = msg.args[0]
 
-	# End the hunting
+	# End the hunt
 	self.started[currentChannel] = False
 
 	try:
@@ -1154,7 +1154,7 @@ class DuckHunt(callbacks.Plugin):
 
 		    irc.reply("Already a duck")
 	    else:
-		irc.reply("The hunting has not started yet!")
+		irc.reply("The hunt has not started yet!")
 	else:
 	    irc.error('You have to be on a channel')
 
