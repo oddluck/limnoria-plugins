@@ -247,7 +247,7 @@ class DuckHunt(callbacks.Plugin):
 	    self.manualFriday[channel] = False
 
 
-	if self.registryValue('autoFriday', channel):
+	if self.registryValue('autoFriday', channel) == True:
 	    if int(time.strftime("%w")) == 5 and int(time.strftime("%H")) > 8 and int(time.strftime("%H")) < 17:
 		self.fridayMode[channel] = True
 	    else:
