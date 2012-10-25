@@ -388,6 +388,8 @@ class Tweety(callbacks.Plugin):
 
 
     # https://dev.twitter.com/docs/api/1.1/get/application/rate_limit_status
+    # https://dev.twitter.com/docs/rate-limiting/1.1
+    # https://dev.twitter.com/docs/rate-limiting/1.1/limits
     def ratelimits(self, irc, msg, args, optstatus):
         """
         Display current rate limits for your twitter API account.
@@ -472,22 +474,21 @@ class Tweety(callbacks.Plugin):
         searchtype being recent, popular or mixed. Popular is the default.
         """
         
-        tsearchArgs = {'include_entities':'false', 'count': self.registryValue('defaultResults', msg.args[0]), 'lang':'en', 'q':urllib.quote(optterm)}
+        tsearchArgs = {'include_entities':'false', 'count': self.registryValue('defaultSearchResults', msg.args[0]), 'lang':'en', 'q':urllib.quote(optterm)}
 
         if optlist:
             for (key, value) in optlist:
                 if key == 'num':
-                    max = self.registryValue('maxResults', msg.args[0])
-                    if args['num'] > max or args['num'] <= 0:
-                        irc.reply("Error: '{0}' is not a valid number of tweets. Range is above 0 and max {1}.".format(args['num'], max))
+                    max = self.registryValue('maxSearchResults', msg.args[0])
+                    if value > max or value <= 0:
+                        irc.reply("Error: '{0}' is not a valid number of tweets. Range is above 0 and max {1}.".format(value, max))
                         return
                     else:
                         tsearchArgs['count'] = value
                 if key == 'searchtype':
                     tsearchArgs['result_type'] = value # limited by getopts to valid values.
-                if key == 'lang':
-                    lang = value
-                    tsearchArgs['lang'] = lang # lang . Uses ISO-639 codes like 'en' http://en.wikipedia.org/wiki/ISO_639-1
+                if key == 'lang': # lang . Uses ISO-639 codes like 'en' http://en.wikipedia.org/wiki/ISO_639-1
+                    tsearchArgs['lang'] = value 
 
         try:
             twitter = OAuthApi(self.registryValue('consumerKey'), self.registryValue('consumerSecret'), self.registryValue('accessKey'), self.registryValue('accessSecret'))
@@ -510,12 +511,12 @@ class Tweety(callbacks.Plugin):
             for result in results:
                 nick = result['user']['name'].encode('utf-8')
                 name = result["user"]['screen_name'].encode('utf-8')
-                text = self._unescape(result["text"]).encode('utf-8')
-                date = self._time_created_at(result["created_at"])
-                tweetid = result["id_str"]
+                text = self._unescape(result.get('text', None).encode('utf-8')) # look also at the unicode strip here.
+                date = self._time_created_at(result.get('created_at', None))
+                tweetid = result.get('id_str', None)
                 self._outputTweet(irc, msg, nick, name, text, date, tweetid)
 
-    tsearch = wrap(tsearch, [getopts({'num':('int'), 'searchtype':('literal', ('popular', 'mixed', 'recent')), 'lang':('something')}), ('text')])
+    tsearch = wrap(tsearch, [getopts({'num':('int'), 'searchtype':('literal', ('popular', 'mixed', 'recent')), 'lang':('somethingWithoutSpaces')}), ('text')])
 
 
     def twitter(self, irc, msg, args, optlist, optnick):
