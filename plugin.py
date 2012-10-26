@@ -241,6 +241,7 @@ class OAuthApi:
 # TODO: centralize logging in. Add something to display error codes in the log while displaying error to irc.
 # TODO: work on colorizing tweets better.
 # TODO: maybe make an encode wrapper that can utilize strip_accents?
+# TODO: langs in search to validate against: https://dev.twitter.com/docs/api/1.1/get/help/languages
 
 class Tweety(callbacks.Plugin):
     """Simply use the commands available in this plugin. Allows fetching of the
@@ -256,6 +257,25 @@ class Tweety(callbacks.Plugin):
             return unicodedata.normalize('NFKD', s).encode('ascii', 'ignore')
         else:
             return s
+
+    
+    #def _checkCredentials(self):
+        #apiKey = self.registryValue('ffApiKey')
+        #if not apiKey or apiKey == "Not set":
+        #    irc.reply("API key not set. see 'config help supybot.plugins.NFL.ffApiKey'.")
+        #    return
+        # twitter = OAuthApi(self.registryValue('consumerKey'), self.registryValue('consumerSecret'), self.registryValue('accessKey'), self.registryValue('accessSecret'))
+
+
+    def _highlightUrl(self, text):
+        URL_REGEX = compile_regex('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')
+
+
+    def _encode(string):
+        try:
+            return string.encode(stdout.encoding, 'replace')
+        except AttributeError:
+            return string
 
 
     def _unescape(self, text):
