@@ -238,6 +238,10 @@ class OAuthApi:
 
 # now, begin our actual code.
 # APIDOCS https://dev.twitter.com/docs/api/1.1
+# TODO: centralize logging in. Add something to display error codes in the log while displaying error to irc.
+# TODO: work on colorizing tweets better.
+# TODO: maybe make an encode wrapper that can utilize strip_accents?
+
 class Tweety(callbacks.Plugin):
     """Simply use the commands available in this plugin. Allows fetching of the
     latest tween from a specified twitter handle, and listing of top ten
