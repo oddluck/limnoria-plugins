@@ -237,15 +237,14 @@ class OAuthApi:
             return json.loads(data)
 
 # now, begin our actual code.
-
+# APIDOCS https://dev.twitter.com/docs/api/1.1
 class Tweety(callbacks.Plugin):
     """Simply use the commands available in this plugin. Allows fetching of the
     latest tween from a specified twitter handle, and listing of top ten
     trending tweets."""
     threaded = True
     
-    # APIDOCS https://dev.twitter.com/docs/api/1.1
-
+    
     def _strip_accents(self, string): 
         """Return a string containing the normalized ascii string."""
         import unicodedata
@@ -275,7 +274,7 @@ class Tweety(callbacks.Plugin):
             return text # leave as is
         return re.sub("&#?\w+;", fixup, text)
 
-  
+
     def _time_created_at(self, s):
         """
         Takes a datetime string object that comes from twitter and twitter search timelines and returns a relative date.
@@ -343,7 +342,7 @@ class Tweety(callbacks.Plugin):
 
     def _createShortUrl(self, nick, tweetid):
         """
-        Takes an input URL and returns a shortened URL via is.gd service.
+        Takes a nick and tweetid and returns a shortened URL via is.gd service.
         """
         
         longurl = "https://twitter.com/#!/{0}/status/{1}".format(nick, tweetid)
@@ -398,16 +397,14 @@ class Tweety(callbacks.Plugin):
 
     woeidlookup = wrap(woeidlookup, ['text'])
 
-
+    # RATELIMITING
     # https://dev.twitter.com/docs/api/1.1/get/application/rate_limit_status
     # https://dev.twitter.com/docs/rate-limiting/1.1
     # https://dev.twitter.com/docs/rate-limiting/1.1/limits
-    def ratelimits(self, irc, msg, args, optstatus):
+    def ratelimits(self, irc, msg, args):
         """
         Display current rate limits for your twitter API account.
         """
-        
-        # statuses, search, trends, users
         
         try:
             twitter = OAuthApi(self.registryValue('consumerKey'), self.registryValue('consumerSecret'), self.registryValue('accessKey'), self.registryValue('accessSecret'))
@@ -416,23 +413,29 @@ class Tweety(callbacks.Plugin):
             return
         
         try:
-            data = twitter.ApiCall('application/rate_limit_status', parameters={'resources':optstatus}) #', parameters={'id':woeid})
+            data = twitter.ApiCall('application/rate_limit_status') #, parameters={'resources':optstatus}) 
         except:
             irc.reply("Failed to lookup rate limit data. Something might have gone wrong.")
             return
             
         data = data.get('resources', None)
-        
+              
         if not data: # simple check if we have part of the json dict.
             irc.reply("Failed to fetch application rate limit status. Something could be wrong with Twitter.")
+            self.log.error(data)
             return
-        
-        # {u'trends': {u'/trends/available': {u'reset': 1351018255, u'limit': 15, u'remaining': 15}, u'/trends/closest': {u'reset': 1351018255, u'limit': 15, u'remaining': 15}, u'/trends/place': 
-        #          {u'reset': 1351018249, u'limit': 15, u'remaining': 14}}}
-        
-        irc.reply(data)
 
-    ratelimits = wrap(ratelimits, [('somethingWithoutSpaces')])
+        # we only have resources needed in here. def below works with each entry properly.        
+        resourcelist = ['trends/place', 'search/tweets', 'users/show/:id', 'statuses/show/:id', 'statuses/user_timeline/:id']
+        
+        for resource in resourcelist:
+            family, endpoint = resource.split('/', 1) # need to split each entry on /, resource family is [0], append / to entry.
+            resourcedict = data.get(family, None)
+            endpoint = resourcedict.get("/"+resource, None)
+            irc.reply("{0} :: {1}".format(resource, endpoint))
+            # endpoint is {u'reset': 1351226072, u'limit': 15, u'remaining': 15}
+        
+    ratelimits = wrap(ratelimits)
 
 
     # https://dev.twitter.com/docs/api/1.1/get/trends/place
@@ -531,6 +534,9 @@ class Tweety(callbacks.Plugin):
     tsearch = wrap(tsearch, [getopts({'num':('int'), 'searchtype':('literal', ('popular', 'mixed', 'recent')), 'lang':('somethingWithoutSpaces')}), ('text')])
 
 
+    # INFO https://dev.twitter.com/docs/api/1.1/get/users/show
+    # ID https://dev.twitter.com/docs/api/1.1/get/statuses/show/%3Aid
+    # TIMELINE https://dev.twitter.com/docs/api/1.1/get/statuses/user_timeline
     def twitter(self, irc, msg, args, optlist, optnick):
         """[--noreply] [--nort] [--num number] <nick> | <--id id> | [--info nick]
 
@@ -539,11 +545,7 @@ class Tweety(callbacks.Plugin):
         Or returns tweet with id 'id'.
         Or returns information on user with --info. 
         """
-        
-        # INFO https://dev.twitter.com/docs/api/1.1/get/users/show
-        # ID https://dev.twitter.com/docs/api/1.1/get/statuses/show/%3Aid
-        # TIMELINE https://dev.twitter.com/docs/api/1.1/get/statuses/user_timeline
-        
+            
         optnick = optnick.replace('@','') # strip @ from input if given.
         
         args = {'id': False, 'nort': False, 'noreply': False, 'num': self.registryValue('defaultResults', msg.args[0]), 'info': False}
@@ -584,7 +586,7 @@ class Tweety(callbacks.Plugin):
             if args['noreply']: # This parameter will prevent replies from appearing in the returned timeline.
                 twitterArgs['exclude_replies'] = 'true'
             else:
-                twitterArgs['exclude_replies'] = 'false' # testing. default to true. 
+                twitterArgs['exclude_replies'] = 'false'
 
         # now with and call the api.
         try:
