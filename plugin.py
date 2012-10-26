@@ -511,7 +511,7 @@ class Tweety(callbacks.Plugin):
             for result in results:
                 nick = result['user'].get('screen_name', None)
                 name = result["user"].get('name', None)
-                text = self._unescape(result.get('text', None) # look also at the unicode strip here.
+                text = self._unescape(result.get('text', None)) # look also at the unicode strip here.
                 date = self._time_created_at(result.get('created_at', None))
                 tweetid = result.get('id_str', None)
                 self._outputTweet(irc, msg, nick.encode('utf-8'), name.encode('utf-8'), text.encode('utf-8'), date, tweetid)
@@ -520,10 +520,10 @@ class Tweety(callbacks.Plugin):
 
 
     def twitter(self, irc, msg, args, optlist, optnick):
-        """[--reply] [--rt] [--num number] <nick> | <--id id> | [--info nick]
+        """[--noreply] [--nort] [--num number] <nick> | <--id id> | [--info nick]
 
-        Returns last tweet or 'number' tweets (max 10). Only replies tweets that are
-        @replies or retweets if specified with the appropriate arguments.
+        Returns last tweet or 'number' tweets (max 10). Shows all tweets, including rt and reply.
+        To not display replies or RT's, use --noreply or --nort, respectively. 
         Or returns tweet with id 'id'.
         Or returns information on user with --info. 
         """
@@ -532,19 +532,19 @@ class Tweety(callbacks.Plugin):
         # ID https://dev.twitter.com/docs/api/1.1/get/statuses/show/%3Aid
         # TIMELINE https://dev.twitter.com/docs/api/1.1/get/statuses/user_timeline
         
-        optnick = optnick.replace('@','') # strip @ from usernames 
+        optnick = optnick.replace('@','') # strip @ from input if given.
         
-        args = {'id': False, 'rt': False, 'reply': False, 'num': self.registryValue('defaultResults', msg.args[0]), 'info': False}
+        args = {'id': False, 'nort': False, 'noreply': False, 'num': self.registryValue('defaultResults', msg.args[0]), 'info': False}
 
         # handle input optlist. 
         if optlist: 
             for (key, value) in optlist:
                 if key == 'id':
                     args['id'] = True
-                if key == 'rt':
-                    args['rt'] = True
-                if key == 'reply':
-                    args['reply'] = True
+                if key == 'nort':
+                    args['nort'] = True
+                if key == 'noreply':
+                    args['noreply'] = True
                 if key == 'num':
                     if value > self.registryValue('maxResults', msg.args[0]) or value <= 0:
                         irc.reply("Error: '{0}' is not a valid number of tweets. Range is above 0 and max {1}.".format(value, max))
@@ -564,15 +564,15 @@ class Tweety(callbacks.Plugin):
         else:
             apiUrl = 'statuses/user_timeline'
             twitterArgs = {'screen_name': optnick, 'count': args['num']}
-            if args['rt']: # When set to false, the timeline will strip any native retweets
-                twitterArgs['include_rts'] = 'true'
-            else:
+            if args['nort']: # When set to false, the timeline will strip any native retweets
                 twitterArgs['include_rts'] = 'false'
-                
-            if args['reply']: # This parameter will prevent replies from appearing in the returned timeline.
-                twitterArgs['exclude_replies'] = 'false'
             else:
-                twitterArgs['exclude_replies'] = 'true' # testing. default to true. 
+                twitterArgs['include_rts'] = 'true'
+                
+            if args['noreply']: # This parameter will prevent replies from appearing in the returned timeline.
+                twitterArgs['exclude_replies'] = 'true'
+            else:
+                twitterArgs['exclude_replies'] = 'false' # testing. default to true. 
 
         # now with and call the api.
         try:
@@ -637,7 +637,7 @@ class Tweety(callbacks.Plugin):
                 relativeTime = self._time_created_at(tweet.get('created_at', None))
                 self._outputTweet(irc, msg, nick.encode('utf-8'), name.encode('utf-8'), text.encode('utf-8'), relativeTime, tweetid)
 
-    twitter = wrap(twitter, [getopts({'reply':'', 'rt': '', 'info': '', 'id': '', 'num': ('int')}), ('something')])
+    twitter = wrap(twitter, [getopts({'noreply':'', 'nort': '', 'info': '', 'id': '', 'num': ('int')}), ('something')])
 
 Class = Tweety
 
