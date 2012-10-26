@@ -49,7 +49,11 @@ conf.registerGlobalValue(Tweety, 'accessSecret', registry.String('', """The Twit
 conf.registerChannelValue(Tweety, 'hideRealName', registry.Boolean(False, """Do not show real name when displaying tweets."""))
 conf.registerChannelValue(Tweety, 'addShortUrl', registry.Boolean(False, """Whether or not to add a short URL to the tweets."""))
 conf.registerChannelValue(Tweety, 'woeid', registry.Integer(1, """Where On Earth ID. World Wide is 1. USA is 23424977."""))
-conf.registerChannelValue(Tweety, 'defaultResults', registry.Integer(3, """Default number of results to return on searches."""))
-conf.registerChannelValue(Tweety, 'maxResults', registry.Integer(10, """Maximum number of results to return on searches and lookups."""))
+conf.registerChannelValue(Tweety, 'defaultSearchResults', registry.Integer(3, """Default number of results to return on searches."""))
+conf.registerChannelValue(Tweety, 'maxSearchResults', registry.Integer(10, """Maximum number of results to return on searches"""))
+conf.registerChannelValue(Tweety, 'defaultResults', registry.Integer(1, """Default number of results to return on timelines."""))
+conf.registerChannelValue(Tweety, 'maxResults', registry.Integer(10, """Maximum number of results to return on timelines."""))
+conf.registerChannelValue(Tweety, 'outputColorTweets', registry.Boolean(False, """When outputting Tweets, display them with some color."""))
+
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
