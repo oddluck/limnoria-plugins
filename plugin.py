@@ -267,11 +267,7 @@ class Tweety(callbacks.Plugin):
         # twitter = OAuthApi(self.registryValue('consumerKey'), self.registryValue('consumerSecret'), self.registryValue('accessKey'), self.registryValue('accessSecret'))
 
 
-    def _highlightUrl(self, text):
-        URL_REGEX = compile_regex('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')
-
-
-    def _encode(string):
+    def _encode(self, string):
         try:
             return string.encode(stdout.encoding, 'replace')
         except AttributeError:
@@ -356,8 +352,9 @@ class Tweety(callbacks.Plugin):
             
         # add in the end with the text + tape
         if outputColorTweets:
+            text = re.sub(r'(http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+)', ircutils.mircColor(r'\1', 'red'), text) # color urls.
             ret += ": {0} ({1})".format(text, ircutils.mircColor(time, 'yellow'))
-        else:
+        else:            
             ret += ": {0} ({1})".format(text, ircutils.bold(time))
         
         if self.registryValue('addShortUrl', msg.args[0]):
