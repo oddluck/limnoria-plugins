@@ -252,7 +252,10 @@ class Tweety(callbacks.Plugin):
     def _strip_accents(self, string): 
         """Return a string containing the normalized ascii string."""
         import unicodedata
-        return unicodedata.normalize('NFKD', unicode(string)).encode('ASCII', 'ignore')
+        if isinstance(s, unicode):
+            return unicodedata.normalize('NFKD', s).encode('ascii', 'ignore')
+        else:
+            return s
 
 
     def _unescape(self, text):
