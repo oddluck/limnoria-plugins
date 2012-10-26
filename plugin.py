@@ -509,12 +509,12 @@ class Tweety(callbacks.Plugin):
             return
         else:
             for result in results:
-                nick = result['user']['name'].encode('utf-8')
-                name = result["user"]['screen_name'].encode('utf-8')
-                text = self._unescape(result.get('text', None).encode('utf-8')) # look also at the unicode strip here.
+                nick = result['user'].get('screen_name', None)
+                name = result["user"].get('name', None)
+                text = self._unescape(result.get('text', None) # look also at the unicode strip here.
                 date = self._time_created_at(result.get('created_at', None))
                 tweetid = result.get('id_str', None)
-                self._outputTweet(irc, msg, nick, name, text, date, tweetid)
+                self._outputTweet(irc, msg, nick.encode('utf-8'), name.encode('utf-8'), text.encode('utf-8'), date, tweetid)
 
     tsearch = wrap(tsearch, [getopts({'num':('int'), 'searchtype':('literal', ('popular', 'mixed', 'recent')), 'lang':('somethingWithoutSpaces')}), ('text')])
 
@@ -586,17 +586,15 @@ class Tweety(callbacks.Plugin):
         except:
             irc.reply("Failed to get user's timeline. Twitter broken?")
             return
-
-        #self.log.info(str(data))
         
         # process the data. 
         if args['id']: # If --id was given for a single tweet.
-            text = self._unescape(data.get('text', None).encode('utf-8'))
-            nick = data["user"]["screen_name"].encode('utf-8')
-            name = data["user"]["name"].encode('utf-8')
+            text = self._unescape(data.get('text', None))
+            nick = data["user"].get('screen_name', None)
+            name = data["user"].get('name', None)
             relativeTime = self._time_created_at(data.get('created_at', None))
             tweetid = data.get('id', None)
-            self._outputTweet(irc, msg, nick, name, text, relativeTime, tweetid)
+            self._outputTweet(irc, msg, nick.encode('utf-8'), name.encode('utf-8'), text.encode('utf-8'), relativeTime, tweetid)
             return
 
         
@@ -632,12 +630,12 @@ class Tweety(callbacks.Plugin):
                 return
             
             for tweet in data:
-                text = self._unescape(tweet.get('text', None)).encode('utf-8')
-                nick = tweet["user"]["screen_name"].encode('utf-8')
-                name = tweet["user"]["name"].encode('utf-8')
+                text = self._unescape(tweet.get('text', None))
+                nick = tweet["user"].get('screen_name', None)
+                name = tweet["user"].get('name', None)
                 tweetid = tweet.get('id', None)
                 relativeTime = self._time_created_at(tweet.get('created_at', None))
-                self._outputTweet(irc, msg, nick, name, text, relativeTime, tweetid)
+                self._outputTweet(irc, msg, nick.encode('utf-8'), name.encode('utf-8'), text.encode('utf-8'), relativeTime, tweetid)
 
     twitter = wrap(twitter, [getopts({'reply':'', 'rt': '', 'info': '', 'id': '', 'num': ('int')}), ('something')])
 
