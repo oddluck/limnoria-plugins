@@ -253,6 +253,7 @@ class Tweety(callbacks.Plugin):
 
 
     def _unescape(self, text):
+        """Created by Fredrik Lundh (http://effbot.org/zone/re-sub.htm#unescape-html)"""
         text = text.replace("\n", " ")
         def fixup(m):
             text = m.group(0)
@@ -317,15 +318,26 @@ class Tweety(callbacks.Plugin):
         Takes a group of strings and outputs a Tweet to IRC. Used for tsearch and twitter.
         """
         
-        ret = ircutils.underline(ircutils.bold("@" + nick))
-        hideName = self.registryValue('hideRealName', msg.args[0])
-        if not hideName:
+        outputColorTweets = self.registryValue('outputColorTweets', msg.args[0])
+        
+        if outputColorTweets:
+            ret = ircutils.underline(ircutils.mircColor(("@" + nick), 'blue'))
+        else:
+            ret = ircutils.underline(ircutils.bold("@" + nick))
+            
+        if not self.registryValue('hideRealName', msg.args[0]): # show realname in tweet output?
             ret += " ({0})".format(name)
-        ret += ": {0} ({1})".format(text, ircutils.bold(time))
+            
+        # add in the end with the text + tape
+        if outputColorTweets:
+            ret += ": {0} ({1})".format(text, ircutils.mircColor(time, 'yellow'))
+        else:
+            ret += ": {0} ({1})".format(text, ircutils.bold(time))
+        
         if self.registryValue('addShortUrl', msg.args[0]):
-            url = self._createShortUrl(nick, tweetid)
-            if (url):
+            if self._createShortUrl(nick, tweetid):
                 ret += " {0}".format(url)
+        
         irc.reply(ret)
 
 
