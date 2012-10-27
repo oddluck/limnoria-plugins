@@ -255,6 +255,7 @@ class Tweety(callbacks.Plugin):
         haveAuthKeys = self._checkCredentials()
 
     def _checkCredentials(self):
+        """Check for all 4 requires keys on Twitter auth."""
         failTest = False
         for checkKey in ('consumerKey', 'consumerSecret', 'accessKey', 'accessSecret'):
             try:
@@ -264,10 +265,10 @@ class Tweety(callbacks.Plugin):
                 break
         
         if failTest:
-            self.log.info('Failed')
+            self.log.error('Failed getting keys')
             return False
         else:
-            self.log.info('Passed')
+            self.log.info('Passed getting keys')
             return True
             
     #def re_encode(input_string, decoder = 'utf-8', encoder = 'utf=8'):   
@@ -425,6 +426,7 @@ class Tweety(callbacks.Plugin):
             irc.reply(("Something broke while looking up: '%s'") % (lookup))
 
     woeidlookup = wrap(woeidlookup, ['text'])
+    
 
     # RATELIMITING
     # https://dev.twitter.com/docs/api/1.1/get/application/rate_limit_status
@@ -497,17 +499,17 @@ class Tweety(callbacks.Plugin):
         try:
             location = data[0]['locations'][0]['name']
         except:
-            irc.reply("ERROR: Location not found for: %s" % optwoeid) # error also throws 404.
-            self.log.info('ERROR: Location not found for: %s' % optwoeid)
-            self.log.info('DATA: %s' % data)
+            irc.reply("ERROR: Cannot load trends: {0}".format(data)) # error also throws 404.
+            self.log.info("Trends error data: {0}".format(data))
             return
         
-        ttrends = string.join([trend['name'] for trend in data[0]['trends']], " | ")
+        ttrends = string.join([trend['name'].encode('utf-8') for trend in data[0]['trends']], " | ")
         
         retvalue = "Top 10 Twitter Trends in {0} :: {1}".format(ircutils.bold(location), ttrends)
         irc.reply(retvalue)
 
     trends = wrap(trends, [optional('text')])
+    
 
     # https://dev.twitter.com/docs/api/1.1/get/search/tweets
     def tsearch(self, irc, msg, args, optlist, optterm):
@@ -628,6 +630,14 @@ class Tweety(callbacks.Plugin):
             data = twitter.ApiCall(apiUrl, parameters=twitterArgs)
         except:
             irc.reply("Failed to get user's timeline. Twitter broken?")
+            return
+
+        # final sanity check for json 
+        try: 
+            data = json.loads(data)
+        except:
+            irc.reply("ERROR: Failed to parse data from Twitter: {0}".format(data))
+            self.log.error(str(data))
             return
         
         # process the data. 
