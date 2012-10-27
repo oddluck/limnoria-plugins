@@ -249,22 +249,38 @@ class Tweety(callbacks.Plugin):
     trending tweets."""
     threaded = True
     
-    
-    def _strip_accents(self, string): 
-        """Return a string containing the normalized ascii string."""
-        import unicodedata
-        if isinstance(s, unicode):
-            return unicodedata.normalize('NFKD', s).encode('ascii', 'ignore')
-        else:
-            return s
+    def __init__(self, irc):
+        self.__parent = super(Tweety, self)
+        self.__parent.__init__(irc)
+        haveAuthKeys = self._checkCredentials()
 
+    def _checkCredentials(self):
+        failTest = False
+        checkKeys = ['consumerKey', 'consumerSecret', 'accessKey', 'accessSecret']
+        for checkKey in checkKeys:
+            try:
+                testKey = self.registryValue(checkKey)
+            except:
+                failTest = True
+                break
+        
+        if failTest:
+            self.log.info('Failed')
+            return False
+        else:
+            self.log.info('Passed')
+            return True
+            
+    #def re_encode(input_string, decoder = 'utf-8', encoder = 'utf=8'):   
+        #try:
+            #output_string = unicodedata.normalize('NFD',\ 
+            #input_string.decode(decoder)).encode(encoder)
+        #except UnicodeError:
+            #output_string = unicodedata.normalize('NFD',\ 
+            #input_string.decode('ascii', 'replace')).encode(encoder)
+        #return output_string
     
-    #def _checkCredentials(self):
-        #apiKey = self.registryValue('ffApiKey')
-        #if not apiKey or apiKey == "Not set":
-        #    irc.reply("API key not set. see 'config help supybot.plugins.NFL.ffApiKey'.")
-        #    return
-        # twitter = OAuthApi(self.registryValue('consumerKey'), self.registryValue('consumerSecret'), self.registryValue('accessKey'), self.registryValue('accessSecret'))
+
 
 
     def _encode(self, string):
