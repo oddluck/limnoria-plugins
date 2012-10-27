@@ -256,8 +256,7 @@ class Tweety(callbacks.Plugin):
 
     def _checkCredentials(self):
         failTest = False
-        checkKeys = ['consumerKey', 'consumerSecret', 'accessKey', 'accessSecret']
-        for checkKey in checkKeys:
+        for checkKey in ('consumerKey', 'consumerSecret', 'accessKey', 'accessSecret'):
             try:
                 testKey = self.registryValue(checkKey)
             except:
@@ -280,16 +279,6 @@ class Tweety(callbacks.Plugin):
             #input_string.decode('ascii', 'replace')).encode(encoder)
         #return output_string
     
-
-
-
-    def _encode(self, string):
-        try:
-            return string.encode(stdout.encoding, 'replace')
-        except AttributeError:
-            return string
-
-
     def _unescape(self, text):
         """Created by Fredrik Lundh (http://effbot.org/zone/re-sub.htm#unescape-html)"""
         text = text.replace("\n", " ")
