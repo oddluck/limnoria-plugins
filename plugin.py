@@ -42,17 +42,11 @@ class UrbanDictionary(callbacks.Plugin):
 
         url = 'http://api.urbandictionary.com/v0/define?term=%s' % (urllib.quote(term))
 
-        #self.log.info(url)
-
-        # attempt to fetch data
         try:
             request = urllib2.Request(url)
             response = urllib2.urlopen(request)
-        except URLError, e:
-            irc.reply(ircutils.mircColor("ERROR:", 'red') + " fetching URL: %s" % (e.reason))
-            return
-        except HTTPError, e:
-            irc.reply(ircutils.mircColor("ERROR:", 'red') + " fetching URL: %s" % (e.code))
+        except:
+            irc.reply(ircutils.mircColor("ERROR:", 'red') + " fetching URL: %s" % (url))
             return
 
         response_data = response.read().replace(r'\r', '').replace(r'\n', '')
