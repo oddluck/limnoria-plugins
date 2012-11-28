@@ -54,6 +54,7 @@ conf.registerChannelValue(Tweety, 'maxSearchResults', registry.Integer(10, """Ma
 conf.registerChannelValue(Tweety, 'defaultResults', registry.Integer(1, """Default number of results to return on timelines."""))
 conf.registerChannelValue(Tweety, 'maxResults', registry.Integer(10, """Maximum number of results to return on timelines."""))
 conf.registerChannelValue(Tweety, 'outputColorTweets', registry.Boolean(False, """When outputting Tweets, display them with some color."""))
+conf.registerChannelValue(Tweety, 'expandShortUrls', registry.Boolean(False, """When outputting Tweets, expand short urls (like from t.co, etc.)."""))
 
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
