@@ -46,8 +46,10 @@ from datetime import tzinfo, datetime, timedelta
 # for unescape
 import re, htmlentitydefs
 
+# reencode
+import unicodedata
+
 # oauthtwitter
-import time
 import urlparse
 import oauth2 as oauth
 
@@ -101,7 +103,7 @@ class OAuthApi:
                                                     http_method=http_method)
         
         # Get a url opener that can handle Oauth basic auth        
-        callbacks.log.info(str(extra_params))
+        #callbacks.log.info(str(extra_params))
         opener = self._GetOpener()
 
         if http_method == "POST":
@@ -113,7 +115,7 @@ class OAuthApi:
             url = req.to_url()
             encoded_post_data = ""
         
-        callbacks.log.info(str(url))
+        #callbacks.log.info(str(url))
         
         if encoded_post_data:
         	url_data = opener.open(url, encoded_post_data).read()
@@ -254,6 +256,7 @@ class Tweety(callbacks.Plugin):
         self.__parent.__init__(irc)
         haveAuthKeys = self._checkCredentials()
 
+
     def _checkCredentials(self):
         """Check for all 4 requires keys on Twitter auth."""
         failTest = False
@@ -261,16 +264,33 @@ class Tweety(callbacks.Plugin):
             try:
                 testKey = self.registryValue(checkKey)
             except:
+                self.log.debug("Failed checking keys. We're missing the config value for: {0}. Please set this and try again.".format(checkKey))
                 failTest = True
                 break
         
         if failTest:
-            self.log.error('Failed getting keys')
+            self.log.error('Failed getting keys. You must set all 4 keys in config variables.')
             return False
         else:
-            self.log.info('Passed getting keys')
             return True
-            
+
+
+    def _expandLinks(self, tweet):
+        # if not surl.startswith('http://') and not surl.startswith('https://'):
+        _tco_link_re = re.compile(u'http://t.co/[a-zA-Z0-9]+')
+        try:
+            req_url = 'http://api.longurl.org/v2/expand?format=json&url=' + qurl
+            req = urllib2.Request(req_url, headers={'User-Agent': 'Python-longurl/1.0'})
+            lookup = json.loads(urllib2.urlopen(req).read())
+            return lookup.get('long-url', None)
+        except urllib2.HTTPError as e:
+            self.log.debug('http error {0} when trying to shorten {1}'.format(e, qurl)
+            return None
+        except urllib2.URLError as e:
+            self.log.debug('http error {0} when trying to shorten {1}'.format(e, qurl)
+            return None
+
+                                
     #def re_encode(input_string, decoder = 'utf-8', encoder = 'utf=8'):   
         #try:
             #output_string = unicodedata.normalize('NFD',\ 
@@ -279,6 +299,7 @@ class Tweety(callbacks.Plugin):
             #output_string = unicodedata.normalize('NFD',\ 
             #input_string.decode('ascii', 'replace')).encode(encoder)
         #return output_string
+
     
     def _unescape(self, text):
         """Created by Fredrik Lundh (http://effbot.org/zone/re-sub.htm#unescape-html)"""
@@ -391,7 +412,6 @@ class Tweety(callbacks.Plugin):
         """
 
         query = "select * from geo.places where text='%s'" % lookup
-
         params = {
                 "q": query,
                 "format":"json",
@@ -412,7 +432,10 @@ class Tweety(callbacks.Plugin):
             return None
 
         return woeid
-
+    
+    ##########################
+    ### PUBLIC FUNCTIONS #####
+    ##########################
 
     def woeidlookup(self, irc, msg, args, lookup):
         """[location]
@@ -495,12 +518,13 @@ class Tweety(callbacks.Plugin):
         except:
             irc.reply("Failed to lookup trends data. Something might have gone wrong.")
             return
+        
+        #self.log.info(str(type(data)))
             
         try:
             location = data[0]['locations'][0]['name']
         except:
             irc.reply("ERROR: Cannot load trends: {0}".format(data)) # error also throws 404.
-            self.log.info("Trends error data: {0}".format(data))
             return
         
         ttrends = string.join([trend['name'].encode('utf-8') for trend in data[0]['trends']], " | ")
@@ -631,15 +655,7 @@ class Tweety(callbacks.Plugin):
         except:
             irc.reply("Failed to get user's timeline. Twitter broken?")
             return
-
-        # final sanity check for json 
-        try: 
-            data = json.loads(data)
-        except:
-            irc.reply("ERROR: Failed to parse data from Twitter: {0}".format(data))
-            self.log.error(str(data))
-            return
-        
+       
         # process the data. 
         if args['id']: # If --id was given for a single tweet.
             text = self._unescape(data.get('text', None))

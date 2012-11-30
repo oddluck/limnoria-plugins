@@ -1,6 +1,25 @@
+Overview:
 Supply a username and get the latest tweet(s). Or an ID to a tweet. Or search on twitter. Or view latest trends. Does not require a user account or apikey or anything like that. Just point and shoot.
 This plugin does NOT relay tweets in real time. It only fetches data from Twitter when commands are called.
 
+This is forked from Hoaas' Tweety plugin at: http://github.com/Hoaas/Supybot-Plugins to support Twitter API v1.1 and add in a few features:
+
+Instructions:
+1.) Install the dependencies. You can go the pip route or install via source, depending on your setup. You will need:
+    1. Install oauth2: sudo pip install oauth2 
+    
+2.) You need some keys from Twitter. See http://dev.twitter.com. Steps are:
+    1. If you plan to use a dedicated Twitter account, create a new twitter account.
+    2. Go to dev.twitter.com and log in. 
+    3. Click create an application.
+    4. Fill out the information. Name does not matter. 
+    5. default is read-only. Since we're not tweeting from this bot/code, you're fine here.
+    6. Your 4 magic strings (2 tokens and 2 secrets) are shown.
+    7. Once you /msg yourbot load Tweety, you need to set these keys:
+      /msg bot config plugins.Tweety.consumer_key xxxxx
+      /msg bot config plugins.Tweety.consumer_secret xxxxx
+      /msg bot config plugins.Tweety.access_key xxxxx
+      /msg bot config plugins.Tweety.access_secret xxxxx
 
 Examples:
 12:38:02 <@Hoaas> !twitter cnn
@@ -19,30 +38,3 @@ Examples:
 12:40:05 <@Hoaas> !twitter --info TheScienceGuy
 12:40:07 <@Bunisher> @TheScienceGuy (Bill Nye): http://billnye.com Science Educator seeks to change the world... 29 friends, 319377 followers. Los Angeles, CA, USA
 
-12:42:00 <@Hoaas> !twitter --num 5 wilw
-12:42:01 <@Bunisher> @wilw (Wil Wheaton): Holy crap, @amazonmp3 is doing some incredible deals until midnight PDT. Tons of great albums for a buck. (5 hours ago)
-12:42:02 <@Bunisher> @wilw (Wil Wheaton): Drr…Drr…Drr. (5 hours ago)
-12:42:03 <@Bunisher> @wilw (Wil Wheaton): Did I make another Robert Evans tweet, because it was amusing to me? You bet your ass I did, and I did it right there in front of everyone. (1 days ago)
-12:42:04 <@Bunisher> @wilw (Wil Wheaton): (Kids, ask your parents. Then go find that weird relative who loves movies from the 70s and she'll explain it to you.) (1 days ago)
-12:42:05 <@Bunisher> @wilw (Wil Wheaton): Do I write tweets that are rhetorical questions, and read them to myself in the voice of Robert Evans? You bet I do. (1 days ago)
-
-12:42:09 <@Hoaas> !twitter --rt --num 5 wilw
-12:42:10 <@Bunisher> @wilw (Wil Wheaton): Holy crap, @amazonmp3 is doing some incredible deals until midnight PDT. Tons of great albums for a buck. (5 hours ago)
-12:42:12 <@Bunisher> @wilw (Wil Wheaton): Drr…Drr…Drr. (5 hours ago)
-12:42:14 <@Bunisher> @wilw (Wil Wheaton): RT @The_RobertEvans: @wilw Am I a fan of Wil Wheaton?  "You bet your ass I am. " (7 hours ago)
-12:42:15 <@Bunisher> @wilw (Wil Wheaton): RT @amazonmp3: Hear one of the finest voices in rock on the latest Florence + the Machine album for $.99 thru midnight: http://t.co/gEXg5Tbb (5 hours ago)
-12:42:16 <@Bunisher> @wilw (Wil Wheaton): RT @amazonmp3: Beach House's Bloom is super dreamy. For $.99 you don't have to take our word for it. Ends midnight Pacific: http://t.co/ ... (6 hours ago)
-
-12:41:38 <@Hoaas> !twitter --reply wilw
-12:41:40 <@Bunisher> @wilw (Wil Wheaton): @chicazul ugh. Region locking makes baby jeebus cry ... until he gets a VPN. (4 hours ago)
-
-12:43:13 <@Hoaas> !twitter --rt --reply --num 5 wilw
-12:43:14 <@Bunisher> @wilw (Wil Wheaton): @chicazul ugh. Region locking makes baby jeebus cry ... until he gets a VPN. (4 hours ago)
-12:43:15 <@Bunisher> @wilw (Wil Wheaton): @amazonmp3 thanks for the rockin' sale :) (4 hours ago)
-12:43:16 <@Bunisher> @wilw (Wil Wheaton): Holy crap, @amazonmp3 is doing some incredible deals until midnight PDT. Tons of great albums for a buck. (5 hours ago)
-12:43:18 <@Bunisher> @wilw (Wil Wheaton): @undeux USA! USA! USA! (5 hours ago)
-12:43:19 <@Bunisher> @wilw (Wil Wheaton): RT @amazonmp3: Hear one of the finest voices in rock on the latest Florence + the Machine album for $.99 thru midnight: http://t.co/gEXg5Tbb (5 hours ago)
-
-
-12:40:29 <@Hoaas> !tagdef ff
-12:40:31 <@Bunisher> Tagdef: #ff #ff is the same as (short for) #followfriday. http://tagdef.com/ff
