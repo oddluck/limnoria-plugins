@@ -1,11 +1,23 @@
 Supybot-UrbanDictionary
 =======================
 
-Supybot plugin for urbandictionary.
+Purpose
 
-This plugin uses their hidden? JSON api. Everyone else scrapes or uses a broken SOAP interface. This uses JSON, which
-is much cleaner. There are quite a few other plugins out there, all which I found to be broken in some way.
+    Supybot plugin for UrbanDictionary (http://www.urbandictionary.com)
+    
+    This plugin uses their hidden? JSON api. Most other plugins and interfaces
+    wind up scraping the broken SOAP interface, scrape the mobile/iPhone site,
+    instead of using the cleaner API.
 
-Feel free to modify (lots of options could be added).
+Instructions
 
+    Should work fine in python 2.6+. Does not use any non-standard modules
+    
+    - Optional: add an alias to the main command:
+    
+        /msg bot Alias add ud urbandictionary
+        /msg bot Alias add urban urbandictionary
 
+Commands
+
+    urbandictionary [--options] <term>
