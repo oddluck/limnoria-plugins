@@ -29,6 +29,7 @@ __url__ = '' # 'http://supybot.com/Members/yourname/UrbanDictionary/download'
 
 import config
 import plugin
+reload(config)
 reload(plugin) # In case we're being reloaded.
 # Add more reloads here if you add third-party modules and want them to be
 # reloaded when this plugin is reloaded.  Don't forget to import them as well!
