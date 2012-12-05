@@ -44,8 +44,13 @@ class UrbanDictionary(callbacks.Plugin):
 
     # main urbandict function.
     def urbandictionary(self, irc, msg, args, optlist, optterm):
-        """<term>
-        Fetches definition for term on UrbanDictionary.com
+        """[--disableexamples|--showvotes|--num #] <term>
+        
+        Fetches definition for <term> on UrbanDictionary.com
+        
+        Use --disableexamples to not display examples.
+        Use --showvotes to show votes [default: off]
+        Use --num # to limit the number of definitions. [default:10]
         """
         
         # default args for output.
