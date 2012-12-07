@@ -49,25 +49,31 @@ class GameRound(CardsAgainstHumanity):
                     except ValueError:
                         pass
             
-class PlayerHand(CardsAgainstHumanity):
-    cardList = self.dealHand()
-            
+class PlayerHand(object):
+    def __init__(self, deck):
+        self.deck = deck
+        self.cardList = self.dealHand()
+
     def dealHand(self):
         hand = []
         while len(hand) < 5:
-            card = self.drawCard('answer')
-            hand.append(answerCard)
+            card = self.deck.drawCard('answer')
+            hand.append(card)
         return hand
             
     def showHand(self):
         for index, card in enumerate(self.cardList):
             print '%s: %s' % (index + 1, card.cardText)
 
+
+
 if __name__=="__main__":
     cah = CardsAgainstHumanity()
     print cah.drawCard('answer').cardText
-    jazz_hand = PlayerHand()
-    bear_hand = PlayerHand()
+    jazz_hand = PlayerHand(cah)
+    bear_hand = PlayerHand(cah)
+    print "Bear's hand:"
     bear_hand.showHand()
+    print "\nJazz's hand"
     jazz_hand.showHand()
 
