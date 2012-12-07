@@ -3,14 +3,14 @@ from random import choice
 class CardsAgainstHumanity(object):
     def __init__(self):
         self.answerDb = ["Coat hanger abortions", "Man meat", "Autocannibalism", "Vigorous jazz hands", "Flightless birds", "Pictures of boobs", "Doing the right thing", "Hunting accidents", "A cartoon camel enjoying the smooth", "The violation of our most basic human rights", "Viagra", "Self-loathing", "Spectacular abs", "An honest cop with nothing left to lose", "Abstinence", "A balanced breakfast", "Mountain Dew Code Red", "Concealing a boner", "Roofies", "Tweeting"]
-
-    def drawCard(self):
-        hand = []
-        while len(hand) < 5:
-            answerCard = choice(self.answerDb)
-            hand.append(answerCard)
-            self.answerDb.remove(answerCard)
-        return hand
+        self.questionDb = ["Who is foo?"]
+    def drawCard(self, typeOfCard):
+        typeMap = {'answer': self.answerDb, 'question': self.questionDb}
+        cardType = typeMap[typeOfCard]
+        cardText = choice(cardType)
+        cardType.remove(cardText)
+        card = Card(1, typeOfCard, cardText)
+        return card
 
 class Card(object):
     def __init__(self, cardId, cardType, cardText):
@@ -35,7 +35,8 @@ class GameRound(CardsAgainstHumanity):
         cardSubmit()
         displayAnswers()
 
-    def displayAnswer(self)
+    def displayAnswer(self):
+        pass
 
     def cardSubmit(self):
         for player in self.playerList:
@@ -45,16 +46,28 @@ class GameRound(CardsAgainstHumanity):
                 while cardInput not in cardRange:
                     try:                               
                         cardInput = int(raw_input('%s Pick a Card: ' % player)) - 1
-                    except: ValueError:
+                    except ValueError:
                         pass
             
 class PlayerHand(CardsAgainstHumanity):
-    def __init__(self):
-        self.cardList = []
+    cardList = self.dealHand()
+            
+    def dealHand(self):
+        hand = []
+        while len(hand) < 5:
+            card = self.drawCard('answer')
+            hand.append(answerCard)
+        return hand
+            
+    def showHand(self):
+        for index, card in enumerate(self.cardList):
+            print '%s: %s' % (index + 1, card.cardText)
 
-    def showHand
+if __name__=="__main__":
+    cah = CardsAgainstHumanity()
+    print cah.drawCard('answer').cardText
+    jazz_hand = PlayerHand()
+    bear_hand = PlayerHand()
+    bear_hand.showHand()
+    jazz_hand.showHand()
 
-cah = CardsAgainstHumanity()
-
-
-print cah.drawCard()
