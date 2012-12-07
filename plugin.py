@@ -24,7 +24,7 @@ class GameRound(CardsAgainstHumanity):
         self.playerTwo = str(raw_input('Player 2 Name: '))
         self.playerThree = str(raw_input('Player 3 Name: '))
         self.playerFour = str(raw_input('Player 4 Name: '))
-        self.playerList = (playerOne, playerTwo, playerThree, playerFour)
+        self.playerList = (playerOne, playerTwo, ssplayerThree, playerFour)
         self.availJudge = playerList
         self.spentJudge = ()
         self.currentJudge = playerOne
