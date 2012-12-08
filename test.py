@@ -9,4 +9,13 @@ def test_cards_will_be_unique():
     deck=CardsAgainstHumanity()
     hand_one = PlayerHand(deck)
     for card in hand_one.cardList:
-        assert card.cardText not in deck.answerDb
+        assert card.text not in deck.answerDb
+
+def test_card_parsing():
+    deck = CardsAgainstHumanity()
+    for card in deck.answerDb:
+        assert type(card) is Card
+        assert type(card.id) is int
+        assert type(card.type) is str
+        assert card.type in ['answer', 'question']
+        assert  type(card.text) is str

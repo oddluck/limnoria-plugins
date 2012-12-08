@@ -1,22 +1,54 @@
 from random import choice
+import os
+
+# Settings you change
+card_folder = 'cards'
+answer_cards_file_names = ['answer_cards', 'custom_anwser_cards']
+question_cards_file_name = ['question_cards', 'custom_question_cards']
+
+# Settings that are used
+base_directory = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__))))
+
 
 class CardsAgainstHumanity(object):
     def __init__(self):
-        self.answerDb = ["Coat hanger abortions", "Man meat", "Autocannibalism", "Vigorous jazz hands", "Flightless birds", "Pictures of boobs", "Doing the right thing", "Hunting accidents", "A cartoon camel enjoying the smooth", "The violation of our most basic human rights", "Viagra", "Self-loathing", "Spectacular abs", "An honest cop with nothing left to lose", "Abstinence", "A balanced breakfast", "Mountain Dew Code Red", "Concealing a boner", "Roofies", "Tweeting"]
-        self.questionDb = ["Who is foo?"]
+        self.answerDb = self.parse_card_file('answer')
+        self.questionDb = self.parse_card_file('question')
+
+    def parse_card_file(self, card_type):
+        card_type_map = {'answer': answer_cards_file_names, 'question': question_cards_file_name}
+
+        # Read text file into a list containing only strings of text for the card
+        card_text_list = []
+        for file_name in card_type_map[card_type]:
+            path = os.path.abspath(os.path.join(base_directory, card_folder, file_name))
+            if os.path.exists(path):
+                with open(path) as file_handle:
+                    file_data = file_handle.readlines()
+                card_text_list.extend(file_data)
+        if len(card_text_list) is 0:
+            raise IOError
+
+        # Turn the strings of text into a Card object
+        card_object_list = []
+        for index, card in enumerate(card_text_list):
+            card_object_list.append(Card(index, card_type, card))
+        return card_object_list
+
+
+
     def drawCard(self, typeOfCard):
         typeMap = {'answer': self.answerDb, 'question': self.questionDb}
-        cardType = typeMap[typeOfCard]
-        cardText = choice(cardType)
-        cardType.remove(cardText)
-        card = Card(1, typeOfCard, cardText)
+        type = typeMap[typeOfCard]
+        card = choice(type)
+        type.remove(card)
         return card
 
 class Card(object):
-    def __init__(self, cardId, cardType, cardText):
-        self.cardId = cardId
-        self.cardType = cardType
-        self.cardText = cardText
+    def __init__(self, id, type, text):
+        self.id = id
+        self.type = type
+        self.text = text
 
 class GameRound(CardsAgainstHumanity):
     def __init__(self):
@@ -63,13 +95,13 @@ class PlayerHand(object):
             
     def showHand(self):
         for index, card in enumerate(self.cardList):
-            print '%s: %s' % (index + 1, card.cardText)
+            print '%s: %s' % (index + 1, card.text)
 
 
 
 if __name__=="__main__":
     deck = CardsAgainstHumanity()
-    print deck.drawCard('answer').cardText
+    print deck.drawCard('answer').text
     jazz_hand = PlayerHand(deck)
     bear_hand = PlayerHand(deck)
     print "Bear's hand:"
