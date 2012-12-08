@@ -4,7 +4,7 @@ import os
 # Settings you change
 card_folder = 'cards'
 answer_cards_file_names = ['answer_cards', 'custom_anwser_cards']
-question_cards_file_name = ['question_cards', 'custom_question_cards']
+question_cards_file_name = ['question_cards', 'question_cards1', 'question_cards2', 'custom_question_cards']
 
 # Settings that are used
 base_directory = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__))))
@@ -25,9 +25,13 @@ class CardsAgainstHumanity(object):
             if os.path.exists(path):
                 with open(path) as file_handle:
                     file_data = file_handle.readlines()
+
                 card_text_list.extend(file_data)
         if len(card_text_list) is 0:
             raise IOError
+
+        # Deduplicate the text from the cards
+        card_text_list = list(set(card_text_list))
 
         # Turn the strings of text into a Card object
         card_object_list = []
@@ -101,7 +105,7 @@ class PlayerHand(object):
 
 if __name__=="__main__":
     deck = CardsAgainstHumanity()
-    print deck.drawCard('answer').text
+    print 'Current Question: %s' % deck.drawCard('question').text
     jazz_hand = PlayerHand(deck)
     bear_hand = PlayerHand(deck)
     print "Bear's hand:"
