@@ -13,16 +13,13 @@ def test_cards_will_be_unique():
 
 def test_card_parsing():
     deck = Deck()
-    for card in deck.answerDb:
-        assert type(card) is Card
-        assert type(card.id) is int
-        assert type(card.type) is str
-        assert card.type in ['answer']
-        assert  type(card.text) is str
-    for card in deck.questionDb:
-        assert type(card) is Card
-        assert type(card.id) is int
-        assert type(card.type) is str
-        assert card.type in ['question']
-        assert  type(card.text) is str
-        assert type(card.answers) is int
+    for deck_type in [deck.answerDb, deck.questionDb]:
+        for card in deck_type:
+            assert type(card) is Card
+            assert type(card.id) is int
+            assert type(card.type) is str
+            assert card.type in ['answer', 'question']
+            assert  type(card.text) is str
+            assert card.text.find('\n') is -1
+            if card.type is 'question':
+                assert type(card.answers) is int

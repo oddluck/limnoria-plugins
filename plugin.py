@@ -38,6 +38,8 @@ class Deck(object):
         # Turn the strings of text into a Card object
         card_object_list = []
         for index, card in enumerate(card_text_list):
+            # Prepare card text by removing control chars
+            card = card.rstrip()
             # Figure out how many answers are required for a question card
             if card_type == 'question':
                 answers = self.count_answers(card)
