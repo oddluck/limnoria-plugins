@@ -19,3 +19,5 @@ def test_card_parsing():
         assert type(card.type) is str
         assert card.type in ['answer', 'question']
         assert  type(card.text) is str
+        if card.type is 'question':
+            assert type(card.answers) is int

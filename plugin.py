@@ -25,7 +25,6 @@ class Deck(object):
             if os.path.exists(path):
                 with open(path) as file_handle:
                     file_data = file_handle.readlines()
-
                 card_text_list.extend(file_data)
         if len(card_text_list) is 0:
             raise IOError
@@ -33,13 +32,25 @@ class Deck(object):
         # Deduplicate the text from the cards
         card_text_list = list(set(card_text_list))
 
+
+
         # Turn the strings of text into a Card object
         card_object_list = []
         for index, card in enumerate(card_text_list):
-            card_object_list.append(Card(index, card_type, card))
+            # Figure out how many answers are required for a question card
+            if card_type == 'question':
+                answers = self.count_answers(card)
+                card_object_list.append(Card(index, card_type, card, answers=answers))
+            else:
+                card_object_list.append(Card(index, card_type, card))
         return card_object_list
 
-
+    def count_answers(self, text, blank_format = '__________'):
+        blanks = text.count(blank_format)
+        if blanks is 0:
+            return 1
+        else:
+            return blanks
 
     def drawCard(self, typeOfCard):
         typeMap = {'answer': self.answerDb, 'question': self.questionDb}
@@ -49,7 +60,7 @@ class Deck(object):
         return card
 
 class Card(object):
-    def __init__(self, id, type, text):
+    def __init__(self, id, type, text, answers=None, author=None):
         self.id = id
         self.type = type
         self.text = text
