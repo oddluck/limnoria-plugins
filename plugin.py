@@ -68,10 +68,10 @@ class PlayerHand(object):
 
 
 if __name__=="__main__":
-    cah = CardsAgainstHumanity()
-    print cah.drawCard('answer').cardText
-    jazz_hand = PlayerHand(cah)
-    bear_hand = PlayerHand(cah)
+    deck = CardsAgainstHumanity()
+    print deck.drawCard('answer').cardText
+    jazz_hand = PlayerHand(deck)
+    bear_hand = PlayerHand(deck)
     print "Bear's hand:"
     bear_hand.showHand()
     print "\nJazz's hand"
