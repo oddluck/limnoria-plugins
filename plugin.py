@@ -10,7 +10,7 @@ question_cards_file_name = ['question_cards', 'question_cards1', 'question_cards
 base_directory = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__))))
 
 
-class CardsAgainstHumanity(object):
+class Deck(object):
     def __init__(self):
         self.answerDb = self.parse_card_file('answer')
         self.questionDb = self.parse_card_file('question')
@@ -54,7 +54,7 @@ class Card(object):
         self.type = type
         self.text = text
 
-class GameRound(CardsAgainstHumanity):
+class GameRound(object):
     def __init__(self):
         self.playerOne = str(raw_input('Player 1 Name: '))
         self.playerTwo = str(raw_input('Player 2 Name: '))
@@ -104,7 +104,7 @@ class PlayerHand(object):
 
 
 if __name__=="__main__":
-    deck = CardsAgainstHumanity()
+    deck = Deck()
     print 'Current Question: %s' % deck.drawCard('question').text
     jazz_hand = PlayerHand(deck)
     bear_hand = PlayerHand(deck)
