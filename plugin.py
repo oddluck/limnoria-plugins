@@ -1,5 +1,6 @@
 from random import choice
 import os
+import json
 
 # Settings you change
 card_folder = 'cards'
@@ -60,10 +61,15 @@ class Deck(object):
         return card
 
 class Card(object):
-    def __init__(self, id, type, text, answers=None, author=None):
+    def __init__(self, id, type, text, **kwargs):
         self.id = id
         self.type = type
         self.text = text
+        for key, value in kwargs.iteritems():
+            setattr(self, key, value)
+    def __repr__(self):
+        return json.dumps(self.__dict__)
+
 
 class GameRound(object):
     def __init__(self):

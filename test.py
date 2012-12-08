@@ -17,7 +17,12 @@ def test_card_parsing():
         assert type(card) is Card
         assert type(card.id) is int
         assert type(card.type) is str
-        assert card.type in ['answer', 'question']
+        assert card.type in ['answer']
         assert  type(card.text) is str
-        if card.type is 'question':
-            assert type(card.answers) is int
+    for card in deck.questionDb:
+        assert type(card) is Card
+        assert type(card.id) is int
+        assert type(card.type) is str
+        assert card.type in ['question']
+        assert  type(card.text) is str
+        assert type(card.answers) is int
