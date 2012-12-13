@@ -135,12 +135,18 @@ class PlayerHand(object):
 if __name__=="__main__":
     game = Game(['Bear','Swim', 'Jazz'])
     print "\nGame started with the following players: %s \n" % game.players.keys()
-    game.next_round()
+    round = game.next_round()
     print "The first question is: %s \n" % game.question.text
-    print "Bear's hand:"
-    game.players['Bear'].showHand()
-    print "\nJazz's hand"
-    game.players['Jazz'].showHand()
-    print "\nSwim's hand"
+
+    print "Swim's hand the easy way:"
     game.players['Swim'].showHand()
+
+    print "\nJazz's hand in a weird way"
+    round['hands']['Jazz'].showHand()
+
+    print "\nBear's hand the hard way:"
+    for index, card in enumerate(round['hands']['Bear'].card_list):
+        print '%s: %s' % (index + 1, card.text)
+
+
 
