@@ -1,6 +1,6 @@
 __author__ = 'Bear'
 
-from plugin import *
+from cah import *
 
 def test_cards_will_be_unique():
     """
