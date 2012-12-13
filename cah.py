@@ -86,9 +86,7 @@ class Game(object):
     def control_round(self):
         for round in range(self.round_limit):
             current_round = Round()
-            current_round.show_question()
-            current_round.get_answers()
-            current_round.get_votes()
+            current_round.give_question_and_hands()
             current_round.show_winner()
 
     def displayAnswer(self):
