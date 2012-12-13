@@ -51,16 +51,21 @@ class Cah(callbacks.Plugin):
         self.games = {}
 
     ###### UTIL METHODS #######
-    def _msg(self, irc, channel, msg):
-        irc.queueMsg(ircmsgs.privmsg(channel, msg))
+    def _msg(self, irc, recip, msg):
+        irc.queueMsg(ircmsgs.privmsg(recip, msg))
     
-    def _printBlackCard(self, irc):
-        channel = self.channel 
-        try:
-            self._reply()
-        except KeyError:
-            self._msg("game not running.")
+    def _printBlackCard(self, irc, game, recip):
+        response = "Question: %s"
+        cah = game['game']
+        self._msg(irc, recip, response % cah.question.text)
 
+    def _msgHandToPlayer(self, irc, game, player):
+        response = "Your cards: %s  Please respond with @card <number> [number]"
+        enumeratedHand = []
+        for position, card in enumerate(player.card_list):
+            enumeratedHand.append("%s: %s" % (position + 1, card.txt))
+        self._printBlackCard(irc, game, player.name)
+        self._msg(irc, player, response % ', '.join(enumeratedHand))
 
     def _tallyVotes(self, votes):
         talliedVotes = {}
@@ -136,8 +141,8 @@ class Cah(callbacks.Plugin):
             channelGame = {}
             channelGame['voting']   = False
             channelGame['canStart'] = False
-            channelGame['running'] = False
-            channelGame['rounds'] = 5
+            channelGame['roundRunning'] = False
+            channelGame['rounds'] = numrounds
             channelGame['maxPlayers'] = 5
             channelGame['players']  = []
             self.games[channel] = channelGame
@@ -145,6 +150,49 @@ class Cah(callbacks.Plugin):
             schedule.addEvent(startGame, time.time() + 60, "start_game_%s" % channel)
 
     ###### END PRE GAME LOGIC ######
+    
+    ###### START GAME LOGIC ########
+
+    def nextRound(self, irc, msg):
+        channel = ircutils.toLower(msg.args[0])
+        try:
+            game = self.games[channel]
+            cah = game['game']
+            try:
+                cah.nextRound()
+                #Print Black Card to channel.
+                self._printBlackCard(irc, game, channel)
+                for player in cah.players:
+                    self._msgHandToPlayer(irc, game, player)
+                self._msg(irc, channel, "The white cards have been PMed to the players, you have 60 seconds to choose.")
+                #TODO: do we need a round flag?
+                schedule.addEvent(endRound, time.time() + 60, "round_%s" % channel)
+            except:
+                #TODO: add no more round logic
+                pass
+
+        except KeyError:
+            irc.reply("A Game is not running.")
+
+    def card(self, irc, msg, card1, card2, card3):
+        channel = ircutils.toLower(msg.args[0])
+        #TODO: Card decision logic
+
+    def endRound(self, irc, msg, args):
+        channel = ircutils.toLower(msg.args[0])
+        try:
+            game = self.games[channel]
+            if game['roundRunning']:
+                game['roundRunning'] = False
+                self._msg(irc, channel, "Card Submittion Completed.")
+                self.startCardVote(irc, msg)
+            else:
+                irc.reply("No round active.")
+        except KeyError:
+            irc.reply("A Game is not running.")
+
+
+    ###### END GAME LOGIC #########
 
 
 
@@ -184,6 +232,9 @@ class Cah(callbacks.Plugin):
             self._roundWinner(irc, winner)
         except:
             irc.reply("A Game is not running, or the time is not to vote.")
+    ###### END VOTING LOGIC #####
+
+    
 Class = Cah
 
 
