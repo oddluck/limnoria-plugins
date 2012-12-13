@@ -33,8 +33,6 @@ class Deck(object):
         # Deduplicate the text from the cards
         card_text_list = list(set(card_text_list))
 
-
-
         # Turn the strings of text into a Card object
         card_object_list = []
         for index, card in enumerate(card_text_list):
@@ -73,37 +71,49 @@ class Card(object):
         return json.dumps(self.__dict__)
 
 
-class GameRound(object):
-    def __init__(self):
-        self.playerOne = str(raw_input('Player 1 Name: '))
-        self.playerTwo = str(raw_input('Player 2 Name: '))
-        self.playerThree = str(raw_input('Player 3 Name: '))
-        self.playerFour = str(raw_input('Player 4 Name: '))
-        self.playerList = (playerOne, playerTwo, playerThree, playerFour)
-        self.availJudge = playerList
-        self.spentJudge = ()
-        self.currentJudge = playerOne
+class Game(object):
+    def __init__(self, players, round_limit = 5, rule_set="house"):
+        self.round_limit = round_limit
+        self.deck = Deck()
+        self.players = self.build_player_list(players)
 
-    def round(self):
-        print "%s is Judging!" % currentJudge
-        print "Question Card: %s" % questionCard
-        cardSubmit()
-        displayAnswers()
+    def build_player_list(self, players):
+        player_list = {}
+        for player in players:
+            player_list[player] = PlayerHand(self.deck)
+        return player_list
+
+    def control_round(self):
+        for round in range(self.round_limit):
+            current_round = Round()
+            current_round.show_question()
+            current_round.get_answers()
+            current_round.get_votes()
+            current_round.show_winner()
 
     def displayAnswer(self):
         pass
 
     def cardSubmit(self):
-        for player in self.playerList:
-            if player !=  self.currentJudge:
-                cardInput = None
-                cardRange = range(5)
-                while cardInput not in cardRange:
-                    try:                               
-                        cardInput = int(raw_input('%s Pick a Card: ' % player)) - 1
-                    except ValueError:
-                        pass
-            
+        for player in self.players:
+            cardInput = None
+            cardRange = range(5)
+            while cardInput not in cardRange:
+                try:
+                    cardInput = int(raw_input('%s Pick a Card: ' % player)) - 1
+                except ValueError:
+                    pass
+
+class Round(object):
+    def show_question(self):
+        pass
+    def get_answers(self):
+        pass
+    def get_votes(self):
+        pass
+    def show_winner(self):
+        pass
+
 class PlayerHand(object):
     def __init__(self, deck):
         self.deck = deck

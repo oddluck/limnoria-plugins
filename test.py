@@ -23,3 +23,8 @@ def test_card_parsing():
             assert card.text.find('\n') is -1
             if card.type is 'question':
                 assert type(card.answers) is int
+
+def test_game():
+    game = Game(['Bear','Swim', 'Jazz'])
+    for player in game.players.keys():
+        assert type(game.players[player]) is PlayerHand
