@@ -93,7 +93,7 @@ class Game(object):
         else:
             raise IndexError
 
-        self.question = deck.drawCard('question')
+        self.question = self.deck.drawCard('question')
         return {'question': self.question, 'hands': self.players}
 
     def displayAnswer(self):
@@ -133,12 +133,14 @@ class PlayerHand(object):
 
 
 if __name__=="__main__":
-    deck = Deck()
-    print 'Current Question: %s' % deck.drawCard('question').text
-    jazz_hand = PlayerHand(deck)
-    bear_hand = PlayerHand(deck)
+    game = Game(['Bear','Swim', 'Jazz'])
+    print "\nGame started with the following players: %s \n" % game.players.keys()
+    game.next_round()
+    print "The first question is: %s \n" % game.question.text
     print "Bear's hand:"
-    bear_hand.showHand()
+    game.players['Bear'].showHand()
     print "\nJazz's hand"
-    jazz_hand.showHand()
+    game.players['Jazz'].showHand()
+    print "\nSwim's hand"
+    game.players['Swim'].showHand()
 
