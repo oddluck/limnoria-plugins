@@ -141,7 +141,7 @@ class Cah(callbacks.Plugin):
             channelGame['maxPlayers'] = 5
             channelGame['players']  = []
             self.games[channel] = channelGame
-            irc.reply("Who wants to play Cards Aganst Humanity?", prefix_nick=False)
+            irc.reply("Who wants to play Cards Aganst Humanity?", prefixNick=False)
             schedule.addEvent(startGame, time.time() + 60, "start_game_%s" % channel)
 
     ###### END PRE GAME LOGIC ######
