@@ -117,7 +117,7 @@ class Round(object):
 class PlayerHand(object):
     def __init__(self, deck):
         self.deck = deck
-        self.cardList = self.dealHand()
+        self.card_list = self.dealHand()
 
     def dealHand(self):
         hand = []
@@ -127,7 +127,7 @@ class PlayerHand(object):
         return hand
             
     def showHand(self):
-        for index, card in enumerate(self.cardList):
+        for index, card in enumerate(self.card_list):
             print '%s: %s' % (index + 1, card.text)
 
 
