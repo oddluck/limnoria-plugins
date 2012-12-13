@@ -22,14 +22,7 @@ def test_card_parsing(deck=None):
         deck = Deck()
     for deck_type in [deck.answerDb, deck.questionDb]:
         for card in deck_type:
-            assert type(card) is Card
-            assert type(card.id) is int
-            assert type(card.type) is str
-            assert card.type in ['answer', 'question']
-            assert  type(card.text) is str
-            assert card.text.find('\n') is -1
-            if card.type is 'question':
-                assert type(card.answers) is int
+            test_card(card)
 
 def test_game():
     game = Game(['Bear','Swim', 'Jazz'])
@@ -39,6 +32,19 @@ def test_game():
         test_player_hand(hand)
 
 
+def test_round_advancement(game=None):
+    if game is None:
+        game = Game(['Bear','Swim', 'Jazz'])
+    assert game.round is None
+    assert game.question is None
+    while round < game.round_limit:
+        bot_gets = game.next_round()
+        assert isinstance(bot_gets, dict)
+        assert bot_gets.has_key('question')
+
+        assert bot_gets.has_key('hands')
+
+
 def test_player_hand(hand=None):
     if hand is None:
         hand = PlayerHand(Deck())
@@ -46,3 +52,15 @@ def test_player_hand(hand=None):
     for count, card in enumerate(hand.card_list):
         assert count < 5
         assert type(card) is Card
+
+def test_card(card=None):
+    if card is None:
+        card = Deck().drawCard('question')
+    assert type(card) is Card
+    assert type(card.id) is int
+    assert type(card.type) is str
+    assert card.type in ['answer', 'question']
+    assert  type(card.text) is str
+    assert card.text.find('\n') is -1
+    if card.type is 'question':
+        assert type(card.answers) is int

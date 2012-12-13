@@ -60,6 +60,9 @@ class Deck(object):
         type.remove(card)
         return card
 
+    def __repr__(self):
+        return json.dumps({'questions': len(self.questionDb), 'answers': len(self.answerDb)})
+
 class Card(object):
     def __init__(self, id, type, text, **kwargs):
         self.id = id
@@ -67,15 +70,14 @@ class Card(object):
         self.text = text
         for key, value in kwargs.iteritems():
             setattr(self, key, value)
-    def __repr__(self):
-        return json.dumps(self.__dict__)
-
 
 class Game(object):
     def __init__(self, players, round_limit = 5, rule_set="house"):
         self.round_limit = round_limit
         self.deck = Deck()
         self.players = self.build_player_list(players)
+        self.round = None
+        self.question = None
 
     def build_player_list(self, players):
         player_list = {}
@@ -83,11 +85,16 @@ class Game(object):
             player_list[player] = PlayerHand(self.deck)
         return player_list
 
-    def control_round(self):
-        for round in range(self.round_limit):
-            current_round = Round()
-            current_round.give_question_and_hands()
-            current_round.show_winner()
+    def next_round(self):
+        if self.round is None:
+            self.round = 0
+        if self.round < self.round_limit:
+            self.round = self.round + 1
+        else:
+            raise IndexError
+
+        self.question = deck.drawCard('question')
+        return {'question': self.question, 'hands': self.players}
 
     def displayAnswer(self):
         pass
@@ -103,30 +110,25 @@ class Game(object):
                     pass
 
 class Round(object):
-    def show_question(self):
-        pass
-    def get_answers(self):
-        pass
-    def get_votes(self):
-        pass
-    def show_winner(self):
-        pass
+    def __init__(self, deck, players):
+        self.question = deck.drawCard('question')
+        self.players = players
 
 class PlayerHand(object):
     def __init__(self, deck):
-        self.deck = deck
-        self.card_list = self.dealHand()
+        self.card_list = self.dealHand(deck)
 
-    def dealHand(self):
+    def dealHand(self, deck):
         hand = []
         while len(hand) < 5:
-            card = self.deck.drawCard('answer')
+            card = deck.drawCard('answer')
             hand.append(card)
         return hand
             
     def showHand(self):
         for index, card in enumerate(self.card_list):
             print '%s: %s' % (index + 1, card.text)
+
 
 
 
