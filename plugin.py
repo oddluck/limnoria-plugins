@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 ###
 # Copyright (c) 2012, James Scott
 # All rights reserved.
