@@ -195,6 +195,20 @@ class Cah(callbacks.Plugin):
     ###### END GAME LOGIC #########
 
 
+    ###### START STOP METHOD #########
+
+    def scah(self, irc, msg, args):
+        channel = ircutils.toLower(msg.args[0])
+        try:
+            schedule.removeEvent("round_%s" % channel)
+            schedule.removeEvent("vote_%s" % channel)
+            schedule.removeEvent("start_game_%s" % channel)
+            self.games.pop(channel)
+        except:
+            irc.reply("something went wrong")
+
+
+    ###### END STOP LOGIC ##########
 
     ###### VOTING ##############
 
