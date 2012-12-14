@@ -103,7 +103,7 @@ class Cah(callbacks.Plugin):
 
     ###### PRE GAME LOGIC ########
 
-    def startGame(self, irc, msg, args):
+    def startgame(self, irc, msg, args):
         channel = ircutils.toLower(msg.args[0])
         try:
             if self.games[channel]['canStart']:
@@ -113,7 +113,7 @@ class Cah(callbacks.Plugin):
                     self.games[channel]['canStart'] = False
                     self.games[channel]['game'] = Game(self.players, rounds)
                     #start game logic
-                    self.nextRound()
+                    self.nextround()
 
         except KeyError:
             irc.reply("Game not running.")
@@ -156,26 +156,26 @@ class Cah(callbacks.Plugin):
             channelGame['players']  = []
             self.games[channel] = channelGame
             irc.reply("Who wants to play Cards Aganst Humanity?", prefixNick=False)
-            schedule.addEvent(startGame, time.time() + 60, "start_game_%s" % channel)
+            schedule.addEvent(startgame, time.time() + 60, "start_game_%s" % channel)
 
     ###### END PRE GAME LOGIC ######
     
     ###### START GAME LOGIC ########
 
-    def nextRound(self, irc, msg, args):
+    def nextround(self, irc, msg, args):
         channel = ircutils.toLower(msg.args[0])
         try:
             game = self.games[channel]
             cah = game['game']
             try:
-                cah.nextRound()
+                cah.nextround()
                 #Print Black Card to channel.
                 self._printBlackCard(irc, game, channel)
                 for player in cah.players:
                     self._msgHandToPlayer(irc, game, player)
                 self._msg(irc, channel, "The white cards have been PMed to the players, you have 60 seconds to choose.")
                 #TODO: do we need a round flag?
-                schedule.addEvent(endRound, time.time() + 60, "round_%s" % channel)
+                schedule.addEvent(endround, time.time() + 60, "round_%s" % channel)
             except:
                 #TODO: add no more round logic
                 pass
@@ -187,7 +187,7 @@ class Cah(callbacks.Plugin):
         channel = ircutils.toLower(msg.args[0])
         #TODO: Card decision logic
 
-    def endRound(self, irc, msg, args):
+    def endround(self, irc, msg, args):
         channel = ircutils.toLower(msg.args[0])
         try:
             game = self.games[channel]
