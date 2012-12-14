@@ -69,7 +69,7 @@ class Cah(callbacks.Plugin):
             self.players = []
         
         def initGame(self):
-            schedule.addEvent(self.startgame, time.time() + 60, "start_game_%s" % self.channel)
+            schedule.addEvent(startgame, time.time() + 60, "start_game_%s" % self.channel)
 
         ###### UTIL METHODS ##########
       
@@ -150,7 +150,7 @@ class Cah(callbacks.Plugin):
                         self._msgHandToPlayer(player)
                     self._msg(channel, "The white cards have been PMed to the players, you have 60 seconds to choose.")
                     #TODO: do we need a round flag?
-                    schedule.addEvent(self.endround, time.time() + 60, "round_%s" % channel)
+                    schedule.addEvent(endround, time.time() + 60, "round_%s" % channel)
                 except:
                     #TODO: add no more round logic
                     pass
