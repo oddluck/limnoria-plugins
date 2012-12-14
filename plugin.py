@@ -52,93 +52,187 @@ class Cah(callbacks.Plugin):
         self.__parent.__init__(irc)
         self.games = {}
 
-    ###### UTIL METHODS ########
-    def _msg(self, irc, recip, msg):
-        irc.queueMsg(ircmsgs.privmsg(recip,msg))
-    
-    def _printBlackCard(self, irc, game, recip):
-        response = "Question: %s"
-        cah = game['game']
-        self._msg(irc, recip, response % cah.question.text)
+    class Game(object):
+        """docstring for Game"""
+        def __init__(self, irc, channel, numrounds = 5):
+            super(Game, self).__init__()
+            self.irc = irc
+            self.channel = channel
+            self.game = None
+            self.canStart = False
+            self.voting = False
+            self.canStart = False
+            self.roundRunning = False
+            self.running =  False
+            self.rounds = numrounds
+            self.maxPlayers= 5
+            self.players = []
+            schedule.addEvent(self.startgame, time.time() + 60, "start_game_%s" % channel)
 
-    def _msgHandToPlayer(self, irc, game, player):
-        response = "Your cards: %s  Please respond with @card <number> [number]"
-        enumeratedHand = []
-        for position, card in enumerate(player.card_list):
-            enumeratedHand.append("%s: %s" % (position + 1, card.txt))
-        self._printBlackCard(irc, game, player.name)
-        self._msg(irc, player, response % ', '.join(enumeratedHand))
+        ###### UTIL METHODS ##########
+      
+        def _msg(self, recip, msg):
+            self.irc.queueMsg(ircmsgs.privmsg(recip,msg))
+        
+        def _printBlackCard(self, recip):
+            response = "Question: %s"
+            cah = self.game
+            self._msg(recip, response % cah.question.text)
 
-    def _tallyVotes(self, votes):
-        talliedVotes = {}
-        for vote in votes.items():
-            try:
-                talliedVotes[vote] += 1
-            except KeyError:
-                talliedVotes[vote] = 1
-        #find ties
+        def _msgHandToPlayer(self, irc, player):
+            response = "Your cards: %s  Please respond with @card <number> [number]"
+            enumeratedHand = []
+            for position, card in enumerate(player.card_list):
+                enumeratedHand.append("%s: %s" % (position + 1, card.txt))
+            self._printBlackCard(player.name)
+            self._msg(player, response % ', '.join(enumeratedHand))
 
-        ties = []
-        winningCanidate = None
-        for canidate, count in votes.iteritems():
-            if winningCanidate == None:
-                winningCanidate = (canidate, votes)
-            elif winningCanidate[1] < count:
-                winningCanidate = (canidate, votes)
-                ties = []
-            elif winningCanidate[1] == count:
-                if len(ties) == 0:
-                    ties.append(winningCanidate)
-                ties.append((canidate, votes))
-            if len(ties) > 0:
-                return (ties[randint(0, len(ties) -1)], true)
-            else:
-                #TODO: WAT?
-                pass
+        def _tallyVotes(self, votes):
+            talliedVotes = {}
+            for vote in votes.items():
+                try:
+                    talliedVotes[vote] += 1
+                except KeyError:
+                    talliedVotes[vote] = 1
+            #find ties
 
-            return (winningCanidate, False)
-
-
- 
-
-    ###### PRE GAME LOGIC ########
-
-    def startgame(self, irc, msg, args):
-        channel = ircutils.toLower(msg.args[0])
-        try:
-            game = self.games[channel]
-            if game['canStart']:
-                if len(game['players']) < 2:
-                    irc.reply("I need more players.")
+            ties = []
+            winningCanidate = None
+            for canidate, count in votes.iteritems():
+                if winningCanidate == None:
+                    winningCanidate = (canidate, votes)
+                elif winningCanidate[1] < count:
+                    winningCanidate = (canidate, votes)
+                    ties = []
+                elif winningCanidate[1] == count:
+                    if len(ties) == 0:
+                        ties.append(winningCanidate)
+                    ties.append((canidate, votes))
+                if len(ties) > 0:
+                    return (ties[randint(0, len(ties) -1)], true)
                 else:
-                    self.games[channel]['canStart'] = False
-                    self.games[channel]['game'] = Game(game['players'], game['rounds'])
+                    #TODO: WAT?
+                    pass
+
+                return (winningCanidate, False)
+        ###### END UTIL METHODS #######
+
+        ###### PRE GAME LOGIC ########
+
+        def startgame(self):
+            #heh fix this
+            game = self 
+            if game.canStart:
+                if len(game.players) < 2:
+                    self._msg(channel, "I need more players.")
+                else:
+                    game.canStart = False
+                    game.game = Game(game.players, game.rounds)
                     #start game logic
-                    self.nextround()
+                    self.nextround()        
 
-        except KeyError:
-            irc.reply("Game not running.")
+        ###### END PRE GAME LOGIC ######
+
+        ###### START GAME LOGIC ########
+
+        def nextround(self):
+            channel = ircutils.toLower(msg.args[0])
+            try:
+                game = self
+                cah = game.game
+                try:
+                    cah.nextround()
+                    #Print Black Card to channel.
+                    self._printBlackCard(self.channel)
+                    for player in cah.players:
+                        self._msgHandToPlayer(player)
+                    self._msg(channel, "The white cards have been PMed to the players, you have 60 seconds to choose.")
+                    #TODO: do we need a round flag?
+                    schedule.addEvent(self.endround, time.time() + 60, "round_%s" % channel)
+                except:
+                    #TODO: add no more round logic
+                    pass
+
+            except KeyError:
+                irc.reply("A Game is not running.")
+
+        def card(self):
+            channel = ircutils.toLower(msg.args[0])
+            #TODO: Card decision logic
+
+        def endround(self):
+            channel = self.channel
+            try:
+                game = self
+                if game.roundRunning:
+                    game.roundRunning= False
+                    self._msg(channel, "Card Submittion Completed.")
+                    self.startcardvote()
+                else:
+                    self_msg(channel, "No round active.")
+            except KeyError:
+                self_msg(channel, "A Game is not running.")
+
+        ###### END GAME LOGIC #########
+
+    ###### VOTING ##############
+
+        def startcardvote(self):
+            channel = self.channel
+            try:
+                game = self
+                game.votes = {}
+                self._printBlackCard(game)
+                self._printAnswers(game)
+                self._msg(channel, "Please Vote on your favorite. @votecard <number> to vote, the entire channel can vote.")
+                schedule.addEvent(self.stopcardvote, time.time() + 60, "vote_%s" % channel)
+            except:
+                self._msg(channel, "A Game is not running, or the time is not to vote.")
 
 
+
+        def stopcardvote(self):
+            try:
+                #TODO: NOt quite done here
+                game = self
+                winner = self._tallyVotes(game.votes)
+                self._roundWinner(winner)
+            except:
+                irc.reply("A Game is not running, or the time is not to vote.")
+        ###### END VOTING LOGIC ######
+
+        def close(self):
+            try:
+                schedule.removeEvent("round_%s" % self.channel)
+            except:
+                pass
+            try:
+                schedule.removeEvent("vote_%s" % self.channel)
+            except:
+                pass
+            try:        
+                schedule.removeEvent("start_game_%s" % self.channel)
+            except:
+                pass  
+    Class = Game
+
+    ###### CHANNEL COMMANDS ######
     def playing(self, irc, msg, args):
         channel = ircutils.toLower(msg.args[0])
-        try:
-            nick = msg.nick
-            #debug
-            print channel
-            game = self.games[channel]
-            if game['running'] == False:
-                if len(game['players']) < game['maxPlayers']:
-                    game['players'].append(nick)
-                    irc.reply("Added, Spots left %d" % (game['maxPlayers'] - len(game['players']),))
+
+        if channel in self.games:
+            game = self.game[channel]
+
+            if game.running == False:
+                if len(game.players) < game.maxPlayers:
+                    game.players.append(nick)
+                    irc.reply("Added, Spots left %d/%d, Current Players %s" % (game.maxPlayers - len(game.players), game.maxPlayers, ', '.join(game.players)))
                 else:
                     irc.reply("Too many players")
-                if len(game['players']) > 1:
-                    game['canStart'] = True
-        except KeyError as e:
-            print e
+                if len(game.players) > 1:
+                    game.canStart = True
+        else:
             irc.reply("Game not running.")
-
 
     def cah(self, irc, msg, args):
         """Starts a cards against humanity game, takes
@@ -149,130 +243,38 @@ class Cah(callbacks.Plugin):
             numrounds = 5
         else:
             numrounds = args[0]
-        try:
-            game = self.games[channel]
-            irc.reply("A game is running, please wait till it is finished to start a new one.")
-        except:
-            channelGame = {}
-            channelGame['voting']   = False
-            channelGame['canStart'] = False
-            channelGame['roundRunning'] = False
-            channelGame['running'] = False
-            channelGame['rounds'] = numrounds
-            channelGame['maxPlayers'] = 5
-            channelGame['players']  = []
-            self.games[channel] = channelGame
-            irc.reply("Who wants to play Cards Aganst Humanity?", prefixNick=False)
-            schedule.addEvent(self.startgame, time.time() + 60, "start_game_%s" % channel)
 
-    ###### END PRE GAME LOGIC ######
-    
-    ###### START GAME LOGIC ########
+        if channel in self.games:
+            irc.reply("There is a game running currently.")
+        else:
+            irc.reply("Who wants to play Cards Aganst Humanity? To play reply with: @playing", prefixNick=False)
+            self.games[channel] = Game(irc, channel, numrounds)
+            
 
-    def nextround(self, irc, msg, args):
-        channel = ircutils.toLower(msg.args[0])
-        try:
-            game = self.games[channel]
-            cah = game['game']
-            try:
-                cah.nextround()
-                #Print Black Card to channel.
-                self._printBlackCard(irc, game, channel)
-                for player in cah.players:
-                    self._msgHandToPlayer(irc, game, player)
-                self._msg(irc, channel, "The white cards have been PMed to the players, you have 60 seconds to choose.")
-                #TODO: do we need a round flag?
-                schedule.addEvent(self.endround, time.time() + 60, "round_%s" % channel)
-            except:
-                #TODO: add no more round logic
-                pass
-
-        except KeyError:
-            irc.reply("A Game is not running.")
-
-    def card(self, irc, msg, args):
-        channel = ircutils.toLower(msg.args[0])
-        #TODO: Card decision logic
-
-    def endround(self, irc, msg, args):
-        channel = ircutils.toLower(msg.args[0])
-        try:
-            game = self.games[channel]
-            if game['roundRunning']:
-                game['roundRunning'] = False
-                self._msg(irc, channel, "Card Submittion Completed.")
-                self.startcardvote(irc, msg)
-            else:
-                irc.reply("No round active.")
-        except KeyError:
-            irc.reply("A Game is not running.")
-
-
-    ###### END GAME LOGIC #########
-
-
-    ###### START STOP METHOD #########
 
     def scah(self, irc, msg, args):
         channel = ircutils.toLower(msg.args[0])
-        try:
-            try:
-                schedule.removeEvent("round_%s" % channel)
-            except:
-                pass
-            try:
-                schedule.removeEvent("vote_%s" % channel)
-            except:
-                pass
-            try:        
-                schedule.removeEvent("start_game_%s" % channel)
-            except:
-                pass
-            self.games.pop(channel)
+        if channel in self.games:
+            games[channel].close()
+            del games[channel]
             irc.reply("Game stopped.")
-        except:
-            irc.reply("something went wrong")
+        else:
+            irc.reply("Game not running.")
 
 
-    ###### END STOP LOGIC ##########
-
-    ###### VOTING ##############
-
-
-    def startcardvote(self, irc, msg):
+    def votecard(self, irc, msg, args, vote):
         channel = ircutils.toLower(msg.args[0])
         try:
             game = self.games[channel]
-            game['votes'] = {}
-            self._printBlackCard(game)
-            self._printAnswers(game)
-            self._msg(irc, channel, "Please Vote on your favorite. @votecard <number> to vote, the entire channel can vote.")
-            schedule.addEvent(self.stopcardvote, time.time() + 60, "vote_%s" % channel)
-        except:
-            irc.reply("A Game is not running, or the time is not to vote.")
-
-    def votecard(self, irc, msg, vote):
-        channel = ircutils.toLower(msg.args[0])
-        try:
-            game = self.games[channel]
-            if msg.nick in game['votes'].keys():
+            if msg.nick in game.voteskeys():
                 irc.reply("You already voted! This isn't Chicago!")
             else:
-                game['votes'][msg.nick] = vote
-                irc.reply("vote cast")
+                game.votes[msg.nick] = vote
+                irc.reply("Cote cast")
         except:
             irc.reply("A Game is not running, or the time is not to vote.")      
 
-    def stopcardvote(self, irc, msg):
-        channel = ircutils.toLower(msg.args[0])
-        try:
-            #TODO: NOt quite done here
-            game = self.games[channel]
-            winner = self._tallyVotes(game['votes'])
-            self._roundWinner(irc, winner)
-        except:
-            irc.reply("A Game is not running, or the time is not to vote.")
-    ###### END VOTING LOGIC #####
+    ###### END CHANNEL COMMANDS ######
 
     
 Class = Cah
