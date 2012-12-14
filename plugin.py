@@ -106,12 +106,13 @@ class Cah(callbacks.Plugin):
     def startgame(self, irc, msg, args):
         channel = ircutils.toLower(msg.args[0])
         try:
-            if self.games[channel]['canStart']:
-                if len(self.players) < 2:
+            game = self.games[channel]
+            if game['canStart']:
+                if len(game['players']) < 2:
                     irc.reply("I need more players.")
                 else:
                     self.games[channel]['canStart'] = False
-                    self.games[channel]['game'] = Game(self.players,  self.games[channel]['rounds'])
+                    self.games[channel]['game'] = Game(game['players'], game['rounds'])
                     #start game logic
                     self.nextround()
 
