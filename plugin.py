@@ -134,11 +134,15 @@ class Cah(callbacks.Plugin):
             irc.reply("Game not running.")
 
 
-    def cah(self, irc, msg, numrounds=5):
+    def cah(self, irc, msg, args):
         """Starts a cards against humanity game, takes
         an optional arguement of number of rounds"""
         channel = ircutils.toLower(msg.args[0])
         #TODO: this is prob needs fixing. 
+        if len(arg) < 1:
+            numrounds = 5
+        else:
+            numrounds = args[0]
         try:
             irc.reply("A game is running, please wait till it is finished to start a new one.")
         except:
