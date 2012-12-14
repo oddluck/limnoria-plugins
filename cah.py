@@ -82,6 +82,7 @@ class Game(object):
         self.players = self.build_player_list(players)
         self.round = None
         self.question = None
+        self.score = {}
 
     def build_player_list(self, players):
         player_list = {}
@@ -101,7 +102,7 @@ class Game(object):
         return {'question': self.question, 'hands': self.players}
 
     def end_round(self, winner_name, cards_played):
-        self.score_keeping(winner_name, cards_played[winner_name])
+        self.score_keeping(winner_name)
         for player in cards_played.keys():
             if isinstance(cards_played[player], Card):
                 cards_played[player] = [cards_played[player]]
@@ -109,8 +110,11 @@ class Game(object):
                 self.players[player].card_list.remove(card)
             self.players[player].deal_hand(self.deck)
 
-    def score_keeping(self, player_name, cards):
-        pass
+    def score_keeping(self, player_name):
+        if self.score.has_key(player_name):
+            self.score[player_name] = self.score[player_name] + 1
+        else:
+            self.score[player_name] = 1
 
     def cardSubmit(self):
         for player in self.players:

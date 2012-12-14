@@ -47,6 +47,7 @@ def test_round_advancement(game=None):
         assert bot_gets.has_key('question')
         assert game.has_key('question')
         assert bot_gets.has_key('hands')
+        test_end_round(game)
 
 def build_end_round_data(game):
     winner = choice(game.players.keys())
@@ -70,6 +71,7 @@ def test_end_round(game=None):
             fake_end_round['cards_played'][player] = list(fake_end_round['cards_played'][player])
         for card in fake_end_round['cards_played'][player]:
             assert card not in game.players[player].card_list
+    assert game.score.has_key(fake_end_round['winner'])
 
 
 def test_player_hand(hand=None):
