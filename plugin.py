@@ -86,7 +86,7 @@ class Cah(callbacks.Plugin):
             enumeratedHand = []
             cah = self.game
             for position, card in enumerate(cah.players[nick].card_list):
-                enumeratedHand.append("%s: %s" % (position + 1, card.txt))
+                enumeratedHand.append("%s: %s" % (position + 1, card.text))
             self._printBlackCard(nick)
             self._msg(nick, response % ', '.join(enumeratedHand))
 
