@@ -144,6 +144,7 @@ class Cah(callbacks.Plugin):
         else:
             numrounds = args[0]
         try:
+            game = self.games[channel]
             irc.reply("A game is running, please wait till it is finished to start a new one.")
         except:
             channelGame = {}
