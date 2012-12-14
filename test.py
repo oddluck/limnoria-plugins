@@ -1,5 +1,3 @@
-from collections import deque
-
 __author__ = 'Bear'
 
 from cah import *

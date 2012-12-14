@@ -76,7 +76,7 @@ class Card(object):
 
 
 class Game(object):
-    def __init__(self, players, round_limit = 5, rule_set="house"):
+    def __init__(self, players, round_limit = 5):
         self.round_limit = round_limit
         self.deck = Deck()
         self.players = self.build_player_list(players)
@@ -94,7 +94,7 @@ class Game(object):
         if self.round is None:
             self.round = 0
         if self.round < self.round_limit:
-            self.round = self.round + 1
+            self.round += 1
         else:
             raise IndexError
 
@@ -111,8 +111,10 @@ class Game(object):
             self.players[player].deal_hand(self.deck)
 
     def score_keeping(self, player_name):
+        if not self.players.has_key(player_name):
+            raise NameError
         if self.score.has_key(player_name):
-            self.score[player_name] = self.score[player_name] + 1
+            self.score[player_name] += 1
         else:
             self.score[player_name] = 1
 
