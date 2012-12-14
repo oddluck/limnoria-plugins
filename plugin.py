@@ -111,7 +111,7 @@ class Cah(callbacks.Plugin):
                     irc.reply("I need more players.")
                 else:
                     self.games[channel]['canStart'] = False
-                    self.games[channel]['game'] = Game(self.players, rounds)
+                    self.games[channel]['game'] = Game(self.players,  self.games[channel]['rounds'])
                     #start game logic
                     self.nextround()
 
@@ -124,7 +124,7 @@ class Cah(callbacks.Plugin):
         try:
             nick = msg.nick
             game = self.games[channel]
-            if channelGame['running'] == False:
+            if game['running'] == False:
                 if len(game['players']) < game['maxPlayers']:
                     game['players'].append(nick)
                     irc.reply("Added, Spots left %d" % (game['maxplayers'] - len(game['players']),))
