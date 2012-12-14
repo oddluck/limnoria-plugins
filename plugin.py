@@ -91,6 +91,8 @@ class Cah(callbacks.Plugin):
             if len(ties) > 0:
                 return (ties[randint(0, len(ties) -1)], true)
             else:
+                #TODO: WAT?
+                pass
 
             return (winningCanidate, False)
 
