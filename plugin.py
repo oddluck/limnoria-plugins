@@ -81,13 +81,14 @@ class Cah(callbacks.Plugin):
             cah = self.game
             self._msg(recip, response % cah.question.text)
 
-        def _msgHandToPlayer(self, player):
+        def _msgHandToPlayer(self, nick):
             response = "Your cards: %s  Please respond with @card <number> [number]"
             enumeratedHand = []
-            for position, card in enumerate(player.card_list):
-                enumeratedHand.append("%s: %s" % (position + 1, card.txt))
-            self._printBlackCard(player.name)
-            self._msg(player, response % ', '.join(enumeratedHand))
+            cah = self.game
+            for position, card in enumerate(cah.players[nick].card_list):
+                enumeratedHand.append("%s: %s " % (position + 1, ircutils.bold(card.text)))
+            self._printBlackCard(nick)
+            self._msg(nick, response % ', '.join(enumeratedHand))
 
         def _tallyVotes(self, votes):
             talliedVotes = {}
@@ -146,8 +147,8 @@ class Cah(callbacks.Plugin):
                 cah.next_round()
                 #Print Black Card to channel.
                 self._printBlackCard(self.channel)
-                for player in cah.players:
-                    self._msgHandToPlayer(player)
+                for nick in self.players:
+                    self._msgHandToPlayer(nick)
                 self._msg(channel, "The white cards have been PMed to the players, you have 60 seconds to choose.")
                 #TODO: do we need a round flag?
                 schedule.addEvent(self.endround, time.time() + 60, "round_%s" % channel)
@@ -273,8 +274,8 @@ class Cah(callbacks.Plugin):
     def scah(self, irc, msg, args):
         channel = ircutils.toLower(msg.args[0])
         if channel in self.games:
-            games[channel].close()
-            del games[channel]
+            self.games[channel].close()
+            self.games.pop(channel)
             irc.reply("Game stopped.")
         else:
             irc.reply("Game not running.")

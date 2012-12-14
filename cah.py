@@ -147,8 +147,7 @@ if __name__=="__main__":
     round['hands']['Jazz'].showHand()
 
     print "\nBear's hand the hard way:"
-    for index, card in enumerate(round['hands']['Bear'].card_list):
+    for index, card in enumerate(game.players['Bear'].card_list):
         print '%s: %s' % (index + 1, card.text)
-
 
 
