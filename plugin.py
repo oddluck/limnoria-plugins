@@ -137,7 +137,7 @@ class Cah(callbacks.Plugin):
         ###### START GAME LOGIC ########
 
         def nextround(self):
-            channel = ircutils.toLower(msg.args[0])
+            channel = self.channel
             try:
                 game = self
                 cah = game.game
