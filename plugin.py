@@ -139,7 +139,7 @@ class Cah(callbacks.Plugin):
         an optional arguement of number of rounds"""
         channel = ircutils.toLower(msg.args[0])
         #TODO: this is prob needs fixing. 
-        if len(arg) < 1:
+        if len(args) < 1:
             numrounds = 5
         else:
             numrounds = args[0]
