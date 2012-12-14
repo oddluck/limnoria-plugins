@@ -132,6 +132,8 @@ class Cah(callbacks.Plugin):
                     irc.reply("Added, Spots left %d" % (game['maxPlayers'] - len(game['players']),))
                 else:
                     irc.reply("Too many players")
+                if len(game['players']) > 1:
+                    game['canStart'] = True
         except KeyError as e:
             print e
             irc.reply("Game not running.")
