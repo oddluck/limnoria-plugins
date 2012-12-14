@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
 ###
 # Copyright (c) 2012, James Scott
 # All rights reserved.
@@ -52,7 +50,7 @@ class Cah(callbacks.Plugin):
     def __init__(self, irc):
         self.games = {}
 
-    ###### UTIL METHODS #######
+    ###### UTIL METHODS ########
     def _msg(self, irc, recip, msg):
         irc.queueMsg(ircmsgs.privmsg(recip, msg))
     
