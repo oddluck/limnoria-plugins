@@ -128,7 +128,7 @@ class Cah(callbacks.Plugin):
                     self._msg(channel, "I need more players.")
                 else:
                     game.canStart = False
-                    game.game = Cah(game.players, game.rounds)
+                    game.game = Game(game.players, game.rounds)
                     #start game logic
                     self.nextround()        
 
