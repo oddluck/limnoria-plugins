@@ -55,7 +55,7 @@ class Cah(callbacks.Plugin):
     class CahGame(object):
         """docstring for Game"""
         def __init__(self, irc, channel, numrounds = 5):
-            super(Game, self).__init__()
+            super(CahGame, self).__init__()
             self.irc = irc
             self.channel = channel
             self.game = None
