@@ -142,7 +142,7 @@ class Cah(callbacks.Plugin):
             game = self
             cah = game.game
             try:
-                cah.nextround()
+                cah.next_round()
                 #Print Black Card to channel.
                 self._printBlackCard(self.channel)
                 for player in cah.players:
