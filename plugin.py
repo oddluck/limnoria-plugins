@@ -86,7 +86,7 @@ class Cah(callbacks.Plugin):
             enumeratedHand = []
             cah = self.game
             for position, card in enumerate(cah.players[nick].card_list):
-                enumeratedHand.append("%s: %s" % (position + 1, card.text))
+                enumeratedHand.append("%s: %s " % (position + 1, ircutils.bold(card.text)))
             self._printBlackCard(nick)
             self._msg(nick, response % ', '.join(enumeratedHand))
 
@@ -275,7 +275,7 @@ class Cah(callbacks.Plugin):
         channel = ircutils.toLower(msg.args[0])
         if channel in self.games:
             games[channel].close()
-            del games[channel]
+            games[channel].pop()
             irc.reply("Game stopped.")
         else:
             irc.reply("Game not running.")
