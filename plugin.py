@@ -31,6 +31,7 @@ import supybot.utils as utils
 from supybot.commands import *
 import supybot.plugins as plugins
 import supybot.ircutils as ircutils
+import supybot.ircmsgs as ircmsgs
 import supybot.schedule as schedule
 import supybot.callbacks as callbacks
 
@@ -237,11 +238,14 @@ class Cah(callbacks.Plugin):
             game = self.games[channel]
 
             if game.running == False:
-                if len(game.players) < game.maxPlayers:
-                    game.players.append(nick)
-                    irc.reply("Added, Spots left %d/%d, Current Players %s" % (game.maxPlayers - len(game.players), game.maxPlayers, ', '.join(game.players)))
+                if nick in players:
+                    irc.reply("You already are playing.")
                 else:
-                    irc.reply("Too many players")
+                    if len(game.players) < game.maxPlayers:
+                        game.players.append(nick)
+                        irc.reply("Added, Spots left %d/%d, Current Players %s" % (game.maxPlayers - len(game.players), game.maxPlayers, ', '.join(game.players)))
+                    else:
+                        irc.reply("Too many players")
                 if len(game.players) > 1:
                     game.canStart = True
         else:
