@@ -38,7 +38,7 @@ from random import randint
 
 import operator 
 
-from cah import Game
+from cah import Game as Cah
 
 import time
 
@@ -67,7 +67,9 @@ class Cah(callbacks.Plugin):
             self.rounds = numrounds
             self.maxPlayers= 5
             self.players = []
-            schedule.addEvent(self.startgame, time.time() + 60, "start_game_%s" % channel)
+        
+        def initGame(self):
+            schedule.addEvent(self.startgame, time.time() + 60, "start_game_%s" % self.channel)
 
         ###### UTIL METHODS ##########
       
@@ -127,7 +129,7 @@ class Cah(callbacks.Plugin):
                     self._msg(channel, "I need more players.")
                 else:
                     game.canStart = False
-                    game.game = Game(game.players, game.rounds)
+                    game.game = Cah(game.players, game.rounds)
                     #start game logic
                     self.nextround()        
 
@@ -249,6 +251,7 @@ class Cah(callbacks.Plugin):
         else:
             irc.reply("Who wants to play Cards Aganst Humanity? To play reply with: @playing", prefixNick=False)
             self.games[channel] = Game(irc, channel, numrounds)
+            self.games[channel].initGame()
             
 
 
