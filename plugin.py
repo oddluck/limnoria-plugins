@@ -68,7 +68,7 @@ class Cah(callbacks.Plugin):
             self.players = []
         
         def initGame(self):
-            schedule.addEvent(startgame, time.time() + 60, "start_game_%s" % self.channel)
+            schedule.addEvent(self.startgame, time.time() + 60, "start_game_%s" % self.channel)
 
         ###### UTIL METHODS ##########
       
@@ -149,7 +149,7 @@ class Cah(callbacks.Plugin):
                         self._msgHandToPlayer(player)
                     self._msg(channel, "The white cards have been PMed to the players, you have 60 seconds to choose.")
                     #TODO: do we need a round flag?
-                    schedule.addEvent(endround, time.time() + 60, "round_%s" % channel)
+                    schedule.addEvent(self.endround, time.time() + 60, "round_%s" % channel)
                 except:
                     #TODO: add no more round logic
                     pass
@@ -186,7 +186,7 @@ class Cah(callbacks.Plugin):
                 self._printBlackCard(game)
                 self._printAnswers(game)
                 self._msg(channel, "Please Vote on your favorite. @votecard <number> to vote, the entire channel can vote.")
-                schedule.addEvent(stopcardvote, time.time() + 60, "vote_%s" % channel)
+                schedule.addEvent(self.stopcardvote, time.time() + 60, "vote_%s" % channel)
             except:
                 self._msg(channel, "A Game is not running, or the time is not to vote.")
 
@@ -222,7 +222,7 @@ class Cah(callbacks.Plugin):
         channel = ircutils.toLower(msg.args[0])
 
         if channel in self.games:
-            game = self.game[channel]
+            game = self.games[channel]
 
             if game.running == False:
                 if len(game.players) < game.maxPlayers:
