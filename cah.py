@@ -1,6 +1,7 @@
 from random import choice
 import os
 import json
+import test
 
 # Settings you change
 card_folder = 'cards'
@@ -9,12 +10,10 @@ question_cards_file_name = ['question_cards', 'question_cards1', 'question_cards
 
 # Settings that are used
 #this is one level hire then it should be 
-base_directory = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath("."))))
-
+base_directory = os.path.dirname(os.path.abspath(__file__))
 
 class Deck(object):
     def __init__(self):
-        print base_directory
         self.answerDb = self.parse_card_file('answer')
         self.questionDb = self.parse_card_file('question')
 
@@ -72,14 +71,18 @@ class Card(object):
         self.text = text
         for key, value in kwargs.iteritems():
             setattr(self, key, value)
+    def __str__(self):
+        return self.text
+
 
 class Game(object):
-    def __init__(self, players, round_limit = 5, rule_set="house"):
+    def __init__(self, players, round_limit = 5):
         self.round_limit = round_limit
         self.deck = Deck()
         self.players = self.build_player_list(players)
         self.round = None
         self.question = None
+        self.score = {}
 
     def build_player_list(self, players):
         player_list = {}
@@ -91,15 +94,29 @@ class Game(object):
         if self.round is None:
             self.round = 0
         if self.round < self.round_limit:
-            self.round = self.round + 1
+            self.round += 1
         else:
             raise IndexError
 
         self.question = self.deck.drawCard('question')
         return {'question': self.question, 'hands': self.players}
 
-    def displayAnswer(self):
-        pass
+    def end_round(self, winner_name, cards_played):
+        self.score_keeping(winner_name)
+        for player in cards_played.keys():
+            if isinstance(cards_played[player], Card):
+                cards_played[player] = [cards_played[player]]
+            for card in cards_played[player]:
+                self.players[player].card_list.remove(card)
+            self.players[player].deal_hand(self.deck)
+
+    def score_keeping(self, player_name):
+        if not self.players.has_key(player_name):
+            raise NameError
+        if self.score.has_key(player_name):
+            self.score[player_name] += 1
+        else:
+            self.score[player_name] = 1
 
     def cardSubmit(self):
         for player in self.players:
@@ -118,18 +135,22 @@ class Round(object):
 
 class PlayerHand(object):
     def __init__(self, deck):
-        self.card_list = self.dealHand(deck)
+        self.card_list = []
+        self.deal_hand(deck)
 
-    def dealHand(self, deck):
-        hand = []
-        while len(hand) < 5:
+    def deal_hand(self, deck):
+        while len(self.card_list) < 5:
             card = deck.drawCard('answer')
-            hand.append(card)
-        return hand
-            
-    def showHand(self):
+            self.card_list.append(card)
+
+    def text_list(self):
+        card_text = []
         for index, card in enumerate(self.card_list):
-            print '%s: %s' % (index + 1, card.text)
+            card_text.append ( card.text)
+        return card_text
+
+    def showHand(self):
+            print '%s' % self.text_list()
 
 
 
@@ -150,4 +171,4 @@ if __name__=="__main__":
     for index, card in enumerate(game.players['Bear'].card_list):
         print '%s: %s' % (index + 1, card.text)
 
-
+    print "\nEnd the round by picking a random cards amd winner: %s" % str(test.build_end_round_data(game))

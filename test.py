@@ -30,6 +30,8 @@ def test_game():
     for player in game.players.keys():
         hand = game.players[player]
         test_player_hand(hand)
+    test_round_advancement(game)
+
 
 
 def test_round_advancement(game=None):
@@ -41,8 +43,33 @@ def test_round_advancement(game=None):
         bot_gets = game.next_round()
         assert isinstance(bot_gets, dict)
         assert bot_gets.has_key('question')
-
+        assert game.has_key('question')
         assert bot_gets.has_key('hands')
+        test_end_round(game)
+
+def build_end_round_data(game):
+    winner = choice(game.players.keys())
+    cards_played = {}
+    #Get random cards from player's hand to satisfy the question card
+    for player in game.players.keys():
+        player_cards = game.players[player].card_list[:game.question.answers]
+        cards_played[player] = player_cards #player_cards is a deque object -> tuple(list,maxlen)
+    return {'winner': winner, 'cards_played': cards_played}
+
+def test_end_round(game=None):
+    if game is None:
+        game = Game(['Bear','Swim', 'Jazz'])
+        game.next_round()
+        game.question.answers = 2
+    fake_end_round = build_end_round_data(game)
+    game.end_round(fake_end_round['winner'],fake_end_round['cards_played'])
+    for player in game.players.keys():
+        assert len(game.players[player].card_list) == 5
+        if isinstance(fake_end_round['cards_played'][player], Card):
+            fake_end_round['cards_played'][player] = list(fake_end_round['cards_played'][player])
+        for card in fake_end_round['cards_played'][player]:
+            assert card not in game.players[player].card_list
+    assert game.score.has_key(fake_end_round['winner'])
 
 
 def test_player_hand(hand=None):
