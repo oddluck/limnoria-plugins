@@ -103,7 +103,7 @@ class Cah(callbacks.Plugin):
 
     ###### PRE GAME LOGIC ########
 
-    def startGame(self, irc, msg):
+    def startGame(self, irc, msg, args):
         channel = ircutils.toLower(msg.args[0])
         try:
             if self.games[channel]['canStart']:
@@ -119,7 +119,7 @@ class Cah(callbacks.Plugin):
             irc.reply("Game not running.")
 
 
-    def playing(self, irc, msg):
+    def playing(self, irc, msg, args):
         channel = ircutils.toLower(msg.args[0])
         try:
             nick = msg.nick
@@ -162,7 +162,7 @@ class Cah(callbacks.Plugin):
     
     ###### START GAME LOGIC ########
 
-    def nextRound(self, irc, msg):
+    def nextRound(self, irc, msg, args):
         channel = ircutils.toLower(msg.args[0])
         try:
             game = self.games[channel]
@@ -183,7 +183,7 @@ class Cah(callbacks.Plugin):
         except KeyError:
             irc.reply("A Game is not running.")
 
-    def card(self, irc, msg, card1, card2, card3):
+    def card(self, irc, msg, args):
         channel = ircutils.toLower(msg.args[0])
         #TODO: Card decision logic
 
