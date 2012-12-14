@@ -220,6 +220,7 @@ class Cah(callbacks.Plugin):
     ###### CHANNEL COMMANDS ######
     def playing(self, irc, msg, args):
         channel = ircutils.toLower(msg.args[0])
+        nick = msg.nick
 
         if channel in self.games:
             game = self.games[channel]
