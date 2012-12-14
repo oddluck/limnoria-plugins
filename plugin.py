@@ -48,11 +48,13 @@ class Cah(callbacks.Plugin):
     threaded = True
 
     def __init__(self, irc):
+        self.__parent = super(Cah, self)
+        self.__parent.__init__(irc)
         self.games = {}
 
-    ###### UTIL METHODS #######
+    ###### UTIL METHODS ########
     def _msg(self, irc, recip, msg):
-        irc.queueMsg(ircmsgs.privmsg(recip, msg))
+        irc.queueMsg(ircmsgs.privmsg(recip,msg))
     
     def _printBlackCard(self, irc, game, recip):
         response = "Question: %s"
@@ -91,6 +93,8 @@ class Cah(callbacks.Plugin):
             if len(ties) > 0:
                 return (ties[randint(0, len(ties) -1)], true)
             else:
+                #TODO: WAT?
+                pass
 
             return (winningCanidate, False)
 
@@ -130,12 +134,17 @@ class Cah(callbacks.Plugin):
             irc.reply("Game not running.")
 
 
-    def cah(self, irc, msg, numrounds=5):
+    def cah(self, irc, msg, args):
         """Starts a cards against humanity game, takes
         an optional arguement of number of rounds"""
         channel = ircutils.toLower(msg.args[0])
         #TODO: this is prob needs fixing. 
+        if len(args) < 1:
+            numrounds = 5
+        else:
+            numrounds = args[0]
         try:
+            game = self.games[channel]
             irc.reply("A game is running, please wait till it is finished to start a new one.")
         except:
             channelGame = {}
@@ -195,6 +204,20 @@ class Cah(callbacks.Plugin):
     ###### END GAME LOGIC #########
 
 
+    ###### START STOP METHOD #########
+
+    def scah(self, irc, msg, args):
+        channel = ircutils.toLower(msg.args[0])
+        try:
+            schedule.removeEvent("round_%s" % channel)
+            schedule.removeEvent("vote_%s" % channel)
+            schedule.removeEvent("start_game_%s" % channel)
+            self.games.pop(channel)
+        except:
+            irc.reply("something went wrong")
+
+
+    ###### END STOP LOGIC ##########
 
     ###### VOTING ##############
 
