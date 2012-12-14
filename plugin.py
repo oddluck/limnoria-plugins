@@ -153,6 +153,7 @@ class Cah(callbacks.Plugin):
             channelGame['voting']   = False
             channelGame['canStart'] = False
             channelGame['roundRunning'] = False
+            channelGame['running'] = False
             channelGame['rounds'] = numrounds
             channelGame['maxPlayers'] = 5
             channelGame['players']  = []
