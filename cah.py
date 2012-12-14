@@ -13,6 +13,7 @@ base_directory = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(".
 
 class Deck(object):
     def __init__(self):
+        print base_directory
         self.answerDb = self.parse_card_file('answer')
         self.questionDb = self.parse_card_file('question')
 

@@ -218,6 +218,14 @@ class Cah(callbacks.Plugin):
     Class = CahGame
 
     ###### CHANNEL COMMANDS ######
+    def startgame(self,irc, msg, args):
+        if channel in self.games:
+            try:        
+                schedule.removeEvent("start_game_%s" % self.channel)
+            except:
+                pass                
+            self.games[channel].startgame()
+            
     def playing(self, irc, msg, args):
         channel = ircutils.toLower(msg.args[0])
         nick = msg.nick
