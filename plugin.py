@@ -81,10 +81,11 @@ class Cah(callbacks.Plugin):
             cah = self.game
             self._msg(recip, response % cah.question.text)
 
-        def _msgHandToPlayer(self, nick, hand):
+        def _msgHandToPlayer(self, nick):
             response = "Your cards: %s  Please respond with @card <number> [number]"
             enumeratedHand = []
-            for position, card in enumerate(hand.card_list):
+            cah = self.game
+            for position, card in enumerate(cah[nick].card_list):
                 enumeratedHand.append("%s: %s" % (position + 1, card.txt))
             self._printBlackCard(nick)
             self._msg(nick, response % ', '.join(enumeratedHand))
@@ -147,7 +148,7 @@ class Cah(callbacks.Plugin):
                 #Print Black Card to channel.
                 self._printBlackCard(self.channel)
                 for nick, hand in enumerate(cah.players):
-                    self._msgHandToPlayer(nick, hand)
+                    self._msgHandToPlayer(nick)
                 self._msg(channel, "The white cards have been PMed to the players, you have 60 seconds to choose.")
                 #TODO: do we need a round flag?
                 schedule.addEvent(self.endround, time.time() + 60, "round_%s" % channel)
