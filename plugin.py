@@ -128,6 +128,7 @@ class Cah(callbacks.Plugin):
                     self._msg(channel, "I need more players.")
                 else:
                     game.canStart = False
+                    game.running = True
                     game.game = Game(game.players, game.rounds)
                     #start game logic
                     self.nextround()        
@@ -149,8 +150,9 @@ class Cah(callbacks.Plugin):
                 self._msg(channel, "The white cards have been PMed to the players, you have 60 seconds to choose.")
                 #TODO: do we need a round flag?
                 schedule.addEvent(self.endround, time.time() + 60, "round_%s" % channel)
-            except:
+            except Exception as e:
                 #TODO: add no more round logic
+                print e
                 pass
 
 
