@@ -8,11 +8,13 @@ answer_cards_file_names = ['answer_cards', 'custom_anwser_cards']
 question_cards_file_name = ['question_cards', 'question_cards1', 'question_cards2', 'custom_question_cards']
 
 # Settings that are used
-base_directory = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__))))
+#this is one level hire then it should be 
+base_directory = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath("."))))
 
 
 class Deck(object):
     def __init__(self):
+        print base_directory
         self.answerDb = self.parse_card_file('answer')
         self.questionDb = self.parse_card_file('question')
 
