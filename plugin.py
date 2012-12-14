@@ -126,13 +126,15 @@ class Cah(callbacks.Plugin):
             #debug
             print channel
             game = self.games[channel]
+
             if game['running'] == False:
                 if len(game['players']) < game['maxPlayers']:
                     game['players'].append(nick)
                     irc.reply("Added, Spots left %d" % (game['maxplayers'] - len(game['players']),))
                 else:
                     irc.reply("Too many players")
-        except KeyError:
+        except KeyError as e:
+            print e
             irc.reply("Game not running.")
 
 
@@ -225,6 +227,7 @@ class Cah(callbacks.Plugin):
             except:
                 pass
             self.games.pop(channel)
+            irc.reply("Game stopped.")
         except:
             irc.reply("something went wrong")
 
