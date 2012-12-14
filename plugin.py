@@ -274,8 +274,8 @@ class Cah(callbacks.Plugin):
     def scah(self, irc, msg, args):
         channel = ircutils.toLower(msg.args[0])
         if channel in self.games:
-            games[channel].close()
-            games[channel].pop()
+            self.games[channel].close()
+            self.games[channel].pop()
             irc.reply("Game stopped.")
         else:
             irc.reply("Game not running.")
