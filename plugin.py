@@ -126,7 +126,6 @@ class Cah(callbacks.Plugin):
             #debug
             print channel
             game = self.games[channel]
-            P
             if game['running'] == False:
                 if len(game['players']) < game['maxPlayers']:
                     game['players'].append(nick)
