@@ -81,7 +81,7 @@ class Cah(callbacks.Plugin):
             cah = self.game
             self._msg(recip, response % cah.question.text)
 
-        def _msgHandToPlayer(self, irc, player):
+        def _msgHandToPlayer(self, player):
             response = "Your cards: %s  Please respond with @card <number> [number]"
             enumeratedHand = []
             for position, card in enumerate(player.card_list):
