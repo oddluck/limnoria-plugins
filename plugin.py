@@ -123,6 +123,8 @@ class Cah(callbacks.Plugin):
         channel = ircutils.toLower(msg.args[0])
         try:
             nick = msg.nick
+            #debug
+            print channel
             game = self.games[channel]
             if game['running'] == False:
                 if len(game['players']) < game['maxPlayers']:
@@ -156,7 +158,7 @@ class Cah(callbacks.Plugin):
             channelGame['players']  = []
             self.games[channel] = channelGame
             irc.reply("Who wants to play Cards Aganst Humanity?", prefixNick=False)
-            schedule.addEvent(startgame, time.time() + 60, "start_game_%s" % channel)
+            schedule.addEvent(self.startgame, time.time() + 60, "start_game_%s" % channel)
 
     ###### END PRE GAME LOGIC ######
     
@@ -175,7 +177,7 @@ class Cah(callbacks.Plugin):
                     self._msgHandToPlayer(irc, game, player)
                 self._msg(irc, channel, "The white cards have been PMed to the players, you have 60 seconds to choose.")
                 #TODO: do we need a round flag?
-                schedule.addEvent(endround, time.time() + 60, "round_%s" % channel)
+                schedule.addEvent(self.endround, time.time() + 60, "round_%s" % channel)
             except:
                 #TODO: add no more round logic
                 pass
@@ -194,7 +196,7 @@ class Cah(callbacks.Plugin):
             if game['roundRunning']:
                 game['roundRunning'] = False
                 self._msg(irc, channel, "Card Submittion Completed.")
-                self.startCardVote(irc, msg)
+                self.startcardvote(irc, msg)
             else:
                 irc.reply("No round active.")
         except KeyError:
@@ -209,9 +211,18 @@ class Cah(callbacks.Plugin):
     def scah(self, irc, msg, args):
         channel = ircutils.toLower(msg.args[0])
         try:
-            schedule.removeEvent("round_%s" % channel)
-            schedule.removeEvent("vote_%s" % channel)
-            schedule.removeEvent("start_game_%s" % channel)
+            try:
+                schedule.removeEvent("round_%s" % channel)
+            except:
+                pass
+            try:
+                schedule.removeEvent("vote_%s" % channel)
+            except:
+                pass
+            try:        
+                schedule.removeEvent("start_game_%s" % channel)
+            except:
+                pass
             self.games.pop(channel)
         except:
             irc.reply("something went wrong")
@@ -222,7 +233,7 @@ class Cah(callbacks.Plugin):
     ###### VOTING ##############
 
 
-    def startCardVote(self, irc, msg):
+    def startcardvote(self, irc, msg):
         channel = ircutils.toLower(msg.args[0])
         try:
             game = self.games[channel]
@@ -230,7 +241,7 @@ class Cah(callbacks.Plugin):
             self._printBlackCard(game)
             self._printAnswers(game)
             self._msg(irc, channel, "Please Vote on your favorite. @votecard <number> to vote, the entire channel can vote.")
-            schedule.addEvent(stopCardVote, time.time() + 60, "vote_%s" % channel)
+            schedule.addEvent(self.stopcardvote, time.time() + 60, "vote_%s" % channel)
         except:
             irc.reply("A Game is not running, or the time is not to vote.")
 
@@ -246,7 +257,7 @@ class Cah(callbacks.Plugin):
         except:
             irc.reply("A Game is not running, or the time is not to vote.")      
 
-    def stopCardVote(self, irc, msg):
+    def stopcardvote(self, irc, msg):
         channel = ircutils.toLower(msg.args[0])
         try:
             #TODO: NOt quite done here
