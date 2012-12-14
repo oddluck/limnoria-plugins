@@ -52,7 +52,7 @@ class Cah(callbacks.Plugin):
 
     ###### UTIL METHODS ########
     def _msg(self, irc, recip, msg):
-        irc.queueMsg(ircmsgs.privmsg(recip, msg))
+        irc.queueMsg(ircmsgs.privmsg(recip,msg))
     
     def _printBlackCard(self, irc, game, recip):
         response = "Question: %s"
