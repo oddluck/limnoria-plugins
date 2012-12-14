@@ -38,7 +38,7 @@ from random import randint
 
 import operator 
 
-from cah import Game as Cah
+from cah import Game
 
 import time
 
@@ -52,7 +52,7 @@ class Cah(callbacks.Plugin):
         self.__parent.__init__(irc)
         self.games = {}
 
-    class Game(object):
+    class CahGame(object):
         """docstring for Game"""
         def __init__(self, irc, channel, numrounds = 5):
             super(Game, self).__init__()
@@ -216,7 +216,7 @@ class Cah(callbacks.Plugin):
                 schedule.removeEvent("start_game_%s" % self.channel)
             except:
                 pass  
-    Class = Game
+    Class = CahGame
 
     ###### CHANNEL COMMANDS ######
     def playing(self, irc, msg, args):
@@ -250,7 +250,7 @@ class Cah(callbacks.Plugin):
             irc.reply("There is a game running currently.")
         else:
             irc.reply("Who wants to play Cards Aganst Humanity? To play reply with: @playing", prefixNick=False)
-            self.games[channel] = Game(irc, channel, numrounds)
+            self.games[channel] = CahGame(irc, channel, numrounds)
             self.games[channel].initGame()
             
 
