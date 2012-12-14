@@ -219,6 +219,7 @@ class Cah(callbacks.Plugin):
 
     ###### CHANNEL COMMANDS ######
     def forcestartgame(self, irc, msg, args):
+        channel = ircutils.toLower(msg.args[0])
         if channel in self.games:
             try:        
                 schedule.removeEvent("start_game_%s" % self.channel)
