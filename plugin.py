@@ -48,6 +48,8 @@ class Cah(callbacks.Plugin):
     threaded = True
 
     def __init__(self, irc):
+        self.__parent = super(Cah, self)
+        self.__parent.__init__(irc)
         self.games = {}
 
     ###### UTIL METHODS ########
