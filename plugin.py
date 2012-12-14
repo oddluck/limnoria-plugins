@@ -238,7 +238,7 @@ class Cah(callbacks.Plugin):
             game = self.games[channel]
 
             if game.running == False:
-                if nick in players:
+                if nick in game.players:
                     irc.reply("You already are playing.")
                 else:
                     if len(game.players) < game.maxPlayers:
