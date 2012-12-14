@@ -147,7 +147,7 @@ class Cah(callbacks.Plugin):
                 cah.next_round()
                 #Print Black Card to channel.
                 self._printBlackCard(self.channel)
-                for nick, hand in enumerate(cah.players):
+                for nick in self.players:
                     self._msgHandToPlayer(nick)
                 self._msg(channel, "The white cards have been PMed to the players, you have 60 seconds to choose.")
                 #TODO: do we need a round flag?
