@@ -187,7 +187,7 @@ class Cah(callbacks.Plugin):
                 self._printBlackCard(game)
                 self._printAnswers(game)
                 self._msg(channel, "Please Vote on your favorite. @votecard <number> to vote, the entire channel can vote.")
-                schedule.addEvent(self.stopcardvote, time.time() + 60, "vote_%s" % channel)
+                schedule.addEvent(stopcardvote, time.time() + 60, "vote_%s" % channel)
             except:
                 self._msg(channel, "A Game is not running, or the time is not to vote.")
 
