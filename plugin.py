@@ -159,7 +159,7 @@ class Cah(callbacks.Plugin):
             cardlist = []
             cards = cah.players[nick].card_list
             for cardNum in cardNumbers:
-                card_list.append(cards[cardNum])
+                cardlist.append(cards[cardNum])
             self.cardsPlayed[nick] = cardlist
             if len(self.cardsPlayed) == len.self(players):
                 try:
