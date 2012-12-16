@@ -67,6 +67,8 @@ class Cah(callbacks.Plugin):
             self.rounds = numrounds
             self.maxPlayers= 5
             self.players = []
+            self.acceptingWhiteCards = False
+            self.cardsPlayed = {}
         
         def initGame(self):
             schedule.addEvent(self.startgame, time.time() + 60, "start_game_%s" % self.channel)
@@ -82,13 +84,25 @@ class Cah(callbacks.Plugin):
             self._msg(recip, response % cah.question.text)
 
         def _msgHandToPlayer(self, nick):
-            response = "Your cards: %s  Please respond with @card <number> [number]"
+            response = "Your cards: %s  Please respond with @playcard <number> [number]"
             enumeratedHand = []
             cah = self.game
             for position, card in enumerate(cah.players[nick].card_list):
                 enumeratedHand.append("%s: %s " % (position + 1, ircutils.bold(card.text)))
             self._printBlackCard(nick)
             self._msg(nick, response % ', '.join(enumeratedHand))
+
+        def _displayPlayedCards(self):
+            channel = self.channel
+            responseTemplate = "%s: (%s)"
+            responses = []
+            response = "%s"
+            for count, nick in enumerate(self.cardsPlayed.keys()):
+                cardText = []
+                cards = ", ".join([ircutils.bold(card.text) for card in self.cardsPlayed[nick]])
+                responses.append(responseTemplate % (count + 1, cards))
+            response = ";  ".join(responses)
+            self._msg(channel, "Played White cards: %s" % response)
 
         def _tallyVotes(self, votes):
             talliedVotes = {}
@@ -139,6 +153,21 @@ class Cah(callbacks.Plugin):
 
         ###### START GAME LOGIC ########
 
+        def playcard(self, nick, cardNumbers):
+            game = self 
+            cah = game.game
+            cardlist = []
+            cards = cah.players[nick].card_list
+            for cardNum in cardNumbers:
+                card_list.append(cards[cardNum])
+            self.cardsPlayed[nick] = cardlist
+            if len(self.cardsPlayed) == len.self(players):
+                try:
+                    schedule.removeEvent("round_%s" % self.channel)
+                except:
+                    pass
+                self.endround()
+
         def nextround(self):
             channel = self.channel
             game = self
@@ -150,6 +179,7 @@ class Cah(callbacks.Plugin):
                 for nick in self.players:
                     self._msgHandToPlayer(nick)
                 self._msg(channel, "The white cards have been PMed to the players, you have 60 seconds to choose.")
+                self.acceptingWhiteCards = True
                 #TODO: do we need a round flag?
                 schedule.addEvent(self.endround, time.time() + 60, "round_%s" % channel)
             except Exception as e:
@@ -161,9 +191,10 @@ class Cah(callbacks.Plugin):
             channel = self.channel
             try:
                 game = self
-                if game.roundRunning:
-                    game.roundRunning= False
+                if game.acceptingWhiteCards:
+                    game.acceptingWhiteCards = False
                     self._msg(channel, "Card Submittion Completed.")
+                    self._displayPlayedCards()
                     self.startcardvote()
                 else:
                     self_msg(channel, "No round active.")
@@ -193,7 +224,8 @@ class Cah(callbacks.Plugin):
                 #TODO: NOt quite done here
                 game = self
                 winner = self._tallyVotes(game.votes)
-                self._roundWinner(winner)
+                game.game.end_round(winner[0], self.cardsPlayed)
+                game._msg(self.channel, "%s wins the round!" % winner[0])
             except:
                 irc.reply("A Game is not running, or the time is not to vote.")
         ###### END VOTING LOGIC ######
@@ -238,7 +270,7 @@ class Cah(callbacks.Plugin):
                 else:
                     if len(game.players) < game.maxPlayers:
                         game.players.append(nick)
-                        irc.reply("Added, Spots left %d/%d, Current Players %s" % (game.maxPlayers - len(game.players), game.maxPlayers, ', '.join(game.players)))
+                        irc.reply("Added, Spots left %d/%d.  Current Players %s" % (game.maxPlayers - len(game.players), game.maxPlayers, ', '.join(game.players)))
                     else:
                         irc.reply("Too many players")
                 if len(game.players) > 1:
@@ -274,20 +306,39 @@ class Cah(callbacks.Plugin):
         else:
             irc.reply("Game not running.")
 
-    def card(self, irc, msg, args):
+    def playcard(self, irc, msg, args):
         channel = ircutils.toLower(msg.args[0])
+        nick = msg.nick
+        if channel in self.games:
+            game = self.games[channel]
+            if not nick in game.players:
+                irc.reply("You are not playing, GET OUT.")
+            elif not game.acceptingWhiteCards:
+                irc.reply("Not accepting white cards.")
+            elif nick in game.cardsPlayed:
+                irc.reply("You already played, GET OUT.")
+            elif len(args) < game.game.question.answers:
+                irc.reply("Hey shitbag I need more cards, this is a %s card question." % game.game.question.answers)
+            elif len(args) > game.game.question.answers:
+                if game.gane.question.answers == 1:
+                    irc.reply("I only want one card you idiot.")
+                irc.reply("Woah there tiger, I only need %s cards." % game.game.question.answers)
+            elif len(args) == game.game.question.answers:
+                game.playcard(nick, args)
+        else:
+            irc.reply("Game not running.")
         #TODO: Card decision logic
 
-    def votecard(self, irc, msg, args, vote):
+    def votecard(self, irc, msg, args):
         channel = ircutils.toLower(msg.args[0])
-        try:
+        if channel in self.games:
             game = self.games[channel]
             if msg.nick in game.voteskeys():
                 irc.reply("You already voted! This isn't Chicago!")
             else:
                 game.votes[msg.nick] = vote
-                irc.reply("Cote cast")
-        except:
+                irc.reply("vote cast")
+        else:
             irc.reply("A Game is not running, or the time is not to vote.")      
 
     ###### END CHANNEL COMMANDS ######
