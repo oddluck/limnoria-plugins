@@ -84,7 +84,7 @@ class Cah(callbacks.Plugin):
             self._msg(recip, response % cah.question.text)
 
         def _msgHandToPlayer(self, nick):
-            response = "Your cards: %s  Please respond with @playcard <number> [number]"
+            response = "Your cards: %s  Please respond with @playcard [channel if in pm] <number> [number]"
             enumeratedHand = []
             cah = self.game
             for position, card in enumerate(cah.players[nick].card_list):
@@ -159,7 +159,7 @@ class Cah(callbacks.Plugin):
             cardlist = []
             cards = cah.players[nick].card_list
             for cardNum in cardNumbers:
-                cardlist.append(cards[cardNum])
+                cardlist.append(cards[int(cardNum)])
             self.cardsPlayed[nick] = cardlist
             if len(self.cardsPlayed) == len.self(players):
                 try:
