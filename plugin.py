@@ -337,7 +337,7 @@ class Cah(callbacks.Plugin):
                 if msg.nick in game.votes.keys():
                     irc.reply("You already voted! This isn't Chicago!")
                 else:
-                    game.votes[msg.nick] = vote
+                    game.votes[msg.nick] = args[0]
                     irc.reply("vote cast")
             else:
                 irc.reply("Now is not the time to vote.")
