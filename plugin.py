@@ -334,7 +334,7 @@ class Cah(callbacks.Plugin):
         if channel in self.games:
             game = self.games[channel]
             if game.voting:
-                if msg.nick in game.voteskeys():
+                if msg.nick in game.votes.keys():
                     irc.reply("You already voted! This isn't Chicago!")
                 else:
                     game.votes[msg.nick] = vote
