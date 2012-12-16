@@ -159,7 +159,7 @@ class Cah(callbacks.Plugin):
             cardlist = []
             cards = cah.players[nick].card_list
             for cardNum in cardNumbers:
-                cardlist.append(cards[int(cardNum)])
+                cardlist.append(cards[int(cardNum) - 1])
             self.cardsPlayed[nick] = cardlist
             if len(self.cardsPlayed) == len(self.players):
                 try:
@@ -194,6 +194,7 @@ class Cah(callbacks.Plugin):
                 if game.acceptingWhiteCards:
                     game.acceptingWhiteCards = False
                     self._msg(channel, "Card Submittion Completed.")
+                    self._printBlackCard()
                     self._displayPlayedCards()
                     self.startcardvote()
                 else:
@@ -207,15 +208,13 @@ class Cah(callbacks.Plugin):
 
         def startcardvote(self):
             channel = self.channel
-            try:
-                game = self
-                game.votes = {}
-                self._printBlackCard(game)
-                self._printAnswers(game)
-                self._msg(channel, "Please Vote on your favorite. @votecard <number> to vote, the entire channel can vote.")
-                schedule.addEvent(self.stopcardvote, time.time() + 60, "vote_%s" % channel)
-            except:
-                self._msg(channel, "A Game is not running, or the time is not to vote.")
+          
+            game = self
+            game.votes = {}
+            game.voting = True
+            self._msg(channel, "Please Vote on your favorite. @votecard <number> to vote, the entire channel can vote.")
+            schedule.addEvent(self.stopcardvote, time.time() + 60, "vote_%s" % channel)
+            
 
 
 
@@ -226,6 +225,7 @@ class Cah(callbacks.Plugin):
                 winner = self._tallyVotes(game.votes)
                 game.game.end_round(winner[0], self.cardsPlayed)
                 game._msg(self.channel, "%s wins the round!" % winner[0])
+                game.nextround()
             except:
                 irc.reply("A Game is not running, or the time is not to vote.")
         ###### END VOTING LOGIC ######
@@ -333,11 +333,14 @@ class Cah(callbacks.Plugin):
         channel = ircutils.toLower(msg.args[0])
         if channel in self.games:
             game = self.games[channel]
-            if msg.nick in game.voteskeys():
-                irc.reply("You already voted! This isn't Chicago!")
+            if game.voting:
+                if msg.nick in game.voteskeys():
+                    irc.reply("You already voted! This isn't Chicago!")
+                else:
+                    game.votes[msg.nick] = vote
+                    irc.reply("vote cast")
             else:
-                game.votes[msg.nick] = vote
-                irc.reply("vote cast")
+                irc.reply("Now is not the time to vote.")
         else:
             irc.reply("A Game is not running, or the time is not to vote.")      
 
