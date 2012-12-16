@@ -219,15 +219,15 @@ class Cah(callbacks.Plugin):
 
 
         def stopcardvote(self):
-            try:
-                #TODO: NOt quite done here
+            
+            #TODO: NOt quite done here
+            if self.voting:
                 game = self
                 winner = self._tallyVotes(game.votes)
                 game.game.end_round(winner[0], self.cardsPlayed)
                 game._msg(self.channel, "%s wins the round!" % winner[0])
                 game.nextround()
-            except:
-                irc.reply("A Game is not running, or the time is not to vote.")
+         
         ###### END VOTING LOGIC ######
 
         def close(self):
