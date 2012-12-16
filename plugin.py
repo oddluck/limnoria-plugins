@@ -157,12 +157,6 @@ class Cah(callbacks.Plugin):
                 print e
                 pass
 
-
-
-        def card(self):
-            channel = ircutils.toLower(msg.args[0])
-            #TODO: Card decision logic
-
         def endround(self):
             channel = self.channel
             try:
@@ -178,7 +172,7 @@ class Cah(callbacks.Plugin):
 
         ###### END GAME LOGIC #########
 
-    ###### VOTING ##############
+        ###### VOTING ##############
 
         def startcardvote(self):
             channel = self.channel
@@ -280,6 +274,9 @@ class Cah(callbacks.Plugin):
         else:
             irc.reply("Game not running.")
 
+    def card(self, irc, msg, args):
+        channel = ircutils.toLower(msg.args[0])
+        #TODO: Card decision logic
 
     def votecard(self, irc, msg, args, vote):
         channel = ircutils.toLower(msg.args[0])
