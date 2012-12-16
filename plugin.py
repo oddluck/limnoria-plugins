@@ -161,7 +161,7 @@ class Cah(callbacks.Plugin):
             for cardNum in cardNumbers:
                 cardlist.append(cards[int(cardNum)])
             self.cardsPlayed[nick] = cardlist
-            if len(self.cardsPlayed) == len.self(self.players):
+            if len(self.cardsPlayed) == len(self.players):
                 try:
                     schedule.removeEvent("round_%s" % self.channel)
                 except:
