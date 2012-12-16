@@ -131,7 +131,7 @@ class Cah(callbacks.Plugin):
                     #TODO: WAT?
                     pass
 
-                return (winningCanidate, False)
+            return winningCanidate
         ###### END UTIL METHODS #######
 
         ###### PRE GAME LOGIC ########
