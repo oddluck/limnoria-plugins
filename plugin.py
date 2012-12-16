@@ -185,6 +185,7 @@ class Cah(callbacks.Plugin):
                 schedule.addEvent(self.endround, time.time() + 60, "round_%s" % channel)
             except Exception as e:
                 #TODO: add no more round logic
+                self._msg(channel, "TODO END GAME LOGIC.")
                 print e
                 pass
 
@@ -223,9 +224,9 @@ class Cah(callbacks.Plugin):
             
             #TODO: NOt quite done here
             if self.voting:
+                game = self
                 game.votes = {}
                 game.voting = False
-                game = self
                 winner = self._tallyVotes(game.votes)
                 game.game.end_round(winner[0], self.cardsPlayed)
                 game._msg(self.channel, "%s wins the round!" % winner[0])
