@@ -173,6 +173,7 @@ class Cah(callbacks.Plugin):
             game = self
             cah = game.game
             try:
+                self.cardsPlayed = {}
                 cah.next_round()
                 #Print Black Card to channel.
                 self._printBlackCard(self.channel)
@@ -222,6 +223,8 @@ class Cah(callbacks.Plugin):
             
             #TODO: NOt quite done here
             if self.voting:
+                game.votes = {}
+                game.voting = False
                 game = self
                 winner = self._tallyVotes(game.votes)
                 game.game.end_round(winner[0], self.cardsPlayed)
