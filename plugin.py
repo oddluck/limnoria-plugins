@@ -194,7 +194,7 @@ class Cah(callbacks.Plugin):
                 if game.acceptingWhiteCards:
                     game.acceptingWhiteCards = False
                     self._msg(channel, "Card Submittion Completed.")
-                    self._printBlackCard()
+                    self._printBlackCard(channel)
                     self._displayPlayedCards()
                     self.startcardvote()
                 else:
