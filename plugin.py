@@ -90,7 +90,7 @@ class Cah(callbacks.Plugin):
             for position, card in enumerate(cah.players[nick].card_list):
                 enumeratedHand.append("%s: %s " % (position + 1, ircutils.bold(card.text)))
             self._printBlackCard(nick)
-            self._msg(nick, response % ', '.join(enumeratedHand))
+            self._msg(nick, ircutils.mircColor(response % ', '.join(enumeratedHand), bg="white", fg="black"))
 
         def _displayPlayedCards(self):
             channel = self.channel
@@ -178,14 +178,19 @@ class Cah(callbacks.Plugin):
                 self.acceptingWhiteCards = True
                 #TODO: do we need a round flag?
                 schedule.addEvent(self.endround, time.time() + 60, "round_%s" % channel)
-            except Exception as e:
+            except Exception:
                 #TODO: add no more round logic
-
-                playerScores = sorted(cah.score.iteritems(), key=operator.itemgetter(1), reverse=True)
-                scores = []
-                for name, score in playerScores.iteritems():
+                scores = cah.score
+                #playerScores = sorted(cah.score.iteritems(), key=operator.itemgetter(1), reverse=True)
+                #scores = []
+                winner = None
+                for name, score in scores.iteritems():
+                    if winner == None:
+                        winner = (name, score)
+                    elif winner[1] < score:
+                        winner = (name, score)
                     scores.append("%s: %d" % (name, score))
-                self.msg(channel, "Game Over! Scores: %s " % ", ".join(scores))
+                self.msg(channel, "Game Over! %s is the Winner!  Scores: %s " % (winner[0], ", ".join(scores)))
 
         def endround(self):
             channel = self.channel
@@ -227,9 +232,9 @@ class Cah(callbacks.Plugin):
                 game.voting = False
                 winner = self._tallyVotes(game.votes)
                 print winner
-                game.game.end_round(winner[0][0], self.cardsPlayed)
+                filledCard = game.game.end_round(winner[0][0], self.cardsPlayed)
                 game.voted = []
-                game._msg(self.channel, "%s wins the round!" % winner[0][0])
+                game._msg(self.channel, "%s wins the round with %s" % (ircutils.bold(winner[0][0]), ircutils.bold(filledCard)))
                 game.nextround()
          
         ###### END VOTING LOGIC ######
@@ -295,7 +300,7 @@ class Cah(callbacks.Plugin):
         if channel in self.games:
             irc.reply("There is a game running currently.")
         else:
-            irc.reply("Who wants to play Cards Aganst Humanity? To play reply with: @playing", prefixNick=False)
+            irc.reply("Who wants to play IRC Aganst Humanity? To play reply with: @playing", prefixNick=False)
             self.games[channel] = self.CahGame(irc, channel, numrounds)
             self.games[channel].initGame()
             
