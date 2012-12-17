@@ -232,9 +232,10 @@ class Cah(callbacks.Plugin):
                 game.voting = False
                 winner = self._tallyVotes(game.votes)
                 print winner
-                filledCard = game.game.end_round(winner[0][0], self.cardsPlayed)
+                game.game.end_round(winner[0][0], self.cardsPlayed)
                 game.voted = []
-                game._msg(self.channel, "%s wins the round with %s" % (ircutils.bold(winner[0][0]), ircutils.bold(filledCard)))
+                game._msg(self.channel, "%s wins the round!" % ircutils.bold(winner[0][0]))
+                #game._msg(self.channel, "%s wins the round with %s" % (ircutils.bold(winner[0][0]), ircutils.bold(filledCard)))
                 game.nextround()
          
         ###### END VOTING LOGIC ######
