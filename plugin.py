@@ -112,7 +112,7 @@ class Cah(callbacks.Plugin):
                 canidatesById.append(nick)
 
             for canidateNumber, count in votes.iteritems():
-                canidate = canidatesById[canidateNumber]
+                canidate = canidatesById[int(canidateNumber)]
                 if len(winningCanidate) == 0:
                     winningCanidate.append((canidate, count))
                 elif winningCanidate[0][1] < count:
@@ -122,7 +122,7 @@ class Cah(callbacks.Plugin):
                     winningCanidate.append((canidate, count))
 
             if len(winningCanidate) > 0:
-                return (winningCanidate[randint(0, len(ties) -1)], True)
+                return (winningCanidate[randint(0, len(winningCanidate) -1)], True)
             return (winningCanidate[0], False)
                 
 
