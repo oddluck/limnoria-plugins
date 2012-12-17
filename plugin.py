@@ -180,9 +180,12 @@ class Cah(callbacks.Plugin):
                 schedule.addEvent(self.endround, time.time() + 60, "round_%s" % channel)
             except Exception as e:
                 #TODO: add no more round logic
-                self._msg(channel, "TODO END GAME LOGIC.")
-                print e
-                pass
+
+                playerScores = sorted(cah.score.iteritems(), key=operator.itemgetter(1), reverse=True)
+                scores = []
+                for name, score in playerScores.iteritems():
+                    scores.append("%s: %d" % (name, score))
+                self.msg(channel, "Game Over! Scores: %s " % ", ".join(scores))
 
         def endround(self):
             channel = self.channel
