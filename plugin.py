@@ -221,7 +221,6 @@ class Cah(callbacks.Plugin):
             #TODO: NOt quite done here
             if self.voting:
                 game = self
-                game.votes = {}
                 game.voting = False
                 winner = self._tallyVotes(game.votes)
                 print winner
