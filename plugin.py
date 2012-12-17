@@ -105,17 +105,14 @@ class Cah(callbacks.Plugin):
             self._msg(channel, "Played White cards: %s" % response)
 
         def _tallyVotes(self, votes):
-            talliedVotes = {}
-            for vote in votes.items():
-                try:
-                    talliedVotes[vote] += 1
-                except KeyError:
-                    talliedVotes[vote] = 1
-            #find ties
-
             ties = []
             winningCanidate = None
-            for canidate, count in votes.iteritems():
+            canidatesById = []
+            for nick in self.cardsPlayed.keys():
+                canidatesById.append(nick)
+
+            for canidateNumber, count in votes.iteritems():
+                canidate = canidatesById[canidateNumber]
                 if winningCanidate == None:
                     winningCanidate = (canidate, count)
                 elif winningCanidate[1] < count:
@@ -211,6 +208,7 @@ class Cah(callbacks.Plugin):
           
             game = self
             game.votes = {}
+            game.voted = []
             game.voting = True
             self._msg(channel, "Please Vote on your favorite. @votecard <number> to vote, the entire channel can vote.")
             schedule.addEvent(self.stopcardvote, time.time() + 60, "vote_%s" % channel)
@@ -228,6 +226,7 @@ class Cah(callbacks.Plugin):
                 winner = self._tallyVotes(game.votes)
                 print winner
                 game.game.end_round(winner[0][0], self.cardsPlayed)
+                game.voted = []
                 game._msg(self.channel, "%s wins the round!" % winner[0][0])
                 game.nextround()
          
@@ -336,17 +335,26 @@ class Cah(callbacks.Plugin):
         channel = ircutils.toLower(msg.args[0])
         if channel in self.games:
             game = self.games[channel]
-            if game.voting:
-                if msg.nick in game.votes.keys():
-                    irc.reply("You already voted! This isn't Chicago!")
-                else:
-                    game.votes[msg.nick] = args[0]
-                    irc.reply("vote cast")
-            else:
-                irc.reply("Now is not the time to vote.")
+            try:
+                vote = int(args[0])
+                if game.voting:
+                    if msg.nick in game.voted:
+                        irc.reply("You already voted! This isn't Chicago!")
+                    elif vote > game.cardsPlayed:
+                        raise ValueError 
+                    else:
+                        game.voted.append(msg.nick)
+                        try:
+                            game.votes[vote - 1] += 1
+                        except KeyError:
+                            game.votes[vote - 1] = 1
+                        irc.reply("vote cast")
+                    else:
+                        irc.reply("Now is not the time to vote.")   
+            except ValueError:
+                irc.reply("I need a value between 1 and %s" % len(game.cardsPlayed))    
         else:
-            irc.reply("A Game is not running, or the time is not to vote.")      
-
+            irc.reply("A Game is not running, or the time is not to vote.")
     ###### END CHANNEL COMMANDS ######
 
     
