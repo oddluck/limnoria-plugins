@@ -349,8 +349,6 @@ class Cah(callbacks.Plugin):
                         except KeyError:
                             game.votes[vote - 1] = 1
                         irc.reply("vote cast")
-                    else:
-                        irc.reply("Now is not the time to vote.")   
             except ValueError:
                 irc.reply("I need a value between 1 and %s" % len(game.cardsPlayed))    
         else:
