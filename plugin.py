@@ -114,9 +114,9 @@ class Cah(callbacks.Plugin):
             for canidateNumber, count in votes.iteritems():
                 canidate = canidatesById[canidateNumber]
                 if len(winningCanidate) == None:
-                    winningCanidate = [(canidate, count)]
+                    winningCanidate = [(canidate, count), ]
                 elif winningCanidate[0][1] < count:
-                    winningCanidate = ((canidate, count)]
+                    winningCanidate = ((canidate, count), ]
                 elif winningCanidate[0][1] == count:
                     winningCanidate.append((canidate, count))
 
