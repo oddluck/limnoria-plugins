@@ -81,7 +81,7 @@ class Cah(callbacks.Plugin):
         def _printBlackCard(self, recip):
             response = "Question: %s"
             cah = self.game
-            self._msg(recip, response % cah.question.text)
+            self._msg(recip, ircutils.mirccolor(response % cah.question.text, bg="black", fg="white"))
 
         def _msgHandToPlayer(self, nick):
             response = "Your cards: %s  Please respond with @playcard [channel if in pm] <number> [number]"
@@ -117,21 +117,19 @@ class Cah(callbacks.Plugin):
             winningCanidate = None
             for canidate, count in votes.iteritems():
                 if winningCanidate == None:
-                    winningCanidate = (canidate, votes)
+                    winningCanidate = (canidate, count)
                 elif winningCanidate[1] < count:
-                    winningCanidate = (canidate, votes)
+                    winningCanidate = (canidate, count)
                     ties = []
                 elif winningCanidate[1] == count:
                     if len(ties) == 0:
                         ties.append(winningCanidate)
-                    ties.append((canidate, votes))
-                if len(ties) > 0:
-                    return (ties[randint(0, len(ties) -1)], true)
-                else:
-                    #TODO: WAT?
-                    pass
+                    ties.append((canidate, count))
+            if len(ties) > 0:
+                return (ties[randint(0, len(ties) -1)], True)
+            return (winningCanidate, False)
+                
 
-            return winningCanidate
         ###### END UTIL METHODS #######
 
         ###### PRE GAME LOGIC ########
@@ -229,7 +227,7 @@ class Cah(callbacks.Plugin):
                 game.voting = False
                 winner = self._tallyVotes(game.votes)
                 game.game.end_round(winner[0], self.cardsPlayed)
-                game._msg(self.channel, "%s wins the round!" % winner[0])
+                game._msg(self.channel, "%s wins the round!" % winner[0][0])
                 game.nextround()
          
         ###### END VOTING LOGIC ######
