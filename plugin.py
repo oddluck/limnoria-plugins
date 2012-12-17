@@ -106,17 +106,18 @@ class Cah(callbacks.Plugin):
 
         def _tallyVotes(self, votes):
             ties = []
-            winningCanidate = None
+            winningCanidate = []
             canidatesById = []
             for nick in self.cardsPlayed.keys():
                 canidatesById.append(nick)
 
             for canidateNumber, count in votes.iteritems():
                 canidate = canidatesById[canidateNumber]
-                if len(winningCanidate) == None:
-                    winningCanidate = [(canidate, count), ]
+                if len(winningCanidate) == 0:
+                    winningCanidate.append(canidate, count))
                 elif winningCanidate[0][1] < count:
-                    winningCanidate = ((canidate, count), ]
+                    winningCanidate = []
+                    winningCanidate.append((canidate, count))
                 elif winningCanidate[0][1] == count:
                     winningCanidate.append((canidate, count))
 
