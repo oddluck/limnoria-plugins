@@ -226,7 +226,8 @@ class Cah(callbacks.Plugin):
                 game.votes = {}
                 game.voting = False
                 winner = self._tallyVotes(game.votes)
-                game.game.end_round(winner[0], self.cardsPlayed)
+                print winner
+                game.game.end_round(winner[0][0], self.cardsPlayed)
                 game._msg(self.channel, "%s wins the round!" % winner[0][0])
                 game.nextround()
          
