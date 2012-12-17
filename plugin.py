@@ -184,13 +184,14 @@ class Cah(callbacks.Plugin):
                 #playerScores = sorted(cah.score.iteritems(), key=operator.itemgetter(1), reverse=True)
                 #scores = []
                 winner = None
+                formattedScores = {}
                 for name, score in scores.iteritems():
                     if winner == None:
                         winner = (name, score)
                     elif winner[1] < score:
                         winner = (name, score)
-                    scores.append("%s: %d" % (name, score))
-                self.msg(channel, "Game Over! %s is the Winner!  Scores: %s " % (winner[0], ", ".join(scores)))
+                    formattedScores.append("%s: %d" % (name, score))
+                self.msg(channel, "Game Over! %s is the Winner!  Scores: %s " % (winner[0], ", ".join(formattedScores)))
 
         def endround(self):
             channel = self.channel
