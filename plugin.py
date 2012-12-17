@@ -81,7 +81,7 @@ class Cah(callbacks.Plugin):
         def _printBlackCard(self, recip):
             response = "Question: %s"
             cah = self.game
-            self._msg(recip, ircutils.mirccolor(response % cah.question.text, bg="black", fg="white"))
+            self._msg(recip, ircutils.mircColor(response % cah.question.text, bg="black", fg="white"))
 
         def _msgHandToPlayer(self, nick):
             response = "Your cards: %s  Please respond with @playcard [channel if in pm] <number> [number]"
