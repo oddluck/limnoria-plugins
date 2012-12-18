@@ -297,7 +297,7 @@ class Cah(callbacks.Plugin):
         if len(args) < 1:
             numrounds = 5
         else:
-            numrounds = args[0]
+            numrounds = int(args[0])
 
         if channel in self.games:
             irc.reply("There is a game running currently.")
@@ -349,7 +349,7 @@ class Cah(callbacks.Plugin):
                 if game.voting:
                     if msg.nick in game.voted:
                         irc.reply("You already voted! This isn't Chicago!")
-                    elif vote > game.cardsPlayed:
+                    elif vote > len(game.cardsPlayed):
                         raise ValueError 
                     else:
                         game.voted.append(msg.nick)
