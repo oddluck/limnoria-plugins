@@ -184,7 +184,7 @@ class Cah(callbacks.Plugin):
                 #playerScores = sorted(cah.score.iteritems(), key=operator.itemgetter(1), reverse=True)
                 #scores = []
                 winner = None
-                formattedScores = {}
+                formattedScores = []
                 for name, score in scores.iteritems():
                     if winner == None:
                         winner = (name, score)
