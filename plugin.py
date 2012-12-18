@@ -104,6 +104,22 @@ class Cah(callbacks.Plugin):
             response = ";  ".join(responses)
             self._msg(channel, "Played White cards: %s" % response)
 
+        def _findHighScore(self, scores):
+            highscore = []
+            for nick, score in scores.iteritems():
+                if len(highscore) == 0:
+                    highscore.append([nick, score])
+                elif highscore[0][1] < score:
+                    highscore = []
+                    highscore.append([nick, score])
+                elif highscore[0][1] == score:
+                    highscore.append([nick, score])
+            if len(highscore) > 0:
+                return (highscore[randint(0, len(highscore) -1)], True)
+            else:
+                return (highscore[0], False)
+
+
         def _tallyVotes(self, votes):
             ties = []
             winningCanidate = []
@@ -185,7 +201,7 @@ class Cah(callbacks.Plugin):
                 #scores = []
                 winner = None
                 formattedScores = []
-                winner = self._tallyVotes(cah.score)
+                winner = self._findHighScore(cah.score)
                 for name, score in cah.score.iteritems():
                     formattedScores.append("%s: %d" % (name, score))
                 self.msg(channel, "Game Over! %s is the Winner!  Scores: %s " % (winner[0][0], ", ".join(formattedScores)))
