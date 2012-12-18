@@ -362,6 +362,21 @@ class Cah(callbacks.Plugin):
                 irc.reply("I need a value between 1 and %s" % len(game.cardsPlayed))    
         else:
             irc.reply("A Game is not running, or the time is not to vote.")
+    
+    ####DEBUG VOTING REMOVE LATER#####
+    # TODO: REMOVE THIS DEBUG CODE   # 
+    def endvote(self, irc, msg, args):
+        channel = ircutils.toLower(msg.args[0])
+        if channel in self.games:
+            try:
+                schedule.removeEvent("vote_%s" % self.channel)
+            except:
+                pass
+            self.endvote()
+        else:
+            irc.reply("Game not running.")
+
+
     ###### END CHANNEL COMMANDS ######
 
     
