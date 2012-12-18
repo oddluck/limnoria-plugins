@@ -180,18 +180,16 @@ class Cah(callbacks.Plugin):
                 schedule.addEvent(self.endround, time.time() + 60, "round_%s" % channel)
             except Exception:
                 #TODO: add no more round logic
-                scores = cah.score
+                
                 #playerScores = sorted(cah.score.iteritems(), key=operator.itemgetter(1), reverse=True)
                 #scores = []
                 winner = None
                 formattedScores = []
-                for name, score in scores.iteritems():
-                    if winner == None:
-                        winner = (name, score)
-                    elif winner[1] < score:
-                        winner = (name, score)
+                winner = _tallyVotes(cah.score)
+                for name, score in cah.score.iteritems():
                     formattedScores.append("%s: %d" % (name, score))
-                self.msg(channel, "Game Over! %s is the Winner!  Scores: %s " % (winner[0], ", ".join(formattedScores)))
+                self.msg(channel, "Game Over! %s is the Winner!  Scores: %s " % (winner[0][0], ", ".join(formattedScores)))
+
 
         def endround(self):
             channel = self.channel
@@ -372,7 +370,7 @@ class Cah(callbacks.Plugin):
                 schedule.removeEvent("vote_%s" % self.channel)
             except:
                 pass
-            self.endvote()
+            self.games[channel].endvote()
         else:
             irc.reply("Game not running.")
 
