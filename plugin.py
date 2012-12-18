@@ -185,7 +185,7 @@ class Cah(callbacks.Plugin):
                 #scores = []
                 winner = None
                 formattedScores = []
-                winner = _tallyVotes(cah.score)
+                winner = self._tallyVotes(cah.score)
                 for name, score in cah.score.iteritems():
                     formattedScores.append("%s: %d" % (name, score))
                 self.msg(channel, "Game Over! %s is the Winner!  Scores: %s " % (winner[0][0], ", ".join(formattedScores)))
