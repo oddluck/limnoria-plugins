@@ -205,7 +205,7 @@ class Cah(callbacks.Plugin):
                 winner = self._findHighScore(cah.score)
                 for name, score in cah.score.iteritems():
                     formattedScores.append("%s: %d" % (name, score))
-                self.msg(channel, "Game Over! %s is the Winner!  Scores: %s " % (winner[0][0], ", ".join(formattedScores)))
+                self._msg(channel, "Game Over! %s is the Winner!  Scores: %s " % (winner[0][0], ", ".join(formattedScores)))
 
 
         def endround(self):
