@@ -201,6 +201,7 @@ class Cah(callbacks.Plugin):
                 #scores = []
                 winner = None
                 formattedScores = []
+                print cah.score
                 winner = self._findHighScore(cah.score)
                 for name, score in cah.score.iteritems():
                     formattedScores.append("%s: %d" % (name, score))
