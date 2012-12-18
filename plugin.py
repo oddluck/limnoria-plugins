@@ -349,7 +349,7 @@ class Cah(callbacks.Plugin):
                 if game.voting:
                     if msg.nick in game.voted:
                         irc.reply("You already voted! This isn't Chicago!")
-                    elif vote > len(game.cardsPlayed):
+                    elif vote > len(game.cardsPlayed) or vote < 1:
                         raise ValueError 
                     else:
                         game.voted.append(msg.nick)
