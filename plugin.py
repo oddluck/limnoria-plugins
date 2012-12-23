@@ -283,13 +283,6 @@ class Tweety(callbacks.Plugin):
             req = urllib2.Request(req_url, headers={'User-Agent': 'Python-longurl/1.0'})
             lookup = json.loads(urllib2.urlopen(req).read())
             return lookup.get('long-url', None)
-        except urllib2.HTTPError as e:
-            self.log.debug('http error {0} when trying to shorten {1}'.format(e, qurl)
-            return None
-        except urllib2.URLError as e:
-            self.log.debug('http error {0} when trying to shorten {1}'.format(e, qurl)
-            return None
-
                                 
     #def re_encode(input_string, decoder = 'utf-8', encoder = 'utf=8'):   
         #try:
