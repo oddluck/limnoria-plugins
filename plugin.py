@@ -278,11 +278,10 @@ class Tweety(callbacks.Plugin):
     def _expandLinks(self, tweet):
         # if not surl.startswith('http://') and not surl.startswith('https://'):
         _tco_link_re = re.compile(u'http://t.co/[a-zA-Z0-9]+')
-        try:
-            req_url = 'http://api.longurl.org/v2/expand?format=json&url=' + qurl
-            req = urllib2.Request(req_url, headers={'User-Agent': 'Python-longurl/1.0'})
-            lookup = json.loads(urllib2.urlopen(req).read())
-            return lookup.get('long-url', None)
+        req_url = 'http://api.longurl.org/v2/expand?format=json&url=' + qurl
+        req = urllib2.Request(req_url, headers={'User-Agent': 'Python-longurl/1.0'})
+        lookup = json.loads(urllib2.urlopen(req).read())
+        return lookup.get('long-url', None)
                                 
     #def re_encode(input_string, decoder = 'utf-8', encoder = 'utf=8'):   
         #try:
