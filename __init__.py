@@ -29,8 +29,7 @@
 ###
 
 """
-Add a description of the plugin (to be presented to the user inside the wizard)
-here.  This should describe *what* the plugin does.
+An advanced trivia script for all to use.
 """
 
 import supybot
@@ -38,10 +37,11 @@ import supybot.world as world
 
 # Use this for the version of this plugin.  You may wish to put a CVS keyword
 # in here if you're keeping the plugin in CVS or some similar system.
-__version__ = ""
+__version__ = "0.1"
 
 # XXX Replace this with an appropriate author or supybot.Author instance.
-__author__ = supybot.authors.unknown
+__author__ = supybot.Author('Tanner', 'tann',
+                                'tann@trivialand.org')
 
 # This is a dictionary mapping supybot.Author instances to lists of
 # contributions.

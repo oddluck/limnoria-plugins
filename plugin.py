@@ -33,11 +33,11 @@ from supybot.commands import *
 import supybot.plugins as plugins
 import supybot.ircutils as ircutils
 import supybot.callbacks as callbacks
+import random
 
 
 class TriviaTime(callbacks.Plugin):
-    """Add the help for "@plugin help TriviaTime" here
-    This should describe *how* to use this plugin."""
+    """This plugin is an advanced trivia game. Currently, there are no commands."""
     threaded = True
 
 
