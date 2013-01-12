@@ -51,25 +51,6 @@ import supybot.plugins as plugins
 import supybot.ircutils as ircutils
 import supybot.callbacks as callbacks
 
-# Twitter error classes from the sixohsix/Twitter API.
-class TwitterError(Exception):
-    """Base Exception thrown by the Twitter object when there is a general error interacting with the API."""
-    pass
-
-class TwitterHTTPError(TwitterError):
-    """Exception thrown by the Twitter object when there is an HTTP error interacting with twitter.com."""
-    def __init__(self, e, uri, format, uriparts):
-      self.e = e
-      self.uri = uri
-      self.format = format
-      self.uriparts = uriparts
-
-    def __str__(self):
-        return (
-            "Twitter sent status %i for URL: %s.%s using parameters: "
-            "(%s)\ndetails: %s" %(
-                self.e.code, self.uri, self.format, self.uriparts,
-                self.e.fp.read()))
 
 # OAuthApi class from https://github.com/jpittman/OAuth-Python-Twitter
 # mainly kept intact but modified for Twitter API v1.1 and unncessary things removed. 
@@ -119,10 +100,7 @@ class OAuthApi:
         try:
             data = self._FetchUrl("https://api.twitter.com/1.1/" + call + ".json", type, parameters)
         except urllib2.HTTPError, e:
-            if (e.code == 304):
-                return []
-            else:
-                raise TwitterHTTPError(e, uri, self.format, arg_data)
+            return e
         except urllib2.URLError, e:
             return e
         else:
@@ -144,12 +122,12 @@ class Tweety(callbacks.Plugin):
     def __init__(self, irc):
         self.__parent = super(Tweety, self)
         self.__parent.__init__(irc)
-        self.twitter = False
-        if not self.twitter:
+        self.twitterApi = False
+        if not self.twitterApi:
             self._checkAuthorization()
 
     def _checkAuthorization(self):
-        if not self.twitter:
+        if not self.twitterApi:
             failTest = False
             for checkKey in ('consumerKey', 'consumerSecret', 'accessKey', 'accessSecret'):
                 try:
@@ -164,8 +142,8 @@ class Tweety(callbacks.Plugin):
                 return False
         
             self.log.info("Got all 4 keys. Now trying to auth up with Twitter.")
-            twitter = OAuthApi(self.registryValue('consumerKey'), self.registryValue('consumerSecret'), self.registryValue('accessKey'), self.registryValue('accessSecret'))
-            data = twitter.ApiCall('account/verify_credentials')
+            twitterApi = OAuthApi(self.registryValue('consumerKey'), self.registryValue('consumerSecret'), self.registryValue('accessKey'), self.registryValue('accessSecret'))
+            data = twitterApi.ApiCall('account/verify_credentials')
             
             try:
                 testjson = json.loads(data)
@@ -175,21 +153,9 @@ class Tweety(callbacks.Plugin):
                 
             if testjson:
                 self.log.info("I have successfully authorized and logged in to Twitter using your credentials.")
-                self.twitter = OAuthApi(self.registryValue('consumerKey'), self.registryValue('consumerSecret'), self.registryValue('accessKey'), self.registryValue('accessSecret'))
+                self.twitterApi = OAuthApi(self.registryValue('consumerKey'), self.registryValue('consumerSecret'), self.registryValue('accessKey'), self.registryValue('accessSecret'))
         else:
             pass
-
-    def _strip_accents(string):
-        import unicodedata
-        return unicodedata.normalize('NFKD', unicode(string)).encode('ASCII', 'ignore')
-
-    def _convert_to_utf8_str(arg):
-        # written by Michael Norton (http://docondev.blogspot.com/)
-        if isinstance(arg, unicode):
-            arg = arg.encode('utf-8')
-        elif not isinstance(arg, str):
-            arg = str(arg)
-        return arg
 
     def _unescape(self, text):
         """Created by Fredrik Lundh (http://effbot.org/zone/re-sub.htm#unescape-html)"""
@@ -337,12 +303,15 @@ class Tweety(callbacks.Plugin):
     # https://dev.twitter.com/docs/api/1.1/get/application/rate_limit_status
     # https://dev.twitter.com/docs/rate-limiting/1.1
     # https://dev.twitter.com/docs/rate-limiting/1.1/limits    
+    #< X-Rate-Limit-Limit: 15
+    #< X-Rate-Limit-Remaining: 13
+    #< X-Rate-Limit-Reset: 1357963140 / time.now()
     def ratelimits(self, irc, msg, args):
         """
         Display current rate limits for your twitter API account.
         """
         
-        data = self.twitter.ApiCall('application/rate_limit_status') #, parameters={'resources':optstatus})
+        data = self.twitterApi.ApiCall('application/rate_limit_status') #, parameters={'resources':optstatus})
         
         try:
             data = json.loads(data)
@@ -369,15 +338,11 @@ class Tweety(callbacks.Plugin):
         
     ratelimits = wrap(ratelimits)
 
-    #< X-Rate-Limit-Limit: 15
-    #< X-Rate-Limit-Remaining: 13
-    #< X-Rate-Limit-Reset: 1357963140 / time.now()
 
 
-
-    # https://dev.twitter.com/docs/api/1.1/get/trends/place
     def trends(self, irc, msg, args, getopts, optwoeid):
-        """<location>
+        """[--exclude] <location>
+        
         Returns the Top 10 Twitter trends for a specific location. 
         Use optional argument location for trends. Ex: trends Boston
         Use --exclude to not include #hashtags in trends data.
@@ -395,7 +360,7 @@ class Tweety(callbacks.Plugin):
             if woeid:
                 args['id'] = woeid
                   
-        data = self.twitter.ApiCall('trends/place', parameters=args)
+        data = self.twitterApi.ApiCall('trends/place', parameters=args)
         try:
             data = json.loads(data)
         except:
@@ -414,10 +379,8 @@ class Tweety(callbacks.Plugin):
 
     trends = wrap(trends, [getopts({'exclude':''}), optional('text')])
     
-
-    # https://dev.twitter.com/docs/api/1.1/get/search/tweets
     def tsearch(self, irc, msg, args, optlist, optterm):
-        """ [--num number] [--searchtype mixed,recent,popular] [--lang xx] <term>
+        """[--num number] [--searchtype mixed,recent,popular] [--lang xx] <term>
 
         Searches Twitter for the <term> and returns the most recent results.
         Number is number of results. Must be a number higher than 0 and max 10.
@@ -440,16 +403,11 @@ class Tweety(callbacks.Plugin):
                 if key == 'lang': # lang . Uses ISO-639 codes like 'en' http://en.wikipedia.org/wiki/ISO_639-1
                     tsearchArgs['lang'] = value 
 
+        data = self.twitterApi.ApiCall('search/tweets', parameters=tsearchArgs)
         try:
-            twitter = OAuthApi(self.registryValue('consumerKey'), self.registryValue('consumerSecret'), self.registryValue('accessKey'), self.registryValue('accessSecret'))
+            data = json.loads(data)
         except:
-            irc.reply("Failed to authorize with twitter.")
-            return
-        
-        try:        
-            data = twitter.ApiCall('search/tweets', parameters=tsearchArgs)
-        except:
-            irc.reply("Failed to get search results. Twitter broken?")
+            irc.reply("Failed to lookup Twitter search. Something might have gone wrong. DATA: %s" % data)
             return
             
         results = data.get('statuses', None) # data returned as a dict 
@@ -469,9 +427,6 @@ class Tweety(callbacks.Plugin):
     tsearch = wrap(tsearch, [getopts({'num':('int'), 'searchtype':('literal', ('popular', 'mixed', 'recent')), 'lang':('somethingWithoutSpaces')}), ('text')])
 
 
-    # INFO https://dev.twitter.com/docs/api/1.1/get/users/show
-    # ID https://dev.twitter.com/docs/api/1.1/get/statuses/show/%3Aid
-    # TIMELINE https://dev.twitter.com/docs/api/1.1/get/statuses/user_timeline
     def twitter(self, irc, msg, args, optlist, optnick):
         """[--noreply] [--nort] [--num number] <nick> | <--id id> | [--info nick]
 
@@ -524,16 +479,11 @@ class Tweety(callbacks.Plugin):
                 twitterArgs['exclude_replies'] = 'false'
 
         # now with and call the api.
+        data = self.twitterApi.ApiCall(apiUrl, parameters=twitterArgs)
         try:
-            twitter = OAuthApi(self.registryValue('consumerKey'), self.registryValue('consumerSecret'), self.registryValue('accessKey'), self.registryValue('accessSecret'))
+            data = json.loads(data)
         except:
-            irc.reply("Failed to authorize with twitter.")
-            return
-        
-        try:        
-            data = twitter.ApiCall(apiUrl, parameters=twitterArgs)
-        except:
-            irc.reply("Failed to get user's timeline. Twitter broken?")
+            irc.reply("Failed to lookup Twitter data. Something might have gone wrong. DATA: %s" % data)
             return
        
         # process the data. 
@@ -545,8 +495,6 @@ class Tweety(callbacks.Plugin):
             tweetid = data.get('id', None)
             self._outputTweet(irc, msg, nick.encode('utf-8'), name.encode('utf-8'), text.encode('utf-8'), relativeTime, tweetid)
             return
-
-        
         elif args['info']: # Works with --info to return info on a Twitter user.
             location = data.get('location', None)
             followers = data.get('followers_count', None)
@@ -572,7 +520,6 @@ class Tweety(callbacks.Plugin):
             
             irc.reply(ret)
             return
-
         else: # Else, its the user's timeline. Count is handled above in the GET request. 
             if len(data) == 0:
                 irc.reply("User: {0} has not tweeted yet.".format(optnick))
