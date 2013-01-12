@@ -1,6 +1,6 @@
-# coding=utf8
+# -*- coding: utf-8 -*-
 ###
-# Copyright (c) 2011-2012, Terje Hoås, spline
+# Copyright (c) 2011-2013, Terje Hoås, spline
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -29,38 +29,50 @@
 
 ###
 
+# my libs
 import urllib, urllib2
 import json
-import datetime
 import string
+# libraries for time_created_at
+import time
+from datetime import tzinfo, datetime, timedelta
+# for unescape
+import re, htmlentitydefs
+# reencode
+import unicodedata
+# oauthtwitter
+import urlparse
+import oauth2 as oauth
+
+#supybot libs
 import supybot.utils as utils
 from supybot.commands import *
 import supybot.plugins as plugins
 import supybot.ircutils as ircutils
 import supybot.callbacks as callbacks
 
-#libraries for time_created_at
-import time
-from datetime import tzinfo, datetime, timedelta
+# Twitter error classes from the sixohsix/Twitter API.
+class TwitterError(Exception):
+    """Base Exception thrown by the Twitter object when there is a general error interacting with the API."""
+    pass
 
-# for unescape
-import re, htmlentitydefs
+class TwitterHTTPError(TwitterError):
+    """Exception thrown by the Twitter object when there is an HTTP error interacting with twitter.com."""
+    def __init__(self, e, uri, format, uriparts):
+      self.e = e
+      self.uri = uri
+      self.format = format
+      self.uriparts = uriparts
 
-# reencode
-import unicodedata
-
-# oauthtwitter
-import urlparse
-import oauth2 as oauth
+    def __str__(self):
+        return (
+            "Twitter sent status %i for URL: %s.%s using parameters: "
+            "(%s)\ndetails: %s" %(
+                self.e.code, self.uri, self.format, self.uriparts,
+                self.e.fp.read()))
 
 # OAuthApi class from https://github.com/jpittman/OAuth-Python-Twitter
 # mainly kept intact but modified for Twitter API v1.1 and unncessary things removed. 
-
-REQUEST_TOKEN_URL = 'https://api.twitter.com/oauth/request_token'
-ACCESS_TOKEN_URL = 'https://api.twitter.com/oauth/access_token'
-AUTHORIZATION_URL = 'https://api.twitter.com/oauth/authorize'
-SIGNIN_URL = 'https://api.twitter.com/oauth/authenticate'
-
 class OAuthApi:
     def __init__(self, consumer_key, consumer_secret, token=None, token_secret=None):
         if token and token_secret:
@@ -70,83 +82,26 @@ class OAuthApi:
         self._Consumer = oauth.Consumer(consumer_key, consumer_secret)
         self._signature_method = oauth.SignatureMethod_HMAC_SHA1()
         self._access_token = token 
-
-    def _GetOpener(self):
-        opener = urllib2.build_opener(urllib2.HTTPHandler(debuglevel=1))
-        return opener
         
-    def _FetchUrl(self,
-                    url,
-                    http_method=None,
-                    parameters=None):
-        '''Fetch a URL, optionally caching for a specified time.
-    
-        Args:
-          url: The URL to retrieve
-          http_method: 
-          	One of "GET" or "POST" to state which kind 
-          	of http call is being made
-          parameters:
-            A dict whose key/value pairs should encoded and added 
-            to the query string, or generated into post data. [OPTIONAL]
-            depending on the http_method parameter
-    
-        Returns:
-          A string containing the body of the response.
-        '''
-        # Build the extra parameters dict
+    def _FetchUrl(self,url, http_method=None, parameters=None):
         extra_params = {}
         if parameters:
-          extra_params.update(parameters)
+            extra_params.update(parameters)
         
-        req = self._makeOAuthRequest(url, params=extra_params, 
-                                                    http_method=http_method)
-        
-        # Get a url opener that can handle Oauth basic auth        
-        #callbacks.log.info(str(extra_params))
-        opener = self._GetOpener()
-
-        if http_method == "POST":
-            encoded_post_data = req.to_postdata()
-            # Removed the following line due to the fact that OAuth2 request objects do not have this function
-            # This does not appear to have any adverse impact on the operation of the toolset
-            #url = req.get_normalized_http_url()
-        else:
-            url = req.to_url()
-            encoded_post_data = ""
-        
-        #callbacks.log.info(str(url))
-        
-        if encoded_post_data:
-        	url_data = opener.open(url, encoded_post_data).read()
-        	callbacks.log.debug(url)
-        else:
-        	url_data = opener.open(url).read()
-        	callbacks.log.debug(url)
+        req = self._makeOAuthRequest(url, params=extra_params, http_method=http_method)      
+        opener = urllib2.build_opener(urllib2.HTTPHandler(debuglevel=1))
+        url = req.to_url()
+        #callbacks.log.info(str(url))        
+        url_data = opener.open(url).read()
         opener.close()
-    
-        # Always return the latest version
         return url_data
     
-    def _makeOAuthRequest(self, url, token=None,
-                                        params=None, http_method="GET"):
-        '''Make a OAuth request from url and parameters
-        
-        Args:
-          url: The Url to use for creating OAuth Request
-          parameters:
-             The URL parameters
-          http_method:
-             The HTTP method to use
-        Returns:
-          A OAauthRequest object
-        '''
-        
+    def _makeOAuthRequest(self, url, token=None, params=None, http_method="GET"):       
         oauth_base_params = {
-        'oauth_version': "1.0",
-        'oauth_nonce': oauth.generate_nonce(),
-        'oauth_timestamp': int(time.time())
-        }
+            'oauth_version': "1.0",
+            'oauth_nonce': oauth.generate_nonce(),
+            'oauth_timestamp': int(time.time())
+            }
         
         if params:
             params.update(oauth_base_params)
@@ -159,84 +114,19 @@ class OAuthApi:
         request.sign_request(self._signature_method, self._Consumer, token)
         return request
 
-    def getAuthorizationURL(self, token, url=AUTHORIZATION_URL):
-        '''Create a signed authorization URL
-        
-        Authorization provides the user with a VERIFIER which they may in turn provide to
-        the consumer.  This key authorizes access.  Used primarily for clients.
-        
-        Returns:
-          A signed OAuthRequest authorization URL 
-        '''
-        return "%s?oauth_token=%s" % (url, token['oauth_token'])
-
-    def getAuthenticationURL(self, token, url=SIGNIN_URL, force_login=False):
-        '''Create a signed authentication URL
-        
-        Authentication allows a user to directly authorize Twitter access with a click.
-        Used primarily for web-apps.
-        
-        Returns:
-          A signed OAuthRequest authentication URL
-        '''
-        auth_url = "%s?oauth_token=%s" % (url, token['oauth_token'])
-        if force_login:
-            auth_url += "&force_login=1"
-        return auth_url
-        
-    def getRequestToken(self, url=REQUEST_TOKEN_URL):
-        '''Get a Request Token from Twitter
-        
-        Returns:
-          A OAuthToken object containing a request token
-        '''
-        resp, content = oauth.Client(self._Consumer).request(url, "GET")
-        if resp['status'] != '200':
-            raise Exception("Invalid response %s." % resp['status'])
-
-        return dict(urlparse.parse_qsl(content))
-    
-    def getAccessToken(self, token, verifier=None, url=ACCESS_TOKEN_URL):
-        '''Get a Request Token from Twitter
-        
-        Note: Verifier is required if you AUTHORIZED, it can be skipped if you AUTHENTICATED
-        
-        Returns:
-          A OAuthToken object containing a request token
-        '''
-        token = oauth.Token(token['oauth_token'], token['oauth_token_secret'])
-        if verifier:
-            token.set_verifier(verifier)
-        client = oauth.Client(self._Consumer, token)
-        
-        resp, content = client.request(url, "POST")
-        return dict(urlparse.parse_qsl(content))
-
     def ApiCall(self, call, type="GET", parameters={}):
-        '''Calls the twitter API
-        
-       Args:
-          call: The name of the api call (ie. account/rate_limit_status)
-          type: One of "GET" or "POST"
-          parameters: Parameters to pass to the Twitter API call
-        Returns:
-          Returns the twitter.User object
-        '''
         return_value = []
-          # We use this try block to make the request in case we run into one of Twitter's many 503 (temporarily unavailable) errors.
-          # Other error handling may end up being useful as well.
         try:
             data = self._FetchUrl("https://api.twitter.com/1.1/" + call + ".json", type, parameters)
-            
-          # This is the most common error type you'll get.  Twitter is good about returning codes, too
-          # Chances are that most of the time you run into this, it's going to be a 503 "service temporarily unavailable".  That's a fail whale.
         except urllib2.HTTPError, e:
-            return e
-          # Getting an URLError usually means you didn't even hit Twitter's servers.  This means something has gone TERRIBLY WRONG somewhere.
+            if (e.code == 304):
+                return []
+            else:
+                raise TwitterHTTPError(e, uri, self.format, arg_data)
         except urllib2.URLError, e:
             return e
         else:
-            return json.loads(data)
+            return data
 
 # now, begin our actual code.
 # APIDOCS https://dev.twitter.com/docs/api/1.1
@@ -254,45 +144,53 @@ class Tweety(callbacks.Plugin):
     def __init__(self, irc):
         self.__parent = super(Tweety, self)
         self.__parent.__init__(irc)
-        haveAuthKeys = self._checkCredentials()
+        self.twitter = False
+        if not self.twitter:
+            self._checkAuthorization()
 
-
-    def _checkCredentials(self):
-        """Check for all 4 requires keys on Twitter auth."""
-        failTest = False
-        for checkKey in ('consumerKey', 'consumerSecret', 'accessKey', 'accessSecret'):
-            try:
-                testKey = self.registryValue(checkKey)
-            except:
-                self.log.debug("Failed checking keys. We're missing the config value for: {0}. Please set this and try again.".format(checkKey))
-                failTest = True
-                break
+    def _checkAuthorization(self):
+        if not self.twitter:
+            failTest = False
+            for checkKey in ('consumerKey', 'consumerSecret', 'accessKey', 'accessSecret'):
+                try:
+                    testKey = self.registryValue(checkKey)
+                except:
+                    self.log.debug("Failed checking keys. We're missing the config value for: {0}. Please set this and try again.".format(checkKey))
+                    failTest = True
+                    break
         
-        if failTest:
-            self.log.error('Failed getting keys. You must set all 4 keys in config variables.')
-            return False
+            if failTest:
+                self.log.error('Failed getting keys. You must set all 4 keys in config variables.')
+                return False
+        
+            self.log.info("Got all 4 keys. Now trying to auth up with Twitter.")
+            twitter = OAuthApi(self.registryValue('consumerKey'), self.registryValue('consumerSecret'), self.registryValue('accessKey'), self.registryValue('accessSecret'))
+            data = twitter.ApiCall('account/verify_credentials')
+            
+            try:
+                testjson = json.loads(data)
+            except:
+                self.log.debug("Failed logging in. Returned: %s" % data)
+                return False
+                
+            if testjson:
+                self.log.info("I have successfully authorized and logged in to Twitter using your credentials.")
+                self.twitter = OAuthApi(self.registryValue('consumerKey'), self.registryValue('consumerSecret'), self.registryValue('accessKey'), self.registryValue('accessSecret'))
         else:
-            return True
+            pass
 
+    def _strip_accents(string):
+        import unicodedata
+        return unicodedata.normalize('NFKD', unicode(string)).encode('ASCII', 'ignore')
 
-    def _expandLinks(self, tweet):
-        # if not surl.startswith('http://') and not surl.startswith('https://'):
-        _tco_link_re = re.compile(u'http://t.co/[a-zA-Z0-9]+')
-        req_url = 'http://api.longurl.org/v2/expand?format=json&url=' + qurl
-        req = urllib2.Request(req_url, headers={'User-Agent': 'Python-longurl/1.0'})
-        lookup = json.loads(urllib2.urlopen(req).read())
-        return lookup.get('long-url', None)
-                                
-    #def re_encode(input_string, decoder = 'utf-8', encoder = 'utf=8'):   
-        #try:
-            #output_string = unicodedata.normalize('NFD',\ 
-            #input_string.decode(decoder)).encode(encoder)
-        #except UnicodeError:
-            #output_string = unicodedata.normalize('NFD',\ 
-            #input_string.decode('ascii', 'replace')).encode(encoder)
-        #return output_string
+    def _convert_to_utf8_str(arg):
+        # written by Michael Norton (http://docondev.blogspot.com/)
+        if isinstance(arg, unicode):
+            arg = arg.encode('utf-8')
+        elif not isinstance(arg, str):
+            arg = str(arg)
+        return arg
 
-    
     def _unescape(self, text):
         """Created by Fredrik Lundh (http://effbot.org/zone/re-sub.htm#unescape-html)"""
         text = text.replace("\n", " ")
@@ -321,37 +219,31 @@ class Tweety(callbacks.Plugin):
         """
         Takes a datetime string object that comes from twitter and twitter search timelines and returns a relative date.
         """
-
-        plural = lambda n: n > 1 and "s" or ""
-
         # twitter search and timelines use different timeformats
         # timeline's created_at Tue May 08 10:58:49 +0000 2012
         # search's created_at Thu, 06 Oct 2011 19:41:12 +0000
-
         try:
             ddate = time.strptime(s, "%a %b %d %H:%M:%S +0000 %Y")[:-2]
         except ValueError:
             try:
                 ddate = time.strptime(s, "%a, %d %b %Y %H:%M:%S +0000")[:-2]
             except ValueError:
-                return "", ""
+                return "unknown"
 
+        # do the math
         created_at = datetime(*ddate, tzinfo=None)
         d = datetime.utcnow() - created_at
 
+        # now parse and return.
         if d.days:
-            rel_time = "%s days ago" % d.days
-        elif d.seconds > 3600:
-            hours = d.seconds / 3600
-            rel_time = "%s hour%s ago" % (hours, plural(hours))
+            rel_time = "%sd ago" % d.days
+        elif d.seconds > 3600: 
+            rel_time = "%sh ago" % (d.seconds / 3600)
         elif 60 <= d.seconds < 3600:
-            minutes = d.seconds / 60
-            rel_time = "%s minute%s ago" % (minutes, plural(minutes))
-        elif 30 < d.seconds < 60:
-            rel_time = "less than a minute ago"
+            rel_time = "%sm ago" % (d.seconds / 60)
         else:
-            rel_time = "less than %s second%s ago" % (d.seconds, plural(d.seconds))
-        return  rel_time
+            rel_time = "%ss ago" % (d.seconds)
+        return rel_time
 
 
     def _outputTweet(self, irc, msg, nick, name, text, time, tweetid):
@@ -408,8 +300,7 @@ class Tweety(callbacks.Plugin):
                 "q": query,
                 "format":"json",
                 "diagnostics":"false",
-                "env":"store://datatables.org/alltableswithkeys"
-        }
+                "env":"store://datatables.org/alltableswithkeys"}
 
         try:
             response = urllib2.urlopen("http://query.yahooapis.com/v1/public/yql",urllib.urlencode(params))
@@ -419,11 +310,10 @@ class Tweety(callbacks.Plugin):
                 woeid = data['query']['results']['place'][0]['woeid']
             else:
                 woeid = data['query']['results']['place']['woeid']
-
+            return woeid
         except Exception, err:
+            self.log.error("Error looking up %s :: %s" % (lookup,err))
             return None
-
-        return woeid
     
     ##########################
     ### PUBLIC FUNCTIONS #####
@@ -446,24 +336,20 @@ class Tweety(callbacks.Plugin):
     # RATELIMITING
     # https://dev.twitter.com/docs/api/1.1/get/application/rate_limit_status
     # https://dev.twitter.com/docs/rate-limiting/1.1
-    # https://dev.twitter.com/docs/rate-limiting/1.1/limits
+    # https://dev.twitter.com/docs/rate-limiting/1.1/limits    
     def ratelimits(self, irc, msg, args):
         """
         Display current rate limits for your twitter API account.
         """
         
-        try:
-            twitter = OAuthApi(self.registryValue('consumerKey'), self.registryValue('consumerSecret'), self.registryValue('accessKey'), self.registryValue('accessSecret'))
-        except:
-            irc.reply("Failed to authorize with twitter.")
-            return
+        data = self.twitter.ApiCall('application/rate_limit_status') #, parameters={'resources':optstatus})
         
         try:
-            data = twitter.ApiCall('application/rate_limit_status') #, parameters={'resources':optstatus}) 
+            data = json.loads(data)
         except:
-            irc.reply("Failed to lookup rate limit data. Something might have gone wrong.")
-            return
-            
+            irc.reply("Failed to lookup rate limit data. Something might have gone wrong. Data: %s" % data)
+            return     
+        
         data = data.get('resources', None)
               
         if not data: # simple check if we have part of the json dict.
@@ -483,36 +369,39 @@ class Tweety(callbacks.Plugin):
         
     ratelimits = wrap(ratelimits)
 
+    #< X-Rate-Limit-Limit: 15
+    #< X-Rate-Limit-Remaining: 13
+    #< X-Rate-Limit-Reset: 1357963140 / time.now()
+
+
 
     # https://dev.twitter.com/docs/api/1.1/get/trends/place
-    def trends(self, irc, msg, args, optwoeid):
+    def trends(self, irc, msg, args, getopts, optwoeid):
         """<location>
-        Returns the Top 10 Twitter trends for a specific location. Use optional argument location for trends, otherwise will use config variable.
+        Returns the Top 10 Twitter trends for a specific location. 
+        Use optional argument location for trends. Ex: trends Boston
+        Use --exclude to not include #hashtags in trends data.
         """
-
+        
+        args = {'id':self.registryValue('woeid', msg.args[0]),'exclude':self.registryValue('hideHashtagsTrends', msg.args[0])}
+        if getopts:
+            for (key,value) in getopts:
+                if key=='exclude': # remove hashtags from trends.
+                    args['exclude'] = 'hashtags'
+                
         # work with woeid. 1 is world, the default. can be set via input or via config.
         if optwoeid:
-            try:
-                woeid = self._woeid_lookup(optwoeid)
-            except:
-                woeid = self.registryValue('woeid', msg.args[0]) # Where On Earth ID
-        else:
-            woeid = self.registryValue('woeid', msg.args[0]) # Where On Earth ID
+            woeid = self._woeid_lookup(optwoeid)
+            if woeid:
+                args['id'] = woeid
                   
+        data = self.twitter.ApiCall('trends/place', parameters=args)
         try:
-            twitter = OAuthApi(self.registryValue('consumerKey'), self.registryValue('consumerSecret'), self.registryValue('accessKey'), self.registryValue('accessSecret'))
+            data = json.loads(data)
         except:
-            irc.reply("Failed to authorize with twitter.")
+            irc.reply("Failed to lookup trends data. Something might have gone wrong. DATA: %s" % data)
             return
-        
-        try:
-            data = twitter.ApiCall('trends/place', parameters={'id':woeid})
-        except:
-            irc.reply("Failed to lookup trends data. Something might have gone wrong.")
-            return
-        
-        #self.log.info(str(type(data)))
-            
+                    
         try:
             location = data[0]['locations'][0]['name']
         except:
@@ -521,10 +410,9 @@ class Tweety(callbacks.Plugin):
         
         ttrends = string.join([trend['name'].encode('utf-8') for trend in data[0]['trends']], " | ")
         
-        retvalue = "Top 10 Twitter Trends in {0} :: {1}".format(ircutils.bold(location), ttrends)
-        irc.reply(retvalue)
+        irc.reply("Top 10 Twitter Trends in {0} :: {1}".format(ircutils.bold(location), ttrends))
 
-    trends = wrap(trends, [optional('text')])
+    trends = wrap(trends, [getopts({'exclude':''}), optional('text')])
     
 
     # https://dev.twitter.com/docs/api/1.1/get/search/tweets
