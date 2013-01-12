@@ -180,7 +180,6 @@ class Tweety(callbacks.Plugin):
             return text # leave as is
         return re.sub("&#?\w+;", fixup, text)
 
-
     def _time_created_at(self, s):
         """
         Takes a datetime string object that comes from twitter and twitter search timelines and returns a relative date.
@@ -364,7 +363,7 @@ class Tweety(callbacks.Plugin):
         try:
             data = json.loads(data)
         except:
-            irc.reply("Failed to lookup trends data. Something might have gone wrong. DATA: %s" % data)
+            irc.reply("Error: failed to lookup Twitter trends: %s" % data)
             return
                     
         try:
@@ -407,7 +406,7 @@ class Tweety(callbacks.Plugin):
         try:
             data = json.loads(data)
         except:
-            irc.reply("Failed to lookup Twitter search. Something might have gone wrong. DATA: %s" % data)
+            irc.reply("Error: %s trying to search Twitter." % data)
             return
             
         results = data.get('statuses', None) # data returned as a dict 
@@ -483,7 +482,7 @@ class Tweety(callbacks.Plugin):
         try:
             data = json.loads(data)
         except:
-            irc.reply("Failed to lookup Twitter data. Something might have gone wrong. DATA: %s" % data)
+            irc.reply("Failed to lookup Twitter account for @{0} ({1}) ".format(optnick, data))
             return
        
         # process the data. 
@@ -520,11 +519,10 @@ class Tweety(callbacks.Plugin):
             
             irc.reply(ret)
             return
-        else: # Else, its the user's timeline. Count is handled above in the GET request. 
-            if len(data) == 0:
+        else:
+            if len(data) == 0: # length handled above but user might have 0 tweets.
                 irc.reply("User: {0} has not tweeted yet.".format(optnick))
                 return
-            
             for tweet in data:
                 text = self._unescape(tweet.get('text', None))
                 nick = tweet["user"].get('screen_name', None)
@@ -533,7 +531,7 @@ class Tweety(callbacks.Plugin):
                 relativeTime = self._time_created_at(tweet.get('created_at', None))
                 self._outputTweet(irc, msg, nick.encode('utf-8'), name.encode('utf-8'), text.encode('utf-8'), relativeTime, tweetid)
 
-    twitter = wrap(twitter, [getopts({'noreply':'', 'nort': '', 'info': '', 'id': '', 'num': ('int')}), ('something')])
+    twitter = wrap(twitter, [getopts({'noreply':'','nort':'','info':'','id':'','num':('int')}), ('something')])
 
 Class = Tweety
 
