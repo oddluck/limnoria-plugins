@@ -1,6 +1,6 @@
-# coding=utf8
+# -*- coding: utf-8 -*-
 ###
-# Copyright (c) 2011, Terje Hoås
+# Copyright (c) 2011-2013, Terje Hoås, spline
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -42,7 +42,7 @@ import supybot.world as world
 __version__ = ""
 
 # XXX Replace this with an appropriate author or supybot.Author instance.
-__author__ = supybot.Author('Terje Hoås', 'Hoaas', 'terjehoaas@gmail.com')
+__author__ = supybot.Author('reticulatingspline', 'spline', 'spline')
 
 # This is a dictionary mapping supybot.Author instances to lists of
 # contributions.
@@ -65,4 +65,4 @@ Class = plugin.Class
 configure = config.configure
 
 
-# vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
+# vim:set shiftwidth=4 tabstop=4 expandtab textwidth=250:
