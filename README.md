@@ -1,13 +1,11 @@
 Supybot-Tweety
 ======
-*Twitter client for Supybot
 
-Overview
---------
-Supply a username and get the latest tweet(s). Or an ID to a tweet. Or search on twitter. Or view latest trends. Does not require a user account or apikey or anything like that. Just point and shoot.
-This plugin does NOT relay tweets in real time. It only fetches data from Twitter when commands are called.
+# Twitter client for Supybot
 
-This is forked from Hoaas' Tweety plugin at: http://github.com/Hoaas/Supybot-Plugins to support Twitter API v1.1 and add in a few features:
+    Description
+    
+    This is a supybot client.
 
 Instructions
 ------------
