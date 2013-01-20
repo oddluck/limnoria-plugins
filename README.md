@@ -17,6 +17,9 @@ This is a much watered down version of ProgVal's Twitter client. It only include
 read-only features (no risk of accidental Tweeting) that most folks use: 
 tweet display, tweet searching and trends.
 
+If you need to do any type of Twittering via the bot such as posting tweets, responding,
+announcing of timelines, you will want his. This will never contain more than what is above.
+
 Instructions
 ------------
 1.) On an up-to-date Python 2.7+ system, one dependency is needed. 
