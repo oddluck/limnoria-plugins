@@ -1,32 +1,5 @@
 # -*- coding: utf-8 -*-
-###
-# Copyright (c) 2011-2013, Terje Hoås, spline
-# All rights reserved.
-#
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions are met:
-#
-#   * Redistributions of source code must retain the above copyright notice,
-#     this list of conditions, and the following disclaimer.
-#   * Redistributions in binary form must reproduce the above copyright notice,
-#     this list of conditions, and the following disclaimer in the
-#     documentation and/or other materials provided with the distribution.
-#   * Neither the name of the author of this software nor the name of
-#     contributors to this software may be used to endorse or promote products
-#     derived from this software without specific prior written consent.
-#
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-# ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
-# LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-# CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
-# SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
-# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
-# CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
-# ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
-# POSSIBILITY OF SUCH DAMAGE.
-
+# Copyright (c) 2013, spline
 ###
 
 # my libs
@@ -43,8 +16,7 @@ import unicodedata
 # oauthtwitter
 import urlparse
 import oauth2 as oauth
-
-#supybot libs
+# supybot libs
 import supybot.utils as utils
 from supybot.commands import *
 import supybot.plugins as plugins
@@ -52,9 +24,8 @@ import supybot.ircutils as ircutils
 import supybot.callbacks as callbacks
 
 
-# OAuthApi class from https://github.com/jpittman/OAuth-Python-Twitter
-# mainly kept intact but modified for Twitter API v1.1 and unncessary things removed. 
 class OAuthApi:
+    """ OAuth class to work with Twitter v1.1 API."""
     def __init__(self, consumer_key, consumer_secret, token=None, token_secret=None):
         if token and token_secret:
             token = oauth.Token(token, token_secret)
@@ -64,20 +35,19 @@ class OAuthApi:
         self._signature_method = oauth.SignatureMethod_HMAC_SHA1()
         self._access_token = token 
         
-    def _FetchUrl(self,url, http_method=None, parameters=None):
+    def _FetchUrl(self,url, parameters=None):
         extra_params = {}
         if parameters:
             extra_params.update(parameters)
         
-        req = self._makeOAuthRequest(url, params=extra_params, http_method=http_method)      
+        req = self._makeOAuthRequest(url, params=extra_params)      
         opener = urllib2.build_opener(urllib2.HTTPHandler(debuglevel=1))
         url = req.to_url()
-        #callbacks.log.info(str(url))        
         url_data = opener.open(url).read()
         opener.close()
         return url_data
     
-    def _makeOAuthRequest(self, url, token=None, params=None, http_method="GET"):       
+    def _makeOAuthRequest(self, url, token=None, params=None):       
         oauth_base_params = {
             'oauth_version': "1.0",
             'oauth_nonce': oauth.generate_nonce(),
@@ -91,14 +61,14 @@ class OAuthApi:
         
         if not token:
             token = self._access_token
-        request = oauth.Request(method=http_method,url=url,parameters=params)
+        request = oauth.Request(method="GET", url=url, parameters=params)
         request.sign_request(self._signature_method, self._Consumer, token)
         return request
 
-    def ApiCall(self, call, type="GET", parameters={}):
+    def ApiCall(self, call, parameters={}):
         return_value = []
         try:
-            data = self._FetchUrl("https://api.twitter.com/1.1/" + call + ".json", type, parameters)
+            data = self._FetchUrl("https://api.twitter.com/1.1/" + call + ".json", parameters)
         except urllib2.HTTPError, e:
             return e
         except urllib2.URLError, e:
@@ -106,17 +76,9 @@ class OAuthApi:
         else:
             return data
 
-# now, begin our actual code.
-# APIDOCS https://dev.twitter.com/docs/api/1.1
-# TODO: centralize logging in. Add something to display error codes in the log while displaying error to irc.
-# TODO: work on colorizing tweets better.
-# TODO: maybe make an encode wrapper that can utilize strip_accents?
-# TODO: langs in search to validate against: https://dev.twitter.com/docs/api/1.1/get/help/languages
 
 class Tweety(callbacks.Plugin):
-    """Simply use the commands available in this plugin. Allows fetching of the
-    latest tween from a specified twitter handle, and listing of top ten
-    trending tweets."""
+    """Public Twitter class for working with the API."""
     threaded = True
     
     def __init__(self, irc):
@@ -127,6 +89,7 @@ class Tweety(callbacks.Plugin):
             self._checkAuthorization()
 
     def _checkAuthorization(self):
+        """ Check if we have our keys and can auth."""
         if not self.twitterApi:
             failTest = False
             for checkKey in ('consumerKey', 'consumerSecret', 'accessKey', 'accessSecret'):
@@ -181,23 +144,18 @@ class Tweety(callbacks.Plugin):
         return re.sub("&#?\w+;", fixup, text)
 
     def _time_created_at(self, s):
-        """
-        Takes a datetime string object that comes from twitter and twitter search timelines and returns a relative date.
-        """
-        # twitter search and timelines use different timeformats
-        # timeline's created_at Tue May 08 10:58:49 +0000 2012
-        # search's created_at Thu, 06 Oct 2011 19:41:12 +0000
-        try:
+        """Return relative delta."""
+        
+        try: # timeline's created_at Tue May 08 10:58:49 +0000 2012
             ddate = time.strptime(s, "%a %b %d %H:%M:%S +0000 %Y")[:-2]
         except ValueError:
-            try:
+            try: # search's created_at Thu, 06 Oct 2011 19:41:12 +0000
                 ddate = time.strptime(s, "%a, %d %b %Y %H:%M:%S +0000")[:-2]
             except ValueError:
                 return "unknown"
 
         # do the math
-        created_at = datetime(*ddate, tzinfo=None)
-        d = datetime.utcnow() - created_at
+        d = datetime.utcnow() - datetime(*ddate, tzinfo=None)
 
         # now parse and return.
         if d.days:
@@ -209,7 +167,6 @@ class Tweety(callbacks.Plugin):
         else:
             rel_time = "%ss ago" % (d.seconds)
         return rel_time
-
 
     def _outputTweet(self, irc, msg, nick, name, text, time, tweetid):
         """
@@ -239,7 +196,6 @@ class Tweety(callbacks.Plugin):
         
         irc.reply(ret)
 
-
     def _createShortUrl(self, nick, tweetid):
         """
         Takes a nick and tweetid and returns a shortened URL via is.gd service.
@@ -253,7 +209,6 @@ class Tweety(callbacks.Plugin):
             return shorturl
         except:
             return False
-
 
     def _woeid_lookup(self, lookup):
         """
@@ -285,7 +240,7 @@ class Tweety(callbacks.Plugin):
     ##########################
 
     def woeidlookup(self, irc, msg, args, lookup):
-        """[location]
+        """<location>
         Search Yahoo's WOEID DB for a location. Useful for the trends variable.
         """
 
@@ -299,27 +254,20 @@ class Tweety(callbacks.Plugin):
     
 
     # RATELIMITING
-    # https://dev.twitter.com/docs/api/1.1/get/application/rate_limit_status
-    # https://dev.twitter.com/docs/rate-limiting/1.1
-    # https://dev.twitter.com/docs/rate-limiting/1.1/limits    
-    #< X-Rate-Limit-Limit: 15
-    #< X-Rate-Limit-Remaining: 13
-    #< X-Rate-Limit-Reset: 1357963140 / time.now()
+
     def ratelimits(self, irc, msg, args):
         """
         Display current rate limits for your twitter API account.
         """
         
         data = self.twitterApi.ApiCall('application/rate_limit_status') #, parameters={'resources':optstatus})
-        
         try:
             data = json.loads(data)
         except:
-            irc.reply("Failed to lookup rate limit data. Something might have gone wrong. Data: %s" % data)
+            irc.reply("Failed to lookup ratelimit data: %s" % data)
             return     
         
         data = data.get('resources', None)
-              
         if not data: # simple check if we have part of the json dict.
             irc.reply("Failed to fetch application rate limit status. Something could be wrong with Twitter.")
             self.log.error(data)
@@ -336,8 +284,6 @@ class Tweety(callbacks.Plugin):
             # endpoint is {u'reset': 1351226072, u'limit': 15, u'remaining': 15}
         
     ratelimits = wrap(ratelimits)
-
-
 
     def trends(self, irc, msg, args, getopts, optwoeid):
         """[--exclude] <location>
@@ -372,8 +318,8 @@ class Tweety(callbacks.Plugin):
             irc.reply("ERROR: Cannot load trends: {0}".format(data)) # error also throws 404.
             return
         
+        # package together in object and output.
         ttrends = string.join([trend['name'].encode('utf-8') for trend in data[0]['trends']], " | ")
-        
         irc.reply("Top 10 Twitter Trends in {0} :: {1}".format(ircutils.bold(location), ttrends))
 
     trends = wrap(trends, [getopts({'exclude':''}), optional('text')])
@@ -424,7 +370,6 @@ class Tweety(callbacks.Plugin):
                 self._outputTweet(irc, msg, nick.encode('utf-8'), name.encode('utf-8'), text.encode('utf-8'), date, tweetid)
 
     tsearch = wrap(tsearch, [getopts({'num':('int'), 'searchtype':('literal', ('popular', 'mixed', 'recent')), 'lang':('somethingWithoutSpaces')}), ('text')])
-
 
     def twitter(self, irc, msg, args, optlist, optnick):
         """[--noreply] [--nort] [--num number] <nick> | <--id id> | [--info nick]
