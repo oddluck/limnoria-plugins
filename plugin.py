@@ -250,17 +250,14 @@ class Tweety(callbacks.Plugin):
 
     woeidlookup = wrap(woeidlookup, ['text'])
     
-
-    # RATELIMITING
-
     def ratelimits(self, irc, msg, args):
         """
         Display current rate limits for your twitter API account.
         """
-        
-        # make sure only admins can run this command.
-        if not ircdb.checkCapability(msg.prefix, 'admin'):
-            irc.reply("Only admins can run this command. Sorry.")
+
+        # before we do anything, make sure we have a twitterApi object.
+        if not self.twitterApi:
+            irc.reply("ERROR: Twitter is not authorized. Please check logs before running this command.")
             return
         
         data = self.twitterApi.ApiCall('application/rate_limit_status')
@@ -296,6 +293,11 @@ class Tweety(callbacks.Plugin):
         Use optional argument location for trends. Ex: trends Boston
         Use --exclude to not include #hashtags in trends data.
         """
+        
+        # before we do anything, make sure we have a twitterApi object.
+        if not self.twitterApi:
+            irc.reply("ERROR: Twitter is not authorized. Please check logs before running this command.")
+            return
         
         args = {'id':self.registryValue('woeid', msg.args[0]),'exclude':self.registryValue('hideHashtagsTrends', msg.args[0])}
         if getopts:
@@ -335,6 +337,11 @@ class Tweety(callbacks.Plugin):
         Number is number of results. Must be a number higher than 0 and max 10.
         searchtype being recent, popular or mixed. Popular is the default.
         """
+
+        # before we do anything, make sure we have a twitterApi object.
+        if not self.twitterApi:
+            irc.reply("ERROR: Twitter is not authorized. Please check logs before running this command.")
+            return
         
         tsearchArgs = {'include_entities':'false', 'count': self.registryValue('defaultSearchResults', msg.args[0]), 'lang':'en', 'q':urllib.quote(optterm)}
 
@@ -383,6 +390,11 @@ class Tweety(callbacks.Plugin):
         Or returns tweet with id 'id'.
         Or returns information on user with --info. 
         """
+
+        # before we do anything, make sure we have a twitterApi object.
+        if not self.twitterApi:
+            irc.reply("ERROR: Twitter is not authorized. Please check logs before running this command.")
+            return
             
         optnick = optnick.replace('@','') # strip @ from input if given.
         
