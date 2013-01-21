@@ -19,6 +19,7 @@ import oauth2 as oauth
 # supybot libs
 import supybot.utils as utils
 from supybot.commands import *
+import supybot.ircdb as ircdb
 import supybot.plugins as plugins
 import supybot.ircutils as ircutils
 import supybot.callbacks as callbacks
@@ -43,7 +44,7 @@ class OAuthApi:
         req = self._makeOAuthRequest(url, params=extra_params)      
         opener = urllib2.build_opener(urllib2.HTTPHandler(debuglevel=1))
         url = req.to_url()
-        url_data = opener.open(url).read()
+        url_data = opener.open(url)
         opener.close()
         return url_data
     
@@ -107,14 +108,11 @@ class Tweety(callbacks.Plugin):
             self.log.info("Got all 4 keys. Now trying to auth up with Twitter.")
             twitterApi = OAuthApi(self.registryValue('consumerKey'), self.registryValue('consumerSecret'), self.registryValue('accessKey'), self.registryValue('accessSecret'))
             data = twitterApi.ApiCall('account/verify_credentials')
-            
-            try:
-                testjson = json.loads(data)
-            except:
-                self.log.debug("Failed logging in. Returned: %s" % data)
+
+            if data.getcode() == "401":
+                self.log.error("ERROR: I could not log in using your credentials. Message: %s" % data.read())
                 return False
-                
-            if testjson:
+            else:
                 self.log.info("I have successfully authorized and logged in to Twitter using your credentials.")
                 self.twitterApi = OAuthApi(self.registryValue('consumerKey'), self.registryValue('consumerSecret'), self.registryValue('accessKey'), self.registryValue('accessSecret'))
         else:
@@ -260,9 +258,14 @@ class Tweety(callbacks.Plugin):
         Display current rate limits for your twitter API account.
         """
         
-        data = self.twitterApi.ApiCall('application/rate_limit_status') #, parameters={'resources':optstatus})
+        # make sure only admins can run this command.
+        if not ircdb.checkCapability(msg.prefix, 'admin'):
+            irc.reply("Only admins can run this command. Sorry.")
+            return
+        
+        data = self.twitterApi.ApiCall('application/rate_limit_status')
         try:
-            data = json.loads(data)
+            data = json.loads(data.read())
         except:
             irc.reply("Failed to lookup ratelimit data: %s" % data)
             return     
@@ -274,14 +277,15 @@ class Tweety(callbacks.Plugin):
             return
 
         # we only have resources needed in here. def below works with each entry properly.        
-        resourcelist = ['trends/place', 'search/tweets', 'users/show/:id', 'statuses/show/:id', 'statuses/user_timeline/:id']
+        resourcelist = ['trends/place', 'search/tweets', 'users/show/:id', 'statuses/show/:id', 'statuses/user_timeline']
         
         for resource in resourcelist:
             family, endpoint = resource.split('/', 1) # need to split each entry on /, resource family is [0], append / to entry.
             resourcedict = data.get(family, None)
             endpoint = resourcedict.get("/"+resource, None)
-            irc.reply("{0} :: {1}".format(resource, endpoint))
-            # endpoint is {u'reset': 1351226072, u'limit': 15, u'remaining': 15}
+            minutes = "%sm%ss" % divmod(int(endpoint['reset'])-int(time.time()), 60)
+            output = "Reset in: {0}  Remaining: {1}".format(minutes, endpoint['remaining'])
+            irc.reply("{0} :: {1}".format(ircutils.bold(resource), output))
         
     ratelimits = wrap(ratelimits)
 
@@ -307,7 +311,7 @@ class Tweety(callbacks.Plugin):
                   
         data = self.twitterApi.ApiCall('trends/place', parameters=args)
         try:
-            data = json.loads(data)
+            data = json.loads(data.read())
         except:
             irc.reply("Error: failed to lookup Twitter trends: %s" % data)
             return
@@ -350,7 +354,7 @@ class Tweety(callbacks.Plugin):
 
         data = self.twitterApi.ApiCall('search/tweets', parameters=tsearchArgs)
         try:
-            data = json.loads(data)
+            data = json.loads(data.read())
         except:
             irc.reply("Error: %s trying to search Twitter." % data)
             return
@@ -425,7 +429,7 @@ class Tweety(callbacks.Plugin):
         # now with and call the api.
         data = self.twitterApi.ApiCall(apiUrl, parameters=twitterArgs)
         try:
-            data = json.loads(data)
+            data = json.loads(data.read())
         except:
             irc.reply("Failed to lookup Twitter account for @{0} ({1}) ".format(optnick, data))
             return
