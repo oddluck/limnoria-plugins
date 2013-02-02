@@ -144,13 +144,13 @@ class Tweety(callbacks.Plugin):
     def _time_created_at(self, s):
         """Return relative delta."""
 
-        try: # timeline's created_at Tue May 08 10:58:49 +0000 2012
+        try:  # timeline's created_at Tue May 08 10:58:49 +0000 2012
             ddate = time.strptime(s, "%a %b %d %H:%M:%S +0000 %Y")[:-2]
         except ValueError:
-            try: # search's created_at Thu, 06 Oct 2011 19:41:12 +0000
+            try:  # search's created_at Thu, 06 Oct 2011 19:41:12 +0000
                 ddate = time.strptime(s, "%a, %d %b %Y %H:%M:%S +0000")[:-2]
             except ValueError:
-                return "unknown"
+                return s
 
         # do the math
         d = datetime.utcnow() - datetime(*ddate, tzinfo=None)
@@ -267,7 +267,7 @@ class Tweety(callbacks.Plugin):
             return
 
         data = data.get('resources', None)
-        if not data: # simple check if we have part of the json dict.
+        if not data:  # simple check if we have part of the json dict.
             irc.reply("Failed to fetch application rate limit status. Something could be wrong with Twitter.")
             self.log.error(data)
             return
@@ -276,7 +276,7 @@ class Tweety(callbacks.Plugin):
         resourcelist = ['trends/place', 'search/tweets', 'users/show/:id', 'statuses/show/:id', 'statuses/user_timeline']
 
         for resource in resourcelist:
-            family, endpoint = resource.split('/', 1) # need to split each entry on /, resource family is [0], append / to entry.
+            family, endpoint = resource.split('/', 1)  # need to split each entry on /, resource family is [0], append / to entry.
             resourcedict = data.get(family, None)
             endpoint = resourcedict.get("/"+resource, None)
             minutes = "%sm%ss" % divmod(int(endpoint['reset'])-int(time.time()), 60)
@@ -298,10 +298,10 @@ class Tweety(callbacks.Plugin):
             irc.reply("ERROR: Twitter is not authorized. Please check logs before running this command.")
             return
 
-        args = {'id':self.registryValue('woeid', msg.args[0]),'exclude':self.registryValue('hideHashtagsTrends', msg.args[0])}
+        args = {'id': self.registryValue('woeid', msg.args[0]),'exclude': self.registryValue('hideHashtagsTrends', msg.args[0])}
         if getopts:
-            for (key,value) in getopts:
-                if key=='exclude': # remove hashtags from trends.
+            for (key, value) in getopts:
+                if key == 'exclude':  # remove hashtags from trends.
                     args['exclude'] = 'hashtags'
 
         # work with woeid. 1 is world, the default. can be set via input or via config.
@@ -320,7 +320,7 @@ class Tweety(callbacks.Plugin):
         try:
             location = data[0]['locations'][0]['name']
         except:
-            irc.reply("ERROR: Cannot load trends: {0}".format(data)) # error also throws 404.
+            irc.reply("ERROR: Cannot load trends: {0}".format(data))  # error also throws 404.
             return
 
         # package together in object and output.
@@ -395,7 +395,7 @@ class Tweety(callbacks.Plugin):
             irc.reply("ERROR: Twitter is not authorized. Please check logs before running this command.")
             return
 
-        optnick = optnick.replace('@','') # strip @ from input if given.
+        optnick = optnick.replace('@','')  # strip @ from input if given.
 
         args = {'id': False, 'nort': False, 'noreply': False, 'num': self.registryValue('defaultResults', msg.args[0]), 'info': False}
 
@@ -427,12 +427,12 @@ class Tweety(callbacks.Plugin):
         else:
             apiUrl = 'statuses/user_timeline'
             twitterArgs = {'screen_name': optnick, 'count': args['num']}
-            if args['nort']: # When set to false, the timeline will strip any native retweets
+            if args['nort']:  # When set to false, the timeline will strip any native retweets
                 twitterArgs['include_rts'] = 'false'
             else:
                 twitterArgs['include_rts'] = 'true'
 
-            if args['noreply']: # This parameter will prevent replies from appearing in the returned timeline.
+            if args['noreply']:  # This parameter will prevent replies from appearing in the returned timeline.
                 twitterArgs['exclude_replies'] = 'true'
             else:
                 twitterArgs['exclude_replies'] = 'false'
@@ -446,7 +446,11 @@ class Tweety(callbacks.Plugin):
             return
 
         # process the data.
-        if args['id']: # If --id was given for a single tweet.
+        if args['id']:  # If --id was given for a single tweet.
+            # first, check for errors.
+            if 'errors' in data:
+                irc.reply("ERROR: I cannot fetch Tweet ID: {0} message: {1}".format(optnick, data['errors'][0]['message']))
+                return
             text = self._unescape(data.get('text', None))
             nick = data["user"].get('screen_name', None)
             name = data["user"].get('name', None)
@@ -454,7 +458,11 @@ class Tweety(callbacks.Plugin):
             tweetid = data.get('id', None)
             self._outputTweet(irc, msg, nick.encode('utf-8'), name.encode('utf-8'), text.encode('utf-8'), relativeTime, tweetid)
             return
-        elif args['info']: # Works with --info to return info on a Twitter user.
+        elif args['info']:  # Works with --info to return info on a Twitter user.
+            # first, check for errors.
+            if 'errors' in data:
+                irc.reply("ERROR: I cannot fetch Twitter info for: {0} message: {1}".format(optnick, data['errors'][0]['message']))
+                return
             location = data.get('location', None)
             followers = data.get('followers_count', None)
             friends = data.get('friends_count', None)
@@ -480,11 +488,11 @@ class Tweety(callbacks.Plugin):
             irc.reply(ret)
             return
         else:
-            if data.has_key('error'):
+            if 'error' in data:
                 irc.reply("ERROR: I cannot fetch tweets from {0}: {1}".format(optnick, data['error']))
                 return
-            if len(data) == 0: # length handled above but user might have 0 tweets.
-                irc.reply("User: {0} has not tweeted yet.".format(optnick))
+            if len(data) == 0:  # length handled above but user might have 0 tweets.
+                irc.reply("ERROR: {0} has not tweeted yet.".format(optnick))
                 return
             for tweet in data:
                 text = self._unescape(tweet.get('text', None))
@@ -494,7 +502,7 @@ class Tweety(callbacks.Plugin):
                 relativeTime = self._time_created_at(tweet.get('created_at', None))
                 self._outputTweet(irc, msg, nick.encode('utf-8'), name.encode('utf-8'), text.encode('utf-8'), relativeTime, tweetid)
 
-    twitter = wrap(twitter, [getopts({'noreply':'','nort':'','info':'','id':'','num':('int')}), ('something')])
+    twitter = wrap(twitter, [getopts({'noreply':'', 'nort':'', 'info':'', 'id':'', 'num':('int')}), ('somethingWithoutSpaces')])
 
 Class = Tweety
 
