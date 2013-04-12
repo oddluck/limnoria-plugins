@@ -3,23 +3,22 @@
 ###
 
 # my libs
-import urllib, urllib2
+import urllib2
 import json
 import string
 # libraries for time_created_at
 import time
 from datetime import tzinfo, datetime, timedelta
 # for unescape
-import re, htmlentitydefs
+import re
+import htmlentitydefs
 # reencode
 import unicodedata
 # oauthtwitter
-import urlparse
 import oauth2 as oauth
 # supybot libs
 import supybot.utils as utils
 from supybot.commands import *
-import supybot.ircdb as ircdb
 import supybot.plugins as plugins
 import supybot.ircutils as ircutils
 import supybot.callbacks as callbacks
@@ -27,11 +26,8 @@ import supybot.callbacks as callbacks
 
 class OAuthApi:
     """ OAuth class to work with Twitter v1.1 API."""
-    def __init__(self, consumer_key, consumer_secret, token=None, token_secret=None):
-        if token and token_secret:
-            token = oauth.Token(token, token_secret)
-        else:
-            token = None
+    def __init__(self, consumer_key, consumer_secret, token, token_secret):
+        token = oauth.Token(token, token_secret)
         self._Consumer = oauth.Consumer(consumer_key, consumer_secret)
         self._signature_method = oauth.SignatureMethod_HMAC_SHA1()
         self._access_token = token
@@ -118,6 +114,46 @@ class Tweety(callbacks.Plugin):
         else:
             pass
 
+    ########################
+    # COLOR AND FORMATTING #
+    ########################
+
+    def _red(self, string):
+        """Returns a red string."""
+        return ircutils.mircColor(string, 'red')
+
+    def _yellow(self, string):
+        """Returns a yellow string."""
+        return ircutils.mircColor(string, 'yellow')
+
+    def _green(self, string):
+        """Returns a green string."""
+        return ircutils.mircColor(string, 'green')
+
+    def _teal(self, string):
+        """Returns a teal string."""
+        return ircutils.mircColor(string, 'teal')
+
+    def _blue(self, string):
+        """Returns a blue string."""
+        return ircutils.mircColor(string, 'blue')
+
+    def _orange(self, string):
+        """Returns an orange string."""
+        return ircutils.mircColor(string, 'orange')
+
+    def _bold(self, string):
+        """Returns a bold string."""
+        return ircutils.bold(string)
+
+    def _ul(self, string):
+        """Returns an underline string."""
+        return ircutils.underline(string)
+
+    def _bu(self, string):
+        """Returns a bold/underline string."""
+        return ircutils.bold(ircutils.underline(string))
+
     def _unescape(self, text):
         """Created by Fredrik Lundh (http://effbot.org/zone/re-sub.htm#unescape-html)"""
         text = text.replace("\n", " ")
@@ -142,7 +178,9 @@ class Tweety(callbacks.Plugin):
         return re.sub("&#?\w+;", fixup, text)
 
     def _time_created_at(self, s):
-        """Return relative delta."""
+        """
+        Return relative time delta. Ex: 3m ago.
+        """
 
         try:  # timeline's created_at Tue May 08 10:58:49 +0000 2012
             ddate = time.strptime(s, "%a %b %d %H:%M:%S +0000 %Y")[:-2]
@@ -201,7 +239,7 @@ class Tweety(callbacks.Plugin):
 
         longurl = "https://twitter.com/#!/{0}/status/{1}".format(nick, tweetid)
         try:
-            req = urllib2.Request("http://is.gd/api.php?longurl=" + urllib.quote(longurl))
+            req = urllib2.Request("http://is.gd/api.php?longurl=" + utils.web.urlquote(longurl))
             f = urllib2.urlopen(req)
             shorturl = f.read()
             return shorturl
@@ -209,7 +247,7 @@ class Tweety(callbacks.Plugin):
             return False
 
     def _woeid_lookup(self, lookup):
-        """
+        """<location>
         Use Yahoo's API to look-up a WOEID.
         """
 
@@ -220,7 +258,7 @@ class Tweety(callbacks.Plugin):
                   "env":"store://datatables.org/alltableswithkeys"}
 
         try:
-            response = urllib2.urlopen("http://query.yahooapis.com/v1/public/yql",urllib.urlencode(params))
+            response = urllib2.urlopen("http://query.yahooapis.com/v1/public/yql", utils.web.urlencode(params))
             data = json.loads(response.read())
 
             if data['query']['count'] > 1:
@@ -243,7 +281,7 @@ class Tweety(callbacks.Plugin):
 
         woeid = self._woeid_lookup(lookup)
         if woeid:
-            irc.reply(("I found WOEID: %s while searching for: '%s'") % (ircutils.bold(woeid), lookup))
+            irc.reply(("I found WOEID: %s while searching for: '%s'") % (self._bold(woeid), lookup))
         else:
             irc.reply(("Something broke while looking up: '%s'") % (lookup))
 
@@ -281,7 +319,7 @@ class Tweety(callbacks.Plugin):
             endpoint = resourcedict.get("/"+resource, None)
             minutes = "%sm%ss" % divmod(int(endpoint['reset'])-int(time.time()), 60)
             output = "Reset in: {0}  Remaining: {1}".format(minutes, endpoint['remaining'])
-            irc.reply("{0} :: {1}".format(ircutils.bold(resource), output))
+            irc.reply("{0} :: {1}".format(self._bold(resource), output))
 
     ratelimits = wrap(ratelimits)
 
@@ -325,7 +363,7 @@ class Tweety(callbacks.Plugin):
 
         # package together in object and output.
         ttrends = string.join([trend['name'].encode('utf-8') for trend in data[0]['trends']], " | ")
-        irc.reply("Top 10 Twitter Trends in {0} :: {1}".format(ircutils.bold(location), ttrends))
+        irc.reply("Top 10 Twitter Trends in {0} :: {1}".format(self._bold(location), ttrends))
 
     trends = wrap(trends, [getopts({'exclude':''}), optional('text')])
 
@@ -342,7 +380,7 @@ class Tweety(callbacks.Plugin):
             irc.reply("ERROR: Twitter is not authorized. Please check logs before running this command.")
             return
 
-        tsearchArgs = {'include_entities':'false', 'count': self.registryValue('defaultSearchResults', msg.args[0]), 'lang':'en', 'q':urllib.quote(optterm)}
+        tsearchArgs = {'include_entities':'false', 'count': self.registryValue('defaultSearchResults', msg.args[0]), 'lang':'en', 'q':utils.web.urlquote(optterm)}
 
         if optlist:
             for (key, value) in optlist:
@@ -354,8 +392,8 @@ class Tweety(callbacks.Plugin):
                     else:
                         tsearchArgs['count'] = value
                 if key == 'searchtype':
-                    tsearchArgs['result_type'] = value # limited by getopts to valid values.
-                if key == 'lang': # lang . Uses ISO-639 codes like 'en' http://en.wikipedia.org/wiki/ISO_639-1
+                    tsearchArgs['result_type'] = value  # limited by getopts to valid values.
+                if key == 'lang':  # lang . Uses ISO-639 codes like 'en' http://en.wikipedia.org/wiki/ISO_639-1
                     tsearchArgs['lang'] = value
 
         data = self.twitterApi.ApiCall('search/tweets', parameters=tsearchArgs)
@@ -368,13 +406,13 @@ class Tweety(callbacks.Plugin):
         results = data.get('statuses', None) # data returned as a dict
 
         if not results or len(results) == 0:
-            irc.reply("Error: No Twitter Search results found for '{0}'".format(optterm))
+            irc.reply("ERROR: No Twitter Search results found for '{0}'".format(optterm))
             return
         else:
             for result in results:
                 nick = result['user'].get('screen_name', None)
                 name = result["user"].get('name', None)
-                text = self._unescape(result.get('text', None)) # look also at the unicode strip here.
+                text = self._unescape(result.get('text', None))  # look also at the unicode strip here.
                 date = self._time_created_at(result.get('created_at', None))
                 tweetid = result.get('id_str', None)
                 self._outputTweet(irc, msg, nick.encode('utf-8'), name.encode('utf-8'), text.encode('utf-8'), date, tweetid)
@@ -418,16 +456,16 @@ class Tweety(callbacks.Plugin):
                     args['info'] = True
 
         # handle the three different rest api endpoint urls + twitterArgs dict for options.
-        if args['id']:
+        if args['id']:  # -id #.
             apiUrl = 'statuses/show'
             twitterArgs = {'id': optnick, 'include_entities':'false'}
-        elif args['info']:
+        elif args['info']:  # --info.
             apiUrl = 'users/show'
             twitterArgs = {'screen_name': optnick, 'include_entities':'false'}
-        else:
+        else:  # if not an --id or --info, we're printing from their timeline.
             apiUrl = 'statuses/user_timeline'
             twitterArgs = {'screen_name': optnick, 'count': args['num']}
-            if args['nort']:  # When set to false, the timeline will strip any native retweets
+            if args['nort']:  # When set to false, the timeline will strip any native retweets.
                 twitterArgs['include_rts'] = 'false'
             else:
                 twitterArgs['include_rts'] = 'true'
@@ -442,15 +480,21 @@ class Tweety(callbacks.Plugin):
         try:
             data = json.loads(data.read())
         except:
-            irc.reply("Failed to lookup Twitter account for @{0} ({1}) ".format(optnick, data))
+            irc.reply("ERROR: Failed to lookup Twitter account for '{0}' ({1}) ".format(optnick, data))
+            return
+
+        # check for errors
+        if 'errors' in data:
+            errmsg = ""  # prep string for output
+            if data['errors'][0]['code']:
+                errmsg += "{0} ".format(data['errors'][0]['code'])
+            if data['errors'][0]['message']:
+                errmsg += " {0}".format(data['errors'][0]['message'])
+            irc.reply("ERROR: {0}".format(errmsg))
             return
 
         # process the data.
         if args['id']:  # If --id was given for a single tweet.
-            # first, check for errors.
-            if 'errors' in data:
-                irc.reply("ERROR: I cannot fetch Tweet ID: {0} message: {1}".format(optnick, data['errors'][0]['message']))
-                return
             text = self._unescape(data.get('text', None))
             nick = data["user"].get('screen_name', None)
             name = data["user"].get('name', None)
@@ -459,10 +503,6 @@ class Tweety(callbacks.Plugin):
             self._outputTweet(irc, msg, nick.encode('utf-8'), name.encode('utf-8'), text.encode('utf-8'), relativeTime, tweetid)
             return
         elif args['info']:  # Works with --info to return info on a Twitter user.
-            # first, check for errors.
-            if 'errors' in data:
-                irc.reply("ERROR: I cannot fetch Twitter info for: {0} message: {1}".format(optnick, data['errors'][0]['message']))
-                return
             location = data.get('location', None)
             followers = data.get('followers_count', None)
             friends = data.get('friends_count', None)
@@ -471,30 +511,26 @@ class Tweety(callbacks.Plugin):
             name = data.get('name', None)
             url = data.get('url', None)
 
-            # build ret, output string
-            ret = ircutils.underline(ircutils.bold("@" + optnick))
+            # build output string conditionally.
+            ret = self._bu("@" + screen_name.encode('utf-8'))
             ret += " ({0}):".format(name.encode('utf-8'))
             if url:
-                ret += " {0}".format(ircutils.underline(url.encode('utf-8')))
+                ret += " {0}".format(self._ul(url.encode('utf-8')))
             if description:
                 ret += " {0}".format(description.encode('utf-8'))
-            ret += " [{0} friends,".format(ircutils.bold(friends))
-            ret += " {0} followers.".format(ircutils.bold(followers))
+            ret += " [{0} friends,".format(self._bold(friends))
+            ret += " {0} followers.".format(self._bold(followers))
             if location:
                 ret += " Location: {0}]".format(location.encode('utf-8'))
             else:
                 ret += "]"
-
-            irc.reply(ret)
+            irc.reply(ret)  # output info.
             return
-        else:
-            if 'error' in data:
-                irc.reply("ERROR: I cannot fetch tweets from {0}: {1}".format(optnick, data['error']))
+        else:  # this will display tweets/a user's timeline.
+            if len(data) == 0:  # If we have no data, user has not tweeted.
+                irc.reply("ERROR: '{0}' has not tweeted yet.".format(optnick))
                 return
-            if len(data) == 0:  # length handled above but user might have 0 tweets.
-                irc.reply("ERROR: {0} has not tweeted yet.".format(optnick))
-                return
-            for tweet in data:
+            for tweet in data:  # iterate through each tweet.
                 text = self._unescape(tweet.get('text', None))
                 nick = tweet["user"].get('screen_name', None)
                 name = tweet["user"].get('name', None)
