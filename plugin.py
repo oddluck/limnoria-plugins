@@ -5,15 +5,12 @@
 # my libs
 import urllib2
 import json
-import string
 # libraries for time_created_at
 import time
-from datetime import tzinfo, datetime, timedelta
+from datetime import datetime
 # for unescape
 import re
 import htmlentitydefs
-# reencode
-import unicodedata
 # oauthtwitter
 import oauth2 as oauth
 # supybot libs
@@ -26,6 +23,7 @@ import supybot.callbacks as callbacks
 
 class OAuthApi:
     """ OAuth class to work with Twitter v1.1 API."""
+
     def __init__(self, consumer_key, consumer_secret, token, token_secret):
         token = oauth.Token(token, token_secret)
         self._Consumer = oauth.Consumer(consumer_key, consumer_secret)
@@ -33,6 +31,7 @@ class OAuthApi:
         self._access_token = token
 
     def _FetchUrl(self,url, parameters=None):
+
         extra_params = {}
         if parameters:
             extra_params.update(parameters)
@@ -45,6 +44,7 @@ class OAuthApi:
         return url_data
 
     def _makeOAuthRequest(self, url, token=None, params=None):
+
         oauth_base_params = {
             'oauth_version': "1.0",
             'oauth_nonce': oauth.generate_nonce(),
@@ -63,7 +63,7 @@ class OAuthApi:
         return request
 
     def ApiCall(self, call, parameters={}):
-        return_value = []
+
         try:
             data = self._FetchUrl("https://api.twitter.com/1.1/" + call + ".json", parameters)
         except urllib2.HTTPError, e:
@@ -87,6 +87,7 @@ class Tweety(callbacks.Plugin):
 
     def _checkAuthorization(self):
         """ Check if we have our keys and can auth."""
+
         if not self.twitterApi:
             failTest = False
             for checkKey in ('consumerKey', 'consumerSecret', 'accessKey', 'accessSecret'):
@@ -156,6 +157,7 @@ class Tweety(callbacks.Plugin):
 
     def _unescape(self, text):
         """Created by Fredrik Lundh (http://effbot.org/zone/re-sub.htm#unescape-html)"""
+
         text = text.replace("\n", " ")
         def fixup(m):
             text = m.group(0)
@@ -189,10 +191,8 @@ class Tweety(callbacks.Plugin):
                 ddate = time.strptime(s, "%a, %d %b %Y %H:%M:%S +0000")[:-2]
             except ValueError:
                 return s
-
         # do the math
         d = datetime.utcnow() - datetime(*ddate, tzinfo=None)
-
         # now parse and return.
         if d.days:
             rel_time = "%sd ago" % d.days
@@ -211,21 +211,24 @@ class Tweety(callbacks.Plugin):
 
         outputColorTweets = self.registryValue('outputColorTweets', msg.args[0])
 
-        if outputColorTweets:
-            ret = ircutils.underline(ircutils.mircColor(("@" + nick), 'blue'))
-        else:
-            ret = ircutils.underline(ircutils.bold("@" + nick))
+        # build output string.
+        if outputColorTweets:  # blue if color is on.
+            ret = "@{0}".format(self._ul(self._blue(nick)))
+        else:  # bold otherwise.
+            ret = "@{0}".format(self._ul(self._bold(nick)))
 
-        if not self.registryValue('hideRealName', msg.args[0]): # show realname in tweet output?
+        # show real name in tweet output?
+        if not self.registryValue('hideRealName', msg.args[0]):
             ret += " ({0})".format(name)
 
-        # add in the end with the text + tape
+        # add in the end with the text + tape.
         if outputColorTweets:
-            text = re.sub(r'(http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+)', ircutils.mircColor(r'\1', 'red'), text) # color urls.
-            ret += ": {0} ({1})".format(text, ircutils.mircColor(time, 'yellow'))
+            text = re.sub(r'(http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+)', self._red(r'\1'), text) # color urls.
+            ret += ": {0} ({1})".format(text, self._yellow(time))
         else:
-            ret += ": {0} ({1})".format(text, ircutils.bold(time))
+            ret += ": {0} ({1})".format(text, self._bold(time))
 
+        # short url the link to the tweet?
         if self.registryValue('addShortUrl', msg.args[0]):
             if self._createShortUrl(nick, tweetid):
                 ret += " {0}".format(url)
@@ -336,7 +339,7 @@ class Tweety(callbacks.Plugin):
             irc.reply("ERROR: Twitter is not authorized. Please check logs before running this command.")
             return
 
-        args = {'id': self.registryValue('woeid', msg.args[0]),'exclude': self.registryValue('hideHashtagsTrends', msg.args[0])}
+        args = {'id': self.registryValue('woeid', msg.args[0]), 'exclude': self.registryValue('hideHashtagsTrends', msg.args[0])}
         if getopts:
             for (key, value) in getopts:
                 if key == 'exclude':  # remove hashtags from trends.
@@ -362,7 +365,7 @@ class Tweety(callbacks.Plugin):
             return
 
         # package together in object and output.
-        ttrends = string.join([trend['name'].encode('utf-8') for trend in data[0]['trends']], " | ")
+        ttrends = " | ".join([trend['name'].encode('utf-8') for trend in data[0]['trends']])
         irc.reply("Top 10 Twitter Trends in {0} :: {1}".format(self._bold(location), ttrends))
 
     trends = wrap(trends, [getopts({'exclude':''}), optional('text')])
@@ -410,22 +413,22 @@ class Tweety(callbacks.Plugin):
             return
         else:
             for result in results:
-                nick = result['user'].get('screen_name', None)
-                name = result["user"].get('name', None)
-                text = self._unescape(result.get('text', None))  # look also at the unicode strip here.
-                date = self._time_created_at(result.get('created_at', None))
-                tweetid = result.get('id_str', None)
+                nick = result['user'].get('screen_name')
+                name = result["user"].get('name')
+                text = self._unescape(result.get('text'))
+                date = self._time_created_at(result.get('created_at'))
+                tweetid = result.get('id_str')
                 self._outputTweet(irc, msg, nick.encode('utf-8'), name.encode('utf-8'), text.encode('utf-8'), date, tweetid)
 
     tsearch = wrap(tsearch, [getopts({'num':('int'), 'searchtype':('literal', ('popular', 'mixed', 'recent')), 'lang':('somethingWithoutSpaces')}), ('text')])
 
     def twitter(self, irc, msg, args, optlist, optnick):
-        """[--noreply] [--nort] [--num number] <nick> | <--id id> | [--info nick]
+        """[--noreply] [--nort] [--num number] <nick> | [--id id] | [--info nick]
 
         Returns last tweet or 'number' tweets (max 10). Shows all tweets, including rt and reply.
         To not display replies or RT's, use --noreply or --nort, respectively.
-        Or returns tweet with id 'id'.
-        Or returns information on user with --info.
+        Or returns specific tweet with --id 'tweet#'.
+        Or returns information on user with --info 'name'.
         """
 
         # before we do anything, make sure we have a twitterApi object.
@@ -448,7 +451,7 @@ class Tweety(callbacks.Plugin):
                     args['noreply'] = True
                 if key == 'num':
                     if value > self.registryValue('maxResults', msg.args[0]) or value <= 0:
-                        irc.reply("Error: '{0}' is not a valid number of tweets. Range is above 0 and max {1}.".format(value, max))
+                        irc.reply("ERROR: '{0}' is not a valid number of tweets. Range is above 0 and max {1}.".format(value, max))
                         return
                     else:
                         args['num'] = value
@@ -495,47 +498,58 @@ class Tweety(callbacks.Plugin):
 
         # process the data.
         if args['id']:  # If --id was given for a single tweet.
-            text = self._unescape(data.get('text', None))
-            nick = data["user"].get('screen_name', None)
-            name = data["user"].get('name', None)
-            relativeTime = self._time_created_at(data.get('created_at', None))
-            tweetid = data.get('id', None)
+            text = self._unescape(data.get('text'))
+            nick = data["user"].get('screen_name')
+            name = data["user"].get('name')
+            relativeTime = self._time_created_at(data.get('created_at'))
+            tweetid = data.get('id')
+            # send to outputTweet because it is an individual "tweet".
             self._outputTweet(irc, msg, nick.encode('utf-8'), name.encode('utf-8'), text.encode('utf-8'), relativeTime, tweetid)
             return
-        elif args['info']:  # Works with --info to return info on a Twitter user.
-            location = data.get('location', None)
-            followers = data.get('followers_count', None)
-            friends = data.get('friends_count', None)
-            description = data.get('description', None)
-            screen_name = data.get('screen_name', None)
-            name = data.get('name', None)
-            url = data.get('url', None)
-
+        elif args['info']:  # --info to return info on a Twitter user.
+            location = data.get('location')
+            followers = data.get('followers_count')
+            friends = data.get('friends_count')
+            description = data.get('description')
+            screen_name = data.get('screen_name')
+            created_at = data.get('created_at')
+            listed_count = data.get('listed_count')
+            protected = data.get('protected')
+            name = data.get('name')
+            url = data.get('url')
             # build output string conditionally.
-            ret = self._bu("@" + screen_name.encode('utf-8'))
-            ret += " ({0}):".format(name.encode('utf-8'))
-            if url:
+            # we don't use outputTweet since it's not a tweet.
+            ret = self._bu("@{0}".format(screen_name.encode('utf-8')))
+            ret += " ({0})".format(name.encode('utf-8'))
+            if protected:  # is the account protected/locked?
+                ret += " [{0}]:".format(self._bu('LOCKED'))
+            else:  # open.
+                ret += ":"
+            if url:  # do they have a url?
                 ret += " {0}".format(self._ul(url.encode('utf-8')))
-            if description:
+            if description:  # a description?
                 ret += " {0}".format(description.encode('utf-8'))
             ret += " [{0} friends,".format(self._bold(friends))
-            ret += " {0} followers.".format(self._bold(followers))
-            if location:
+            ret += " {0} tweets,".format(self._bold(listed_count))
+            ret += " {0} followers,".format(self._bold(followers))
+            ret += " signup: {0}".format(self._bold(self._time_created_at(created_at)))
+            if location:  # do we have location?
                 ret += " Location: {0}]".format(location.encode('utf-8'))
-            else:
+            else: # nope.
                 ret += "]"
-            irc.reply(ret)  # output info.
+            # finally, output.
+            irc.reply(ret)
             return
         else:  # this will display tweets/a user's timeline.
             if len(data) == 0:  # If we have no data, user has not tweeted.
                 irc.reply("ERROR: '{0}' has not tweeted yet.".format(optnick))
                 return
             for tweet in data:  # iterate through each tweet.
-                text = self._unescape(tweet.get('text', None))
-                nick = tweet["user"].get('screen_name', None)
-                name = tweet["user"].get('name', None)
-                tweetid = tweet.get('id', None)
-                relativeTime = self._time_created_at(tweet.get('created_at', None))
+                text = self._unescape(tweet.get('text'))
+                nick = tweet["user"].get('screen_name')
+                name = tweet["user"].get('name')
+                tweetid = tweet.get('id')
+                relativeTime = self._time_created_at(tweet.get('created_at'))
                 self._outputTweet(irc, msg, nick.encode('utf-8'), name.encode('utf-8'), text.encode('utf-8'), relativeTime, tweetid)
 
     twitter = wrap(twitter, [getopts({'noreply':'', 'nort':'', 'info':'', 'id':'', 'num':('int')}), ('somethingWithoutSpaces')])
