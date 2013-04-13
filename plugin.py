@@ -513,7 +513,7 @@ class Tweety(callbacks.Plugin):
             description = data.get('description')
             screen_name = data.get('screen_name')
             created_at = data.get('created_at')
-            listed_count = data.get('listed_count')
+            statuses_count = data.get('statuses_count')
             protected = data.get('protected')
             name = data.get('name')
             url = data.get('url')
@@ -530,7 +530,7 @@ class Tweety(callbacks.Plugin):
             if description:  # a description?
                 ret += " {0}".format(description.encode('utf-8'))
             ret += " [{0} friends,".format(self._bold(friends))
-            ret += " {0} tweets,".format(self._bold(listed_count))
+            ret += " {0} tweets,".format(self._bold(statuses_count))
             ret += " {0} followers,".format(self._bold(followers))
             ret += " signup: {0}".format(self._bold(self._time_created_at(created_at)))
             if location:  # do we have location?
