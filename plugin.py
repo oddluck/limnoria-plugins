@@ -7,10 +7,6 @@
 ###
 # my libs
 import json
-import urllib2
-import urllib
-import string
-import unicodedata
 # supybot libs
 import supybot.utils as utils
 from supybot.commands import *
@@ -27,10 +23,9 @@ class UrbanDictionary(callbacks.Plugin):
     This should describe *how* to use this plugin."""
     threaded = True
 
-    # helper methods.
-    def _remove_accents(self, data):
-        nkfd_form = unicodedata.normalize('NFKD', unicode(data))
-        return u"".join([c for c in nkfd_form if not unicodedata.combining(c)])
+    ######################
+    # INTERNAL FUNCTIONS #
+    ######################
 
     def _red(self, string):
         """return a red string."""
@@ -40,9 +35,12 @@ class UrbanDictionary(callbacks.Plugin):
         """bold and underline string."""
         return ircutils.bold(ircutils.underline(string))
 
-    # main urbandict function.
+    ####################
+    # PUBLIC FUNCTIONS #
+    ####################
+
     def urbandictionary(self, irc, msg, args, optlist, optterm):
-        """[--disableexamples|--showvotes|--num #] <term>
+        """[--disableexamples | --showvotes | --num #] <term>
 
         Fetches definition for <term> on UrbanDictionary.com
 
@@ -51,9 +49,11 @@ class UrbanDictionary(callbacks.Plugin):
         Use --num # to limit the number of definitions. [default:10]
         """
 
-        # default args for output.
-        args = {'showExamples': True, 'numberOfDefinitions':'10', 'showVotes': False }
-
+        # default args for output. can manip via --getopts.
+        args = {'showExamples': True,
+                'numberOfDefinitions':self.registryValue('maxNumberOfDefinitions'),
+                'showVotes': False
+               }
         # optlist to change args.
         if optlist:
             for (key, value) in optlist:
@@ -61,73 +61,49 @@ class UrbanDictionary(callbacks.Plugin):
                     args['showExamples'] = False
                 if key == 'showvotes':
                     args['showVotes'] = True
-                if key == 'num': # number of definitions. max 10 default but also is enforced
-                    if value > self.registryValue('maxNumberOfDefinitions') or value <= 0:
-                        args['numberOfDefinitions'] = '10'
-                    else:
+                if key == 'num':  # if number is >, default to config var.
+                    if 0 <= value <= self.registryValue('maxNumberOfDefinitions'):
                         args['numberOfDefinitions'] = value
-
-        # url
-        url = 'http://api.urbandictionary.com/v0/define?term=%s' % (urllib.quote(optterm))
-
-        # try fetching url.
+        # build and fetch url.
+        url = 'http://api.urbandictionary.com/v0/define?term=%s' % utils.web.urlquote(optterm)
         try:
-            request = urllib2.Request(url)
-            response = urllib2.urlopen(request)
-        except Exception, e:
-            irc.reply("{0} fetching {1}".format(self._red("Error"), url))
-            self.log.debug("Error fetching: {0} :: {1}".format(url, e))
+            html = utils.web.getUrl(url)
+        except utils.web.Error as e:
+            self.log.error("ERROR opening {0} message: {1}".format(url, e))
+            irc.reply("ERROR: could not open {0} message: {1}".format(url, e))
             return
-
         # try parsing json.
         try:
-            jsondata = response.read().decode('utf-8')
-            jsondata = json.loads(jsondata.replace(r'\r','').replace(r'\n','')) # odds chars in UD.
+            jsondata = html.decode('utf-8')  # decode utf-8. fix \r\n that ud puts in below.
+            jsondata = json.loads(jsondata.replace(r'\r','').replace(r'\n',''))  # odds chars in UD.
         except:
-            irc.reply("Failed to parse json data. Check logs for error")
+            irc.reply("ERROR: Failed to parse json data. Check logs for error")
             return
-
-        # handle output based on what comes back. 2 different results, fallback on else.
-        # asshole - "has_related_words": true, "result_type": "exact"
-        # assmole - "has_related_words": true, "result_type": "exact", total: 1
-        # asswole - "has_related_words": false, "result_type": "no_results" - list->term
-        definitions = jsondata.get('list', None)
-        result_type = jsondata.get('result_type', None)
-        total = jsondata.get('total', None)
-
-        if result_type == "exact" and len(jsondata['list']) > 0: # exact, means we found, and we have definitions.
-            output = [] # container to put all def/ex in.
-            for item in jsondata['list'][0:int(args['numberOfDefinitions'])]:
-                outputstring = "{0}".format(item['definition'].encode('utf-8').strip()) # start outputstring.
-                if args['showExamples']: # if we're showing examples
-                    if self.registryValue('disableANSI'):
-                        outputstring += " {0} {1} {2}".format("[ex:]", item['example'].encode('utf-8').strip(), "[/ex]")
-                    else:
-                        outputstring += " {0} {1} {2}".format(self._bu("[ex:]"), item['example'].encode('utf-8').strip(), self._bu("[/ex]"))
-                if args['showVotes']: # if we're showing votes
-                        outputstring += " (+{0}/-{1})".format(item['thumbs_up'], item['thumbs_down'])
-
-                output.append(outputstring) # finally add to output
-
-            #output.
-            if self.registryValue('disableANSI'):
-                irc.reply("{0} ({1}): {2}".format(optterm, total, string.join([item for item in output], " | ")))
-            else:
-                irc.reply("{0} ({1}): {2}".format(self._red(optterm), total, string.join([item for item in output], " | ")))
-
-        elif result_type == "no_results" and len(jsondata['list']) > 0:
-            outrelated = string.join([item['term'].encode('utf-8') for item in jsondata['list']], " | ")
-
-            if self.registryValue('disableANSI'):
-                irc.reply("{0}: {1} not found. {2}: {3}".format("ERROR", optterm, "Related terms", outrelated))
-            else:
-                irc.reply("{0}: {1} not found. {2}: {3}".format(self._red("ERROR"), optterm, self._bu("Related terms"), outrelated))
-
-        else:
-            if self.registryValue('disableANSI'):
-                irc.reply("{0} nothing found in output looking up: {1}".format("ERROR", optterm))
-            else:
-                irc.reply("{0} nothing found in output looking up: {1}".format(self._red("ERROR"), optterm))
+        # process json.
+        results = jsondata.get('result_type')  # exact, no_results, fulltext .
+        definitions = jsondata.get('list')
+        # prep output now depending on results.
+        if results == "exact":  # we did not find anything.
+            outdefs = []
+            for i in definitions[0:args['numberOfDefinitions']]:  # iterate through each def.
+                outputstring = "{0}".format(i['definition'].encode('utf-8').strip())  # default string.
+                if args['showExamples']:  # show examples?
+                    outputstring += " {0} {1} {2}".format(self._bu("[ex:]"), i['example'].encode('utf-8').strip(), self._bu("[/ex]"))
+                if args['showVotes']:  # show votes?
+                    outputstring += " (+{0}/-{1})".format(i['thumbs_up'], i['thumbs_down'])
+                outdefs.append(outputstring)  # add to our list.
+            output = " | ".join([item for item in outdefs])  # create string with everything.
+        elif results == "fulltext":  # not direct. yields related terms.
+            output = " | ".join(sorted(set([item['word'].encode('utf-8') for item in definitions])))  # sorted, unique words.
+        # output time.
+        if results == "no_results" or len(definitions) == 0:  # NOTHING FOUND.
+            irc.reply("ERROR: '{0}' not defined on UrbanDictionary.".format(optterm))
+            return
+        else:  # we have definitions.
+            if self.registryValue('disableANSI'):  # disable formatting.
+                irc.reply("{0} :: {1}".format(optterm, ircutils.stripFormatting(output)))
+            else:  # colors.
+                irc.reply("{0} :: {1}".format(self._red(optterm), output))
 
     urbandictionary = wrap(urbandictionary, [getopts({'showvotes':'', 'num':('int'), 'disableexamples':''}), ('text')])
 
