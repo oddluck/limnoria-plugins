@@ -334,6 +334,10 @@ class Tweety(callbacks.Plugin):
         Use --exclude to not include #hashtags in trends data.
         """
 
+        # enforce +voice or above to use command?
+        if self.registryValue('requireVoiceOrAbove', msg.args[0]) and not irc.state.channels[msg.args[0]].isVoicePlus(msg.nick):
+            irc.error("ERROR: You have to be at least voiced to use this command.")
+
         # before we do anything, make sure we have a twitterApi object.
         if not self.twitterApi:
             irc.reply("ERROR: Twitter is not authorized. Please check logs before running this command.")
@@ -377,6 +381,10 @@ class Tweety(callbacks.Plugin):
         Number is number of results. Must be a number higher than 0 and max 10.
         searchtype being recent, popular or mixed. Popular is the default.
         """
+
+        # enforce +voice or above to use command?
+        if self.registryValue('requireVoiceOrAbove', msg.args[0]) and not irc.state.channels[msg.args[0]].isVoicePlus(msg.nick):
+            irc.error("ERROR: You have to be at least voiced to use this command.")
 
         # before we do anything, make sure we have a twitterApi object.
         if not self.twitterApi:
@@ -430,6 +438,10 @@ class Tweety(callbacks.Plugin):
         Or returns specific tweet with --id 'tweet#'.
         Or returns information on user with --info 'name'.
         """
+
+        # enforce +voice or above to use command?
+        if self.registryValue('requireVoiceOrAbove', msg.args[0]) and not irc.state.channels[msg.args[0]].isVoicePlus(msg.nick):
+            irc.error("ERROR: You have to be at least voiced to use this command.")
 
         # before we do anything, make sure we have a twitterApi object.
         if not self.twitterApi:
