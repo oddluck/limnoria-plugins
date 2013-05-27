@@ -29,5 +29,6 @@ conf.registerChannelValue(Tweety,'maxResults',registry.Integer(10, """Maximum nu
 conf.registerChannelValue(Tweety,'outputColorTweets',registry.Boolean(False, """When outputting Tweets, display them with some color."""))
 conf.registerChannelValue(Tweety,'hideHashtagsTrends',registry.Boolean(False, """When displaying trends, should we display #hashtags? Default is no."""))
 conf.registerChannelValue(Tweety,'requireVoiceOrAbove',registry.Boolean(False, """Only allows a user with voice or above on a channel to use commands."""))
+conf.registerChannelValue(Tweety,'colorTweetURLs',registry.Boolean(False, """Try and color URLs (red) in Tweets?"""))
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=250:
