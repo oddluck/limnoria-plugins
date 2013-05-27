@@ -17,8 +17,10 @@ This is a much watered down version of ProgVal's Twitter client. It only include
 read-only features (no risk of accidental Tweeting) that most folks use:
 tweet display, tweet searching and trends.
 
-If you need to do any type of Twittering via the bot such as posting tweets, responding,
-announcing of timelines, you will want his. This will never contain more than what is above.
+If you need to do any type of Twittering via the bot such as posting tweets,
+responding, announcing of timelines, you will want ProgVals.
+
+This will never contain more than what is above.
 
 Instructions
 ------------
@@ -47,6 +49,21 @@ Instructions
 Examples
 --------
 
+    - Twitter Trends
+    <me> trends
+    <bot> Top 10 Twitter Trends in United States :: #BeforeIDieIWantTo | #ThingsIMissAboutMyChildhood | Happy Memorial Day | #RG13 | #USA | #america | BBQ | WWII | God Bless | Facebook
+
+    - Searching Twitter
+    <me> tsearch news
+    <bot> @ray_gallego (Ray Gallego): http://t.co/ftNbDEzXaR (Researchers say Western IQs dropped 14 points over last century) (14s ago)
+    <bot> @surfing93 (emilyhenderson): @MariaaEveline Hay here is the Crestillion Interview. http://t.co/CEiDpboeMX (15s ago)
+
+    - Getting tweets from someones' timeline.
+    <me> twitter --num 3 @ESPNStatsInfo
+    <bot> @ESPNStatsInfo (ESPN Stats & Info): In 1st-round win vs Daniel Brands, Rafael Nadal lost 19 games. He lost a total of 19 games in the 1st 4 rounds at last year's French Open. (30m ago)
+    <bot> @ESPNStatsInfo (ESPN Stats & Info): Key stats from Miami's win yesterday. Haslem's jump shot, LeBron's post-up and more: http://t.co/a4CcUnKJMi (53m ago)
+    <bot> @ESPNStatsInfo (ESPN Stats & Info): Heat avoid losing consecutive games. They haven't lost 2 straight in more than 5 months (January 8-10) (1h ago)
+
 Background
 ----------
 Hoaas, on GitHub, started this plugin with basics for Twitter and I started to submit
@@ -59,7 +76,7 @@ changes.
 
 So, as I take over, I must acknowledge the work done by Hoaas:
 http://github.com/Hoaas/
-Much/almost all of the oAuth code ideas came from:
+Much/almost all of the oAuth code came from:
 https://github.com/jpittman/OAuth-Python-Twitter
 
 Documentation
