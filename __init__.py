@@ -22,7 +22,7 @@ __author__ = supybot.Author('reticulatingspline', 'spline', 'spline')
 __contributors__ = {}
 
 # This is a url where the most recent plugin package can be downloaded.
-__url__ = '' # 'http://supybot.com/Members/yourname/Tweety/download'
+__url__ = 'http://github.com/reticulatingspline/Supybot-Tweety'
 
 import config
 import plugin
