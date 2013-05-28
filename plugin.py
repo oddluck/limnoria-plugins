@@ -330,7 +330,7 @@ class Tweety(callbacks.Plugin):
         # enforce +voice or above to use command?
         if self.registryValue('requireVoiceOrAbove', msg.args[0]):  # should we check?
             if ircutils.isChannel(msg.args[0]):  # are we in a channel?
-                if irc.state.channels[msg.args[0]].isVoicePlus(msg.nick):  # are they + or @?
+                if not irc.state.channels[msg.args[0]].isVoicePlus(msg.nick):  # are they + or @?
                     irc.error("ERROR: You have to be at least voiced to use the trends command in {0}.".format(msg.args[0]))
                     return
 
@@ -393,8 +393,8 @@ class Tweety(callbacks.Plugin):
         # enforce +voice or above to use command?
         if self.registryValue('requireVoiceOrAbove', msg.args[0]):  # should we check?
             if ircutils.isChannel(msg.args[0]):  # are we in a channel?
-                if irc.state.channels[msg.args[0]].isVoicePlus(msg.nick):  # are they + or @?
-                    irc.error("ERROR: You have to be at least voiced to use the tsearchcommand in {0}.".format(msg.args[0]))
+                if not irc.state.channels[msg.args[0]].isVoicePlus(msg.nick):  # are they + or @?
+                    irc.error("ERROR: You have to be at least voiced to use the tsearch command in {0}.".format(msg.args[0]))
                     return
 
         # before we do anything, make sure we have a twitterApi object.
@@ -462,7 +462,7 @@ class Tweety(callbacks.Plugin):
         # enforce +voice or above to use command?
         if self.registryValue('requireVoiceOrAbove', msg.args[0]):  # should we check?
             if ircutils.isChannel(msg.args[0]):  # are we in a channel?
-                if irc.state.channels[msg.args[0]].isVoicePlus(msg.nick):  # are they + or @?
+                if not irc.state.channels[msg.args[0]].isVoicePlus(msg.nick):  # are they + or @?
                     irc.error("ERROR: You have to be at least voiced to use the twitter command in {0}.".format(msg.args[0]))
                     return
 
