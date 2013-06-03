@@ -596,7 +596,7 @@ class Tweety(callbacks.Plugin):
     twitter = wrap(twitter, [getopts({'noreply':'',
                                       'nort':'',
                                       'info':'',
-                                      'id':('int'),
+                                      'id':'',
                                       'num':('int')}), ('somethingWithoutSpaces')])
 
 Class = Tweety
