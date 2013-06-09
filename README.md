@@ -1,7 +1,5 @@
+This plugin will be a feature packed trivia script for [Supybot][] in the future. Developers will need to refer to [TriviaTime][] for more information.
 This plugin cannot do anything yet. The project has not yet started.
-
-This plugin will be a feature packed trivia script for [Supybot][] in the future.
-Developers will need to [TriviaTime][] for more information.
 
 # Plans
 ## Main Priority
