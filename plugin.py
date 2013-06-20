@@ -434,7 +434,7 @@ class Tweety(callbacks.Plugin):
             irc.reply("ERROR: No Twitter Search results found for '{0}'".format(optterm))
             return
         else:  # we found something.
-            for result in results:  # iterate over each.
+            for result in results[0:int(tsearchArgs['count'])]:  # iterate over each.
                 nick = result['user'].get('screen_name').encode('utf-8')
                 name = result["user"].get('name').encode('utf-8')
                 text = self._unescape(result.get('text')).encode('utf-8')
