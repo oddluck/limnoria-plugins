@@ -13,8 +13,6 @@ import re
 import htmlentitydefs
 # oauthtwitter
 import oauth2 as oauth
-# extra supybot libs.
-import supybot.ircmsgs as ircmsgs
 # supybot libs
 import supybot.utils as utils
 from supybot.commands import *
@@ -371,7 +369,7 @@ class Tweety(callbacks.Plugin):
         if 'errors' in data:
             if data['errors'][0]['code'] == 34:  # 34 means location not found.
                 irc.reply("ERROR: I do not have any trends for: {0}".format(optwoeid))
-                returnirc.reply(responseTxt, prefixNick=False)
+                return
             else:  # just return the message.
                 errmsg = data['errors'][0]
                 irc.reply("ERROR: Could not load trends. ({0} {1})".format(errmsg['code'], errmsg['message']))
