@@ -13,6 +13,8 @@ import re
 import htmlentitydefs
 # oauthtwitter
 import oauth2 as oauth
+# extra supybot libs.
+import supybot.ircmsgs as ircmsgs
 # supybot libs
 import supybot.utils as utils
 from supybot.commands import *
@@ -150,7 +152,7 @@ class Tweety(callbacks.Plugin):
     def _unescape(self, text):
         """Created by Fredrik Lundh (http://effbot.org/zone/re-sub.htm#unescape-html)"""
 
-        text = text.replace("\n", " ")
+        text = text.replace('\n', ' ')
         def fixup(m):
             text = m.group(0)
             if text[:2] == "&#":
@@ -369,7 +371,7 @@ class Tweety(callbacks.Plugin):
         if 'errors' in data:
             if data['errors'][0]['code'] == 34:  # 34 means location not found.
                 irc.reply("ERROR: I do not have any trends for: {0}".format(optwoeid))
-                return
+                returnirc.reply(responseTxt, prefixNick=False)
             else:  # just return the message.
                 errmsg = data['errors'][0]
                 irc.reply("ERROR: Could not load trends. ({0} {1})".format(errmsg['code'], errmsg['message']))
@@ -567,13 +569,13 @@ class Tweety(callbacks.Plugin):
             if url:  # do they have a url?
                 ret += " {0}".format(self._ul(url.encode('utf-8')))
             if description:  # a description?
-                ret += " {0}".format(description.encode('utf-8'))
+                ret += " {0}".format(self._unescape(description).encode('utf-8'))
             ret += " [{0} friends,".format(self._bold(friends))
             ret += " {0} tweets,".format(self._bold(statuses_count))
             ret += " {0} followers,".format(self._bold(followers))
             ret += " signup: {0}".format(self._bold(self._time_created_at(created_at)))
             if location:  # do we have location?
-                ret += " Location: {0}]".format(location.encode('utf-8'))
+                ret += " Location: {0}]".format(self._bold(location.encode('utf-8')))
             else: # nope.
                 ret += "]"
             # finally, output.

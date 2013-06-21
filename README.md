@@ -46,6 +46,25 @@ Instructions
 
     Things should work fine from here providing your keys are right.
 
+3.) EXTRAS: Want the bot to function like others do parsing out Twitter links and displaying?
+
+    IE:
+
+    <@snackle> https://twitter.com/JSportsnet/status/348114324004413440
+    <@milo> @JSportsnet (John Shannon): Am told that Tippett's new deal is for 5 years, and he's "committed to the franchise where ever it ends up". (44m ago)
+
+    OR:
+
+    <@Hoaas> Should work on links to profiles aswell: https://twitter.com/EricFrancis
+    <@Bunisher> @EricFrancis (Eric Francis): HNIC-turned-Sportsnet analyst, Calgary Sun columnist, JACK FM morning host, author, FAN 960,
+    job collector, KidSport Ambassador, Ticats kicker, Dad, rum lover [513 friends, 3903 tweets, 20646 followers, signup: 1561d ago Location: Calgary]
+
+    Load the messageparser plugin: (Thanks to Hoaas for this!)
+
+    /msg <bot> load MessageParser
+    /msg <bot> messageparser add global "https?://twitter\.com/([^ \t/]+)(?:$|[ \t])" "Tweety twitter --info $1"
+    /msg <bot> messageparser add global "https?://twitter\.com/([A-Za-z0-9_]+)/status/([0-9]+)" "Tweety twitter --id $2"
+
 Examples
 --------
 
