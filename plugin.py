@@ -39,9 +39,11 @@ from random import randint
 
 import operator 
 
-from cah import Game
+from cah import Game, base_directory, card_folder, blank_format
 
 import time
+import os
+import re
 
 class Cah(callbacks.Plugin):
     """Add the help for "@plugin help Cah" here
@@ -268,8 +270,26 @@ class Cah(callbacks.Plugin):
             irc.reply("Who wants to play Cards Aganst Humanity? To play reply with: @playing", prefixNick=False)
             self.games[channel] = self.CahGame(irc, channel, numrounds)
             self.games[channel].initGame()
-            
 
+    def addcard(self, irc, msg, args):
+        """Add a question or answer card to the deck,
+        take required argument of [question, answer], and the string.
+        For questions cards any number of continuous underscores will be treated as a fill-in-the-blank.
+        """
+        channel = ircutils.toLower(msg.args[0])
+        #TODO: assumes msg[index] is a string
+        text = args[1].capitalize().strip()
+        if args[0] == "question":
+            card_file = "custom_question_cards"
+            text = re.sub(r'_+', blank_format, text)
+        elif args[0] == "answer":
+            card_file = "custom_answer_cards"
+        else:
+            irc.reply("Specify type of card as either question or answer.")
+            return
+        path = os.path.abspath(os.path.join(base_directory, card_folder, card_file))
+        with open(path, 'w') as file_handle:
+            file_handle.writelines([text])
 
     def scah(self, irc, msg, args):
         channel = ircutils.toLower(msg.args[0])

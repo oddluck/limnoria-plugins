@@ -5,8 +5,9 @@ import test
 
 # Settings you change
 card_folder = 'cards'
-answer_cards_file_names = ['answer_cards', 'custom_anwser_cards']
+answer_cards_file_names = ['answer_cards', 'custom_answer_cards']
 question_cards_file_name = ['question_cards', 'question_cards1', 'question_cards2', 'custom_question_cards']
+blank_format = '__________'
 
 # Settings that are used
 #this is one level hire then it should be 
@@ -47,7 +48,7 @@ class Deck(object):
                 card_object_list.append(Card(index, card_type, card))
         return card_object_list
 
-    def count_answers(self, text, blank_format = '__________'):
+    def count_answers(self, text):
         blanks = text.count(blank_format)
         if blanks is 0:
             return 1
