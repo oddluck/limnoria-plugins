@@ -1,10 +1,3 @@
-###
-# Copyright (c) 2013, tann <tann@trivialand.org>
-# All rights reserved.
-#
-#
-###
-
 import supybot.utils as utils
 from supybot.commands import *
 import supybot.plugins as plugins
@@ -46,8 +39,15 @@ class TriviaTime(callbacks.Plugin):
         self.storage.makeUserTable()
         #self.storage.dropReportTable()
         self.storage.makeReportTable()
+        #self.storage.dropQuestionTable()
+        self.storage.makeQuestionTable()
+        self.storage.dropEditTable()
+        self.storage.makeEditTable()
         #self.storage.insertUserLog('root', 1, 1, 10, 30, 2013)
         #self.storage.insertUser('root', 1, 1)
+
+        #filename = self.registryValue('quizfile')
+        #self.addQuestionsFromFile(filename)
 
     def doPrivmsg(self, irc, msg):
         """
@@ -62,6 +62,40 @@ class TriviaTime(callbacks.Plugin):
         if channel in self.games:
             # check the answer
             self.games[channel].checkAnswer(msg)
+
+    def addquestionfile(self, irc, msg, arg, filename):
+        """[<filename>]
+        Add a file of questions to the servers question database, filename defaults to configured quesiton file
+        """
+        if filename is None:
+            filename = self.registryValue('quizfile')
+        try:
+            filesLines = open(filename).readlines()
+        except:
+            irc.error('Could not open file to add to database. Make sure it exists on the server.')
+            return
+        irc.reply('Adding questions from %s to database.. This may take a few minutes' % filename)
+        insertList = []
+        for line in filesLines:
+            insertList.append((str(line).strip(),str(line).strip()))
+
+        info = self.storage.insertQuestionsBulk(insertList)
+        irc.reply('Successfully added %d questions, skipped %d' % (info[0], info[1]))
+    addquestionfile = wrap(addquestionfile, ['admin',optional('text')])
+
+    def info(self, irc, msg, arg):
+        """
+        Get TriviaTime information, how many questions/users in database, time, etc
+        """
+        infoText = '''\x0301,08 TriviaTime by #trivialand @ irc.freenode.net '''
+        irc.queueMsg(ircmsgs.privmsg(msg.args[0], infoText))
+        infoText = '''\x0301,08 %d Users on scoreboard  Time is %s ''' % (self.storage.getNumUser(),time.asctime(time.localtime()))
+        irc.queueMsg(ircmsgs.privmsg(msg.args[0], infoText))
+        numKaos = self.storage.getNumKAOS()
+        numQuestionTotal = self.storage.getNumQuestions()
+        infoText = '''\x0301,08 %d Questions and %d KAOS (%d Total) in the database ''' % ((numQuestionTotal-numKaos), numKaos, numQuestionTotal)
+        irc.queueMsg(ircmsgs.privmsg(msg.args[0], infoText))
+    info = wrap(info)
 
     def clearpoints(self, irc, msg, arg, username):
         """<username>
@@ -84,6 +118,57 @@ class TriviaTime(callbacks.Plugin):
         irc.queueMsg(ircmsgs.privmsg(channel, topsText))
         irc.noReply()
     day = wrap(day)
+
+    def edit(self, irc, msg, arg, num, question):
+        """<question number> <corrected text>
+        Correct a question by providing the question number and the corrected text.
+        """
+        if self.storage.questionIdExists(num):
+            self.storage.insertEdit(num, question,irc.msg.nick,msg.args[0])
+            irc.reply("Success! Submitted edit for further review.")
+        else:
+            irc.error("Question does not exist")
+    edit = wrap(edit, ['int', 'text'])
+
+    def acceptedit(self, irc, msg, arg, num):
+        """<num>
+        Accept a question edit, and remove edit
+        """
+        edit = self.storage.getEditById(num)
+        if len(edit) < 1:
+            irc.error('Could not find that edit')
+        else:
+            edit = edit[0]
+            self.storage.updateQuestion(edit[1], edit[2])
+            self.storage.removeEdit(edit[0])
+            irc.reply('Question #%d updated!' % edit[1])
+    acceptedit = wrap(acceptedit, ['int'])
+
+    def removeedit(self, irc, msg, arg, num):
+        """<int>
+        Remove a edit without accepting it
+        """
+        edit = self.storage.getEditById(num)
+        if len(edit) < 1:
+            irc.error('Could not find that edit')
+        else:
+            edit = edit[0]
+            self.storage.removeEdit(edit[0])
+            irc.reply('Edit %d removed!' % edit[0])
+    removeedit = wrap(removeedit, ['int'])
+
+    def removereport(self, irc, msg, arg, num):
+        """<report num>
+        Remove a old report by report number
+        """
+        report = self.storage.getReportById(num)
+        if len(report) < 1:
+            irc.error('Could not find that report')
+        else:
+            report = report[0]
+            self.storage.removeReport(report[0])
+            irc.reply('Report %d removed!' % report[0])
+    removereport = wrap(removereport, ['int'])
 
     def givepoints(self, irc, msg, arg, username, points, days):
         """<username> <points> [<daysAgo>]
@@ -118,6 +203,9 @@ class TriviaTime(callbacks.Plugin):
     me = wrap(me)
 
     def report(self, irc, msg, arg, text):
+        """<report text>
+        Provide a report for a bad question. Be sure to include the round number and any problems.
+        """
         channel = str.lower(msg.args[0])
         self.storage.insertReport(channel, msg.nick, text)
         irc.reply('Your report has been submitted!')
@@ -134,7 +222,11 @@ class TriviaTime(callbacks.Plugin):
             irc.error('You need to register with me to use this command. TODO: show command needed to register')
             return
         channel = ircutils.toLower(msg.args[0])
+        if channel not in self.games:
+            irc.error('Trivia is not running.')
+            return
         if self.games[channel].active == False:
+            irc.error('Trivia is not running.')
             return
         try:
             schedule.removeEvent('%s.trivia' % channel)
@@ -144,6 +236,84 @@ class TriviaTime(callbacks.Plugin):
         self.games[channel].nextQuestion()
         irc.noReply()
     skip = wrap(skip)
+
+    def showstats(self, irc, msg, arg, username):
+        """
+            Get someones rank, score & questions asked for day, month, year
+        """
+        channel = ircutils.toLower(msg.args[0])
+        info = self.storage.getUser(str.lower(username))
+        if len(info) < 3:
+            irc.error("You do not exist! There is no spoon.")
+        else:
+            infoText = '\x0305,08 %s\'s Stats:\x0301,08 Points (answers) \x0305,08Today: #%d %d (%d) This Week: #%d %d (%d) This Month: #%d %d (%d) This Year: #%d %d (%d)' % (info[1], info[16], info[10], info[11], info[15], info[8], info[9], info[14], info[6], info[7], info[13], info[4], info[5])
+            irc.queueMsg(ircmsgs.privmsg(channel, infoText))
+        irc.noReply()
+    showstats = wrap(showstats,['nick'])
+
+    def showquestion(self, irc, msg, arg, num):
+        """<num>
+        Search question database for question at line num
+        """
+        question = self.storage.getQuestion(num)
+        if len(question) < 1:
+            irc.error("Question not found")
+        else:
+            question = question[0]
+            irc.reply('''Question#%d: %s''' % (num, question[2]))
+    showquestion = wrap(showquestion, ['int'])
+
+    def showround(self, irc, msg, arg, num):
+        """<round num>
+        Show what question was asked during the round
+        """
+        question = self.storage.getQuestionByRound(num, msg.args[0])
+        if len(question) < 1:
+            irc.error("Round not found")
+        else:
+            question = question[0]
+            irc.reply('''Round %d: Question#%d, Text:%s''' % (num, question[0], question[2]))
+    showround = wrap(showround, ['int'])
+
+    def showreport(self, irc, msg, arg, num):
+        """[<report num>]
+        Shows report information, if num is provided one record is shown, otherwise the last 3 are
+        """
+        if num is not None:
+            report = self.storage.getReportById(num)
+            report = report[0]
+            irc.reply('Report #%d `%s` by %s on %s '%(report[0], report[3], report[2], report[1]))
+        else:
+            reports  = self.storage.getReportTop3()
+            if len(reports) < 1:
+                irc.reply('No reports found')
+            for report in reports:
+                irc.reply('Report #%d `%s` by %s on %s '%(report[0], report[3], report[2], report[1]))
+    showreport = wrap(showreport, [optional('int')])
+
+    def showedit(self, irc, msg, arg, num):
+        """[<edit num>]
+        Show top 3 edits, or provide edit num to view one
+        """
+        if num is not None:
+            edit = self.storage.getEditById(num)
+            edit = edit[0]
+            question = self.storage.getQuestion(edit[1])
+            question = question[0]
+            irc.reply('Edit #%d, Question#%d'%(edit[0], edit[1]))
+            irc.reply('NEW:%s' %(edit[2]))
+            irc.reply('OLD:%s' % (question[2]))
+        else:
+            edits = self.storage.getEditTop3()
+            if len(edits) < 1:
+                irc.reply('No edits found')
+            for edit in edits:
+                question = self.storage.getQuestion(edit[1])
+                question = question[0]
+                irc.reply('Edit #%d, Question#%d'%(edit[0], edit[1]))
+                irc.reply('NEW:%s' %(edit[2]))
+                irc.reply('OLD:%s' % (question[2]))
+    showedit = wrap(showedit, [optional('int')])
 
     def start(self, irc, msg, args):
         """
@@ -444,7 +614,14 @@ class TriviaTime(callbacks.Plugin):
             self.storage.updateGame(self.channel, 1) #increment q's asked
 
             # grab the next q
-            retrievedQuestion = self.retrieveQuestion()
+            numQuestion = self.storage.getNumQuestions()
+            if numQuestion == 0:
+                self.sendMessage('There are no questions. Stopping. If you are an admin use the addquestionfile to add questions to the database')
+                self.stop()
+                return
+            #print '%d questions' % numQuestion
+            lineNumber = random.randint(1,numQuestion-1)
+            retrievedQuestion = self.retrieveQuestion(lineNumber)
 
             self.points = self.registryValue('defaultPoints', self.channel)
             for x in retrievedQuestion:
@@ -494,9 +671,9 @@ class TriviaTime(callbacks.Plugin):
             except KeyError:
                 pass
 
-        def retrieveQuestion(self):
+        def retrieveQuestion(self, lineNumber):
             # temporary function to get data
-            lineNumber, question = self.retrieveRandomQuestionFromFile()
+            question = self.retrieveQuestionFromSql(lineNumber)
             answer = question.split('*', 1)
             if len(answer) > 1:
                 question = answer[0].strip()
@@ -513,7 +690,7 @@ class TriviaTime(callbacks.Plugin):
                         answer.append(ans)
                         question = 'Unscramble the letters: '
                         shuffledLetters = list(ans)
-                        shuffle(shuffledLetters)
+                        random.shuffle(shuffledLetters)
                         for letter in shuffledLetters:
                             question += str.lower(letter)
                         break
@@ -541,15 +718,22 @@ class TriviaTime(callbacks.Plugin):
                     'aa':['Obama']
                     }
 
+        def retrieveQuestionFromSql(self, randNum):
+            question = self.storage.getQuestion(randNum)
+            question = question[0]
+            return str(question[2])
+
+        """
         def retrieveRandomQuestionFromFile(self):
-            """
+            '''
                 Helper function to grab a random line from a file
-            """
+            '''
             filename = self.registryValue('quizfile')
             filesLines = open(filename).readlines()
             randomNumber = random.randint(1,len(filesLines))
             randomLine = filesLines[randomNumber]
             return (randomNumber, randomLine)
+        """
 
         def sendMessage(self, msg, color=None, bgcolor=None):
             """ <msg>, [<color>], [<bgcolor>]
@@ -571,7 +755,8 @@ class TriviaTime(callbacks.Plugin):
             # responsible for stopping a timer/thread after being told to stop
             self.active = False
             self.removeEvent()
-            del self.games[self.channel]
+            if self.channel in self.games:
+                del self.games[self.channel]
             self.sendMessage(self.registryValue('stopped'), 1, 9)
         # end Game
 
@@ -586,6 +771,7 @@ class TriviaTime(callbacks.Plugin):
             self.loc = loc
             self.conn = sqlite3.connect(loc, check_same_thread=False) # dont check threads
                                                                       # otherwise errors
+            self.conn.text_factory = str
 
         def insertUserLog(self, username, score, numAnswered, day=None, month=None, year=None):
             if day == None and month == None and year == None:
@@ -640,6 +826,33 @@ class TriviaTime(callbacks.Plugin):
             self.conn.commit()
             c.close()
 
+        def insertQuestionsBulk(self, questions):
+            c = self.conn.cursor()
+            skipped=0
+            print 'Loading questions file.'
+            for question in questions:
+                if not self.questionExists(question[0]):
+                    c.execute('''insert into triviaquestion values (NULL, ?, ?)''', 
+                                            (question[0], question[1]))
+                else:
+                    skipped +=1
+            print '%d repeats skipped' % skipped
+            print 'Done. loaded %d questions' % (len(questions) - skipped)
+            self.conn.commit()
+            c.close()
+            return ((len(questions) - skipped), skipped)
+
+        def insertEdit(self, questionId, questionText, username, channel, createdAt=None):
+            c = self.conn.cursor()
+            username = str.lower(username)
+            channel = str.lower(channel)
+            if createdAt is None:
+                createdAt = int(time.mktime(time.localtime()))
+            c.execute('insert into triviaedit values (NULL, ?, ?, NULL, ?, ?, ?)', 
+                                        (questionId,questionText,username,channel,createdAt))
+            self.conn.commit()
+            c.close()
+
         def userLogExists(self, username, day, month, year):
             username = str.lower(username)
             c = self.conn.cursor()
@@ -665,6 +878,24 @@ class TriviaTime(callbacks.Plugin):
             channel = str.lower(channel)
             c = self.conn.cursor()
             result = c.execute('select count(id) from triviagames where channel=?', (channel,))
+            rows = result.fetchone()[0]
+            c.close()
+            if rows > 0:
+                return True
+            return False
+
+        def questionExists(self, question):
+            c = self.conn.cursor()
+            result = c.execute('select count(id) from triviaquestion where question=? or question_canonical=?', (question,question))
+            rows = result.fetchone()[0]
+            c.close()
+            if rows > 0:
+                return True
+            return False
+
+        def questionIdExists(self, id):
+            c = self.conn.cursor()
+            result = c.execute('select count(id) from triviaquestion where id=?', (id,))
             rows = result.fetchone()[0]
             c.close()
             if rows > 0:
@@ -717,6 +948,14 @@ class TriviaTime(callbacks.Plugin):
             self.conn.commit()
             c.close()
 
+        def updateQuestion(self, id, newQuestion):
+            c = self.conn.cursor()
+            test = c.execute('''update triviaquestion set
+                                question=?
+                                where id=?''', (newQuestion, id))
+            self.conn.commit()
+            c.close()
+
         def dropUserTable(self):
             c = self.conn.cursor()
             try:
@@ -753,6 +992,22 @@ class TriviaTime(callbacks.Plugin):
             c = self.conn.cursor()
             try:
                 c.execute('''drop table triviareport''')
+            except:
+                pass
+            c.close()
+
+        def dropQuestionTable(self):
+            c = self.conn.cursor()
+            try:
+                c.execute('''drop table triviaquestion''')
+            except:
+                pass
+            c.close()
+
+        def dropEditTable(self):
+            c = self.conn.cursor()
+            try:
+                c.execute('''drop table triviaedit''')
             except:
                 pass
             c.close()
@@ -827,6 +1082,36 @@ class TriviaTime(callbacks.Plugin):
                         reported_at integer,
                         fixed_at integer,
                         fixed_by text
+                        )''')
+            except:
+                pass
+            self.conn.commit()
+            c.close()
+
+        def makeQuestionTable(self):
+            c = self.conn.cursor()
+            try:
+                c.execute('''create table triviaquestion (
+                        id integer primary key autoincrement,
+                        question_canonical text unique on conflict ignore,
+                        question text
+                        )''')
+            except:
+                pass
+            self.conn.commit()
+            c.close()
+
+        def makeEditTable(self):
+            c = self.conn.cursor()
+            try:
+                c.execute('''create table triviaedit (
+                        id integer primary key autoincrement,
+                        question_id integer,
+                        question text,
+                        status text,
+                        username text,
+                        channel text,
+                        created_at text
                         )''')
             except:
                 pass
@@ -1143,6 +1428,91 @@ class TriviaTime(callbacks.Plugin):
             c.close()
             return data
 
+        def getNumUser(self):
+            c = self.conn.cursor()
+            result = c.execute('select count(*) from triviausers')
+            result = result.fetchone()[0]
+            c.close()
+            return result
+
+        def getNumQuestions(self):
+            c = self.conn.cursor()
+            result = c.execute('select count(*) from triviaquestion')
+            result = result.fetchone()[0]
+            c.close()
+            return result
+
+        def getNumKAOS(self):
+            c = self.conn.cursor()
+            result = c.execute('select count(*) from triviaquestion where lower(substr(question,1,4))=?',('kaos',))
+            result = result.fetchone()[0]
+            c.close()
+            return result
+
+        def getQuestion(self, id):
+            c = self.conn.cursor()
+            result = c.execute('select * from triviaquestion where id=?', (id,))
+            return result.fetchone()
+            c.close()
+
+        def getReportById(self, id):
+            c = self.conn.cursor()
+            c.execute('select * from triviareport where id=?', (id,))
+            data = []
+            for row in c:
+                data.append(row)
+            c.close()
+            return data
+
+        def getReportTop3(self):
+            c = self.conn.cursor()
+            c.execute('select * from triviareport order by id desc limit 3')
+            data = []
+            for row in c:
+                data.append(row)
+            c.close()
+            return data
+
+        def getEditById(self, id):
+            c = self.conn.cursor()
+            c.execute('select * from triviaedit where id=?', (id,))
+            data = []
+            for row in c:
+                data.append(row)
+            c.close()
+            return data
+
+        def getQuestion(self, id):
+            c = self.conn.cursor()
+            c.execute('''select * from triviaquestion where id=?''', (id,))
+            data = []
+            for row in c:
+                data.append(row)
+            c.close()
+            return data
+
+        def getQuestionByRound(self, roundNumber, channel):
+            channel=str.lower(channel)
+            c = self.conn.cursor()
+            c.execute('''select * from triviaquestion where id=(select tgl.line_num
+                                                                from triviagameslog tgl
+                                                                where tgl.round_num=?
+                                                                and tgl.channel=?)''', (roundNumber,channel))
+            data = []
+            for row in c:
+                data.append(row)
+            c.close()
+            return data
+
+        def getEditTop3(self):
+            c = self.conn.cursor()
+            c.execute('select * from triviaedit order by id desc limit 3')
+            data = []
+            for row in c:
+                data.append(row)
+            c.close()
+            return data
+
         def viewDayTop10(self):
             dateObject = datetime.date.today()
             day   = dateObject.day
@@ -1157,6 +1527,7 @@ class TriviaTime(callbacks.Plugin):
                 data.append(row)
             c.close()
             return data
+
         """
         def transferUserLogs(self, userFrom, userTo):  
             userFrom = str.lower(userFrom) 
@@ -1187,6 +1558,19 @@ class TriviaTime(callbacks.Plugin):
             self.conn.commit()
             c.close()
         """
+
+        def removeEdit(self, editId):
+            c = self.conn.cursor()
+            c.execute('''delete from triviaedit
+                        where id=?''', (editId,))
+            c.close()
+
+        def removeReport(self, repId):
+            c = self.conn.cursor()
+            c.execute('''delete from triviareport
+                        where id=?''', (repId,))
+            c.close()
+
         def removeUserLogs(self, username):
             username = str.lower(username)
             c = self.conn.cursor()
