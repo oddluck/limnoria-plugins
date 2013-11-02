@@ -1,3 +1,10 @@
+###
+# Copyright (c) 2013, tann <tann@trivialand.org>
+# All rights reserved.
+#
+#
+###
+
 import supybot.utils as utils
 from supybot.commands import *
 import supybot.plugins as plugins
@@ -41,7 +48,7 @@ class TriviaTime(callbacks.Plugin):
         self.storage.makeReportTable()
         #self.storage.dropQuestionTable()
         self.storage.makeQuestionTable()
-        self.storage.dropEditTable()
+        #self.storage.dropEditTable()
         self.storage.makeEditTable()
         #self.storage.insertUserLog('root', 1, 1, 10, 30, 2013)
         #self.storage.insertUser('root', 1, 1)
@@ -63,6 +70,23 @@ class TriviaTime(callbacks.Plugin):
             # check the answer
             self.games[channel].checkAnswer(msg)
 
+    def doJoin(self,irc,msg):
+        username = str.lower(msg.nick)
+        print username
+        channel = str.lower(msg.args[0])
+        user = self.storage.getUser(username)
+        print user
+        if len(user) >= 1:
+            if user[13] <= 10:
+                irc.sendMsg(ircmsgs.privmsg(channel, 'Giving VIP to %s for being top #%d this YEAR' % (username, user[13])))
+                irc.queueMsg(ircmsgs.voice(channel, username))
+            elif user[14] <= 10:
+                irc.sendMsg(ircmsgs.privmsg(channel, 'Giving VIP to %s for being top #%d this MONTH' % (username, user[14])))
+                irc.queueMsg(ircmsgs.voice(channel, username))
+            elif user[15] <= 10:
+                irc.sendMsg(ircmsgs.privmsg(channel, 'Giving VIP to %s for being top #%d this WEEK' % (username, user[15])))
+                irc.queueMsg(ircmsgs.voice(channel, username))
+
     def addquestionfile(self, irc, msg, arg, filename):
         """[<filename>]
         Add a file of questions to the servers question database, filename defaults to configured quesiton file
@@ -78,7 +102,6 @@ class TriviaTime(callbacks.Plugin):
         insertList = []
         for line in filesLines:
             insertList.append((str(line).strip(),str(line).strip()))
-
         info = self.storage.insertQuestionsBulk(insertList)
         irc.reply('Successfully added %d questions, skipped %d' % (info[0], info[1]))
     addquestionfile = wrap(addquestionfile, ['admin',optional('text')])
@@ -88,13 +111,13 @@ class TriviaTime(callbacks.Plugin):
         Get TriviaTime information, how many questions/users in database, time, etc
         """
         infoText = '''\x0301,08 TriviaTime by #trivialand @ irc.freenode.net '''
-        irc.queueMsg(ircmsgs.privmsg(msg.args[0], infoText))
+        irc.sendMsg(ircmsgs.privmsg(msg.args[0], infoText))
         infoText = '''\x0301,08 %d Users on scoreboard  Time is %s ''' % (self.storage.getNumUser(),time.asctime(time.localtime()))
-        irc.queueMsg(ircmsgs.privmsg(msg.args[0], infoText))
+        irc.sendMsg(ircmsgs.privmsg(msg.args[0], infoText))
         numKaos = self.storage.getNumKAOS()
         numQuestionTotal = self.storage.getNumQuestions()
         infoText = '''\x0301,08 %d Questions and %d KAOS (%d Total) in the database ''' % ((numQuestionTotal-numKaos), numKaos, numQuestionTotal)
-        irc.queueMsg(ircmsgs.privmsg(msg.args[0], infoText))
+        irc.sendMsg(ircmsgs.privmsg(msg.args[0], infoText))
     info = wrap(info)
 
     def clearpoints(self, irc, msg, arg, username):
@@ -115,7 +138,7 @@ class TriviaTime(callbacks.Plugin):
         topsText = '\x0301,08 TODAYS Top 10 - '
         for i in range(len(tops)):
             topsText += '\x02\x0301,08 #%d:\x02 \x0300,04%s %d ' % ((i+1) , tops[i][1], tops[i][2])
-        irc.queueMsg(ircmsgs.privmsg(channel, topsText))
+        irc.sendMsg(ircmsgs.privmsg(channel, topsText))
         irc.noReply()
     day = wrap(day)
 
@@ -198,7 +221,7 @@ class TriviaTime(callbacks.Plugin):
             irc.error("You do not exist! There is no spoon.")
         else:
             infoText = '\x0305,08 %s\'s Stats:\x0301,08 Points (answers) \x0305,08Today: #%d %d (%d) This Week: #%d %d (%d) This Month: #%d %d (%d) This Year: #%d %d (%d)' % (msg.nick, info[16], info[10], info[11], info[15], info[8], info[9], info[14], info[6], info[7], info[13], info[4], info[5])
-            irc.queueMsg(ircmsgs.privmsg(channel, infoText))
+            irc.sendMsg(ircmsgs.privmsg(channel, infoText))
         irc.noReply()
     me = wrap(me)
 
@@ -216,12 +239,35 @@ class TriviaTime(callbacks.Plugin):
             Skip a question
         """
         # is it a user?
+        """
         try:
             user = ircdb.users.getUser(msg.prefix) # rootcoma!~rootcomaa@unaffiliated/rootcoma
         except KeyError:
             irc.error('You need to register with me to use this command. TODO: show command needed to register')
             return
+        """
+        username = ircutils.toLower(msg.nick)
         channel = ircutils.toLower(msg.args[0])
+
+        timeSeconds = self.registryValue('skipActiveTime', channel)
+        totalActive = self.storage.getNumUserActiveIn(timeSeconds)
+
+        if not self.storage.wasUserActiveIn(username, timeSeconds):
+            irc.error('Only users who have answered a question in the last 10 minutes can skip.')
+            return
+
+        if username in self.games[channel].skipVoteCount:
+            irc.error('You can only vote to skip once.')
+            return
+
+        self.games[channel].skipVoteCount[username] = 1
+
+        irc.sendMsg(ircmsgs.privmsg(channel, '%s voted to skip this question.' % username))
+
+        if (len(self.games[channel].skipVoteCount) / totalActive) < self.registryValue('skipThreshold', channel):
+            irc.noReply()
+            return
+
         if channel not in self.games:
             irc.error('Trivia is not running.')
             return
@@ -232,7 +278,7 @@ class TriviaTime(callbacks.Plugin):
             schedule.removeEvent('%s.trivia' % channel)
         except KeyError:
             pass
-        irc.queueMsg(ircmsgs.privmsg(channel, 'Skipped question!'))
+        irc.sendMsg(ircmsgs.privmsg(channel, 'Skipped question! (%d of %d voted)' % (len(self.games[channel].skipVoteCount), totalActive)))
         self.games[channel].nextQuestion()
         irc.noReply()
     skip = wrap(skip)
@@ -247,7 +293,7 @@ class TriviaTime(callbacks.Plugin):
             irc.error("You do not exist! There is no spoon.")
         else:
             infoText = '\x0305,08 %s\'s Stats:\x0301,08 Points (answers) \x0305,08Today: #%d %d (%d) This Week: #%d %d (%d) This Month: #%d %d (%d) This Year: #%d %d (%d)' % (info[1], info[16], info[10], info[11], info[15], info[8], info[9], info[14], info[6], info[7], info[13], info[4], info[5])
-            irc.queueMsg(ircmsgs.privmsg(channel, infoText))
+            irc.sendMsg(ircmsgs.privmsg(channel, infoText))
         irc.noReply()
     showstats = wrap(showstats,['nick'])
 
@@ -330,10 +376,12 @@ class TriviaTime(callbacks.Plugin):
                     schedule.removeEvent('%s.trivia' % channel)
                 except KeyError:
                     pass
-            irc.error(self.registryValue('alreadyStarted'))
+            #irc.error(self.registryValue('alreadyStarted'))
+            irc.sendMsg(ircmsgs.privmsg(channel, self.registryValue('starting')))
+            self.games[channel] = self.Game(irc, channel, self)
         else:
             # create a new game
-            irc.queueMsg(ircmsgs.privmsg(channel, self.registryValue('starting')))
+            irc.sendMsg(ircmsgs.privmsg(channel, self.registryValue('starting')))
             self.games[channel] = self.Game(irc, channel, self)
         irc.noReply()
     start = wrap(start)
@@ -359,7 +407,7 @@ class TriviaTime(callbacks.Plugin):
                 self.games[channel].stop()
             else:
                 del self.games[channel]
-                irc.queueMsg(ircmsgs.privmsg(channel, self.registryValue('stopped')))
+                irc.sendMsg(ircmsgs.privmsg(channel, self.registryValue('stopped')))
         irc.noReply()
     stop = wrap(stop)
 
@@ -370,7 +418,7 @@ class TriviaTime(callbacks.Plugin):
         channel = ircutils.toLower(msg.args[0])
         timeObject = time.asctime(time.localtime())
         timeString = '\x0301,08The current server time appears to be %s' % timeObject
-        irc.queueMsg(ircmsgs.privmsg(channel, timeString))
+        irc.sendMsg(ircmsgs.privmsg(channel, timeString))
         irc.noReply()
     time = wrap(time)
 
@@ -403,6 +451,7 @@ class TriviaTime(callbacks.Plugin):
             self.irc = irc
 
             # reset stats
+            self.skipVoteCount = {}
             self.streak       = 0
             self.lastWinner   = ''
             self.hintsCounter = 0
@@ -527,7 +576,7 @@ class TriviaTime(callbacks.Plugin):
                 Main game/question/hint loop called by event. Decides whether question or hint is needed.
             """
             # out of hints to give?
-            if self.hintsCounter >= self.registryValue('maxHints', self.channel):
+            if self.hintsCounter >= 3:
                 answer = ''
                 # create a string to show answers missed
                 for ans in self.answers:
@@ -564,7 +613,9 @@ class TriviaTime(callbacks.Plugin):
             """
             hintRatio = self.registryValue('hintShowRatio') # % to show each hint
             hints = ''
-            
+            ratio = float(hintRatio * .01)
+            charMask = self.registryValue('charMask', self.channel)
+
             # create a string with hints for all of the answers
             for ans in self.answers:
                 if str.lower(ans) in self.guessedAnswers:
@@ -573,15 +624,39 @@ class TriviaTime(callbacks.Plugin):
                     hints += ' '
                 if len(self.answers) > 1:
                     hints += '['
-                divider = int(len(ans) * self.hintsCounter * hintRatio / 100)
-                if divider == len(ans):
-                    divider -= 1
-                hints += ans[:divider]
-                masked = ans[divider:]
-                # unmasks a percentage of characters from the front of words
-                # TODO a better algorithm for hints
-                charMask = self.registryValue('charMask', self.channel)
-                hints += re.sub('\w', charMask, masked)
+                if self.hintsCounter == 0:
+                    masked = ans
+                    hints += re.sub('\w', charMask, masked)
+                elif self.hintsCounter == 1:
+                    divider = int(len(ans) * ratio)
+                    if divider > 3:
+                        divider = 3
+                    if divider > len(ans):
+                        divider = len(ans)-1
+                    hints += ans[:divider]
+                    masked = ans[divider:]
+                    hints += re.sub('\w', charMask, masked)
+                elif self.hintsCounter == 2:
+                    divider = int(len(ans) * ratio)
+                    if divider > 3:
+                        divider = 3
+                    if divider > len(ans):
+                        divider = len(ans)-1
+                    lettersInARow=divider
+                    hints += ans[:divider]
+                    ansend = ans[divider:]
+                    hintsend = ''
+                    unmasked = 0
+                    for i in range(len(ans)-divider):
+                        masked = ansend[i]
+                        if lettersInARow < 3 and unmasked < (len(ans)-divider+1) and random.randint(0,100) < hintRatio:
+                            lettersInARow += 1
+                            hintsend += ansend[i]
+                            unmasked += 1
+                        else:
+                            lettersInARow=0
+                            hintsend += re.sub('\w', charMask, masked)
+                    hints += hintsend
                 if len(self.answers) > 1:
                     hints += ']'
             #increment hints counter
@@ -602,6 +677,7 @@ class TriviaTime(callbacks.Plugin):
                 return
 
             # reset and increment
+            self.skipVoteCount = {}
             self.question = ''
             self.answers = []
             self.alternativeAnswers = []
@@ -616,8 +692,9 @@ class TriviaTime(callbacks.Plugin):
             # grab the next q
             numQuestion = self.storage.getNumQuestions()
             if numQuestion == 0:
-                self.sendMessage('There are no questions. Stopping. If you are an admin use the addquestionfile to add questions to the database')
                 self.stop()
+                self.sendMessage('There are no questions. Stopping. If you are an admin use the addquestionfile to add questions to the database')
+
                 return
             #print '%d questions' % numQuestion
             lineNumber = random.randint(1,numQuestion-1)
@@ -742,11 +819,11 @@ class TriviaTime(callbacks.Plugin):
             """
             # with colors? bgcolor?
             if color is None:
-                self.irc.queueMsg(ircmsgs.privmsg(self.channel, ' %s ' % msg))
+                self.irc.sendMsg(ircmsgs.privmsg(self.channel, ' %s ' % msg))
             elif bgcolor is None:
-                self.irc.queueMsg(ircmsgs.privmsg(self.channel, '\x03%02d %s ' % (color, msg)))
+                self.irc.sendMsg(ircmsgs.privmsg(self.channel, '\x03%02d %s ' % (color, msg)))
             else:
-                self.irc.queueMsg(ircmsgs.privmsg(self.channel, '\x03%02d,%02d %s ' % (color, bgcolor, msg)))
+                self.irc.sendMsg(ircmsgs.privmsg(self.channel, '\x03%02d,%02d %s ' % (color, bgcolor, msg)))
 
         def stop(self):
             """
@@ -773,18 +850,20 @@ class TriviaTime(callbacks.Plugin):
                                                                       # otherwise errors
             self.conn.text_factory = str
 
-        def insertUserLog(self, username, score, numAnswered, day=None, month=None, year=None):
+        def insertUserLog(self, username, score, numAnswered, day=None, month=None, year=None, epoch=None):
             if day == None and month == None and year == None:
                 dateObject = datetime.date.today()
                 day   = dateObject.day
                 month = dateObject.month
                 year  = dateObject.year
+            if epoch is None:
+                epoch = int(time.mktime(time.localtime()))
             if self.userLogExists(username, day, month, year):
                 return self.updateUserLog(username, score, day, month, year)
             c = self.conn.cursor()
             username = str.lower(username)
-            c.execute('insert into triviauserlog values (NULL, ?, ?, ?, ?, ?, ?)', 
-                (username, score, numAnswered, day, month, year))
+            c.execute('insert into triviauserlog values (NULL, ?, ?, ?, ?, ?, ?, ?)', 
+                (username, score, numAnswered, day, month, year, epoch))
             self.conn.commit()
             c.close()
 
@@ -902,7 +981,7 @@ class TriviaTime(callbacks.Plugin):
                 return True
             return False
 
-        def updateUserLog(self, username, score, numAnswered, day=None, month=None, year=None):
+        def updateUserLog(self, username, score, numAnswered, day=None, month=None, year=None, epoch=None):
             username = str.lower(username)
             if not self.userExists(username):
                 self.insertUser(username)
@@ -911,6 +990,8 @@ class TriviaTime(callbacks.Plugin):
                 day   = dateObject.day
                 month = dateObject.month
                 year  = dateObject.year
+            if epoch is None:
+                epoch = int(time.mktime(time.localtime()))
             if not self.userLogExists(username, day, month, year):
                 return self.insertUserLog(username, score, numAnswered, day, month, year)
             c = self.conn.cursor()
@@ -919,11 +1000,12 @@ class TriviaTime(callbacks.Plugin):
             numAns = numAnswered
             test = c.execute('''update triviauserlog set 
                                 points_made = points_made+?,
-                                num_answered = num_answered+?
+                                num_answered = num_answered+?,
+                                last_updated = ?
                                 where username=?
                                 and day=? 
                                 and month=? 
-                                and year=?''', (scr,numAns,usr,day,month,year))
+                                and year=?''', (scr,numAns,epoch,usr,day,month,year))
             self.conn.commit()
             c.close()
 
@@ -1035,6 +1117,7 @@ class TriviaTime(callbacks.Plugin):
                         day integer, 
                         month integer, 
                         year integer,
+                        last_updated integer,
                         unique(username, day, month, year) on conflict replace
                         )''')
             except:
@@ -1481,6 +1564,38 @@ class TriviaTime(callbacks.Plugin):
                 data.append(row)
             c.close()
             return data
+
+        def getNumUserActiveIn(self,timeSeconds):
+            epoch = int(time.mktime(time.localtime()))
+            dateObject = datetime.date.today()
+            day   = dateObject.day
+            month = dateObject.month
+            year  = dateObject.year
+            c = self.conn.cursor()
+            result = c.execute('''select count(*) from triviauserlog 
+                        where day=? and month=? and year=?
+                        and last_updated>?''', (day, month, year,(epoch-timeSeconds)))
+            rows = result.fetchone()[0]
+            c.close()
+            return rows
+
+        def wasUserActiveIn(self,username,timeSeconds):
+            username = str.lower(username)
+            epoch = int(time.mktime(time.localtime()))
+            dateObject = datetime.date.today()
+            day   = dateObject.day
+            month = dateObject.month
+            year  = dateObject.year
+            c = self.conn.cursor()
+            result = c.execute('''select count(*) from triviauserlog 
+                        where day=? and month=? and year=?
+                        and username=? and last_updated>?''', (day, month, year,username,(epoch-timeSeconds)))
+            rows = result.fetchone()[0]
+            c.close()
+            if rows > 0:
+                return True
+            return False
+
 
         def getQuestion(self, id):
             c = self.conn.cursor()
