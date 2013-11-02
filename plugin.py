@@ -78,13 +78,13 @@ class TriviaTime(callbacks.Plugin):
         print user
         if len(user) >= 1:
             if user[13] <= 10:
-                irc.sendMsg(ircmsgs.privmsg(channel, 'Giving VIP to %s for being top #%d this YEAR' % (username, user[13])))
+                irc.sendMsg(ircmsgs.privmsg(channel, 'Giving MVP to %s for being top #%d this YEAR' % (username, user[13])))
                 irc.queueMsg(ircmsgs.voice(channel, username))
             elif user[14] <= 10:
-                irc.sendMsg(ircmsgs.privmsg(channel, 'Giving VIP to %s for being top #%d this MONTH' % (username, user[14])))
+                irc.sendMsg(ircmsgs.privmsg(channel, 'Giving MVP to %s for being top #%d this MONTH' % (username, user[14])))
                 irc.queueMsg(ircmsgs.voice(channel, username))
             elif user[15] <= 10:
-                irc.sendMsg(ircmsgs.privmsg(channel, 'Giving VIP to %s for being top #%d this WEEK' % (username, user[15])))
+                irc.sendMsg(ircmsgs.privmsg(channel, 'Giving MVP to %s for being top #%d this WEEK' % (username, user[15])))
                 irc.queueMsg(ircmsgs.voice(channel, username))
 
     def addquestionfile(self, irc, msg, arg, filename):
@@ -110,7 +110,7 @@ class TriviaTime(callbacks.Plugin):
         """
         Get TriviaTime information, how many questions/users in database, time, etc
         """
-        infoText = '''\x0301,08 TriviaTime by #trivialand @ irc.freenode.net '''
+        infoText = '''\x0301,08 TriviaTime by #trivialand on Freenode '''
         irc.sendMsg(ircmsgs.privmsg(msg.args[0], infoText))
         infoText = '''\x0301,08 %d Users on scoreboard  Time is %s ''' % (self.storage.getNumUser(),time.asctime(time.localtime()))
         irc.sendMsg(ircmsgs.privmsg(msg.args[0], infoText))
@@ -126,7 +126,7 @@ class TriviaTime(callbacks.Plugin):
         Deletes all of a users points, and removes all their records
         """
         self.storage.removeUserLogs(str.lower(username))
-        irc.reply('Done! Removed all points from %s' % (username))
+        irc.reply('Removed all points from %s' % (username))
     clearpoints = wrap(clearpoints, ['admin','nick'])
 
     def day(self, irc, msg, arg):
@@ -208,7 +208,7 @@ class TriviaTime(callbacks.Plugin):
             month = d.month
             year = d.year
         self.storage.updateUserLog(str.lower(username), points, 0, day, month, year)
-        irc.reply('Done! Gave %d points to %s' % (points, username))
+        irc.reply('Added %d points to %s' % (points, username))
     givepoints = wrap(givepoints, ['admin','nick', 'int', optional('int')])
 
     def me(self, irc, msg, arg):
@@ -218,7 +218,7 @@ class TriviaTime(callbacks.Plugin):
         channel = ircutils.toLower(msg.args[0])
         info = self.storage.getUser(str.lower(msg.nick))
         if len(info) < 3:
-            irc.error("You do not exist! There is no spoon.")
+            irc.error("I couldn't find you in my database.")
         else:
             infoText = '\x0305,08 %s\'s Stats:\x0301,08 Points (answers) \x0305,08Today: #%d %d (%d) This Week: #%d %d (%d) This Month: #%d %d (%d) This Year: #%d %d (%d)' % (msg.nick, info[16], info[10], info[11], info[15], info[8], info[9], info[14], info[6], info[7], info[13], info[4], info[5])
             irc.sendMsg(ircmsgs.privmsg(channel, infoText))
@@ -290,7 +290,7 @@ class TriviaTime(callbacks.Plugin):
         channel = ircutils.toLower(msg.args[0])
         info = self.storage.getUser(str.lower(username))
         if len(info) < 3:
-            irc.error("You do not exist! There is no spoon.")
+            irc.error("I couldn't find you in my database.")
         else:
             infoText = '\x0305,08 %s\'s Stats:\x0301,08 Points (answers) \x0305,08Today: #%d %d (%d) This Week: #%d %d (%d) This Month: #%d %d (%d) This Year: #%d %d (%d)' % (info[1], info[16], info[10], info[11], info[15], info[8], info[9], info[14], info[6], info[7], info[13], info[4], info[5])
             irc.sendMsg(ircmsgs.privmsg(channel, infoText))
