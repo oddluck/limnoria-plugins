@@ -277,6 +277,9 @@ class TriviaTime(callbacks.Plugin):
 
         Give a user points, last argument is optional amount of days in past to add records
         """
+        if points < 1:
+            irc.error("You cannot give less than 1 point.")
+            return
         day=None
         month=None
         year=None
@@ -486,7 +489,7 @@ class TriviaTime(callbacks.Plugin):
         """
         channel = ircutils.toLower(msg.args[0])
         if not irc.isChannel(channel):
-            irc.noReply()
+            irc.reply('Sorry, I can start inside of a channel, try joining #trivialand. Or fork TriviaLand on github')
             return
         if channel in self.games:
             if not self.games[channel].active:
@@ -699,6 +702,9 @@ class TriviaTime(callbacks.Plugin):
 
                     self.removeEvent()
                     sleepTime = self.registryValue('sleepTime',self.channel)
+                    if sleepTime < 2:
+                        sleepTime = 2
+                        log.error('sleepTime was set too low(<2 seconds). setting to 2 seconds')
                     sleepTime = time.time() + sleepTime
                     self.queueEvent(sleepTime, self.nextQuestion)
 
@@ -738,6 +744,9 @@ class TriviaTime(callbacks.Plugin):
                 # provide next question
                 
                 sleepTime = self.registryValue('sleepTime',self.channel)
+                if sleepTime < 2:
+                    sleepTime = 2
+                    log.error('sleepTime was set too low(<2 seconds). setting to 2 seconds')
                 sleepTime = time.time() + sleepTime
                 self.queueEvent(sleepTime, self.nextQuestion)
             else:
@@ -800,6 +809,9 @@ class TriviaTime(callbacks.Plugin):
             self.hintsCounter += 1
             self.sendMessage('Hint %s: %s' % (self.hintsCounter, hints), 1, 9)
             timeout = self.registryValue('timeout', self.channel)
+            if timeout < 2:
+                timout = 2
+                log.error('timeout was set too low(<2 seconds). setting to 2 seconds')
             timeout += time.time()
             self.queueEvent(timeout, self.loopEvent)
 
