@@ -246,6 +246,7 @@
 
         <?php
           $sqlClause = '';
+          $day = date('N')-1;
           $week = new DateTime();
           $interval = new DateInterval('P'.$day.'D');
           $week->sub($interval);

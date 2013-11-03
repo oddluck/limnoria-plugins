@@ -87,81 +87,130 @@
         <p>
         </p>
       </div>
-
-      <div class="row">
-        <div class="span12">
-          <h2>Reports</h2>
-            <table class="table">
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Username</th>
-                  <th>Report Text</th>
-                </tr>
-              </thead>
-              <tbody>
-                <?php
-                    if ($db) {
-                        $q = $db->query('SELECT * FROM triviareport LIMIT 10');
-                        if ($q === false) {
-                            die("Error: database error: table does not exist\n");
-                        } else {
-                            $result = $q->fetchAll();
-                            foreach($result as $res) {
+      <div class="accordion" id="accordion1">
+        <div class="accordion-group">
+          <div class="accordion-heading">
+            <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion1" href="#collapseOne">
+              Hide reports
+            </a>
+          </div>
+        <div class="row">
+          <div class="span12">
+            <div id="collapseOne" class="accordion-body collapse in">
+              <div class="accordion-inner">
+              <h2>Reports</h2>
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>Report #</th>
+                      <th>Username</th>
+                      <th>Question #</th>
+                      <th>Question</th>
+                      <th>Report Text</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <?php
+                        if ($db) {
+                          $q = $db->query('SELECT tr.*, tq.question as original  FROM triviareport tr INNER JOIN triviaquestion tq on tq.id=question_num  LIMIT 10');
+                            if ($q === false) {
+                              die("Error: database error: table does not exist\n");
+                            } else {
+                              $result = $q->fetchAll();
+                              foreach($result as $res) {
                                 echo '<tr>';
                                 echo '<td>' . $res['id'] . '</td>';
                                 echo '<td>' . $res['username'] . '</td>';
+                                echo '<td>' . $res['question_num'] . '</td>';
+                                echo '<td>' . $res['original'] . '</td>';
                                 echo '<td>' . $res['report_text'] . '</td>';
                                 echo '</tr>';
+                              }
                             }
+                          } else {
+                            die('Couldnt connect to db');
+                          }
+                    ?>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="accordion" id="accordion2">
+          <div class="accordion-group">
+            <div class="accordion-heading">
+              <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion2" href="#collapseTwo">
+                Hide edits
+              </a>
+            </div>
+        <div class="row">
+          <div class="span12">
+            <div id="collapseTwo" class="accordion-body collapse in">
+            <div class="accordion-inner">
+            <h2>Edits</h2>
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Edit #</th>
+                    <th>Username</th>
+                    <th>New Question</th>
+                    <th>Old Question</th>
+                    <th>Question #</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <?php
+                      if ($db) {
+                          $q = $db->query('SELECT te.*, tq.question as original  FROM triviaedit te INNER JOIN triviaquestion tq on tq.id=question_id ORDER BY id DESC LIMIT 10');
+                          if ($q === false) {
+                              die("Error: database error: table does not exist\n");
+                          } else {
+                              $result = $q->fetchAll();
+                              foreach($result as $res) {
+                                $isItalic = false;
+                                $brokenNew = str_split($res['question']);
+                                $brokenOld = str_split($res['original']);
+                                $differenceString = '';
+                                for($i=0;$i<sizeof($brokenNew);$i++) {
+                                  if(!array_key_exists($i, $brokenOld)||!array_key_exists($i, $brokenNew)) {
+                                    if($isItalic==false){
+                                      $isItalic = true;
+                                      $differenceString .= '<u>';
+                                    }
+                                  } else if($brokenNew[$i]!=$brokenOld[$i]) {
+                                    if($isItalic==false){
+                                      $isItalic = true;
+                                      $differenceString .= '<u>';
+                                    }
+                                  } else if($brokenNew[$i]==$brokenOld[$i]&&$isItalic==true) {
+                                    $isItalic = false;
+                                    $differenceString .= '</u>';
+                                  }
+                                  $differenceString.=$brokenNew[$i];
+                            }
+                            if($isItalic==true) {
+                              $differenceString .= '</u>';
+                            }
+
+                            echo '<tr>';
+                            echo '<td>' . $res['id'] . '</td>';
+                            echo '<td>' . $res['username'] . '</td>';
+                            echo '<td>' . $differenceString . '</td>';
+                            echo '<td>' . $res['original'] . '</td>';
+                            echo '<td>' . $res['question_id'] . '</td>';
+                            echo '</tr>';
                         }
-                    } else {
-                        die('Couldnt connect to db');
-                    }
-                ?>
-              </tbody>
-            </table>
+                        }
+                      } else {
+                          die($err);
+                      }
+                  ?>
+                </tbody>
+              </table>
+          </div>
         </div>
       </div>
-      <div class="row">
-        <div class="span12">
-          <h2>Edits</h2>
-            <table class="table">
-              <thead>
-                <tr>
-                  <th>Edit #</th>
-                  <th>Username</th>
-                  <th>New Question</th>
-                  <th>Old Question</th>
-                  <th>Question #</th>
-                </tr>
-              </thead>
-              <tbody>
-                <?php
-                    if ($db) {
-                        $q = $db->query('SELECT *, tq.question as original  FROM triviaedit INNER JOIN triviaquestion tq on tq.id=question_id ORDER BY id DESC LIMIT 10');
-                        if ($q === false) {
-                            die("Error: database error: table does not exist\n");
-                        } else {
-                            $result = $q->fetchAll();
-                            foreach($result as $res) {
-                                echo '<tr>';
-                                echo '<td>' . $res['id'] . '</td>';
-                                echo '<td>' . $res['username'] . '</td>';
-                                echo '<td>' . $res['question'] . '</td>';
-                                echo '<td>' . $res['original'] . '</td>';
-                                echo '<td>' . $res['question_id'] . '</td>';
-                                echo '</tr>';
-                            }
-                        }
-                    } else {
-                        die($err);
-                    }
-                ?>
-              </tbody>
-            </table>
-        </div>
-
       </div>
 
       <div class="footer">

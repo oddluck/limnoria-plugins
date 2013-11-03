@@ -1947,12 +1947,14 @@ class TriviaTime(callbacks.Plugin):
             c = self.conn.cursor()
             c.execute('''delete from triviaedit
                         where id=?''', (editId,))
+            self.conn.commit()
             c.close()
 
         def removeReport(self, repId):
             c = self.conn.cursor()
             c.execute('''delete from triviareport
                         where id=?''', (repId,))
+            self.conn.commit()
             c.close()
 
         def removeUserLogs(self, username):
@@ -1960,9 +1962,9 @@ class TriviaTime(callbacks.Plugin):
             c = self.conn.cursor()
             c.execute('''delete from triviauserlog
                         where username=?''', (username,))
+            self.conn.commit()
             c.close()
 
 
 Class = TriviaTime
 # vim:set shiftwidth=4 softtabstop=4 expandtab textwidth=79:
-
