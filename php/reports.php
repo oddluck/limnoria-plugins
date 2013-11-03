@@ -168,15 +168,40 @@
                           } else {
                               $result = $q->fetchAll();
                               foreach($result as $res) {
-                                  echo '<tr>';
-                                  echo '<td>' . $res['id'] . '</td>';
-                                  echo '<td>' . $res['username'] . '</td>';
-                                  echo '<td>' . $res['question'] . '</td>';
-                                  echo '<td>' . $res['original'] . '</td>';
-                                  echo '<td>' . $res['question_id'] . '</td>';
-                                  echo '</tr>';
-                              }
-                          }
+                                $isItalic = false;
+                                $brokenNew = str_split($res['question']);
+                                $brokenOld = str_split($res['original']);
+                                $differenceString = '';
+                                for($i=0;$i<sizeof($brokenNew);$i++) {
+                                  if(!array_key_exists($i, $brokenOld)||!array_key_exists($i, $brokenNew)) {
+                                    if($isItalic==false){
+                                      $isItalic = true;
+                                      $differenceString .= '<u>';
+                                    }
+                                  } else if($brokenNew[$i]!=$brokenOld[$i]) {
+                                    if($isItalic==false){
+                                      $isItalic = true;
+                                      $differenceString .= '<u>';
+                                    }
+                                  } else if($brokenNew[$i]==$brokenOld[$i]&&$isItalic==true) {
+                                    $isItalic = false;
+                                    $differenceString .= '</u>';
+                                  }
+                                  $differenceString.=$brokenNew[$i];
+                            }
+                            if($isItalic==true) {
+                              $differenceString .= '</u>';
+                            }
+
+                            echo '<tr>';
+                            echo '<td>' . $res['id'] . '</td>';
+                            echo '<td>' . $res['username'] . '</td>';
+                            echo '<td>' . $differenceString . '</td>';
+                            echo '<td>' . $res['original'] . '</td>';
+                            echo '<td>' . $res['question_id'] . '</td>';
+                            echo '</tr>';
+                        }
+                        }
                       } else {
                           die($err);
                       }
