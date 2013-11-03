@@ -89,7 +89,7 @@
       </div>
 
       <div class="row">
-        <div class="span6">
+        <div class="span12">
           <h2>Reports</h2>
             <table class="table">
               <thead>
@@ -100,30 +100,31 @@
                 </tr>
               </thead>
               <tbody>
-<?php
-    if ($db) {
-        $q = $db->query('SELECT * FROM triviareport LIMIT 10');
-        if ($q === false) {
-            die("Error: database error: table does not exist\n");
-        } else {
-            $result = $q->fetchAll();
-            foreach($result as $res) {
-                echo '<tr>';
-                echo '<td>' . $res['id'] . '</td>';
-                echo '<td>' . $res['username'] . '</td>';
-                echo '<td>' . $res['report_text'] . '</td>';
-                echo '</tr>';
-            }
-        }
-    } else {
-        die('Couldnt connect to db');
-    }
-?>
+                <?php
+                    if ($db) {
+                        $q = $db->query('SELECT * FROM triviareport LIMIT 10');
+                        if ($q === false) {
+                            die("Error: database error: table does not exist\n");
+                        } else {
+                            $result = $q->fetchAll();
+                            foreach($result as $res) {
+                                echo '<tr>';
+                                echo '<td>' . $res['id'] . '</td>';
+                                echo '<td>' . $res['username'] . '</td>';
+                                echo '<td>' . $res['report_text'] . '</td>';
+                                echo '</tr>';
+                            }
+                        }
+                    } else {
+                        die('Couldnt connect to db');
+                    }
+                ?>
               </tbody>
             </table>
         </div>
-
-        <div class="span6">
+      </div>
+      <div class="row">
+        <div class="span12">
           <h2>Edits</h2>
             <table class="table">
               <thead>
@@ -131,30 +132,32 @@
                   <th>Edit #</th>
                   <th>Username</th>
                   <th>New Question</th>
+                  <th>Old Question</th>
                   <th>Question #</th>
                 </tr>
               </thead>
               <tbody>
-<?php
-    if ($db) {
-        $q = $db->query('SELECT * FROM triviaedit ORDER BY id DESC LIMIT 10');
-        if ($q === false) {
-            die("Error: database error: table does not exist\n");
-        } else {
-            $result = $q->fetchAll();
-            foreach($result as $res) {
-                echo '<tr>';
-                echo '<td>' . $res['id'] . '</td>';
-                echo '<td>' . $res['username'] . '</td>';
-                echo '<td>' . $res['question'] . '</td>';
-                echo '<td>' . $res['question_id'] . '</td>';
-                echo '</tr>';
-            }
-        }
-    } else {
-        die($err);
-    }
-?>
+                <?php
+                    if ($db) {
+                        $q = $db->query('SELECT *, tq.question as original  FROM triviaedit INNER JOIN triviaquestion tq on tq.id=question_id ORDER BY id DESC LIMIT 10');
+                        if ($q === false) {
+                            die("Error: database error: table does not exist\n");
+                        } else {
+                            $result = $q->fetchAll();
+                            foreach($result as $res) {
+                                echo '<tr>';
+                                echo '<td>' . $res['id'] . '</td>';
+                                echo '<td>' . $res['username'] . '</td>';
+                                echo '<td>' . $res['question'] . '</td>';
+                                echo '<td>' . $res['original'] . '</td>';
+                                echo '<td>' . $res['question_id'] . '</td>';
+                                echo '</tr>';
+                            }
+                        }
+                    } else {
+                        die($err);
+                    }
+                ?>
               </tbody>
             </table>
         </div>
@@ -162,7 +165,7 @@
       </div>
 
       <div class="footer">
-        <p>&copy; Trivialand 2013</p>
+        <p>&copy; Trivialand 2013 - <a href="https://github.com/tannn/TriviaTime">github</a></p>
       </div>
 
     </div> <!-- /container -->

@@ -126,7 +126,7 @@
       </div>
 
       <div class="footer">
-        <p>&copy; Trivialand 2013</p>
+        <p>&copy; Trivialand 2013 - <a href="https://github.com/tannn/TriviaTime">github</a></p>
       </div>
 
     </div> <!-- /container -->
