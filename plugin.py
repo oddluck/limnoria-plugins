@@ -13,6 +13,7 @@ import supybot.callbacks as callbacks
 import supybot.ircdb as ircdb
 import supybot.ircmsgs as ircmsgs
 import supybot.schedule as schedule
+import supybot.log as log
 import os
 import re
 import sqlite3
@@ -27,7 +28,7 @@ class TriviaTime(callbacks.Plugin):
     threaded = True # enables threading for supybot plugin
 
     def __init__(self, irc):
-        print 'Loaded TriviaTime'
+        log.info('*** Loaded TriviaTime!!! ***')
         self.__parent = super(TriviaTime, self)
         self.__parent.__init__(irc)
 
@@ -35,7 +36,16 @@ class TriviaTime(callbacks.Plugin):
         self.games = {} # separate game for each channel
 
         """ connections """
-        self.storage = self.Storage(self.registryValue('sqlitedb'))
+        dbLocation = self.registryValue('sqlitedb')
+        # tuple head, tail ('example/example/', 'filename.txt')
+        dbFolder = os.path.split(dbLocation)
+        # take folder from split
+        dbFolder = dbFolder[0]
+        # create the folder
+        if not os.path.exists(dbFolder):
+            log.info("""The database location did not exist, creating folder structure""")
+            os.makedirs(dbFolder)
+        self.storage = self.Storage(dbLocation)
         #self.storage.dropUserLogTable()
         self.storage.makeUserLogTable()
         #self.storage.dropGameTable()
@@ -72,18 +82,17 @@ class TriviaTime(callbacks.Plugin):
 
     def doJoin(self,irc,msg):
         username = str.lower(msg.nick)
-        print username
         channel = str.lower(msg.args[0])
         user = self.storage.getUser(username)
-        print user
+        numTopToVoice = self.registryValue('numTopToVoice')
         if len(user) >= 1:
-            if user[13] <= 10:
+            if user[13] <= numTopToVoice and user[4] > self.registryValue('minPointsVoiceYear'):
                 irc.sendMsg(ircmsgs.privmsg(channel, 'Giving MVP to %s for being top #%d this YEAR' % (username, user[13])))
                 irc.queueMsg(ircmsgs.voice(channel, username))
-            elif user[14] <= 10:
+            elif user[14] <= numTopToVoice and user[6] > self.registryValue('minPointsVoiceMonth'):
                 irc.sendMsg(ircmsgs.privmsg(channel, 'Giving MVP to %s for being top #%d this MONTH' % (username, user[14])))
                 irc.queueMsg(ircmsgs.voice(channel, username))
-            elif user[15] <= 10:
+            elif user[15] <= numTopToVoice and user[8] > self.registryValue('minPointsVoiceWeek'):
                 irc.sendMsg(ircmsgs.privmsg(channel, 'Giving MVP to %s for being top #%d this WEEK' % (username, user[15])))
                 irc.queueMsg(ircmsgs.voice(channel, username))
 
@@ -376,9 +385,10 @@ class TriviaTime(callbacks.Plugin):
                     schedule.removeEvent('%s.trivia' % channel)
                 except KeyError:
                     pass
-            #irc.error(self.registryValue('alreadyStarted'))
-            irc.sendMsg(ircmsgs.privmsg(channel, self.registryValue('starting')))
-            self.games[channel] = self.Game(irc, channel, self)
+                #irc.error(self.registryValue('alreadyStarted'))
+                irc.sendMsg(ircmsgs.privmsg(channel, self.registryValue('starting')))
+                self.games[channel] = self.Game(irc, channel, self)
+            irc.sendMsg(ircmsgs.privmsg(channel, self.registryValue('alreadyStarted')))
         else:
             # create a new game
             irc.sendMsg(ircmsgs.privmsg(channel, self.registryValue('starting')))
@@ -457,6 +467,7 @@ class TriviaTime(callbacks.Plugin):
             self.hintsCounter = 0
             self.numAsked     = 0
             self.lastAnswer   = time.time()
+            self.roundStartedAt = time.mktime(time.localtime())
 
             self.loadGameState()
 
@@ -510,7 +521,7 @@ class TriviaTime(callbacks.Plugin):
                         % (msg.nick, pointsAdded, correctAnswer))
                 else:
                     # Normal question solved
-                    
+                    streakBonus = 0
                     # update streak info
                     if self.lastWinner != str.lower(msg.nick):
                         self.lastWinner = str.lower(msg.nick)
@@ -527,7 +538,7 @@ class TriviaTime(callbacks.Plugin):
                     self.storage.updateUserLog(msg.nick,pointsAdded,1)
                     self.lastAnswer = time.time()
                     self.sendMessage(self.registryValue('answeredNormal', self.channel) 
-                        % (msg.nick, correctAnswer, timeElapsed, pointsAdded))
+                        % (msg.nick, correctAnswer, timeElapsed, pointsAdded, streakBonus))
 
                     if self.registryValue('showPlayerStats', self.channel):
                         playersStats = self.storage.getUser(msg.nick)
@@ -570,6 +581,7 @@ class TriviaTime(callbacks.Plugin):
             gameInfo = self.storage.getGame(self.channel)
             if gameInfo is not None:
                 self.numAsked = gameInfo[2]
+                self.roundStartedAt = gameInfo[3]
 
         def loopEvent(self):
             """
@@ -687,18 +699,23 @@ class TriviaTime(callbacks.Plugin):
             self.correctPlayers = {}
             self.hintsCounter = 0
             self.numAsked += 1
-            self.storage.updateGame(self.channel, 1) #increment q's asked
 
             # grab the next q
             numQuestion = self.storage.getNumQuestions()
             if numQuestion == 0:
                 self.stop()
                 self.sendMessage('There are no questions. Stopping. If you are an admin use the addquestionfile to add questions to the database')
-
                 return
-            #print '%d questions' % numQuestion
-            lineNumber = random.randint(1,numQuestion-1)
-            retrievedQuestion = self.retrieveQuestion(lineNumber)
+
+            numQuestionsLeftInRound = self.storage.getNumQuestionsNotAsked(self.channel, self.roundStartedAt)
+            if numQuestionsLeftInRound == 0:
+                self.numAsked = 1
+                self.roundStartedAt = time.mktime(time.localtime())
+                self.storage.updateGameRoundStarted(self.channel, self.roundStartedAt)
+                self.sendMessage('All of the questions have been asked, shuffling and starting over')
+
+            self.storage.updateGame(self.channel, self.numAsked) #increment q's asked
+            retrievedQuestion = self.retrieveQuestion()
 
             self.points = self.registryValue('defaultPoints', self.channel)
             for x in retrievedQuestion:
@@ -748,9 +765,9 @@ class TriviaTime(callbacks.Plugin):
             except KeyError:
                 pass
 
-        def retrieveQuestion(self, lineNumber):
+        def retrieveQuestion(self):
             # temporary function to get data
-            question = self.retrieveQuestionFromSql(lineNumber)
+            lineNumber, question = self.retrieveQuestionFromSql()
             answer = question.split('*', 1)
             if len(answer) > 1:
                 question = answer[0].strip()
@@ -778,7 +795,6 @@ class TriviaTime(callbacks.Plugin):
                         else:
                             alternativeAnswers.append(str(ans).strip())
                     answer = [answer[0]]
-                print answer
                 return {'p':points,
                         'q':question,
                         'a':answer, 
@@ -795,10 +811,10 @@ class TriviaTime(callbacks.Plugin):
                     'aa':['Obama']
                     }
 
-        def retrieveQuestionFromSql(self, randNum):
-            question = self.storage.getQuestion(randNum)
+        def retrieveQuestionFromSql(self):
+            question = self.storage.getRandomQuestionNotAsked(self.channel, self.roundStartedAt)
             question = question[0]
-            return str(question[2])
+            return (question[0], question[2])
 
         """
         def retrieveRandomQuestionFromFile(self):
@@ -876,12 +892,14 @@ class TriviaTime(callbacks.Plugin):
             self.conn.commit()
             c.close()
 
-        def insertGame(self, channel, numAsked=0):
+        def insertGame(self, channel, numAsked=0, epoch=None):
             channel = str.lower(channel)
             if self.gameExists(channel):
                 return self.updateGame(channel, numAsked)
+            if epoch is None:
+                epoch = int(time.mktime(time.localtime()))
             c = self.conn.cursor()
-            c.execute('insert into triviagames values (NULL, ?, ?)', (channel,numAsked))
+            c.execute('insert into triviagames values (NULL, ?, ?, ?)', (channel,numAsked,epoch))
             self.conn.commit()
             c.close()
 
@@ -908,15 +926,12 @@ class TriviaTime(callbacks.Plugin):
         def insertQuestionsBulk(self, questions):
             c = self.conn.cursor()
             skipped=0
-            print 'Loading questions file.'
             for question in questions:
                 if not self.questionExists(question[0]):
                     c.execute('''insert into triviaquestion values (NULL, ?, ?)''', 
                                             (question[0], question[1]))
                 else:
                     skipped +=1
-            print '%d repeats skipped' % skipped
-            print 'Done. loaded %d questions' % (len(questions) - skipped)
             self.conn.commit()
             c.close()
             return ((len(questions) - skipped), skipped)
@@ -1024,9 +1039,22 @@ class TriviaTime(callbacks.Plugin):
             if not self.gameExists(channel):
                 return self.insertGame(channel, numAsked)
             c = self.conn.cursor()
+
+            log.info('%s' % numAsked)
             test = c.execute('''update triviagames set
-                                num_asked=num_asked+?
+                                num_asked=?
                                 where channel=?''', (numAsked, channel))
+            self.conn.commit()
+            c.close()
+
+        def updateGameRoundStarted(self, channel, lastRoundStarted):
+            channel = str.lower(channel)
+            if not self.gameExists(channel):
+                return self.insertGame(channel, numAsked)
+            c = self.conn.cursor()
+            test = c.execute('''update triviagames set
+                                round_started=?
+                                where channel=?''', (lastRoundStarted, channel))
             self.conn.commit()
             c.close()
 
@@ -1131,7 +1159,8 @@ class TriviaTime(callbacks.Plugin):
                 c.execute('''create table triviagames (
                         id integer primary key autoincrement, 
                         channel text not null unique,
-                        num_asked integer
+                        num_asked integer,
+                        round_started integer
                         )''')
             except:
                 pass
@@ -1492,8 +1521,7 @@ class TriviaTime(callbacks.Plugin):
                     data.append(d)
                 break
             for d in self.getUserRanks(username):
-                data.append(d) 
-            #print data
+                data.append(d)
 
             c.close()
             return data
@@ -1596,6 +1624,16 @@ class TriviaTime(callbacks.Plugin):
                 return True
             return False
 
+        def getRandomQuestionNotAsked(self, channel, roundStart):
+            c = self.conn.cursor()
+            c.execute('''select * from triviaquestion 
+                            where id not in (select line_num from triviagameslog where channel=? and asked_at>=?) 
+                            order by random()''', (str.lower(channel),roundStart))
+            data = []
+            for row in c:
+                data.append(row)
+            c.close()
+            return data
 
         def getQuestion(self, id):
             c = self.conn.cursor()
@@ -1612,12 +1650,23 @@ class TriviaTime(callbacks.Plugin):
             c.execute('''select * from triviaquestion where id=(select tgl.line_num
                                                                 from triviagameslog tgl
                                                                 where tgl.round_num=?
-                                                                and tgl.channel=?)''', (roundNumber,channel))
+                                                                and tgl.channel=?
+                                                                order by id desc
+                                                                limit 10)''', (roundNumber,channel))
             data = []
             for row in c:
                 data.append(row)
             c.close()
             return data
+
+        def getNumQuestionsNotAsked(self, channel, roundStart):
+            c = self.conn.cursor()
+            result = c.execute('''select count(id) from triviaquestion 
+                            where id not in (select line_num from triviagameslog where channel=? and asked_at>=?)''', 
+                                    (channel,roundStart))
+            rows = result.fetchone()[0]
+            c.close()
+            return rows
 
         def getEditTop3(self):
             c = self.conn.cursor()
