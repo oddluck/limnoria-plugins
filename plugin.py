@@ -82,6 +82,13 @@ class TriviaTime(callbacks.Plugin):
 
     def doJoin(self,irc,msg):
         username = str.lower(msg.nick)
+        # is it a user?
+        try:
+            user = ircdb.users.getUser(msg.prefix) # rootcoma!~rootcomaa@unaffiliated/rootcoma
+            username = str.lower(user.name)
+            log.info('user had nick %s' % username)
+        except KeyError:
+            pass
         channel = str.lower(msg.args[0])
         user = self.storage.getUser(username)
         numTopToVoice = self.registryValue('numTopToVoice')
@@ -146,18 +153,74 @@ class TriviaTime(callbacks.Plugin):
         tops = self.storage.viewDayTop10()
         topsText = '\x0301,08 TODAYS Top 10 - '
         for i in range(len(tops)):
-            topsText += '\x02\x0301,08 #%d:\x02 \x0300,04%s %d ' % ((i+1) , tops[i][1], tops[i][2])
+            topsText += '\x02\x0301,08 #%d:\x02 \x0300,04 %s %d ' % ((i+1) , tops[i][1], tops[i][2])
         irc.sendMsg(ircmsgs.privmsg(channel, topsText))
         irc.noReply()
     day = wrap(day)
+
+    def week(self, irc, msg, arg):
+        """
+            Gives the top10 scores of the week
+        """
+        channel = ircutils.toLower(msg.args[0])
+        tops = self.storage.viewWeekTop10()
+        topsText = '\x0301,08 This WEEKS Top 10 - '
+        for i in range(len(tops)):
+            topsText += '\x02\x0301,08 #%d:\x02 \x0300,04 %s %d ' % ((i+1) , tops[i][1], tops[i][2])
+        irc.sendMsg(ircmsgs.privmsg(channel, topsText))
+        irc.noReply()
+    week = wrap(week)
+
+    def month(self, irc, msg, arg):
+        """
+            Gives the top10 scores of the month
+        """
+        channel = ircutils.toLower(msg.args[0])
+        tops = self.storage.viewMonthTop10()
+        topsText = '\x0301,08 This MONTHS Top 10 Players - '
+        for i in range(len(tops)):
+            topsText += '\x02\x0301,08 #%d:\x02 \x0300,04 %s %d ' % ((i+1) , tops[i][1], tops[i][2])
+        irc.sendMsg(ircmsgs.privmsg(channel, topsText))
+        irc.noReply()
+    month = wrap(month)
+
+    def year(self, irc, msg, arg):
+        """
+            Gives the top10 scores of the year
+        """
+        channel = ircutils.toLower(msg.args[0])
+        tops = self.storage.viewYearTop10()
+        topsText = '\x0301,08 Top 10 Players - '
+        for i in range(len(tops)):
+            topsText += '\x02\x0301,08 #%d:\x02 \x0300,04 %s %d ' % ((i+1) , tops[i][1], tops[i][2])
+        irc.sendMsg(ircmsgs.privmsg(channel, topsText))
+        irc.noReply()
+    year = wrap(year)
+
+    def alltime(self, irc, msg, arg):
+        """
+            Gives the top10 scores from all time
+        """
+        channel = ircutils.toLower(msg.args[0])
+        tops = self.storage.viewAllTimeTop10()
+        topsText = '\x0301,08 ALL TIME Top 10 Players - '
+        for i in range(len(tops)):
+            topsText += '\x02\x0301,08 #%d:\x02 \x0300,04 %s %d ' % ((i+1) , tops[i][1], tops[i][2])
+        irc.sendMsg(ircmsgs.privmsg(channel, topsText))
+        irc.noReply()
+    alltime = wrap(alltime)
 
     def edit(self, irc, msg, arg, num, question):
         """<question number> <corrected text>
         Correct a question by providing the question number and the corrected text.
         """
-        if self.storage.questionIdExists(num):
-            self.storage.insertEdit(num, question,irc.msg.nick,msg.args[0])
+        q = self.storage.getQuestion(num)
+        if len(question) > 0:
+            q = q[0]
+            self.storage.insertEdit(num, question, msg.nick, msg.args[0])
             irc.reply("Success! Submitted edit for further review.")
+            irc.reply('NEW:%s' %(question))
+            irc.reply('OLD:%s' % (q[2]))
         else:
             irc.error("Question does not exist")
     edit = wrap(edit, ['int', 'text'])
@@ -171,9 +234,16 @@ class TriviaTime(callbacks.Plugin):
             irc.error('Could not find that edit')
         else:
             edit = edit[0]
+            question = self.storage.getQuestion(edit[1])
             self.storage.updateQuestion(edit[1], edit[2])
             self.storage.removeEdit(edit[0])
             irc.reply('Question #%d updated!' % edit[1])
+            irc.reply('NEW:%s' %(edit[2]))
+            if len(question) > 0:
+                question = question[0]
+                irc.reply('OLD:%s' % (question[2]))
+            else:
+                irc.error('Question could not be found for this edit')
     acceptedit = wrap(acceptedit, ['int'])
 
     def removeedit(self, irc, msg, arg, num):
@@ -224,24 +294,49 @@ class TriviaTime(callbacks.Plugin):
         """
             Get your rank, score & questions asked for day, month, year
         """
+        username = str.lower(msg.nick)
+        try:
+            user = ircdb.users.getUser(msg.prefix) # rootcoma!~rootcomaa@unaffiliated/rootcoma
+            username = str.lower(user.name)
+        except KeyError:
+            pass
         channel = ircutils.toLower(msg.args[0])
-        info = self.storage.getUser(str.lower(msg.nick))
+        info = self.storage.getUser(str.lower(username))
         if len(info) < 3:
             irc.error("I couldn't find you in my database.")
         else:
-            infoText = '\x0305,08 %s\'s Stats:\x0301,08 Points (answers) \x0305,08Today: #%d %d (%d) This Week: #%d %d (%d) This Month: #%d %d (%d) This Year: #%d %d (%d)' % (msg.nick, info[16], info[10], info[11], info[15], info[8], info[9], info[14], info[6], info[7], info[13], info[4], info[5])
+            infoText = '\x0305,08 %s\'s Stats:\x0301,08 Points (answers) \x0305,08Today: #%d %d (%d) This Week: #%d %d (%d) This Month: #%d %d (%d) This Year: #%d %d (%d)' % (username, info[16], info[10], info[11], info[15], info[8], info[9], info[14], info[6], info[7], info[13], info[4], info[5])
             irc.sendMsg(ircmsgs.privmsg(channel, infoText))
         irc.noReply()
     me = wrap(me)
 
-    def report(self, irc, msg, arg, text):
+    def report(self, irc, msg, arg, roundNum, text):
         """<report text>
         Provide a report for a bad question. Be sure to include the round number and any problems.
         """
         channel = str.lower(msg.args[0])
-        self.storage.insertReport(channel, msg.nick, text)
-        irc.reply('Your report has been submitted!')
-    report = wrap(report, ['text'])
+        username = str.lower(msg.nick)
+        question = self.storage.getQuestionByRound(roundNum, msg.args[0])
+        if len(question) > 0:
+            question = question[0]
+            inp = text.strip()
+            if inp[:2] == 's/':
+                regex = inp[2:].split('/')
+                if len(regex) > 1:
+                    newOne = regex[1]
+                    oldOne = regex[0]
+                    newQuestionText = question[2].replace(oldOne, newOne)
+                    log.info(newQuestionText)
+                    self.storage.insertEdit(question[0], newQuestionText, username, channel)
+                    irc.reply('** Regex detected ** Your report has been submitted!')
+                    irc.reply('NEW:%s' % (newQuestionText))
+                    irc.reply('OLD:%s' % (question[2]))
+                    return
+            self.storage.insertReport(channel, username, text, question[0])
+            irc.reply('Your report has been submitted!')
+        else:
+            irc.error('Sorry, round %d could not be found in the database')
+    report = wrap(report, ['int', 'text'])
 
     def skip(self, irc, msg, arg):
         """
@@ -336,14 +431,24 @@ class TriviaTime(callbacks.Plugin):
         """
         if num is not None:
             report = self.storage.getReportById(num)
-            report = report[0]
-            irc.reply('Report #%d `%s` by %s on %s '%(report[0], report[3], report[2], report[1]))
+            if len(report) < 1:
+                irc.reply('No reports found')
+            else:
+                report = report[0]
+                irc.reply('Report #%d `%s` by %s on %s Q#%d '%(report[0], report[3], report[2], report[1], report[7]))
+                
+                question = self.storage.getQuestion(report[7])
+                if len(question) < 1:
+                    irc.reply("Error: Tried to find question but couldn't")
+                else:
+                    question = question[0]
+                    irc.reply('''Question#%d: %s''' % (question[0], question[2]))
         else:
             reports  = self.storage.getReportTop3()
             if len(reports) < 1:
                 irc.reply('No reports found')
             for report in reports:
-                irc.reply('Report #%d `%s` by %s on %s '%(report[0], report[3], report[2], report[1]))
+                irc.reply('Report #%d `%s` by %s on %s Q#%d '%(report[0], report[3], report[2], report[1], report[7]))
     showreport = wrap(showreport, [optional('int')])
 
     def showedit(self, irc, msg, arg, num):
@@ -352,12 +457,18 @@ class TriviaTime(callbacks.Plugin):
         """
         if num is not None:
             edit = self.storage.getEditById(num)
-            edit = edit[0]
-            question = self.storage.getQuestion(edit[1])
-            question = question[0]
-            irc.reply('Edit #%d, Question#%d'%(edit[0], edit[1]))
-            irc.reply('NEW:%s' %(edit[2]))
-            irc.reply('OLD:%s' % (question[2]))
+            if len(edit) > 0:
+                edit = edit[0]
+                question = self.storage.getQuestion(edit[1])
+                irc.reply('Edit #%d, Question#%d'%(edit[0], edit[1]))
+                irc.reply('NEW:%s' %(edit[2]))
+                if len(question) > 0:
+                    question = question[0]
+                    irc.reply('OLD:%s' % (question[2]))
+                else:
+                    irc.error('Question could not be found for this edit')
+            else:
+                irc.error('Edit #%d not found' % num)
         else:
             edits = self.storage.getEditTop3()
             if len(edits) < 1:
@@ -365,9 +476,8 @@ class TriviaTime(callbacks.Plugin):
             for edit in edits:
                 question = self.storage.getQuestion(edit[1])
                 question = question[0]
-                irc.reply('Edit #%d, Question#%d'%(edit[0], edit[1]))
-                irc.reply('NEW:%s' %(edit[2]))
-                irc.reply('OLD:%s' % (question[2]))
+                irc.reply('Edit #%d, Question#%d, NEW:%s'%(edit[0], edit[1], edit[2]))
+            irc.reply('type .showedit <edit number> to see more information')
     showedit = wrap(showedit, [optional('int')])
 
     def start(self, irc, msg, args):
@@ -388,7 +498,8 @@ class TriviaTime(callbacks.Plugin):
                 #irc.error(self.registryValue('alreadyStarted'))
                 irc.sendMsg(ircmsgs.privmsg(channel, self.registryValue('starting')))
                 self.games[channel] = self.Game(irc, channel, self)
-            irc.sendMsg(ircmsgs.privmsg(channel, self.registryValue('alreadyStarted')))
+            else:
+                irc.sendMsg(ircmsgs.privmsg(channel, self.registryValue('alreadyStarted')))
         else:
             # create a new game
             irc.sendMsg(ircmsgs.privmsg(channel, self.registryValue('starting')))
@@ -482,7 +593,14 @@ class TriviaTime(callbacks.Plugin):
             """
                 Check users input to see if answer was given.
             """
-            
+            username = str.lower(msg.nick)
+            # is it a user?
+            try:
+                user = ircdb.users.getUser(msg.prefix) # rootcoma!~rootcomaa@unaffiliated/rootcoma
+                username = str.lower(user.name)
+                log.info('user had nick %s' % username)
+            except KeyError:
+                pass
             correctAnswerFound = False
             correctAnswer = ''
 
@@ -508,23 +626,27 @@ class TriviaTime(callbacks.Plugin):
                     pointsAdded /= 2 * (self.hintsCounter - 1)
 
                 if len(self.answers) > 1:
-                    if str.lower(msg.nick) not in self.correctPlayers:
-                        self.correctPlayers[str.lower(msg.nick)] = 1
-                    self.correctPlayers[str.lower(msg.nick)] += 1
+                    if str.lower(username) not in self.correctPlayers:
+                        self.correctPlayers[str.lower(username)] = 1
+                    self.correctPlayers[str.lower(username)] += 1
                     # KAOS? divide points
                     pointsAdded /= (len(self.answers) + 1)
+
+                    # Convert score to int
+                    pointsAdded = int(pointsAdded)
+
                     self.totalAmountWon += pointsAdded
                     # report the correct guess for kaos item
-                    self.storage.updateUserLog(msg.nick,pointsAdded,0)
+                    self.storage.updateUserLog(username,pointsAdded,0)
                     self.lastAnswer = time.time()
                     self.sendMessage(self.registryValue('answeredKAOS', self.channel) 
-                        % (msg.nick, pointsAdded, correctAnswer))
+                        % (username, pointsAdded, correctAnswer))
                 else:
                     # Normal question solved
                     streakBonus = 0
                     # update streak info
-                    if self.lastWinner != str.lower(msg.nick):
-                        self.lastWinner = str.lower(msg.nick)
+                    if self.lastWinner != str.lower(username):
+                        self.lastWinner = str.lower(username)
                         self.streak = 1
                     else:
                         self.streak += 1
@@ -534,22 +656,25 @@ class TriviaTime(callbacks.Plugin):
                             streakBonus = maxBonus
                         pointsAdded += streakBonus
 
+                    # Convert score to int
+                    pointsAdded = int(pointsAdded)
+
                     # report correct guess, and show players streak
-                    self.storage.updateUserLog(msg.nick,pointsAdded,1)
+                    self.storage.updateUserLog(username,pointsAdded,1)
                     self.lastAnswer = time.time()
                     self.sendMessage(self.registryValue('answeredNormal', self.channel) 
-                        % (msg.nick, correctAnswer, timeElapsed, pointsAdded, streakBonus))
+                        % (username, correctAnswer, timeElapsed, pointsAdded, streakBonus))
 
                     if self.registryValue('showPlayerStats', self.channel):
-                        playersStats = self.storage.getUser(msg.nick)
+                        playersStats = self.storage.getUser(username)
                         todaysScore = 0
-                        userInfo = self.storage.getUser(msg.nick)
+                        userInfo = self.storage.getUser(username)
                         if len(userInfo) >= 3:
                             todaysScore = userInfo[8]
                             monthScore = userInfo[6]
                             yearScore = userInfo[4]
                         self.sendMessage(self.registryValue('playerStatsMsg', self.channel) 
-                            % (msg.nick, self.streak, todaysScore, monthScore, yearScore))
+                            % (username, self.streak, todaysScore, monthScore, yearScore))
 
                 # add guessed word to list so we can cross it out
                 if self.guessedAnswers.count(attempt) == 0:
@@ -565,7 +690,7 @@ class TriviaTime(callbacks.Plugin):
                         bonusPointsText = ''
                         if bonusPoints > 0:
                             for nick in self.correctPlayers:
-                                self.storage.updateUserLog(str(msg.nick).lower(),bonusPoints)
+                                self.storage.updateUserLog(str(username).lower(),bonusPoints)
                             bonusPointsText += self.registryValue('bonusKAOS', self.channel) % int(bonusPoints)
 
                         # give a special message if it was KAOS
@@ -801,11 +926,14 @@ class TriviaTime(callbacks.Plugin):
                         'aa':alternativeAnswers, 
                         '#':lineNumber
                         }
+            else:
+                log.info('Bad question found on line#%d' % lineNumber)
+                # TODO report bad question
 
             # default question, everything went wrong with grabbing question
-            return {'#':-1,
+            return {'#':lineNumber,
                     'p':10050,
-                    'q':'KAOS: The 10 Worst U.S. Presidents (Last Name Only)?',
+                    'q':'KAOS: The 10 Worst U.S. Presidents (Last Name Only)? (This is a panic question, if you see this report this question. it is malformed.)',
                     'a':['Bush', 'Nixon', 'Hoover', 'Grant', 'Johnson', 
                         'Ford', 'Reagan', 'Coolidge', 'Pierce'], 
                     'aa':['Obama']
@@ -872,6 +1000,7 @@ class TriviaTime(callbacks.Plugin):
                 day   = dateObject.day
                 month = dateObject.month
                 year  = dateObject.year
+            score = int(score)
             if epoch is None:
                 epoch = int(time.mktime(time.localtime()))
             if self.userLogExists(username, day, month, year):
@@ -912,14 +1041,14 @@ class TriviaTime(callbacks.Plugin):
             self.conn.commit()
             c.close()
 
-        def insertReport(self, channel, username, reportText, reportedAt=None):
+        def insertReport(self, channel, username, reportText, questionNum, reportedAt=None):
             channel = str.lower(channel)
             username = str.lower(username)
             if reportedAt is None:
                 reportedAt = int(time.mktime(time.localtime()))
             c = self.conn.cursor()
-            c.execute('insert into triviareport values (NULL, ?, ?, ?, ?, NULL, NULL)', 
-                                        (channel,username,reportText,reportedAt))
+            c.execute('insert into triviareport values (NULL, ?, ?, ?, ?, NULL, NULL, ?)', 
+                                        (channel,username,reportText,reportedAt,questionNum))
             self.conn.commit()
             c.close()
 
@@ -1039,8 +1168,6 @@ class TriviaTime(callbacks.Plugin):
             if not self.gameExists(channel):
                 return self.insertGame(channel, numAsked)
             c = self.conn.cursor()
-
-            log.info('%s' % numAsked)
             test = c.execute('''update triviagames set
                                 num_asked=?
                                 where channel=?''', (numAsked, channel))
@@ -1193,7 +1320,8 @@ class TriviaTime(callbacks.Plugin):
                         report_text text,
                         reported_at integer,
                         fixed_at integer,
-                        fixed_by text
+                        fixed_by text,
+                        question_num integer
                         )''')
             except:
                 pass
@@ -1692,6 +1820,98 @@ class TriviaTime(callbacks.Plugin):
             c.close()
             return data
 
+        def viewAllTimeTop10(self):
+            c = self.conn.cursor()
+            c.execute('''select id,
+                        username,
+                        sum(points_made),
+                        sum(num_answered)
+                        from triviauserlog
+                        group by username 
+                        order by points_made desc 
+                        limit 10''')
+
+            data = []
+            for row in c:
+                data.append(row)
+            c.close()
+            return data
+
+        def viewMonthTop10(self, year=None, month=None):
+            d = datetime.date.today()
+            if year is None or month is None:
+                year = d.year
+                month = d.month
+            c = self.conn.cursor()
+
+            c.execute('''select id,
+                        username,
+                        sum(points_made),
+                        sum(num_answered)
+                        from triviauserlog 
+                        where year=? and month=?
+                        group by username 
+                        order by points_made desc 
+                        limit 10''', (year,month))
+
+            data = []
+            for row in c:
+                data.append(row)
+            c.close()
+            return data
+
+        def viewYearTop10(self, year=None):
+            d = datetime.date.today()
+            if year is None:
+                year = d.year
+            c = self.conn.cursor()
+
+            c.execute('''select id,
+                        username,
+                        sum(points_made),
+                        sum(num_answered)
+                        from triviauserlog 
+                        where year=?
+                        group by username 
+                        order by points_made desc 
+                        limit 10''', (year,))
+
+            data = []
+            for row in c:
+                data.append(row)
+            c.close()
+            return data
+
+        def viewWeekTop10(self):
+            d = datetime.date.today()
+            weekday=d.weekday()
+            d -= datetime.timedelta(weekday)
+            weekSqlString = ''
+            for i in range(7):
+                if i > 0:
+                    weekSqlString += ' or ' 
+                weekSqlString += '''
+                            (year=%d
+                            and month=%d
+                            and day=%d)''' % (d.year, d.month, d.day)
+                d += datetime.timedelta(1)
+            c = self.conn.cursor()
+            weekSql = '''select id,
+                        username,
+                        sum(points_made),
+                        sum(num_answered)
+                        from triviauserlog 
+                        where '''
+            weekSql += weekSqlString
+            weekSql += ''' group by username order by points_made desc limit 10'''
+            c.execute(weekSql)
+
+            data = []
+            for row in c:
+                data.append(row)
+            c.close()
+            return data
+
         """
         def transferUserLogs(self, userFrom, userTo):  
             userFrom = str.lower(userFrom) 
@@ -1745,3 +1965,4 @@ class TriviaTime(callbacks.Plugin):
 
 Class = TriviaTime
 # vim:set shiftwidth=4 softtabstop=4 expandtab textwidth=79:
+
