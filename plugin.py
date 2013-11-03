@@ -733,7 +733,6 @@ class TriviaTime(callbacks.Plugin):
                     answer += ans
                     if len(self.answers) > 1:
                         answer += ']'
-
                 # Give failure message
                 if len(self.answers) > 1:
                     self.sendMessage(self.registryValue('notAnsweredKAOS', self.channel) % answer)
@@ -743,6 +742,9 @@ class TriviaTime(callbacks.Plugin):
                     self.sendMessage(self.registryValue('notAnswered', self.channel) % answer)
                 # provide next question
                 
+                self.answers = []
+                self.alternativeAnswers = []
+                self.question = ''
                 sleepTime = self.registryValue('sleepTime',self.channel)
                 if sleepTime < 2:
                     sleepTime = 2
