@@ -91,7 +91,7 @@
 
       <div class="row">
         <div class="span6">
-          <h2>Top10 of ALL TIME</h2>
+          <h2>All Time Top Scores</h2>
             <table class="table">
               <thead>
                 <tr>
@@ -101,32 +101,32 @@
                 </tr>
               </thead>
               <tbody>
-<?php
-    if ($db) {
-        $q = $db->query('SELECT username, sum(points_made) as points FROM triviauserlog GROUP BY username ORDER BY points DESC LIMIT 10');
-        if ($q === false) {
-            die("Error: database error: table does not exist\n");
-        } else {
-            $result = $q->fetchAll();
+                <?php
+                    if ($db) {
+                        $q = $db->query('SELECT username, sum(points_made) as points FROM triviauserlog GROUP BY username ORDER BY points DESC LIMIT 10');
+                        if ($q === false) {
+                            die("Error: database error: table does not exist\n");
+                        } else {
+                            $result = $q->fetchAll();
 
-            foreach($result as $key=>$res) {
+                            foreach($result as $key=>$res) {
 
-                echo '<tr>';
-                echo '<td>' . ($key+1) . '</td>';
-                echo '<td>' . $res['username'] . '</td>';
-                echo '<td>' . $res['points'] . '</td>';
-                echo '</tr>';
-            }
-        }
-    } else {
-        die($err);
-    }
-?>
+                                echo '<tr>';
+                                echo '<td>' . ($key+1) . '</td>';
+                                echo '<td>' . $res['username'] . '</td>';
+                                echo '<td>' . $res['points'] . '</td>';
+                                echo '</tr>';
+                            }
+                        }
+                    } else {
+                        die($err);
+                    }
+                ?>
               </tbody>
             </table>
         </div>
         <div class="span6">
-          <h2>Todays TOP10</h2>
+          <h2>Todays Top Scores</h2>
             <table class="table">
               <thead>
                 <tr>
@@ -136,37 +136,168 @@
                 </tr>
               </thead>
               <tbody>
-<?php
-    $day = date('j');
-    $month = date('m');
-    $year = date('Y');
+                <?php
+                    $day = date('j');
+                    $month = date('m');
+                    $year = date('Y');
 
-    if ($db) {
-        $q = $db->prepare("SELECT username, sum(points_made) as points FROM triviauserlog WHERE day=:day AND year=:year AND month=:month GROUP BY username ORDER BY points DESC LIMIT 10");
-        $q->execute(array(':day'=>$day, 'year'=>$year, 'month'=>$month));
-        if ($q === false) {
-            die("Error: database error: table does not exist\n");
-        } else {
-            $result = $q->fetchAll();
-            foreach($result as $key=>$res) {
-                echo '<tr>';
-                echo '<td>' . ($key+1) . '</td>';
-                echo '<td>' . $res['username'] . '</td>';
-                echo '<td>' . $res['points'] . '</td>';
-                echo '</tr>';
-            }
-        }
-    } else {
-        die($err);
-    }
-?>
+                    if ($db) {
+                        $q = $db->prepare("SELECT username, sum(points_made) as points FROM triviauserlog WHERE day=:day AND year=:year AND month=:month GROUP BY username ORDER BY points DESC LIMIT 10");
+                        $q->execute(array(':day'=>$day, 'year'=>$year, 'month'=>$month));
+                        if ($q === false) {
+                            die("Error: database error: table does not exist\n");
+                        } else {
+                            $result = $q->fetchAll();
+                            foreach($result as $key=>$res) {
+                                echo '<tr>';
+                                echo '<td>' . ($key+1) . '</td>';
+                                echo '<td>' . $res['username'] . '</td>';
+                                echo '<td>' . $res['points'] . '</td>';
+                                echo '</tr>';
+                            }
+                        }
+                    } else {
+                        die($err);
+                    }
+                ?>
               </tbody>
             </table>
         </div>
       </div>
 
+      <div class="row">
+        <div class="span4">
+          <h2>Month Top Scores</h2>
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Username</th>
+                  <th>Points</th>
+                </tr>
+              </thead>
+              <tbody>
+                <?php
+                    $day = date('j');
+                    $month = date('m');
+                    $year = date('Y');
+
+                    if ($db) {
+                        $q = $db->prepare("SELECT username, sum(points_made) as points FROM triviauserlog WHERE year=:year AND month=:month GROUP BY username ORDER BY points DESC LIMIT 10");
+                        $q->execute(array('year'=>$year, 'month'=>$month));
+                        if ($q === false) {
+                            die("Error: database error: table does not exist\n");
+                        } else {
+                            $result = $q->fetchAll();
+                            foreach($result as $key=>$res) {
+                                echo '<tr>';
+                                echo '<td>' . ($key+1) . '</td>';
+                                echo '<td>' . $res['username'] . '</td>';
+                                echo '<td>' . $res['points'] . '</td>';
+                                echo '</tr>';
+                            }
+                        }
+                    } else {
+                        die($err);
+                    }
+                ?>
+              </tbody>
+            </table>
+        </div>
+        <div class="span4">
+          <h2>Year Top Scores</h2>
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Username</th>
+                  <th>Points</th>
+                </tr>
+              </thead>
+              <tbody>
+                <?php
+                    $day = date('j');
+                    $month = date('m');
+                    $year = date('Y');
+
+                    if ($db) {
+                        $q = $db->prepare("SELECT username, sum(points_made) as points FROM triviauserlog WHERE year=:year GROUP BY username ORDER BY points DESC LIMIT 10");
+                        $q->execute(array('year'=>$year));
+                        if ($q === false) {
+                            die("Error: database error: table does not exist\n");
+                        } else {
+                            $result = $q->fetchAll();
+                            foreach($result as $key=>$res) {
+                                echo '<tr>';
+                                echo '<td>' . ($key+1) . '</td>';
+                                echo '<td>' . $res['username'] . '</td>';
+                                echo '<td>' . $res['points'] . '</td>';
+                                echo '</tr>';
+                            }
+                        }
+                    } else {
+                        die($err);
+                    }
+                ?>
+
+              </tbody>
+            </table>
+        </div>
+
+        <?php
+          $sqlClause = '';
+          $week = new DateTime();
+          $interval = new DateInterval('P'.$day.'D');
+          $week->sub($interval);
+          $interval = new DateInterval('P1D');
+          for($i=0;$i<7;$i++) {
+            if($i>0) {
+              $sqlClause .= ' or ';
+            }
+            $sqlClause .= '(day=' . $week->format('j') . 
+                            ' and month=' . $week->format('n') .
+                            ' and year=' . $week->format('Y') . 
+                            ')';
+            $week->add($interval);
+          }
+        ?>
+        <div class="span4">
+          <h2>Week Top Scores</h2>
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Username</th>
+                  <th>Points</th>
+                </tr>
+              </thead>
+              <tbody>
+<?php
+    if ($db) {
+        $q = $db->query("SELECT username, sum(points_made) as points FROM triviauserlog WHERE $sqlClause GROUP BY username ORDER BY points DESC LIMIT 10");
+        if ($q === false) {
+            die("Error: database error: table does not exist\n");
+        } else {
+            $result = $q->fetchAll();
+            foreach($result as $key=>$res) {
+                echo '<tr>';
+                echo '<td>' . ($key+1) . '</td>';
+                echo '<td>' . $res['username'] . '</td>';
+                echo '<td>' . $res['points'] . '</td>';
+                echo '</tr>';
+            }
+        }
+    } else {
+        die($err);
+    }
+?>
+
+              </tbody>
+            </table>
+        </div>
+      </div>
       <div class="footer">
-        <p>&copy; Trivialand 2013</p>
+        <p>&copy; Trivialand 2013 - <a href="https://github.com/tannn/TriviaTime">github</a></p>
       </div>
 
     </div> <!-- /container -->
