@@ -143,6 +143,7 @@ class TriviaTime(callbacks.Plugin):
         """
         self.storage.removeUserLogs(str.lower(username))
         irc.reply('Removed all points from %s' % (username))
+        self.storage.insertUserLog(username, 0, 0)
     clearpoints = wrap(clearpoints, ['admin','nick'])
 
     def day(self, irc, msg, arg):
@@ -1965,4 +1966,3 @@ class TriviaTime(callbacks.Plugin):
 
 Class = TriviaTime
 # vim:set shiftwidth=4 softtabstop=4 expandtab textwidth=79:
-
