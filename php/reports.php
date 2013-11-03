@@ -81,11 +81,25 @@
         </div><!-- /.navbar -->
       </div>
 
+      <div class="hero-unit">
+        <h1>Reports</h1>
+        <p>The reports and edits that are currently pending.</p>
+        <p>
+        </p>
+      </div>
 
       <div class="row">
         <div class="span6">
           <h2>Reports</h2>
-          <p>
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Username</th>
+                  <th>Report Text</th>
+                </tr>
+              </thead>
+              <tbody>
 <?php
     if ($db) {
         $q = $db->query('SELECT * FROM triviareport LIMIT 10');
@@ -94,19 +108,33 @@
         } else {
             $result = $q->fetchAll();
             foreach($result as $res) {
-                echo $res['reported_at'] . ' ' . $res['channel'] . ' ' . $res['username'] . ' ' . $res['report_text'] . "<br>\n";
+                echo '<tr>';
+                echo '<td>' . $res['id'] . '</td>';
+                echo '<td>' . $res['username'] . '</td>';
+                echo '<td>' . $res['report_text'] . '</td>';
+                echo '</tr>';
             }
         }
     } else {
         die('Couldnt connect to db');
     }
 ?>
-          </p>
+              </tbody>
+            </table>
         </div>
 
         <div class="span6">
           <h2>Edits</h2>
-          <p>
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Edit #</th>
+                  <th>Username</th>
+                  <th>New Question</th>
+                  <th>Question #</th>
+                </tr>
+              </thead>
+              <tbody>
 <?php
     if ($db) {
         $q = $db->query('SELECT * FROM triviaedit ORDER BY id DESC LIMIT 10');
@@ -115,14 +143,20 @@
         } else {
             $result = $q->fetchAll();
             foreach($result as $res) {
-                echo 'Edit#' . $res['id'] . ' new:`' . $res['question'] . '` by:' . $res['username'] . ' Question#' . $res['question_id'] . "<br>\n";
+                echo '<tr>';
+                echo '<td>' . $res['id'] . '</td>';
+                echo '<td>' . $res['username'] . '</td>';
+                echo '<td>' . $res['question'] . '</td>';
+                echo '<td>' . $res['question_id'] . '</td>';
+                echo '</tr>';
             }
         }
     } else {
         die($err);
     }
 ?>
-        </p>
+              </tbody>
+            </table>
         </div>
 
       </div>

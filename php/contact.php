@@ -81,14 +81,11 @@
         </div><!-- /.navbar -->
       </div>
 
-
-      <div class="row">
-        <div class="span12">
-          <h2>Contact Us</h2>
-          <p>
-            We are #trivialand on Freenode. Come join us!
-          </p>
-        </div>
+      <div class="hero-unit">
+        <h1>Contact Us</h1>
+        <p>We are #trivialand on Freenode. Come join us!</p>
+        <p>
+        </p>
       </div>
 
       <div class="footer">

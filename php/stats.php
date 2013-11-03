@@ -81,11 +81,26 @@
         </div><!-- /.navbar -->
       </div>
 
+      <div class="hero-unit">
+        <h1>Stats</h1>
+        <p>Stats are updated continuously and instantly.</p>
+        <p>
+        </p>
+      </div>
+
 
       <div class="row">
         <div class="span6">
           <h2>Top10 of ALL TIME</h2>
-          <p>
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Username</th>
+                  <th>Points</th>
+                </tr>
+              </thead>
+              <tbody>
 <?php
     if ($db) {
         $q = $db->query('SELECT username, sum(points_made) as points FROM triviauserlog GROUP BY username ORDER BY points DESC LIMIT 10');
@@ -93,19 +108,34 @@
             die("Error: database error: table does not exist\n");
         } else {
             $result = $q->fetchAll();
-            foreach($result as $res) {
-                echo $res['username'] . ' ' . $res['points'] . "<br>\n";
+
+            foreach($result as $key=>$res) {
+
+                echo '<tr>';
+                echo '<td>' . ($key+1) . '</td>';
+                echo '<td>' . $res['username'] . '</td>';
+                echo '<td>' . $res['points'] . '</td>';
+                echo '</tr>';
             }
         }
     } else {
         die($err);
     }
 ?>
-          </p>
+              </tbody>
+            </table>
         </div>
         <div class="span6">
           <h2>Todays TOP10</h2>
-          <p>
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Username</th>
+                  <th>Points</th>
+                </tr>
+              </thead>
+              <tbody>
 <?php
     $day = date('j');
     $month = date('m');
@@ -118,15 +148,20 @@
             die("Error: database error: table does not exist\n");
         } else {
             $result = $q->fetchAll();
-            foreach($result as $res) {
-                echo $res['username'] . ' ' . $res['points'] . "<br>\n";
+            foreach($result as $key=>$res) {
+                echo '<tr>';
+                echo '<td>' . ($key+1) . '</td>';
+                echo '<td>' . $res['username'] . '</td>';
+                echo '<td>' . $res['points'] . '</td>';
+                echo '</tr>';
             }
         }
     } else {
         die($err);
     }
 ?>
-        </p>
+              </tbody>
+            </table>
         </div>
       </div>
 

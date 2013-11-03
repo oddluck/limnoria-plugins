@@ -81,14 +81,12 @@
         </div><!-- /.navbar -->
       </div>
 
-
-      <div class="row">
-        <div class="span12">
-          <h2>TriviaTime</h2>
-          <p>
-            We are #trivialand on Freenode. Come join us!
-          </p>
-        </div>
+      <div class="hero-unit">
+        <h1>About Us</h1>
+        <p>TriviaTime is a trivia word game meant for irc. The source code is on github, be sure to check it out.</p>
+        <p>We are #trivialand on Freenode. Come join us!</p>
+        <p>
+        </p>
       </div>
 
       <div class="footer">

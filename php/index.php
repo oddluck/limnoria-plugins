@@ -81,14 +81,11 @@
         </div><!-- /.navbar -->
       </div>
 
-
-      <div class="row">
-        <div class="span12">
-          <h2>TriviaTime</h2>
-          <p>
-            Get the latest stats for players and updates.
-          </p>
-        </div>
+      <div class="hero-unit">
+        <h1>TriviaTime</h1>
+        <p>Get the latest stats for players and updates.</p>
+        <p>
+        </p>
       </div>
       <div class="row">
         <div class="span12">
