@@ -90,7 +90,16 @@
       <div class="row">
         <div class="span12">
           <h2>Latest questions asked</h2>
-          <p>
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Round #</th>
+                  <th>Channel</th>
+                  <th>Question #</th>
+                  <th>Question</th>
+                </tr>
+              </thead>
+              <tbody>
 <?php
     if ($db) {
         $q = $db->query('SELECT asked_at, channel, round_num, question, line_num FROM triviagameslog ORDER BY id DESC LIMIT 10');
@@ -99,14 +108,20 @@
         } else {
             $result = $q->fetchAll();
             foreach($result as $res) {
-                echo $res['asked_at'] . ' Round:'  . $res['channel'] . ':' . $res['round_num'] . ' `' . $res['question'] . '` line number:' . $res['line_num'] . "<br>\n";
+                echo '<tr>';
+                echo '<td>' . $res['round_num'] . '</td>';
+                echo '<td>' . $res['channel'] . '</td>';
+                echo '<td>' . $res['line_num'] . '</td>';
+                echo '<td>' . $res['question'] . '</td>';
+                echo '</tr>';
             }
         }
     } else {
         die($err);
     }
 ?>
-          </h2>
+              </tbody>
+            </table>
         </div>
       </div>
 
