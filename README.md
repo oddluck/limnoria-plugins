@@ -4,15 +4,16 @@ This plugin has been started but is not finished. For developers use only. Not r
 # Plans
 ## Main Priority
 
-* require minimum amount of points for autovoice
 * allow shuffling of questions
-* move databases to inside the TriviaTime plugin folder
 * when reaching the end of questions, restart the question numbers per [Concept][] page
-* extra points for streaks
 * We plan on keeping track of players’ scores by their usernames. Should they want to change usernames and keep their scores, they will need to register to the bot. Supybots are already capable of keeping track of users across nicknames and hosts (per owner’s configuration)
 * Store question in an SQL file. Create a system of assigning number to the question. That question number will only be used for reporting and when the question is displayed by the bot. If the question is reported, it will be assigned a new number for reporting. When edited, it will use the new report number.
-* create live PHP website showing scores and to track reports
 * Scores are tracked by nicknames. If a user is registered, it is then tracked by their supybot account
+* Show remaining KAOS answers (command is a comma)
+* Average answer time (web only)
+* Average answer score (web only)
+* Show stats for reports, fixes, and verified edits for each user (web only)
+
 
 ## Second Priority
 These items can wait until the game is almost ready for public testing.
