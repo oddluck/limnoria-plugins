@@ -141,9 +141,11 @@ class TriviaTime(callbacks.Plugin):
 
         Deletes all of a users points, and removes all their records
         """
+        d = datetime.date.today()
+        d -= datetime.timedelta(366)
+        self.storage.updateUserLog(str.lower(username), 0, 0,d.day,d.month,d.year)
         self.storage.removeUserLogs(str.lower(username))
         irc.reply('Removed all points from %s' % (username))
-        self.storage.insertUserLog(username, 0, 0)
     clearpoints = wrap(clearpoints, ['admin','nick'])
 
     def day(self, irc, msg, arg):
