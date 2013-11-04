@@ -30,6 +30,11 @@ conf.registerChannelValue(TriviaTime, 'quizfile',
         )
 
 # timeout, number of hints, values
+conf.registerChannelValue(TriviaTime, 'showHintCommandKAOS', 
+        registry.NormalizedString(""",""", 
+                """The command for showing the remaining KAOS""")
+        )
+
 conf.registerChannelValue(TriviaTime, 'showPlayerStats', 
         registry.Boolean(True, 
                 """Show player stats after correct answer?""")

@@ -77,8 +77,12 @@ class TriviaTime(callbacks.Plugin):
         if callbacks.addressed(irc.nick, msg):
             return
         if channel in self.games:
-            # check the answer
-            self.games[channel].checkAnswer(msg)
+            # Look for command to list remaining KAOS
+            if msg.args[1] == self.registryValue('showHintCommandKAOS',channel):
+                self.games[channel].getRemainingKAOS()
+            else:
+                # check the answer
+                self.games[channel].checkAnswer(msg)
 
     def doJoin(self,irc,msg):
         username = str.lower(msg.nick)
@@ -86,7 +90,6 @@ class TriviaTime(callbacks.Plugin):
         try:
             user = ircdb.users.getUser(msg.prefix) # rootcoma!~rootcomaa@unaffiliated/rootcoma
             username = str.lower(user.name)
-            log.info('user had nick %s' % username)
         except KeyError:
             pass
         channel = str.lower(msg.args[0])
@@ -329,7 +332,7 @@ class TriviaTime(callbacks.Plugin):
                     newOne = regex[1]
                     oldOne = regex[0]
                     newQuestionText = question[2].replace(oldOne, newOne)
-                    log.info(newQuestionText)
+                    #log.info(newQuestionText)
                     self.storage.insertEdit(question[0], newQuestionText, username, channel)
                     irc.reply('** Regex detected ** Your report has been submitted!')
                     irc.reply('NEW:%s' % (newQuestionText))
@@ -575,6 +578,7 @@ class TriviaTime(callbacks.Plugin):
             self.irc = irc
 
             # reset stats
+            self.shownHint = False
             self.skipVoteCount = {}
             self.streak       = 0
             self.lastWinner   = ''
@@ -601,7 +605,6 @@ class TriviaTime(callbacks.Plugin):
             try:
                 user = ircdb.users.getUser(msg.prefix) # rootcoma!~rootcomaa@unaffiliated/rootcoma
                 username = str.lower(user.name)
-                log.info('user had nick %s' % username)
             except KeyError:
                 pass
             correctAnswerFound = False
@@ -682,6 +685,8 @@ class TriviaTime(callbacks.Plugin):
                 # add guessed word to list so we can cross it out
                 if self.guessedAnswers.count(attempt) == 0:
                     self.guessedAnswers.append(attempt)
+                # can show more hints now
+                self.shownHint = False
 
                 # Have all of the answers been found?
                 if len(self.guessedAnswers) == len(self.answers):
@@ -755,10 +760,9 @@ class TriviaTime(callbacks.Plugin):
                 # give out more hints
                 self.nextHint()
 
-        def nextHint(self):
-            """
-                Max hints have not been reached, and no answer is found, need more hints
-            """
+        def getHintString(self, hintNum=None):
+            if hintNum == None:
+                hintNum = self.hintsCounter
             hintRatio = self.registryValue('hintShowRatio') # % to show each hint
             hints = ''
             ratio = float(hintRatio * .01)
@@ -772,10 +776,10 @@ class TriviaTime(callbacks.Plugin):
                     hints += ' '
                 if len(self.answers) > 1:
                     hints += '['
-                if self.hintsCounter == 0:
+                if hintNum == 0:
                     masked = ans
                     hints += re.sub('\w', charMask, masked)
-                elif self.hintsCounter == 1:
+                elif hintNum == 1:
                     divider = int(len(ans) * ratio)
                     if divider > 3:
                         divider = 3
@@ -784,7 +788,7 @@ class TriviaTime(callbacks.Plugin):
                     hints += ans[:divider]
                     masked = ans[divider:]
                     hints += re.sub('\w', charMask, masked)
-                elif self.hintsCounter == 2:
+                elif hintNum == 2:
                     divider = int(len(ans) * ratio)
                     if divider > 3:
                         divider = 3
@@ -807,9 +811,24 @@ class TriviaTime(callbacks.Plugin):
                     hints += hintsend
                 if len(self.answers) > 1:
                     hints += ']'
+            return hints
+
+        def getRemainingKAOS(self):
+            if len(self.answers) > 1:
+                if self.shownHint == False:
+                    self.shownHint = True
+                    self.sendMessage(self.getHintString(self.hintsCounter-1))
+
+        def nextHint(self):
+            """
+                Max hints have not been reached, and no answer is found, need more hints
+            """
+            hints = self.getHintString(self.hintsCounter)
             #increment hints counter
             self.hintsCounter += 1
             self.sendMessage('Hint %s: %s' % (self.hintsCounter, hints), 1, 9)
+            #reset hint shown
+            self.shownHint = False
             timeout = self.registryValue('timeout', self.channel)
             if timeout < 2:
                 timout = 2
@@ -828,6 +847,7 @@ class TriviaTime(callbacks.Plugin):
                 return
 
             # reset and increment
+            self.shownHint = False
             self.skipVoteCount = {}
             self.question = ''
             self.answers = []
