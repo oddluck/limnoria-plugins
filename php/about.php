@@ -82,15 +82,15 @@
       </div>
 
       <div class="hero-unit">
-        <h1>About Us</h1>
-        <p>TriviaTime is a trivia word game meant for irc. The source code is on github, be sure to check it out.</p>
-        <p>We are #trivialand on Freenode. Come join us!</p>
+        <h1>About TriviaTime</h1>
+        <p>TriviaTime is a trivia game on IRC, made exclusively for Trivialand.</p>
+        <p>We are #trivialand on Freenode. <a href="irc://chat.freenode.net/trivialand">Come play with us!</a></p>
         <p>
         </p>
       </div>
 
       <div class="footer">
-        <p>&copy; Trivialand 2013 - <a href="https://github.com/tannn/TriviaTime">github</a></p>
+        <p>&copy; Trivialand 2013 - <a href="https://github.com/tannn/TriviaTime">GitHub</a></p>
       </div>
 
     </div> <!-- /container -->
