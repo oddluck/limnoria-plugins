@@ -72,6 +72,7 @@
               <ul class="nav">
                 <li class="active"><a href="index.php">Home</a></li>
                 <li><a href="stats.php">Stats</a></li>
+                <li><a href="user.php">Players</a></li>
                 <li><a href="reports.php">Reports</a></li>
                 <li><a href="about.php">About</a></li>
                 <li><a href="contact.php">Contact</a></li>

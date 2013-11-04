@@ -60,7 +60,7 @@ class TriviaTime(callbacks.Plugin):
         self.storage.makeQuestionTable()
         #self.storage.dropEditTable()
         self.storage.makeEditTable()
-        #self.storage.insertUserLog('root', 1, 1, 10, 30, 2013)
+        #self.storage.insertUserLog('root', 1, 1, 10, 10, 30, 2013)
         #self.storage.insertUser('root', 1, 1)
 
         #filename = self.registryValue('quizfile')
@@ -292,7 +292,7 @@ class TriviaTime(callbacks.Plugin):
             day = d.day
             month = d.month
             year = d.year
-        self.storage.updateUserLog(str.lower(username), points, 0, day, month, year)
+        self.storage.updateUserLog(str.lower(username), points, 0, 0, day, month, year)
         irc.reply('Added %d points to %s' % (points, username))
     givepoints = wrap(givepoints, ['admin','nick', 'int', optional('int')])
 
@@ -643,7 +643,7 @@ class TriviaTime(callbacks.Plugin):
 
                     self.totalAmountWon += pointsAdded
                     # report the correct guess for kaos item
-                    self.storage.updateUserLog(username,pointsAdded,0)
+                    self.storage.updateUserLog(username,pointsAdded,0, 0)
                     self.lastAnswer = time.time()
                     self.sendMessage(self.registryValue('answeredKAOS', self.channel) 
                         % (username, pointsAdded, correctAnswer))
@@ -666,7 +666,7 @@ class TriviaTime(callbacks.Plugin):
                     pointsAdded = int(pointsAdded)
 
                     # report correct guess, and show players streak
-                    self.storage.updateUserLog(username,pointsAdded,1)
+                    self.storage.updateUserLog(username,pointsAdded,1, timeElapsed)
                     self.lastAnswer = time.time()
                     self.sendMessage(self.registryValue('answeredNormal', self.channel) 
                         % (username, correctAnswer, timeElapsed, pointsAdded, streakBonus))
@@ -698,7 +698,7 @@ class TriviaTime(callbacks.Plugin):
                         bonusPointsText = ''
                         if bonusPoints > 0:
                             for nick in self.correctPlayers:
-                                self.storage.updateUserLog(str(username).lower(),bonusPoints)
+                                self.storage.updateUserLog(str(username).lower(),bonusPoints, 0, 0)
                             bonusPointsText += self.registryValue('bonusKAOS', self.channel) % int(bonusPoints)
 
                         # give a special message if it was KAOS
@@ -1028,7 +1028,7 @@ class TriviaTime(callbacks.Plugin):
                                                                       # otherwise errors
             self.conn.text_factory = str
 
-        def insertUserLog(self, username, score, numAnswered, day=None, month=None, year=None, epoch=None):
+        def insertUserLog(self, username, score, numAnswered, timeTaken, day=None, month=None, year=None, epoch=None):
             if day == None and month == None and year == None:
                 dateObject = datetime.date.today()
                 day   = dateObject.day
@@ -1038,11 +1038,11 @@ class TriviaTime(callbacks.Plugin):
             if epoch is None:
                 epoch = int(time.mktime(time.localtime()))
             if self.userLogExists(username, day, month, year):
-                return self.updateUserLog(username, score, day, month, year)
+                return self.updateUserLog(username, score, numAnswered, timeTaken, day, month, year, epoch)
             c = self.conn.cursor()
             username = str.lower(username)
-            c.execute('insert into triviauserlog values (NULL, ?, ?, ?, ?, ?, ?, ?)', 
-                (username, score, numAnswered, day, month, year, epoch))
+            c.execute('insert into triviauserlog values (NULL, ?, ?, ?, ?, ?, ?, ?, ?)', 
+                (username, score, numAnswered, day, month, year, epoch, timeTaken))
             self.conn.commit()
             c.close()
 
@@ -1159,7 +1159,7 @@ class TriviaTime(callbacks.Plugin):
                 return True
             return False
 
-        def updateUserLog(self, username, score, numAnswered, day=None, month=None, year=None, epoch=None):
+        def updateUserLog(self, username, score, numAnswered, timeTaken, day=None, month=None, year=None, epoch=None):
             username = str.lower(username)
             if not self.userExists(username):
                 self.insertUser(username)
@@ -1171,19 +1171,20 @@ class TriviaTime(callbacks.Plugin):
             if epoch is None:
                 epoch = int(time.mktime(time.localtime()))
             if not self.userLogExists(username, day, month, year):
-                return self.insertUserLog(username, score, numAnswered, day, month, year)
+                return self.insertUserLog(username, score, numAnswered, timeTaken, day, month, year, epoch)
             c = self.conn.cursor()
             usr = str.lower(username)
             scr = score
             numAns = numAnswered
             test = c.execute('''update triviauserlog set 
                                 points_made = points_made+?,
+                                average_time=( average_time * (1.0*num_answered/(num_answered+?)) + ? * (1.0*?/(num_answered+?)) ),
                                 num_answered = num_answered+?,
                                 last_updated = ?
                                 where username=?
                                 and day=? 
                                 and month=? 
-                                and year=?''', (scr,numAns,epoch,usr,day,month,year))
+                                and year=?''', (scr,numAns,timeTaken,numAns,numAns,numAns,epoch,usr,day,month,year))
             self.conn.commit()
             c.close()
 
@@ -1307,6 +1308,7 @@ class TriviaTime(callbacks.Plugin):
                         month integer, 
                         year integer,
                         last_updated integer,
+                        average_time integer,
                         unique(username, day, month, year) on conflict replace
                         )''')
             except:
