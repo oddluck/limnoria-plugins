@@ -1041,8 +1041,11 @@ class TriviaTime(callbacks.Plugin):
                 return self.updateUserLog(username, score, numAnswered, timeTaken, day, month, year, epoch)
             c = self.conn.cursor()
             username = str.lower(username)
-            c.execute('insert into triviauserlog values (NULL, ?, ?, ?, ?, ?, ?, ?, ?)', 
-                (username, score, numAnswered, day, month, year, epoch, timeTaken))
+            scoreAvg = 'NULL'
+            if numAnswered >= 1:
+                scoreAvg = score / numAnswered
+            c.execute('insert into triviauserlog values (NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?)', 
+                (username, score, numAnswered, day, month, year, epoch, timeTaken, scoreAvg))
             self.conn.commit()
             c.close()
 
@@ -1179,12 +1182,13 @@ class TriviaTime(callbacks.Plugin):
             test = c.execute('''update triviauserlog set 
                                 points_made = points_made+?,
                                 average_time=( average_time * (1.0*num_answered/(num_answered+?)) + ? * (1.0*?/(num_answered+?)) ),
+                                average_score=( average_score * (1.0*num_answered/(num_answered+?)) + ? * (1.0*?/(num_answered+?)) ),
                                 num_answered = num_answered+?,
                                 last_updated = ?
                                 where username=?
                                 and day=? 
                                 and month=? 
-                                and year=?''', (scr,numAns,timeTaken,numAns,numAns,numAns,epoch,usr,day,month,year))
+                                and year=?''', (scr,numAns,timeTaken,numAns,numAns,numAns,score,numAns,numAns,numAns,epoch,usr,day,month,year))
             self.conn.commit()
             c.close()
 
@@ -1309,6 +1313,7 @@ class TriviaTime(callbacks.Plugin):
                         year integer,
                         last_updated integer,
                         average_time integer,
+                        average_score integer,
                         unique(username, day, month, year) on conflict replace
                         )''')
             except:
