@@ -112,7 +112,10 @@
               <thead>
                 <tr>
                   <th>Username</th>
-                  <th>Average time</th>
+                  <th>Average Time/Question (Exludes KAOS)</th>
+                  <th>Average Points/Question (Exludes KAOS)</th>
+                  <th>Total Points</th>
+                  <th>Question Answered</th>
                 </tr>
               </thead>
               <tbody>
@@ -128,7 +131,9 @@
                 (select sum(num_answered) 
                     from triviauserlog 
                     where username=:username))
-                ) as score
+                ) as score,
+            (select sum(points_made) from triviauserlog t3 where username=:username) as points,
+            (select sum(num_answered) from triviauserlog t4 where username=:username) as q_asked
             from (select 
                     tl3.id as id2, 
                     tl3.average_time * 1.0 as t, 
@@ -136,7 +141,10 @@
                     tl3.num_answered * 1.0 as n 
                     from triviauserlog tl3
                 ) tl2
-            inner join triviauserlog tl on tl.username=:username and id=tl2.id2');
+            inner join triviauserlog tl 
+            on tl.username=:username 
+            and id=tl2.id2
+            ');
         $q->execute(array('username'=>$username));
         if ($q === false) {
             die("Error: database error: table does not exist\n");
@@ -147,6 +155,8 @@
                 echo '<td>' . $username . '</td>';
                 echo '<td>' . $res['count'] . '</td>';
                 echo '<td>' . $res['score'] . '</td>';
+                echo '<td>' . $res['points'] . '</td>';
+                echo '<td>' . $res['q_asked'] . '</td>';
                 echo '</tr>';
             }
         }
