@@ -13,6 +13,7 @@ This plugin has been started but is not finished. For developers use only. Not r
 * Average answer time (web only)
 * Average answer score (web only)
 * Show stats for reports, fixes, and verified edits for each user (web only)
+* Allow for deletion of questions
 
 
 ## Second Priority
