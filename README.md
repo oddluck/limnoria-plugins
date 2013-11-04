@@ -4,16 +4,10 @@ This plugin has been started but is not finished. For developers use only. Not r
 # Plans
 ## Main Priority
 
-* allow shuffling of questions
-* when reaching the end of questions, restart the question numbers per [Concept][] page
-* We plan on keeping track of players’ scores by their usernames. Should they want to change usernames and keep their scores, they will need to register to the bot. Supybots are already capable of keeping track of users across nicknames and hosts (per owner’s configuration)
-* Scores are tracked by nicknames. If a user is registered, it is then tracked by their supybot account
-* Show remaining KAOS answers (command is a comma)
 * Average answer time (web only)
 * Average answer score (web only)
 * Show stats for reports, fixes, and verified edits for each user (web only)
 * Allow for deletion of questions
-
 
 ## Second Priority
 These items can wait until the game is almost ready for public testing.
