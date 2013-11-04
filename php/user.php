@@ -112,10 +112,10 @@
               <thead>
                 <tr>
                   <th>Username</th>
-                  <th>Average Time/Question (Exludes KAOS)</th>
-                  <th>Average Points/Question (Exludes KAOS)</th>
+                  <th>Average Time/Question*</th>
+                  <th>Average Points/Question*</th>
                   <th>Total Points</th>
-                  <th>Question Answered</th>
+                  <th>Question Answered*</th>
                 </tr>
               </thead>
               <tbody>
@@ -169,6 +169,11 @@
         </div>
       </div>
 
+      <div class="row">
+        <div class="span12">
+            <p>* These stats do not include KAOS</p>
+        </div>
+      </div>
       <div class="footer">
         <p>&copy; Trivialand 2013 - <a href="https://github.com/tannn/TriviaTime">github</a></p>
       </div>
