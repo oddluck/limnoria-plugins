@@ -61,22 +61,22 @@ conf.registerChannelValue(TriviaTime, 'numTopToVoice',
         )
 
 conf.registerChannelValue(TriviaTime, 'minPointsVoiceWeek',
-        registry.Integer(64200,
+        registry.Integer(30000,
                 """Points required to be voiced for being top player in the week""")
         )
 
 conf.registerChannelValue(TriviaTime, 'minPointsVoiceMonth',
-        registry.Integer(102000,
+        registry.Integer(100000,
                 """Points required to be voiced for being top player in the month""")
         )
 
 conf.registerChannelValue(TriviaTime, 'minPointsVoiceYear',
-        registry.Integer(305000,
-                """Points required to be voiced for being top player in the month""")
+        registry.Integer(5000000,
+                """Points required to be voiced for being top player in the year""")
         )
 
 conf.registerChannelValue(TriviaTime, 'payoutKAOS', 
-        registry.Integer(5000, 
+        registry.Integer(1000, 
                 """Extra points for teamwork on KAOS""")
         )
 
@@ -86,12 +86,12 @@ conf.registerChannelValue(TriviaTime, 'inactivityDelay',
         )
 
 conf.registerChannelValue(TriviaTime, 'defaultPoints', 
-        registry.Integer(750, 
+        registry.Integer(500, 
                 """Default points for a correct answer""")
         )
 
 conf.registerChannelValue(TriviaTime, 'hintShowRatio', 
-        registry.Integer(40, 
+        registry.Integer(35, 
                 """Percent of word to show per hint""")
         )
 
