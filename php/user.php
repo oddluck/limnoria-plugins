@@ -2,10 +2,15 @@
 <html lang="en">
 <?php
   include('config.php');
+  if(array_key_exists('username', $_GET)) {
+    $username = $_GET['username'];
+  } else {
+    $username = '';
+  }
 ?>
   <head>
     <meta charset="utf-8">
-    <title>Home &middot; TriviaTime</title>
+    <title>Players &middot; TriviaTime</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="">
     <meta name="author" content="">
@@ -70,9 +75,9 @@
           <div class="navbar-inner">
             <div class="container">
               <ul class="nav">
-                <li class="active"><a href="index.php">Home</a></li>
+                <li><a href="index.php">Home</a></li>
                 <li><a href="stats.php">Stats</a></li>
-                <li><a href="user.php">Players</a></li>
+                <li class="active"><a href="user.php">Players</a></li>
                 <li><a href="reports.php">Reports</a></li>
                 <li><a href="about.php">About</a></li>
                 <li><a href="contact.php">Contact</a></li>
@@ -83,37 +88,75 @@
       </div>
 
       <div class="hero-unit">
-        <h1>TriviaTime</h1>
-        <p>Get the latest stats for players and updates.</p>
+        <h1>Players</h1>
+        <p>Show stats for users.</p>
         <p>
         </p>
       </div>
       <div class="row">
         <div class="span12">
-          <h2>Latest questions asked</h2>
+            <h2>Search</h2>
+            <form method="get">
+                Username: <input name="username"></input>
+                <input type="submit"></input>
+            </form>
+        </div>
+    </div>
+
+
+
+      <div class="row">
+        <div class="span12">
+          <h2>Player data</h2>
             <table class="table">
               <thead>
                 <tr>
-                  <th>Round #</th>
-                  <th>Channel</th>
-                  <th>Question #</th>
-                  <th>Question</th>
+                  <th>Username</th>
+                  <th>Average Time/Question*</th>
+                  <th>Average Points/Question*</th>
+                  <th>Total Points</th>
+                  <th>Question Answered*</th>
                 </tr>
               </thead>
               <tbody>
 <?php
     if ($db) {
-        $q = $db->query('SELECT asked_at, channel, round_num, question, line_num FROM triviagameslog ORDER BY id DESC LIMIT 10');
+        $q = $db->prepare('select 
+            sum(tl2.t * (tl2.n / 
+                (select sum(num_answered) 
+                    from triviauserlog 
+                    where username=:username))
+                ) as count,
+            sum(tl2.p * (tl2.n / 
+                (select sum(num_answered) 
+                    from triviauserlog 
+                    where username=:username))
+                ) as score,
+            (select sum(points_made) from triviauserlog t3 where username=:username) as points,
+            (select sum(num_answered) from triviauserlog t4 where username=:username) as q_asked
+            from (select 
+                    tl3.id as id2, 
+                    tl3.average_time * 1.0 as t, 
+                    tl3.average_score * 1.0 as p, 
+                    tl3.num_answered * 1.0 as n 
+                    from triviauserlog tl3
+                ) tl2
+            inner join triviauserlog tl 
+            on tl.username=:username 
+            and id=tl2.id2
+            ');
+        $q->execute(array('username'=>$username));
         if ($q === false) {
             die("Error: database error: table does not exist\n");
         } else {
             $result = $q->fetchAll();
             foreach($result as $res) {
                 echo '<tr>';
-                echo '<td>' . $res['round_num'] . '</td>';
-                echo '<td>' . $res['channel'] . '</td>';
-                echo '<td>' . $res['line_num'] . '</td>';
-                echo '<td>' . $res['question'] . '</td>';
+                echo '<td>' . $username . '</td>';
+                echo '<td>' . $res['count'] . '</td>';
+                echo '<td>' . $res['score'] . '</td>';
+                echo '<td>' . $res['points'] . '</td>';
+                echo '<td>' . $res['q_asked'] . '</td>';
                 echo '</tr>';
             }
         }
@@ -126,6 +169,11 @@
         </div>
       </div>
 
+      <div class="row">
+        <div class="span12">
+            <p>* These stats do not include KAOS</p>
+        </div>
+      </div>
       <div class="footer">
         <p>&copy; Trivialand 2013 - <a href="https://github.com/tannn/TriviaTime">github</a></p>
       </div>
@@ -141,4 +189,13 @@
   </body>
 </html>
 
-
+<!--
+select
+sum(tl2.t * (tl2.n / (select sum(num_answered) from triviauserlog where username='rootcoma')))
+from (select tl3.id as id2, tl3.average_time * 1.0 as t, tl3.num_answered * 1.0 as n
+    from triviauserlog tl3
+    ) tl2
+inner join triviauserlog tl
+on tl.username='rootcoma'
+and id=tl2.id2
+-->

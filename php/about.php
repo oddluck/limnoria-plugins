@@ -72,6 +72,7 @@
               <ul class="nav">
                 <li><a href="index.php">Home</a></li>
                 <li><a href="stats.php">Stats</a></li>
+                <li><a href="user.php">Players</a></li>
                 <li><a href="reports.php">Reports</a></li>
                 <li class="active"><a href="about.php">About</a></li>
                 <li><a href="contact.php">Contact</a></li>
@@ -82,15 +83,15 @@
       </div>
 
       <div class="hero-unit">
-        <h1>About TriviaTime</h1>
-        <p>TriviaTime is a trivia game on IRC, made exclusively for Trivialand.</p>
-        <p>We are #trivialand on Freenode. <a href="irc://chat.freenode.net/trivialand">Come play with us!</a></p>
+        <h1>About Us</h1>
+        <p>TriviaTime is a trivia word game meant for irc. The source code is on github, be sure to check it out.</p>
+        <p>We are #trivialand on Freenode. Come join us!</p>
         <p>
         </p>
       </div>
 
       <div class="footer">
-        <p>&copy; Trivialand 2013 - <a href="https://github.com/tannn/TriviaTime">GitHub</a></p>
+        <p>&copy; Trivialand 2013 - <a href="https://github.com/tannn/TriviaTime">github</a></p>
       </div>
 
     </div> <!-- /container -->
