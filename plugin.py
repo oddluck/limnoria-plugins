@@ -34,6 +34,7 @@ class TriviaTime(callbacks.Plugin):
 
         """ games info """
         self.games = {} # separate game for each channel
+        self.skips = {} # separate game for each channel
 
         """ connections """
         dbLocation = self.registryValue('sqlitedb')
@@ -105,6 +106,24 @@ class TriviaTime(callbacks.Plugin):
             elif user[15] <= numTopToVoice and user[8] > self.registryValue('minPointsVoiceWeek'):
                 irc.sendMsg(ircmsgs.privmsg(channel, 'Giving MVP to %s for being top #%d this WEEK' % (username, user[15])))
                 irc.queueMsg(ircmsgs.voice(channel, username))
+
+    def deletequestion(self, irc, msg, arg, id):
+        if not self.storage.questionIdExists(id):
+            self.error('That question does not exist.')
+            return
+        self.storage.deleteQuestion(id)
+        irc.reply('Deleted question %d.' % id)
+    deletequestion = wrap(deletequestion, ['int'])
+
+    def addquestion(self, irc, msg, arg, question):
+        channel = ircutils.toLower(msg.args[0])
+        charMask = self.registryValue('charMask', channel)   
+        if charMask not in question:
+            irc.error('The question must include the separating character %s' % (charMask))
+            return
+        self.storage.insertQuestionsBulk([(question,question)])
+        irc.reply('Added your question to the question database')
+    addquestion = wrap(addquestion, ['text'])
 
     def addquestionfile(self, irc, msg, arg, filename):
         """[<filename>]
@@ -366,6 +385,10 @@ class TriviaTime(callbacks.Plugin):
             irc.error('No questions are currently being asked.')
             return
 
+        if self.games[channel].questionOver == True:
+            irc.error('No questions are currently being asked.')
+            return
+
         if not self.storage.wasUserActiveIn(username, timeSeconds):
             irc.error('Only users who have answered a question in the last 10 minutes can skip.')
             return
@@ -374,10 +397,23 @@ class TriviaTime(callbacks.Plugin):
             irc.error('You can only vote to skip once.')
             return
 
+        skipSeconds = self.registryValue('skipLimitTime', channel)
+        if username in self.skips:
+            if self.skips[username] - int(time.mktime(time.localtime())) < skipSeconds:
+                irc.error('You must wait to be able to skip again.')
+                return
+
         self.games[channel].skipVoteCount[username] = 1
+        self.skips[username] = int(time.mktime(time.localtime()))
 
         irc.sendMsg(ircmsgs.privmsg(channel, '%s voted to skip this question.' % username))
-        if (len(self.games[channel].skipVoteCount) / totalActive) < self.registryValue('skipThreshold', channel):
+        if totalActive < 1:
+            return
+
+        percentAnswered = ((1.0*len(self.games[channel].skipVoteCount))/(totalActive*1.0))
+
+        # not all have skipped yet, we need to get out of here
+        if percentAnswered < self.registryValue('skipThreshold', channel):
             irc.noReply()
             return
 
@@ -392,7 +428,13 @@ class TriviaTime(callbacks.Plugin):
         except KeyError:
             pass
         irc.sendMsg(ircmsgs.privmsg(channel, 'Skipped question! (%d of %d voted)' % (len(self.games[channel].skipVoteCount), totalActive)))
-        self.games[channel].nextQuestion()
+
+        timeout = self.registryValue('timeout', channel)
+        if timeout < 2:
+            timout = 2
+            log.error('timeout was set too low(<2 seconds). setting to 2 seconds')
+        timeout += time.time()
+        self.games[channel].queueEvent(timeout, self.games[channel].nextQuestion)
         irc.noReply()
     skip = wrap(skip)
 
@@ -593,6 +635,7 @@ class TriviaTime(callbacks.Plugin):
             self.loadGameState()
 
             # activate
+            self.questionOver = True
             self.active = True
 
             # stop any old game and start a new one
@@ -693,10 +736,13 @@ class TriviaTime(callbacks.Plugin):
 
                 # Have all of the answers been found?
                 if len(self.guessedAnswers) == len(self.answers):
+                    # question is over
+                    self.questionOver = True
                     if len(self.guessedAnswers) > 1:
                         bonusPoints = 0
-                        if len(self.correctPlayers) > 2:
-                            bonusPoints = self.registryValue('payoutKAOS', self.channel)
+                        if len(self.correctPlayers) >= 2:
+                            if len(self.answers) >= 10:
+                                bonusPoints = self.registryValue('payoutKAOS', self.channel)
                         
                         bonusPointsText = ''
                         if bonusPoints > 0:
@@ -748,11 +794,14 @@ class TriviaTime(callbacks.Plugin):
                     self.sendMessage(self.registryValue('recapNotCompleteKaos', self.channel) % (len(self.guessedAnswers), len(self.answers), int(self.totalAmountWon), len(self.correctPlayers)))
                 else:
                     self.sendMessage(self.registryValue('notAnswered', self.channel) % answer)
-                # provide next question
-                
+
+                #reset stuff
                 self.answers = []
                 self.alternativeAnswers = []
                 self.question = ''
+                self.questionOver = True
+
+                # provide next question
                 sleepTime = self.registryValue('sleepTime',self.channel)
                 if sleepTime < 2:
                     sleepTime = 2
@@ -797,18 +846,26 @@ class TriviaTime(callbacks.Plugin):
                         divider = 3
                     if divider > len(ans):
                         divider = len(ans)-1
-                    lettersInARow=divider
+                    lettersInARow=divider-1
+                    maskedInARow=0
                     hints += ans[:divider]
                     ansend = ans[divider:]
                     hintsend = ''
                     unmasked = 0
                     for i in range(len(ans)-divider):
                         masked = ansend[i]
-                        if lettersInARow < 3 and unmasked < (len(ans)-divider+1) and random.randint(0,100) < hintRatio:
+                        if maskedInARow > 2 and unmasked < (len(ans)-divider):
                             lettersInARow += 1
                             hintsend += ansend[i]
                             unmasked += 1
+                            maskedInARow = 0
+                        elif lettersInARow < 3 and unmasked < (len(ans)-divider) and random.randint(0,100) < hintRatio:
+                            lettersInARow += 1
+                            hintsend += ansend[i]
+                            unmasked += 1
+                            maskedInARow = 0
                         else:
+                            maskedInARow += 1
                             lettersInARow=0
                             hintsend += re.sub('\w', charMask, masked)
                     hints += hintsend
@@ -850,6 +907,7 @@ class TriviaTime(callbacks.Plugin):
                 return
 
             # reset and increment
+            self.questionOver = False
             self.shownHint = False
             self.skipVoteCount = {}
             self.question = ''
@@ -896,8 +954,12 @@ class TriviaTime(callbacks.Plugin):
             self.storage.insertGameLog(self.channel, self.numAsked, 
                                 self.lineNumber, self.question)
 
+            tempQuestion = self.question.rstrip()
+            if tempQuestion[-1:] != '?':
+                tempQuestion += ' ?'
+
             # bold the q
-            questionText = '%s' % self.question
+            questionText = '%s' % (tempQuestion)
 
             # KAOS? report # of answers
             if len(self.answers) > 1:
@@ -1102,7 +1164,7 @@ class TriviaTime(callbacks.Plugin):
             #skipped=0
             divData = self.chunk(questions) # divide into 10000 rows each
             for chunk in divData:
-                c.executemany('''insert into triviaquestion values (NULL, ?, ?)''', 
+                c.executemany('''insert into triviaquestion values (NULL, ?, ?, 0)''', 
                                             chunk)
             self.conn.commit()
             skipped = self.removeDuplicateQuestions()
@@ -1111,7 +1173,7 @@ class TriviaTime(callbacks.Plugin):
 
         def removeDuplicateQuestions(self):
             c = self.conn.cursor()
-            c.execute('''delete from triviaquestion where id not in (select min(id) from triviaquestion GROUP BY question, question_canonical)''')
+            c.execute('''delete from triviaquestion where id not in (select min(id) from triviaquestion GROUP BY question_canonical)''')
             num = c.rowcount
             self.conn.commit()
             c.close()
@@ -1390,7 +1452,8 @@ class TriviaTime(callbacks.Plugin):
                 c.execute('''create table triviaquestion (
                         id integer primary key autoincrement,
                         question_canonical text,
-                        question text
+                        question text,
+                        deleted integer not null default 0
                         )''')
             except:
                 pass
@@ -1732,7 +1795,7 @@ class TriviaTime(callbacks.Plugin):
 
         def getNumQuestions(self):
             c = self.conn.cursor()
-            result = c.execute('select count(*) from triviaquestion')
+            result = c.execute('select count(*) from triviaquestion where deleted=0')
             result = result.fetchone()[0]
             c.close()
             return result
@@ -1811,7 +1874,7 @@ class TriviaTime(callbacks.Plugin):
         def getRandomQuestionNotAsked(self, channel, roundStart):
             c = self.conn.cursor()
             c.execute('''select * from triviaquestion 
-                            where id not in (select line_num from triviagameslog where channel=? and asked_at>=?) 
+                            where id not in (select line_num from triviagameslog where deleted=1 or (channel=? and asked_at>=?))
                             order by random()''', (str.lower(channel),roundStart))
             data = []
             for row in c:
@@ -1846,7 +1909,7 @@ class TriviaTime(callbacks.Plugin):
         def getNumQuestionsNotAsked(self, channel, roundStart):
             c = self.conn.cursor()
             result = c.execute('''select count(id) from triviaquestion 
-                            where id not in (select line_num from triviagameslog where channel=? and asked_at>=?)''', 
+                            where id not in (select line_num from triviagameslog where deleted=1 or (channel=? and asked_at>=?))''', 
                                     (channel,roundStart))
             rows = result.fetchone()[0]
             c.close()
@@ -1967,6 +2030,14 @@ class TriviaTime(callbacks.Plugin):
                 data.append(row)
             c.close()
             return data
+
+        def deleteQuestion(self, questionId):
+            c = self.conn.cursor()
+            test = c.execute('''update triviaquestion set
+                                deleted=1
+                                where id=?''', (questionId,))
+            self.conn.commit()
+            c.close()
 
         """
         def transferUserLogs(self, userFrom, userTo):  
