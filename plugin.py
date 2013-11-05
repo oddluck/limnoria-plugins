@@ -317,7 +317,7 @@ class TriviaTime(callbacks.Plugin):
     me = wrap(me)
 
     def report(self, irc, msg, arg, roundNum, text):
-        """<report text>
+        """<report id> <report text>
         Provide a report for a bad question. Be sure to include the round number and any problems.
         """
         channel = str.lower(msg.args[0])
@@ -362,6 +362,10 @@ class TriviaTime(callbacks.Plugin):
         timeSeconds = self.registryValue('skipActiveTime', channel)
         totalActive = self.storage.getNumUserActiveIn(timeSeconds)
 
+        if channel not in self.games:
+            irc.error('No questions are currently being asked.')
+            return
+
         if not self.storage.wasUserActiveIn(username, timeSeconds):
             irc.error('Only users who have answered a question in the last 10 minutes can skip.')
             return
@@ -373,7 +377,6 @@ class TriviaTime(callbacks.Plugin):
         self.games[channel].skipVoteCount[username] = 1
 
         irc.sendMsg(ircmsgs.privmsg(channel, '%s voted to skip this question.' % username))
-
         if (len(self.games[channel].skipVoteCount) / totalActive) < self.registryValue('skipThreshold', channel):
             irc.noReply()
             return
@@ -698,7 +701,7 @@ class TriviaTime(callbacks.Plugin):
                         bonusPointsText = ''
                         if bonusPoints > 0:
                             for nick in self.correctPlayers:
-                                self.storage.updateUserLog(str(username).lower(),bonusPoints, 0, 0)
+                                self.storage.updateUserLog(str(nick).lower(),bonusPoints, 0, 0)
                             bonusPointsText += self.registryValue('bonusKAOS', self.channel) % int(bonusPoints)
 
                         # give a special message if it was KAOS
@@ -1089,18 +1092,30 @@ class TriviaTime(callbacks.Plugin):
             self.conn.commit()
             c.close()
 
+        def chunk(self, qs, rows=10000):
+            """ Divides the data into 10000 rows each """
+            for i in xrange(0, len(qs), rows):
+                yield qs[i:i+rows]
+
         def insertQuestionsBulk(self, questions):
             c = self.conn.cursor()
-            skipped=0
-            for question in questions:
-                if not self.questionExists(question[0]):
-                    c.execute('''insert into triviaquestion values (NULL, ?, ?)''', 
-                                            (question[0], question[1]))
-                else:
-                    skipped +=1
+            #skipped=0
+            divData = self.chunk(questions) # divide into 10000 rows each
+            for chunk in divData:
+                c.executemany('''insert into triviaquestion values (NULL, ?, ?)''', 
+                                            chunk)
             self.conn.commit()
+            skipped = self.removeDuplicateQuestions()
             c.close()
             return ((len(questions) - skipped), skipped)
+
+        def removeDuplicateQuestions(self):
+            c = self.conn.cursor()
+            c.execute('''delete from triviaquestion where id not in (select min(id) from triviaquestion GROUP BY question, question_canonical)''')
+            num = c.rowcount
+            self.conn.commit()
+            c.close()
+            return num
 
         def insertEdit(self, questionId, questionText, username, channel, createdAt=None):
             c = self.conn.cursor()
@@ -1374,7 +1389,7 @@ class TriviaTime(callbacks.Plugin):
             try:
                 c.execute('''create table triviaquestion (
                         id integer primary key autoincrement,
-                        question_canonical text unique on conflict ignore,
+                        question_canonical text,
                         question text
                         )''')
             except:
