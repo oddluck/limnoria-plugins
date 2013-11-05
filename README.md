@@ -1,5 +1,5 @@
 This plugin will be a feature packed trivia script for [Supybot][] in the future. Developers will need to refer to [TriviaTime][] for more information.
-This plugin has been started but is not finished. For developers use only. Not ready for use.
+This plugin has been started and it almost ready. For developers user only.
 
 # Plans
 ## Main Priority
@@ -9,7 +9,6 @@ This plugin has been started but is not finished. For developers use only. Not r
 * Allow for deletion of questions
 * if stop is used during a question, wait until after the question is finished to stop the game.
 * ping command
-* Week's top score on the website
 * Total Ever score should be recorded but not publicly available (yet)
 * extra hint, can only be used once per question
 
