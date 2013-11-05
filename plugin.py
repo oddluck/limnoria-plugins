@@ -953,8 +953,12 @@ class TriviaTime(callbacks.Plugin):
             self.storage.insertGameLog(self.channel, self.numAsked, 
                                 self.lineNumber, self.question)
 
+            tempQuestion = self.question.rstrip()
+            if tempQuestion[-1:] != '?':
+                tempQuestion += ' ?'
+
             # bold the q
-            questionText = '%s' % self.question
+            questionText = '%s' % (tempQuestion)
 
             # KAOS? report # of answers
             if len(self.answers) > 1:
