@@ -107,6 +107,24 @@ class TriviaTime(callbacks.Plugin):
                 irc.sendMsg(ircmsgs.privmsg(channel, 'Giving MVP to %s for being top #%d this WEEK' % (username, user[15])))
                 irc.queueMsg(ircmsgs.voice(channel, username))
 
+    def deletequestion(self, irc, msg, arg, id):
+        if not self.storage.questionIdExists(id):
+            self.error('That question does not exist.')
+            return
+        self.storage.deleteQuestion(id)
+        irc.reply('Deleted question %d.' % id)
+    deletequestion = wrap(deletequestion, ['int'])
+
+    def addquestion(self, irc, msg, arg, question):
+        channel = ircutils.toLower(msg.args[0])
+        charMask = self.registryValue('charMask', channel)   
+        if charMask not in question:
+            irc.error('The question must include the separating character %s' % (charMask))
+            return
+        self.storage.insertQuestionsBulk([(question,question)])
+        irc.reply('Added your question to the question database')
+    addquestion = wrap(addquestion, ['text'])
+
     def addquestionfile(self, irc, msg, arg, filename):
         """[<filename>]
         Add a file of questions to the servers question database, filename defaults to configured quesiton file
@@ -1133,7 +1151,7 @@ class TriviaTime(callbacks.Plugin):
             #skipped=0
             divData = self.chunk(questions) # divide into 10000 rows each
             for chunk in divData:
-                c.executemany('''insert into triviaquestion values (NULL, ?, ?)''', 
+                c.executemany('''insert into triviaquestion values (NULL, ?, ?, 0)''', 
                                             chunk)
             self.conn.commit()
             skipped = self.removeDuplicateQuestions()
@@ -1421,7 +1439,8 @@ class TriviaTime(callbacks.Plugin):
                 c.execute('''create table triviaquestion (
                         id integer primary key autoincrement,
                         question_canonical text,
-                        question text
+                        question text,
+                        deleted integer not null default 0
                         )''')
             except:
                 pass
@@ -1763,7 +1782,7 @@ class TriviaTime(callbacks.Plugin):
 
         def getNumQuestions(self):
             c = self.conn.cursor()
-            result = c.execute('select count(*) from triviaquestion')
+            result = c.execute('select count(*) from triviaquestion where deleted=0')
             result = result.fetchone()[0]
             c.close()
             return result
@@ -1842,7 +1861,7 @@ class TriviaTime(callbacks.Plugin):
         def getRandomQuestionNotAsked(self, channel, roundStart):
             c = self.conn.cursor()
             c.execute('''select * from triviaquestion 
-                            where id not in (select line_num from triviagameslog where channel=? and asked_at>=?) 
+                            where id not in (select line_num from triviagameslog where deleted=1 or (channel=? and asked_at>=?))
                             order by random()''', (str.lower(channel),roundStart))
             data = []
             for row in c:
@@ -1877,7 +1896,7 @@ class TriviaTime(callbacks.Plugin):
         def getNumQuestionsNotAsked(self, channel, roundStart):
             c = self.conn.cursor()
             result = c.execute('''select count(id) from triviaquestion 
-                            where id not in (select line_num from triviagameslog where channel=? and asked_at>=?)''', 
+                            where id not in (select line_num from triviagameslog where deleted=1 or (channel=? and asked_at>=?))''', 
                                     (channel,roundStart))
             rows = result.fetchone()[0]
             c.close()
@@ -1998,6 +2017,14 @@ class TriviaTime(callbacks.Plugin):
                 data.append(row)
             c.close()
             return data
+
+        def deleteQuestion(self, questionId):
+            c = self.conn.cursor()
+            test = c.execute('''update triviaquestion set
+                                deleted=1
+                                where id=?''', (questionId,))
+            self.conn.commit()
+            c.close()
 
         """
         def transferUserLogs(self, userFrom, userTo):  
