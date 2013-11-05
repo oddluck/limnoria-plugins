@@ -740,8 +740,9 @@ class TriviaTime(callbacks.Plugin):
                     self.questionOver = True
                     if len(self.guessedAnswers) > 1:
                         bonusPoints = 0
-                        if len(self.correctPlayers) > 2:
-                            bonusPoints = self.registryValue('payoutKAOS', self.channel)
+                        if len(self.correctPlayers) >= 2:
+                            if len(self.answers) >= 10:
+                                bonusPoints = self.registryValue('payoutKAOS', self.channel)
                         
                         bonusPointsText = ''
                         if bonusPoints > 0:
