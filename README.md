@@ -4,17 +4,20 @@ This plugin has been started but is not finished. For developers use only. Not r
 # Plans
 ## Main Priority
 
-* Average answer time (web only)
-* Average answer score (web only)
+* Agree on a solution for reporting/editing/fixing
 * Show stats for reports, fixes, and verified edits for each user (web only)
 * Allow for deletion of questions
+* if stop is used during a question, wait until after the question is finished to stop the game.
+* ping command
+* Week's top score on the website
+* Total Ever score should be recorded but not publicly available (yet)
 
 ## Second Priority
 These items can wait until the game is almost ready for public testing.
 * New Style design
 * fix permissions for commands
-* if stop is used during a question, wait until after the question is finished to stop the game.
-* ping command
+* Add a question via IRC command
+* Check for duplicates while adding (without making adding even slower)
 
 and much more, based off of BogusTrivia and Trivia (supybot plugin)
 
