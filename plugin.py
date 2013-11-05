@@ -845,18 +845,26 @@ class TriviaTime(callbacks.Plugin):
                         divider = 3
                     if divider > len(ans):
                         divider = len(ans)-1
-                    lettersInARow=divider
+                    lettersInARow=divider-1
+                    maskedInARow=0
                     hints += ans[:divider]
                     ansend = ans[divider:]
                     hintsend = ''
                     unmasked = 0
                     for i in range(len(ans)-divider):
                         masked = ansend[i]
-                        if lettersInARow < 3 and unmasked < (len(ans)-divider+1) and random.randint(0,100) < hintRatio:
+                        if maskedInARow > 2 and unmasked < (len(ans)-divider):
                             lettersInARow += 1
                             hintsend += ansend[i]
                             unmasked += 1
+                            maskedInARow = 0
+                        elif lettersInARow < 3 and unmasked < (len(ans)-divider) and random.randint(0,100) < hintRatio:
+                            lettersInARow += 1
+                            hintsend += ansend[i]
+                            unmasked += 1
+                            maskedInARow = 0
                         else:
+                            maskedInARow += 1
                             lettersInARow=0
                             hintsend += re.sub('\w', charMask, masked)
                     hints += hintsend
