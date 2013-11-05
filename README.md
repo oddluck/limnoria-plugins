@@ -6,7 +6,6 @@ This plugin has been started and it almost ready. For developers user only.
 
 * Agree on a solution for reporting/editing/fixing
 * Show stats for reports, fixes, and verified edits for each user (web only)
-* Allow for deletion of questions
 * if stop is used during a question, wait until after the question is finished to stop the game.
 * ping command
 * Total Ever score should be recorded but not publicly available (yet)
@@ -16,7 +15,6 @@ This plugin has been started and it almost ready. For developers user only.
 These items can wait until the game is almost ready for public testing.
 * New Style design - figure out how to do bold
 * fix permissions for commands
-* Add a question via IRC command
 * Merge points command
 * Are the commands rate-limited? I know supybot eventually ignores users asking too many commands.
 
