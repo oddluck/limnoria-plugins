@@ -34,6 +34,7 @@ class TriviaTime(callbacks.Plugin):
 
         """ games info """
         self.games = {} # separate game for each channel
+        self.skips = {} # separate game for each channel
 
         """ connections """
         dbLocation = self.registryValue('sqlitedb')
@@ -366,6 +367,10 @@ class TriviaTime(callbacks.Plugin):
             irc.error('No questions are currently being asked.')
             return
 
+        if self.games[channel].questionOver == True:
+            irc.error('No questions are currently being asked.')
+            return
+
         if not self.storage.wasUserActiveIn(username, timeSeconds):
             irc.error('Only users who have answered a question in the last 10 minutes can skip.')
             return
@@ -374,10 +379,23 @@ class TriviaTime(callbacks.Plugin):
             irc.error('You can only vote to skip once.')
             return
 
+        skipSeconds = self.registryValue('skipLimitTime', channel)
+        if username in self.skips:
+            if self.skips[username] - int(time.mktime(time.localtime())) < skipSeconds:
+                irc.error('You must wait to be able to skip again.')
+                return
+
         self.games[channel].skipVoteCount[username] = 1
+        self.skips[username] = int(time.mktime(time.localtime()))
 
         irc.sendMsg(ircmsgs.privmsg(channel, '%s voted to skip this question.' % username))
-        if (len(self.games[channel].skipVoteCount) / totalActive) < self.registryValue('skipThreshold', channel):
+        if totalActive < 1:
+            return
+
+        percentAnswered = ((1.0*len(self.games[channel].skipVoteCount))/(totalActive*1.0))
+
+        # not all have skipped yet, we need to get out of here
+        if percentAnswered < self.registryValue('skipThreshold', channel):
             irc.noReply()
             return
 
@@ -392,7 +410,13 @@ class TriviaTime(callbacks.Plugin):
         except KeyError:
             pass
         irc.sendMsg(ircmsgs.privmsg(channel, 'Skipped question! (%d of %d voted)' % (len(self.games[channel].skipVoteCount), totalActive)))
-        self.games[channel].nextQuestion()
+
+        timeout = self.registryValue('timeout', channel)
+        if timeout < 2:
+            timout = 2
+            log.error('timeout was set too low(<2 seconds). setting to 2 seconds')
+        timeout += time.time()
+        self.games[channel].queueEvent(timeout, self.games[channel].nextQuestion)
         irc.noReply()
     skip = wrap(skip)
 
@@ -593,6 +617,7 @@ class TriviaTime(callbacks.Plugin):
             self.loadGameState()
 
             # activate
+            self.questionOver = True
             self.active = True
 
             # stop any old game and start a new one
@@ -693,6 +718,8 @@ class TriviaTime(callbacks.Plugin):
 
                 # Have all of the answers been found?
                 if len(self.guessedAnswers) == len(self.answers):
+                    # question is over
+                    self.questionOver = True
                     if len(self.guessedAnswers) > 1:
                         bonusPoints = 0
                         if len(self.correctPlayers) > 2:
@@ -748,11 +775,14 @@ class TriviaTime(callbacks.Plugin):
                     self.sendMessage(self.registryValue('recapNotCompleteKaos', self.channel) % (len(self.guessedAnswers), len(self.answers), int(self.totalAmountWon), len(self.correctPlayers)))
                 else:
                     self.sendMessage(self.registryValue('notAnswered', self.channel) % answer)
-                # provide next question
-                
+
+                #reset stuff
                 self.answers = []
                 self.alternativeAnswers = []
                 self.question = ''
+                self.questionOver = True
+
+                # provide next question
                 sleepTime = self.registryValue('sleepTime',self.channel)
                 if sleepTime < 2:
                     sleepTime = 2
@@ -850,6 +880,7 @@ class TriviaTime(callbacks.Plugin):
                 return
 
             # reset and increment
+            self.questionOver = False
             self.shownHint = False
             self.skipVoteCount = {}
             self.question = ''
@@ -1111,7 +1142,7 @@ class TriviaTime(callbacks.Plugin):
 
         def removeDuplicateQuestions(self):
             c = self.conn.cursor()
-            c.execute('''delete from triviaquestion where id not in (select min(id) from triviaquestion GROUP BY question, question_canonical)''')
+            c.execute('''delete from triviaquestion where id not in (select min(id) from triviaquestion GROUP BY question_canonical)''')
             num = c.rowcount
             self.conn.commit()
             c.close()

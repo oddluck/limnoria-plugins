@@ -50,6 +50,11 @@ conf.registerChannelValue(TriviaTime, 'skipActiveTime',
                 """Amount of time a user is considered active after answering a question""")
         )
 
+conf.registerChannelValue(TriviaTime, 'skipLimitTime', 
+        registry.Integer(60, 
+                """Time a user must wait to skip a question again after skipping in seconds""")
+        )
+
 conf.registerChannelValue(TriviaTime, 'timeout', 
         registry.Integer(15, 
                 """Time in between hints""")
