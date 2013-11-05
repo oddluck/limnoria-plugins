@@ -11,13 +11,16 @@ This plugin has been started but is not finished. For developers use only. Not r
 * ping command
 * Week's top score on the website
 * Total Ever score should be recorded but not publicly available (yet)
+* extra hint, can only be used once per question
 
 ## Second Priority
 These items can wait until the game is almost ready for public testing.
-* New Style design
+* New Style design - figure out how to do bold
 * fix permissions for commands
 * Add a question via IRC command
 * Check for duplicates while adding (without making adding even slower)
+* Merge points command
+* Are the commands rate-limited? I know supybot eventually ignores users asking too many commands.
 
 and much more, based off of BogusTrivia and Trivia (supybot plugin)
 
