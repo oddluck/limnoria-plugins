@@ -156,8 +156,8 @@
             foreach($result as $res) {
                 echo '<tr>';
                 echo '<td>' . $username . '</td>';
-                echo '<td>' . $res['count'] . '</td>';
-                echo '<td>' . $res['score'] . '</td>';
+                echo '<td>' . number_format($res['count'],2) . '</td>';
+                echo '<td>' . number_format($res['score'],2) . '</td>';
                 echo '<td>' . $res['points'] . '</td>';
                 echo '<td>' . $res['q_asked'] . '</td>';
                 echo '<td>' . $res['num_r'] . '</td>';
