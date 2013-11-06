@@ -244,10 +244,17 @@ class TriviaTime(callbacks.Plugin):
         """<question number> <corrected text>
         Correct a question by providing the question number and the corrected text.
         """
+        username = str.lower(msg.nick)
+        try:
+            user = ircdb.users.getUser(msg.prefix) # rootcoma!~rootcomaa@unaffiliated/rootcoma
+            username = str.lower(user.name)
+        except KeyError:
+            pass
         q = self.storage.getQuestion(num)
         if len(question) > 0:
             q = q[0]
-            self.storage.insertEdit(num, question, msg.nick, msg.args[0])
+            self.storage.insertEdit(num, question, username, msg.args[0])
+            self.storage.updateUser(username, 1, 0)
             irc.reply("Success! Submitted edit for further review.")
             irc.sendMsg(ircmsgs.notice(msg.nick, 'NEW: %s' % (question)))
             irc.sendMsg(ircmsgs.notice(msg.nick, 'OLD: %s' % (q[2])))
@@ -266,12 +273,13 @@ class TriviaTime(callbacks.Plugin):
             edit = edit[0]
             question = self.storage.getQuestion(edit[1])
             self.storage.updateQuestion(edit[1], edit[2])
+            self.storage.updateUser(edit[4], 0, 1)
             self.storage.removeEdit(edit[0])
             irc.reply('Question #%d updated!' % edit[1])
-            irc.reply('NEW:%s' %(edit[2]))
+            irc.sendMsg(ircmsgs.notice(msg.nick, 'NEW: %s' % (edit[2])))
             if len(question) > 0:
                 question = question[0]
-                irc.reply('OLD:%s' % (question[2]))
+                irc.sendMsg(ircmsgs.notice(msg.nick, 'OLD: %s' % (question[2])))
             else:
                 irc.error('Question could not be found for this edit')
     acceptedit = wrap(acceptedit, ['int'])
@@ -347,8 +355,13 @@ class TriviaTime(callbacks.Plugin):
         """<report id> <report text>
         Provide a report for a bad question. Be sure to include the round number and any problems.
         """
-        channel = str.lower(msg.args[0])
         username = str.lower(msg.nick)
+        try:
+            user = ircdb.users.getUser(msg.prefix) # rootcoma!~rootcomaa@unaffiliated/rootcoma
+            username = str.lower(user.name)
+        except KeyError:
+            pass
+        channel = str.lower(msg.args[0])
         if channel in self.games:
             if self.games[channel].numAsked == roundNum and self.games[channel].questionOver == False:
                 irc.reply("Sorry you must wait until the current question is over to report it.")
@@ -357,6 +370,7 @@ class TriviaTime(callbacks.Plugin):
         if len(question) > 0:
             question = question[0]
             inp = text.strip()
+            self.storage.updateUser(username, 1, 0)
             if inp[:2] == 's/':
                 regex = inp[2:].split('/')
                 if len(regex) > 1:
@@ -1130,12 +1144,12 @@ class TriviaTime(callbacks.Plugin):
             self.conn.commit()
             c.close()
 
-        def insertUser(self, username):
+        def insertUser(self, username, numReported=0, numAccepted=0):
             username = str.lower(username)
             if self.userExists(username):
                 return self.updateUser(username)
             c = self.conn.cursor()
-            c.execute('insert into triviausers values (NULL, ?)', (username,))
+            c.execute('insert into triviausers values (NULL, ?, ?, ?)', (username,numReported,numAccepted))
             self.conn.commit()
             c.close()
 
@@ -1220,7 +1234,7 @@ class TriviaTime(callbacks.Plugin):
         def userExists(self, username):
             c = self.conn.cursor()
             usr = (str.lower(username),)
-            result = c.execute('select count(id) from triviausers where username=?', usr)
+            result = c.execute('select count(id) from triviausers where lower(username)=?', usr)
             rows = result.fetchone()[0]
             c.close()
             if rows > 0:
@@ -1285,13 +1299,15 @@ class TriviaTime(callbacks.Plugin):
             self.conn.commit()
             c.close()
 
-        def updateUser(self, username):
+        def updateUser(self, username, numReported=0, numAccepted=0):
             username = str.lower(username)
             if not self.userExists(username):
-                return self.insertUser(username)
+                return self.insertUser(username, numReported, numAccepted)
             c = self.conn.cursor()
-            test = c.execute('''update triviausers set
-                                where username=?''', (username))
+            c.execute('''update triviausers set
+                                num_reported=num_reported+?,
+                                num_accepted=num_accepted+?
+                                where username=?''', (numReported, numAccepted, username))
             self.conn.commit()
             c.close()
             
@@ -1386,7 +1402,9 @@ class TriviaTime(callbacks.Plugin):
             try:
                 c.execute('''create table triviausers (
                         id integer primary key autoincrement, 
-                        username text not null unique
+                        username text not null unique,
+                        num_reported integer,
+                        num_accepted integer
                         )''')
             except:
                 pass
