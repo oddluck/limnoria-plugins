@@ -10,6 +10,7 @@ This plugin has been started and it almost ready. For developers user only.
 * ping command
 * Total Ever score should be recorded but not publicly available (yet)
 * extra hint, can only be used once per question
+* Different KAOS hint times and point values
 
 ## Second Priority
 These items can wait until the game is almost ready for public testing.
