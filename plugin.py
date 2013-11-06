@@ -922,6 +922,8 @@ class TriviaTime(callbacks.Plugin):
             return hints
 
         def getOtherHint(self, username):
+            if self.questionOver:
+                return
             if username in self.shownOtherHint:
                 return
             self.shownOtherHint[username] = True
