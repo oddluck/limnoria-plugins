@@ -139,7 +139,7 @@
                             foreach($result as $key=>$res) {
                                 echo '<tr>';
                                 echo '<td>' . ($key+1) . '</td>';
-                                echo '<td>' . $res['username'] . '</td>';
+                                echo '<td><a href="user.php?username=' . $res['username'] . '">' . $res['username'] . '</a></td>';
                                 echo '<td>' . $res['points'] . '</td>';
                                 echo '</tr>';
                             }
@@ -194,7 +194,7 @@
             foreach($result as $key=>$res) {
                 echo '<tr>';
                 echo '<td>' . ($key+1) . '</td>';
-                echo '<td>' . $res['username'] . '</td>';
+                                echo '<td><a href="user.php?username=' . $res['username'] . '">' . $res['username'] . '</a></td>';
                 echo '<td>' . $res['points'] . '</td>';
                 echo '</tr>';
             }
@@ -235,7 +235,7 @@
                             foreach($result as $key=>$res) {
                                 echo '<tr>';
                                 echo '<td>' . ($key+1) . '</td>';
-                                echo '<td>' . $res['username'] . '</td>';
+                                echo '<td><a href="user.php?username=' . $res['username'] . '">' . $res['username'] . '</a></td>';
                                 echo '<td>' . $res['points'] . '</td>';
                                 echo '</tr>';
                             }
@@ -276,7 +276,7 @@
                             foreach($result as $key=>$res) {
                                 echo '<tr>';
                                 echo '<td>' . ($key+1) . '</td>';
-                                echo '<td>' . $res['username'] . '</td>';
+                                echo '<td><a href="user.php?username=' . $res['username'] . '">' . $res['username'] . '</a></td>';
                                 echo '<td>' . $res['points'] . '</td>';
                                 echo '</tr>';
                             }
