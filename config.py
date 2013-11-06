@@ -56,7 +56,7 @@ conf.registerChannelValue(TriviaTime, 'skipLimitTime',
         )
 
 conf.registerChannelValue(TriviaTime, 'timeout', 
-        registry.Integer(15, 
+        registry.Integer(10, 
                 """Time in between hints""")
         )
 
@@ -112,7 +112,7 @@ conf.registerChannelValue(TriviaTime, 'charMask',
 
 # victory text, help messages, formatting
 conf.registerChannelValue(TriviaTime, 'starting', 
-        registry.NormalizedString("""Trivia starting in 5 seconds, get ready!!!""", 
+        registry.NormalizedString("""Another epic round of tivia is about to begin.""", 
                 """Message shown when trivia starts""")
         )
 
@@ -132,47 +132,47 @@ conf.registerChannelValue(TriviaTime, 'alreadyStarted',
         )
 
 conf.registerChannelValue(TriviaTime, 'answeredKAOS', 
-        registry.NormalizedString("""\x0304%s\x0312 gets \x0304%d\x0312 points for: \x0304%s\x0312""",
+        registry.NormalizedString("""\x02%s\x02 gets \x02d\x02 points for: \x02%s\x02""",
             """Message for one correct guess during KAOS""")
         )
 
 conf.registerChannelValue(TriviaTime, 'answeredNormal', 
-        registry.NormalizedString("""\x0312DING DING DING, \x0304%s\x0312 got the answer -> \x0304%s\x0312 <- in \x0304%0.4f\x0312 seconds, and gets \x0304%d(+%d)\x0312 points""", 
+        registry.NormalizedString("""DING DING DING, \x02%s\x02 got the answer -> \x02%s\x02 <- in \x02%0.4f\x02 seconds for \x02%d(+%d)\x02 points""", 
                 """Message for a correct answer""")
         )
 
 conf.registerChannelValue(TriviaTime, 'notAnswered', 
-        registry.NormalizedString("""\x0304Time's up!\x0312 The answer was -> \x0304%s\x0312 <-""", 
+        registry.NormalizedString("""Time's up! The answer was\x02%s\x02""", 
                 """Message when no one guesses the answer""")
         )
 
 conf.registerChannelValue(TriviaTime, 'notAnsweredKAOS', 
-        registry.NormalizedString("""\x0312Time's up!  \x0304No one got\x0312 %s""", 
+        registry.NormalizedString("""Time's up! No one got \x02%s\x02""", 
                 """Message when time is up and KAOS are left""")
         )
 
 conf.registerChannelValue(TriviaTime, 'recapNotCompleteKAOS', 
-        registry.NormalizedString("""\x0312Correctly Answered: \x0304%d of %d\x0312 Total Awarded: \x0304%d Points\x0312 to %d Players""", 
+        registry.NormalizedString("""Correctly Answered: \x02%d of %d\x02 Total Awarded: \x02%d Points to %d Players\x02""", 
                 """Message after KAOS game that not all questions were answered in""")
         )
 
 conf.registerChannelValue(TriviaTime, 'recapCompleteKAOS', 
-        registry.NormalizedString("""\x0312Total Awarded: \x0304%d Points\x0312 to %d Players""", 
+        registry.NormalizedString("""Total Awarded: \x02%d Points to %d Players\x02""", 
                 """Message after KAOS game that all questions were answered in""")
         )
 
 conf.registerChannelValue(TriviaTime, 'solvedAllKaos', 
-        registry.NormalizedString("""Congratulations, \x0304You've Guessed Them All !!%s""", 
+        registry.NormalizedString("""All KAOS answered! %s""", 
                 """Message stating all KAOS have been guessed""")
         )
 
 conf.registerChannelValue(TriviaTime, 'bonusKAOS', 
-        registry.NormalizedString(""" \x0300,04 Everyone gets a %d Point Bonus !!""", 
+        registry.NormalizedString("""Everyone gets a %d Point Bonus!!""", 
                 """Message for bonus points from KAOS for group play""")
         )
 
 conf.registerChannelValue(TriviaTime, 'playerStatsMsg', 
-        registry.NormalizedString("""\x0304%s\x0312 has won \x0304%d\x0312 in a row! Total Points TODAY: \x0304%d\x0312 this WEEK \x0304%d\x0312 & this MONTH: \x0304%d\x0312""", 
+        registry.NormalizedString("""\x02%s\x02 has won \x02%d\x02 in a row! Total Points TODAY: \x02%d\x02 this WEEK \x02%d\x02 & this MONTH: \x02%d\x02""", 
                 """Message showing a users stats after guessing a answer correctly""")
         )
 
