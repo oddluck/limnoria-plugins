@@ -108,6 +108,9 @@ class TriviaTime(callbacks.Plugin):
                 irc.queueMsg(ircmsgs.voice(channel, username))
 
     def deletequestion(self, irc, msg, arg, id):
+        """
+            Deletes a question from the database.
+        """
         if not self.storage.questionIdExists(id):
             self.error('That question does not exist.')
             return
@@ -116,6 +119,9 @@ class TriviaTime(callbacks.Plugin):
     deletequestion = wrap(deletequestion, ['int'])
 
     def addquestion(self, irc, msg, arg, question):
+        """
+            Adds a question to the database
+        """
         channel = ircutils.toLower(msg.args[0])
         charMask = self.registryValue('charMask', channel)   
         if charMask not in question:
@@ -148,13 +154,13 @@ class TriviaTime(callbacks.Plugin):
         """
         Get TriviaTime information, how many questions/users in database, time, etc
         """
-        infoText = '''\x0301,08 TriviaTime by #trivialand on Freenode '''
+        infoText = ''' TriviaTime by #trivialand on Freenode'''
         irc.sendMsg(ircmsgs.privmsg(msg.args[0], infoText))
-        infoText = '''\x0301,08 %d Users on scoreboard  Time is %s ''' % (self.storage.getNumUser(),time.asctime(time.localtime()))
+        infoText = '''\x02 %d Users\x02 on scoreboard  Time is %s ''' % (self.storage.getNumUser(),time.asctime(time.localtime()))
         irc.sendMsg(ircmsgs.privmsg(msg.args[0], infoText))
         numKaos = self.storage.getNumKAOS()
         numQuestionTotal = self.storage.getNumQuestions()
-        infoText = '''\x0301,08 %d Questions and %d KAOS (%d Total) in the database ''' % ((numQuestionTotal-numKaos), numKaos, numQuestionTotal)
+        infoText = '''\x02 %d Questions\x02 and \x02%d KAOS\x02 (\x02%d Total\x02) in the database ''' % ((numQuestionTotal-numKaos), numKaos, numQuestionTotal)
         irc.sendMsg(ircmsgs.privmsg(msg.args[0], infoText))
     info = wrap(info)
 
@@ -330,7 +336,7 @@ class TriviaTime(callbacks.Plugin):
         if len(info) < 3:
             irc.error("I couldn't find you in my database.")
         else:
-            infoText = '\x0305,08 %s\'s Stats:\x0301,08 Points (answers) \x0305,08Today: #%d %d (%d) This Week: #%d %d (%d) This Month: #%d %d (%d) This Year: #%d %d (%d)' % (username, info[16], info[10], info[11], info[15], info[8], info[9], info[14], info[6], info[7], info[13], info[4], info[5])
+            infoText = ' %s\'s Stats: \x02Today:\x02 #%d %d (%d) \x02This Week:\x02 #%d %d (%d) \x02This Month:\x02 #%d %d (%d) \x02This Year:\x02 #%d %d (%d)' % (username, info[16], info[10], info[11], info[15], info[8], info[9], info[14], info[6], info[7], info[13], info[4], info[5])
             irc.sendMsg(ircmsgs.privmsg(channel, infoText))
         irc.noReply()
     me = wrap(me)
@@ -1077,7 +1083,7 @@ class TriviaTime(callbacks.Plugin):
             self.removeEvent()
             if self.channel in self.games:
                 del self.games[self.channel]
-            self.sendMessage(self.registryValue('stopped'), 1, 9)
+            self.sendMessage(self.registryValue('stopped'), 2)
         # end Game
 
     """
