@@ -3,7 +3,7 @@
 <?php
   include('config.php');
   if(array_key_exists('username', $_GET)) {
-    $username = $_GET['username'];
+    $username = strtolower($_GET['username']);
   } else {
     $username = '';
   }
@@ -80,7 +80,6 @@
                 <li class="active"><a href="user.php">Players</a></li>
                 <li><a href="reports.php">Reports</a></li>
                 <li><a href="about.php">About</a></li>
-                <li><a href="contact.php">Contact</a></li>
               </ul>
             </div>
           </div>
@@ -132,8 +131,8 @@
                     from triviauserlog 
                     where username=:username))
                 ) as score,
-            (select sum(points_made) from triviauserlog t3 where username=:username) as points,
-            (select sum(num_answered) from triviauserlog t4 where username=:username) as q_asked
+            (select sum(points_made) from triviauserlog t3 where lower(username)=:username) as points,
+            (select sum(num_answered) from triviauserlog t4 where lower(username)=:username) as q_asked
             from (select 
                     tl3.id as id2, 
                     tl3.average_time * 1.0 as t, 

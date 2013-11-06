@@ -108,7 +108,7 @@ class TriviaTime(callbacks.Plugin):
                 irc.queueMsg(ircmsgs.voice(channel, username))
 
     def deletequestion(self, irc, msg, arg, id):
-        """
+        """<question id>
             Deletes a question from the database.
         """
         if not self.storage.questionIdExists(id):
@@ -119,7 +119,7 @@ class TriviaTime(callbacks.Plugin):
     deletequestion = wrap(deletequestion, ['int'])
 
     def addquestion(self, irc, msg, arg, question):
-        """
+        """<question text>
             Adds a question to the database
         """
         channel = ircutils.toLower(msg.args[0])
@@ -225,10 +225,11 @@ class TriviaTime(callbacks.Plugin):
         irc.noReply()
     year = wrap(year)
 
+    """
     def alltime(self, irc, msg, arg):
-        """
+        '''
             Gives the top10 scores from all time
-        """
+        '''
         channel = ircutils.toLower(msg.args[0])
         tops = self.storage.viewAllTimeTop10()
         topsText = '\x0301,08 ALL TIME Top 10 Players - '
@@ -237,6 +238,7 @@ class TriviaTime(callbacks.Plugin):
         irc.sendMsg(ircmsgs.privmsg(channel, topsText))
         irc.noReply()
     alltime = wrap(alltime)
+    """
 
     def edit(self, irc, msg, arg, num, question):
         """<question number> <corrected text>
@@ -347,7 +349,11 @@ class TriviaTime(callbacks.Plugin):
         """
         channel = str.lower(msg.args[0])
         username = str.lower(msg.nick)
-        question = self.storage.getQuestionByRound(roundNum, msg.args[0])
+        if channel in self.games:
+            if self.games[channel].numAsked == roundNum:
+                irc.reply("Sorry you must wait until the current question is over to report it.")
+                return
+        question = self.storage.getQuestionByRound(roundNum, channel)
         if len(question) > 0:
             question = question[0]
             inp = text.strip()
@@ -357,7 +363,6 @@ class TriviaTime(callbacks.Plugin):
                     newOne = regex[1]
                     oldOne = regex[0]
                     newQuestionText = question[2].replace(oldOne, newOne)
-                    #log.info(newQuestionText)
                     self.storage.insertEdit(question[0], newQuestionText, username, channel)
                     irc.reply('** Regex detected ** Your report has been submitted!')
                     irc.reply('NEW:%s' % (newQuestionText))
@@ -384,7 +389,7 @@ class TriviaTime(callbacks.Plugin):
             return
 
         if self.games[channel].questionOver == True:
-            irc.error('No questions are currently being asked.')
+            irc.error('No question is currently being asked.')
             return
 
         if not self.storage.wasUserActiveIn(username, timeSeconds):
@@ -696,7 +701,7 @@ class TriviaTime(callbacks.Plugin):
                     self.storage.updateUserLog(username,pointsAdded,0, 0)
                     self.lastAnswer = time.time()
                     self.sendMessage(self.registryValue('answeredKAOS', self.channel) 
-                        % (username, pointsAdded, correctAnswer))
+                            % (username, pointsAdded, correctAnswer))
                 else:
                     # Normal question solved
                     streakBonus = 0
@@ -719,7 +724,7 @@ class TriviaTime(callbacks.Plugin):
                     self.storage.updateUserLog(username,pointsAdded,1, timeElapsed)
                     self.lastAnswer = time.time()
                     self.sendMessage(self.registryValue('answeredNormal', self.channel) 
-                        % (username, correctAnswer, timeElapsed, pointsAdded, streakBonus))
+                            % (username, correctAnswer, timeElapsed, pointsAdded, streakBonus))
 
                     if self.registryValue('showPlayerStats', self.channel):
                         playersStats = self.storage.getUser(username)
@@ -730,7 +735,7 @@ class TriviaTime(callbacks.Plugin):
                             weekScore = userInfo[8]
                             monthScore = userInfo[6]
                             self.sendMessage(self.registryValue('playerStatsMsg', self.channel) 
-                            % (username, self.streak, todaysScore, weekScore, monthScore))
+                                    % (username, self.streak, todaysScore, weekScore, monthScore))
 
                 # add guessed word to list so we can cross it out
                 if self.guessedAnswers.count(attempt) == 0:
@@ -745,7 +750,7 @@ class TriviaTime(callbacks.Plugin):
                     if len(self.guessedAnswers) > 1:
                         bonusPoints = 0
                         if len(self.correctPlayers) >= 2:
-                            if len(self.answers) >= 10:
+                            if len(self.answers) >= 9:
                                 bonusPoints = self.registryValue('payoutKAOS', self.channel)
                         
                         bonusPointsText = ''
@@ -893,7 +898,12 @@ class TriviaTime(callbacks.Plugin):
             self.sendMessage('Hint %s: %s' % (self.hintsCounter, hints), 1, 9)
             #reset hint shown
             self.shownHint = False
-            timeout = self.registryValue('timeout', self.channel)
+
+            timeout = 2
+            if len(self.answers) > 1:
+                timeout = self.registryValue('timeoutKAOS', self.channel)
+            else:
+                timeout = self.registryValue('timeout', self.channel)
             if timeout < 2:
                 timout = 2
                 log.error('timeout was set too low(<2 seconds). setting to 2 seconds')
@@ -1002,9 +1012,7 @@ class TriviaTime(callbacks.Plugin):
                 answers = answer[1].split('*')
                 answer = []
                 alternativeAnswers = []
-                points = self.registryValue('defaultPoints', self.channel)
                 if str.lower(question[:4]) == 'kaos':
-                    points *= len(answers)
                     for ans in answers:
                         answer.append(ans.strip())
                 elif str.lower(question[:5]) == 'uword':
@@ -1015,6 +1023,7 @@ class TriviaTime(callbacks.Plugin):
                         random.shuffle(shuffledLetters)
                         for letter in shuffledLetters:
                             question += str.lower(letter)
+                            question += ' '
                         break
                 else:                
                     for ans in answers:
@@ -1022,7 +1031,10 @@ class TriviaTime(callbacks.Plugin):
                             answer.append(str(ans).strip())
                         else:
                             alternativeAnswers.append(str(ans).strip())
-                    answer = [answer[0]]
+
+                points = self.registryValue('defaultPoints', self.channel)
+                if len(answer) > 1:
+                    points = self.registryValue('defaultPointsKAOS', self.channel) * len(answers)
                 return {'p':points,
                         'q':question,
                         'a':answer, 

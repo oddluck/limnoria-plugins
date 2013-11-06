@@ -60,6 +60,11 @@ conf.registerChannelValue(TriviaTime, 'timeout',
                 """Time in between hints""")
         )
 
+conf.registerChannelValue(TriviaTime, 'timeoutKAOS', 
+        registry.Integer(15, 
+                """Time in between hints""")
+        )
+
 conf.registerChannelValue(TriviaTime, 'sleepTime', 
         registry.Integer(15, 
                 """Time in between the end of one question and the start of another""")
@@ -97,7 +102,12 @@ conf.registerChannelValue(TriviaTime, 'inactivityDelay',
 
 conf.registerChannelValue(TriviaTime, 'defaultPoints', 
         registry.Integer(500, 
-                """Default points for a correct answer""")
+                """Default points for a correct answer to a normal question""")
+        )
+
+conf.registerChannelValue(TriviaTime, 'defaultPointsKAOS', 
+        registry.Integer(300, 
+                """Default points for a correct KAOS answer""")
         )
 
 conf.registerChannelValue(TriviaTime, 'hintShowRatio', 
@@ -128,12 +138,12 @@ conf.registerChannelValue(TriviaTime, 'alreadyStopped',
 
 conf.registerChannelValue(TriviaTime, 'alreadyStarted', 
         registry.NormalizedString("""Trivia has already been started.""", 
-            """Message stating chat has already been started""")
+                """Message stating chat has already been started""")
         )
 
 conf.registerChannelValue(TriviaTime, 'answeredKAOS', 
         registry.NormalizedString("""\x02%s\x02 gets \x02d\x02 points for: \x02%s\x02""",
-            """Message for one correct guess during KAOS""")
+                """Message for one correct guess during KAOS""")
         )
 
 conf.registerChannelValue(TriviaTime, 'answeredNormal', 
@@ -142,7 +152,7 @@ conf.registerChannelValue(TriviaTime, 'answeredNormal',
         )
 
 conf.registerChannelValue(TriviaTime, 'notAnswered', 
-        registry.NormalizedString("""Time's up! The answer was\x02%s\x02""", 
+        registry.NormalizedString("""Time's up! The answer was \x02%s\x02""", 
                 """Message when no one guesses the answer""")
         )
 
