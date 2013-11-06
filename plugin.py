@@ -899,7 +899,6 @@ class TriviaTime(callbacks.Plugin):
                 timeout = self.registryValue('timeoutKAOS', self.channel)
             else:
                 timeout = self.registryValue('timeout', self.channel)
-            print timeout
             if timeout < 2:
                 timout = 2
                 log.error('timeout was set too low(<2 seconds). setting to 2 seconds')
@@ -1031,7 +1030,6 @@ class TriviaTime(callbacks.Plugin):
                 points = self.registryValue('defaultPoints', self.channel)
                 if len(answer) > 1:
                     points = self.registryValue('defaultPointsKAOS', self.channel) * len(answers)
-                print points
                 return {'p':points,
                         'q':question,
                         'a':answer, 
