@@ -656,7 +656,6 @@ class TriviaTime(callbacks.Plugin):
             # reset stats
             self.shownHint = False
             self.skipVoteCount = {}
-            self.shownOtherHint = {}
             self.streak       = 0
             self.lastWinner   = ''
             self.hintsCounter = 0
@@ -924,11 +923,10 @@ class TriviaTime(callbacks.Plugin):
         def getOtherHint(self, username):
             if self.questionOver:
                 return
-            if username in self.shownOtherHint:
-                return
-            self.shownOtherHint[username] = True
-            if len(self.answers) == 1:
-                self.sendMessage(self.getOtherHintString())
+            if self.shownHint == False:
+                self.shownHint = True
+                if len(self.answers) == 1:
+                    self.sendMessage(self.getOtherHintString())
 
         def getRemainingKAOS(self):
             if len(self.answers) > 1:
@@ -946,7 +944,6 @@ class TriviaTime(callbacks.Plugin):
             self.sendMessage('Hint %s: %s' % (self.hintsCounter, hints), 1, 9)
             #reset hint shown
             self.shownHint = False
-            self.shownOtherHint = {}
 
             timeout = 2
             if len(self.answers) > 1:
@@ -973,7 +970,6 @@ class TriviaTime(callbacks.Plugin):
             self.questionOver = False
             self.shownHint = False
             self.skipVoteCount = {}
-            self.shownOtherHint = {}
             self.question = ''
             self.answers = []
             self.alternativeAnswers = []
