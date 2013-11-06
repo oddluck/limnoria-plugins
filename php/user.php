@@ -115,12 +115,14 @@
                   <th>Average Points/Question*</th>
                   <th>Total Points</th>
                   <th>Question Answered*</th>
+                  <th>Edits Made</th>
+                  <th>Edits Accepted</th>
                 </tr>
               </thead>
               <tbody>
 <?php
     if ($db) {
-        $q = $db->prepare('select 
+        $q = $db->prepare('select
             sum(tl2.t * (tl2.n / 
                 (select sum(num_answered) 
                     from triviauserlog 
@@ -132,7 +134,9 @@
                     where username=:username))
                 ) as score,
             (select sum(points_made) from triviauserlog t3 where lower(username)=:username) as points,
-            (select sum(num_answered) from triviauserlog t4 where lower(username)=:username) as q_asked
+            (select sum(num_answered) from triviauserlog t4 where lower(username)=:username) as q_asked,
+            (select num_reported from triviausers where lower(username)=:username) as num_r,
+            (select num_accepted from triviausers where lower(username)=:username) as num_a
             from (select 
                     tl3.id as id2, 
                     tl3.average_time * 1.0 as t, 
@@ -140,8 +144,8 @@
                     tl3.num_answered * 1.0 as n 
                     from triviauserlog tl3
                 ) tl2
-            inner join triviauserlog tl 
-            on tl.username=:username 
+            inner join triviauserlog tl
+            on tl.username=:username
             and id=tl2.id2
             ');
         $q->execute(array('username'=>$username));
@@ -156,6 +160,8 @@
                 echo '<td>' . $res['score'] . '</td>';
                 echo '<td>' . $res['points'] . '</td>';
                 echo '<td>' . $res['q_asked'] . '</td>';
+                echo '<td>' . $res['num_r'] . '</td>';
+                echo '<td>' . $res['num_a'] . '</td>';
                 echo '</tr>';
             }
         }
