@@ -75,7 +75,6 @@
                 <li><a href="user.php">Players</a></li>
                 <li><a href="reports.php">Reports</a></li>
                 <li><a href="about.php">About</a></li>
-                <li><a href="contact.php">Contact</a></li>
               </ul>
             </div>
           </div>
@@ -91,18 +90,8 @@
 
 
       <div class="row">
-        <div class="span6">
-          <h2>All Time Top Scores</h2>
-            <table class="table">
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Username</th>
-                  <th>Points</th>
-                </tr>
-              </thead>
-              <tbody>
-                <?php
+
+                <?php /*
                     if ($db) {
                         $q = $db->query('SELECT username, sum(points_made) as points FROM triviauserlog GROUP BY username ORDER BY points DESC LIMIT 10');
                         if ($q === false) {
@@ -122,11 +111,9 @@
                     } else {
                         die($err);
                     }
+                    */
                 ?>
-              </tbody>
-            </table>
-        </div>
-        <div class="span6">
+        <div class="span12">
           <h2>Todays Top Scores</h2>
             <table class="table">
               <thead>
@@ -167,7 +154,62 @@
       </div>
 
       <div class="row">
-        <div class="span4">
+
+        <?php
+          $sqlClause = '';
+          $day = date('N')-1;
+          $week = new DateTime();
+          $interval = new DateInterval('P'.$day.'D');
+          $week->sub($interval);
+          $interval = new DateInterval('P1D');
+          for($i=0;$i<7;$i++) {
+            if($i>0) {
+              $sqlClause .= ' or ';
+            }
+            $sqlClause .= '(day=' . $week->format('j') . 
+                            ' and month=' . $week->format('n') .
+                            ' and year=' . $week->format('Y') . 
+                            ')';
+            $week->add($interval);
+          }
+        ?>
+        <div class="span12">
+          <h2>Week Top Scores</h2>
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Username</th>
+                  <th>Points</th>
+                </tr>
+              </thead>
+              <tbody>
+<?php
+    if ($db) {
+        $q = $db->query("SELECT username, sum(points_made) as points FROM triviauserlog WHERE $sqlClause GROUP BY username ORDER BY points DESC LIMIT 10");
+        if ($q === false) {
+            die("Error: database error: table does not exist\n");
+        } else {
+            $result = $q->fetchAll();
+            foreach($result as $key=>$res) {
+                echo '<tr>';
+                echo '<td>' . ($key+1) . '</td>';
+                echo '<td>' . $res['username'] . '</td>';
+                echo '<td>' . $res['points'] . '</td>';
+                echo '</tr>';
+            }
+        }
+    } else {
+        die($err);
+    }
+?>
+
+              </tbody>
+            </table>
+        </div>
+      </div>
+      <div class="row">
+        <div class="span12">
           <h2>Month Top Scores</h2>
             <table class="table">
               <thead>
@@ -205,7 +247,10 @@
               </tbody>
             </table>
         </div>
-        <div class="span4">
+      </div>
+
+      <div class="row">
+        <div class="span12">
           <h2>Year Top Scores</h2>
             <table class="table">
               <thead>
@@ -244,60 +289,8 @@
               </tbody>
             </table>
         </div>
-
-        <?php
-          $sqlClause = '';
-          $day = date('N')-1;
-          $week = new DateTime();
-          $interval = new DateInterval('P'.$day.'D');
-          $week->sub($interval);
-          $interval = new DateInterval('P1D');
-          for($i=0;$i<7;$i++) {
-            if($i>0) {
-              $sqlClause .= ' or ';
-            }
-            $sqlClause .= '(day=' . $week->format('j') . 
-                            ' and month=' . $week->format('n') .
-                            ' and year=' . $week->format('Y') . 
-                            ')';
-            $week->add($interval);
-          }
-        ?>
-        <div class="span4">
-          <h2>Week Top Scores</h2>
-            <table class="table">
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Username</th>
-                  <th>Points</th>
-                </tr>
-              </thead>
-              <tbody>
-<?php
-    if ($db) {
-        $q = $db->query("SELECT username, sum(points_made) as points FROM triviauserlog WHERE $sqlClause GROUP BY username ORDER BY points DESC LIMIT 10");
-        if ($q === false) {
-            die("Error: database error: table does not exist\n");
-        } else {
-            $result = $q->fetchAll();
-            foreach($result as $key=>$res) {
-                echo '<tr>';
-                echo '<td>' . ($key+1) . '</td>';
-                echo '<td>' . $res['username'] . '</td>';
-                echo '<td>' . $res['points'] . '</td>';
-                echo '</tr>';
-            }
-        }
-    } else {
-        die($err);
-    }
-?>
-
-              </tbody>
-            </table>
-        </div>
       </div>
+
       <div class="footer">
         <p>&copy; Trivialand 2013 - <a href="https://github.com/tannn/TriviaTime">github</a></p>
       </div>

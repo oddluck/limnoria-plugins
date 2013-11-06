@@ -75,7 +75,6 @@
                 <li><a href="user.php">Players</a></li>
                 <li><a href="reports.php">Reports</a></li>
                 <li><a href="about.php">About</a></li>
-                <li><a href="contact.php">Contact</a></li>
               </ul>
             </div>
           </div>
