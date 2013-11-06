@@ -108,7 +108,7 @@ class TriviaTime(callbacks.Plugin):
                 irc.queueMsg(ircmsgs.voice(channel, username))
 
     def deletequestion(self, irc, msg, arg, id):
-        """
+        """<question id>
             Deletes a question from the database.
         """
         if not self.storage.questionIdExists(id):
@@ -119,7 +119,7 @@ class TriviaTime(callbacks.Plugin):
     deletequestion = wrap(deletequestion, ['int'])
 
     def addquestion(self, irc, msg, arg, question):
-        """
+        """<question text>
             Adds a question to the database
         """
         channel = ircutils.toLower(msg.args[0])
@@ -225,10 +225,11 @@ class TriviaTime(callbacks.Plugin):
         irc.noReply()
     year = wrap(year)
 
+    """
     def alltime(self, irc, msg, arg):
-        """
+        '''
             Gives the top10 scores from all time
-        """
+        '''
         channel = ircutils.toLower(msg.args[0])
         tops = self.storage.viewAllTimeTop10()
         topsText = '\x0301,08 ALL TIME Top 10 Players - '
@@ -237,7 +238,8 @@ class TriviaTime(callbacks.Plugin):
         irc.sendMsg(ircmsgs.privmsg(channel, topsText))
         irc.noReply()
     alltime = wrap(alltime)
-
+    """
+    
     def edit(self, irc, msg, arg, num, question):
         """<question number> <corrected text>
         Correct a question by providing the question number and the corrected text.
