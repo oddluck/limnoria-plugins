@@ -908,7 +908,7 @@ class TriviaTime(callbacks.Plugin):
             hintRatio = self.registryValue('hintShowRatio') # % to show each hint
             ratio = float(hintRatio * .01)
             timeElapsed = float(time.time() - self.askedAt)
-            showPercentage = float((timeElapsed + (self.registryValue('timeout', self.channel)/3)) / (self.registryValue('timeout', self.channel) * 3))
+            showPercentage = float((timeElapsed + (self.registryValue('timeout', self.channel)/2)) / (self.registryValue('timeout', self.channel) * 3))
             charMask = self.registryValue('charMask', self.channel)
             if len(self.answers) > 1 or len(self.answers) < 1:
                 return
