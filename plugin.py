@@ -249,8 +249,8 @@ class TriviaTime(callbacks.Plugin):
             q = q[0]
             self.storage.insertEdit(num, question, msg.nick, msg.args[0])
             irc.reply("Success! Submitted edit for further review.")
-            irc.reply('NEW:%s' %(question))
-            irc.reply('OLD:%s' % (q[2]))
+            irc.sendMsg(ircmsgs.notice(msg.nick, 'NEW: %s' % (question)))
+            irc.sendMsg(ircmsgs.notice(msg.nick, 'OLD: %s' % (q[2])))
         else:
             irc.error("Question does not exist")
     edit = wrap(edit, ['int', 'text'])
@@ -350,7 +350,7 @@ class TriviaTime(callbacks.Plugin):
         channel = str.lower(msg.args[0])
         username = str.lower(msg.nick)
         if channel in self.games:
-            if self.games[channel].numAsked == roundNum:
+            if self.games[channel].numAsked == roundNum and self.games[channel].questionOver == False:
                 irc.reply("Sorry you must wait until the current question is over to report it.")
                 return
         question = self.storage.getQuestionByRound(roundNum, channel)
@@ -365,8 +365,8 @@ class TriviaTime(callbacks.Plugin):
                     newQuestionText = question[2].replace(oldOne, newOne)
                     self.storage.insertEdit(question[0], newQuestionText, username, channel)
                     irc.reply('** Regex detected ** Your report has been submitted!')
-                    irc.reply('NEW:%s' % (newQuestionText))
-                    irc.reply('OLD:%s' % (question[2]))
+                    irc.sendMsg(ircmsgs.notice(username, 'NEW: %s' % (newQuestionText)))
+                    irc.sendMsg(ircmsgs.notice(username, 'OLD: %s' % (question[2])))
                     return
             self.storage.insertReport(channel, username, text, question[0])
             irc.reply('Your report has been submitted!')
