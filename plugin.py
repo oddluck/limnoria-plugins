@@ -373,14 +373,6 @@ class TriviaTime(callbacks.Plugin):
         """
             Skip a question
         """
-        # is it a user?
-        """
-        try:
-            user = ircdb.users.getUser(msg.prefix) # rootcoma!~rootcomaa@unaffiliated/rootcoma
-        except KeyError:
-            irc.error('You need to register with me to use this command. TODO: show command needed to register')
-            return
-        """
         username = ircutils.toLower(msg.nick)
         channel = ircutils.toLower(msg.args[0])
 
@@ -404,8 +396,14 @@ class TriviaTime(callbacks.Plugin):
             return
 
         skipSeconds = self.registryValue('skipLimitTime', channel)
+        oldSkips = []
+        for usr in self.skips:
+            if int(time.mktime(time.localtime())) - self.skips[usr] > skipSeconds:
+                oldSkips.append(usr)
+        for usr in oldSkips:
+            del self.skips[usr]
         if username in self.skips:
-            if self.skips[username] - int(time.mktime(time.localtime())) < skipSeconds:
+            if int(time.mktime(time.localtime())) - self.skips[username] < skipSeconds:
                 irc.error('You must wait to be able to skip again.')
                 return
 
@@ -728,11 +726,11 @@ class TriviaTime(callbacks.Plugin):
                         todaysScore = 0
                         userInfo = self.storage.getUser(username)
                         if len(userInfo) >= 3:
-                            todaysScore = userInfo[8]
+                            todaysScore = userInfo[10]
+                            weekScore = userInfo[8]
                             monthScore = userInfo[6]
-                            yearScore = userInfo[4]
-                        self.sendMessage(self.registryValue('playerStatsMsg', self.channel) 
-                            % (username, self.streak, todaysScore, monthScore, yearScore))
+                            self.sendMessage(self.registryValue('playerStatsMsg', self.channel) 
+                            % (username, self.streak, todaysScore, weekScore, monthScore))
 
                 # add guessed word to list so we can cross it out
                 if self.guessedAnswers.count(attempt) == 0:
