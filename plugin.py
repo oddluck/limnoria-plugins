@@ -71,6 +71,12 @@ class TriviaTime(callbacks.Plugin):
         """
             Catches all PRIVMSG, including channels communication
         """
+        username = str.lower(msg.nick)
+        try:
+            user = ircdb.users.getUser(msg.prefix) # rootcoma!~rootcomaa@unaffiliated/rootcoma
+            username = str.lower(user.name)
+        except KeyError:
+            pass
         channel = ircutils.toLower(msg.args[0])
         # Make sure that it is starting inside of a channel, not in pm
         if not irc.isChannel(channel):
@@ -81,6 +87,8 @@ class TriviaTime(callbacks.Plugin):
             # Look for command to list remaining KAOS
             if msg.args[1] == self.registryValue('showHintCommandKAOS',channel):
                 self.games[channel].getRemainingKAOS()
+            elif msg.args[1] == self.registryValue('showOtherHintCommand', channel):
+                self.games[channel].getOtherHint(username)
             else:
                 # check the answer
                 self.games[channel].checkAnswer(msg)
@@ -648,6 +656,7 @@ class TriviaTime(callbacks.Plugin):
             # reset stats
             self.shownHint = False
             self.skipVoteCount = {}
+            self.shownOtherHint = {}
             self.streak       = 0
             self.lastWinner   = ''
             self.hintsCounter = 0
@@ -858,7 +867,7 @@ class TriviaTime(callbacks.Plugin):
                     divider = int(len(ans) * ratio)
                     if divider > 3:
                         divider = 3
-                    if divider > len(ans):
+                    if divider >= len(ans):
                         divider = len(ans)-1
                     hints += ans[:divider]
                     masked = ans[divider:]
@@ -867,7 +876,7 @@ class TriviaTime(callbacks.Plugin):
                     divider = int(len(ans) * ratio)
                     if divider > 3:
                         divider = 3
-                    if divider > len(ans):
+                    if divider >= len(ans):
                         divider = len(ans)-1
                     lettersInARow=divider-1
                     maskedInARow=0
@@ -896,6 +905,29 @@ class TriviaTime(callbacks.Plugin):
                     hints += ']'
             return hints
 
+        def getOtherHintString(self):
+            hintRatio = self.registryValue('hintShowRatio') # % to show each hint
+            ratio = float(hintRatio * .01)
+            timeElapsed = float(time.time() - self.askedAt)
+            showPercentage = float((timeElapsed + (self.registryValue('timeout', self.channel)/2)) / (self.registryValue('timeout', self.channel) * 2))
+            charMask = self.registryValue('charMask', self.channel)
+            if len(self.answers) > 1 or len(self.answers) < 1:
+                return
+            ans = self.answers[0]
+            divider = int(len(ans) * ratio * showPercentage + 1)
+            if divider >= len(ans):
+                divider = len(ans)-1
+            hints = 'Hint: \x02\x0312'
+            hints += ans[:divider]
+            return hints
+
+        def getOtherHint(self, username):
+            if username in self.shownOtherHint:
+                return
+            self.shownOtherHint[username] = True
+            if len(self.answers) == 1:
+                self.sendMessage(self.getOtherHintString())
+
         def getRemainingKAOS(self):
             if len(self.answers) > 1:
                 if self.shownHint == False:
@@ -912,6 +944,7 @@ class TriviaTime(callbacks.Plugin):
             self.sendMessage('Hint %s: %s' % (self.hintsCounter, hints), 1, 9)
             #reset hint shown
             self.shownHint = False
+            self.shownOtherHint = {}
 
             timeout = 2
             if len(self.answers) > 1:
@@ -938,6 +971,7 @@ class TriviaTime(callbacks.Plugin):
             self.questionOver = False
             self.shownHint = False
             self.skipVoteCount = {}
+            self.shownOtherHint = {}
             self.question = ''
             self.answers = []
             self.alternativeAnswers = []

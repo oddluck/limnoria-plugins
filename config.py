@@ -30,6 +30,11 @@ conf.registerChannelValue(TriviaTime, 'quizfile',
         )
 
 # timeout, number of hints, values
+conf.registerChannelValue(TriviaTime, 'showOtherHintCommand', 
+        registry.NormalizedString(""".""", 
+                """The command to show alternative hints""")
+        )
+
 conf.registerChannelValue(TriviaTime, 'showHintCommandKAOS', 
         registry.NormalizedString(""",""", 
                 """The command for showing the remaining KAOS""")
@@ -122,7 +127,7 @@ conf.registerChannelValue(TriviaTime, 'charMask',
 
 # victory text, help messages, formatting
 conf.registerChannelValue(TriviaTime, 'starting', 
-        registry.NormalizedString("""Another epic round of tivia is about to begin.""", 
+        registry.NormalizedString("""Another epic round of trivia is about to begin.""", 
                 """Message shown when trivia starts""")
         )
 
@@ -142,7 +147,7 @@ conf.registerChannelValue(TriviaTime, 'alreadyStarted',
         )
 
 conf.registerChannelValue(TriviaTime, 'answeredKAOS', 
-        registry.NormalizedString("""\x02%s\x02 gets \x02d\x02 points for: \x02%s\x02""",
+        registry.NormalizedString("""\x02%s\x02 gets \x02%d\x02 points for: \x02%s\x02""",
                 """Message for one correct guess during KAOS""")
         )
 
