@@ -239,7 +239,7 @@ class TriviaTime(callbacks.Plugin):
         irc.noReply()
     alltime = wrap(alltime)
     """
-    
+
     def edit(self, irc, msg, arg, num, question):
         """<question number> <corrected text>
         Correct a question by providing the question number and the corrected text.
@@ -349,7 +349,11 @@ class TriviaTime(callbacks.Plugin):
         """
         channel = str.lower(msg.args[0])
         username = str.lower(msg.nick)
-        question = self.storage.getQuestionByRound(roundNum, msg.args[0])
+        if channel in self.games:
+            if self.games[channel].numAsked == roundNum:
+                irc.reply("Sorry you must wait until the current question is over to report it.")
+                return
+        question = self.storage.getQuestionByRound(roundNum, channel)
         if len(question) > 0:
             question = question[0]
             inp = text.strip()
@@ -359,7 +363,6 @@ class TriviaTime(callbacks.Plugin):
                     newOne = regex[1]
                     oldOne = regex[0]
                     newQuestionText = question[2].replace(oldOne, newOne)
-                    #log.info(newQuestionText)
                     self.storage.insertEdit(question[0], newQuestionText, username, channel)
                     irc.reply('** Regex detected ** Your report has been submitted!')
                     irc.reply('NEW:%s' % (newQuestionText))
