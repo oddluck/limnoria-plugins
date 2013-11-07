@@ -133,7 +133,7 @@ class TriviaTime(callbacks.Plugin):
             return
         self.storage.deleteQuestion(id)
         irc.reply('Deleted question %d.' % id)
-    deletequestion = wrap(deletequestion, ['int'])
+    deletequestion = wrap(deletequestion, ['admin', 'int'])
 
     def addquestion(self, irc, msg, arg, question):
         """<question text>
@@ -146,7 +146,7 @@ class TriviaTime(callbacks.Plugin):
             return
         self.storage.insertQuestionsBulk([(question,question)])
         irc.reply('Added your question to the question database')
-    addquestion = wrap(addquestion, ['text'])
+    addquestion = wrap(addquestion, ['admin', 'text'])
 
     def addquestionfile(self, irc, msg, arg, filename):
         """[<filename>]
@@ -165,7 +165,7 @@ class TriviaTime(callbacks.Plugin):
             insertList.append((str(line).strip(),str(line).strip()))
         info = self.storage.insertQuestionsBulk(insertList)
         irc.reply('Successfully added %d questions, skipped %d' % (info[0], info[1]))
-    addquestionfile = wrap(addquestionfile, ['admin',optional('text')])
+    addquestionfile = wrap(addquestionfile, ['admin', optional('text')])
 
     def info(self, irc, msg, arg):
         """
@@ -245,9 +245,9 @@ class TriviaTime(callbacks.Plugin):
         irc.noReply()
     year = wrap(year)
 
-    def edit(self, irc, msg, arg, num, question):
-        """<question number> <corrected text>
-        Correct a question by providing the question number and the corrected text.
+    def edit(self, irc, msg, arg, user, channel, num, question):
+        """[<channel>] <question number> <corrected text>
+        Correct a question by providing the question number and the corrected text. Channel is only necessary when editing from outside of the channel
         """
         username = str.lower(msg.nick)
         try:
@@ -265,11 +265,11 @@ class TriviaTime(callbacks.Plugin):
             irc.sendMsg(ircmsgs.notice(msg.nick, 'OLD: %s' % (q[2])))
         else:
             irc.error("Question does not exist")
-    edit = wrap(edit, ['int', 'text'])
+    edit = wrap(edit, ['user', ('checkChannelCapability', 'triviamod'), 'int', 'text'])
 
-    def acceptedit(self, irc, msg, arg, num):
-        """<num>
-        Accept a question edit, and remove edit
+    def acceptedit(self, irc, msg, arg, user, channel, num):
+        """[<channel>] <num>
+        Accept a question edit, and remove edit. Channel is only necessary when editing from outside of the channel
         """
         edit = self.storage.getEditById(num)
         if len(edit) < 1:
@@ -287,11 +287,11 @@ class TriviaTime(callbacks.Plugin):
                 irc.sendMsg(ircmsgs.notice(msg.nick, 'OLD: %s' % (question[2])))
             else:
                 irc.error('Question could not be found for this edit')
-    acceptedit = wrap(acceptedit, ['int'])
+    acceptedit = wrap(acceptedit, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
 
-    def removeedit(self, irc, msg, arg, num):
-        """<int>
-        Remove a edit without accepting it
+    def removeedit(self, irc, msg, arg, user, channel, num):
+        """[<channel>] <int>
+        Remove a edit without accepting it. Channel is only necessary when editing from outside of the channel
         """
         edit = self.storage.getEditById(num)
         if len(edit) < 1:
@@ -300,11 +300,11 @@ class TriviaTime(callbacks.Plugin):
             edit = edit[0]
             self.storage.removeEdit(edit[0])
             irc.reply('Edit %d removed!' % edit[0])
-    removeedit = wrap(removeedit, ['int'])
+    removeedit = wrap(removeedit, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
 
-    def removereport(self, irc, msg, arg, num):
-        """<report num>
-        Remove a old report by report number
+    def removereport(self, irc, msg, arg, user, channel, num):
+        """[<channel>] <report num>
+        Remove a old report by report number. Channel is only necessary when editing from outside of the channel
         """
         report = self.storage.getReportById(num)
         if len(report) < 1:
@@ -313,7 +313,7 @@ class TriviaTime(callbacks.Plugin):
             report = report[0]
             self.storage.removeReport(report[0])
             irc.reply('Report %d removed!' % report[0])
-    removereport = wrap(removereport, ['int'])
+    removereport = wrap(removereport, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
 
     def givepoints(self, irc, msg, arg, username, points, days):
         """<username> <points> [<daysAgo>]
@@ -491,9 +491,9 @@ class TriviaTime(callbacks.Plugin):
         irc.noReply()
     showstats = wrap(showstats,['nick'])
 
-    def showquestion(self, irc, msg, arg, num):
-        """<num>
-        Search question database for question at line num
+    def showquestion(self, irc, msg, arg, user, channel, num):
+        """[<channel>] <num>
+        Search question database for question at line num. Channel is only necessary when editing from outside of the channel
         """
         question = self.storage.getQuestion(num)
         if len(question) < 1:
@@ -501,11 +501,11 @@ class TriviaTime(callbacks.Plugin):
         else:
             question = question[0]
             irc.reply('''Question#%d: %s''' % (num, question[2]))
-    showquestion = wrap(showquestion, ['int'])
+    showquestion = wrap(showquestion, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
 
-    def showround(self, irc, msg, arg, num):
-        """<round num>
-        Show what question was asked during the round
+    def showround(self, irc, msg, arg, user, channel, num):
+        """[<channel>] <round num>
+        Show what question was asked during the round. Channel is only necessary when editing from outside of the channel
         """
         question = self.storage.getQuestionByRound(num, msg.args[0])
         if len(question) < 1:
@@ -513,11 +513,11 @@ class TriviaTime(callbacks.Plugin):
         else:
             question = question[0]
             irc.reply('''Round %d: Question#%d, Text:%s''' % (num, question[0], question[2]))
-    showround = wrap(showround, ['int'])
+    showround = wrap(showround, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
 
-    def showreport(self, irc, msg, arg, num):
-        """[<report num>]
-        Shows report information, if num is provided one record is shown, otherwise the last 3 are
+    def showreport(self, irc, msg, arg, user, channel, num):
+        """[<channel>] [<report num>]
+        Shows report information, if num is provided one record is shown, otherwise the last 3 are. Channel is only necessary when editing from outside of the channel
         """
         if num is not None:
             report = self.storage.getReportById(num)
@@ -539,11 +539,11 @@ class TriviaTime(callbacks.Plugin):
                 irc.reply('No reports found')
             for report in reports:
                 irc.reply('Report #%d `%s` by %s on %s Q#%d '%(report[0], report[3], report[2], report[1], report[7]))
-    showreport = wrap(showreport, [optional('int')])
+    showreport = wrap(showreport, ['user', ('checkChannelCapability', 'triviamod'), optional('int')])
 
-    def showedit(self, irc, msg, arg, num):
-        """[<edit num>]
-        Show top 3 edits, or provide edit num to view one
+    def showedit(self, irc, msg, arg, user, channel, num):
+        """[<channel>] [<edit num>]
+        Show top 3 edits, or provide edit num to view one. Channel is only necessary when editing from outside of the channel
         """
         if num is not None:
             edit = self.storage.getEditById(num)
@@ -568,7 +568,7 @@ class TriviaTime(callbacks.Plugin):
                 question = question[0]
                 irc.reply('Edit #%d, Question#%d, NEW:%s'%(edit[0], edit[1], edit[2]))
             irc.reply('type .showedit <edit number> to see more information')
-    showedit = wrap(showedit, [optional('int')])
+    showedit = wrap(showedit, ['user', ('checkChannelCapability', 'triviamod'), optional('int')])
 
     def start(self, irc, msg, args):
         """
@@ -579,7 +579,10 @@ class TriviaTime(callbacks.Plugin):
             irc.reply('Sorry, I can start inside of a channel, try joining #trivialand. Or fork TriviaLand on github')
             return
         if channel in self.games:
-            if not self.games[channel].active:
+            if self.games[channel].stopPending == True:
+                self.games[channel].stopPending = False
+                irc.sendMsg(ircmsgs.privmsg(channel, 'Pending stop aborted'))
+            elif not self.games[channel].active:
                 del self.games[channel]
                 try:
                     schedule.removeEvent('%s.trivia' % channel)
@@ -597,30 +600,25 @@ class TriviaTime(callbacks.Plugin):
         irc.noReply()
     start = wrap(start)
 
-    def stop(self, irc, msg, args):
+    def stop(self, irc, msg, channel, args):
+        """[<channel>] 
+            Ends Trivia. Only use this if you know what you are doing.. Channel is only necessary when editing from outside of the channel
         """
-            Ends Trivia. Only use this if you know what you are doing.
-        """
-        # is it a user?
-        try:
-            user = ircdb.users.getUser(msg.prefix) # rootcoma!~rootcomaa@unaffiliated/rootcoma
-        except KeyError:
-            irc.error('You need to register with me to use this command. TODO: show command needed to register')
-            return
-
         channel = ircutils.toLower(msg.args[0])
-        try:
-            schedule.removeEvent('%s.trivia' % channel)
-        except KeyError:
-            irc.error(self.registryValue('alreadyStopped'))
         if channel in self.games:
-            if self.games[channel].active:
+            if self.games[channel].questionOver == True:
                 self.games[channel].stop()
+                return
+            if self.games[channel].active:
+                self.games[channel].stopPending = True
+                irc.sendMsg(ircmsgs.privmsg(channel, 'Trivia will now stop after this question.'))
             else:
                 del self.games[channel]
                 irc.sendMsg(ircmsgs.privmsg(channel, self.registryValue('stopped')))
+        else:
+            irc.sendMsg(ircmsgs.privmsg(channel, 'Game is already stopped'))
         irc.noReply()
-    stop = wrap(stop)
+    stop = wrap(stop, [('checkChannelCapability', 'triviamod')])
 
     def time(self, irc, msg, arg):
         """
@@ -642,7 +640,7 @@ class TriviaTime(callbacks.Plugin):
         userto = str.lower(userto)
         self.storage.transferUserLogs(userfrom, userto)
         irc.reply('Done! Transfered records from %s to %s' % (userfrom, userto))
-    transferpoints = wrap(transferpoints, ['nick', 'nick'])
+    transferpoints = wrap(transferpoints, ['admin', 'nick', 'nick'])
 
     #Game instance
     class Game:
@@ -658,6 +656,7 @@ class TriviaTime(callbacks.Plugin):
             self.irc = irc
 
             # reset stats
+            self.stopPending = False
             self.shownHint = False
             self.skipVoteCount = {}
             self.streak       = 0
@@ -742,7 +741,7 @@ class TriviaTime(callbacks.Plugin):
                         if streakBonus > maxBonus:
                             streakBonus = maxBonus
                         pointsAdded += streakBonus
-
+                    self.storage.updateGameStreak(self.channel, self.lastWinner, self.streak)
                     # Convert score to int
                     pointsAdded = int(pointsAdded)
 
@@ -790,6 +789,11 @@ class TriviaTime(callbacks.Plugin):
                         self.sendMessage(self.registryValue('recapCompleteKaos', self.channel) % (int(self.totalAmountWon), len(self.correctPlayers)))
 
                     self.removeEvent()
+
+                    if self.stopPending == True:
+                        self.stop()
+                        return
+
                     sleepTime = self.registryValue('sleepTime',self.channel)
                     if sleepTime < 2:
                         sleepTime = 2
@@ -802,6 +806,8 @@ class TriviaTime(callbacks.Plugin):
             if gameInfo is not None:
                 self.numAsked = gameInfo[2]
                 self.roundStartedAt = gameInfo[3]
+                self.lastWinner = gameInfo[4]
+                self.streak = int(gameInfo[5])
 
         def loopEvent(self):
             """
@@ -835,6 +841,10 @@ class TriviaTime(callbacks.Plugin):
                 self.alternativeAnswers = []
                 self.question = ''
                 self.questionOver = True
+
+                if self.stopPending == True:
+                    self.stop()
+                    return
 
                 # provide next question
                 sleepTime = self.registryValue('sleepTime',self.channel)
@@ -973,6 +983,12 @@ class TriviaTime(callbacks.Plugin):
                 self.sendMessage('Stopping due to inactivity')
                 return
 
+
+            if self.stopPending == True:
+                self.stop()
+                return
+
+
             # reset and increment
             self.questionOver = False
             self.shownHint = False
@@ -1103,7 +1119,7 @@ class TriviaTime(callbacks.Plugin):
                     'p':10050,
                     'q':'KAOS: The 10 Worst U.S. Presidents (Last Name Only)? (This is a panic question, if you see this report this question. it is malformed.)',
                     'a':['Bush', 'Nixon', 'Hoover', 'Grant', 'Johnson', 
-                        'Ford', 'Reagan', 'Coolidge', 'Pierce'], 
+                            'Ford', 'Reagan', 'Coolidge', 'Pierce'], 
                     'aa':['Obama']
                     }
 
@@ -1132,9 +1148,9 @@ class TriviaTime(callbacks.Plugin):
             # responsible for stopping a timer/thread after being told to stop
             self.active = False
             self.removeEvent()
+            self.sendMessage(self.registryValue('stopped'), 2)
             if self.channel in self.games:
                 del self.games[self.channel]
-            self.sendMessage(self.registryValue('stopped'), 2)
 
     #Storage for users and points using sqlite3
     class Storage:
@@ -1164,7 +1180,7 @@ class TriviaTime(callbacks.Plugin):
             if numAnswered >= 1:
                 scoreAvg = score / numAnswered
             c.execute('insert into triviauserlog values (NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?)', 
-                (username, score, numAnswered, day, month, year, epoch, timeTaken, scoreAvg))
+                                    (username, score, numAnswered, day, month, year, epoch, timeTaken, scoreAvg))
             self.conn.commit()
             c.close()
 
@@ -1179,6 +1195,7 @@ class TriviaTime(callbacks.Plugin):
 
         def insertGame(self, channel, numAsked=0, epoch=None):
             channel = str.lower(channel)
+            lastWinner  = str.lower(lastWinner)
             if self.gameExists(channel):
                 return self.updateGame(channel, numAsked)
             if epoch is None:
@@ -1346,6 +1363,19 @@ class TriviaTime(callbacks.Plugin):
             self.conn.commit()
             c.close()
 
+        def updateGameStreak(self, channel, lastWinner, streak):
+            channel = str.lower(channel)
+            lastWinner  = str.lower(lastWinner)
+            if not self.gameExists(channel):
+                return self.insertGame(channel, 0, None)
+            c = self.conn.cursor()
+            test = c.execute('''update triviagames set
+                                last_winner=?,
+                                streak=?
+                                where channel=?''', (lastWinner, streak, channel))
+            self.conn.commit()
+            c.close()
+
         def updateGameRoundStarted(self, channel, lastRoundStarted):
             channel = str.lower(channel)
             if not self.gameExists(channel):
@@ -1463,7 +1493,9 @@ class TriviaTime(callbacks.Plugin):
                         id integer primary key autoincrement, 
                         channel text not null unique,
                         num_asked integer,
-                        round_started integer
+                        round_started integer,
+                        last_winner text,
+                        streak integer
                         )''')
             except:
                 pass
@@ -2175,6 +2207,7 @@ class TriviaTime(callbacks.Plugin):
                             and tl.username=?
                     )
             ''',(userTo, userFrom, userTo))
+            self.conn.commit()
 
             self.removeUserLogs(userFrom)
 
