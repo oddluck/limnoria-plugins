@@ -90,6 +90,8 @@ class TriviaTime(callbacks.Plugin):
                 self.games[channel].getRemainingKAOS()
             elif msg.args[1] == self.registryValue('showOtherHintCommand', channel):
                 self.games[channel].getOtherHint(username)
+            elif str.lower(msg.args[1]) == self.registryValue('repeatCommand', channel):
+                self.games[channel].repeatQuestion()
             else:
                 # check the answer
                 self.games[channel].checkAnswer(msg)
@@ -124,16 +126,27 @@ class TriviaTime(callbacks.Plugin):
                 irc.sendMsg(ircmsgs.privmsg(self.pings[username][1], """ %s Pong: response %0.2f seconds""" % (username, pingTime)))
                 del self.pings[username]
 
-    def deletequestion(self, irc, msg, arg, id):
-        """<question id>
-            Deletes a question from the database.
+    def acceptedit(self, irc, msg, arg, user, channel, num):
+        """[<channel>] <num>
+        Accept a question edit, and remove edit. Channel is only necessary when editing from outside of the channel
         """
-        if not self.storage.questionIdExists(id):
-            self.error('That question does not exist.')
-            return
-        self.storage.deleteQuestion(id)
-        irc.reply('Deleted question %d.' % id)
-    deletequestion = wrap(deletequestion, ['admin', 'int'])
+        edit = self.storage.getEditById(num)
+        if len(edit) < 1:
+            irc.error('Could not find that edit')
+        else:
+            edit = edit[0]
+            question = self.storage.getQuestion(edit[1])
+            self.storage.updateQuestion(edit[1], edit[2])
+            self.storage.updateUser(edit[4], 0, 1)
+            self.storage.removeEdit(edit[0])
+            irc.reply('Question #%d updated!' % edit[1])
+            irc.sendMsg(ircmsgs.notice(msg.nick, 'NEW: %s' % (edit[2])))
+            if len(question) > 0:
+                question = question[0]
+                irc.sendMsg(ircmsgs.notice(msg.nick, 'OLD: %s' % (question[2])))
+            else:
+                irc.error('Question could not be found for this edit')
+    acceptedit = wrap(acceptedit, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
 
     def addquestion(self, irc, msg, arg, question):
         """<question text>
@@ -167,23 +180,6 @@ class TriviaTime(callbacks.Plugin):
         irc.reply('Successfully added %d questions, skipped %d' % (info[0], info[1]))
     addquestionfile = wrap(addquestionfile, ['admin', optional('text')])
 
-    def info(self, irc, msg, arg):
-        """
-        Get TriviaTime information, how many questions/users in database, time, etc
-        """
-        numActiveThisWeek = self.storage.getNumActiveThisWeek()
-        infoText = ''' TriviaTime by #trivialand on Freenode'''
-        irc.sendMsg(ircmsgs.privmsg(msg.args[0], infoText))
-        infoText = ''' Time is %s ''' % (time.asctime(time.localtime(),))
-        irc.sendMsg(ircmsgs.privmsg(msg.args[0], infoText))
-        infoText = '''\x02 %d Users\x02 on scoreboard \x02%d Active This Week\x02''' % (self.storage.getNumUser(), numActiveThisWeek)
-        irc.sendMsg(ircmsgs.privmsg(msg.args[0], infoText))
-        numKaos = self.storage.getNumKAOS()
-        numQuestionTotal = self.storage.getNumQuestions()
-        infoText = '''\x02 %d Questions\x02 and \x02%d KAOS\x02 (\x02%d Total\x02) in the database ''' % ((numQuestionTotal-numKaos), numKaos, numQuestionTotal)
-        irc.sendMsg(ircmsgs.privmsg(msg.args[0], infoText))
-    info = wrap(info)
-
     def clearpoints(self, irc, msg, arg, username):
         """<username>
 
@@ -206,44 +202,16 @@ class TriviaTime(callbacks.Plugin):
         irc.noReply()
     day = wrap(day)
 
-    def week(self, irc, msg, arg):
+    def deletequestion(self, irc, msg, arg, id):
+        """<question id>
+            Deletes a question from the database.
         """
-            Gives the top10 scores of the week
-        """
-        channel = ircutils.toLower(msg.args[0])
-        tops = self.storage.viewWeekTop10()
-        topsText = '\x0301,08 This WEEKS Top 10 - '
-        for i in range(len(tops)):
-            topsText += '\x02\x0301,08 #%d:\x02 \x0300,04 %s %d ' % ((i+1) , tops[i][1], tops[i][2])
-        irc.sendMsg(ircmsgs.privmsg(channel, topsText))
-        irc.noReply()
-    week = wrap(week)
-
-    def month(self, irc, msg, arg):
-        """
-            Gives the top10 scores of the month
-        """
-        channel = ircutils.toLower(msg.args[0])
-        tops = self.storage.viewMonthTop10()
-        topsText = '\x0301,08 This MONTHS Top 10 Players - '
-        for i in range(len(tops)):
-            topsText += '\x02\x0301,08 #%d:\x02 \x0300,04 %s %d ' % ((i+1) , tops[i][1], tops[i][2])
-        irc.sendMsg(ircmsgs.privmsg(channel, topsText))
-        irc.noReply()
-    month = wrap(month)
-
-    def year(self, irc, msg, arg):
-        """
-            Gives the top10 scores of the year
-        """
-        channel = ircutils.toLower(msg.args[0])
-        tops = self.storage.viewYearTop10()
-        topsText = '\x0301,08 Top 10 Players - '
-        for i in range(len(tops)):
-            topsText += '\x02\x0301,08 #%d:\x02 \x0300,04 %s %d ' % ((i+1) , tops[i][1], tops[i][2])
-        irc.sendMsg(ircmsgs.privmsg(channel, topsText))
-        irc.noReply()
-    year = wrap(year)
+        if not self.storage.questionIdExists(id):
+            self.error('That question does not exist.')
+            return
+        self.storage.deleteQuestion(id)
+        irc.reply('Deleted question %d.' % id)
+    deletequestion = wrap(deletequestion, ['admin', 'int'])
 
     def edit(self, irc, msg, arg, user, channel, num, question):
         """[<channel>] <question number> <corrected text>
@@ -267,27 +235,92 @@ class TriviaTime(callbacks.Plugin):
             irc.error("Question does not exist")
     edit = wrap(edit, ['user', ('checkChannelCapability', 'triviamod'), 'int', 'text'])
 
-    def acceptedit(self, irc, msg, arg, user, channel, num):
-        """[<channel>] <num>
-        Accept a question edit, and remove edit. Channel is only necessary when editing from outside of the channel
+    def givepoints(self, irc, msg, arg, username, points, days):
+        """<username> <points> [<daysAgo>]
+
+        Give a user points, last argument is optional amount of days in past to add records
         """
-        edit = self.storage.getEditById(num)
-        if len(edit) < 1:
-            irc.error('Could not find that edit')
+        if points < 1:
+            irc.error("You cannot give less than 1 point.")
+            return
+        day=None
+        month=None
+        year=None
+        if days is not None:
+            d = datetime.date.today()
+            d -= datetime.timedelta(days)
+            day = d.day
+            month = d.month
+            year = d.year
+        self.storage.updateUserLog(str.lower(username), points, 0, 0, day, month, year)
+        irc.reply('Added %d points to %s' % (points, username))
+    givepoints = wrap(givepoints, ['admin','nick', 'int', optional('int')])
+
+    def info(self, irc, msg, arg):
+        """
+        Get TriviaTime information, how many questions/users in database, time, etc
+        """
+        numActiveThisWeek = self.storage.getNumActiveThisWeek()
+        infoText = ''' TriviaTime by #trivialand on Freenode'''
+        irc.sendMsg(ircmsgs.privmsg(msg.args[0], infoText))
+        infoText = ''' Time is %s ''' % (time.asctime(time.localtime(),))
+        irc.sendMsg(ircmsgs.privmsg(msg.args[0], infoText))
+        infoText = '''\x02 %d Users\x02 on scoreboard \x02%d Active This Week\x02''' % (self.storage.getNumUser(), numActiveThisWeek)
+        irc.sendMsg(ircmsgs.privmsg(msg.args[0], infoText))
+        numKaos = self.storage.getNumKAOS()
+        numQuestionTotal = self.storage.getNumQuestions()
+        infoText = '''\x02 %d Questions\x02 and \x02%d KAOS\x02 (\x02%d Total\x02) in the database ''' % ((numQuestionTotal-numKaos), numKaos, numQuestionTotal)
+        irc.sendMsg(ircmsgs.privmsg(msg.args[0], infoText))
+    info = wrap(info)
+
+    def latency(self, irc, msg, arg):
+        channel = ircutils.toLower(msg.args[0])
+        username = str.lower(msg.nick)
+        expiredPings = []
+
+        for ping in self.pings:
+            if time.time() - self.pings[ping][0] > 60:
+                expiredPings.append(ping)
+        for ping in expiredPings:
+            del expiredPings[ping]
+        if username in self.pings:
+            return
+        self.pings[username] = (time.time(), channel)
+        irc.sendMsg(ircmsgs.privmsg(username, """\x01PING ping\x01"""))
+    latency = wrap(latency)
+
+    def me(self, irc, msg, arg):
+        """
+            Get your rank, score & questions asked for day, month, year
+        """
+        username = str.lower(msg.nick)
+        try:
+            user = ircdb.users.getUser(msg.prefix) # rootcoma!~rootcomaa@unaffiliated/rootcoma
+            username = str.lower(user.name)
+        except KeyError:
+            pass
+        channel = ircutils.toLower(msg.args[0])
+        info = self.storage.getUser(str.lower(username))
+        if len(info) < 3:
+            irc.error("I couldn't find you in my database.")
         else:
-            edit = edit[0]
-            question = self.storage.getQuestion(edit[1])
-            self.storage.updateQuestion(edit[1], edit[2])
-            self.storage.updateUser(edit[4], 0, 1)
-            self.storage.removeEdit(edit[0])
-            irc.reply('Question #%d updated!' % edit[1])
-            irc.sendMsg(ircmsgs.notice(msg.nick, 'NEW: %s' % (edit[2])))
-            if len(question) > 0:
-                question = question[0]
-                irc.sendMsg(ircmsgs.notice(msg.nick, 'OLD: %s' % (question[2])))
-            else:
-                irc.error('Question could not be found for this edit')
-    acceptedit = wrap(acceptedit, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
+            infoText = ' %s\'s Stats: \x02Today:\x02 #%d %d (%d) \x02This Week:\x02 #%d %d (%d) \x02This Month:\x02 #%d %d (%d) \x02This Year:\x02 #%d %d (%d)' % (username, info[16], info[10], info[11], info[15], info[8], info[9], info[14], info[6], info[7], info[13], info[4], info[5])
+            irc.sendMsg(ircmsgs.privmsg(channel, infoText))
+        irc.noReply()
+    me = wrap(me)
+
+    def month(self, irc, msg, arg):
+        """
+            Gives the top10 scores of the month
+        """
+        channel = ircutils.toLower(msg.args[0])
+        tops = self.storage.viewMonthTop10()
+        topsText = '\x0301,08 This MONTHS Top 10 Players - '
+        for i in range(len(tops)):
+            topsText += '\x02\x0301,08 #%d:\x02 \x0300,04 %s %d ' % ((i+1) , tops[i][1], tops[i][2])
+        irc.sendMsg(ircmsgs.privmsg(channel, topsText))
+        irc.noReply()
+    month = wrap(month)
 
     def removeedit(self, irc, msg, arg, user, channel, num):
         """[<channel>] <int>
@@ -314,47 +347,6 @@ class TriviaTime(callbacks.Plugin):
             self.storage.removeReport(report[0])
             irc.reply('Report %d removed!' % report[0])
     removereport = wrap(removereport, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
-
-    def givepoints(self, irc, msg, arg, username, points, days):
-        """<username> <points> [<daysAgo>]
-
-        Give a user points, last argument is optional amount of days in past to add records
-        """
-        if points < 1:
-            irc.error("You cannot give less than 1 point.")
-            return
-        day=None
-        month=None
-        year=None
-        if days is not None:
-            d = datetime.date.today()
-            d -= datetime.timedelta(days)
-            day = d.day
-            month = d.month
-            year = d.year
-        self.storage.updateUserLog(str.lower(username), points, 0, 0, day, month, year)
-        irc.reply('Added %d points to %s' % (points, username))
-    givepoints = wrap(givepoints, ['admin','nick', 'int', optional('int')])
-
-    def me(self, irc, msg, arg):
-        """
-            Get your rank, score & questions asked for day, month, year
-        """
-        username = str.lower(msg.nick)
-        try:
-            user = ircdb.users.getUser(msg.prefix) # rootcoma!~rootcomaa@unaffiliated/rootcoma
-            username = str.lower(user.name)
-        except KeyError:
-            pass
-        channel = ircutils.toLower(msg.args[0])
-        info = self.storage.getUser(str.lower(username))
-        if len(info) < 3:
-            irc.error("I couldn't find you in my database.")
-        else:
-            infoText = ' %s\'s Stats: \x02Today:\x02 #%d %d (%d) \x02This Week:\x02 #%d %d (%d) \x02This Month:\x02 #%d %d (%d) \x02This Year:\x02 #%d %d (%d)' % (username, info[16], info[10], info[11], info[15], info[8], info[9], info[14], info[6], info[7], info[13], info[4], info[5])
-            irc.sendMsg(ircmsgs.privmsg(channel, infoText))
-        irc.noReply()
-    me = wrap(me)
 
     def report(self, irc, msg, arg, roundNum, text):
         """<report id> <report text>
@@ -392,22 +384,6 @@ class TriviaTime(callbacks.Plugin):
         else:
             irc.error('Sorry, round %d could not be found in the database')
     report = wrap(report, ['int', 'text'])
-
-    def latency(self, irc, msg, arg):
-        channel = ircutils.toLower(msg.args[0])
-        username = str.lower(msg.nick)
-        expiredPings = []
-
-        for ping in self.pings:
-            if time.time() - self.pings[ping][0] > 60:
-                expiredPings.append(ping)
-        for ping in expiredPings:
-            del expiredPings[ping]
-        if username in self.pings:
-            return
-        self.pings[username] = (time.time(), channel)
-        irc.sendMsg(ircmsgs.privmsg(username, """\x01PING ping\x01"""))
-    latency = wrap(latency)
 
     def skip(self, irc, msg, arg):
         """
@@ -642,6 +618,32 @@ class TriviaTime(callbacks.Plugin):
         irc.reply('Done! Transfered records from %s to %s' % (userfrom, userto))
     transferpoints = wrap(transferpoints, ['admin', 'nick', 'nick'])
 
+    def week(self, irc, msg, arg):
+        """
+            Gives the top10 scores of the week
+        """
+        channel = ircutils.toLower(msg.args[0])
+        tops = self.storage.viewWeekTop10()
+        topsText = '\x0301,08 This WEEKS Top 10 - '
+        for i in range(len(tops)):
+            topsText += '\x02\x0301,08 #%d:\x02 \x0300,04 %s %d ' % ((i+1) , tops[i][1], tops[i][2])
+        irc.sendMsg(ircmsgs.privmsg(channel, topsText))
+        irc.noReply()
+    week = wrap(week)
+
+    def year(self, irc, msg, arg):
+        """
+            Gives the top10 scores of the year
+        """
+        channel = ircutils.toLower(msg.args[0])
+        tops = self.storage.viewYearTop10()
+        topsText = '\x0301,08 Top 10 Players - '
+        for i in range(len(tops)):
+            topsText += '\x02\x0301,08 #%d:\x02 \x0300,04 %s %d ' % ((i+1) , tops[i][1], tops[i][2])
+        irc.sendMsg(ircmsgs.privmsg(channel, topsText))
+        irc.noReply()
+    year = wrap(year)
+
     #Game instance
     class Game:
         """
@@ -658,6 +660,7 @@ class TriviaTime(callbacks.Plugin):
             # reset stats
             self.stopPending = False
             self.shownHint = False
+            self.questionRepeated = False
             self.skipVoteCount = {}
             self.streak       = 0
             self.lastWinner   = ''
@@ -801,62 +804,6 @@ class TriviaTime(callbacks.Plugin):
                     sleepTime = time.time() + sleepTime
                     self.queueEvent(sleepTime, self.nextQuestion)
 
-        def loadGameState(self):
-            gameInfo = self.storage.getGame(self.channel)
-            if gameInfo is not None:
-                self.numAsked = gameInfo[2]
-                self.roundStartedAt = gameInfo[3]
-                self.lastWinner = gameInfo[4]
-                self.streak = int(gameInfo[5])
-
-        def loopEvent(self):
-            """
-                Main game/question/hint loop called by event. Decides whether question or hint is needed.
-            """
-            # out of hints to give?
-            if self.hintsCounter >= 3:
-                answer = ''
-                # create a string to show answers missed
-                for ans in self.answers:
-                    # dont show guessed values at loss
-                    if str.lower(ans) in self.guessedAnswers:
-                        continue
-                    if answer != '':
-                        answer += ' '
-                    if len(self.answers) > 1:
-                        answer += '['
-                    answer += ans
-                    if len(self.answers) > 1:
-                        answer += ']'
-                # Give failure message
-                if len(self.answers) > 1:
-                    self.sendMessage(self.registryValue('notAnsweredKAOS', self.channel) % answer)
-
-                    self.sendMessage(self.registryValue('recapNotCompleteKaos', self.channel) % (len(self.guessedAnswers), len(self.answers), int(self.totalAmountWon), len(self.correctPlayers)))
-                else:
-                    self.sendMessage(self.registryValue('notAnswered', self.channel) % answer)
-
-                #reset stuff
-                self.answers = []
-                self.alternativeAnswers = []
-                self.question = ''
-                self.questionOver = True
-
-                if self.stopPending == True:
-                    self.stop()
-                    return
-
-                # provide next question
-                sleepTime = self.registryValue('sleepTime',self.channel)
-                if sleepTime < 2:
-                    sleepTime = 2
-                    log.error('sleepTime was set too low(<2 seconds). setting to 2 seconds')
-                sleepTime = time.time() + sleepTime
-                self.queueEvent(sleepTime, self.nextQuestion)
-            else:
-                # give out more hints
-                self.nextHint()
-
         def getHintString(self, hintNum=None):
             if hintNum == None:
                 hintNum = self.hintsCounter
@@ -951,6 +898,62 @@ class TriviaTime(callbacks.Plugin):
                     self.shownHint = True
                     self.sendMessage(self.getHintString(self.hintsCounter-1))
 
+        def loadGameState(self):
+            gameInfo = self.storage.getGame(self.channel)
+            if gameInfo is not None:
+                self.numAsked = gameInfo[2]
+                self.roundStartedAt = gameInfo[3]
+                self.lastWinner = gameInfo[4]
+                self.streak = int(gameInfo[5])
+
+        def loopEvent(self):
+            """
+                Main game/question/hint loop called by event. Decides whether question or hint is needed.
+            """
+            # out of hints to give?
+            if self.hintsCounter >= 3:
+                answer = ''
+                # create a string to show answers missed
+                for ans in self.answers:
+                    # dont show guessed values at loss
+                    if str.lower(ans) in self.guessedAnswers:
+                        continue
+                    if answer != '':
+                        answer += ' '
+                    if len(self.answers) > 1:
+                        answer += '['
+                    answer += ans
+                    if len(self.answers) > 1:
+                        answer += ']'
+                # Give failure message
+                if len(self.answers) > 1:
+                    self.sendMessage(self.registryValue('notAnsweredKAOS', self.channel) % answer)
+
+                    self.sendMessage(self.registryValue('recapNotCompleteKaos', self.channel) % (len(self.guessedAnswers), len(self.answers), int(self.totalAmountWon), len(self.correctPlayers)))
+                else:
+                    self.sendMessage(self.registryValue('notAnswered', self.channel) % answer)
+
+                #reset stuff
+                self.answers = []
+                self.alternativeAnswers = []
+                self.question = ''
+                self.questionOver = True
+
+                if self.stopPending == True:
+                    self.stop()
+                    return
+
+                # provide next question
+                sleepTime = self.registryValue('sleepTime',self.channel)
+                if sleepTime < 2:
+                    sleepTime = 2
+                    log.error('sleepTime was set too low(<2 seconds). setting to 2 seconds')
+                sleepTime = time.time() + sleepTime
+                self.queueEvent(sleepTime, self.nextQuestion)
+            else:
+                # give out more hints
+                self.nextHint()
+
         def nextHint(self):
             """
                 Max hints have not been reached, and no answer is found, need more hints
@@ -991,6 +994,7 @@ class TriviaTime(callbacks.Plugin):
 
             # reset and increment
             self.questionOver = False
+            self.questionRepeated = False
             self.shownHint = False
             self.skipVoteCount = {}
             self.question = ''
@@ -1061,6 +1065,28 @@ class TriviaTime(callbacks.Plugin):
                 func()
             if self.active:
                 schedule.addEvent(event, timeout, '%s.trivia' % self.channel)
+
+        def repeatQuestion(self):
+            if self.questionRepeated == True:
+                return
+            if self.questionOver == True:
+                return
+            self.questionRepeated = True
+            try:
+                tempQuestion = self.question.rstrip()
+                if tempQuestion[-1:] != '?':
+                    tempQuestion += ' ?'
+
+                # bold the q
+                questionText = '%s' % (tempQuestion)
+
+                # KAOS? report # of answers
+                if len(self.answers) > 1:
+                    questionText += ' %d possible answers' % (len(self.answers))
+
+                self.sendMessage('.%s. %s' % (self.numAsked, questionText), 1, 9)
+            except AttributeError:
+                pass
 
         def removeEvent(self):
             """
@@ -1163,235 +1189,16 @@ class TriviaTime(callbacks.Plugin):
                                                                       # otherwise errors
             self.conn.text_factory = str
 
-        def insertUserLog(self, username, score, numAnswered, timeTaken, day=None, month=None, year=None, epoch=None):
-            if day == None and month == None and year == None:
-                dateObject = datetime.date.today()
-                day   = dateObject.day
-                month = dateObject.month
-                year  = dateObject.year
-            score = int(score)
-            if epoch is None:
-                epoch = int(time.mktime(time.localtime()))
-            if self.userLogExists(username, day, month, year):
-                return self.updateUserLog(username, score, numAnswered, timeTaken, day, month, year, epoch)
-            c = self.conn.cursor()
-            username = str.lower(username)
-            scoreAvg = 'NULL'
-            if numAnswered >= 1:
-                scoreAvg = score / numAnswered
-            c.execute('insert into triviauserlog values (NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?)', 
-                                    (username, score, numAnswered, day, month, year, epoch, timeTaken, scoreAvg))
-            self.conn.commit()
-            c.close()
-
-        def insertUser(self, username, numReported=0, numAccepted=0):
-            username = str.lower(username)
-            if self.userExists(username):
-                return self.updateUser(username)
-            c = self.conn.cursor()
-            c.execute('insert into triviausers values (NULL, ?, ?, ?)', (username,numReported,numAccepted))
-            self.conn.commit()
-            c.close()
-
-        def insertGame(self, channel, numAsked=0, epoch=None):
-            channel = str.lower(channel)
-            lastWinner  = str.lower(lastWinner)
-            if self.gameExists(channel):
-                return self.updateGame(channel, numAsked)
-            if epoch is None:
-                epoch = int(time.mktime(time.localtime()))
-            c = self.conn.cursor()
-            c.execute('insert into triviagames values (NULL, ?, ?, ?)', (channel,numAsked,epoch))
-            self.conn.commit()
-            c.close()
-
-        def insertGameLog(self, channel, roundNumber, lineNumber, questionText, askedAt=None):
-            channel = str.lower(channel)
-            if askedAt is None:
-                askedAt = int(time.mktime(time.localtime()))
-            c = self.conn.cursor()
-            c.execute('insert into triviagameslog values (NULL, ?, ?, ?, ?, ?)', (channel,roundNumber,lineNumber,questionText,askedAt))
-            self.conn.commit()
-            c.close()
-
-        def insertReport(self, channel, username, reportText, questionNum, reportedAt=None):
-            channel = str.lower(channel)
-            username = str.lower(username)
-            if reportedAt is None:
-                reportedAt = int(time.mktime(time.localtime()))
-            c = self.conn.cursor()
-            c.execute('insert into triviareport values (NULL, ?, ?, ?, ?, NULL, NULL, ?)', 
-                                        (channel,username,reportText,reportedAt,questionNum))
-            self.conn.commit()
-            c.close()
-
         def chunk(self, qs, rows=10000):
             """ Divides the data into 10000 rows each """
             for i in xrange(0, len(qs), rows):
                 yield qs[i:i+rows]
 
-        def insertQuestionsBulk(self, questions):
-            c = self.conn.cursor()
-            #skipped=0
-            divData = self.chunk(questions) # divide into 10000 rows each
-            for chunk in divData:
-                c.executemany('''insert into triviaquestion values (NULL, ?, ?, 0)''', 
-                                            chunk)
-            self.conn.commit()
-            skipped = self.removeDuplicateQuestions()
-            c.close()
-            return ((len(questions) - skipped), skipped)
-
-        def removeDuplicateQuestions(self):
-            c = self.conn.cursor()
-            c.execute('''delete from triviaquestion where id not in (select min(id) from triviaquestion GROUP BY question_canonical)''')
-            num = c.rowcount
-            self.conn.commit()
-            c.close()
-            return num
-
-        def insertEdit(self, questionId, questionText, username, channel, createdAt=None):
-            c = self.conn.cursor()
-            username = str.lower(username)
-            channel = str.lower(channel)
-            if createdAt is None:
-                createdAt = int(time.mktime(time.localtime()))
-            c.execute('insert into triviaedit values (NULL, ?, ?, NULL, ?, ?, ?)', 
-                                        (questionId,questionText,username,channel,createdAt))
-            self.conn.commit()
-            c.close()
-
-        def userLogExists(self, username, day, month, year):
-            username = str.lower(username)
-            c = self.conn.cursor()
-            args = (str.lower(username),day,month,year)
-            result = c.execute('select count(id) from triviauserlog where username=? and day=? and month=? and year=?', args)
-            rows = result.fetchone()[0]
-            c.close()
-            if rows > 0:
-                return True
-            return False
-
-        def userExists(self, username):
-            c = self.conn.cursor()
-            usr = (str.lower(username),)
-            result = c.execute('select count(id) from triviausers where lower(username)=?', usr)
-            rows = result.fetchone()[0]
-            c.close()
-            if rows > 0:
-                return True
-            return False
-
-        def gameExists(self, channel):
-            channel = str.lower(channel)
-            c = self.conn.cursor()
-            result = c.execute('select count(id) from triviagames where channel=?', (channel,))
-            rows = result.fetchone()[0]
-            c.close()
-            if rows > 0:
-                return True
-            return False
-
-        def questionExists(self, question):
-            c = self.conn.cursor()
-            result = c.execute('select count(id) from triviaquestion where question=? or question_canonical=?', (question,question))
-            rows = result.fetchone()[0]
-            c.close()
-            if rows > 0:
-                return True
-            return False
-
-        def questionIdExists(self, id):
-            c = self.conn.cursor()
-            result = c.execute('select count(id) from triviaquestion where id=?', (id,))
-            rows = result.fetchone()[0]
-            c.close()
-            if rows > 0:
-                return True
-            return False
-
-        def updateUserLog(self, username, score, numAnswered, timeTaken, day=None, month=None, year=None, epoch=None):
-            username = str.lower(username)
-            if not self.userExists(username):
-                self.insertUser(username)
-            if day == None and month == None and year == None:
-                dateObject = datetime.date.today()
-                day   = dateObject.day
-                month = dateObject.month
-                year  = dateObject.year
-            if epoch is None:
-                epoch = int(time.mktime(time.localtime()))
-            if not self.userLogExists(username, day, month, year):
-                return self.insertUserLog(username, score, numAnswered, timeTaken, day, month, year, epoch)
-            c = self.conn.cursor()
-            usr = str.lower(username)
-            scr = score
-            numAns = numAnswered
-            test = c.execute('''update triviauserlog set 
-                                points_made = points_made+?,
-                                average_time=( average_time * (1.0*num_answered/(num_answered+?)) + ? * (1.0*?/(num_answered+?)) ),
-                                average_score=( average_score * (1.0*num_answered/(num_answered+?)) + ? * (1.0*?/(num_answered+?)) ),
-                                num_answered = num_answered+?,
-                                last_updated = ?
-                                where username=?
-                                and day=? 
-                                and month=? 
-                                and year=?''', (scr,numAns,timeTaken,numAns,numAns,numAns,score,numAns,numAns,numAns,epoch,usr,day,month,year))
-            self.conn.commit()
-            c.close()
-
-        def updateUser(self, username, numReported=0, numAccepted=0):
-            username = str.lower(username)
-            if not self.userExists(username):
-                return self.insertUser(username, numReported, numAccepted)
-            c = self.conn.cursor()
-            c.execute('''update triviausers set
-                                num_reported=num_reported+?,
-                                num_accepted=num_accepted+?
-                                where username=?''', (numReported, numAccepted, username))
-            self.conn.commit()
-            c.close()
-            
-        def updateGame(self, channel, numAsked):
-            channel = str.lower(channel)
-            if not self.gameExists(channel):
-                return self.insertGame(channel, numAsked)
-            c = self.conn.cursor()
-            test = c.execute('''update triviagames set
-                                num_asked=?
-                                where channel=?''', (numAsked, channel))
-            self.conn.commit()
-            c.close()
-
-        def updateGameStreak(self, channel, lastWinner, streak):
-            channel = str.lower(channel)
-            lastWinner  = str.lower(lastWinner)
-            if not self.gameExists(channel):
-                return self.insertGame(channel, 0, None)
-            c = self.conn.cursor()
-            test = c.execute('''update triviagames set
-                                last_winner=?,
-                                streak=?
-                                where channel=?''', (lastWinner, streak, channel))
-            self.conn.commit()
-            c.close()
-
-        def updateGameRoundStarted(self, channel, lastRoundStarted):
-            channel = str.lower(channel)
-            if not self.gameExists(channel):
-                return self.insertGame(channel, numAsked)
-            c = self.conn.cursor()
-            test = c.execute('''update triviagames set
-                                round_started=?
-                                where channel=?''', (lastRoundStarted, channel))
-            self.conn.commit()
-            c.close()
-
-        def updateQuestion(self, id, newQuestion):
+        def deleteQuestion(self, questionId):
             c = self.conn.cursor()
             test = c.execute('''update triviaquestion set
-                                question=?
-                                where id=?''', (newQuestion, id))
+                                deleted=1
+                                where id=?''', (questionId,))
             self.conn.commit()
             c.close()
 
@@ -1451,121 +1258,40 @@ class TriviaTime(callbacks.Plugin):
                 pass
             c.close()
 
-        def makeUserTable(self):
+        def getRandomQuestionNotAsked(self, channel, roundStart):
             c = self.conn.cursor()
-            try:
-                c.execute('''create table triviausers (
-                        id integer primary key autoincrement, 
-                        username text not null unique,
-                        num_reported integer,
-                        num_accepted integer
-                        )''')
-            except:
-                pass
-            self.conn.commit()
+            c.execute('''select * from triviaquestion 
+                            where id not in (select line_num from triviagameslog where deleted=1 or (channel=? and asked_at>=?))
+                            order by random() limit 1''', (str.lower(channel),roundStart))
+            data = []
+            for row in c:
+                data.append(row)
             c.close()
+            return data
 
-        def makeUserLogTable(self):
+        def getQuestionByRound(self, roundNumber, channel):
+            channel=str.lower(channel)
             c = self.conn.cursor()
-            try:
-                c.execute('''create table triviauserlog (
-                        id integer primary key autoincrement, 
-                        username text,
-                        points_made integer,
-                        num_answered integer,
-                        day integer, 
-                        month integer, 
-                        year integer,
-                        last_updated integer,
-                        average_time integer,
-                        average_score integer,
-                        unique(username, day, month, year) on conflict replace
-                        )''')
-            except:
-                pass
-            self.conn.commit()
+            c.execute('''select * from triviaquestion where id=(select tgl.line_num
+                                                                from triviagameslog tgl
+                                                                where tgl.round_num=?
+                                                                and tgl.channel=?
+                                                                order by id desc
+                                                                limit 1)''', (roundNumber,channel))
+            data = []
+            for row in c:
+                data.append(row)
             c.close()
+            return data
 
-        def makeGameTable(self):
+        def getNumQuestionsNotAsked(self, channel, roundStart):
             c = self.conn.cursor()
-            try:
-                c.execute('''create table triviagames (
-                        id integer primary key autoincrement, 
-                        channel text not null unique,
-                        num_asked integer,
-                        round_started integer,
-                        last_winner text,
-                        streak integer
-                        )''')
-            except:
-                pass
-            self.conn.commit()
+            result = c.execute('''select count(id) from triviaquestion 
+                            where id not in (select line_num from triviagameslog where deleted=1 or (channel=? and asked_at>=?))''', 
+                                    (channel,roundStart))
+            rows = result.fetchone()[0]
             c.close()
-
-        def makeGameLogTable(self):
-            c = self.conn.cursor()
-            try:
-                c.execute('''create table triviagameslog (
-                        id integer primary key autoincrement, 
-                        channel text,
-                        round_num integer,
-                        line_num integer,
-                        question text,
-                        asked_at integer
-                        )''')
-            except:
-                pass
-            self.conn.commit()
-            c.close()
-
-        def makeReportTable(self):
-            c = self.conn.cursor()
-            try:
-                c.execute('''create table triviareport (
-                        id integer primary key autoincrement, 
-                        channel text,
-                        username text,
-                        report_text text,
-                        reported_at integer,
-                        fixed_at integer,
-                        fixed_by text,
-                        question_num integer
-                        )''')
-            except:
-                pass
-            self.conn.commit()
-            c.close()
-
-        def makeQuestionTable(self):
-            c = self.conn.cursor()
-            try:
-                c.execute('''create table triviaquestion (
-                        id integer primary key autoincrement,
-                        question_canonical text,
-                        question text,
-                        deleted integer not null default 0
-                        )''')
-            except:
-                pass
-            self.conn.commit()
-            c.close()
-
-        def makeEditTable(self):
-            c = self.conn.cursor()
-            try:
-                c.execute('''create table triviaedit (
-                        id integer primary key autoincrement,
-                        question_id integer,
-                        question text,
-                        status text,
-                        username text,
-                        channel text,
-                        created_at text
-                        )''')
-            except:
-                pass
-            self.conn.commit()
-            c.close()
+            return rows
 
         def getUserRanks(self, username):
             username = str.lower(username)
@@ -1899,13 +1625,38 @@ class TriviaTime(callbacks.Plugin):
 
         def getQuestion(self, id):
             c = self.conn.cursor()
-            result = c.execute('select * from triviaquestion where id=?', (id,))
-            return result.fetchone()
+            c.execute('select * from triviaquestion where id=? limit 1', (id,))
+            data = []
+            for row in c:
+                data.append(row)
             c.close()
+            return data
+
+        def getNumActiveThisWeek(self):
+            d = datetime.date.today()
+            weekday=d.weekday()
+            d -= datetime.timedelta(weekday)
+            weekSqlString = ''
+            for i in range(7):
+                if i > 0:
+                    weekSqlString += ' or ' 
+                weekSqlString += '''
+                            (tl.year=%d
+                            and tl.month=%d
+                            and tl.day=%d)''' % (d.year, d.month, d.day)
+                d += datetime.timedelta(1)
+            c = self.conn.cursor()
+            weekSql = '''select count(distinct(tl.username))
+                        from triviauserlog tl
+                        where '''
+            weekSql += weekSqlString
+            result = c.execute(weekSql)
+            rows = result.fetchone()[0]
+            return rows
 
         def getReportById(self, id):
             c = self.conn.cursor()
-            c.execute('select * from triviareport where id=?', (id,))
+            c.execute('select * from triviareport where id=? limit 1', (id,))
             data = []
             for row in c:
                 data.append(row)
@@ -1923,7 +1674,7 @@ class TriviaTime(callbacks.Plugin):
 
         def getEditById(self, id):
             c = self.conn.cursor()
-            c.execute('select * from triviaedit where id=?', (id,))
+            c.execute('select * from triviaedit where id=? limit 1', (id,))
             data = []
             for row in c:
                 data.append(row)
@@ -1944,66 +1695,15 @@ class TriviaTime(callbacks.Plugin):
             c.close()
             return rows
 
-        def wasUserActiveIn(self,username,timeSeconds):
-            username = str.lower(username)
-            epoch = int(time.mktime(time.localtime()))
-            dateObject = datetime.date.today()
-            day   = dateObject.day
-            month = dateObject.month
-            year  = dateObject.year
+        def gameExists(self, channel):
+            channel = str.lower(channel)
             c = self.conn.cursor()
-            result = c.execute('''select count(*) from triviauserlog 
-                        where day=? and month=? and year=?
-                        and username=? and last_updated>?''', (day, month, year,username,(epoch-timeSeconds)))
+            result = c.execute('select count(id) from triviagames where channel=?', (channel,))
             rows = result.fetchone()[0]
             c.close()
             if rows > 0:
                 return True
             return False
-
-        def getRandomQuestionNotAsked(self, channel, roundStart):
-            c = self.conn.cursor()
-            c.execute('''select * from triviaquestion 
-                            where id not in (select line_num from triviagameslog where deleted=1 or (channel=? and asked_at>=?))
-                            order by random()''', (str.lower(channel),roundStart))
-            data = []
-            for row in c:
-                data.append(row)
-            c.close()
-            return data
-
-        def getQuestion(self, id):
-            c = self.conn.cursor()
-            c.execute('''select * from triviaquestion where id=?''', (id,))
-            data = []
-            for row in c:
-                data.append(row)
-            c.close()
-            return data
-
-        def getQuestionByRound(self, roundNumber, channel):
-            channel=str.lower(channel)
-            c = self.conn.cursor()
-            c.execute('''select * from triviaquestion where id=(select tgl.line_num
-                                                                from triviagameslog tgl
-                                                                where tgl.round_num=?
-                                                                and tgl.channel=?
-                                                                order by id desc
-                                                                limit 10)''', (roundNumber,channel))
-            data = []
-            for row in c:
-                data.append(row)
-            c.close()
-            return data
-
-        def getNumQuestionsNotAsked(self, channel, roundStart):
-            c = self.conn.cursor()
-            result = c.execute('''select count(id) from triviaquestion 
-                            where id not in (select line_num from triviagameslog where deleted=1 or (channel=? and asked_at>=?))''', 
-                                    (channel,roundStart))
-            rows = result.fetchone()[0]
-            c.close()
-            return rows
 
         def getEditTop3(self):
             c = self.conn.cursor()
@@ -2013,6 +1713,421 @@ class TriviaTime(callbacks.Plugin):
                 data.append(row)
             c.close()
             return data
+
+        def insertUserLog(self, username, score, numAnswered, timeTaken, day=None, month=None, year=None, epoch=None):
+            if day == None and month == None and year == None:
+                dateObject = datetime.date.today()
+                day   = dateObject.day
+                month = dateObject.month
+                year  = dateObject.year
+            score = int(score)
+            if epoch is None:
+                epoch = int(time.mktime(time.localtime()))
+            if self.userLogExists(username, day, month, year):
+                return self.updateUserLog(username, score, numAnswered, timeTaken, day, month, year, epoch)
+            c = self.conn.cursor()
+            username = str.lower(username)
+            scoreAvg = 'NULL'
+            if numAnswered >= 1:
+                scoreAvg = score / numAnswered
+            c.execute('insert into triviauserlog values (NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?)', 
+                                    (username, score, numAnswered, day, month, year, epoch, timeTaken, scoreAvg))
+            self.conn.commit()
+            c.close()
+
+        def insertUser(self, username, numReported=0, numAccepted=0):
+            username = str.lower(username)
+            if self.userExists(username):
+                return self.updateUser(username)
+            c = self.conn.cursor()
+            c.execute('insert into triviausers values (NULL, ?, ?, ?)', (username,numReported,numAccepted))
+            self.conn.commit()
+            c.close()
+
+        def insertGame(self, channel, numAsked=0, epoch=None):
+            channel = str.lower(channel)
+            lastWinner  = str.lower(lastWinner)
+            if self.gameExists(channel):
+                return self.updateGame(channel, numAsked)
+            if epoch is None:
+                epoch = int(time.mktime(time.localtime()))
+            c = self.conn.cursor()
+            c.execute('insert into triviagames values (NULL, ?, ?, ?)', (channel,numAsked,epoch))
+            self.conn.commit()
+            c.close()
+
+        def insertGameLog(self, channel, roundNumber, lineNumber, questionText, askedAt=None):
+            channel = str.lower(channel)
+            if askedAt is None:
+                askedAt = int(time.mktime(time.localtime()))
+            c = self.conn.cursor()
+            c.execute('insert into triviagameslog values (NULL, ?, ?, ?, ?, ?)', (channel,roundNumber,lineNumber,questionText,askedAt))
+            self.conn.commit()
+            c.close()
+
+        def insertReport(self, channel, username, reportText, questionNum, reportedAt=None):
+            channel = str.lower(channel)
+            username = str.lower(username)
+            if reportedAt is None:
+                reportedAt = int(time.mktime(time.localtime()))
+            c = self.conn.cursor()
+            c.execute('insert into triviareport values (NULL, ?, ?, ?, ?, NULL, NULL, ?)', 
+                                        (channel,username,reportText,reportedAt,questionNum))
+            self.conn.commit()
+            c.close()
+
+        def insertQuestionsBulk(self, questions):
+            c = self.conn.cursor()
+            #skipped=0
+            divData = self.chunk(questions) # divide into 10000 rows each
+            for chunk in divData:
+                c.executemany('''insert into triviaquestion values (NULL, ?, ?, 0)''', 
+                                            chunk)
+            self.conn.commit()
+            skipped = self.removeDuplicateQuestions()
+            c.close()
+            return ((len(questions) - skipped), skipped)
+
+        def insertEdit(self, questionId, questionText, username, channel, createdAt=None):
+            c = self.conn.cursor()
+            username = str.lower(username)
+            channel = str.lower(channel)
+            if createdAt is None:
+                createdAt = int(time.mktime(time.localtime()))
+            c.execute('insert into triviaedit values (NULL, ?, ?, NULL, ?, ?, ?)', 
+                                        (questionId,questionText,username,channel,createdAt))
+            self.conn.commit()
+            c.close()
+
+        def makeUserTable(self):
+            c = self.conn.cursor()
+            try:
+                c.execute('''create table triviausers (
+                        id integer primary key autoincrement, 
+                        username text not null unique,
+                        num_reported integer,
+                        num_accepted integer
+                        )''')
+            except:
+                pass
+            self.conn.commit()
+            c.close()
+
+        def makeUserLogTable(self):
+            c = self.conn.cursor()
+            try:
+                c.execute('''create table triviauserlog (
+                        id integer primary key autoincrement, 
+                        username text,
+                        points_made integer,
+                        num_answered integer,
+                        day integer, 
+                        month integer, 
+                        year integer,
+                        last_updated integer,
+                        average_time integer,
+                        average_score integer,
+                        unique(username, day, month, year) on conflict replace
+                        )''')
+            except:
+                pass
+            self.conn.commit()
+            c.close()
+
+        def makeGameTable(self):
+            c = self.conn.cursor()
+            try:
+                c.execute('''create table triviagames (
+                        id integer primary key autoincrement, 
+                        channel text not null unique,
+                        num_asked integer,
+                        round_started integer,
+                        last_winner text,
+                        streak integer
+                        )''')
+            except:
+                pass
+            self.conn.commit()
+            c.close()
+
+        def makeGameLogTable(self):
+            c = self.conn.cursor()
+            try:
+                c.execute('''create table triviagameslog (
+                        id integer primary key autoincrement, 
+                        channel text,
+                        round_num integer,
+                        line_num integer,
+                        question text,
+                        asked_at integer
+                        )''')
+            except:
+                pass
+            self.conn.commit()
+            c.close()
+
+        def makeReportTable(self):
+            c = self.conn.cursor()
+            try:
+                c.execute('''create table triviareport (
+                        id integer primary key autoincrement, 
+                        channel text,
+                        username text,
+                        report_text text,
+                        reported_at integer,
+                        fixed_at integer,
+                        fixed_by text,
+                        question_num integer
+                        )''')
+            except:
+                pass
+            self.conn.commit()
+            c.close()
+
+        def makeQuestionTable(self):
+            c = self.conn.cursor()
+            try:
+                c.execute('''create table triviaquestion (
+                        id integer primary key autoincrement,
+                        question_canonical text,
+                        question text,
+                        deleted integer not null default 0
+                        )''')
+            except:
+                pass
+            self.conn.commit()
+            c.close()
+
+        def makeEditTable(self):
+            c = self.conn.cursor()
+            try:
+                c.execute('''create table triviaedit (
+                        id integer primary key autoincrement,
+                        question_id integer,
+                        question text,
+                        status text,
+                        username text,
+                        channel text,
+                        created_at text
+                        )''')
+            except:
+                pass
+            self.conn.commit()
+            c.close()
+
+        def questionExists(self, question):
+            c = self.conn.cursor()
+            result = c.execute('select count(id) from triviaquestion where question=? or question_canonical=?', (question,question))
+            rows = result.fetchone()[0]
+            c.close()
+            if rows > 0:
+                return True
+            return False
+
+        def questionIdExists(self, id):
+            c = self.conn.cursor()
+            result = c.execute('select count(id) from triviaquestion where id=?', (id,))
+            rows = result.fetchone()[0]
+            c.close()
+            if rows > 0:
+                return True
+            return False
+
+        def removeDuplicateQuestions(self):
+            c = self.conn.cursor()
+            c.execute('''delete from triviaquestion where id not in (select min(id) from triviaquestion GROUP BY question_canonical)''')
+            num = c.rowcount
+            self.conn.commit()
+            c.close()
+            return num
+
+        def removeEdit(self, editId):
+            c = self.conn.cursor()
+            c.execute('''delete from triviaedit
+                        where id=?''', (editId,))
+            self.conn.commit()
+            c.close()
+
+        def removeReport(self, repId):
+            c = self.conn.cursor()
+            c.execute('''delete from triviareport
+                        where id=?''', (repId,))
+            self.conn.commit()
+            c.close()
+
+        def removeUserLogs(self, username):
+            username = str.lower(username)
+            c = self.conn.cursor()
+            c.execute('''delete from triviauserlog
+                        where username=?''', (username,))
+            self.conn.commit()
+            c.close()
+
+        def transferUserLogs(self, userFrom, userTo): 
+            userFrom = str.lower(userFrom) 
+            userTo = str.lower(userTo)
+            c = self.conn.cursor()
+            c.execute('''
+                    update triviauserlog
+                    set num_answered=num_answered
+                            +ifnull(
+                                    (
+                                            select t3.num_answered 
+                                            from triviauserlog t3 
+                                            where t3.day=triviauserlog.day 
+                                            and t3.month=triviauserlog.month 
+                                            and t3.year=triviauserlog.year 
+                                            and t3.username=?
+                                    )
+                            ,0),
+                    points_made=points_made
+                            +ifnull(
+                                    (
+                                            select t2.points_made 
+                                            from triviauserlog t2 
+                                            where t2.day=triviauserlog.day 
+                                            and t2.month=triviauserlog.month 
+                                            and t2.year=triviauserlog.year 
+                                            and t2.username=?
+                                    )
+                            ,0)
+                    where id in (
+                            select id 
+                            from triviauserlog tl 
+                            where username=? 
+                            and exists (
+                                    select id 
+                                    from triviauserlog tl2 
+                                    where tl2.day=tl.day
+                                    and tl2.month=tl.month 
+                                    and tl2.year=tl.year 
+                                    and username=?
+                            )
+                    )
+            ''', (userFrom,userFrom,userTo,userFrom))
+
+            c.execute('''
+                    update triviauserlog
+                    set username=?
+                    where username=? 
+                    and not exists (
+                            select 1 
+                            from triviauserlog tl 
+                            where tl.day=triviauserlog.day 
+                            and tl.month=triviauserlog.month 
+                            and tl.year=triviauserlog.year 
+                            and tl.username=?
+                    )
+            ''',(userTo, userFrom, userTo))
+            self.conn.commit()
+
+            self.removeUserLogs(userFrom)
+
+        def userLogExists(self, username, day, month, year):
+            username = str.lower(username)
+            c = self.conn.cursor()
+            args = (str.lower(username),day,month,year)
+            result = c.execute('select count(id) from triviauserlog where username=? and day=? and month=? and year=?', args)
+            rows = result.fetchone()[0]
+            c.close()
+            if rows > 0:
+                return True
+            return False
+
+        def userExists(self, username):
+            c = self.conn.cursor()
+            usr = (str.lower(username),)
+            result = c.execute('select count(id) from triviausers where lower(username)=?', usr)
+            rows = result.fetchone()[0]
+            c.close()
+            if rows > 0:
+                return True
+            return False
+
+        def updateUserLog(self, username, score, numAnswered, timeTaken, day=None, month=None, year=None, epoch=None):
+            username = str.lower(username)
+            if not self.userExists(username):
+                self.insertUser(username)
+            if day == None and month == None and year == None:
+                dateObject = datetime.date.today()
+                day   = dateObject.day
+                month = dateObject.month
+                year  = dateObject.year
+            if epoch is None:
+                epoch = int(time.mktime(time.localtime()))
+            if not self.userLogExists(username, day, month, year):
+                return self.insertUserLog(username, score, numAnswered, timeTaken, day, month, year, epoch)
+            c = self.conn.cursor()
+            usr = str.lower(username)
+            scr = score
+            numAns = numAnswered
+            test = c.execute('''update triviauserlog set 
+                                points_made = points_made+?,
+                                average_time=( average_time * (1.0*num_answered/(num_answered+?)) + ? * (1.0*?/(num_answered+?)) ),
+                                average_score=( average_score * (1.0*num_answered/(num_answered+?)) + ? * (1.0*?/(num_answered+?)) ),
+                                num_answered = num_answered+?,
+                                last_updated = ?
+                                where username=?
+                                and day=? 
+                                and month=? 
+                                and year=?''', (scr,numAns,timeTaken,numAns,numAns,numAns,score,numAns,numAns,numAns,epoch,usr,day,month,year))
+            self.conn.commit()
+            c.close()
+
+        def updateUser(self, username, numReported=0, numAccepted=0):
+            username = str.lower(username)
+            if not self.userExists(username):
+                return self.insertUser(username, numReported, numAccepted)
+            c = self.conn.cursor()
+            c.execute('''update triviausers set
+                                num_reported=num_reported+?,
+                                num_accepted=num_accepted+?
+                                where username=?''', (numReported, numAccepted, username))
+            self.conn.commit()
+            c.close()
+            
+        def updateGame(self, channel, numAsked):
+            channel = str.lower(channel)
+            if not self.gameExists(channel):
+                return self.insertGame(channel, numAsked)
+            c = self.conn.cursor()
+            test = c.execute('''update triviagames set
+                                num_asked=?
+                                where channel=?''', (numAsked, channel))
+            self.conn.commit()
+            c.close()
+
+        def updateGameStreak(self, channel, lastWinner, streak):
+            channel = str.lower(channel)
+            lastWinner  = str.lower(lastWinner)
+            if not self.gameExists(channel):
+                return self.insertGame(channel, 0, None)
+            c = self.conn.cursor()
+            test = c.execute('''update triviagames set
+                                last_winner=?,
+                                streak=?
+                                where channel=?''', (lastWinner, streak, channel))
+            self.conn.commit()
+            c.close()
+
+        def updateGameRoundStarted(self, channel, lastRoundStarted):
+            channel = str.lower(channel)
+            if not self.gameExists(channel):
+                return self.insertGame(channel, numAsked)
+            c = self.conn.cursor()
+            test = c.execute('''update triviagames set
+                                round_started=?
+                                where channel=?''', (lastRoundStarted, channel))
+            self.conn.commit()
+            c.close()
+
+        def updateQuestion(self, id, newQuestion):
+            c = self.conn.cursor()
+            test = c.execute('''update triviaquestion set
+                                question=?
+                                where id=?''', (newQuestion, id))
+            self.conn.commit()
+            c.close()
 
         def viewDayTop10(self):
             dateObject = datetime.date.today()
@@ -2121,117 +2236,22 @@ class TriviaTime(callbacks.Plugin):
             c.close()
             return data
 
-        def getNumActiveThisWeek(self):
-            d = datetime.date.today()
-            weekday=d.weekday()
-            d -= datetime.timedelta(weekday)
-            weekSqlString = ''
-            for i in range(7):
-                if i > 0:
-                    weekSqlString += ' or ' 
-                weekSqlString += '''
-                            (tl.year=%d
-                            and tl.month=%d
-                            and tl.day=%d)''' % (d.year, d.month, d.day)
-                d += datetime.timedelta(1)
-            c = self.conn.cursor()
-            weekSql = '''select count(distinct(tl.username))
-                        from triviauserlog tl
-                        where '''
-            weekSql += weekSqlString
-            result = c.execute(weekSql)
-            rows = result.fetchone()[0]
-            return rows
-
-        def deleteQuestion(self, questionId):
-            c = self.conn.cursor()
-            test = c.execute('''update triviaquestion set
-                                deleted=1
-                                where id=?''', (questionId,))
-            self.conn.commit()
-            c.close()
-
-        def transferUserLogs(self, userFrom, userTo): 
-            userFrom = str.lower(userFrom) 
-            userTo = str.lower(userTo)
-            c = self.conn.cursor()
-            c.execute('''
-                    update triviauserlog
-                    set num_answered=num_answered
-                            +ifnull(
-                                    (
-                                            select t3.num_answered 
-                                            from triviauserlog t3 
-                                            where t3.day=triviauserlog.day 
-                                            and t3.month=triviauserlog.month 
-                                            and t3.year=triviauserlog.year 
-                                            and t3.username=?
-                                    )
-                            ,0),
-                    points_made=points_made
-                            +ifnull(
-                                    (
-                                            select t2.points_made 
-                                            from triviauserlog t2 
-                                            where t2.day=triviauserlog.day 
-                                            and t2.month=triviauserlog.month 
-                                            and t2.year=triviauserlog.year 
-                                            and t2.username=?
-                                    )
-                            ,0)
-                    where id in (
-                            select id 
-                            from triviauserlog tl 
-                            where username=? 
-                            and exists (
-                                    select id 
-                                    from triviauserlog tl2 
-                                    where tl2.day=tl.day
-                                    and tl2.month=tl.month 
-                                    and tl2.year=tl.year 
-                                    and username=?
-                            )
-                    )
-            ''', (userFrom,userFrom,userTo,userFrom))
-
-            c.execute('''
-                    update triviauserlog
-                    set username=?
-                    where username=? 
-                    and not exists (
-                            select 1 
-                            from triviauserlog tl 
-                            where tl.day=triviauserlog.day 
-                            and tl.month=triviauserlog.month 
-                            and tl.year=triviauserlog.year 
-                            and tl.username=?
-                    )
-            ''',(userTo, userFrom, userTo))
-            self.conn.commit()
-
-            self.removeUserLogs(userFrom)
-
-        def removeEdit(self, editId):
-            c = self.conn.cursor()
-            c.execute('''delete from triviaedit
-                        where id=?''', (editId,))
-            self.conn.commit()
-            c.close()
-
-        def removeReport(self, repId):
-            c = self.conn.cursor()
-            c.execute('''delete from triviareport
-                        where id=?''', (repId,))
-            self.conn.commit()
-            c.close()
-
-        def removeUserLogs(self, username):
+        def wasUserActiveIn(self,username,timeSeconds):
             username = str.lower(username)
+            epoch = int(time.mktime(time.localtime()))
+            dateObject = datetime.date.today()
+            day   = dateObject.day
+            month = dateObject.month
+            year  = dateObject.year
             c = self.conn.cursor()
-            c.execute('''delete from triviauserlog
-                        where username=?''', (username,))
-            self.conn.commit()
+            result = c.execute('''select count(*) from triviauserlog 
+                        where day=? and month=? and year=?
+                        and username=? and last_updated>?''', (day, month, year,username,(epoch-timeSeconds)))
+            rows = result.fetchone()[0]
             c.close()
+            if rows > 0:
+                return True
+            return False
 
 Class = TriviaTime
 # vim:set shiftwidth=4 softtabstop=4 expandtab textwidth=79:
