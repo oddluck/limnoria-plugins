@@ -116,6 +116,13 @@ class TriviaTime(callbacks.Plugin):
                 irc.sendMsg(ircmsgs.privmsg(channel, 'Giving MVP to %s for being top #%d this WEEK' % (username, user[15])))
                 irc.queueMsg(ircmsgs.voice(channel, username))
 
+    def doNotice(self,irc,msg):
+        username = str.lower(msg.nick)
+        if username in self.pings:
+            pingTime = float(time.time() - self.pings[username][0])
+            irc.sendMsg(ircmsgs.privmsg(self.pings[username][1], """ %s Pong: response %0.2f seconds""" % (username, pingTime)))
+            del self.pings[username]
+
     def deletequestion(self, irc, msg, arg, id):
         """<question id>
             Deletes a question from the database.
@@ -397,6 +404,22 @@ class TriviaTime(callbacks.Plugin):
             irc.error('Sorry, round %d could not be found in the database')
     report = wrap(report, ['int', 'text'])
 
+    def latency(self, irc, msg, arg):
+        channel = ircutils.toLower(msg.args[0])
+        username = str.lower(msg.nick)
+        expiredPings = []
+
+        for ping in self.pings:
+            if time.time() - self.pings[ping][0] > 60:
+                expiredPings.append(ping)
+        for ping in expiredPings:
+            del expiredPings[ping]
+        if username in self.pings:
+            return
+        self.pings[username] = (time.time(), channel)
+        irc.sendMsg(ircmsgs.privmsg('rootcoma', """\x01PING ping\x01"""))
+    latency = wrap(latency)
+
     def skip(self, irc, msg, arg):
         """
             Skip a question
@@ -461,12 +484,7 @@ class TriviaTime(callbacks.Plugin):
             pass
         irc.sendMsg(ircmsgs.privmsg(channel, 'Skipped question! (%d of %d voted)' % (len(self.games[channel].skipVoteCount), totalActive)))
 
-        timeout = self.registryValue('timeout', channel)
-        if timeout < 2:
-            timout = 2
-            log.error('timeout was set too low(<2 seconds). setting to 2 seconds')
-        timeout += time.time()
-        self.games[channel].queueEvent(timeout, self.games[channel].nextQuestion)
+        self.games[channel].nextQuestion()
         irc.noReply()
     skip = wrap(skip)
 
