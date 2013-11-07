@@ -648,18 +648,17 @@ class TriviaTime(callbacks.Plugin):
         irc.noReply()
     time = wrap(time)
 
-    """
     def transferpoints(self, irc, msg, arg, userfrom, userto):
-        '''<userfrom> <userto>
+        """<userfrom> <userto>
 
         Transfers all points and records from one user to another
-        '''
+        """
         userfrom = str.lower(userfrom)
         userto = str.lower(userto)
         self.storage.transferUserLogs(userfrom, userto)
         irc.reply('Done! Transfered records from %s to %s' % (userfrom, userto))
     transferpoints = wrap(transferpoints, ['nick', 'nick'])
-    """
+
 
     """
         Game instance
@@ -2153,6 +2152,66 @@ class TriviaTime(callbacks.Plugin):
             self.conn.commit()
             c.close()
 
+        def transferUserLogs(self, userFrom, userTo): 
+            userFrom = str.lower(userFrom) 
+            userTo = str.lower(userTo)
+            c = self.conn.cursor()
+            c.execute('''
+                    update triviauserlog
+                    set num_answered=num_answered
+                            +ifnull(
+                                    (
+                                            select t3.num_answered 
+                                            from triviauserlog t3 
+                                            where t3.day=triviauserlog.day 
+                                            and t3.month=triviauserlog.month 
+                                            and t3.year=triviauserlog.year 
+                                            and t3.username=?
+                                    )
+                            ,0),
+                            points_made=points_made
+                                    +ifnull(
+                                            (
+                                                    select t2.points_made 
+                                                    from triviauserlog t2 
+                                                    where t2.day=triviauserlog.day 
+                                                    and t2.month=triviauserlog.month 
+                                                    and t2.year=triviauserlog.year 
+                                                    and t2.username=?
+                                            )
+                                    ,0)
+                            where id in (
+                                    select id 
+                                    from triviauserlog tl 
+                                    where username=? 
+                                    and exists (
+                                            select id 
+                                            from triviauserlog tl2 
+                                            where tl2.day=tl.day 
+                                            and tl2.month=tl.month 
+                                            and tl2.year=tl.year 
+                                            and username=?
+                                    )
+                            )
+                    ''', (userFrom,userFrom,userTo,userFrom))
+
+            c.execute('''
+                    update triviauserlog
+                    set username=?
+                    where username=? 
+                    and not exists (
+                            select 1 
+                            from triviauserlog tl 
+                            where tl.day=triviauserlog.day 
+                            and tl.month=triviauserlog.month 
+                            and tl.year=triviauserlog.year 
+                            and tl.username=?
+                    )
+            ''',(userTo, userFrom, userTo))
+
+            self.removeUserLogs(userFrom)
+
+
         """
         def transferUserLogs(self, userFrom, userTo):  
             userFrom = str.lower(userFrom) 
@@ -2161,7 +2220,7 @@ class TriviaTime(callbacks.Plugin):
             c.execute('''update triviauserlog
                             set
                                 username=?,
-                                points_made=(select
+                                points_made=points_made+(select
                                                     tl2.points_made
                                                     from triviauserlog tl2
                                                     where 
@@ -2170,7 +2229,7 @@ class TriviaTime(callbacks.Plugin):
                                                     and tl2.month=month
                                                     and tl2.year=year)
                                                 ,
-                                num_answered=(select
+                                num_answered=points_made+(select
                                                     tl2.num_answered
                                                     from triviauserlog tl2
                                                     where
