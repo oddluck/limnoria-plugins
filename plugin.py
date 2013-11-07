@@ -171,9 +171,12 @@ class TriviaTime(callbacks.Plugin):
         """
         Get TriviaTime information, how many questions/users in database, time, etc
         """
+        numActiveThisWeek = self.storage.getNumActiveThisWeek()
         infoText = ''' TriviaTime by #trivialand on Freenode'''
         irc.sendMsg(ircmsgs.privmsg(msg.args[0], infoText))
-        infoText = '''\x02 %d Users\x02 on scoreboard  Time is %s ''' % (self.storage.getNumUser(),time.asctime(time.localtime()))
+        infoText = ''' Time is %s ''' % (time.asctime(time.localtime(),))
+        irc.sendMsg(ircmsgs.privmsg(msg.args[0], infoText))
+        infoText = '''\x02 %d Users\x02 on scoreboard \x02%d Active This Week\x02''' % (self.storage.getNumUser(), numActiveThisWeek)
         irc.sendMsg(ircmsgs.privmsg(msg.args[0], infoText))
         numKaos = self.storage.getNumKAOS()
         numQuestionTotal = self.storage.getNumQuestions()
@@ -2119,6 +2122,28 @@ class TriviaTime(callbacks.Plugin):
                 data.append(row)
             c.close()
             return data
+
+        def getNumActiveThisWeek(self):
+            d = datetime.date.today()
+            weekday=d.weekday()
+            d -= datetime.timedelta(weekday)
+            weekSqlString = ''
+            for i in range(7):
+                if i > 0:
+                    weekSqlString += ' or ' 
+                weekSqlString += '''
+                            (tl.year=%d
+                            and tl.month=%d
+                            and tl.day=%d)''' % (d.year, d.month, d.day)
+                d += datetime.timedelta(1)
+            c = self.conn.cursor()
+            weekSql = '''select count(distinct(tl.username))
+                        from triviauserlog tl
+                        where '''
+            weekSql += weekSqlString
+            result = c.execute(weekSql)
+            rows = result.fetchone()[0]
+            return rows
 
         def deleteQuestion(self, questionId):
             c = self.conn.cursor()
