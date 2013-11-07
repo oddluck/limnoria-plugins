@@ -34,7 +34,8 @@ class TriviaTime(callbacks.Plugin):
 
         """ games info """
         self.games = {} # separate game for each channel
-        self.skips = {} # separate game for each channel
+        self.skips = {}
+        self.pings = {}
 
         """ connections """
         dbLocation = self.registryValue('sqlitedb')
@@ -114,6 +115,13 @@ class TriviaTime(callbacks.Plugin):
             elif user[15] <= numTopToVoice and user[8] > self.registryValue('minPointsVoiceWeek'):
                 irc.sendMsg(ircmsgs.privmsg(channel, 'Giving MVP to %s for being top #%d this WEEK' % (username, user[15])))
                 irc.queueMsg(ircmsgs.voice(channel, username))
+
+    def doPong(self, irc, msg):
+        username = str.lower(msg.args[1])
+        if username in self.pings:
+            pingTime = float(time.time() - self.pings[username][1])
+            irc.sendMsg(ircmsgs.privmsg(self.pings[username][0], """%s: Pong: response %0.2f seconds""" % (username, pingTime)))
+            del self.pings[username]
 
     def deletequestion(self, irc, msg, arg, id):
         """<question id>
@@ -247,6 +255,21 @@ class TriviaTime(callbacks.Plugin):
         irc.noReply()
     alltime = wrap(alltime)
     """
+
+    def latency(self, irc, msg, arg):
+        username = str.lower(msg.nick)
+        channel = ircutils.toLower(msg.args[0])
+        expiredPings = []
+        for ping in self.pings:
+            if time.time() - self.pings[ping] > 60:
+                expiredPings.append(ping)
+        for ping in expiredPings:
+            del expiredPings[ping]
+        if username in self.pings:
+            return
+        self.pings[username] = (channel, time.time())
+        irc.sendMsg(ircmsgs.ping(username))
+    latency = wrap(latency)
 
     def edit(self, irc, msg, arg, num, question):
         """<question number> <corrected text>
