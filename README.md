@@ -8,6 +8,7 @@ This plugin has been started and it almost ready. For developers user only.
 * New Style design - remove colors and use bold where necessary
 * Update permissions - prevent the typical user from accessing admin commands
 * when question is skipped start the next question immediately
+* add amount of active players in last seven days to .info
 
 ## Second Priority
 These items are bonus features that will not effect gameplay.
