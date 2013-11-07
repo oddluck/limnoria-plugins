@@ -208,13 +208,13 @@ class TriviaTime(callbacks.Plugin):
 
     def day(self, irc, msg, arg):
         """
-            Gives the top10 scores of the day
+            Displays the top ten scores of the day
         """
         channel = ircutils.toLower(msg.args[0])
         tops = self.storage.viewDayTop10()
-        topsText = '\x0301,08 TODAYS Top 10 - '
+        topsText = 'Today\'s Top 10 Players: '
         for i in range(len(tops)):
-            topsText += '\x02\x0301,08 #%d:\x02 \x0300,04 %s %d ' % ((i+1) , tops[i][1], tops[i][2])
+            topsText += '\x02 #%d:\x02 %s %d ' % ((i+1) , tops[i][1], tops[i][2])
         irc.sendMsg(ircmsgs.privmsg(channel, topsText))
         irc.noReply()
     day = wrap(day)
@@ -328,13 +328,13 @@ class TriviaTime(callbacks.Plugin):
 
     def month(self, irc, msg, arg):
         """
-            Gives the top10 scores of the month
+            Displays the top ten scores of the month
         """
         channel = ircutils.toLower(msg.args[0])
         tops = self.storage.viewMonthTop10()
-        topsText = '\x0301,08 This MONTHS Top 10 Players - '
+        topsText = 'This MONTHS Top 10 Players: '
         for i in range(len(tops)):
-            topsText += '\x02\x0301,08 #%d:\x02 \x0300,04 %s %d ' % ((i+1) , tops[i][1], tops[i][2])
+            topsText += '\x02 #%d:\x02 %s %d ' % ((i+1) , tops[i][1], tops[i][2])
         irc.sendMsg(ircmsgs.privmsg(channel, topsText))
         irc.noReply()
     month = wrap(month)
@@ -485,14 +485,14 @@ class TriviaTime(callbacks.Plugin):
 
     def showstats(self, irc, msg, arg, username):
         """
-            Get someones rank, score & questions asked for day, month, year
+            Show a  player's rank, score & questions asked for day, month, and year
         """
         channel = ircutils.toLower(msg.args[0])
         info = self.storage.getUser(str.lower(username))
         if len(info) < 3:
             irc.error("I couldn't find you in my database.")
         else:
-            infoText = '\x0305,08 %s\'s Stats:\x0301,08 Points (answers) \x0305,08Today: #%d %d (%d) This Week: #%d %d (%d) This Month: #%d %d (%d) This Year: #%d %d (%d)' % (info[1], info[16], info[10], info[11], info[15], info[8], info[9], info[14], info[6], info[7], info[13], info[4], info[5])
+            infoText = '%s\'s Stats: Points (answers) \x02Today:\x02 #%d %d (%d) \x02This Week:\x02 #%d %d (%d) \x02This Month:\x02 #%d %d (%d) \x02This Year:\x02 #%d %d (%d)' % (info[1], info[16], info[10], info[11], info[15], info[8], info[9], info[14], info[6], info[7], info[13], info[4], info[5])
             irc.sendMsg(ircmsgs.privmsg(channel, infoText))
         irc.noReply()
     showstats = wrap(showstats,['nick'])
@@ -670,26 +670,26 @@ class TriviaTime(callbacks.Plugin):
 
     def week(self, irc, msg, arg):
         """
-            Gives the top10 scores of the week
+            Displays the top ten scores of the week
         """
         channel = ircutils.toLower(msg.args[0])
         tops = self.storage.viewWeekTop10()
-        topsText = '\x0301,08 This WEEKS Top 10 - '
+        topsText = 'This week\'s Top 10 Players: '
         for i in range(len(tops)):
-            topsText += '\x02\x0301,08 #%d:\x02 \x0300,04 %s %d ' % ((i+1) , tops[i][1], tops[i][2])
+            topsText += '\x02 #%d:\x02 %s %d ' % ((i+1) , tops[i][1], tops[i][2])
         irc.sendMsg(ircmsgs.privmsg(channel, topsText))
         irc.noReply()
     week = wrap(week)
 
     def year(self, irc, msg, arg):
         """
-            Gives the top10 scores of the year
+            Displays the top ten scores of the year
         """
         channel = ircutils.toLower(msg.args[0])
         tops = self.storage.viewYearTop10()
-        topsText = '\x0301,08 Top 10 Players - '
+        topsText = 'This Year\'s Top 10 Players: '
         for i in range(len(tops)):
-            topsText += '\x02\x0301,08 #%d:\x02 \x0300,04 %s %d ' % ((i+1) , tops[i][1], tops[i][2])
+            topsText += '\x02 #%d:\x02 %s %d ' % ((i+1) , tops[i][1], tops[i][2])
         irc.sendMsg(ircmsgs.privmsg(channel, topsText))
         irc.noReply()
     year = wrap(year)
@@ -930,7 +930,7 @@ class TriviaTime(callbacks.Plugin):
             divider = int(len(ans) * ratio * showPercentage + 1)
             if divider >= len(ans):
                 divider = len(ans)-1
-            hints = 'Hint: \x02\x0312'
+            hints = 'Hint: \x02'
             hints += ans[:divider]
             return hints
 
