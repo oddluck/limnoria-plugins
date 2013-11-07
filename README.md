@@ -1,7 +1,6 @@
-This plugin will be a feature packed trivia script for [Supybot][] in the future. Developers will need to refer to [TriviaTime][] for more information.
 This plugin has been started and it almost ready. For developers user only.
 
-# Plans
+# TODO
 ## Main Priority
 
 * if stop is used during a question, wait until after the question is finished to stop the game.
@@ -14,12 +13,6 @@ This plugin has been started and it almost ready. For developers user only.
 These items are bonus features that will not effect gameplay.
 * ping command
 * Merge points command
-
-and much more, based off of BogusTrivia and Trivia (supybot plugin)
-
-  [TriviaTime]: http://trivialand.org/triviatime/
-  [Supybot]: http://sourceforge.net/projects/supybot/
-  [Concept]: http://trivialand.org/triviatime/concept/
 
 # Configuration
 ## Setting up plugin
