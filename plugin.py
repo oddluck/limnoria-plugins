@@ -905,7 +905,9 @@ class TriviaTime(callbacks.Plugin):
                     unmasked = 0
                     for i in range(len(ans)-divider):
                         masked = ansend[i]
-                        if maskedInARow > 2 and unmasked < (len(ans)-divider):
+                        if masked == ' ':
+                            hintsend = ' '
+                        elif maskedInARow > 2 and unmasked < (len(ans)-divider):
                             lettersInARow += 1
                             hintsend += ansend[i]
                             unmasked += 1
