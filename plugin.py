@@ -245,21 +245,6 @@ class TriviaTime(callbacks.Plugin):
         irc.noReply()
     year = wrap(year)
 
-    """
-    def alltime(self, irc, msg, arg):
-        '''
-            Gives the top10 scores from all time
-        '''
-        channel = ircutils.toLower(msg.args[0])
-        tops = self.storage.viewAllTimeTop10()
-        topsText = '\x0301,08 ALL TIME Top 10 Players - '
-        for i in range(len(tops)):
-            topsText += '\x02\x0301,08 #%d:\x02 \x0300,04 %s %d ' % ((i+1) , tops[i][1], tops[i][2])
-        irc.sendMsg(ircmsgs.privmsg(channel, topsText))
-        irc.noReply()
-    alltime = wrap(alltime)
-    """
-
     def edit(self, irc, msg, arg, num, question):
         """<question number> <corrected text>
         Correct a question by providing the question number and the corrected text.
@@ -659,10 +644,7 @@ class TriviaTime(callbacks.Plugin):
         irc.reply('Done! Transfered records from %s to %s' % (userfrom, userto))
     transferpoints = wrap(transferpoints, ['nick', 'nick'])
 
-
-    """
-        Game instance
-    """
+    #Game instance
     class Game:
         """
             Main game logic, single game instance for each channel.
@@ -1130,18 +1112,6 @@ class TriviaTime(callbacks.Plugin):
             question = question[0]
             return (question[0], question[2])
 
-        """
-        def retrieveRandomQuestionFromFile(self):
-            '''
-                Helper function to grab a random line from a file
-            '''
-            filename = self.registryValue('quizfile')
-            filesLines = open(filename).readlines()
-            randomNumber = random.randint(1,len(filesLines))
-            randomLine = filesLines[randomNumber]
-            return (randomNumber, randomLine)
-        """
-
         def sendMessage(self, msg, color=None, bgcolor=None):
             """ <msg>, [<color>], [<bgcolor>]
 
@@ -1165,11 +1135,8 @@ class TriviaTime(callbacks.Plugin):
             if self.channel in self.games:
                 del self.games[self.channel]
             self.sendMessage(self.registryValue('stopped'), 2)
-        # end Game
 
-    """
-        Storage for users and points using sqlite3
-    """
+    #Storage for users and points using sqlite3
     class Storage:
         """
             Storage class
@@ -2169,31 +2136,31 @@ class TriviaTime(callbacks.Plugin):
                                             and t3.username=?
                                     )
                             ,0),
-                            points_made=points_made
-                                    +ifnull(
-                                            (
-                                                    select t2.points_made 
-                                                    from triviauserlog t2 
-                                                    where t2.day=triviauserlog.day 
-                                                    and t2.month=triviauserlog.month 
-                                                    and t2.year=triviauserlog.year 
-                                                    and t2.username=?
-                                            )
-                                    ,0)
-                            where id in (
-                                    select id 
-                                    from triviauserlog tl 
-                                    where username=? 
-                                    and exists (
-                                            select id 
-                                            from triviauserlog tl2 
-                                            where tl2.day=tl.day 
-                                            and tl2.month=tl.month 
-                                            and tl2.year=tl.year 
-                                            and username=?
+                    points_made=points_made
+                            +ifnull(
+                                    (
+                                            select t2.points_made 
+                                            from triviauserlog t2 
+                                            where t2.day=triviauserlog.day 
+                                            and t2.month=triviauserlog.month 
+                                            and t2.year=triviauserlog.year 
+                                            and t2.username=?
                                     )
+                            ,0)
+                    where id in (
+                            select id 
+                            from triviauserlog tl 
+                            where username=? 
+                            and exists (
+                                    select id 
+                                    from triviauserlog tl2 
+                                    where tl2.day=tl.day
+                                    and tl2.month=tl.month 
+                                    and tl2.year=tl.year 
+                                    and username=?
                             )
-                    ''', (userFrom,userFrom,userTo,userFrom))
+                    )
+            ''', (userFrom,userFrom,userTo,userFrom))
 
             c.execute('''
                     update triviauserlog
@@ -2210,38 +2177,6 @@ class TriviaTime(callbacks.Plugin):
             ''',(userTo, userFrom, userTo))
 
             self.removeUserLogs(userFrom)
-
-
-        """
-        def transferUserLogs(self, userFrom, userTo):  
-            userFrom = str.lower(userFrom) 
-            userTo = str.lower(userTo)
-            c = self.conn.cursor()
-            c.execute('''update triviauserlog
-                            set
-                                username=?,
-                                points_made=points_made+(select
-                                                    tl2.points_made
-                                                    from triviauserlog tl2
-                                                    where 
-                                                        tl2.username=?
-                                                    and tl2.day=day
-                                                    and tl2.month=month
-                                                    and tl2.year=year)
-                                                ,
-                                num_answered=points_made+(select
-                                                    tl2.num_answered
-                                                    from triviauserlog tl2
-                                                    where
-                                                        tl2.username=?
-                                                    and tl2.day=day
-                                                    and tl2.month=month
-                                                    and tl2.year=year)
-                            where
-                                username=?''', (userTo,userTo,userTo,userFrom))
-            self.conn.commit()
-            c.close()
-        """
 
         def removeEdit(self, editId):
             c = self.conn.cursor()
@@ -2264,7 +2199,6 @@ class TriviaTime(callbacks.Plugin):
                         where username=?''', (username,))
             self.conn.commit()
             c.close()
-
 
 Class = TriviaTime
 # vim:set shiftwidth=4 softtabstop=4 expandtab textwidth=79:
