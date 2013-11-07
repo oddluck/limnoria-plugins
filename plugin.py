@@ -576,7 +576,7 @@ class TriviaTime(callbacks.Plugin):
             irc.reply('type .showedit <edit number> to see more information')
     showedit = wrap(showedit, ['user', ('checkChannelCapability', 'triviamod'), optional('int')])
 
-    def showtempquestion(self, irc, msg, arg, num):
+    def showtempquestion(self, irc, msg, arg, user, channel, num):
         """[<temp question #>]
         Show questions awaiting approval
         """
@@ -594,7 +594,7 @@ class TriviaTime(callbacks.Plugin):
             for ques in q:
                 irc.reply('Temp Q #%d: %s'%(ques[0], ques[3]))
             irc.reply('type .showtempquestion <temp question #> to see more information')
-    showtempquestion = wrap(showtempquestion, [optional('int')])
+    showtempquestion = wrap(showtempquestion, ['user', ('checkChannelCapability', 'triviamod'),optional('int')])
 
     def start(self, irc, msg, args):
         """
