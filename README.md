@@ -4,7 +4,7 @@ This plugin has been started and it almost ready. For developers user only.
 ## Main Priority
 
 * New Style design - remove colors and use bold where necessary
-* Update permissions - prevent the typical user from accessing admin commands
+* Allow setting of location for website - such as /home/public_html 
 * continue streaks when trivia stops
 
 # Configuration
