@@ -3,16 +3,9 @@ This plugin has been started and it almost ready. For developers user only.
 # TODO
 ## Main Priority
 
-* if stop is used during a question, wait until after the question is finished to stop the game.
 * New Style design - remove colors and use bold where necessary
 * Update permissions - prevent the typical user from accessing admin commands
-* when question is skipped start the next question immediately
-* add amount of active players in last seven days to .info
-
-## Second Priority
-These items are bonus features that will not effect gameplay.
-* ping command
-* Merge points command
+* continue streaks when trivia stops
 
 # Configuration
 ## Setting up plugin
