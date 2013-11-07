@@ -4,20 +4,15 @@ This plugin has been started and it almost ready. For developers user only.
 # Plans
 ## Main Priority
 
-* Agree on a solution for reporting/editing/fixing
-* Show stats for reports, fixes, and verified edits for each user (web only)
 * if stop is used during a question, wait until after the question is finished to stop the game.
-* ping command
-* Total Ever score should be recorded but not publicly available (yet)
-* extra hint, can only be used once per question
-* Different KAOS hint times and point values
+* New Style design - remove colors and use bold where necessary
+* Update permissions - prevent the typical user from accessing admin commands
+* when question is skipped start the next question immediately
 
 ## Second Priority
-These items can wait until the game is almost ready for public testing.
-* New Style design - figure out how to do bold
-* fix permissions for commands
+These items are bonus features that will not effect gameplay.
+* ping command
 * Merge points command
-* Are the commands rate-limited? I know supybot eventually ignores users asking too many commands.
 
 and much more, based off of BogusTrivia and Trivia (supybot plugin)
 
