@@ -656,7 +656,6 @@ class TriviaTime(callbacks.Plugin):
             # reset stats
             self.shownHint = False
             self.skipVoteCount = {}
-            self.shownOtherHint = {}
             self.streak       = 0
             self.lastWinner   = ''
             self.hintsCounter = 0
@@ -909,7 +908,7 @@ class TriviaTime(callbacks.Plugin):
             hintRatio = self.registryValue('hintShowRatio') # % to show each hint
             ratio = float(hintRatio * .01)
             timeElapsed = float(time.time() - self.askedAt)
-            showPercentage = float((timeElapsed + (self.registryValue('timeout', self.channel)/2)) / (self.registryValue('timeout', self.channel) * 2))
+            showPercentage = float((timeElapsed + (self.registryValue('timeout', self.channel)/2)) / (self.registryValue('timeout', self.channel) * 3))
             charMask = self.registryValue('charMask', self.channel)
             if len(self.answers) > 1 or len(self.answers) < 1:
                 return
@@ -922,11 +921,12 @@ class TriviaTime(callbacks.Plugin):
             return hints
 
         def getOtherHint(self, username):
-            if username in self.shownOtherHint:
+            if self.questionOver:
                 return
-            self.shownOtherHint[username] = True
-            if len(self.answers) == 1:
-                self.sendMessage(self.getOtherHintString())
+            if self.shownHint == False:
+                self.shownHint = True
+                if len(self.answers) == 1:
+                    self.sendMessage(self.getOtherHintString())
 
         def getRemainingKAOS(self):
             if len(self.answers) > 1:
@@ -944,7 +944,6 @@ class TriviaTime(callbacks.Plugin):
             self.sendMessage('Hint %s: %s' % (self.hintsCounter, hints), 1, 9)
             #reset hint shown
             self.shownHint = False
-            self.shownOtherHint = {}
 
             timeout = 2
             if len(self.answers) > 1:
@@ -971,7 +970,6 @@ class TriviaTime(callbacks.Plugin):
             self.questionOver = False
             self.shownHint = False
             self.skipVoteCount = {}
-            self.shownOtherHint = {}
             self.question = ''
             self.answers = []
             self.alternativeAnswers = []
