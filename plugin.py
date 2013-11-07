@@ -60,6 +60,8 @@ class TriviaTime(callbacks.Plugin):
         self.storage.makeReportTable()
         #self.storage.dropQuestionTable()
         self.storage.makeQuestionTable()
+        #self.storage.dropTemporaryQuestionTable()
+        self.storage.makeTemporaryQuestionTable()
         #self.storage.dropEditTable()
         self.storage.makeEditTable()
         #self.storage.insertUserLog('root', 1, 1, 10, 10, 30, 2013)
@@ -148,18 +150,33 @@ class TriviaTime(callbacks.Plugin):
                 irc.error('Question could not be found for this edit')
     acceptedit = wrap(acceptedit, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
 
+    def accepttempquestion(self, irc, msg, arg, user, channel, num):
+        """[<channel>] <num>
+        Accept a new question, and add it to the database. Channel is only necessary when editing from outside of the channel
+        """
+        q = self.storage.getTemporaryQuestionById(num)
+        if len(q) < 1:
+            irc.error('Could not find that temp question')
+        else:
+            q = q[0]
+            self.storage.insertQuestionsBulk([(q[3], q[3])])
+            self.storage.removeTemporaryQuestion(q[0])
+            irc.reply('Question accepted!')
+    accepttempquestion = wrap(accepttempquestion, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
+
     def addquestion(self, irc, msg, arg, question):
         """<question text>
             Adds a question to the database
         """
+        username = ircutils.toLower(msg.nick)
         channel = ircutils.toLower(msg.args[0])
         charMask = self.registryValue('charMask', channel)   
         if charMask not in question:
-            irc.error('The question must include the separating character %s' % (charMask))
+            irc.error(' The question must include the separating character %s ' % (charMask))
             return
-        self.storage.insertQuestionsBulk([(question,question)])
-        irc.reply('Added your question to the question database')
-    addquestion = wrap(addquestion, ['admin', 'text'])
+        self.storage.insertTemporaryQuestion(username, channel, question)
+        irc.reply(' Thank you for adding your question to the question database, it is awaiting approval. ')
+    addquestion = wrap(addquestion, ['text'])
 
     def addquestionfile(self, irc, msg, arg, filename):
         """[<filename>]
@@ -347,6 +364,19 @@ class TriviaTime(callbacks.Plugin):
             self.storage.removeReport(report[0])
             irc.reply('Report %d removed!' % report[0])
     removereport = wrap(removereport, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
+
+    def removetempquestion(self, irc, msg, arg, user, channel, num):
+        """[<channel>] <int>
+        Remove a temp question without accepting it. Channel is only necessary when editing from outside of the channel
+        """
+        q = self.storage.getTemporaryQuestionById(num)
+        if len(q) < 1:
+            irc.error('Could not find that temp question')
+        else:
+            q = q[0]
+            self.storage.removeTemporaryQuestion(q[0])
+            irc.reply('Temp question #%d removed!' % q[0])
+    removetempquestion = wrap(removetempquestion, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
 
     def report(self, irc, msg, arg, roundNum, text):
         """<report id> <report text>
@@ -545,6 +575,26 @@ class TriviaTime(callbacks.Plugin):
                 irc.reply('Edit #%d, Question#%d, NEW:%s'%(edit[0], edit[1], edit[2]))
             irc.reply('type .showedit <edit number> to see more information')
     showedit = wrap(showedit, ['user', ('checkChannelCapability', 'triviamod'), optional('int')])
+
+    def showtempquestion(self, irc, msg, arg, num):
+        """[<temp question #>]
+        Show questions awaiting approval
+        """
+        if num is not None:
+            q = self.storage.getTemporaryQuestionById(num)
+            if len(q) > 0:
+                q = q[0]
+                irc.reply('Temp Q #%d: %s'%(q[0], q[3]))
+            else:
+                irc.error('Temp Q #%d not found' % num)
+        else:
+            q = self.storage.getTemporaryQuestionTop3()
+            if len(q) < 1:
+                irc.reply('No temp questions found')
+            for ques in q:
+                irc.reply('Temp Q #%d: %s'%(ques[0], ques[3]))
+            irc.reply('type .showtempquestion <temp question #> to see more information')
+    showtempquestion = wrap(showtempquestion, [optional('int')])
 
     def start(self, irc, msg, args):
         """
@@ -1250,6 +1300,14 @@ class TriviaTime(callbacks.Plugin):
                 pass
             c.close()
 
+        def dropTemporaryQuestionTable(self):
+            c = self.conn.cursor()
+            try:
+                c.execute('''drop table triviatemporaryquestion''')
+            except:
+                pass
+            c.close()
+
         def dropEditTable(self):
             c = self.conn.cursor()
             try:
@@ -1672,6 +1730,24 @@ class TriviaTime(callbacks.Plugin):
             c.close()
             return data
 
+        def getTemporaryQuestionTop3(self):
+            c = self.conn.cursor()
+            c.execute('select * from triviatemporaryquestion order by id desc limit 3')
+            data = []
+            for row in c:
+                data.append(row)
+            c.close()
+            return data
+
+        def getTemporaryQuestionById(self, id):
+            c = self.conn.cursor()
+            c.execute('select * from triviatemporaryquestion where id=? limit 1', (id,))
+            data = []
+            for row in c:
+                data.append(row)
+            c.close()
+            return data
+
         def getEditById(self, id):
             c = self.conn.cursor()
             c.execute('select * from triviaedit where id=? limit 1', (id,))
@@ -1799,6 +1875,15 @@ class TriviaTime(callbacks.Plugin):
             self.conn.commit()
             c.close()
 
+        def insertTemporaryQuestion(self, username, channel, question):
+            c = self.conn.cursor()
+            username = str.lower(username)
+            channel = str.lower(channel)
+            c.execute('insert into triviatemporaryquestion values (NULL, ?, ?, ?)', 
+                                        (username,channel,question))
+            self.conn.commit()
+            c.close()
+
         def makeUserTable(self):
             c = self.conn.cursor()
             try:
@@ -1884,6 +1969,20 @@ class TriviaTime(callbacks.Plugin):
             self.conn.commit()
             c.close()
 
+        def makeTemporaryQuestionTable(self):
+            c = self.conn.cursor()
+            try:
+                c.execute('''create table triviatemporaryquestion (
+                        id integer primary key autoincrement,
+                        username text,
+                        channel text,
+                        question text
+                        )''')
+            except:
+                pass
+            self.conn.commit()
+            c.close()
+
         def makeQuestionTable(self):
             c = self.conn.cursor()
             try:
@@ -1952,6 +2051,13 @@ class TriviaTime(callbacks.Plugin):
             c = self.conn.cursor()
             c.execute('''delete from triviareport
                         where id=?''', (repId,))
+            self.conn.commit()
+            c.close()
+
+        def removeTemporaryQuestion(self, id):
+            c = self.conn.cursor()
+            c.execute('''delete from triviatemporaryquestion
+                        where id=?''', (id,))
             self.conn.commit()
             c.close()
 

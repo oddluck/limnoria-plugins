@@ -112,7 +112,7 @@
                   <tbody>
                     <?php
                         if ($db) {
-                          $q = $db->query('SELECT tr.*, tq.question as original  FROM triviareport tr INNER JOIN triviaquestion tq on tq.id=question_num  LIMIT 10');
+                          $q = $db->query('SELECT tr.*, tq.question as original  FROM triviareport tr INNER JOIN triviaquestion tq on tq.id=question_num ORDER BY id DESC LIMIT 10');
                             if ($q === false) {
                               die("Error: database error: table does not exist\n");
                             } else {
@@ -222,6 +222,53 @@
                           die($err);
                       }
                   ?>
+                </tbody>
+              </table>
+          </div>
+        </div>
+      </div>
+      </div>
+
+        <div class="accordion" id="accordion3">
+          <div class="accordion-group">
+            <div class="accordion-heading">
+              <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion3" href="#collapseThree">
+                Hide added questions
+              </a>
+            </div>
+        <div class="row">
+          <div class="span12">
+            <div id="collapseThree" class="accordion-body collapse in">
+            <div class="accordion-inner">
+            <h2>Added Questions</h2>
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Author</th>
+                    <th>New Question</th>
+                  </tr>
+                </thead>
+                <tbody>
+                    <?php
+                        if ($db) {
+                          $q = $db->query('SELECT tq.*  FROM triviatemporaryquestion tq ORDER BY tq.id DESC LIMIT 10');
+                            if ($q === false) {
+                              die("Error: database error: table does not exist\n");
+                            } else {
+                              $result = $q->fetchAll();
+                              foreach($result as $res) {
+                                echo '<tr>';
+                                echo '<td>' . $res['id'] . '</td>';
+                                echo '<td>' . $res['username'] . '</td>';
+                                echo '<td>' . $res['question'] . '</td>';
+                                echo '</tr>';
+                              }
+                            }
+                          } else {
+                            die('Couldnt connect to db');
+                          }
+                    ?>
                 </tbody>
               </table>
           </div>
