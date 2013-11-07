@@ -118,10 +118,11 @@ class TriviaTime(callbacks.Plugin):
 
     def doNotice(self,irc,msg):
         username = str.lower(msg.nick)
-        if username in self.pings:
-            pingTime = float(time.time() - self.pings[username][0])
-            irc.sendMsg(ircmsgs.privmsg(self.pings[username][1], """ %s Pong: response %0.2f seconds""" % (username, pingTime)))
-            del self.pings[username]
+        if msg.args[1][1:5] == "PING":
+            if username in self.pings:
+                pingTime = float(time.time() - self.pings[username][0])
+                irc.sendMsg(ircmsgs.privmsg(self.pings[username][1], """ %s Pong: response %0.2f seconds""" % (username, pingTime)))
+                del self.pings[username]
 
     def deletequestion(self, irc, msg, arg, id):
         """<question id>
@@ -417,7 +418,7 @@ class TriviaTime(callbacks.Plugin):
         if username in self.pings:
             return
         self.pings[username] = (time.time(), channel)
-        irc.sendMsg(ircmsgs.privmsg('rootcoma', """\x01PING ping\x01"""))
+        irc.sendMsg(ircmsgs.privmsg(username, """\x01PING ping\x01"""))
     latency = wrap(latency)
 
     def skip(self, irc, msg, arg):
