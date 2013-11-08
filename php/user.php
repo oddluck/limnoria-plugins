@@ -158,10 +158,10 @@
                 echo '<td>' . $username . '</td>';
                 echo '<td>' . number_format($res['count'],2) . '</td>';
                 echo '<td>' . number_format($res['score'],2) . '</td>';
-                echo '<td>' . $res['points'] . '</td>';
-                echo '<td>' . $res['q_asked'] . '</td>';
-                echo '<td>' . $res['num_r'] . '</td>';
-                echo '<td>' . $res['num_a'] . '</td>';
+                echo '<td>' . number_format($res['points'],0) . '</td>';
+                echo '<td>' . number_format($res['q_asked'],0) . '</td>';
+                echo '<td>' . number_format($res['num_r'],0) . '</td>';
+                echo '<td>' . number_format($res['num_a'],0) . '</td>';
                 echo '</tr>';
             }
         }

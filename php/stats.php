@@ -140,7 +140,7 @@
                                 echo '<tr>';
                                 echo '<td>' . ($key+1) . '</td>';
                                 echo '<td><a href="user.php?username=' . $res['username'] . '">' . $res['username'] . '</a></td>';
-                                echo '<td>' . $res['points'] . '</td>';
+                                echo '<td>' . number_format($res['points'],0) . '</td>';
                                 echo '</tr>';
                             }
                         }
@@ -195,7 +195,7 @@
                 echo '<tr>';
                 echo '<td>' . ($key+1) . '</td>';
                                 echo '<td><a href="user.php?username=' . $res['username'] . '">' . $res['username'] . '</a></td>';
-                echo '<td>' . $res['points'] . '</td>';
+                echo '<td>' . number_format($res['points'],0) . '</td>';
                 echo '</tr>';
             }
         }
@@ -236,7 +236,7 @@
                                 echo '<tr>';
                                 echo '<td>' . ($key+1) . '</td>';
                                 echo '<td><a href="user.php?username=' . $res['username'] . '">' . $res['username'] . '</a></td>';
-                                echo '<td>' . $res['points'] . '</td>';
+                                echo '<td>' . number_format($res['points'],0) . '</td>';
                                 echo '</tr>';
                             }
                         }
@@ -277,7 +277,7 @@
                                 echo '<tr>';
                                 echo '<td>' . ($key+1) . '</td>';
                                 echo '<td><a href="user.php?username=' . $res['username'] . '">' . $res['username'] . '</a></td>';
-                                echo '<td>' . $res['points'] . '</td>';
+                                echo '<td>' . number_format($res['points'],0) . '</td>';
                                 echo '</tr>';
                             }
                         }
