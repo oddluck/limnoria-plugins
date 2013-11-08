@@ -61,7 +61,7 @@ conf.registerChannelValue(TriviaTime, 'skipActiveTime',
         )
 
 conf.registerChannelValue(TriviaTime, 'skipLimitTime', 
-        registry.Integer(60, 
+        registry.Integer(90, 
                 """Time a user must wait to skip a question again after skipping in seconds""")
         )
 

@@ -657,7 +657,7 @@ class TriviaTime(callbacks.Plugin):
         """
         channel = ircutils.toLower(msg.args[0])
         timeObject = time.asctime(time.localtime())
-        timeString = '\x0301,08The current server time appears to be %s' % timeObject
+        timeString = 'The current server time appears to be %s' % timeObject
         irc.sendMsg(ircmsgs.privmsg(channel, timeString))
         irc.noReply()
     time = wrap(time)
@@ -1098,7 +1098,7 @@ class TriviaTime(callbacks.Plugin):
 
             tempQuestion = self.question.rstrip()
             if tempQuestion[-1:] != '?':
-                tempQuestion += ' ?'
+                tempQuestion += '?'
 
             # bold the q
             questionText = '%s' % (tempQuestion)
@@ -1216,11 +1216,11 @@ class TriviaTime(callbacks.Plugin):
             """
             # with colors? bgcolor?
             if color is None:
-                self.irc.sendMsg(ircmsgs.privmsg(self.channel, ' %s ' % msg))
+                self.irc.sendMsg(ircmsgs.privmsg(self.channel, ' \x02%s ' % msg))
             elif bgcolor is None:
-                self.irc.sendMsg(ircmsgs.privmsg(self.channel, '\x03%02d %s ' % (color, msg)))
+                self.irc.sendMsg(ircmsgs.privmsg(self.channel, ' \x02%s ' % (color, msg)))
             else:
-                self.irc.sendMsg(ircmsgs.privmsg(self.channel, '\x03%02d,%02d %s ' % (color, bgcolor, msg)))
+                self.irc.sendMsg(ircmsgs.privmsg(self.channel, ' \x02%s ' % (color, bgcolor, msg)))
 
         def stop(self):
             """
