@@ -295,7 +295,7 @@ class TriviaTime(callbacks.Plugin):
         irc.sendMsg(ircmsgs.privmsg(msg.args[0], infoText))
     info = wrap(info)
 
-    def latency(self, irc, msg, arg):
+    def ping(self, irc, msg, arg):
         """
             get the ping time of a user
         """
@@ -312,7 +312,7 @@ class TriviaTime(callbacks.Plugin):
             return
         self.pings[username] = (time.time(), channel)
         irc.sendMsg(ircmsgs.privmsg(username, """\x01PING ping\x01"""))
-    latency = wrap(latency)
+    ping = wrap(ping)
 
     def me(self, irc, msg, arg):
         """
