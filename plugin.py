@@ -86,17 +86,18 @@ class TriviaTime(callbacks.Plugin):
             return
         if callbacks.addressed(irc.nick, msg):
             return
-        if channel in self.games:
+        channelCanonical = ircutils.toLower(channel)
+        if channelCanonical in self.games:
             # Look for command to list remaining KAOS
             if msg.args[1] == self.registryValue('showHintCommandKAOS',channel):
-                self.games[channel].getRemainingKAOS()
+                self.games[channelCanonical].getRemainingKAOS()
             elif msg.args[1] == self.registryValue('showOtherHintCommand', channel):
-                self.games[channel].getOtherHint(username)
+                self.games[channelCanonical].getOtherHint(username)
             elif msg.args[1] == self.registryValue('repeatCommand', channel):
-                self.games[channel].repeatQuestion()
+                self.games[channelCanonical].repeatQuestion()
             else:
                 # check the answer
-                self.games[channel].checkAnswer(msg)
+                self.games[channelCanonical].checkAnswer(msg)
 
     def doJoin(self,irc,msg):
         username = msg.nick
@@ -386,6 +387,13 @@ class TriviaTime(callbacks.Plugin):
             irc.reply('Temp question #%d removed!' % q[0])
     removetempquestion = wrap(removetempquestion, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
 
+    def repeat(self, irc, msg, arg):
+        channel = msg.args[0]
+        channelCanonical = ircutils.toLower(channel)
+        if channelCanonical in self.games:
+            self.games[channelCanonical].repeatQuestion()
+    repeat = wrap(repeat)
+
     def report(self, irc, msg, arg, roundNum, text):
         """<report id> <report text>
         Provide a report for a bad question. Be sure to include the round number and any problems.
@@ -397,8 +405,9 @@ class TriviaTime(callbacks.Plugin):
         except KeyError:
             pass
         channel = msg.args[0]
-        if channel in self.games:
-            if self.games[channel].numAsked == roundNum and self.games[channel].questionOver == False:
+        channelCanonical = ircutils.toLower(channel)
+        if channelCanonical in self.games:
+            if self.games[channelCanonical].numAsked == roundNum and self.games[channelCanonical].questionOver == False:
                 irc.reply("Sorry you must wait until the current question is over to report it.")
                 return
         question = self.storage.getQuestionByRound(roundNum, channel)
@@ -432,12 +441,12 @@ class TriviaTime(callbacks.Plugin):
 
         timeSeconds = self.registryValue('skipActiveTime', channel)
         totalActive = self.storage.getNumUserActiveIn(timeSeconds)
-
-        if channel not in self.games:
+        channelCanonical = ircutils.toLower(channel)
+        if channelCanonical not in self.games:
             irc.error('No questions are currently being asked.')
             return
 
-        if self.games[channel].questionOver == True:
+        if self.games[channelCanonical].questionOver == True:
             irc.error('No question is currently being asked.')
             return
 
@@ -445,7 +454,7 @@ class TriviaTime(callbacks.Plugin):
             irc.error('Only users who have answered a question in the last 10 minutes can skip.')
             return
 
-        if username in self.games[channel].skipVoteCount:
+        if username in self.games[channelCanonical].skipVoteCount:
             irc.error('You can only vote to skip once.')
             return
 
@@ -461,33 +470,33 @@ class TriviaTime(callbacks.Plugin):
                 irc.error('You must wait to be able to skip again.')
                 return
 
-        self.games[channel].skipVoteCount[username] = 1
+        self.games[channelCanonical].skipVoteCount[username] = 1
         self.skips[username] = int(time.mktime(time.localtime()))
 
         irc.sendMsg(ircmsgs.privmsg(channel, '%s voted to skip this question.' % username))
         if totalActive < 1:
             return
 
-        percentAnswered = ((1.0*len(self.games[channel].skipVoteCount))/(totalActive*1.0))
+        percentAnswered = ((1.0*len(self.games[channelCanonical].skipVoteCount))/(totalActive*1.0))
 
         # not all have skipped yet, we need to get out of here
         if percentAnswered < self.registryValue('skipThreshold', channel):
             irc.noReply()
             return
 
-        if channel not in self.games:
+        if channelCanonical not in self.games:
             irc.error('Trivia is not running.')
             return
-        if self.games[channel].active == False:
+        if self.games[channelCanonical].active == False:
             irc.error('Trivia is not running.')
             return
         try:
             schedule.removeEvent('%s.trivia' % channel)
         except KeyError:
             pass
-        irc.sendMsg(ircmsgs.privmsg(channel, 'Skipped question! (%d of %d voted)' % (len(self.games[channel].skipVoteCount), totalActive)))
+        irc.sendMsg(ircmsgs.privmsg(channel, 'Skipped question! (%d of %d voted)' % (len(self.games[channelCanonical].skipVoteCount), totalActive)))
 
-        self.games[channel].nextQuestion()
+        self.games[channelCanonical].nextQuestion()
         irc.noReply()
     skip = wrap(skip)
 
@@ -609,28 +618,29 @@ class TriviaTime(callbacks.Plugin):
             Begins a round of Trivia inside of your current channel.
         """
         channel = msg.args[0]
+        channelCanonical = ircutils.toLower(channel)
         if not irc.isChannel(channel):
             irc.reply('Sorry, I can start inside of a channel, try joining #trivialand. Or fork TriviaLand on github')
             return
-        if channel in self.games:
-            if self.games[channel].stopPending == True:
-                self.games[channel].stopPending = False
+        if channelCanonical in self.games:
+            if self.games[channelCanonical].stopPending == True:
+                self.games[channelCanonical].stopPending = False
                 irc.sendMsg(ircmsgs.privmsg(channel, 'Pending stop aborted'))
-            elif not self.games[channel].active:
-                del self.games[channel]
+            elif not self.games[channelCanonical].active:
+                del self.games[channelCanonical]
                 try:
                     schedule.removeEvent('%s.trivia' % channel)
                 except KeyError:
                     pass
                 #irc.error(self.registryValue('alreadyStarted'))
                 irc.sendMsg(ircmsgs.privmsg(channel, self.registryValue('starting')))
-                self.games[channel] = self.Game(irc, channel, self)
+                self.games[channelCanonical] = self.Game(irc, channel, self)
             else:
                 irc.sendMsg(ircmsgs.privmsg(channel, self.registryValue('alreadyStarted')))
         else:
             # create a new game
             irc.sendMsg(ircmsgs.privmsg(channel, self.registryValue('starting')))
-            self.games[channel] = self.Game(irc, channel, self)
+            self.games[channelCanonical] = self.Game(irc, channel, self)
         irc.noReply()
     start = wrap(start)
 
@@ -639,15 +649,16 @@ class TriviaTime(callbacks.Plugin):
             Ends Trivia. Only use this if you know what you are doing.. Channel is only necessary when editing from outside of the channel
         """
         channel = msg.args[0]
-        if channel in self.games:
-            if self.games[channel].questionOver == True:
-                self.games[channel].stop()
+        channelCanonical = ircutils.toLower(channel)
+        if channelCanonical in self.games:
+            if self.games[channelCanonical].questionOver == True:
+                self.games[channelCanonical].stop()
                 return
-            if self.games[channel].active:
-                self.games[channel].stopPending = True
+            if self.games[channelCanonical].active:
+                self.games[channelCanonical].stopPending = True
                 irc.sendMsg(ircmsgs.privmsg(channel, 'Trivia will now stop after this question.'))
             else:
-                del self.games[channel]
+                del self.games[channelCanonical]
                 irc.sendMsg(ircmsgs.privmsg(channel, self.registryValue('stopped')))
         else:
             irc.sendMsg(ircmsgs.privmsg(channel, 'Game is already stopped'))
@@ -1228,8 +1239,9 @@ class TriviaTime(callbacks.Plugin):
             self.active = False
             self.removeEvent()
             self.sendMessage(self.registryValue('stopped'), 2)
-            if self.channel in self.games:
-                del self.games[self.channel]
+            channelCanonical = ircutils.toLower(self.channel)
+            if channelCanonical in self.games:
+                del self.games[channelCanonical]
 
     #Storage for users and points using sqlite3
     class Storage:
