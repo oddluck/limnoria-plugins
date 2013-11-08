@@ -400,6 +400,7 @@ class TriviaTime(callbacks.Plugin):
         Provide a report for a bad question. Be sure to include the round number and any problems.
         """
         username = msg.nick
+        inp = text.strip()
         try:
             user = ircdb.users.getUser(msg.prefix) # rootcoma!~rootcomaa@unaffiliated/rootcoma
             username = user.name
@@ -408,13 +409,13 @@ class TriviaTime(callbacks.Plugin):
         channel = msg.args[0]
         channelCanonical = ircutils.toLower(channel)
         if channelCanonical in self.games:
-            if self.games[channelCanonical].numAsked == roundNum and self.games[channelCanonical].questionOver == False:
-                irc.reply("Sorry you must wait until the current question is over to report it.")
-                return
+            if inp[:2] == 's/':
+                if self.games[channelCanonical].numAsked == roundNum and self.games[channelCanonical].questionOver == False:
+                    irc.reply("Sorry you must wait until the current question is over to report it.")
+                    return
         question = self.storage.getQuestionByRound(roundNum, channel)
         if len(question) > 0:
             question = question[0]
-            inp = text.strip()
             self.storage.updateUser(username, 1, 0)
             if inp[:2] == 's/':
                 regex = inp[2:].split('/')
