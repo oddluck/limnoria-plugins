@@ -1830,7 +1830,6 @@ class TriviaTime(callbacks.Plugin):
 
         def insertGame(self, channel, numAsked=0, epoch=None):
             channel = ircutils.toLower(channel)
-            lastWinner  = ircutils.toLower(lastWinner)
             if self.gameExists(channel):
                 return self.updateGame(channel, numAsked)
             if epoch is None:
