@@ -819,7 +819,7 @@ class TriviaTime(callbacks.Plugin):
 
                     if self.registryValue('showPlayerStats', self.channel):
                         todaysScore = 0
-                        userInfo = self.storage.getUser(username, channel)
+                        userInfo = self.storage.getUser(username, self.channel)
                         if len(userInfo) >= 3:
                             todaysScore = userInfo[10]
                             weekScore = userInfo[8]
