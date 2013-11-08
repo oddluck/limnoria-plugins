@@ -1,9 +1,4 @@
-This plugin has been started and it almost ready. For developers user only.
-
-# TODO
-## Main Priority
-
-* New Style design - remove colors and use bold where necessary
+This plugin is in beta. Please report all bugs on GitHub.
 
 # Configuration
 ## Setting up plugin
