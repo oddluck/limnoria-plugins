@@ -1019,7 +1019,7 @@ class TriviaTime(callbacks.Plugin):
             hints = self.getHintString(self.hintsCounter)
             #increment hints counter
             self.hintsCounter += 1
-            self.sendMessage('Hint %s: %s' % (self.hintsCounter, hints), 1, 9)
+            self.sendMessage('Hint %s: \x02%s' % (self.hintsCounter, hints), 1, 9)
             #reset hint shown
             self.shownHint = False
 
@@ -1104,7 +1104,7 @@ class TriviaTime(callbacks.Plugin):
                 tempQuestion += '?'
 
             # bold the q
-            questionText = '%s' % (tempQuestion)
+            questionText = '\x02%s' % (tempQuestion)
 
             # KAOS? report # of answers
             if len(self.answers) > 1:

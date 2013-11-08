@@ -162,7 +162,7 @@ conf.registerChannelValue(TriviaTime, 'answeredNormal',
         )
 
 conf.registerChannelValue(TriviaTime, 'notAnswered', 
-        registry.NormalizedString("""Time's up! The answer was \x02%s\x02""", 
+        registry.NormalizedString("""Time's up! The answer was \x02%s\x02.""", 
                 """Message when no one guesses the answer""")
         )
 
