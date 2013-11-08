@@ -1835,7 +1835,7 @@ class TriviaTime(callbacks.Plugin):
             if epoch is None:
                 epoch = int(time.mktime(time.localtime()))
             c = self.conn.cursor()
-            c.execute('insert into triviagames values (NULL, ?, ?, ?)', (channel,numAsked,epoch))
+            c.execute('insert into triviagames values (NULL, ?, 0, 0)', (channel,numAsked,epoch))
             self.conn.commit()
             c.close()
 
