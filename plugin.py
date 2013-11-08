@@ -35,7 +35,6 @@ class TriviaTime(callbacks.Plugin):
         """ games info """
         self.games = {} # separate game for each channel
         self.skips = {}
-        self.pings = {}
 
         """ connections """
         dbLocation = self.registryValue('sqlitedb')
@@ -74,40 +73,41 @@ class TriviaTime(callbacks.Plugin):
         """
             Catches all PRIVMSG, including channels communication
         """
-        username = ircutils.toLower(msg.nick)
+        username = msg.nick
         try:
             user = ircdb.users.getUser(msg.prefix) # rootcoma!~rootcomaa@unaffiliated/rootcoma
-            username = ircutils.toLower(user.name)
+            username = user.name
         except KeyError:
             pass
-        channel = ircutils.toLower(msg.args[0])
+        channel = msg.args[0]
         # Make sure that it is starting inside of a channel, not in pm
         if not irc.isChannel(channel):
             return
         if callbacks.addressed(irc.nick, msg):
             return
-        if channel in self.games:
+        channelCanonical = ircutils.toLower(channel)
+        if channelCanonical in self.games:
             # Look for command to list remaining KAOS
             if msg.args[1] == self.registryValue('showHintCommandKAOS',channel):
-                self.games[channel].getRemainingKAOS()
+                self.games[channelCanonical].getRemainingKAOS()
             elif msg.args[1] == self.registryValue('showOtherHintCommand', channel):
-                self.games[channel].getOtherHint(username)
-            elif ircutils.toLower(msg.args[1]) == self.registryValue('repeatCommand', channel):
-                self.games[channel].repeatQuestion()
+                self.games[channelCanonical].getOtherHint(username)
+            elif msg.args[1] == self.registryValue('repeatCommand', channel):
+                self.games[channelCanonical].repeatQuestion()
             else:
                 # check the answer
-                self.games[channel].checkAnswer(msg)
+                self.games[channelCanonical].checkAnswer(msg)
 
     def doJoin(self,irc,msg):
-        username = ircutils.toLower(msg.nick)
+        username = msg.nick
         # is it a user?
         try:
             user = ircdb.users.getUser(msg.prefix) # rootcoma!~rootcomaa@unaffiliated/rootcoma
-            username = ircutils.toLower(user.name)
+            username = user.name
         except KeyError:
             pass
-        channel = ircutils.toLower(msg.args[0])
-        user = self.storage.getUser(username)
+        channel = msg.args[0]
+        user = self.storage.getUser(username, channel)
         numTopToVoice = self.registryValue('numTopToVoice')
         if len(user) >= 1:
             if user[13] <= numTopToVoice and user[4] > self.registryValue('minPointsVoiceYear'):
@@ -121,12 +121,15 @@ class TriviaTime(callbacks.Plugin):
                 irc.queueMsg(ircmsgs.voice(channel, username))
 
     def doNotice(self,irc,msg):
-        username = ircutils.toLower(msg.nick)
+        username = msg.nick
         if msg.args[1][1:5] == "PING":
-            if username in self.pings:
-                pingTime = float(time.time() - self.pings[username][0])
-                irc.sendMsg(ircmsgs.privmsg(self.pings[username][1], """ %s Pong: response %0.2f seconds""" % (username, pingTime)))
-                del self.pings[username]
+            pingMsg = msg.args[1][6:]
+            pingMsg = pingMsg[:-1]
+            pingMsg = pingMsg.split('*', 1)
+            if len(pingMsg) == 2:
+                pingTime = float(pingMsg[0])
+                channel = pingMsg[1]
+                irc.sendMsg(ircmsgs.privmsg(channel, """ %s Pong: response %0.2f seconds""" % (username, time.time()-pingTime)))
 
     def acceptedit(self, irc, msg, arg, user, channel, num):
         """[<channel>] <num>
@@ -168,8 +171,8 @@ class TriviaTime(callbacks.Plugin):
         """<question text>
             Adds a question to the database
         """
-        username = ircutils.toLower(msg.nick)
-        channel = ircutils.toLower(msg.args[0])
+        username = msg.nick
+        channel = msg.args[0]
         charMask = self.registryValue('charMask', channel)   
         if charMask not in question:
             irc.error(' The question must include the separating character %s ' % (charMask))
@@ -202,7 +205,7 @@ class TriviaTime(callbacks.Plugin):
 
         Deletes all of a users points, and removes all their records
         """
-        self.storage.removeUserLogs(ircutils.toLower(username))
+        self.storage.removeUserLogs(username)
         irc.reply('Removed all points from %s' % (username))
     clearpoints = wrap(clearpoints, ['admin','nick'])
 
@@ -210,8 +213,8 @@ class TriviaTime(callbacks.Plugin):
         """
             Displays the top ten scores of the day
         """
-        channel = ircutils.toLower(msg.args[0])
-        tops = self.storage.viewDayTop10()
+        channel = msg.args[0]
+        tops = self.storage.viewDayTop10(channel)
         topsText = 'Today\'s Top 10 Players: '
         for i in range(len(tops)):
             topsText += '\x02 #%d:\x02 %s %d ' % ((i+1) , tops[i][1], tops[i][2])
@@ -234,10 +237,10 @@ class TriviaTime(callbacks.Plugin):
         """[<channel>] <question number> <corrected text>
         Correct a question by providing the question number and the corrected text. Channel is only necessary when editing from outside of the channel
         """
-        username = ircutils.toLower(msg.nick)
+        username = msg.nick
         try:
             user = ircdb.users.getUser(msg.prefix) # rootcoma!~rootcomaa@unaffiliated/rootcoma
-            username = ircutils.toLower(user.name)
+            username = user.name
         except KeyError:
             pass
         q = self.storage.getQuestion(num)
@@ -261,8 +264,8 @@ class TriviaTime(callbacks.Plugin):
             irc.error("You cannot give less than 1 point.")
             return
         try:
-            user = ircdb.users.getUser(ircutils.toLower(username)) # rootcoma!~rootcomaa@unaffiliated/rootcoma
-            username = ircutils.toLower(user.name)
+            user = ircdb.users.getUser(username) # rootcoma!~rootcomaa@unaffiliated/rootcoma
+            username = user.name
         except KeyError:
             pass
         day=None
@@ -274,7 +277,8 @@ class TriviaTime(callbacks.Plugin):
             day = d.day
             month = d.month
             year = d.year
-        self.storage.updateUserLog(ircutils.toLower(username), points, 0, 0, day, month, year)
+        channel = msg.args[0]
+        self.storage.updateUserLog(username, channel, points, 0, 0, day, month, year)
         irc.reply('Added %d points to %s' % (points, username))
     givepoints = wrap(givepoints, ['admin','nick', 'int', optional('int')])
 
@@ -299,33 +303,23 @@ class TriviaTime(callbacks.Plugin):
         """
             get the ping time of a user
         """
-        channel = ircutils.toLower(msg.args[0])
-        username = ircutils.toLower(msg.nick)
-        expiredPings = []
-
-        for ping in self.pings:
-            if time.time() - self.pings[ping][0] > 60:
-                expiredPings.append(ping)
-        for ping in expiredPings:
-            del expiredPings[ping]
-        if username in self.pings:
-            return
-        self.pings[username] = (time.time(), channel)
-        irc.sendMsg(ircmsgs.privmsg(username, """\x01PING ping\x01"""))
+        channel = msg.args[0]
+        username = msg.nick
+        irc.sendMsg(ircmsgs.privmsg(username, """\x01PING %s*%s\x01""" % (time.time(),channel)))
     ping = wrap(ping)
 
     def me(self, irc, msg, arg):
         """
             Get your rank, score & questions asked for day, month, year
         """
-        username = ircutils.toLower(msg.nick)
+        username = msg.nick
         try:
             user = ircdb.users.getUser(msg.prefix) # rootcoma!~rootcomaa@unaffiliated/rootcoma
-            username = ircutils.toLower(user.name)
+            username = user.name
         except KeyError:
             pass
-        channel = ircutils.toLower(msg.args[0])
-        info = self.storage.getUser(ircutils.toLower(username))
+        channel = msg.args[0]
+        info = self.storage.getUser(username, channel)
         if len(info) < 3:
             irc.error("I couldn't find you in my database.")
         else:
@@ -338,8 +332,8 @@ class TriviaTime(callbacks.Plugin):
         """
             Displays the top ten scores of the month
         """
-        channel = ircutils.toLower(msg.args[0])
-        tops = self.storage.viewMonthTop10()
+        channel = msg.args[0]
+        tops = self.storage.viewMonthTop10(channel)
         topsText = 'This MONTHS Top 10 Players: '
         for i in range(len(tops)):
             topsText += '\x02 #%d:\x02 %s %d ' % ((i+1) , tops[i][1], tops[i][2])
@@ -386,25 +380,34 @@ class TriviaTime(callbacks.Plugin):
             irc.reply('Temp question #%d removed!' % q[0])
     removetempquestion = wrap(removetempquestion, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
 
+    def repeat(self, irc, msg, arg):
+        channel = msg.args[0]
+        channelCanonical = ircutils.toLower(channel)
+        if channelCanonical in self.games:
+            self.games[channelCanonical].repeatQuestion()
+    repeat = wrap(repeat)
+
     def report(self, irc, msg, arg, roundNum, text):
         """<report id> <report text>
         Provide a report for a bad question. Be sure to include the round number and any problems.
         """
-        username = ircutils.toLower(msg.nick)
+        username = msg.nick
+        inp = text.strip()
         try:
             user = ircdb.users.getUser(msg.prefix) # rootcoma!~rootcomaa@unaffiliated/rootcoma
-            username = ircutils.toLower(user.name)
+            username = user.name
         except KeyError:
             pass
-        channel = ircutils.toLower(msg.args[0])
-        if channel in self.games:
-            if self.games[channel].numAsked == roundNum and self.games[channel].questionOver == False:
-                irc.reply("Sorry you must wait until the current question is over to report it.")
-                return
+        channel = msg.args[0]
+        channelCanonical = ircutils.toLower(channel)
+        if channelCanonical in self.games:
+            if inp[:2] == 's/':
+                if self.games[channelCanonical].numAsked == roundNum and self.games[channelCanonical].questionOver == False:
+                    irc.reply("Sorry you must wait until the current question is over to report it.")
+                    return
         question = self.storage.getQuestionByRound(roundNum, channel)
         if len(question) > 0:
             question = question[0]
-            inp = text.strip()
             self.storage.updateUser(username, 1, 0)
             if inp[:2] == 's/':
                 regex = inp[2:].split('/')
@@ -427,17 +430,17 @@ class TriviaTime(callbacks.Plugin):
         """
             Skip a question
         """
-        username = ircutils.toLower(msg.nick)
-        channel = ircutils.toLower(msg.args[0])
+        username = msg.nick
+        channel = msg.args[0]
 
         timeSeconds = self.registryValue('skipActiveTime', channel)
         totalActive = self.storage.getNumUserActiveIn(timeSeconds)
-
-        if channel not in self.games:
+        channelCanonical = ircutils.toLower(channel)
+        if channelCanonical not in self.games:
             irc.error('No questions are currently being asked.')
             return
 
-        if self.games[channel].questionOver == True:
+        if self.games[channelCanonical].questionOver == True:
             irc.error('No question is currently being asked.')
             return
 
@@ -445,7 +448,7 @@ class TriviaTime(callbacks.Plugin):
             irc.error('Only users who have answered a question in the last 10 minutes can skip.')
             return
 
-        if username in self.games[channel].skipVoteCount:
+        if username in self.games[channelCanonical].skipVoteCount:
             irc.error('You can only vote to skip once.')
             return
 
@@ -461,33 +464,33 @@ class TriviaTime(callbacks.Plugin):
                 irc.error('You must wait to be able to skip again.')
                 return
 
-        self.games[channel].skipVoteCount[username] = 1
+        self.games[channelCanonical].skipVoteCount[username] = 1
         self.skips[username] = int(time.mktime(time.localtime()))
 
         irc.sendMsg(ircmsgs.privmsg(channel, '%s voted to skip this question.' % username))
         if totalActive < 1:
             return
 
-        percentAnswered = ((1.0*len(self.games[channel].skipVoteCount))/(totalActive*1.0))
+        percentAnswered = ((1.0*len(self.games[channelCanonical].skipVoteCount))/(totalActive*1.0))
 
         # not all have skipped yet, we need to get out of here
         if percentAnswered < self.registryValue('skipThreshold', channel):
             irc.noReply()
             return
 
-        if channel not in self.games:
+        if channelCanonical not in self.games:
             irc.error('Trivia is not running.')
             return
-        if self.games[channel].active == False:
+        if self.games[channelCanonical].active == False:
             irc.error('Trivia is not running.')
             return
         try:
             schedule.removeEvent('%s.trivia' % channel)
         except KeyError:
             pass
-        irc.sendMsg(ircmsgs.privmsg(channel, 'Skipped question! (%d of %d voted)' % (len(self.games[channel].skipVoteCount), totalActive)))
+        irc.sendMsg(ircmsgs.privmsg(channel, 'Skipped question! (%d of %d voted)' % (len(self.games[channelCanonical].skipVoteCount), totalActive)))
 
-        self.games[channel].nextQuestion()
+        self.games[channelCanonical].nextQuestion()
         irc.noReply()
     skip = wrap(skip)
 
@@ -495,8 +498,8 @@ class TriviaTime(callbacks.Plugin):
         """
             Show a  player's rank, score & questions asked for day, month, and year
         """
-        channel = ircutils.toLower(msg.args[0])
-        info = self.storage.getUser(ircutils.toLower(username))
+        channel = msg.args[0]
+        info = self.storage.getUser(username, channel)
         if len(info) < 3:
             irc.error("I couldn't find you in my database.")
         else:
@@ -608,29 +611,30 @@ class TriviaTime(callbacks.Plugin):
         """
             Begins a round of Trivia inside of your current channel.
         """
-        channel = ircutils.toLower(msg.args[0])
+        channel = msg.args[0]
+        channelCanonical = ircutils.toLower(channel)
         if not irc.isChannel(channel):
             irc.reply('Sorry, I can start inside of a channel, try joining #trivialand. Or fork TriviaLand on github')
             return
-        if channel in self.games:
-            if self.games[channel].stopPending == True:
-                self.games[channel].stopPending = False
+        if channelCanonical in self.games:
+            if self.games[channelCanonical].stopPending == True:
+                self.games[channelCanonical].stopPending = False
                 irc.sendMsg(ircmsgs.privmsg(channel, 'Pending stop aborted'))
-            elif not self.games[channel].active:
-                del self.games[channel]
+            elif not self.games[channelCanonical].active:
+                del self.games[channelCanonical]
                 try:
                     schedule.removeEvent('%s.trivia' % channel)
                 except KeyError:
                     pass
                 #irc.error(self.registryValue('alreadyStarted'))
                 irc.sendMsg(ircmsgs.privmsg(channel, self.registryValue('starting')))
-                self.games[channel] = self.Game(irc, channel, self)
+                self.games[channelCanonical] = self.Game(irc, channel, self)
             else:
                 irc.sendMsg(ircmsgs.privmsg(channel, self.registryValue('alreadyStarted')))
         else:
             # create a new game
             irc.sendMsg(ircmsgs.privmsg(channel, self.registryValue('starting')))
-            self.games[channel] = self.Game(irc, channel, self)
+            self.games[channelCanonical] = self.Game(irc, channel, self)
         irc.noReply()
     start = wrap(start)
 
@@ -638,16 +642,17 @@ class TriviaTime(callbacks.Plugin):
         """[<channel>] 
             Ends Trivia. Only use this if you know what you are doing.. Channel is only necessary when editing from outside of the channel
         """
-        channel = ircutils.toLower(msg.args[0])
-        if channel in self.games:
-            if self.games[channel].questionOver == True:
-                self.games[channel].stop()
+        channel = msg.args[0]
+        channelCanonical = ircutils.toLower(channel)
+        if channelCanonical in self.games:
+            if self.games[channelCanonical].questionOver == True:
+                self.games[channelCanonical].stop()
                 return
-            if self.games[channel].active:
-                self.games[channel].stopPending = True
+            if self.games[channelCanonical].active:
+                self.games[channelCanonical].stopPending = True
                 irc.sendMsg(ircmsgs.privmsg(channel, 'Trivia will now stop after this question.'))
             else:
-                del self.games[channel]
+                del self.games[channelCanonical]
                 irc.sendMsg(ircmsgs.privmsg(channel, self.registryValue('stopped')))
         else:
             irc.sendMsg(ircmsgs.privmsg(channel, 'Game is already stopped'))
@@ -658,7 +663,7 @@ class TriviaTime(callbacks.Plugin):
         """
             Figure out what time/day it is for the server
         """
-        channel = ircutils.toLower(msg.args[0])
+        channel = msg.args[0]
         timeObject = time.asctime(time.localtime())
         timeString = 'The current server time appears to be %s' % timeObject
         irc.sendMsg(ircmsgs.privmsg(channel, timeString))
@@ -670,8 +675,8 @@ class TriviaTime(callbacks.Plugin):
 
         Transfers all points and records from one user to another
         """
-        userfrom = ircutils.toLower(userfrom)
-        userto = ircutils.toLower(userto)
+        userfrom = userfrom
+        userto = userto
         self.storage.transferUserLogs(userfrom, userto)
         irc.reply('Done! Transfered records from %s to %s' % (userfrom, userto))
     transferpoints = wrap(transferpoints, ['admin', 'nick', 'nick'])
@@ -680,8 +685,8 @@ class TriviaTime(callbacks.Plugin):
         """
             Displays the top ten scores of the week
         """
-        channel = ircutils.toLower(msg.args[0])
-        tops = self.storage.viewWeekTop10()
+        channel = msg.args[0]
+        tops = self.storage.viewWeekTop10(channel)
         topsText = 'This week\'s Top 10 Players: '
         for i in range(len(tops)):
             topsText += '\x02 #%d:\x02 %s %d ' % ((i+1) , tops[i][1], tops[i][2])
@@ -693,8 +698,8 @@ class TriviaTime(callbacks.Plugin):
         """
             Displays the top ten scores of the year
         """
-        channel = ircutils.toLower(msg.args[0])
-        tops = self.storage.viewYearTop10()
+        channel = msg.args[0]
+        tops = self.storage.viewYearTop10(channel)
         topsText = 'This Year\'s Top 10 Players: '
         for i in range(len(tops)):
             topsText += '\x02 #%d:\x02 %s %d ' % ((i+1) , tops[i][1], tops[i][2])
@@ -741,11 +746,11 @@ class TriviaTime(callbacks.Plugin):
             """
                 Check users input to see if answer was given.
             """
-            username = ircutils.toLower(msg.nick)
+            username = msg.nick
             # is it a user?
             try:
                 user = ircdb.users.getUser(msg.prefix) # rootcoma!~rootcomaa@unaffiliated/rootcoma
-                username = ircutils.toLower(user.name)
+                username = user.name
             except KeyError:
                 pass
             correctAnswerFound = False
@@ -784,7 +789,7 @@ class TriviaTime(callbacks.Plugin):
 
                     self.totalAmountWon += pointsAdded
                     # report the correct guess for kaos item
-                    self.storage.updateUserLog(username,pointsAdded,0, 0)
+                    self.storage.updateUserLog(username, self.channel, pointsAdded,0, 0)
                     self.lastAnswer = time.time()
                     self.sendMessage(self.registryValue('answeredKAOS', self.channel) 
                             % (username, pointsAdded, correctAnswer))
@@ -792,7 +797,7 @@ class TriviaTime(callbacks.Plugin):
                     # Normal question solved
                     streakBonus = 0
                     # update streak info
-                    if self.lastWinner != ircutils.toLower(username):
+                    if ircutils.toLower(self.lastWinner) != ircutils.toLower(username):
                         self.lastWinner = ircutils.toLower(username)
                         self.streak = 1
                     else:
@@ -807,15 +812,14 @@ class TriviaTime(callbacks.Plugin):
                     pointsAdded = int(pointsAdded)
 
                     # report correct guess, and show players streak
-                    self.storage.updateUserLog(username,pointsAdded,1, timeElapsed)
+                    self.storage.updateUserLog(username, self.channel, pointsAdded,1, timeElapsed)
                     self.lastAnswer = time.time()
                     self.sendMessage(self.registryValue('answeredNormal', self.channel) 
                             % (username, correctAnswer, timeElapsed, pointsAdded, streakBonus))
 
                     if self.registryValue('showPlayerStats', self.channel):
-                        playersStats = self.storage.getUser(username)
                         todaysScore = 0
-                        userInfo = self.storage.getUser(username)
+                        userInfo = self.storage.getUser(username, channel)
                         if len(userInfo) >= 3:
                             todaysScore = userInfo[10]
                             weekScore = userInfo[8]
@@ -842,7 +846,7 @@ class TriviaTime(callbacks.Plugin):
                         bonusPointsText = ''
                         if bonusPoints > 0:
                             for nick in self.correctPlayers:
-                                self.storage.updateUserLog(str(nick).lower(),bonusPoints, 0, 0)
+                                self.storage.updateUserLog(nick, self.channel, bonusPoints, 0, 0)
                             bonusPointsText += self.registryValue('bonusKAOS', self.channel) % int(bonusPoints)
 
                         # give a special message if it was KAOS
@@ -1175,7 +1179,7 @@ class TriviaTime(callbacks.Plugin):
                         shuffledLetters = list(ans)
                         random.shuffle(shuffledLetters)
                         for letter in shuffledLetters:
-                            question += ircutils.toLower(letter)
+                            question += letter
                             question += ' '
                         break
                 else:                
@@ -1228,8 +1232,9 @@ class TriviaTime(callbacks.Plugin):
             self.active = False
             self.removeEvent()
             self.sendMessage(self.registryValue('stopped'), 2)
-            if self.channel in self.games:
-                del self.games[self.channel]
+            channelCanonical = ircutils.toLower(self.channel)
+            if channelCanonical in self.games:
+                del self.games[channelCanonical]
 
     #Storage for users and points using sqlite3
     class Storage:
@@ -1324,7 +1329,7 @@ class TriviaTime(callbacks.Plugin):
         def getRandomQuestionNotAsked(self, channel, roundStart):
             c = self.conn.cursor()
             c.execute('''select * from triviaquestion 
-                            where deleted=0 and id not in (select tl.line_num from triviagameslog tl where tl.channel=? and tl.asked_at>=?)
+                            where deleted=0 and id not in (select tl.line_num from triviagameslog tl where tl.channel_canonical=? and tl.asked_at>=?)
                             order by random() limit 1
                         ''', (ircutils.toLower(channel),roundStart))
             data = []
@@ -1339,7 +1344,7 @@ class TriviaTime(callbacks.Plugin):
             c.execute('''select * from triviaquestion where id=(select tgl.line_num
                                                                 from triviagameslog tgl
                                                                 where tgl.round_num=?
-                                                                and tgl.channel=?
+                                                                and tgl.channel_canonical=?
                                                                 order by id desc
                                                                 limit 1)''', (roundNumber,channel))
             data = []
@@ -1357,8 +1362,9 @@ class TriviaTime(callbacks.Plugin):
             c.close()
             return rows
 
-        def getUserRanks(self, username):
-            username = ircutils.toLower(username)
+        def getUserRanks(self, username, channel):
+            usernameCanonical = ircutils.toLower(username)
+            channelCanonical = ircutils.toLower(channel)
             dateObject = datetime.date.today()
             day   = dateObject.day
             month = dateObject.month
@@ -1370,20 +1376,23 @@ class TriviaTime(callbacks.Plugin):
                             from (
                                 select id, username, sum(points_made) as totalscore
                                 from triviauserlog
-                                group by username
+                                where channel_canonical=?
+                                group by username_canonical
                             ) as tu2
                             where tu2.totalscore > (
                                 select sum(points_made)
                                 from triviauserlog
-                                where username=?
+                                where channel_canonical=?
+                                and username_canonical=?
                                 )
                         ) as tr
                         where
                             exists(
                                 select *
                                 from triviauserlog
-                                where username=?
-                            )''', (username,username))
+                                where channel_canonical=?
+                                and username_canonical=?
+                            )''', (channelCanonical, channelCanonical, usernameCanonical, channelCanonical, usernameCanonical))
             data = []
 
             rank = 0
@@ -1402,20 +1411,25 @@ class TriviaTime(callbacks.Plugin):
                                 select id, username, sum(points_made) as totalscore
                                 from triviauserlog
                                 where year=?
-                                group by username
+                                and channel_canonical=?
+                                group by username_canonical
                             ) as tu2
                             where tu2.totalscore > (
                                 select sum(points_made)
                                 from triviauserlog
-                                where year=? and username=?
+                                where year=? 
+                                and username_canonical=?
+                                and channel_canonical=?
                                 )
                         ) as tr
                         where
                             exists(
                                 select *
                                 from triviauserlog
-                                where year=? and username=?
-                            )''', (year,year,username,year,username))
+                                where year=? 
+                                and username_canonical=?
+                                and channel_canonical=?
+                            )''', (year, channelCanonical, year, usernameCanonical, channelCanonical, year, usernameCanonical, channelCanonical))
 
             rank = 0
             for row in c:
@@ -1432,21 +1446,29 @@ class TriviaTime(callbacks.Plugin):
                             from (
                                 select id, username, sum(points_made) as totalscore
                                 from triviauserlog
-                                where month=? and year=?
-                                group by username
+                                where month=? 
+                                and year=?
+                                and channel_canonical=?
+                                group by username_canonical
                             ) as tu2
                             where tu2.totalscore > (
                                 select sum(points_made)
                                 from triviauserlog
-                                where month=? and year=? and username=?
+                                where month=? 
+                                and year=? 
+                                and username_canonical=?
+                                and channel_canonical=?
                                 )
                         ) as tr
                         where
                             exists(
                                 select *
                                 from triviauserlog
-                                where month=? and year=? and username=?
-                            )''', (month,year,month,year,username,month,year,username))
+                                where month=? 
+                                and year=? 
+                                and username=?
+                                and channel_canonical=?
+                            )''', (month, year, channelCanonical, month, year, usernameCanonical, channelCanonical, month, year, usernameCanonical, channelCanonical))
 
             rank = 0
             for row in c:
@@ -1476,15 +1498,19 @@ class TriviaTime(callbacks.Plugin):
                             from (
                                 select id, username, sum(points_made) as totalscore
                                 from triviauserlog
-                                where'''
+                                where ('''
             weekSql += weekSqlClause
             weekSql +='''
-                                group by username
+                                ) 
+                                and channel_canonical=?
+                                group by username_canonical
                             ) as tu2
                             where tu2.totalscore > (
                                 select sum(points_made)
                                 from triviauserlog
-                                where username=? and ('''
+                                where username_canonical=? 
+                                and channel_canonical=?
+                                and ('''
             weekSql += weekSqlClause
             weekSql += ''' 
                                     )
@@ -1494,12 +1520,14 @@ class TriviaTime(callbacks.Plugin):
                             exists(
                                 select *
                                 from triviauserlog
-                                where username=? and ('''
+                                where username_canonical=? 
+                                and channel_canonical=?
+                                and ('''
             weekSql += weekSqlClause
             weekSql += ''' 
                                 )
                             )'''
-            c.execute(weekSql, (username,username))
+            c.execute(weekSql, (channelCanonical, usernameCanonical, channelCanonical, usernameCanonical, channelCanonical))
 
             rank = 0
             for row in c:
@@ -1516,21 +1544,32 @@ class TriviaTime(callbacks.Plugin):
                             from (
                                 select id, username, sum(points_made) as totalscore
                                 from triviauserlog
-                                where day=? and month=? and year=?
-                                group by username
+                                where day=? 
+                                and month=? 
+                                and year=?
+                                and channel_canonical=?
+                                group by username_canonical
                             ) as tu2
                             where tu2.totalscore > (
                                 select sum(points_made)
                                 from triviauserlog
-                                where day=? and month=? and year=? and username=?
+                                where day=? 
+                                and month=? 
+                                and year=? 
+                                and username_canonical=?
+                                and channel_canonical=?
                                 )
                         ) as tr
                         where
                             exists(
                                 select *
                                 from triviauserlog
-                                where day=? and month=? and year=? and username=?
-                            )''', (day,month,year,day,month,year,username,day,month,year,username))
+                                where day=? 
+                                and month=? 
+                                and year=? 
+                                and username_canonical=?
+                                and channel_canonical=?
+                            )''', (day, month, year, channelCanonical, day, month, year, usernameCanonical, channelCanonical, day, month, year, usernameCanonical, channelCanonical))
 
             rank = 0
             for row in c:
@@ -1544,8 +1583,9 @@ class TriviaTime(callbacks.Plugin):
             c.close()
             return data
 
-        def getUser(self, username):
-            username = ircutils.toLower(username)
+        def getUser(self, username, channel):
+            usernameCanonical = ircutils.toLower(username)
+            channelCanonical = ircutils.toLower(channel)
             dateObject = datetime.date.today()
             day   = dateObject.day
             month = dateObject.month
@@ -1561,7 +1601,8 @@ class TriviaTime(callbacks.Plugin):
                             sum(tl.points_made) as points, 
                             sum(tl.num_answered) as answered
                         from triviauserlog tl
-                        where tl.username=?''', (ircutils.toLower(username),))
+                        where tl.username_canonical=?
+                        and tl.channel_canonical=?''', (usernameCanonical,channelCanonical))
             
             for row in c:
                 for d in row:
@@ -1575,8 +1616,9 @@ class TriviaTime(callbacks.Plugin):
                             sum(tl.num_answered) as yearAnswered
                         from triviauserlog tl
                         where 
-                            tl.username=?
-                        and tl.year=?''', (ircutils.toLower(username),year))
+                            tl.username_canonical=?
+                        and tl.year=?
+                        and tl.channel_canonical=?''', (usernameCanonical, year, channelCanonical))
 
             for row in c:
                 for d in row:
@@ -1590,9 +1632,10 @@ class TriviaTime(callbacks.Plugin):
                             sum(tl.num_answered) as yearAnswered
                         from triviauserlog tl
                         where 
-                            tl.username=?
+                            tl.username_canonical=?
                         and tl.year=?
-                        and tl.month=?''', (ircutils.toLower(username),year, month))
+                        and tl.month=?
+                        and tl.channel_canonical=?''', (usernameCanonical, year, month, channelCanonical))
             
             for row in c:
                 for d in row:
@@ -1606,7 +1649,8 @@ class TriviaTime(callbacks.Plugin):
                             sum(tl.num_answered) as yearAnswered
                         from triviauserlog tl
                         where 
-                            tl.username=? 
+                            tl.username_canonical=? 
+                        and tl.channel_canonical=?
                         and ('''
             
             d = datetime.date.today()
@@ -1622,7 +1666,7 @@ class TriviaTime(callbacks.Plugin):
                 d += datetime.timedelta(1)
             
             weekSqlString += ')'
-            c.execute(weekSqlString, (ircutils.toLower(username),))
+            c.execute(weekSqlString, (usernameCanonical, channelCanonical))
             
             for row in c:
                 for d in row:
@@ -1636,10 +1680,11 @@ class TriviaTime(callbacks.Plugin):
                             sum(tl.num_answered) as yearAnswered
                         from triviauserlog tl
                         where 
-                            tl.username=? 
+                            tl.username_canonical=? 
+                        and tl.channel_canonical=?
                         and tl.year=?
                         and tl.month=?
-                        and tl.day=?''', (ircutils.toLower(username),year, month,day))
+                        and tl.day=?''', (usernameCanonical, channelCanonical, year, month, day))
             
             for row in c:
                 for d in row:
@@ -1647,7 +1692,7 @@ class TriviaTime(callbacks.Plugin):
                         d=0
                     data.append(d)
                 break
-            for d in self.getUserRanks(username):
+            for d in self.getUserRanks(username, channel):
                 data.append(d)
 
             c.close()
@@ -1657,7 +1702,7 @@ class TriviaTime(callbacks.Plugin):
             channel = ircutils.toLower(channel)
             c = self.conn.cursor()
             c.execute('''select * from triviagames
-                        where channel=?
+                        where channel_canonical=?
                         limit 1''', (channel,))
             data = None
             for row in c:
@@ -1780,7 +1825,7 @@ class TriviaTime(callbacks.Plugin):
         def gameExists(self, channel):
             channel = ircutils.toLower(channel)
             c = self.conn.cursor()
-            result = c.execute('select count(id) from triviagames where channel=?', (channel,))
+            result = c.execute('select count(id) from triviagames where channel_canonical=?', (channel,))
             rows = result.fetchone()[0]
             c.close()
             if rows > 0:
@@ -1796,7 +1841,7 @@ class TriviaTime(callbacks.Plugin):
             c.close()
             return data
 
-        def insertUserLog(self, username, score, numAnswered, timeTaken, day=None, month=None, year=None, epoch=None):
+        def insertUserLog(self, username, channel, score, numAnswered, timeTaken, day=None, month=None, year=None, epoch=None):
             if day == None and month == None and year == None:
                 dateObject = datetime.date.today()
                 day   = dateObject.day
@@ -1805,55 +1850,56 @@ class TriviaTime(callbacks.Plugin):
             score = int(score)
             if epoch is None:
                 epoch = int(time.mktime(time.localtime()))
-            if self.userLogExists(username, day, month, year):
-                return self.updateUserLog(username, score, numAnswered, timeTaken, day, month, year, epoch)
+            if self.userLogExists(username, channel, day, month, year):
+                return self.updateUserLog(username, channel, score, numAnswered, timeTaken, day, month, year, epoch)
             c = self.conn.cursor()
-            username = ircutils.toLower(username)
+            usernameCanonical = ircutils.toLower(username)
+            channelCanonical = ircutils.toLower(channel)
             scoreAvg = 'NULL'
             if numAnswered >= 1:
                 scoreAvg = score / numAnswered
-            c.execute('insert into triviauserlog values (NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?)', 
-                                    (username, score, numAnswered, day, month, year, epoch, timeTaken, scoreAvg))
+            c.execute('insert into triviauserlog values (NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', 
+                                    (username, score, numAnswered, day, month, year, epoch, timeTaken, scoreAvg, usernameCanonical, channel, channelCanonical))
             self.conn.commit()
             c.close()
 
         def insertUser(self, username, numReported=0, numAccepted=0):
-            username = ircutils.toLower(username)
+            usernameCanonical = ircutils.toLower(username)
             if self.userExists(username):
                 return self.updateUser(username)
             c = self.conn.cursor()
-            c.execute('insert into triviausers values (NULL, ?, ?, ?)', (username,numReported,numAccepted))
+            c.execute('insert into triviausers values (NULL, ?, ?, ?, ?)', (username,numReported,numAccepted,usernameCanonical))
             self.conn.commit()
             c.close()
 
         def insertGame(self, channel, numAsked=0, epoch=None):
-            channel = ircutils.toLower(channel)
+            channelCanonical = ircutils.toLower(channel)
             if self.gameExists(channel):
                 return self.updateGame(channel, numAsked)
             if epoch is None:
                 epoch = int(time.mktime(time.localtime()))
             c = self.conn.cursor()
-            c.execute('insert into triviagames values (NULL, ?, ?, ?, 0, 0)', (channel,numAsked,epoch))
+            c.execute('insert into triviagames values (NULL, ?, ?, ?, 0, 0, ?)', (channel,numAsked,epoch,channelCanonical))
             self.conn.commit()
             c.close()
 
         def insertGameLog(self, channel, roundNumber, lineNumber, questionText, askedAt=None):
-            channel = ircutils.toLower(channel)
+            channelCanonical = ircutils.toLower(channel)
             if askedAt is None:
                 askedAt = int(time.mktime(time.localtime()))
             c = self.conn.cursor()
-            c.execute('insert into triviagameslog values (NULL, ?, ?, ?, ?, ?)', (channel,roundNumber,lineNumber,questionText,askedAt))
+            c.execute('insert into triviagameslog values (NULL, ?, ?, ?, ?, ?, ?)', (channel,roundNumber,lineNumber,questionText,askedAt,channelCanonical))
             self.conn.commit()
             c.close()
 
         def insertReport(self, channel, username, reportText, questionNum, reportedAt=None):
-            channel = ircutils.toLower(channel)
-            username = ircutils.toLower(username)
+            channelCanonical = ircutils.toLower(channel)
+            usernameCanonical = ircutils.toLower(username)
             if reportedAt is None:
                 reportedAt = int(time.mktime(time.localtime()))
             c = self.conn.cursor()
-            c.execute('insert into triviareport values (NULL, ?, ?, ?, ?, NULL, NULL, ?)', 
-                                        (channel,username,reportText,reportedAt,questionNum))
+            c.execute('insert into triviareport values (NULL, ?, ?, ?, ?, NULL, NULL, ?,?,?)', 
+                                        (channel,username,reportText,reportedAt,questionNum,usernameCanonical,channelCanonical))
             self.conn.commit()
             c.close()
 
@@ -1871,21 +1917,21 @@ class TriviaTime(callbacks.Plugin):
 
         def insertEdit(self, questionId, questionText, username, channel, createdAt=None):
             c = self.conn.cursor()
-            username = ircutils.toLower(username)
-            channel = ircutils.toLower(channel)
+            channelCanonical = ircutils.toLower(channel)
+            usernameCanonical = ircutils.toLower(username)
             if createdAt is None:
                 createdAt = int(time.mktime(time.localtime()))
-            c.execute('insert into triviaedit values (NULL, ?, ?, NULL, ?, ?, ?)', 
-                                        (questionId,questionText,username,channel,createdAt))
+            c.execute('insert into triviaedit values (NULL, ?, ?, NULL, ?, ?, ?, ?, ?)', 
+                                        (questionId,questionText,username,channel,createdAt, usernameCanonical, channelCanonical))
             self.conn.commit()
             c.close()
 
         def insertTemporaryQuestion(self, username, channel, question):
             c = self.conn.cursor()
-            username = ircutils.toLower(username)
-            channel = ircutils.toLower(channel)
-            c.execute('insert into triviatemporaryquestion values (NULL, ?, ?, ?)', 
-                                        (username,channel,question))
+            channelCanonical = ircutils.toLower(channel)
+            usernameCanonical = ircutils.toLower(username)
+            c.execute('insert into triviatemporaryquestion values (NULL, ?, ?, ?, ?, ?)', 
+                                        (username,channel,question,usernameCanonical,channelCanonical))
             self.conn.commit()
             c.close()
 
@@ -1896,7 +1942,8 @@ class TriviaTime(callbacks.Plugin):
                         id integer primary key autoincrement, 
                         username text not null unique,
                         num_reported integer,
-                        num_accepted integer
+                        num_accepted integer,
+                        username_canonical
                         )''')
             except:
                 pass
@@ -1917,7 +1964,10 @@ class TriviaTime(callbacks.Plugin):
                         last_updated integer,
                         average_time integer,
                         average_score integer,
-                        unique(username, day, month, year) on conflict replace
+                        username_canonical text,
+                        channel text,
+                        channel_canonical text,
+                        unique(username_canonical,channel_canonical, day, month, year) on conflict replace
                         )''')
             except:
                 pass
@@ -1929,11 +1979,12 @@ class TriviaTime(callbacks.Plugin):
             try:
                 c.execute('''create table triviagames (
                         id integer primary key autoincrement, 
-                        channel text not null unique,
+                        channel text,
                         num_asked integer,
                         round_started integer,
                         last_winner text,
-                        streak integer
+                        streak integer,
+                        channel_canonical text not null unique
                         )''')
             except:
                 pass
@@ -1949,7 +2000,8 @@ class TriviaTime(callbacks.Plugin):
                         round_num integer,
                         line_num integer,
                         question text,
-                        asked_at integer
+                        asked_at integer,
+                        channel_canonical text
                         )''')
                 c.execute('''create index gamelograndomindex 
                             on triviagameslog (channel, line_num, asked_at)
@@ -1970,7 +2022,9 @@ class TriviaTime(callbacks.Plugin):
                         reported_at integer,
                         fixed_at integer,
                         fixed_by text,
-                        question_num integer
+                        question_num integer,
+                        username_canonical text,
+                        channel_canonical text
                         )''')
             except:
                 pass
@@ -1984,7 +2038,9 @@ class TriviaTime(callbacks.Plugin):
                         id integer primary key autoincrement,
                         username text,
                         channel text,
-                        question text
+                        question text,
+                        username_canonical text,
+                        channel_canonical text
                         )''')
             except:
                 pass
@@ -2018,7 +2074,9 @@ class TriviaTime(callbacks.Plugin):
                         status text,
                         username text,
                         channel text,
-                        created_at text
+                        created_at text,
+                        username_canonical text,
+                        channel_canonical
                         )''')
             except:
                 pass
@@ -2076,7 +2134,7 @@ class TriviaTime(callbacks.Plugin):
             username = ircutils.toLower(username)
             c = self.conn.cursor()
             c.execute('''delete from triviauserlog
-                        where username=?''', (username,))
+                        where username_canonical=?''', (username,))
             self.conn.commit()
             c.close()
 
@@ -2093,8 +2151,9 @@ class TriviaTime(callbacks.Plugin):
                                             from triviauserlog t3 
                                             where t3.day=triviauserlog.day 
                                             and t3.month=triviauserlog.month 
-                                            and t3.year=triviauserlog.year 
-                                            and t3.username=?
+                                            and t3.year=triviauserlog.year
+                                            and t3.channel_canonical=triviauserlog.channel_canonical
+                                            and t3.username_canonical=?
                                     )
                             ,0),
                     points_made=points_made
@@ -2105,20 +2164,22 @@ class TriviaTime(callbacks.Plugin):
                                             where t2.day=triviauserlog.day 
                                             and t2.month=triviauserlog.month 
                                             and t2.year=triviauserlog.year 
-                                            and t2.username=?
+                                            and t2.channel_canonical=triviauserlog.channel_canonical
+                                            and t2.username_canonical=?
                                     )
                             ,0)
                     where id in (
                             select id 
                             from triviauserlog tl 
-                            where username=? 
+                            where username_canonical=? 
                             and exists (
                                     select id 
                                     from triviauserlog tl2 
                                     where tl2.day=tl.day
                                     and tl2.month=tl.month 
-                                    and tl2.year=tl.year 
-                                    and username=?
+                                    and tl2.year=tl.year
+                                    and tl2.channel_canonical=tl.channel_canonical
+                                    and username_canonical=?
                             )
                     )
             ''', (userFrom,userFrom,userTo,userFrom))
@@ -2133,6 +2194,7 @@ class TriviaTime(callbacks.Plugin):
                             where tl.day=triviauserlog.day 
                             and tl.month=triviauserlog.month 
                             and tl.year=triviauserlog.year 
+                            and tl.channel_canonical=triviauserlog.channel_canonical
                             and tl.username=?
                     )
             ''',(userTo, userFrom, userTo))
@@ -2140,11 +2202,10 @@ class TriviaTime(callbacks.Plugin):
 
             self.removeUserLogs(userFrom)
 
-        def userLogExists(self, username, day, month, year):
-            username = ircutils.toLower(username)
+        def userLogExists(self, username, channel, day, month, year):
             c = self.conn.cursor()
-            args = (ircutils.toLower(username),day,month,year)
-            result = c.execute('select count(id) from triviauserlog where username=? and day=? and month=? and year=?', args)
+            args = (ircutils.toLower(username),ircutils.toLower(channel),day,month,year)
+            result = c.execute('select count(id) from triviauserlog where username_canonical=? and channel_canonical=? and day=? and month=? and year=?', args)
             rows = result.fetchone()[0]
             c.close()
             if rows > 0:
@@ -2154,15 +2215,14 @@ class TriviaTime(callbacks.Plugin):
         def userExists(self, username):
             c = self.conn.cursor()
             usr = (ircutils.toLower(username),)
-            result = c.execute('select count(id) from triviausers where lower(username)=?', usr)
+            result = c.execute('select count(id) from triviausers where username_canonical=?', usr)
             rows = result.fetchone()[0]
             c.close()
             if rows > 0:
                 return True
             return False
 
-        def updateUserLog(self, username, score, numAnswered, timeTaken, day=None, month=None, year=None, epoch=None):
-            username = ircutils.toLower(username)
+        def updateUserLog(self, username, channel, score, numAnswered, timeTaken, day=None, month=None, year=None, epoch=None):
             if not self.userExists(username):
                 self.insertUser(username)
             if day == None and month == None and year == None:
@@ -2172,69 +2232,72 @@ class TriviaTime(callbacks.Plugin):
                 year  = dateObject.year
             if epoch is None:
                 epoch = int(time.mktime(time.localtime()))
-            if not self.userLogExists(username, day, month, year):
-                return self.insertUserLog(username, score, numAnswered, timeTaken, day, month, year, epoch)
+            if not self.userLogExists(username, channel, day, month, year):
+                return self.insertUserLog(username, channel, score, numAnswered, timeTaken, day, month, year, epoch)
             c = self.conn.cursor()
-            usr = ircutils.toLower(username)
-            scr = score
-            numAns = numAnswered
-            test = c.execute('''update triviauserlog set 
+            usernameCanonical = ircutils.toLower(username)
+            channelCanonical = ircutils.toLower(channel)
+            test = c.execute('''update triviauserlog set
+                                username=?,
                                 points_made = points_made+?,
                                 average_time=( average_time * (1.0*num_answered/(num_answered+?)) + ? * (1.0*?/(num_answered+?)) ),
                                 average_score=( average_score * (1.0*num_answered/(num_answered+?)) + ? * (1.0*?/(num_answered+?)) ),
                                 num_answered = num_answered+?,
                                 last_updated = ?
-                                where username=?
+                                where username_canonical=?
+                                and channel_canonical=?
                                 and day=? 
                                 and month=? 
-                                and year=?''', (scr,numAns,timeTaken,numAns,numAns,numAns,score,numAns,numAns,numAns,epoch,usr,day,month,year))
+                                and year=?''', (username,score,numAnswered,timeTaken,numAnswered,numAnswered,numAnswered,score,numAnswered,numAnswered,numAnswered,epoch,usernameCanonical,channelCanonical,day,month,year))
             self.conn.commit()
             c.close()
 
         def updateUser(self, username, numReported=0, numAccepted=0):
-            username = ircutils.toLower(username)
             if not self.userExists(username):
                 return self.insertUser(username, numReported, numAccepted)
+            usernameCanonical = ircutils.toLower(username)
             c = self.conn.cursor()
             c.execute('''update triviausers set
+                                username=?,
                                 num_reported=num_reported+?,
                                 num_accepted=num_accepted+?
-                                where username=?''', (numReported, numAccepted, username))
+                                where username_canonical=?''', (username, numReported, numAccepted, usernameCanonical))
             self.conn.commit()
             c.close()
             
         def updateGame(self, channel, numAsked):
-            channel = ircutils.toLower(channel)
             if not self.gameExists(channel):
                 return self.insertGame(channel, numAsked)
             c = self.conn.cursor()
+            channelCanonical = ircutils.toLower(channel)
             test = c.execute('''update triviagames set
+                                channel=?,
                                 num_asked=?
-                                where channel=?''', (numAsked, channel))
+                                where channel_canonical=?''', (channel, numAsked, channelCanonical))
             self.conn.commit()
             c.close()
 
         def updateGameStreak(self, channel, lastWinner, streak):
-            channel = ircutils.toLower(channel)
-            lastWinner  = ircutils.toLower(lastWinner)
             if not self.gameExists(channel):
                 return self.insertGame(channel, 0, None)
             c = self.conn.cursor()
+            channelCanonical = ircutils.toLower(channel)
+            lastWinner  = ircutils.toLower(lastWinner)
             test = c.execute('''update triviagames set
                                 last_winner=?,
                                 streak=?
-                                where channel=?''', (lastWinner, streak, channel))
+                                where channel_canonical=?''', (lastWinner, streak, channelCanonical))
             self.conn.commit()
             c.close()
 
         def updateGameRoundStarted(self, channel, lastRoundStarted):
-            channel = ircutils.toLower(channel)
             if not self.gameExists(channel):
                 return self.insertGame(channel, numAsked)
+            channelCanonical = ircutils.toLower(channel)
             c = self.conn.cursor()
             test = c.execute('''update triviagames set
                                 round_started=?
-                                where channel=?''', (lastRoundStarted, channel))
+                                where channel_canonical=?''', (lastRoundStarted, channelCanonical))
             self.conn.commit()
             c.close()
 
@@ -2246,54 +2309,42 @@ class TriviaTime(callbacks.Plugin):
             self.conn.commit()
             c.close()
 
-        def viewDayTop10(self):
+        def viewDayTop10(self, channel):
             dateObject = datetime.date.today()
             day   = dateObject.day
             month = dateObject.month
             year  = dateObject.year
+            channelCanonical = ircutils.toLower(channel)
             c = self.conn.cursor()
-            c.execute('''select * from triviauserlog 
-                        where day=? and month=? and year=?
-                        order by points_made desc limit 10''', (day, month, year))
-            data = []
-            for row in c:
-                data.append(row)
-            c.close()
-            return data
-
-        def viewAllTimeTop10(self):
-            c = self.conn.cursor()
-            c.execute('''select id,
-                        username,
-                        sum(points_made),
-                        sum(num_answered)
-                        from triviauserlog
-                        group by username 
-                        order by points_made desc 
-                        limit 10''')
-
-            data = []
-            for row in c:
-                data.append(row)
-            c.close()
-            return data
-
-        def viewMonthTop10(self, year=None, month=None):
-            d = datetime.date.today()
-            if year is None or month is None:
-                year = d.year
-                month = d.month
-            c = self.conn.cursor()
-
             c.execute('''select id,
                         username,
                         sum(points_made),
                         sum(num_answered)
                         from triviauserlog 
-                        where year=? and month=?
-                        group by username 
+                        where day=? 
+                        and month=? 
+                        and year=?
+                        and channel_canonical=?
+                        group by username_canonical 
+                        order by points_made desc limit 10''', (day, month, year, channelCanonical))
+            data = []
+            for row in c:
+                data.append(row)
+            c.close()
+            return data
+
+        def viewAllTimeTop10(self, channel):
+            c = self.conn.cursor()
+            channelCanonical = ircutils.toLower(channel)
+            c.execute('''select id,
+                        username,
+                        sum(points_made),
+                        sum(num_answered)
+                        from triviauserlog
+                        where channel_canonical=?
+                        group by username_canonical 
                         order by points_made desc 
-                        limit 10''', (year,month))
+                        limit 10''', (channelCanonical,))
 
             data = []
             for row in c:
@@ -2301,21 +2352,47 @@ class TriviaTime(callbacks.Plugin):
             c.close()
             return data
 
-        def viewYearTop10(self, year=None):
+        def viewMonthTop10(self, channel, year=None, month=None):
+            d = datetime.date.today()
+            if year is None or month is None:
+                year = d.year
+                month = d.month
+            c = self.conn.cursor()
+            channelCanonical = ircutils.toLower(channel)
+            c.execute('''select id,
+                        username,
+                        sum(points_made),
+                        sum(num_answered)
+                        from triviauserlog 
+                        where year=? 
+                        and month=?
+                        and channel_canonical=?
+                        group by username_canonical 
+                        order by points_made desc 
+                        limit 10''', (year,month, channelCanonical))
+
+            data = []
+            for row in c:
+                data.append(row)
+            c.close()
+            return data
+
+        def viewYearTop10(self, channel, year=None):
             d = datetime.date.today()
             if year is None:
                 year = d.year
             c = self.conn.cursor()
-
+            channelCanonical = ircutils.toLower(channel)
             c.execute('''select id,
                         username,
                         sum(points_made),
                         sum(num_answered)
                         from triviauserlog 
                         where year=?
+                        and channel_canonical=?
                         group by username 
                         order by points_made desc 
-                        limit 10''', (year,))
+                        limit 10''', (year,channelCanonical))
 
             data = []
             for row in c:
@@ -2323,7 +2400,7 @@ class TriviaTime(callbacks.Plugin):
             c.close()
             return data
 
-        def viewWeekTop10(self):
+        def viewWeekTop10(self, channel):
             d = datetime.date.today()
             weekday=d.weekday()
             d -= datetime.timedelta(weekday)
@@ -2342,10 +2419,15 @@ class TriviaTime(callbacks.Plugin):
                         sum(points_made),
                         sum(num_answered)
                         from triviauserlog 
-                        where '''
+                        where ('''
             weekSql += weekSqlString
-            weekSql += ''' group by username order by points_made desc limit 10'''
-            c.execute(weekSql)
+            weekSql += ''' ) and channel_canonical=?
+                            group by username 
+                            order by points_made desc 
+                            limit 10
+                        '''
+            channelCanonical = ircutils.toLower(channel)
+            c.execute(weekSql, (channelCanonical,))
 
             data = []
             for row in c:
@@ -2363,7 +2445,7 @@ class TriviaTime(callbacks.Plugin):
             c = self.conn.cursor()
             result = c.execute('''select count(*) from triviauserlog 
                         where day=? and month=? and year=?
-                        and username=? and last_updated>?''', (day, month, year,username,(epoch-timeSeconds)))
+                        and username_canonical=? and last_updated>?''', (day, month, year,username,(epoch-timeSeconds)))
             rows = result.fetchone()[0]
             c.close()
             if rows > 0:
