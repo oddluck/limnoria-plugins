@@ -1283,6 +1283,7 @@ class TriviaTime(callbacks.Plugin):
             c = self.conn.cursor()
             try:
                 c.execute('''drop table triviagameslog''')
+                c.execute('''drop index gamelograndomindex''')
             except:
                 pass
             c.close()
@@ -1299,6 +1300,7 @@ class TriviaTime(callbacks.Plugin):
             c = self.conn.cursor()
             try:
                 c.execute('''drop table triviaquestion''')
+                c.execute('''drop index questionrandomindex''')
             except:
                 pass
             c.close()
@@ -1322,8 +1324,9 @@ class TriviaTime(callbacks.Plugin):
         def getRandomQuestionNotAsked(self, channel, roundStart):
             c = self.conn.cursor()
             c.execute('''select * from triviaquestion 
-                            where id not in (select line_num from triviagameslog where deleted=1 or (channel=? and asked_at>=?))
-                            order by random() limit 1''', (ircutils.toLower(channel),roundStart))
+                            where deleted=0 and id not in (select tl.line_num from triviagameslog tl where tl.channel=? and tl.asked_at>=?)
+                            order by random() limit 1
+                        ''', (ircutils.toLower(channel),roundStart))
             data = []
             for row in c:
                 data.append(row)
@@ -1348,7 +1351,7 @@ class TriviaTime(callbacks.Plugin):
         def getNumQuestionsNotAsked(self, channel, roundStart):
             c = self.conn.cursor()
             result = c.execute('''select count(id) from triviaquestion 
-                            where id not in (select line_num from triviagameslog where deleted=1 or (channel=? and asked_at>=?))''', 
+                            where deleted=0 and id not in (select tl.line_num from triviagameslog tl where tl.channel=? and tl.asked_at>=?)''', 
                                     (channel,roundStart))
             rows = result.fetchone()[0]
             c.close()
@@ -1948,6 +1951,9 @@ class TriviaTime(callbacks.Plugin):
                         question text,
                         asked_at integer
                         )''')
+                c.execute('''create index gamelograndomindex 
+                            on triviagameslog (channel, line_num, asked_at)
+                            )''')
             except:
                 pass
             self.conn.commit()
@@ -1994,6 +2000,9 @@ class TriviaTime(callbacks.Plugin):
                         question text,
                         deleted integer not null default 0
                         )''')
+                c.execute('''create index questionrandomindex 
+                            on triviagameslog (id, deleted)
+                            )''')
             except:
                 pass
             self.conn.commit()
