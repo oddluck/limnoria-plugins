@@ -297,7 +297,7 @@ class TriviaTime(callbacks.Plugin):
 
     def latency(self, irc, msg, arg):
         """
-			get the ping time of a user
+            get the ping time of a user
         """
         channel = ircutils.toLower(msg.args[0])
         username = ircutils.toLower(msg.nick)
@@ -905,7 +905,7 @@ class TriviaTime(callbacks.Plugin):
                     for i in range(len(ans)-divider):
                         masked = ansend[i]
                         if masked == ' ':
-                            hintsend = ' '
+                            hintsend += ' '
                             unmasked += 1
                         elif maskedInARow > 2 and unmasked < (len(ans)-divider):
                             lettersInARow += 1
