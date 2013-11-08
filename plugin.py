@@ -1217,13 +1217,8 @@ class TriviaTime(callbacks.Plugin):
 
                 helper for game instance to send messages to channel
             """
-            # with colors? bgcolor?
-            if color is None:
-                self.irc.sendMsg(ircmsgs.privmsg(self.channel, ' \x02%s ' % msg))
-            elif bgcolor is None:
-                self.irc.sendMsg(ircmsgs.privmsg(self.channel, ' \x02%s ' % (color, msg)))
-            else:
-                self.irc.sendMsg(ircmsgs.privmsg(self.channel, ' \x02%s ' % (color, bgcolor, msg)))
+            # no color
+            self.irc.sendMsg(ircmsgs.privmsg(self.channel, ' %s ' % msg))
 
         def stop(self):
             """
@@ -1835,7 +1830,7 @@ class TriviaTime(callbacks.Plugin):
             if epoch is None:
                 epoch = int(time.mktime(time.localtime()))
             c = self.conn.cursor()
-            c.execute('insert into triviagames values (NULL, ?, 0, 0)', (channel,numAsked,epoch))
+            c.execute('insert into triviagames values (NULL, ?, ?, ?, 0, 0)', (channel,numAsked,epoch))
             self.conn.commit()
             c.close()
 
