@@ -305,11 +305,11 @@ class TriviaTime(callbacks.Plugin):
         username = msg.nick
         expiredPings = []
 
-        for ping in self.pings:
-            if time.time() - self.pings[ping][0] > 60:
-                expiredPings.append(ping)
-        for ping in expiredPings:
-            del expiredPings[ping]
+        for pingitem in self.pings:
+            if time.time() - self.pings[pingitem][0] > 60:
+                expiredPings.append(pingitem)
+        for pingitem in expiredPings:
+            del self.pings[expiredPings[pingitem]]
         if ircutils.toLower(username) in self.pings:
             return
         self.pings[ircutils.toLower(username)] = (time.time(), channel)
