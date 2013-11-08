@@ -296,6 +296,9 @@ class TriviaTime(callbacks.Plugin):
     info = wrap(info)
 
     def latency(self, irc, msg, arg):
+        """
+			get the ping time of a user
+        """
         channel = ircutils.toLower(msg.args[0])
         username = ircutils.toLower(msg.nick)
         expiredPings = []
