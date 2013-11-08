@@ -35,7 +35,6 @@ class TriviaTime(callbacks.Plugin):
         """ games info """
         self.games = {} # separate game for each channel
         self.skips = {}
-        self.pings = {}
 
         """ connections """
         dbLocation = self.registryValue('sqlitedb')
@@ -124,10 +123,13 @@ class TriviaTime(callbacks.Plugin):
     def doNotice(self,irc,msg):
         username = msg.nick
         if msg.args[1][1:5] == "PING":
-            if ircutils.toLower(username) in self.pings:
-                pingTime = float(time.time() - self.pings[username][0])
-                irc.sendMsg(ircmsgs.privmsg(self.pings[username][1], """ %s Pong: response %0.2f seconds""" % (username, pingTime)))
-                del self.pings[username]
+            pingMsg = msg.args[1][6:]
+            pingMsg = pingMsg[:-1]
+            pingMsg = pingMsg.split('*', 1)
+            if len(pingMsg) == 2:
+                pingTime = float(pingMsg[0])
+                channel = pingMsg[1]
+                irc.sendMsg(ircmsgs.privmsg(channel, """ %s Pong: response %0.2f seconds""" % (username, time.time()-pingTime)))
 
     def acceptedit(self, irc, msg, arg, user, channel, num):
         """[<channel>] <num>
@@ -303,17 +305,7 @@ class TriviaTime(callbacks.Plugin):
         """
         channel = msg.args[0]
         username = msg.nick
-        expiredPings = []
-
-        for pingitem in self.pings:
-            if time.time() - self.pings[pingitem][0] > 60:
-                expiredPings.append(pingitem)
-        for pingitem in expiredPings:
-            del self.pings[expiredPings[pingitem]]
-        if ircutils.toLower(username) in self.pings:
-            return
-        self.pings[ircutils.toLower(username)] = (time.time(), channel)
-        irc.sendMsg(ircmsgs.privmsg(username, """\x01PING ping\x01"""))
+        irc.sendMsg(ircmsgs.privmsg(username, """\x01PING %s*%s\x01""" % (time.time(),channel)))
     ping = wrap(ping)
 
     def me(self, irc, msg, arg):
