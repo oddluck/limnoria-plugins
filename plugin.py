@@ -1209,10 +1209,10 @@ class TriviaTime(callbacks.Plugin):
                 alternativeAnswers = []
                 if ircutils.toLower(question[:4]) == 'kaos':
                     for ans in answers:
-                        answer.append(ans.strip())
+                        answer.append(self.removeAccents(ans.strip()))
                 elif ircutils.toLower(question[:5]) == 'uword':
                     for ans in answers:
-                        answer.append(ans)
+                        answer.append(self.removeAccents(ans))
                         question = 'Unscramble the letters: '
                         shuffledLetters = list(ans)
                         random.shuffle(shuffledLetters)
@@ -1223,9 +1223,9 @@ class TriviaTime(callbacks.Plugin):
                 else:                
                     for ans in answers:
                         if answer == []:
-                            answer.append(str(ans).strip())
+                            answer.append(self.removeAccents(str(ans).strip()))
                         else:
-                            alternativeAnswers.append(str(ans).strip())
+                            alternativeAnswers.append(self.removeAccents(str(ans).strip()))
 
                 points = self.registryValue('defaultPoints', self.channel)
                 if len(answer) > 1:
