@@ -63,11 +63,6 @@ class TriviaTime(callbacks.Plugin):
         self.storage.makeTemporaryQuestionTable()
         #self.storage.dropEditTable()
         self.storage.makeEditTable()
-        #self.storage.insertUserLog('root', 1, 1, 10, 10, 30, 2013)
-        #self.storage.insertUser('root', 1, 1)
-
-        #filename = self.registryValue('quizfile')
-        #self.addQuestionsFromFile(filename)
 
     def doPrivmsg(self, irc, msg):
         """
@@ -885,7 +880,11 @@ class TriviaTime(callbacks.Plugin):
                     hints += '['
                 if hintNum == 0:
                     masked = ans
-                    hints += re.sub('\w', charMask, masked)
+                    for i in range(len(masked)):
+                        if masked[i] in " -'\"_=+&%$#@!~`[]{}?.,<>|\\/":
+                            hints+= masked[i]
+                        else:
+                            hints += charMask
                 elif hintNum == 1:
                     divider = int(len(ans) * ratio)
                     if divider > 3:
@@ -894,7 +893,11 @@ class TriviaTime(callbacks.Plugin):
                         divider = len(ans)-1
                     hints += ans[:divider]
                     masked = ans[divider:]
-                    hints += re.sub('\w', charMask, masked)
+                    for i in range(len(masked)):
+                        if masked[i] in " -'\"_=+&%$#@!~`[]{}?.,<>|\\/":
+                            hints+= masked[i]
+                        else:
+                            hints += charMask
                 elif hintNum == 2:
                     divider = int(len(ans) * ratio)
                     if divider > 3:
@@ -920,12 +923,12 @@ class TriviaTime(callbacks.Plugin):
             hints = ''
             for i in range(len(letters)):
                 masked = letters[i]
-                if masked == ' ':
-                    hints += ' '
+                if masked in " -'\"_=+&%$#@!~`[]{}?.,<>|\\/":
+                    hints += masked
                 elif masked in 'aeiou':
                     hints += masked
                 else:
-                    hints += re.sub('\w', charMask, masked)
+                    hints += charMask
             return hints
 
         def getMaskedRandom(self, letters, sizeOfUnmasked):
@@ -937,8 +940,8 @@ class TriviaTime(callbacks.Plugin):
             lettersInARow=sizeOfUnmasked
             for i in range(len(letters)):
                 masked = letters[i]
-                if masked == ' ':
-                    hints += ' '
+                if masked in " -'\"_=+&%$#@!~`[]{}?.,<>|\\/":
+                    hints += masked
                     unmasked += 1
                 elif maskedInARow > 2 and unmasked < (len(letters)-1):
                     lettersInARow += 1
@@ -953,9 +956,8 @@ class TriviaTime(callbacks.Plugin):
                 else:
                     maskedInARow += 1
                     lettersInARow=0
-                    hints += re.sub('\w', charMask, masked)
+                    hints += charMask
             return hints
-
 
         def getOtherHintString(self):
             hintRatio = self.registryValue('hintShowRatio') # % to show each hint
