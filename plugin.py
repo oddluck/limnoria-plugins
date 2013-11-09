@@ -299,7 +299,7 @@ class TriviaTime(callbacks.Plugin):
 
     def ping(self, irc, msg, arg):
         """
-            get the ping time of a user
+            Check your latency to the server.
         """
         channel = msg.args[0]
         username = msg.nick
@@ -495,8 +495,8 @@ class TriviaTime(callbacks.Plugin):
         irc.noReply()
     skip = wrap(skip)
 
-    def showstats(self, irc, msg, arg, username):
-        """
+    def stats(self, irc, msg, arg, username):
+        """ <username>
             Show a  player's rank, score & questions asked for day, month, and year
         """
         channel = msg.args[0]
@@ -507,7 +507,7 @@ class TriviaTime(callbacks.Plugin):
             infoText = '%s\'s Stats: Points (answers) \x02Today:\x02 #%d %d (%d) \x02This Week:\x02 #%d %d (%d) \x02This Month:\x02 #%d %d (%d) \x02This Year:\x02 #%d %d (%d)' % (info[1], info[16], info[10], info[11], info[15], info[8], info[9], info[14], info[6], info[7], info[13], info[4], info[5])
             irc.sendMsg(ircmsgs.privmsg(channel, infoText))
         irc.noReply()
-    showstats = wrap(showstats,['nick'])
+    stats = wrap(stats,['nick'])
 
     def showquestion(self, irc, msg, arg, user, channel, num):
         """[<channel>] <num>
