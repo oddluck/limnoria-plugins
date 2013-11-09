@@ -381,6 +381,9 @@ class TriviaTime(callbacks.Plugin):
     removetempquestion = wrap(removetempquestion, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
 
     def repeat(self, irc, msg, arg):
+        """
+        Repeat the current question.
+        """
         channel = msg.args[0]
         channelCanonical = ircutils.toLower(channel)
         if channelCanonical in self.games:
