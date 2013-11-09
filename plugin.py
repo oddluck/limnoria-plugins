@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 ###
 # Copyright (c) 2013, tann <tann@trivialand.org>
 # All rights reserved.
@@ -753,14 +754,16 @@ class TriviaTime(callbacks.Plugin):
             correctAnswer = ''
 
             attempt = ircutils.toLower(msg.args[1])
-
+            attempt = self.removeAccents(attempt)
             # was a correct answer guessed?
             for ans in self.alternativeAnswers:
-                if ircutils.toLower(ans) == attempt and ircutils.toLower(ans) not in self.guessedAnswers:
+                normalizedAns = self.removeAccents(ircutils.toLower(ans))
+                if normalizedAns == attempt and normalizedAns not in self.guessedAnswers:
                     correctAnswerFound = True
                     correctAnswer = ans
             for ans in self.answers:
-                if ircutils.toLower(ans) == attempt and ircutils.toLower(ans) not in self.guessedAnswers:
+                normalizedAns = self.removeAccents(ircutils.toLower(ans))
+                if normalizedAns == attempt and normalizedAns not in self.guessedAnswers:
                     correctAnswerFound = True
                     correctAnswer = ans
 
@@ -1156,6 +1159,12 @@ class TriviaTime(callbacks.Plugin):
                 func()
             if self.active:
                 schedule.addEvent(event, timeout, '%s.trivia' % self.channel)
+
+        def removeAccents(self, text):
+            replacements = [('á', 'a'),('é','e'),('í', 'i'),('ó','o'),('ú','u'),('ü','u'),('ñ','n')]
+            for a,b in replacements:
+                text = text.replace(a,b)
+            return text
 
         def repeatQuestion(self):
             if self.questionRepeated == True:
