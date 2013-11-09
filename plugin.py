@@ -92,8 +92,6 @@ class TriviaTime(callbacks.Plugin):
                 self.games[channelCanonical].getRemainingKAOS()
             elif msg.args[1] == self.registryValue('showOtherHintCommand', channel):
                 self.games[channelCanonical].getOtherHint(username)
-            elif msg.args[1] == self.registryValue('repeatCommand', channel):
-                self.games[channelCanonical].repeatQuestion()
             else:
                 # check the answer
                 self.games[channelCanonical].checkAnswer(msg)
