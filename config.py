@@ -40,11 +40,6 @@ conf.registerChannelValue(TriviaTime, 'showHintCommandKAOS',
                 """The command for showing the remaining KAOS""")
         )
 
-conf.registerChannelValue(TriviaTime, 'repeatCommand', 
-        registry.NormalizedString("""repeat""", 
-                """The command to repeat the question""")
-        )
-
 conf.registerChannelValue(TriviaTime, 'showPlayerStats', 
         registry.Boolean(True, 
                 """Show player stats after correct answer?""")

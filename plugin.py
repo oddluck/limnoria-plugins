@@ -1231,7 +1231,7 @@ class TriviaTime(callbacks.Plugin):
             # responsible for stopping a timer/thread after being told to stop
             self.active = False
             self.removeEvent()
-            self.sendMessage(self.registryValue('stopped'), 2)
+            self.sendMessage(self.registryValue('stopped'))
             channelCanonical = ircutils.toLower(self.channel)
             if channelCanonical in self.games:
                 del self.games[channelCanonical]
