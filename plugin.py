@@ -907,29 +907,55 @@ class TriviaTime(callbacks.Plugin):
                     ansend = ans[divider:]
                     hintsend = ''
                     unmasked = 0
-                    for i in range(len(ans)-divider):
-                        masked = ansend[i]
-                        if masked == ' ':
-                            hintsend += ' '
-                            unmasked += 1
-                        elif maskedInARow > 2 and unmasked < (len(ans)-divider):
-                            lettersInARow += 1
-                            hintsend += ansend[i]
-                            unmasked += 1
-                            maskedInARow = 0
-                        elif lettersInARow < 3 and unmasked < (len(ans)-divider) and random.randint(0,100) < hintRatio:
-                            lettersInARow += 1
-                            hintsend += ansend[i]
-                            unmasked += 1
-                            maskedInARow = 0
-                        else:
-                            maskedInARow += 1
-                            lettersInARow=0
-                            hintsend += re.sub('\w', charMask, masked)
-                    hints += hintsend
+                    if self.registryValue('showVowelsThirdHint', self.channel):
+                        hints+= self.getMaskedVowels(ansend)
+                    else:
+                        hints+= self.getMaskedRandom(ansend, divider-1)
                 if len(self.answers) > 1:
                     hints += ']'
             return hints
+
+        def getMaskedVowels(self, letters):
+            charMask = self.registryValue('charMask', self.channel)
+            hints = ''
+            for i in range(len(letters)):
+                masked = letters[i]
+                if masked == ' ':
+                    hints += ' '
+                elif masked in 'aeiou':
+                    hints += masked
+                else:
+                    hints += re.sub('\w', charMask, masked)
+            return hints
+
+        def getMaskedRandom(self, letters, sizeOfUnmasked):
+            charMask = self.registryValue('charMask', self.channel)
+            hintRatio = self.registryValue('hintShowRatio') # % to show each hint
+            hints = ''
+            unmasked = 0
+            maskedInARow=0
+            lettersInARow=sizeOfUnmasked
+            for i in range(len(letters)):
+                masked = letters[i]
+                if masked == ' ':
+                    hints += ' '
+                    unmasked += 1
+                elif maskedInARow > 2 and unmasked < (len(letters)-1):
+                    lettersInARow += 1
+                    unmasked += 1
+                    maskedInARow = 0
+                    hints += letters[i]
+                elif lettersInARow < 3 and unmasked < (len(letters)-1) and random.randint(0,100) < hintRatio:
+                    lettersInARow += 1
+                    unmasked += 1
+                    maskedInARow = 0
+                    hints += letters[i]
+                else:
+                    maskedInARow += 1
+                    lettersInARow=0
+                    hints += re.sub('\w', charMask, masked)
+            return hints
+
 
         def getOtherHintString(self):
             hintRatio = self.registryValue('hintShowRatio') # % to show each hint
