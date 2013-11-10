@@ -40,6 +40,16 @@ conf.registerChannelValue(TriviaTime, 'showHintCommandKAOS',
                 """The command for showing the remaining KAOS""")
         )
 
+conf.registerChannelValue(TriviaTime, 'showVowelsThirdHint',
+        registry.Boolean(True,
+                """Show all vowels on the third hint. If false, random letters will be shown instead""")
+        )
+
+conf.registerChannelValue(TriviaTime, 'repeatCommand', 
+        registry.NormalizedString("""repeat""", 
+                """The command to repeat the question""")
+        )
+
 conf.registerChannelValue(TriviaTime, 'showPlayerStats', 
         registry.Boolean(True, 
                 """Show player stats after correct answer?""")
@@ -56,7 +66,7 @@ conf.registerChannelValue(TriviaTime, 'skipActiveTime',
         )
 
 conf.registerChannelValue(TriviaTime, 'skipLimitTime', 
-        registry.Integer(90, 
+        registry.Integer(60, 
                 """Time a user must wait to skip a question again after skipping in seconds""")
         )
 
@@ -157,7 +167,7 @@ conf.registerChannelValue(TriviaTime, 'answeredNormal',
         )
 
 conf.registerChannelValue(TriviaTime, 'notAnswered', 
-        registry.NormalizedString("""Time's up! The answer was \x02%s\x02.""", 
+        registry.NormalizedString("""Time's up! The answer was \x02%s\x02""", 
                 """Message when no one guesses the answer""")
         )
 
@@ -192,4 +202,3 @@ conf.registerChannelValue(TriviaTime, 'playerStatsMsg',
         )
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
-

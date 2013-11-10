@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 ###
 # Copyright (c) 2013, tann <tann@trivialand.org>
 # All rights reserved.
@@ -63,11 +64,6 @@ class TriviaTime(callbacks.Plugin):
         self.storage.makeTemporaryQuestionTable()
         #self.storage.dropEditTable()
         self.storage.makeEditTable()
-        #self.storage.insertUserLog('root', 1, 1, 10, 10, 30, 2013)
-        #self.storage.insertUser('root', 1, 1)
-
-        #filename = self.registryValue('quizfile')
-        #self.addQuestionsFromFile(filename)
 
     def doPrivmsg(self, irc, msg):
         """
@@ -758,14 +754,16 @@ class TriviaTime(callbacks.Plugin):
             correctAnswer = ''
 
             attempt = ircutils.toLower(msg.args[1])
-
+            attempt = self.removeAccents(attempt)
             # was a correct answer guessed?
             for ans in self.alternativeAnswers:
-                if ircutils.toLower(ans) == attempt and ircutils.toLower(ans) not in self.guessedAnswers:
+                normalizedAns = self.removeAccents(ircutils.toLower(ans))
+                if normalizedAns == attempt and normalizedAns not in self.guessedAnswers:
                     correctAnswerFound = True
                     correctAnswer = ans
             for ans in self.answers:
-                if ircutils.toLower(ans) == attempt and ircutils.toLower(ans) not in self.guessedAnswers:
+                normalizedAns = self.removeAccents(ircutils.toLower(ans))
+                if normalizedAns == attempt and normalizedAns not in self.guessedAnswers:
                     correctAnswerFound = True
                     correctAnswer = ans
 
@@ -885,7 +883,11 @@ class TriviaTime(callbacks.Plugin):
                     hints += '['
                 if hintNum == 0:
                     masked = ans
-                    hints += re.sub('\w', charMask, masked)
+                    for i in range(len(masked)):
+                        if masked[i] in " -'\"_=+&%$#@!~`[]{}?.,<>|\\/":
+                            hints+= masked[i]
+                        else:
+                            hints += charMask
                 elif hintNum == 1:
                     divider = int(len(ans) * ratio)
                     if divider > 3:
@@ -894,7 +896,11 @@ class TriviaTime(callbacks.Plugin):
                         divider = len(ans)-1
                     hints += ans[:divider]
                     masked = ans[divider:]
-                    hints += re.sub('\w', charMask, masked)
+                    for i in range(len(masked)):
+                        if masked[i] in " -'\"_=+&%$#@!~`[]{}?.,<>|\\/":
+                            hints+= masked[i]
+                        else:
+                            hints += charMask
                 elif hintNum == 2:
                     divider = int(len(ans) * ratio)
                     if divider > 3:
@@ -907,28 +913,53 @@ class TriviaTime(callbacks.Plugin):
                     ansend = ans[divider:]
                     hintsend = ''
                     unmasked = 0
-                    for i in range(len(ans)-divider):
-                        masked = ansend[i]
-                        if masked == ' ':
-                            hintsend += ' '
-                            unmasked += 1
-                        elif maskedInARow > 2 and unmasked < (len(ans)-divider):
-                            lettersInARow += 1
-                            hintsend += ansend[i]
-                            unmasked += 1
-                            maskedInARow = 0
-                        elif lettersInARow < 3 and unmasked < (len(ans)-divider) and random.randint(0,100) < hintRatio:
-                            lettersInARow += 1
-                            hintsend += ansend[i]
-                            unmasked += 1
-                            maskedInARow = 0
-                        else:
-                            maskedInARow += 1
-                            lettersInARow=0
-                            hintsend += re.sub('\w', charMask, masked)
-                    hints += hintsend
+                    if self.registryValue('showVowelsThirdHint', self.channel):
+                        hints+= self.getMaskedVowels(ansend)
+                    else:
+                        hints+= self.getMaskedRandom(ansend, divider-1)
                 if len(self.answers) > 1:
                     hints += ']'
+            return hints
+
+        def getMaskedVowels(self, letters):
+            charMask = self.registryValue('charMask', self.channel)
+            hints = ''
+            for i in range(len(letters)):
+                masked = letters[i]
+                if masked in " -'\"_=+&%$#@!~`[]{}?.,<>|\\/":
+                    hints += masked
+                elif masked in 'aeiou':
+                    hints += masked
+                else:
+                    hints += charMask
+            return hints
+
+        def getMaskedRandom(self, letters, sizeOfUnmasked):
+            charMask = self.registryValue('charMask', self.channel)
+            hintRatio = self.registryValue('hintShowRatio') # % to show each hint
+            hints = ''
+            unmasked = 0
+            maskedInARow=0
+            lettersInARow=sizeOfUnmasked
+            for i in range(len(letters)):
+                masked = letters[i]
+                if masked in " -'\"_=+&%$#@!~`[]{}?.,<>|\\/":
+                    hints += masked
+                    unmasked += 1
+                elif maskedInARow > 2 and unmasked < (len(letters)-1):
+                    lettersInARow += 1
+                    unmasked += 1
+                    maskedInARow = 0
+                    hints += letters[i]
+                elif lettersInARow < 3 and unmasked < (len(letters)-1) and random.randint(0,100) < hintRatio:
+                    lettersInARow += 1
+                    unmasked += 1
+                    maskedInARow = 0
+                    hints += letters[i]
+                else:
+                    maskedInARow += 1
+                    lettersInARow=0
+                    hints += charMask
             return hints
 
         def getOtherHintString(self):
@@ -1129,6 +1160,12 @@ class TriviaTime(callbacks.Plugin):
             if self.active:
                 schedule.addEvent(event, timeout, '%s.trivia' % self.channel)
 
+        def removeAccents(self, text):
+            replacements = [('á', 'a'),('é','e'),('í', 'i'),('ó','o'),('ú','u'),('ü','u'),('ñ','n')]
+            for a,b in replacements:
+                text = text.replace(a,b)
+            return text
+
         def repeatQuestion(self):
             if self.questionRepeated == True:
                 return
@@ -1172,10 +1209,10 @@ class TriviaTime(callbacks.Plugin):
                 alternativeAnswers = []
                 if ircutils.toLower(question[:4]) == 'kaos':
                     for ans in answers:
-                        answer.append(ans.strip())
+                        answer.append(self.removeAccents(ans.strip()))
                 elif ircutils.toLower(question[:5]) == 'uword':
                     for ans in answers:
-                        answer.append(ans)
+                        answer.append(self.removeAccents(ans))
                         question = 'Unscramble the letters: '
                         shuffledLetters = list(ans)
                         random.shuffle(shuffledLetters)
@@ -1186,9 +1223,9 @@ class TriviaTime(callbacks.Plugin):
                 else:                
                     for ans in answers:
                         if answer == []:
-                            answer.append(str(ans).strip())
+                            answer.append(self.removeAccents(str(ans).strip()))
                         else:
-                            alternativeAnswers.append(str(ans).strip())
+                            alternativeAnswers.append(self.removeAccents(str(ans).strip()))
 
                 points = self.registryValue('defaultPoints', self.channel)
                 if len(answer) > 1:
