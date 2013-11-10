@@ -191,9 +191,4 @@ conf.registerChannelValue(TriviaTime, 'bonusKAOS',
                 """Message for bonus points from KAOS for group play""")
         )
 
-conf.registerChannelValue(TriviaTime, 'playerStatsMsg', 
-        registry.NormalizedString("""\x02%s\x02 has won \x02%d\x02 in a row! Total Points TODAY: \x02%d\x02 this WEEK \x02%d\x02 & this MONTH: \x02%d\x02""", 
-                """Message showing a users stats after guessing a answer correctly""")
-        )
-
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
