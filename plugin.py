@@ -307,17 +307,39 @@ class TriviaTime(callbacks.Plugin):
             Get your rank, score & questions asked for day, month, year
         """
         username = msg.nick
+        identified = False
         try:
             user = ircdb.users.getUser(msg.prefix) # rootcoma!~rootcomaa@unaffiliated/rootcoma
             username = user.name
+            identified = True
         except KeyError:
             pass
         channel = msg.args[0]
         info = self.storage.getUser(username, channel)
         if len(info) < 3:
-            irc.error("I couldn't find you in my database.")
+            errorMessage = """You do not have any points."""
+            if not identified:
+                errorMessage += """ You should identify to keep track of your score more accurately."""
+            irc.reply(errorMessage)
         else:
-            infoText = ' %s\'s Stats: \x02Today:\x02 #%d %d (%d) \x02This Week:\x02 #%d %d (%d) \x02This Month:\x02 #%d %d (%d) \x02This Year:\x02 #%d %d (%d)' % (username, info[16], info[10], info[11], info[15], info[8], info[9], info[14], info[6], info[7], info[13], info[4], info[5])
+            hasPoints = False
+            infoText = '%s\'s Stats: Points (answers)' % (info[1])
+            if info[10] > 0 or info[16] > 0 or info[11] > 0:
+                hasPoints = True
+                infoText += ' \x02Today:\x02 #%d %d (%d)' % (info[16], info[10], info[11])
+            if info[15] > 0 or info[8] > 0 or info[9] > 0:
+                hasPoints = True
+                infoText += ' \x02This Week:\x02 #%d %d (%d)' % (info[15], info[8], info[9])
+            if info[14] > 0 or info[6] > 0 or info[7] > 0:
+                hasPoints = True
+                infoText += ' \x02This Month:\x02 #%d %d (%d)' % (info[14], info[6], info[7])
+            if info[13] > 0 or info[4] > 0 or info[5] > 0:
+                hasPoints = True
+                infoText += ' \x02This Year:\x02 #%d %d (%d)' % (info[13], info[4], info[5])
+            if not hasPoints:
+                infoText = """%s: You do not have any points.""" % (username)
+                if not identified:
+                    infoText += """ You should identify to keep track of your score more accurately."""
             irc.sendMsg(ircmsgs.privmsg(channel, infoText))
         irc.noReply()
     me = wrap(me)
@@ -498,9 +520,24 @@ class TriviaTime(callbacks.Plugin):
         channel = msg.args[0]
         info = self.storage.getUser(username, channel)
         if len(info) < 3:
-            irc.error("I couldn't find you in my database.")
+            irc.error("I couldn't find that user in the database.")
         else:
-            infoText = '%s\'s Stats: Points (answers) \x02Today:\x02 #%d %d (%d) \x02This Week:\x02 #%d %d (%d) \x02This Month:\x02 #%d %d (%d) \x02This Year:\x02 #%d %d (%d)' % (info[1], info[16], info[10], info[11], info[15], info[8], info[9], info[14], info[6], info[7], info[13], info[4], info[5])
+            hasPoints = False
+            infoText = '%s\'s Stats: Points (answers)' % (info[1])
+            if info[10] > 0 or info[16] > 0 or info[11] > 0:
+                hasPoints = True
+                infoText += ' \x02Today:\x02 #%d %d (%d)' % (info[16], info[10], info[11])
+            if info[15] > 0 or info[8] > 0 or info[9] > 0:
+                hasPoints = True
+                infoText += ' \x02This Week:\x02 #%d %d (%d)' % (info[15], info[8], info[9])
+            if info[14] > 0 or info[6] > 0 or info[7] > 0:
+                hasPoints = True
+                infoText += ' \x02This Month:\x02 #%d %d (%d)' % (info[14], info[6], info[7])
+            if info[13] > 0 or info[4] > 0 or info[5] > 0:
+                hasPoints = True
+                infoText += ' \x02This Year:\x02 #%d %d (%d)' % (info[13], info[4], info[5])
+            if not hasPoints:
+                infoText = '%s: %s does not have any points.' % (msg.nick, username)
             irc.sendMsg(ircmsgs.privmsg(channel, infoText))
         irc.noReply()
     stats = wrap(stats,['nick'])
@@ -817,14 +854,24 @@ class TriviaTime(callbacks.Plugin):
                             % (username, correctAnswer, timeElapsed, pointsAdded, streakBonus))
 
                     if self.registryValue('showPlayerStats', self.channel):
-                        todaysScore = 0
                         userInfo = self.storage.getUser(username, self.channel)
                         if len(userInfo) >= 3:
                             todaysScore = userInfo[10]
                             weekScore = userInfo[8]
                             monthScore = userInfo[6]
-                            self.sendMessage(self.registryValue('playerStatsMsg', self.channel) 
-                                    % (username, self.streak, todaysScore, weekScore, monthScore))
+                            recapMessage = """\x02%s\x02 has won \x02%d\x02 in a row!""" % (username, self.streak)
+                            if todaysScore > pointsAdded or weekScore > pointsAdded or monthScore > pointsAdded:
+                                recapMessage += """ Total Points"""
+                            if todaysScore > pointsAdded:
+                                recapMessage += """ TODAY: \x02%d\x02""" % (todaysScore)
+                            if weekScore > pointsAdded:
+                                recapMessage += """ this WEEK \x02%d\x02""" % (weekScore)
+                            if weekScore > pointsAdded or todaysScore > pointsAdded:
+                                if monthScore > pointsAdded:
+                                    recapMessage += """ &"""
+                            if monthScore > pointsAdded:
+                                recapMessage += """ this MONTH: \x02%d\x02""" % (monthScore)
+                            self.sendMessage(recapMessage)
 
                 # add guessed word to list so we can cross it out
                 if self.guessedAnswers.count(attempt) == 0:
