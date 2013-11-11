@@ -901,8 +901,6 @@ class TriviaTime(callbacks.Plugin):
 
                     self.removeEvent()
 
-                    self.storage.updateQuestionStats(self.lineNumber, 1, 0)
-
                     if self.stopPending == True:
                         self.stop()
                         return
@@ -1075,8 +1073,6 @@ class TriviaTime(callbacks.Plugin):
                     self.sendMessage(self.registryValue('recapNotCompleteKaos', self.channel) % (len(self.guessedAnswers), len(self.answers), int(self.totalAmountWon), len(self.correctPlayers)))
                 else:
                     self.sendMessage(self.registryValue('notAnswered', self.channel) % answer)
-
-                self.storage.updateQuestionStats(self.lineNumber, 0, 1)
 
                 #reset stuff
                 self.answers = []
@@ -1251,7 +1247,7 @@ class TriviaTime(callbacks.Plugin):
 
         def retrieveQuestion(self):
             # temporary function to get data
-            lineNumber, question, timesAnswered, timesMissed = self.retrieveQuestionFromSql()
+            lineNumber, question = self.retrieveQuestionFromSql()
             answer = question.split('*', 1)
             if len(answer) > 1:
                 question = answer[0].strip()
@@ -1281,15 +1277,6 @@ class TriviaTime(callbacks.Plugin):
                 points = self.registryValue('defaultPoints', self.channel)
                 if len(answer) > 1:
                     points = self.registryValue('defaultPointsKAOS', self.channel) * len(answers)
-
-                additionalPoints = 0
-                additionalPoints += timesAnswered * -5
-                additionalPoints += timesMissed * 5
-                if additionalPoints > 200:
-                    additionalPoints = 200
-                if additionalPoints < -200:
-                    additionalPoints = -200
-                points += additionalPoints
                 return {'p':points,
                         'q':question,
                         'a':answer, 
@@ -1312,7 +1299,7 @@ class TriviaTime(callbacks.Plugin):
         def retrieveQuestionFromSql(self):
             question = self.storage.getRandomQuestionNotAsked(self.channel, self.roundStartedAt)
             question = question[0]
-            return (question[0], question[2], question[4], question[5])
+            return (question[0], question[2])
 
         def sendMessage(self, msg, color=None, bgcolor=None):
             """ <msg>, [<color>], [<bgcolor>]
@@ -2006,7 +1993,7 @@ class TriviaTime(callbacks.Plugin):
             #skipped=0
             divData = self.chunk(questions) # divide into 10000 rows each
             for chunk in divData:
-                c.executemany('''insert into triviaquestion values (NULL, ?, ?, 0, 0, 0)''', 
+                c.executemany('''insert into triviaquestion values (NULL, ?, ?, 0)''', 
                                             chunk)
             self.conn.commit()
             skipped = self.removeDuplicateQuestions()
@@ -2152,9 +2139,7 @@ class TriviaTime(callbacks.Plugin):
                         id integer primary key autoincrement,
                         question_canonical text,
                         question text,
-                        deleted integer not null default 0,
-                        num_answered integer,
-                        num_missed integer
+                        deleted integer not null default 0
                         )''')
                 c.execute('''create index questionrandomindex 
                             on triviagameslog (id, deleted)
@@ -2406,15 +2391,6 @@ class TriviaTime(callbacks.Plugin):
             test = c.execute('''update triviaquestion set
                                 question=?
                                 where id=?''', (newQuestion, id))
-            self.conn.commit()
-            c.close()
-
-        def updateQuestionStats(self, id, timesAnswered, timesMissed):
-            c = self.conn.cursor()
-            test = c.execute('''update triviaquestion set
-                                num_answered=num_answered+?,
-                                num_missed=num_missed+?
-                                where id=?''', (timesAnswered, timesMissed, id))
             self.conn.commit()
             c.close()
 
