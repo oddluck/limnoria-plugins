@@ -1023,19 +1023,33 @@ class TriviaTime(callbacks.Plugin):
             return hints
 
         def getOtherHintString(self):
-            hintRatio = self.registryValue('hintShowRatio') # % to show each hint
-            ratio = float(hintRatio * .01)
-            timeElapsed = float(time.time() - self.askedAt)
-            showPercentage = float((timeElapsed + (self.registryValue('timeout', self.channel)/2)) / (self.registryValue('timeout', self.channel) * 3))
             charMask = self.registryValue('charMask', self.channel)
             if len(self.answers) > 1 or len(self.answers) < 1:
                 return
             ans = self.answers[0]
-            divider = int(len(ans) * ratio * showPercentage + 1)
-            if divider >= len(ans):
-                divider = len(ans)-1
+
             hints = 'Hint: \x02'
-            hints += ans[:divider]
+
+            divider = 0
+
+            if len(ans) < 2:
+                divider = 0
+            elif self.hintsCounter == 1:
+                divider = 1
+            elif self.hintsCounter == 2:
+                divider = int((len(ans) * .25) + 1)
+                if divider > 4:
+                    divider = 4
+            elif self.hintsCounter == 3:
+                divider = int((len(ans) * .5) + 1)
+                if divider > 6:
+                    divider = 6
+            if divider == len(ans):
+                divider -= 1
+
+            if divider > 0:
+                hints += ans[:divider]
+
             return hints
 
         def getOtherHint(self, username):
