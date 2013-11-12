@@ -971,14 +971,19 @@ class TriviaTime(callbacks.Plugin):
         def getMaskedVowels(self, letters):
             charMask = self.registryValue('charMask', self.channel)
             hints = ''
+            unmasked = 0
+            lettersInARow = 0
             for i in range(len(letters)):
                 masked = letters[i]
                 if masked in " -'\"_=+&%$#@!~`[]{}?.,<>|\\/":
                     hints += masked
-                elif masked in 'aeiou':
+                elif masked in 'aeiou' and unmasked < (len(letters)-1) and lettersInARow < 3:
                     hints += masked
+                    lettersInARow += 1
+                    unmasked += 1
                 else:
                     hints += charMask
+                    lettersInARow = 0
             return hints
 
         def getMaskedRandom(self, letters, sizeOfUnmasked):
