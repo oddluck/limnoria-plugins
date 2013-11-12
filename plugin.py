@@ -240,6 +240,14 @@ class TriviaTime(callbacks.Plugin):
         q = self.storage.getQuestion(num)
         if len(question) > 0:
             q = q[0]
+            questionParts = question.split('*')
+            if len(questionParts) < 2:
+                oldQuestionParts = q[2].split('*')
+                questionParts.extend(oldQuestionParts[1:])
+                question = questionParts[0]
+                for part in questionParts[1:]:
+                    question += '*'
+                    question += part
             self.storage.insertEdit(num, question, username, msg.args[0])
             self.storage.updateUser(username, 1, 0)
             irc.reply("Success! Submitted edit for further review.")
