@@ -660,14 +660,13 @@ class TriviaTime(callbacks.Plugin):
                     schedule.removeEvent('%s.trivia' % channel)
                 except KeyError:
                     pass
-                #irc.error(self.registryValue('alreadyStarted'))
-                irc.sendMsg(ircmsgs.privmsg(channel, self.registryValue('starting')))
+                irc.sendMsg(ircmsgs.privmsg(channel, """Another epic round of trivia is about to begin."""))
                 self.games[channelCanonical] = self.Game(irc, channel, self)
             else:
-                irc.sendMsg(ircmsgs.privmsg(channel, self.registryValue('alreadyStarted')))
+                irc.sendMsg(ircmsgs.privmsg(channel, """Trivia has already been started."""))
         else:
             # create a new game
-            irc.sendMsg(ircmsgs.privmsg(channel, self.registryValue('starting')))
+            irc.sendMsg(ircmsgs.privmsg(channel, """Another epic round of trivia is about to begin."""))
             self.games[channelCanonical] = self.Game(irc, channel, self)
         irc.noReply()
     start = wrap(start)
@@ -687,7 +686,7 @@ class TriviaTime(callbacks.Plugin):
                 irc.sendMsg(ircmsgs.privmsg(channel, 'Trivia will now stop after this question.'))
             else:
                 del self.games[channelCanonical]
-                irc.sendMsg(ircmsgs.privmsg(channel, self.registryValue('stopped')))
+                irc.sendMsg(ircmsgs.privmsg(channel, """Trivia stopped. :'("""))
         else:
             irc.sendMsg(ircmsgs.privmsg(channel, 'Game is already stopped'))
         irc.noReply()
@@ -827,7 +826,7 @@ class TriviaTime(callbacks.Plugin):
                     # report the correct guess for kaos item
                     self.storage.updateUserLog(username, self.channel, pointsAdded,0, 0)
                     self.lastAnswer = time.time()
-                    self.sendMessage(self.registryValue('answeredKAOS', self.channel) 
+                    self.sendMessage("""\x02%s\x02 gets \x02%d\x02 points for: \x02%s\x02"""
                             % (username, pointsAdded, correctAnswer))
                 else:
                     # Normal question solved
@@ -850,7 +849,7 @@ class TriviaTime(callbacks.Plugin):
                     # report correct guess, and show players streak
                     self.storage.updateUserLog(username, self.channel, pointsAdded,1, timeElapsed)
                     self.lastAnswer = time.time()
-                    self.sendMessage(self.registryValue('answeredNormal', self.channel) 
+                    self.sendMessage("""DING DING DING, \x02%s\x02 got the answer -> \x02%s\x02 <- in \x02%0.4f\x02 seconds for \x02%d(+%d)\x02 points"""
                             % (username, correctAnswer, timeElapsed, pointsAdded, streakBonus))
 
                     if self.registryValue('showPlayerStats', self.channel):
@@ -893,11 +892,11 @@ class TriviaTime(callbacks.Plugin):
                         if bonusPoints > 0:
                             for nick in self.correctPlayers:
                                 self.storage.updateUserLog(nick, self.channel, bonusPoints, 0, 0)
-                            bonusPointsText += self.registryValue('bonusKAOS', self.channel) % int(bonusPoints)
+                            bonusPointsText += """Everyone gets a %d Point Bonus!!""" % int(bonusPoints)
 
                         # give a special message if it was KAOS
-                        self.sendMessage(self.registryValue('solvedAllKAOS', self.channel) % bonusPointsText)
-                        self.sendMessage(self.registryValue('recapCompleteKaos', self.channel) % (int(self.totalAmountWon), len(self.correctPlayers)))
+                        self.sendMessage("""All KAOS answered! %s""" % bonusPointsText)
+                        self.sendMessage("""Total Awarded: \x02%d Points to %d Players\x02""" % (int(self.totalAmountWon), len(self.correctPlayers)))
 
                     self.removeEvent()
 
@@ -1068,11 +1067,13 @@ class TriviaTime(callbacks.Plugin):
                         answer += ']'
                 # Give failure message
                 if len(self.answers) > 1:
-                    self.sendMessage(self.registryValue('notAnsweredKAOS', self.channel) % answer)
+                    self.sendMessage("""Time's up! No one got \x02%s\x02""" % answer)
 
-                    self.sendMessage(self.registryValue('recapNotCompleteKaos', self.channel) % (len(self.guessedAnswers), len(self.answers), int(self.totalAmountWon), len(self.correctPlayers)))
+                    self.sendMessage("""Correctly Answered: \x02%d of %d\x02 Total Awarded: \x02%d Points to %d Players\x02""" 
+                                    % (len(self.guessedAnswers), len(self.answers), int(self.totalAmountWon), len(self.correctPlayers))
+                                    )
                 else:
-                    self.sendMessage(self.registryValue('notAnswered', self.channel) % answer)
+                    self.sendMessage("""Time's up! The answer was \x02%s\x02.""" % answer)
 
                 #reset stuff
                 self.answers = []
@@ -1316,7 +1317,7 @@ class TriviaTime(callbacks.Plugin):
             # responsible for stopping a timer/thread after being told to stop
             self.active = False
             self.removeEvent()
-            self.sendMessage(self.registryValue('stopped'))
+            self.sendMessage("""Trivia stopped. :'(""")
             channelCanonical = ircutils.toLower(self.channel)
             if channelCanonical in self.games:
                 del self.games[channelCanonical]
