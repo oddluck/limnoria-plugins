@@ -406,9 +406,9 @@ class TriviaTime(callbacks.Plugin):
             self.games[channelCanonical].repeatQuestion()
     repeat = wrap(repeat)
 
-    def report(self, irc, msg, arg, roundNum, text):
-        """<report id> <report text>
-        Provide a report for a bad question. Be sure to include the round number and any problems.
+    def report(self, irc, msg, arg, channel, roundNum, text):
+        """[channel] <round number> <report text>
+        Provide a report for a bad question. Be sure to include the round number and any problems. Channel is a optional parameter which is only needed when reporting outside of the channel
         """
         username = msg.nick
         inp = text.strip()
@@ -417,7 +417,6 @@ class TriviaTime(callbacks.Plugin):
             username = user.name
         except KeyError:
             pass
-        channel = msg.args[0]
         channelCanonical = ircutils.toLower(channel)
         if channelCanonical in self.games:
             if inp[:2] == 's/':
@@ -442,8 +441,8 @@ class TriviaTime(callbacks.Plugin):
             self.storage.insertReport(channel, username, text, question[0])
             irc.reply('Your report has been submitted!')
         else:
-            irc.error('Sorry, round %d could not be found in the database')
-    report = wrap(report, ['int', 'text'])
+            irc.error('Sorry, round %d could not be found in the database' % (roundNum))
+    report = wrap(report, ['channel', 'int', 'text'])
 
     def skip(self, irc, msg, arg):
         """
