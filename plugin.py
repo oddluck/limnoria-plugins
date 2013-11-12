@@ -845,9 +845,8 @@ class TriviaTime(callbacks.Plugin):
                     else:
                         self.streak += 1
                         streakBonus = pointsAdded * .01 * (self.streak-1)
-                        maxBonus = 2 * pointsAdded
-                        if streakBonus > maxBonus:
-                            streakBonus = maxBonus
+                        if streakBonus > pointsAdded:
+                            streakBonus = pointsAdded
                         pointsAdded += streakBonus
                     self.storage.updateGameStreak(self.channel, self.lastWinner, self.streak)
                     # Convert score to int
