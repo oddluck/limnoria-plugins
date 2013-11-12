@@ -850,7 +850,7 @@ class TriviaTime(callbacks.Plugin):
                             streakBonus = maxBonus
                         pointsAdded += streakBonus
                     self.storage.updateGameStreak(self.channel, self.lastWinner, self.streak)
-                    self.storage.updateGameLongestStreak(self.channel, self.lastWinner, self.streak)
+                    self.storage.updateGameLongestStreak(self.channel, username, self.streak)
                     # Convert score to int
                     pointsAdded = int(pointsAdded)
 
@@ -1055,7 +1055,6 @@ class TriviaTime(callbacks.Plugin):
 
         def loadGameState(self):
             gameInfo = self.storage.getGame(self.channel)
-            print gameInfo
             if gameInfo is not None:
                 self.numAsked = gameInfo[2]
                 self.roundStartedAt = gameInfo[3]
