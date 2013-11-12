@@ -850,6 +850,7 @@ class TriviaTime(callbacks.Plugin):
                             streakBonus = maxBonus
                         pointsAdded += streakBonus
                     self.storage.updateGameStreak(self.channel, self.lastWinner, self.streak)
+                    self.storage.updateGameLongestStreak(self.channel, self.lastWinner, self.streak)
                     # Convert score to int
                     pointsAdded = int(pointsAdded)
 
@@ -1054,6 +1055,7 @@ class TriviaTime(callbacks.Plugin):
 
         def loadGameState(self):
             gameInfo = self.storage.getGame(self.channel)
+            print gameInfo
             if gameInfo is not None:
                 self.numAsked = gameInfo[2]
                 self.roundStartedAt = gameInfo[3]
@@ -1990,7 +1992,7 @@ class TriviaTime(callbacks.Plugin):
             if epoch is None:
                 epoch = int(time.mktime(time.localtime()))
             c = self.conn.cursor()
-            c.execute('insert into triviagames values (NULL, ?, ?, ?, 0, 0, ?)', (channel,numAsked,epoch,channelCanonical))
+            c.execute('insert into triviagames values (NULL, ?, ?, ?, 0, 0, ?, 0, "", "")', (channel,numAsked,epoch,channelCanonical))
             self.conn.commit()
             c.close()
 
@@ -2009,7 +2011,7 @@ class TriviaTime(callbacks.Plugin):
             if reportedAt is None:
                 reportedAt = int(time.mktime(time.localtime()))
             c = self.conn.cursor()
-            c.execute('insert into triviareport values (NULL, ?, ?, ?, ?, NULL, NULL, ?,?,?)', 
+            c.execute('insert into triviareport values (NULL, ?, ?, ?, ?, NULL, NULL, ?, ?, ?)', 
                                         (channel,username,reportText,reportedAt,questionNum,usernameCanonical,channelCanonical))
             self.conn.commit()
             c.close()
@@ -2095,7 +2097,10 @@ class TriviaTime(callbacks.Plugin):
                         round_started integer,
                         last_winner text,
                         streak integer,
-                        channel_canonical text not null unique
+                        channel_canonical text not null unique,
+                        longest_streak integer,
+                        longest_streak_holder text,
+                        longest_streak_holder_canonical text
                         )''')
             except:
                 pass
@@ -2387,6 +2392,19 @@ class TriviaTime(callbacks.Plugin):
                                 channel=?,
                                 num_asked=?
                                 where channel_canonical=?''', (channel, numAsked, channelCanonical))
+            self.conn.commit()
+            c.close()
+
+        def updateGameLongestStreak(self, channel, lastWinner, streak):
+            c = self.conn.cursor()
+            channelCanonical = ircutils.toLower(channel)
+            lastWinnerCanonical  = ircutils.toLower(lastWinner)
+            test = c.execute('''update triviagames set
+                                longest_streak=?,
+                                longest_streak_holder=?,
+                                longest_streak_holder_canonical=?
+                                where channel_canonical=?
+                                and longest_streak<?''', (streak, lastWinner, lastWinnerCanonical, channelCanonical, streak))
             self.conn.commit()
             c.close()
 
