@@ -289,7 +289,7 @@ class TriviaTime(callbacks.Plugin):
         Get TriviaTime information, how many questions/users in database, time, etc
         """
         numActiveThisWeek = self.storage.getNumActiveThisWeek()
-        infoText = ''' TriviaTime by #trivialand on Freenode'''
+        infoText = ''' TriviaTime v1.0-beta by Trivialand on Freenode https://github.com/tannn/TriviaTime '''
         irc.sendMsg(ircmsgs.privmsg(msg.args[0], infoText))
         infoText = ''' Time is %s ''' % (time.asctime(time.localtime(),))
         irc.sendMsg(ircmsgs.privmsg(msg.args[0], infoText))
