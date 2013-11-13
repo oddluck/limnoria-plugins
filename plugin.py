@@ -915,7 +915,7 @@ class TriviaTime(callbacks.Plugin):
 
                     self.removeEvent()
 
-                    self.storage.updateQuestionStats(self.lineNumber, 1, 0)
+                    self.storage.updateQuestionStats(self.lineNumber, (4-self.hintsCounter), 0)
 
                     if self.stopPending == True:
                         self.stop()
