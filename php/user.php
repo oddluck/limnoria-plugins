@@ -202,14 +202,3 @@
 
   </body>
 </html>
-
-<!--
-select
-sum(tl2.t * (tl2.n / (select sum(num_answered) from triviauserlog where username='rootcoma')))
-from (select tl3.id as id2, tl3.average_time * 1.0 as t, tl3.num_answered * 1.0 as n
-    from triviauserlog tl3
-    ) tl2
-inner join triviauserlog tl
-on tl.username='rootcoma'
-and id=tl2.id2
--->
