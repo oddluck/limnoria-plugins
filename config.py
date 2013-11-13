@@ -40,6 +40,11 @@ conf.registerChannelValue(TriviaTime, 'showHintCommandKAOS',
                 """The command for showing the remaining KAOS""")
         )
 
+conf.registerChannelValue(TriviaTime, 'showVowelsThirdHint',
+        registry.Boolean(True,
+                """Show all vowels on the third hint. If false, random letters will be shown instead""")
+        )
+
 conf.registerChannelValue(TriviaTime, 'showPlayerStats', 
         registry.Boolean(True, 
                 """Show player stats after correct answer?""")
@@ -125,71 +130,4 @@ conf.registerChannelValue(TriviaTime, 'charMask',
                 """Masking character for hints""")
         )
 
-# victory text, help messages, formatting
-conf.registerChannelValue(TriviaTime, 'starting', 
-        registry.NormalizedString("""Another epic round of trivia is about to begin.""", 
-                """Message shown when trivia starts""")
-        )
-
-conf.registerChannelValue(TriviaTime, 'stopped', 
-        registry.NormalizedString("""Trivia stopped. :'(""", 
-                """Message shown when trivia stops""")
-        )
-
-conf.registerChannelValue(TriviaTime, 'alreadyStopped', 
-        registry.NormalizedString("""Trivia has already been stopped.""", 
-                """Message stating chat has already been stopped""")
-        )
-
-conf.registerChannelValue(TriviaTime, 'alreadyStarted', 
-        registry.NormalizedString("""Trivia has already been started.""", 
-                """Message stating chat has already been started""")
-        )
-
-conf.registerChannelValue(TriviaTime, 'answeredKAOS', 
-        registry.NormalizedString("""\x02%s\x02 gets \x02%d\x02 points for: \x02%s\x02""",
-                """Message for one correct guess during KAOS""")
-        )
-
-conf.registerChannelValue(TriviaTime, 'answeredNormal', 
-        registry.NormalizedString("""DING DING DING, \x02%s\x02 got the answer -> \x02%s\x02 <- in \x02%0.4f\x02 seconds for \x02%d(+%d)\x02 points""", 
-                """Message for a correct answer""")
-        )
-
-conf.registerChannelValue(TriviaTime, 'notAnswered', 
-        registry.NormalizedString("""Time's up! The answer was \x02%s\x02.""", 
-                """Message when no one guesses the answer""")
-        )
-
-conf.registerChannelValue(TriviaTime, 'notAnsweredKAOS', 
-        registry.NormalizedString("""Time's up! No one got \x02%s\x02""", 
-                """Message when time is up and KAOS are left""")
-        )
-
-conf.registerChannelValue(TriviaTime, 'recapNotCompleteKAOS', 
-        registry.NormalizedString("""Correctly Answered: \x02%d of %d\x02 Total Awarded: \x02%d Points to %d Players\x02""", 
-                """Message after KAOS game that not all questions were answered in""")
-        )
-
-conf.registerChannelValue(TriviaTime, 'recapCompleteKAOS', 
-        registry.NormalizedString("""Total Awarded: \x02%d Points to %d Players\x02""", 
-                """Message after KAOS game that all questions were answered in""")
-        )
-
-conf.registerChannelValue(TriviaTime, 'solvedAllKaos', 
-        registry.NormalizedString("""All KAOS answered! %s""", 
-                """Message stating all KAOS have been guessed""")
-        )
-
-conf.registerChannelValue(TriviaTime, 'bonusKAOS', 
-        registry.NormalizedString("""Everyone gets a %d Point Bonus!!""", 
-                """Message for bonus points from KAOS for group play""")
-        )
-
-conf.registerChannelValue(TriviaTime, 'playerStatsMsg', 
-        registry.NormalizedString("""\x02%s\x02 has won \x02%d\x02 in a row! Total Points TODAY: \x02%d\x02 this WEEK \x02%d\x02 & this MONTH: \x02%d\x02""", 
-                """Message showing a users stats after guessing a answer correctly""")
-        )
-
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
-
