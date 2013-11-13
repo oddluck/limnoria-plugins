@@ -2318,7 +2318,6 @@ class TriviaTime(callbacks.Plugin):
                                     and username_canonical=?
                             )
                     )
-            ''', (userFrom,userFrom,userTo,userFrom))
 
             c.execute('''
                     update triviauserlog
@@ -2610,7 +2609,7 @@ class TriviaTime(callbacks.Plugin):
                 return True
             return False
         def getVersion(self):
-            c = self.conn.cursor();
+            c = self.conn.cursor()
             try:
                 c.execute('''select version from triviainfo''')
                 return c.fetchone()
