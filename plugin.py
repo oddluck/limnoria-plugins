@@ -33,11 +33,11 @@ class TriviaTime(callbacks.Plugin):
         self.__parent = super(TriviaTime, self)
         self.__parent.__init__(irc)
 
-        """ games info """
+        # games info
         self.games = {} # separate game for each channel
         self.skips = {}
 
-        """ connections """
+        # connections
         dbLocation = self.registryValue('sqlitedb')
         # tuple head, tail ('example/example/', 'filename.txt')
         dbFolder = os.path.split(dbLocation)
@@ -66,10 +66,9 @@ class TriviaTime(callbacks.Plugin):
         self.storage.makeEditTable()
         self.storage.makeInfoTable()
         #triviainfo table check
-        if self.storage.isTriviaVersionSet():
-            if self.storage.getVersion() != None:
-                if self.storage.getVersion() != self.currentVersion:
-                    return;
+        #if self.storage.isTriviaVersionSet():
+        #    if self.storage.getVersion() != None & self.storage.getVersion() != self.currentVersion:
+                #HERE IS WHERE WE UPDATE THE DATABASE.
 
     def doPrivmsg(self, irc, msg):
         """
@@ -162,6 +161,7 @@ class TriviaTime(callbacks.Plugin):
             irc.error('Could not find that temp question')
         else:
             q = q[0]
+            self.storage.updateUser(q[1], 0, 0, 0, 0, 1)
             self.storage.insertQuestionsBulk([(q[3], q[3])])
             self.storage.removeTemporaryQuestion(q[0])
             irc.reply('Question accepted!')
@@ -177,6 +177,7 @@ class TriviaTime(callbacks.Plugin):
         if charMask not in question:
             irc.error(' The question must include the separating character %s ' % (charMask))
             return
+        self.storage.updateUser(username, 0, 0, 0, 1)
         self.storage.insertTemporaryQuestion(username, channel, question)
         irc.reply(' Thank you for adding your question to the question database, it is awaiting approval. ')
     addquestion = wrap(addquestion, ['text'])
@@ -440,10 +441,10 @@ class TriviaTime(callbacks.Plugin):
         question = self.storage.getQuestionByRound(roundNum, channel)
         if len(question) > 0:
             question = question[0]
-            self.storage.updateUser(username, 1, 0)
             if inp[:2] == 's/':
                 regex = inp[2:].split('/')
                 if len(regex) > 1:
+                    self.storage.updateUser(username, 1, 0)
                     newOne = regex[1]
                     oldOne = regex[0]
                     newQuestionText = question[2].replace(oldOne, newOne)
@@ -452,6 +453,7 @@ class TriviaTime(callbacks.Plugin):
                     irc.sendMsg(ircmsgs.notice(username, 'NEW: %s' % (newQuestionText)))
                     irc.sendMsg(ircmsgs.notice(username, 'OLD: %s' % (question[2])))
                     return
+            self.storage.updateUser(username, 0, 0, 1)
             self.storage.insertReport(channel, username, text, question[0])
             irc.reply('Your report has been submitted!')
         else:
@@ -913,7 +915,7 @@ class TriviaTime(callbacks.Plugin):
 
                     self.removeEvent()
 
-                    self.storage.updateQuestionStats(self.lineNumber, 1, 0)
+                    self.storage.updateQuestionStats(self.lineNumber, (4-self.hintsCounter), 0)
 
                     if self.stopPending == True:
                         self.stop()
@@ -1994,12 +1996,22 @@ class TriviaTime(callbacks.Plugin):
             self.conn.commit()
             c.close()
 
-        def insertUser(self, username, numReported=0, numAccepted=0):
+        def insertUser(self, username, numEditted=0, numEdittedAccepted=0, numReported=0, numQuestionsAdded=0, numQuestionsAccepted=0):
             usernameCanonical = ircutils.toLower(username)
             if self.userExists(username):
-                return self.updateUser(username)
+                return self.updateUser(username, numEditted, numEdittedAccepted, numReported, numQuestionsAdded, numQuestionsAccepted)
             c = self.conn.cursor()
-            c.execute('insert into triviausers values (NULL, ?, ?, ?, ?)', (username,numReported,numAccepted,usernameCanonical))
+            c.execute('insert into triviausers values (NULL, ?, ?, ?, ?, ?, ?, ?)', 
+                            (
+                                    username,
+                                    numEditted,
+                                    numEdittedAccepted,
+                                    usernameCanonical,
+                                    numReported,
+                                    numQuestionsAdded,
+                                    numQuestionsAccepted
+                            )
+                    )
             self.conn.commit()
             c.close()
 
@@ -2072,9 +2084,12 @@ class TriviaTime(callbacks.Plugin):
                 c.execute('''create table triviausers (
                         id integer primary key autoincrement,
                         username text not null unique,
+                        num_editted integer,
+                        num_editted_accepted integer,
+                        username_canonical,
                         num_reported integer,
-                        num_accepted integer,
-                        username_canonical
+                        num_questions_added integer,
+                        num_questions_accepted integer
                         )''')
             except:
                 pass
@@ -2318,6 +2333,7 @@ class TriviaTime(callbacks.Plugin):
                                     and username_canonical=?
                             )
                     )
+            ''', (userFrom,userFrom,userTo,userFrom))
 
             c.execute('''
                     update triviauserlog
@@ -2387,16 +2403,29 @@ class TriviaTime(callbacks.Plugin):
             self.conn.commit()
             c.close()
 
-        def updateUser(self, username, numReported=0, numAccepted=0):
+        def updateUser(self, username, numEditted=0, numEdittedAccepted=0, numReported=0, numQuestionsAdded=0, numQuestionsAccepted=0):
             if not self.userExists(username):
-                return self.insertUser(username, numReported, numAccepted)
+                return self.insertUser(username, numEditted, numEdittedAccepted, numReported, numQuestionsAdded, numQuestionsAccepted)
             usernameCanonical = ircutils.toLower(username)
             c = self.conn.cursor()
             c.execute('''update triviausers set
                                 username=?,
+                                num_editted=num_editted+?,
+                                num_editted_accepted=num_editted_accepted+?,
                                 num_reported=num_reported+?,
-                                num_accepted=num_accepted+?
-                                where username_canonical=?''', (username, numReported, numAccepted, usernameCanonical))
+                                num_questions_added=num_questions_added+?,
+                                num_questions_accepted=num_questions_accepted+?
+                                where username_canonical=?''', 
+                                        (
+                                                username, 
+                                                numEditted, 
+                                                numEdittedAccepted, 
+                                                numReported,
+                                                numQuestionsAdded, 
+                                                numQuestionsAccepted, 
+                                                usernameCanonical
+                                        )
+                                )
             self.conn.commit()
             c.close()
 
@@ -2608,13 +2637,15 @@ class TriviaTime(callbacks.Plugin):
             if rows > 0:
                 return True
             return False
+
         def getVersion(self):
-            c = self.conn.cursor()
+            c = self.conn.cursor();
             try:
                 c.execute('''select version from triviainfo''')
                 return c.fetchone()
             except:
                 pass
+
         def makeInfoTable(self):
             c = self.conn.cursor()
             try:
@@ -2623,5 +2654,6 @@ class TriviaTime(callbacks.Plugin):
                     )''')
             except:
                 pass
+
 Class = TriviaTime
 # vim:set shiftwidth=4 softtabstop=4 expandtab textwidth=79:

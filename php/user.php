@@ -117,6 +117,9 @@
                   <th>Question Answered*</th>
                   <th>Edits Made</th>
                   <th>Edits Accepted</th>
+                  <th>Questions Made</th>
+                  <th>Questions Accepted</th>
+                  <th>Reports Made</th>
                 </tr>
               </thead>
               <tbody>
@@ -135,8 +138,11 @@
                 ) as score,
             (select sum(points_made) from triviauserlog t3 where lower(username)=:username) as points,
             (select sum(num_answered) from triviauserlog t4 where lower(username)=:username) as q_asked,
-            (select num_reported from triviausers where lower(username)=:username) as num_r,
-            (select num_accepted from triviausers where lower(username)=:username) as num_a
+            (select num_editted from triviausers where lower(username)=:username) as num_e,
+            (select num_editted_accepted from triviausers where lower(username)=:username) as num_e_accepted,
+            (select num_questions_added from triviausers where lower(username)=:username) as num_q,
+            (select num_questions_accepted from triviausers where lower(username)=:username) as num_q_accepted,
+            (select num_reported from triviausers where lower(username)=:username) as num_r
             from (select 
                     tl3.id as id2, 
                     tl3.average_time * 1.0 as t, 
@@ -160,8 +166,11 @@
                 echo '<td>' . number_format($res['score'],2) . '</td>';
                 echo '<td>' . number_format($res['points'],0) . '</td>';
                 echo '<td>' . number_format($res['q_asked'],0) . '</td>';
+                echo '<td>' . number_format($res['num_e'],0) . '</td>';
+                echo '<td>' . number_format($res['num_e_accepted'],0) . '</td>';
+                echo '<td>' . number_format($res['num_q'],0) . '</td>';
+                echo '<td>' . number_format($res['num_q_accepted'],0) . '</td>';
                 echo '<td>' . number_format($res['num_r'],0) . '</td>';
-                echo '<td>' . number_format($res['num_a'],0) . '</td>';
                 echo '</tr>';
             }
         }
@@ -193,14 +202,3 @@
 
   </body>
 </html>
-
-<!--
-select
-sum(tl2.t * (tl2.n / (select sum(num_answered) from triviauserlog where username='rootcoma')))
-from (select tl3.id as id2, tl3.average_time * 1.0 as t, tl3.num_answered * 1.0 as n
-    from triviauserlog tl3
-    ) tl2
-inner join triviauserlog tl
-on tl.username='rootcoma'
-and id=tl2.id2
--->
