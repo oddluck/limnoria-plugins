@@ -65,9 +65,14 @@ class TriviaTime(callbacks.Plugin):
         self.storage.makeEditTable()
         #self.storage.insertUserLog('root', 1, 1, 10, 10, 30, 2013)
         #self.storage.insertUser('root', 1, 1)
+        self.storage.makeInfoTable()
 
         #filename = self.registryValue('quizfile')
         #self.addQuestionsFromFile(filename)
+        #triviainfo table check
+        if self.storage.isTriviaVersionSet():
+            if self.storage.getVersion() != None & self.storage.getVersion() != self.currentVersion:
+                #HERE IS WHERE WE UPDATE THE DATABASE.
 
     def doPrivmsg(self, irc, msg):
         """
@@ -321,7 +326,7 @@ class TriviaTime(callbacks.Plugin):
         if len(info) < 3:
             irc.error("I couldn't find you in my database.")
         else:
-            infoText = ' %s\'s Stats: \x02Today:\x02 #%d %d (%d) \x02This Week:\x02 #%d %d (%d) \x02This Month:\x02 #%d %d (%d) \x02This Year:\x02 #%d %d (%d)' % (username, info[16], info[10], info[11], info[15], info[8], info[9], info[14], info[6], info[7], info[13], info[4], info[5])
+            infoText = ' %s\'s Stats: \x02Today:\x02 #%d %d (%d) \x02This Week:\x02 #%d %d (%d) \x02This Month:\x02 #%d %d (%d) \x02This Year:\x02 #%d %d (%dhttps://github.com/tannn/TriviaTime/issues/63)' % (username, info[16], info[10], info[11], info[15], info[8], info[9], info[14], info[6], info[7], info[13], info[4], info[5])
             irc.sendMsg(ircmsgs.privmsg(channel, infoText))
         irc.noReply()
     me = wrap(me)
@@ -1247,7 +1252,13 @@ class TriviaTime(callbacks.Plugin):
             self.conn = sqlite3.connect(loc, check_same_thread=False) # dont check threads
                                                                       # otherwise errors
             self.conn.text_factory = str
-
+        def getVersion(self):
+            c = self.conn.cursor();
+            try:
+                c.execute('''select version from triviainfo''')
+                return c.fetchone()
+            except:
+                pass
         def chunk(self, qs, rows=10000):
             """ Divides the data into 10000 rows each """
             for i in xrange(0, len(qs), rows):
@@ -2083,7 +2094,14 @@ class TriviaTime(callbacks.Plugin):
                 pass
             self.conn.commit()
             c.close()
-
+        def makeInfoTable(self):
+            c = self.conn.cursor()
+            try:
+                c.execute('''create table triviainfo (
+                    version integer
+                    )''')
+            except:
+                pass
         def questionExists(self, question):
             c = self.conn.cursor()
             result = c.execute('select count(id) from triviaquestion where question=? or question_canonical=?', (question,question))
@@ -2452,6 +2470,16 @@ class TriviaTime(callbacks.Plugin):
             if rows > 0:
                 return True
             return False
-
+        def isTriviaVersionSet(self):
+            c = self.conn.cursor()
+            try:
+                c.execute('''select * from triviainfo''')
+                data = c.fetchall()
+                if len(data) == 0:
+                    return False
+                return True
+            except:
+                pass
+            return False
 Class = TriviaTime
 # vim:set shiftwidth=4 softtabstop=4 expandtab textwidth=79:

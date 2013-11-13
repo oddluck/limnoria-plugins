@@ -22,7 +22,7 @@ __author__ = supybot.Author('Tanner', 'tann',
 
 # This is a dictionary mapping supybot.Author instances to lists of
 # contributions.
-__contributors__ = {'rootcoma'}
+__contributors__ = {'rootcoma', 'Th0masR0ss;}
 
 # This is a url where the most recent plugin package can be downloaded.
 __url__ = 'https://github.com/tannn/TriviaTime/tree/master'
