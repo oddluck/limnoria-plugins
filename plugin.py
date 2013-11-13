@@ -66,8 +66,8 @@ class TriviaTime(callbacks.Plugin):
         self.storage.makeEditTable()
         self.storage.makeInfoTable()
         #triviainfo table check
-        if self.storage.isTriviaVersionSet():
-            if self.storage.getVersion() != None & self.storage.getVersion() != self.currentVersion:
+        #if self.storage.isTriviaVersionSet():
+        #    if self.storage.getVersion() != None & self.storage.getVersion() != self.currentVersion:
                 #HERE IS WHERE WE UPDATE THE DATABASE.
 
     def doPrivmsg(self, irc, msg):
