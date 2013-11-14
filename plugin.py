@@ -27,6 +27,7 @@ class TriviaTime(callbacks.Plugin):
         TriviaTime - A trivia word game, guess the word and score points. Play KAOS rounds and work together to solve clues to find groups of words.
     """
     threaded = True # enables threading for supybot plugin
+    currentDBVersion = 1.2
 
     def __init__(self, irc):
         log.info('*** Loaded TriviaTime!!! ***')
@@ -36,6 +37,9 @@ class TriviaTime(callbacks.Plugin):
         # games info
         self.games = {} # separate game for each channel
         self.skips = {}
+
+        #Database amend statements for outdated versions
+        self.dbamends = {} #Formatted like this: <DBVersion>: "<ALTERSTATEMENT>; <ALTERSTATEMENT>;" (This IS valid SQL as long as we include the semicolons)
 
         # connections
         dbLocation = self.registryValue('sqlitedb')
@@ -66,9 +70,9 @@ class TriviaTime(callbacks.Plugin):
         self.storage.makeEditTable()
         self.storage.makeInfoTable()
         #triviainfo table check
-        #if self.storage.isTriviaVersionSet():
-        #    if self.storage.getVersion() != None & self.storage.getVersion() != self.currentVersion:
-                #HERE IS WHERE WE UPDATE THE DATABASE.
+        if self.storage.isTriviaVersionSet():
+            if self.storage.getVersion() != None & self.storage.getVersion() != self.currentDBVersion:
+                return
 
     def doPrivmsg(self, irc, msg):
         """
@@ -1387,16 +1391,16 @@ class TriviaTime(callbacks.Plugin):
 
         def deleteQuestion(self, questionId):
             c = self.conn.cursor()
-            test = c.execute('''update triviaquestion set
+            test = c.execute('''UPDATE triviaquestion set
                                 deleted=1
-                                where id=?''', (questionId,))
+                                WHERE id=?''', (questionId,))
             self.conn.commit()
             c.close()
 
         def dropUserTable(self):
             c = self.conn.cursor()
             try:
-                c.execute('''drop table triviausers''')
+                c.execute('''DROP TABLE triviausers''')
             except:
                 pass
             c.close()
@@ -1404,7 +1408,7 @@ class TriviaTime(callbacks.Plugin):
         def dropUserLogTable(self):
             c = self.conn.cursor()
             try:
-                c.execute('''drop table triviauserlog''')
+                c.execute('''DROP TABLE triviauserlog''')
             except:
                 pass
             c.close()
@@ -1412,7 +1416,7 @@ class TriviaTime(callbacks.Plugin):
         def dropGameTable(self):
             c = self.conn.cursor()
             try:
-                c.execute('''drop table triviagames''')
+                c.execute('''DROP table triviagames''')
             except:
                 pass
             c.close()
@@ -1420,8 +1424,8 @@ class TriviaTime(callbacks.Plugin):
         def dropGameLogTable(self):
             c = self.conn.cursor()
             try:
-                c.execute('''drop table triviagameslog''')
-                c.execute('''drop index gamelograndomindex''')
+                c.execute('''DROP TABLE triviagameslog''')
+                c.execute('''DROP INDEX gamelograndomindex''')
             except:
                 pass
             c.close()
@@ -1429,7 +1433,7 @@ class TriviaTime(callbacks.Plugin):
         def dropReportTable(self):
             c = self.conn.cursor()
             try:
-                c.execute('''drop table triviareport''')
+                c.execute('''DROP TABLE triviareport''')
             except:
                 pass
             c.close()
@@ -1437,8 +1441,8 @@ class TriviaTime(callbacks.Plugin):
         def dropQuestionTable(self):
             c = self.conn.cursor()
             try:
-                c.execute('''drop table triviaquestion''')
-                c.execute('''drop index questionrandomindex''')
+                c.execute('''DROP TABLE triviaquestion''')
+                c.execute('''DROP INDEX questionrandomindex''')
             except:
                 pass
             c.close()
@@ -1446,7 +1450,7 @@ class TriviaTime(callbacks.Plugin):
         def dropTemporaryQuestionTable(self):
             c = self.conn.cursor()
             try:
-                c.execute('''drop table triviatemporaryquestion''')
+                c.execute('''DROP TABLE triviatemporaryquestion''')
             except:
                 pass
             c.close()
@@ -1454,16 +1458,16 @@ class TriviaTime(callbacks.Plugin):
         def dropEditTable(self):
             c = self.conn.cursor()
             try:
-                c.execute('''drop table triviaedit''')
+                c.execute('''DROP TABLE triviaedit''')
             except:
                 pass
             c.close()
 
         def getRandomQuestionNotAsked(self, channel, roundStart):
             c = self.conn.cursor()
-            c.execute('''select * from triviaquestion
-                            where deleted=0 and id not in (select tl.line_num from triviagameslog tl where tl.channel_canonical=? and tl.asked_at>=?)
-                            order by random() limit 1
+            c.execute('''SELECT * FROM triviaquestion
+                            WHERE deleted=0 AND id NOT IN (SELECT tl.line_num FROM triviagameslog tl WHERE tl.channel_canonical=? AND tl.asked_at>=?)
+                            ORDER BY random() LIMIT 1
                         ''', (ircutils.toLower(channel),roundStart))
             data = []
             for row in c:
@@ -1474,12 +1478,12 @@ class TriviaTime(callbacks.Plugin):
         def getQuestionByRound(self, roundNumber, channel):
             channel=ircutils.toLower(channel)
             c = self.conn.cursor()
-            c.execute('''select * from triviaquestion where id=(select tgl.line_num
-                                                                from triviagameslog tgl
-                                                                where tgl.round_num=?
-                                                                and tgl.channel_canonical=?
-                                                                order by id desc
-                                                                limit 1)''', (roundNumber,channel))
+            c.execute('''SELECT * FROM triviaquestion WHERE id=(SELECT tgl.line_num
+                                                                FROM triviagameslog tgl
+                                                                WHERE tgl.round_num=?
+                                                                AND tgl.channel_canonical=?
+                                                                ORDER BY id DESC
+                                                                LIMIT 1)''', (roundNumber,channel))
             data = []
             for row in c:
                 data.append(row)
@@ -1488,8 +1492,8 @@ class TriviaTime(callbacks.Plugin):
 
         def getNumQuestionsNotAsked(self, channel, roundStart):
             c = self.conn.cursor()
-            result = c.execute('''select count(id) from triviaquestion
-                            where deleted=0 and id not in (select tl.line_num from triviagameslog tl where tl.channel=? and tl.asked_at>=?)''',
+            result = c.execute('''SELECT count(id) FROM triviaquestion
+                            WHERE deleted=0 AND id NOT IN (SELECT tl.line_num FROM triviagameslog tl WHERE tl.channel=? AND tl.asked_at>=?)''',
                                     (channel,roundStart))
             rows = result.fetchone()[0]
             c.close()
@@ -1834,7 +1838,7 @@ class TriviaTime(callbacks.Plugin):
         def getGame(self, channel):
             channel = ircutils.toLower(channel)
             c = self.conn.cursor()
-            c.execute('''select * from triviagames
+            c.execute('''SELECT * FROM triviagames
                         where channel_canonical=?
                         limit 1''', (channel,))
             data = None
@@ -1867,7 +1871,7 @@ class TriviaTime(callbacks.Plugin):
 
         def getQuestion(self, id):
             c = self.conn.cursor()
-            c.execute('select * from triviaquestion where id=? limit 1', (id,))
+            c.execute('SELECT * FROM triviaquestion where id=? limit 1', (id,))
             data = []
             for row in c:
                 data.append(row)
@@ -1898,7 +1902,7 @@ class TriviaTime(callbacks.Plugin):
 
         def getReportById(self, id):
             c = self.conn.cursor()
-            c.execute('select * from triviareport where id=? limit 1', (id,))
+            c.execute('SELECT * FROM triviareport where id=? limit 1', (id,))
             data = []
             for row in c:
                 data.append(row)
@@ -1907,7 +1911,7 @@ class TriviaTime(callbacks.Plugin):
 
         def getReportTop3(self):
             c = self.conn.cursor()
-            c.execute('select * from triviareport order by id desc limit 3')
+            c.execute('SELECT * FROM triviareport order by id desc limit 3')
             data = []
             for row in c:
                 data.append(row)
@@ -1916,7 +1920,7 @@ class TriviaTime(callbacks.Plugin):
 
         def getTemporaryQuestionTop3(self):
             c = self.conn.cursor()
-            c.execute('select * from triviatemporaryquestion order by id desc limit 3')
+            c.execute('SELECT * FROM triviatemporaryquestion order by id desc limit 3')
             data = []
             for row in c:
                 data.append(row)
@@ -1925,7 +1929,7 @@ class TriviaTime(callbacks.Plugin):
 
         def getTemporaryQuestionById(self, id):
             c = self.conn.cursor()
-            c.execute('select * from triviatemporaryquestion where id=? limit 1', (id,))
+            c.execute('SELECT * FROM triviatemporaryquestion where id=? limit 1', (id,))
             data = []
             for row in c:
                 data.append(row)
@@ -1934,7 +1938,7 @@ class TriviaTime(callbacks.Plugin):
 
         def getEditById(self, id):
             c = self.conn.cursor()
-            c.execute('select * from triviaedit where id=? limit 1', (id,))
+            c.execute('SELECT * FROM triviaedit where id=? limit 1', (id,))
             data = []
             for row in c:
                 data.append(row)
@@ -1967,7 +1971,7 @@ class TriviaTime(callbacks.Plugin):
 
         def getEditTop3(self):
             c = self.conn.cursor()
-            c.execute('select * from triviaedit order by id desc limit 3')
+            c.execute('SELECT * FROM triviaedit order by id desc limit 3')
             data = []
             for row in c:
                 data.append(row)
