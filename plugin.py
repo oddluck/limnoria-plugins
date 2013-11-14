@@ -27,6 +27,7 @@ class TriviaTime(callbacks.Plugin):
         TriviaTime - A trivia word game, guess the word and score points. Play KAOS rounds and work together to solve clues to find groups of words.
     """
     threaded = True # enables threading for supybot plugin
+    currentDBVersion = 1.2
 
     def __init__(self, irc):
         log.info('*** Loaded TriviaTime!!! ***')
@@ -36,6 +37,9 @@ class TriviaTime(callbacks.Plugin):
         # games info
         self.games = {} # separate game for each channel
         self.skips = {}
+
+        #Database amend statements for outdated versions
+        self.dbamends = {} #Formatted like this: <DBVersion>: "<ALTERSTATEMENT>; <ALTERSTATEMENT>;" (This IS valid SQL as long as we include the semicolons)
 
         # connections
         dbLocation = self.registryValue('sqlitedb')
@@ -67,7 +71,7 @@ class TriviaTime(callbacks.Plugin):
         self.storage.makeInfoTable()
         #triviainfo table check
         if self.storage.isTriviaVersionSet():
-            if self.storage.getVersion() != None & self.storage.getVersion() != self.currentVersion:
+            if self.storage.getVersion() != None & self.storage.getVersion() != self.currentDBVersion:
                 return
 
     def doPrivmsg(self, irc, msg):
