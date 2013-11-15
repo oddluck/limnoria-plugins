@@ -104,9 +104,6 @@
                 Username: <input name="username" value="<?php echo $username; ?>"></input>
                 <input type="submit"></input>
             </form>
-        </div>
-    </div>
-
 <?php
     if ($db) {
         $q = $db->prepare('select
@@ -158,6 +155,10 @@
         die($err);
     }
 ?>
+        </div>
+    </div>
+
+
 
       <div class="row">
         <div class="span12">
