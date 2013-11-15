@@ -214,18 +214,20 @@ class TriviaTime(callbacks.Plugin):
         irc.reply('Removed all points from %s' % (username))
     clearpoints = wrap(clearpoints, ['admin','nick'])
 
-    def day(self, irc, msg, arg):
+    def day(self, irc, msg, arg, num):
+        """[<number>]
+            Displays the top ten scores of the day. Parameter is optional, display up to that number. eg 20 - display 11-20
         """
-            Displays the top ten scores of the day
-        """
+        if num is None or num < 10:
+            num=10
         channel = msg.args[0]
-        tops = self.storage.viewDayTop10(channel)
+        tops = self.storage.viewDayTop10(channel, num)
         topsText = 'Today\'s Top 10 Players: '
         for i in range(len(tops)):
-            topsText += '\x02 #%d:\x02 %s %d ' % ((i+1) , tops[i][1], tops[i][2])
+            topsText += '\x02 #%d:\x02 %s %d ' % ((i+1+num-10) , tops[i][1], tops[i][2])
         irc.sendMsg(ircmsgs.privmsg(channel, topsText))
         irc.noReply()
-    day = wrap(day)
+    day = wrap(day, [optional('int')])
 
     def deletequestion(self, irc, msg, arg, id):
         """<question id>
@@ -363,18 +365,20 @@ class TriviaTime(callbacks.Plugin):
         irc.noReply()
     me = wrap(me)
 
-    def month(self, irc, msg, arg):
+    def month(self, irc, msg, arg, num):
+        """[<number>]
+            Displays the top ten scores of the month. Parameter is optional, display up to that number. eg 20 - display 11-20
         """
-            Displays the top ten scores of the month
-        """
+        if num is None or num < 10:
+            num=10
         channel = msg.args[0]
-        tops = self.storage.viewMonthTop10(channel)
+        tops = self.storage.viewMonthTop10(channel, num)
         topsText = 'This MONTHS Top 10 Players: '
         for i in range(len(tops)):
-            topsText += '\x02 #%d:\x02 %s %d ' % ((i+1) , tops[i][1], tops[i][2])
+            topsText += '\x02 #%d:\x02 %s %d ' % ((i+1+num-10) , tops[i][1], tops[i][2])
         irc.sendMsg(ircmsgs.privmsg(channel, topsText))
         irc.noReply()
-    month = wrap(month)
+    month = wrap(month, [optional('int')])
 
     def removeedit(self, irc, msg, arg, user, channel, num):
         """[<channel>] <int>
@@ -733,31 +737,35 @@ class TriviaTime(callbacks.Plugin):
         irc.reply('Done! Transfered records from %s to %s' % (userfrom, userto))
     transferpoints = wrap(transferpoints, ['admin', 'nick', 'nick'])
 
-    def week(self, irc, msg, arg):
+    def week(self, irc, msg, arg, num):
+        """[<number>]
+            Displays the top ten scores of the week. Parameter is optional, display up to that number. eg 20 - display 11-20
         """
-            Displays the top ten scores of the week
-        """
+        if num is None or num < 10:
+            num=10
         channel = msg.args[0]
-        tops = self.storage.viewWeekTop10(channel)
+        tops = self.storage.viewWeekTop10(channel, num)
         topsText = 'This week\'s Top 10 Players: '
         for i in range(len(tops)):
-            topsText += '\x02 #%d:\x02 %s %d ' % ((i+1) , tops[i][1], tops[i][2])
+            topsText += '\x02 #%d:\x02 %s %d ' % ((i+1+num-10) , tops[i][1], tops[i][2])
         irc.sendMsg(ircmsgs.privmsg(channel, topsText))
         irc.noReply()
-    week = wrap(week)
+    week = wrap(week, [optional('int')])
 
-    def year(self, irc, msg, arg):
+    def year(self, irc, msg, arg, num):
+        """[<number>]
+            Displays the top ten scores of the year. Parameter is optional, display up to that number. eg 20 - display 11-20
         """
-            Displays the top ten scores of the year
-        """
+        if num is None or num < 10:
+            num=10
         channel = msg.args[0]
-        tops = self.storage.viewYearTop10(channel)
+        tops = self.storage.viewYearTop10(channel, num)
         topsText = 'This Year\'s Top 10 Players: '
         for i in range(len(tops)):
-            topsText += '\x02 #%d:\x02 %s %d ' % ((i+1) , tops[i][1], tops[i][2])
+            topsText += '\x02 #%d:\x02 %s %d ' % ((i+1+num-10) , tops[i][1], tops[i][2])
         irc.sendMsg(ircmsgs.privmsg(channel, topsText))
         irc.noReply()
-    year = wrap(year)
+    year = wrap(year, [optional('int')])
 
     #Game instance
     class Game:
@@ -2499,7 +2507,8 @@ class TriviaTime(callbacks.Plugin):
             self.conn.commit()
             c.close()
 
-        def viewDayTop10(self, channel):
+        def viewDayTop10(self, channel, numUpTo=10):
+            numUpTo -= 10
             dateObject = datetime.date.today()
             day   = dateObject.day
             month = dateObject.month
@@ -2516,14 +2525,15 @@ class TriviaTime(callbacks.Plugin):
                         and year=?
                         and channel_canonical=?
                         group by username_canonical
-                        order by points desc limit 10''', (day, month, year, channelCanonical))
+                        order by points desc limit ?, 10''', (day, month, year, channelCanonical, numUpTo))
             data = []
             for row in c:
                 data.append(row)
             c.close()
             return data
 
-        def viewAllTimeTop10(self, channel):
+        def viewAllTimeTop10(self, channel, numUpTo=10):
+            numUpTo -= 10
             c = self.conn.cursor()
             channelCanonical = ircutils.toLower(channel)
             c.execute('''select id,
@@ -2534,7 +2544,7 @@ class TriviaTime(callbacks.Plugin):
                         where channel_canonical=?
                         group by username_canonical
                         order by points desc
-                        limit 10''', (channelCanonical,))
+                        limit ?, 10''', (channelCanonical,numUpTo))
 
             data = []
             for row in c:
@@ -2542,7 +2552,8 @@ class TriviaTime(callbacks.Plugin):
             c.close()
             return data
 
-        def viewMonthTop10(self, channel, year=None, month=None):
+        def viewMonthTop10(self, channel, numUpTo=10, year=None, month=None):
+            numUpTo -= 10
             d = datetime.date.today()
             if year is None or month is None:
                 year = d.year
@@ -2559,7 +2570,7 @@ class TriviaTime(callbacks.Plugin):
                         and channel_canonical=?
                         group by username_canonical
                         order by points desc
-                        limit 10''', (year,month, channelCanonical))
+                        limit ?, 10''', (year,month, channelCanonical, numUpTo))
 
             data = []
             for row in c:
@@ -2567,7 +2578,8 @@ class TriviaTime(callbacks.Plugin):
             c.close()
             return data
 
-        def viewYearTop10(self, channel, year=None):
+        def viewYearTop10(self, channel, numUpTo=10, year=None):
+            numUpTo -= 10
             d = datetime.date.today()
             if year is None:
                 year = d.year
@@ -2582,7 +2594,7 @@ class TriviaTime(callbacks.Plugin):
                         and channel_canonical=?
                         group by username_canonical
                         order by points desc
-                        limit 10''', (year,channelCanonical))
+                        limit ?, 10''', (year,channelCanonical,numUpTo))
 
             data = []
             for row in c:
@@ -2590,7 +2602,8 @@ class TriviaTime(callbacks.Plugin):
             c.close()
             return data
 
-        def viewWeekTop10(self, channel):
+        def viewWeekTop10(self, channel, numUpTo=10):
+            numUpTo -= 10
             d = datetime.date.today()
             weekday=d.weekday()
             d -= datetime.timedelta(weekday)
@@ -2614,10 +2627,9 @@ class TriviaTime(callbacks.Plugin):
             weekSql += ''' ) and channel_canonical=?
                             group by username_canonical
                             order by points desc
-                            limit 10
-                        '''
+                            limit ?, 10'''
             channelCanonical = ircutils.toLower(channel)
-            c.execute(weekSql, (channelCanonical,))
+            c.execute(weekSql, (channelCanonical,numUpTo))
 
             data = []
             for row in c:
