@@ -155,9 +155,9 @@
                     tl3.num_answered * 1.0 as n 
                     from triviauserlog tl3
                 ) tl2
-            left join triviauserlog tl
+            inner join triviauserlog tl
             on tl.username_canonical=:username
-            where id=tl2.id2
+            and tl.id=tl2.id2
             ');
         $q->execute(array(':username'=>$usernameCanonical));
         if ($q === false) {
