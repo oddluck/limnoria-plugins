@@ -30,7 +30,7 @@ conf.registerChannelValue(TriviaTime, 'quizfile',
         )
 
 # timeout, number of hints, values
-conf.registerChannelValue(TriviaTime, 'showOtherHintCommand', 
+conf.registerChannelValue(TriviaTime, 'extraHint', 
         registry.NormalizedString(""".""", 
                 """The command to show alternative hints""")
         )
@@ -40,12 +40,12 @@ conf.registerChannelValue(TriviaTime, 'showHintCommandKAOS',
                 """The command for showing the remaining KAOS""")
         )
 
-conf.registerChannelValue(TriviaTime, 'showVowelsThirdHint',
+conf.registerChannelValue(TriviaTime, 'vowelsHint',
         registry.Boolean(True,
                 """Show all vowels on the third hint. If false, random letters will be shown instead""")
         )
 
-conf.registerChannelValue(TriviaTime, 'showPlayerStats', 
+conf.registerChannelValue(TriviaTime, 'showStats', 
         registry.Boolean(True, 
                 """Show player stats after correct answer?""")
         )
@@ -60,22 +60,22 @@ conf.registerChannelValue(TriviaTime, 'skipActiveTime',
                 """Amount of time a user is considered active after answering a question""")
         )
 
-conf.registerChannelValue(TriviaTime, 'skipLimitTime', 
+conf.registerChannelValue(TriviaTime, 'skipTime', 
         registry.Integer(90, 
                 """Time a user must wait to skip a question again after skipping in seconds""")
         )
 
-conf.registerChannelValue(TriviaTime, 'timeout', 
+conf.registerChannelValue(TriviaTime, 'hintTime', 
         registry.Integer(10, 
                 """Time in between hints""")
         )
 
-conf.registerChannelValue(TriviaTime, 'timeoutKAOS', 
+conf.registerChannelValue(TriviaTime, 'hintKAOS', 
         registry.Integer(15, 
                 """Time in between hints""")
         )
 
-conf.registerChannelValue(TriviaTime, 'sleepTime', 
+conf.registerChannelValue(TriviaTime, 'waitTime', 
         registry.Integer(15, 
                 """Time in between the end of one question and the start of another""")
         )
@@ -105,7 +105,7 @@ conf.registerChannelValue(TriviaTime, 'payoutKAOS',
                 """Extra points for teamwork on KAOS""")
         )
 
-conf.registerChannelValue(TriviaTime, 'inactivityDelay', 
+conf.registerChannelValue(TriviaTime, 'timeout', 
         registry.Integer(600, 
                 """Time before game shuts off in seconds""")
         )
@@ -115,12 +115,12 @@ conf.registerChannelValue(TriviaTime, 'defaultPoints',
                 """Default points for a correct answer to a normal question""")
         )
 
-conf.registerChannelValue(TriviaTime, 'defaultPointsKAOS', 
+conf.registerChannelValue(TriviaTime, 'defaultKAOS', 
         registry.Integer(300, 
                 """Default points for a correct KAOS answer""")
         )
 
-conf.registerChannelValue(TriviaTime, 'hintShowRatio', 
+conf.registerChannelValue(TriviaTime, 'hintRatio', 
         registry.Integer(35, 
                 """Percent of word to show per hint""")
         )
