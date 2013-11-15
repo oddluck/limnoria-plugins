@@ -156,7 +156,7 @@ class TriviaTime(callbacks.Plugin):
                 irc.error('Question could not be found for this edit')
     acceptedit = wrap(acceptedit, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
 
-    def accepttempquestion(self, irc, msg, arg, user, channel, num):
+    def acceptnew(self, irc, msg, arg, user, channel, num):
         """[<channel>] <num>
         Accept a new question, and add it to the database. Channel is only necessary when editing from outside of the channel
         """
@@ -169,7 +169,7 @@ class TriviaTime(callbacks.Plugin):
             self.storage.insertQuestionsBulk([(q[3], q[3])])
             self.storage.removeTemporaryQuestion(q[0])
             irc.reply('Question accepted!')
-    accepttempquestion = wrap(accepttempquestion, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
+    acceptnew = wrap(acceptnew, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
 
     def addquestion(self, irc, msg, arg, question):
         """<question text>
@@ -406,7 +406,7 @@ class TriviaTime(callbacks.Plugin):
             irc.reply('Report %d removed!' % report[0])
     removereport = wrap(removereport, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
 
-    def removetempquestion(self, irc, msg, arg, user, channel, num):
+    def delnew(self, irc, msg, arg, user, channel, num):
         """[<channel>] <int>
         Remove a temp question without accepting it. Channel is only necessary when editing from outside of the channel
         """
@@ -417,7 +417,7 @@ class TriviaTime(callbacks.Plugin):
             q = q[0]
             self.storage.removeTemporaryQuestion(q[0])
             irc.reply('Temp question #%d removed!' % q[0])
-    removetempquestion = wrap(removetempquestion, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
+    delnew = wrap(delnew, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
 
     def repeat(self, irc, msg, arg):
         """
@@ -644,7 +644,7 @@ class TriviaTime(callbacks.Plugin):
             irc.reply('type .showedit <edit number> to see more information')
     showedit = wrap(showedit, ['user', ('checkChannelCapability', 'triviamod'), optional('int')])
 
-    def showtempquestion(self, irc, msg, arg, user, channel, num):
+    def shownew(self, irc, msg, arg, user, channel, num):
         """[<temp question #>]
         Show questions awaiting approval
         """
@@ -661,8 +661,8 @@ class TriviaTime(callbacks.Plugin):
                 irc.reply('No temp questions found')
             for ques in q:
                 irc.reply('Temp Q #%d: %s'%(ques[0], ques[3]))
-            irc.reply('type .showtempquestion <temp question #> to see more information')
-    showtempquestion = wrap(showtempquestion, ['user', ('checkChannelCapability', 'triviamod'),optional('int')])
+            irc.reply('type .shownew <temp question #> to see more information')
+    shownew = wrap(shownew, ['user', ('checkChannelCapability', 'triviamod'),optional('int')])
 
     def start(self, irc, msg, args):
         """
