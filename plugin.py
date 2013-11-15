@@ -2508,7 +2508,7 @@ class TriviaTime(callbacks.Plugin):
             c = self.conn.cursor()
             c.execute('''select id,
                         username,
-                        sum(points_made),
+                        sum(points_made) as points,
                         sum(num_answered)
                         from triviauserlog
                         where day=?
@@ -2516,7 +2516,7 @@ class TriviaTime(callbacks.Plugin):
                         and year=?
                         and channel_canonical=?
                         group by username_canonical
-                        order by points_made desc limit 10''', (day, month, year, channelCanonical))
+                        order by points desc limit 10''', (day, month, year, channelCanonical))
             data = []
             for row in c:
                 data.append(row)
@@ -2528,12 +2528,12 @@ class TriviaTime(callbacks.Plugin):
             channelCanonical = ircutils.toLower(channel)
             c.execute('''select id,
                         username,
-                        sum(points_made),
+                        sum(points_made) as points,
                         sum(num_answered)
                         from triviauserlog
                         where channel_canonical=?
                         group by username_canonical
-                        order by points_made desc
+                        order by points desc
                         limit 10''', (channelCanonical,))
 
             data = []
@@ -2551,14 +2551,14 @@ class TriviaTime(callbacks.Plugin):
             channelCanonical = ircutils.toLower(channel)
             c.execute('''select id,
                         username,
-                        sum(points_made),
+                        sum(points_made) as points,
                         sum(num_answered)
                         from triviauserlog
                         where year=?
                         and month=?
                         and channel_canonical=?
                         group by username_canonical
-                        order by points_made desc
+                        order by points desc
                         limit 10''', (year,month, channelCanonical))
 
             data = []
@@ -2575,13 +2575,13 @@ class TriviaTime(callbacks.Plugin):
             channelCanonical = ircutils.toLower(channel)
             c.execute('''select id,
                         username,
-                        sum(points_made),
+                        sum(points_made) as points,
                         sum(num_answered)
                         from triviauserlog
                         where year=?
                         and channel_canonical=?
                         group by username_canonical
-                        order by points_made desc
+                        order by points desc
                         limit 10''', (year,channelCanonical))
 
             data = []
