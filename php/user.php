@@ -3,9 +3,14 @@
 <?php
   include('config.php');
   if(array_key_exists('username', $_GET)) {
-    $username = strtolower($_GET['username']);
+    // Convert username to lowercase in irc
+    $username = $_GET['username'];
+    $ircLowerSymbols = array("\\"=>"|", "["=>"{", "]"=>"}", "~"=>"^");
+    $usernameCanonical = strtr($username, $ircLowerSymbols);
+    $usernameCanonical = strtolower($usernameCanonical);
   } else {
     $username = '';
+    $usernameCanonical = '';
   }
 ?>
   <head>
@@ -129,20 +134,20 @@
             sum(tl2.t * (tl2.n / 
                 (select sum(num_answered) 
                     from triviauserlog 
-                    where username=:username))
+                    where username_canonical=:username))
                 ) as count,
             sum(tl2.p * (tl2.n / 
                 (select sum(num_answered) 
                     from triviauserlog 
-                    where username=:username))
+                    where username_canonical=:username))
                 ) as score,
-            (select sum(points_made) from triviauserlog t3 where lower(username)=:username) as points,
-            (select sum(num_answered) from triviauserlog t4 where lower(username)=:username) as q_asked,
-            (select num_editted from triviausers where lower(username)=:username) as num_e,
-            (select num_editted_accepted from triviausers where lower(username)=:username) as num_e_accepted,
-            (select num_questions_added from triviausers where lower(username)=:username) as num_q,
-            (select num_questions_accepted from triviausers where lower(username)=:username) as num_q_accepted,
-            (select num_reported from triviausers where lower(username)=:username) as num_r
+            (select sum(points_made) from triviauserlog t3 where username_canonical=:username) as points,
+            (select sum(num_answered) from triviauserlog t4 where username_canonical=:username) as q_asked,
+            (select num_editted from triviausers where username_canonical=:username) as num_e,
+            (select num_editted_accepted from triviausers where username_canonical=:username) as num_e_accepted,
+            (select num_questions_added from triviausers where username_canonical=:username) as num_q,
+            (select num_questions_accepted from triviausers where username_canonical=:username) as num_q_accepted,
+            (select num_reported from triviausers where username_canonical=:username) as num_r
             from (select 
                     tl3.id as id2, 
                     tl3.average_time * 1.0 as t, 
@@ -150,11 +155,11 @@
                     tl3.num_answered * 1.0 as n 
                     from triviauserlog tl3
                 ) tl2
-            inner join triviauserlog tl
-            on tl.username=:username
-            and id=tl2.id2
+            left join triviauserlog tl
+            on tl.username_canonical=:username
+            where id=tl2.id2
             ');
-        $q->execute(array('username'=>$username));
+        $q->execute(array(':username'=>$usernameCanonical));
         if ($q === false) {
             die("Error: database error: table does not exist\n");
         } else {
@@ -189,7 +194,7 @@
         </div>
       </div>
       <div class="footer">
-        <p>&copy; Trivialand 2013 - <a href="https://github.com/tannn/TriviaTime">github</a></p>
+        <p>&copy; Trivialand 2013 - <a target="_blank" href="https://github.com/tannn/TriviaTime">github</a></p>
       </div>
 
     </div> <!-- /container -->
