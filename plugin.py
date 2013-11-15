@@ -2580,7 +2580,7 @@ class TriviaTime(callbacks.Plugin):
                         from triviauserlog
                         where year=?
                         and channel_canonical=?
-                        group by username
+                        group by username_canonical
                         order by points_made desc
                         limit 10''', (year,channelCanonical))
 
@@ -2612,7 +2612,7 @@ class TriviaTime(callbacks.Plugin):
                         where ('''
             weekSql += weekSqlString
             weekSql += ''' ) and channel_canonical=?
-                            group by username
+                            group by username_canonical
                             order by points_made desc
                             limit 10
                         '''
