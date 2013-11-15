@@ -124,7 +124,7 @@
               </thead>
               <tbody>
 <?php
-    if ($db) {
+    if ($db && $username != '') {
         $q = $db->prepare('select
             sum(tl2.t * (tl2.n / 
                 (select sum(num_answered) 
@@ -174,8 +174,10 @@
                 echo '</tr>';
             }
         }
-    } else {
-        die($err);
+	} else {
+		if(isset($err)) {
+			die($err);
+		}
     }
 ?>
               </tbody>
