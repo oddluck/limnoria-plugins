@@ -169,8 +169,8 @@
                               $result = $q->fetchAll();
                               foreach($result as $res) {
                                 $isItalic = false;
-                                $splitNew = split('\*', $res['question']);
-                                $splitOld = split('\*', $res['original']);
+                                $splitNew = explode('*', $res['question']);
+                                $splitOld = explode('*', $res['original']);
 
                                 $differenceString = '';
                                 for($y=0;$y<sizeof($splitNew);$y++){
