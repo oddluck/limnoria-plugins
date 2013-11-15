@@ -101,33 +101,12 @@
         <div class="span12">
             <h2>Search</h2>
             <form method="get">
-                Username: <input name="username"></input>
+                Username: <input name="username" value="<?php echo $username; ?>"></input>
                 <input type="submit"></input>
             </form>
         </div>
     </div>
 
-
-
-      <div class="row">
-        <div class="span12">
-          <h2>Player data</h2>
-            <table class="table">
-              <thead>
-                <tr>
-                  <th>Username</th>
-                  <th>Average Time/Question*</th>
-                  <th>Average Points/Question*</th>
-                  <th>Total Points</th>
-                  <th>Question Answered*</th>
-                  <th>Edits Made</th>
-                  <th>Edits Accepted</th>
-                  <th>Questions Made</th>
-                  <th>Questions Accepted</th>
-                  <th>Reports Made</th>
-                </tr>
-              </thead>
-              <tbody>
 <?php
     if ($db) {
         $q = $db->prepare('select
@@ -166,23 +145,57 @@
         } else {
             $result = $q->fetchAll();
             foreach($result as $res) {
-                echo '<tr>';
-                echo '<td>' . $res['usrname'] . '</td>';
-                echo '<td>' . number_format($res['count'],2) . '</td>';
-                echo '<td>' . number_format($res['score'],2) . '</td>';
-                echo '<td>' . number_format($res['points'],0) . '</td>';
-                echo '<td>' . number_format($res['q_asked'],0) . '</td>';
-                echo '<td>' . number_format($res['num_e'],0) . '</td>';
-                echo '<td>' . number_format($res['num_e_accepted'],0) . '</td>';
-                echo '<td>' . number_format($res['num_q'],0) . '</td>';
-                echo '<td>' . number_format($res['num_q_accepted'],0) . '</td>';
-                echo '<td>' . number_format($res['num_r'],0) . '</td>';
-                echo '</tr>';
+                if(is_null($res['usrname'])) {
+                    if($username=='') {
+                        echo "<div class='alert'>Enter a username above to search for stats.</div>";
+                    } else {
+                        echo "<div class='alert alert-error'>User not found.</div>";
+                    }
+                }
             }
         }
     } else {
         die($err);
     }
+?>
+
+      <div class="row">
+        <div class="span12">
+          <h2>Player data</h2>
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Username</th>
+                  <th>Average Time/Question*</th>
+                  <th>Average Points/Question*</th>
+                  <th>Total Points</th>
+                  <th>Question Answered*</th>
+                  <th>Edits Made</th>
+                  <th>Edits Accepted</th>
+                  <th>Questions Made</th>
+                  <th>Questions Accepted</th>
+                  <th>Reports Made</th>
+                </tr>
+              </thead>
+              <tbody>
+<?php
+
+            foreach($result as $res) {
+                if(!is_null($res['usrname'])) {
+                    echo '<tr>';
+                    echo '<td>' . $res['usrname'] . '</td>';
+                    echo '<td>' . number_format($res['count'],2) . '</td>';
+                    echo '<td>' . number_format($res['score'],2) . '</td>';
+                    echo '<td>' . number_format($res['points'],0) . '</td>';
+                    echo '<td>' . number_format($res['q_asked'],0) . '</td>';
+                    echo '<td>' . number_format($res['num_e'],0) . '</td>';
+                    echo '<td>' . number_format($res['num_e_accepted'],0) . '</td>';
+                    echo '<td>' . number_format($res['num_q'],0) . '</td>';
+                    echo '<td>' . number_format($res['num_q_accepted'],0) . '</td>';
+                    echo '<td>' . number_format($res['num_r'],0) . '</td>';
+                    echo '</tr>';
+                }
+            }
 ?>
               </tbody>
             </table>
