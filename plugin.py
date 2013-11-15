@@ -95,7 +95,7 @@ class TriviaTime(callbacks.Plugin):
             # Look for command to list remaining KAOS
             if msg.args[1] == self.registryValue('showHintCommandKAOS',channel):
                 self.games[channelCanonical].getRemainingKAOS()
-            elif msg.args[1] == self.registryValue('showOtherHintCommand', channel):
+            elif msg.args[1] == self.registryValue('extraHint', channel):
                 self.games[channelCanonical].getOtherHint(username)
             else:
                 # check the answer
@@ -132,7 +132,7 @@ class TriviaTime(callbacks.Plugin):
             if len(pingMsg) == 2:
                 pingTime = float(pingMsg[0])
                 channel = pingMsg[1]
-                irc.sendMsg(ircmsgs.privmsg(channel, """ %s Pong: response %0.2f seconds""" % (username, time.time()-pingTime)))
+                irc.sendMsg(ircmsgs.privmsg(channel, """%s Ping reply: %0.2f seconds""" % (username, time.time()-pingTime)))
 
     def acceptedit(self, irc, msg, arg, user, channel, num):
         """[<channel>] <num>
@@ -340,7 +340,7 @@ class TriviaTime(callbacks.Plugin):
         if len(info) < 3:
             errorMessage = """You do not have any points."""
             if not identified:
-                errorMessage += """ You should identify to keep track of your score more accurately."""
+                errorMessage += """You should identify to keep track of your score more accurately."""
             irc.reply(errorMessage)
         else:
             hasPoints = False
@@ -360,7 +360,7 @@ class TriviaTime(callbacks.Plugin):
             if not hasPoints:
                 infoText = """%s: You do not have any points.""" % (username)
                 if not identified:
-                    infoText += """ You should identify to keep track of your score more accurately."""
+                    infoText += """You should identify to keep track of your score more accurately."""
             irc.sendMsg(ircmsgs.privmsg(channel, infoText))
         irc.noReply()
     me = wrap(me)
@@ -494,7 +494,7 @@ class TriviaTime(callbacks.Plugin):
             irc.error('You can only vote to skip once.')
             return
 
-        skipSeconds = self.registryValue('skipLimitTime', channel)
+        skipSeconds = self.registryValue('skipTime', channel)
         oldSkips = []
         for usr in self.skips:
             if int(time.mktime(time.localtime())) - self.skips[usr] > skipSeconds:
@@ -879,7 +879,7 @@ class TriviaTime(callbacks.Plugin):
                     self.sendMessage("""DING DING DING, \x02%s\x02 got the answer -> \x02%s\x02 <- in \x02%0.4f\x02 seconds for \x02%d(+%d)\x02 points"""
                             % (username, correctAnswer, timeElapsed, pointsAdded, streakBonus))
 
-                    if self.registryValue('showPlayerStats', self.channel):
+                    if self.registryValue('showStats', self.channel):
                         userInfo = self.storage.getUser(username, self.channel)
                         if len(userInfo) >= 3:
                             todaysScore = userInfo[10]
@@ -933,17 +933,17 @@ class TriviaTime(callbacks.Plugin):
                         self.stop()
                         return
 
-                    sleepTime = self.registryValue('sleepTime',self.channel)
-                    if sleepTime < 2:
-                        sleepTime = 2
-                        log.error('sleepTime was set too low(<2 seconds). setting to 2 seconds')
-                    sleepTime = time.time() + sleepTime
-                    self.queueEvent(sleepTime, self.nextQuestion)
+                    waitTime = self.registryValue('waitTime',self.channel)
+                    if waitTime < 2:
+                        waitTime = 2
+                        log.error('waitTime was set too low (<2 seconds). Setting to 2 seconds')
+                    waitTime = time.time() + waitTime
+                    self.queueEvent(waitTime, self.nextQuestion)
 
         def getHintString(self, hintNum=None):
             if hintNum == None:
                 hintNum = self.hintsCounter
-            hintRatio = self.registryValue('hintShowRatio') # % to show each hint
+            hintRatio = self.registryValue('hintRatio') # % to show each hint
             hints = ''
             ratio = float(hintRatio * .01)
             charMask = self.registryValue('charMask', self.channel)
@@ -988,7 +988,7 @@ class TriviaTime(callbacks.Plugin):
                     ansend = ans[divider:]
                     hintsend = ''
                     unmasked = 0
-                    if self.registryValue('showVowelsThirdHint', self.channel):
+                    if self.registryValue('vowelsHint', self.channel):
                         hints+= self.getMaskedVowels(ansend)
                     else:
                         hints+= self.getMaskedRandom(ansend, divider-1)
@@ -1016,7 +1016,7 @@ class TriviaTime(callbacks.Plugin):
 
         def getMaskedRandom(self, letters, sizeOfUnmasked):
             charMask = self.registryValue('charMask', self.channel)
-            hintRatio = self.registryValue('hintShowRatio') # % to show each hint
+            hintRatio = self.registryValue('hintRatio') # % to show each hint
             hints = ''
             unmasked = 0
             maskedInARow=0
@@ -1136,12 +1136,12 @@ class TriviaTime(callbacks.Plugin):
                     return
 
                 # provide next question
-                sleepTime = self.registryValue('sleepTime',self.channel)
-                if sleepTime < 2:
-                    sleepTime = 2
-                    log.error('sleepTime was set too low(<2 seconds). setting to 2 seconds')
-                sleepTime = time.time() + sleepTime
-                self.queueEvent(sleepTime, self.nextQuestion)
+                waitTime = self.registryValue('waitTime',self.channel)
+                if waitTime < 2:
+                    waitTime = 2
+                    log.error('waitTime was set too low (<2 seconds). Setting to 2 seconds')
+                waitTime = time.time() + waitTime
+                self.queueEvent(waitTime, self.nextQuestion)
             else:
                 # give out more hints
                 self.nextHint()
@@ -1157,22 +1157,22 @@ class TriviaTime(callbacks.Plugin):
             #reset hint shown
             self.shownHint = False
 
-            timeout = 2
+            hintTime = 2
             if len(self.answers) > 1:
-                timeout = self.registryValue('timeoutKAOS', self.channel)
+                hintTime = self.registryValue('hintKAOS', self.channel)
             else:
-                timeout = self.registryValue('timeout', self.channel)
-            if timeout < 2:
+                hintTime = self.registryValue('hintTime', self.channel)
+            if hintTime < 2:
                 timout = 2
-                log.error('timeout was set too low(<2 seconds). setting to 2 seconds')
-            timeout += time.time()
-            self.queueEvent(timeout, self.loopEvent)
+                log.error('hintTime was set too low(<2 seconds). setting to 2 seconds')
+            hintTime += time.time()
+            self.queueEvent(hintTime, self.loopEvent)
 
         def nextQuestion(self):
             """
                 Time for a new question
             """
-            inactivityTime = self.registryValue('inactivityDelay')
+            inactivityTime = self.registryValue('timeout')
             if self.lastAnswer < time.time() - inactivityTime:
                 self.stop()
                 self.sendMessage('Stopping due to inactivity')
@@ -1248,15 +1248,15 @@ class TriviaTime(callbacks.Plugin):
             self.queueEvent(0, self.loopEvent)
             self.askedAt = time.time()
 
-        def queueEvent(self, timeout, func):
+        def queueEvent(self, hintTime, func):
             """
                 Create a new timer event for loopEvent call
             """
-            # create a new thread for event next step to happen for [timeout] seconds
+            # create a new thread for event next step to happen for [hintTime] seconds
             def event():
                 func()
             if self.active:
-                schedule.addEvent(event, timeout, '%s.trivia' % self.channel)
+                schedule.addEvent(event, hintTime, '%s.trivia' % self.channel)
 
         def removeAccents(self, text):
             replacements = [('á', 'a'),('é','e'),('í', 'i'),('ó','o'),('ú','u'),('ü','u'),('ñ','n')]
@@ -1327,7 +1327,7 @@ class TriviaTime(callbacks.Plugin):
 
                 points = self.registryValue('defaultPoints', self.channel)
                 if len(answer) > 1:
-                    points = self.registryValue('defaultPointsKAOS', self.channel) * len(answers)
+                    points = self.registryValue('defaultKAOS', self.channel) * len(answers)
 
                 additionalPoints = 0
                 additionalPoints += timesAnswered * -5
