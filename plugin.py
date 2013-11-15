@@ -2606,14 +2606,14 @@ class TriviaTime(callbacks.Plugin):
             c = self.conn.cursor()
             weekSql = '''select id,
                         username,
-                        sum(points_made),
+                        sum(points_made) as points,
                         sum(num_answered)
                         from triviauserlog
                         where ('''
             weekSql += weekSqlString
             weekSql += ''' ) and channel_canonical=?
                             group by username_canonical
-                            order by points_made desc
+                            order by points desc
                             limit 10
                         '''
             channelCanonical = ircutils.toLower(channel)
