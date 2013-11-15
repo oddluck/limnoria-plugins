@@ -105,7 +105,7 @@
                 <input type="submit"></input>
             </form>
 <?php
-    if ($db) {
+    if ($db && $username != '') {
         $q = $db->prepare('select
             tl.username as usrname,
             sum(tl2.t * (tl2.n / 
@@ -151,8 +151,13 @@
                 }
             }
         }
-    } else {
-        die($err);
+	} else {
+		if(isset($err)) {
+			die($err);
+		}
+		else {
+			echo "<div class='alert alert-info'>Enter a username above to search for stats.</div>";
+		}
     }
 ?>
         </div>
