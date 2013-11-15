@@ -131,6 +131,7 @@
 <?php
     if ($db) {
         $q = $db->prepare('select
+            tl.username as usrname,
             sum(tl2.t * (tl2.n / 
                 (select sum(num_answered) 
                     from triviauserlog 
@@ -166,7 +167,7 @@
             $result = $q->fetchAll();
             foreach($result as $res) {
                 echo '<tr>';
-                echo '<td>' . $username . '</td>';
+                echo '<td>' . $res['usrname'] . '</td>';
                 echo '<td>' . number_format($res['count'],2) . '</td>';
                 echo '<td>' . number_format($res['score'],2) . '</td>';
                 echo '<td>' . number_format($res['points'],0) . '</td>';
