@@ -147,7 +147,7 @@
             foreach($result as $res) {
                 if(is_null($res['usrname'])) {
                     if($username=='') {
-                        echo "<div class='alert'>Enter a username above to search for stats.</div>";
+                        echo "<div class='alert alert-info'>Enter a username above to search for stats.</div>";
                     } else {
                         echo "<div class='alert alert-error'>User not found.</div>";
                     }
