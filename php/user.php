@@ -178,6 +178,9 @@
 		if(isset($err)) {
 			die($err);
 		}
+		else {
+			echo "<div class='alert alert-info'>Enter a username above to search for stats.</div>";
+		}
     }
 ?>
               </tbody>
