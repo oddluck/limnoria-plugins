@@ -70,9 +70,9 @@ class TriviaTime(callbacks.Plugin):
         self.storage.makeEditTable()
         self.storage.makeInfoTable()
         #triviainfo table check
-        if self.storage.isTriviaVersionSet():
-            if self.storage.getVersion() != None & self.storage.getVersion() != self.currentDBVersion:
-                return
+        #if self.storage.isTriviaVersionSet():
+        if self.storage.getVersion() != None and self.storage.getVersion() != self.currentDBVersion:
+            return
 
     def doPrivmsg(self, irc, msg):
         """
