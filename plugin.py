@@ -694,11 +694,10 @@ class TriviaTime(callbacks.Plugin):
         irc.noReply()
     start = wrap(start)
 
-    def stop(self, irc, msg, channel, args):
+    def stop(self, irc, msg, args, channel):
         """[<channel>]
             Ends Trivia. Only use this if you know what you are doing.. Channel is only necessary when editing from outside of the channel
         """
-        channel = msg.args[0]
         channelCanonical = ircutils.toLower(channel)
         if channelCanonical in self.games:
             if self.games[channelCanonical].questionOver == True:
