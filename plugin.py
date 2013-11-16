@@ -2293,16 +2293,16 @@ class TriviaTime(callbacks.Plugin):
             c.close()
 
         def removeUserLogs(self, username):
-            username = ircutils.toLower(username)
+            usernameCanonical = ircutils.toLower(username)
             c = self.conn.cursor()
             c.execute('''delete from triviauserlog
-                        where username_canonical=?''', (username,))
+                        where username_canonical=?''', (usernameCanonical,))
             self.conn.commit()
             c.close()
 
         def transferUserLogs(self, userFrom, userTo):
-            userFrom = ircutils.toLower(userFrom)
-            userTo = ircutils.toLower(userTo)
+            userFromCanonical = ircutils.toLower(userFrom)
+            userToCanonical = ircutils.toLower(userTo)
             c = self.conn.cursor()
             c.execute('''
                     update triviauserlog
@@ -2344,12 +2344,13 @@ class TriviaTime(callbacks.Plugin):
                                     and username_canonical=?
                             )
                     )
-            ''', (userFrom,userFrom,userTo,userFrom))
+            ''', (userFromCanonical,userFromCanonical,userToCanonical,userFromCanonical))
 
             c.execute('''
                     update triviauserlog
-                    set username=?
-                    where username=?
+                    set username=?,
+                    username_canonical=?
+                    where username_canonical=?
                     and not exists (
                             select 1
                             from triviauserlog tl
@@ -2357,9 +2358,9 @@ class TriviaTime(callbacks.Plugin):
                             and tl.month=triviauserlog.month
                             and tl.year=triviauserlog.year
                             and tl.channel_canonical=triviauserlog.channel_canonical
-                            and tl.username=?
+                            and tl.username_canonical=?
                     )
-            ''',(userTo, userFrom, userTo))
+            ''',(userTo, userToCanonical, userFromCanonical, userToCanonical))
             self.conn.commit()
 
             self.removeUserLogs(userFrom)
