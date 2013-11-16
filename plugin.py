@@ -1243,7 +1243,19 @@ class TriviaTime(callbacks.Plugin):
             if len(self.answers) > 1:
                 questionText += ' %d possible answers' % (len(self.answers))
 
-            self.sendMessage('.%s. %s' % (self.numAsked, questionText), 1, 9)
+            questionMessageString = '.%s. %s' % (self.numAsked, questionText)
+
+            maxLength = 400
+
+            questionMesagePieces = [questionMessageString[i:i+maxLength] for i in range(0, len(questionMessageString), maxLength)]
+
+            multipleMessages=False
+
+            for msgPiece in questionMesagePieces:
+                if multipleMessages:
+                    msgPiece = '\x02' + msgPiece
+                multipleMessages = True
+                self.sendMessage(msgPiece, 1, 9)
             self.queueEvent(0, self.loopEvent)
             self.askedAt = time.time()
 
