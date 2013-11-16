@@ -143,21 +143,17 @@
             $result = $q->fetchAll();
             foreach($result as $res) {
                 if(is_null($res['usrname'])) {
-                    if($username=='') {
-                        echo "<div class='alert alert-info'>Enter a username above to search for stats.</div>";
-                    } else {
-                        echo "<div class='alert alert-error'>User not found.</div>";
-                    }
+                    echo "<div class='alert alert-error'>User not found.</div>";
                 }
             }
         }
-	} else {
-		if(isset($err)) {
-			die($err);
-		}
-		else {
-			echo "<div class='alert alert-info'>Enter a username above to search for stats.</div>";
-		}
+    } else {
+        if(isset($err)) {
+            die($err);
+        }
+        else {
+            echo "<div class='alert alert-info'>Enter a username above to search for stats.</div>";
+        }
     }
 ?>
         </div>
@@ -186,6 +182,7 @@
               <tbody>
 <?php
 
+        if(isset($result)) {
             foreach($result as $res) {
                 if(!is_null($res['usrname'])) {
                     echo '<tr>';
@@ -202,6 +199,7 @@
                     echo '</tr>';
                 }
             }
+        }
 ?>
               </tbody>
             </table>
