@@ -12,10 +12,10 @@ This plugin is in beta. Please report all bugs on GitHub.
 1. Download PHP and PHP-MySQL (for PDO)
 2. Configure config.php to point to your TriviaTime database in the plugin/TriviaTime/Storage/db folder
 
-## How to update
+## How to update (beta only)
 1. Unload TriviaTime
 2. Install the new files
 3. Drop all the tables (uncomment all the drops in plugin.py)
-4. Reload TriviaTime
+4. Load TriviaTime
 
   [Supybot]: http://sourceforge.net/projects/supybot/
