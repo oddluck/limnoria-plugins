@@ -301,12 +301,14 @@ class TriviaTime(callbacks.Plugin):
         """
         Get TriviaTime information, how many questions/users in database, time, etc
         """
-        numActiveThisWeek = self.storage.getNumActiveThisWeek()
+        channel = msg.args[0]
+        totalUsersEver = self.storage.getNumUser(channel)
+        numActiveThisWeek = self.storage.getNumActiveThisWeek(channel)
         infoText = ''' TriviaTime v1.0-beta by Trivialand on Freenode https://github.com/tannn/TriviaTime '''
         irc.sendMsg(ircmsgs.privmsg(msg.args[0], infoText))
         infoText = ''' Time is %s ''' % (time.asctime(time.localtime(),))
         irc.sendMsg(ircmsgs.privmsg(msg.args[0], infoText))
-        infoText = '''\x02 %d Users\x02 on scoreboard \x02%d Active This Week\x02''' % (self.storage.getNumUser(), numActiveThisWeek)
+        infoText = '''\x02 %d Users\x02 on scoreboard \x02%d Active This Week\x02''' % (totalUsersEver, numActiveThisWeek)
         irc.sendMsg(ircmsgs.privmsg(msg.args[0], infoText))
         numKaos = self.storage.getNumKAOS()
         numQuestionTotal = self.storage.getNumQuestions()
@@ -1876,9 +1878,10 @@ class TriviaTime(callbacks.Plugin):
             c.close()
             return data
 
-        def getNumUser(self):
+        def getNumUser(self, channel):
+            channelCanonical = ircutils.toLower(channel)
             c = self.conn.cursor()
-            result = c.execute('select count(*) from triviausers')
+            result = c.execute('select count(distinct(username_canonical)) from triviauserlog where channel_canonical=?', (channelCanonical,))
             result = result.fetchone()[0]
             c.close()
             return result
@@ -1906,7 +1909,8 @@ class TriviaTime(callbacks.Plugin):
             c.close()
             return data
 
-        def getNumActiveThisWeek(self):
+        def getNumActiveThisWeek(self, channel):
+            channelCanonical = ircutils.toLower(channel)
             d = datetime.date.today()
             weekday=d.weekday()
             d -= datetime.timedelta(weekday)
@@ -1920,11 +1924,12 @@ class TriviaTime(callbacks.Plugin):
                             and tl.day=%d)''' % (d.year, d.month, d.day)
                 d += datetime.timedelta(1)
             c = self.conn.cursor()
-            weekSql = '''select count(distinct(tl.username))
+            weekSql = '''select count(distinct(tl.username_canonical))
                         from triviauserlog tl
-                        where '''
+                        where channel_canonical=? and ('''
             weekSql += weekSqlString
-            result = c.execute(weekSql)
+            weekSql += ''')'''
+            result = c.execute(weekSql, (channelCanonical,))
             rows = result.fetchone()[0]
             return rows
 
