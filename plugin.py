@@ -817,14 +817,18 @@ class TriviaTime(callbacks.Plugin):
 
             attempt = ircutils.toLower(msg.args[1])
             attempt = self.removeAccents(attempt)
+            attempt = self.removeExtraSpaces(attempt)
+
             # was a correct answer guessed?
             for ans in self.alternativeAnswers:
                 normalizedAns = self.removeAccents(ircutils.toLower(ans))
+                normalizedAns = self.removeExtraSpaces(ircutils.toLower(ans))
                 if normalizedAns == attempt and normalizedAns not in self.guessedAnswers:
                     correctAnswerFound = True
                     correctAnswer = ans
             for ans in self.answers:
                 normalizedAns = self.removeAccents(ircutils.toLower(ans))
+                normalizedAns = self.removeExtraSpaces(ircutils.toLower(ans))
                 if normalizedAns == attempt and normalizedAns not in self.guessedAnswers:
                     correctAnswerFound = True
                     correctAnswer = ans
@@ -1273,6 +1277,11 @@ class TriviaTime(callbacks.Plugin):
             replacements = [('á', 'a'),('é','e'),('í', 'i'),('ó','o'),('ú','u'),('ü','u'),('ñ','n')]
             for a,b in replacements:
                 text = text.replace(a,b)
+            return text
+
+        def removeExtraSpaces(self, text):
+            text = text.strip()
+            text = ' '.join(text.split())
             return text
 
         def repeatQuestion(self):
