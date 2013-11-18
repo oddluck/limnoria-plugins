@@ -397,7 +397,7 @@ class TriviaTime(callbacks.Plugin):
             if not hasPoints:
                 infoList = ['%s: You do not have any points.' % (username)]
                 if not identified:
-                    infoList.append('You should identify to keep track of your score more accurately.')
+                    infoList.append(' You should identify to keep track of your score more accurately.')
             infoText = ''.join(infoList)
             irc.sendMsg(ircmsgs.privmsg(channel, infoText))
         irc.noReply()
