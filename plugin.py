@@ -1059,23 +1059,23 @@ class TriviaTime(callbacks.Plugin):
                     hintsend = ''
                     unmasked = 0
                     if self.registryValue('general.vowelsHint', self.channel):
-                        hints+= self.getMaskedVowels(ansend)
+                        hints+= self.getMaskedVowels(ansend, divider-1)
                     else:
                         hints+= self.getMaskedRandom(ansend, divider-1)
                 if len(self.answers) > 1:
                     hints += ']'
             return hints.encode('utf-8')
 
-        def getMaskedVowels(self, letters):
+        def getMaskedVowels(self, letters, sizeOfUnmasked):
             charMask = self.registryValue('general.charMask', self.channel)
             hintsList = ['']
             unmasked = 0
-            lettersInARow = 0
+            lettersInARow = sizeOfUnmasked
             for i in range(len(letters)):
                 masked = letters[i]
                 if masked in " -'\"_=+&%$#@!~`[]{}?.,<>|\\/":
                     hintsList.append(masked)
-                elif self.removeAccents(masked.encode('utf-8')) in 'aeiou' and unmasked < (len(letters)-1) and lettersInARow < 3:
+                elif str.lower(self.removeAccents(masked.encode('utf-8'))) in 'aeiou' and unmasked < (len(letters)-1) and lettersInARow < 3:
                     hintsList.append(masked)
                     lettersInARow += 1
                     unmasked += 1
