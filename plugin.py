@@ -886,14 +886,16 @@ class TriviaTime(callbacks.Plugin):
 
             # was a correct answer guessed?
             for ans in self.alternativeAnswers:
-                normalizedAns = self.removeAccents(str.lower(ans))
+                normalizedAns = self.removeAccents(ans)
                 normalizedAns = self.removeExtraSpaces(normalizedAns)
+                normalizedAns = str.lower(normalizedAns)
                 if normalizedAns == attempt and normalizedAns not in self.guessedAnswers:
                     correctAnswerFound = True
                     correctAnswer = ans
             for ans in self.answers:
-                normalizedAns = self.removeAccents(str.lower(ans))
+                normalizedAns = self.removeAccents(ans)
                 normalizedAns = self.removeExtraSpaces(normalizedAns)
+                normalizedAns = str.lower(normalizedAns)
                 if normalizedAns == attempt and normalizedAns not in self.guessedAnswers:
                     correctAnswerFound = True
                     correctAnswer = ans
