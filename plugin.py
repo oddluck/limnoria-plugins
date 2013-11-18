@@ -161,7 +161,7 @@ class TriviaTime(callbacks.Plugin):
                         )
 
     def addZeroWidthSpace(self, text):
-        if len(text) < 1:
+        if len(text) <= 1:
             return text
         s = '%s​%s' % (text[:1], text[1:]) # WARNING: this has a zero width space, though its invisible
         return s
