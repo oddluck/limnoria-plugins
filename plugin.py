@@ -24,7 +24,8 @@ import datetime
 
 class TriviaTime(callbacks.Plugin):
     """
-        TriviaTime - A trivia word game, guess the word and score points. Play KAOS rounds and work together to solve clues to find groups of words.
+    TriviaTime - A trivia word game, guess the word and score points. 
+    Play KAOS rounds and work together to solve clues to find groups of words.
     """
     threaded = True # enables threading for supybot plugin
     currentDBVersion = 1.2
@@ -80,7 +81,8 @@ class TriviaTime(callbacks.Plugin):
         """
         username = msg.nick
         try:
-            user = ircdb.users.getUser(msg.prefix) # rootcoma!~rootcomaa@unaffiliated/rootcoma
+            # rootcoma!~rootcomaa@unaffiliated/rootcoma
+            user = ircdb.users.getUser(msg.prefix)
             username = user.name
         except KeyError:
             pass
@@ -91,12 +93,16 @@ class TriviaTime(callbacks.Plugin):
         if callbacks.addressed(irc.nick, msg):
             return
         channelCanonical = ircutils.toLower(channel)
+
+        otherHintCommand = self.registryValue('commands.showHintCommandKAOS', channel)
+        kaosRemainingCommand = self.registryValue('commands.extraHint', channel)
+
         if channelCanonical in self.games:
             # Look for command to list remaining KAOS
-            if msg.args[1] == self.registryValue('commands.showHintCommandKAOS',channel):
+            if msg.args[1] == otherHintCommand:
                 self.games[channelCanonical].getRemainingKAOS()
-            elif msg.args[1] == self.registryValue('commands.extraHint', channel):
-                self.games[channelCanonical].getOtherHint(username)
+            elif msg.args[1] == kaosRemainingCommand:
+                self.games[channelCanonical].getOtherHint()
             else:
                 # check the answer
                 self.games[channelCanonical].checkAnswer(msg)
@@ -105,22 +111,38 @@ class TriviaTime(callbacks.Plugin):
         username = msg.nick
         # is it a user?
         try:
-            user = ircdb.users.getUser(msg.prefix) # rootcoma!~rootcomaa@unaffiliated/rootcoma
+            # rootcoma!~rootcomaa@unaffiliated/rootcoma
+            user = ircdb.users.getUser(msg.prefix)
             username = user.name
         except KeyError:
             pass
         channel = msg.args[0]
         user = self.storage.getUser(username, channel)
         numTopToVoice = self.registryValue('voice.numTopToVoice')
+        minPointsVoiceYear = self.registryValue('voice.minPointsVoiceYear')
+        minPointsVoiceMonth = self.registryValue('voice.minPointsVoiceMonth')
+        minPointsVoiceWeek = self.registryValue('voice.minPointsVoiceWeek')
         if len(user) >= 1:
-            if user[13] <= numTopToVoice and user[4] > self.registryValue('voice.minPointsVoiceYear'):
-                irc.sendMsg(ircmsgs.privmsg(channel, 'Giving MVP to %s for being top #%d this YEAR' % (username, user[13])))
+            if user[13] <= numTopToVoice and user[4] >= minPointsVoiceYear:
+                irc.sendMsg(
+                        ircmsgs.privmsg(channel, 
+                                'Giving MVP to %s for being top #%d this YEAR' % (username, user[13])
+                                )
+                        )
                 irc.queueMsg(ircmsgs.voice(channel, username))
-            elif user[14] <= numTopToVoice and user[6] > self.registryValue('voice.minPointsVoiceMonth'):
-                irc.sendMsg(ircmsgs.privmsg(channel, 'Giving MVP to %s for being top #%d this MONTH' % (username, user[14])))
+            elif user[14] <= numTopToVoice and user[6] >= minPointsVoiceMonth:
+                irc.sendMsg(
+                        ircmsgs.privmsg(channel, 
+                                'Giving MVP to %s for being top #%d this MONTH' % (username, user[14])
+                                )
+                        )
                 irc.queueMsg(ircmsgs.voice(channel, username))
-            elif user[15] <= numTopToVoice and user[8] > self.registryValue('voice.minPointsVoiceWeek'):
-                irc.sendMsg(ircmsgs.privmsg(channel, 'Giving MVP to %s for being top #%d this WEEK' % (username, user[15])))
+            elif user[15] <= numTopToVoice and user[8] >= minPointsVoiceWeek:
+                irc.sendMsg(
+                        ircmsgs.privmsg(channel, 
+                                'Giving MVP to %s for being top #%d this WEEK' % (username, user[15])
+                                )
+                        )
                 irc.queueMsg(ircmsgs.voice(channel, username))
 
     def doNotice(self,irc,msg):
@@ -130,13 +152,18 @@ class TriviaTime(callbacks.Plugin):
             pingMsg = pingMsg[:-1]
             pingMsg = pingMsg.split('*', 1)
             if len(pingMsg) == 2:
-                pingTime = float(pingMsg[0])
+                pingTime = time.time()-float(pingMsg[0])
                 channel = pingMsg[1]
-                irc.sendMsg(ircmsgs.privmsg(channel, '%s Ping reply: %0.2f seconds' % (username, time.time()-pingTime)))
+                irc.sendMsg(
+                        ircmsgs.privmsg(channel, 
+                                '%s Ping reply: %0.2f seconds' % (username, pingTime)
+                                )
+                        )
 
     def acceptedit(self, irc, msg, arg, user, channel, num):
         """[<channel>] <num>
-        Accept a question edit, and remove edit. Channel is only necessary when editing from outside of the channel
+        Accept a question edit, and remove edit. 
+        Channel is only necessary when editing from outside of the channel
         """
         edit = self.storage.getEditById(num)
         if len(edit) < 1:
@@ -158,7 +185,8 @@ class TriviaTime(callbacks.Plugin):
 
     def acceptnew(self, irc, msg, arg, user, channel, num):
         """[<channel>] <num>
-        Accept a new question, and add it to the database. Channel is only necessary when editing from outside of the channel
+        Accept a new question, and add it to the database. 
+        Channel is only necessary when editing from outside of the channel
         """
         q = self.storage.getTemporaryQuestionById(num)
         if len(q) < 1:
@@ -173,7 +201,7 @@ class TriviaTime(callbacks.Plugin):
 
     def addquestion(self, irc, msg, arg, question):
         """<question text>
-            Adds a question to the database
+        Adds a question to the database
         """
         username = msg.nick
         channel = msg.args[0]
@@ -188,7 +216,8 @@ class TriviaTime(callbacks.Plugin):
 
     def addquestionfile(self, irc, msg, arg, filename):
         """[<filename>]
-        Add a file of questions to the servers question database, filename defaults to configured quesiton file
+        Add a file of questions to the servers question database, 
+        filename defaults to configured quesiton file
         """
         if filename is None:
             filename = self.registryValue('admin.quizfile')
@@ -207,7 +236,6 @@ class TriviaTime(callbacks.Plugin):
 
     def clearpoints(self, irc, msg, arg, username):
         """<username>
-
         Deletes all of a users points, and removes all their records
         """
         self.storage.removeUserLogs(username)
@@ -216,15 +244,19 @@ class TriviaTime(callbacks.Plugin):
 
     def day(self, irc, msg, arg, num):
         """[<number>]
-            Displays the top ten scores of the day. Parameter is optional, display up to that number. eg 20 - display 11-20
+            Displays the top ten scores of the day. 
+            Parameter is optional, display up to that number. 
+            eg 20 - display 11-20
         """
         if num is None or num < 10:
             num=10
         channel = msg.args[0]
         tops = self.storage.viewDayTop10(channel, num)
-        topsText = 'Today\'s Top 10 Players: '
+        offset = num-9
+        topsList = ['Today\'s Top 10 Players: ']
         for i in range(len(tops)):
-            topsText += '\x02 #%d:\x02 %s %d ' % ((i+1+num-10) , tops[i][1], tops[i][2])
+            topsList.append('\x02 #%d:\x02 %s %d ' % ((i+offset) , tops[i][1], tops[i][2]))
+        topsText = ''.join(topsList)
         irc.sendMsg(ircmsgs.privmsg(channel, topsText))
         irc.noReply()
     day = wrap(day, [optional('int')])
@@ -242,11 +274,13 @@ class TriviaTime(callbacks.Plugin):
 
     def edit(self, irc, msg, arg, user, channel, num, question):
         """[<channel>] <question number> <corrected text>
-        Correct a question by providing the question number and the corrected text. Channel is only necessary when editing from outside of the channel
+        Correct a question by providing the question number and the corrected text. 
+        Channel is only necessary when editing from outside of the channel
         """
         username = msg.nick
         try:
-            user = ircdb.users.getUser(msg.prefix) # rootcoma!~rootcomaa@unaffiliated/rootcoma
+            #rootcoma!~rootcomaa@unaffiliated/rootcoma
+            user = ircdb.users.getUser(msg.prefix) 
             username = user.name
         except KeyError:
             pass
@@ -263,11 +297,11 @@ class TriviaTime(callbacks.Plugin):
                     question += part
             self.storage.insertEdit(num, question, username, msg.args[0])
             self.storage.updateUser(username, 1, 0)
-            irc.reply("Success! Submitted edit for further review.")
+            irc.reply('Success! Submitted edit for further review.')
             irc.sendMsg(ircmsgs.notice(msg.nick, 'NEW: %s' % (question)))
             irc.sendMsg(ircmsgs.notice(msg.nick, 'OLD: %s' % (q[2])))
         else:
-            irc.error("Question does not exist")
+            irc.error('Question does not exist')
     edit = wrap(edit, ['user', ('checkChannelCapability', 'triviamod'), 'int', 'text'])
 
     def givepoints(self, irc, msg, arg, username, points, days):
@@ -279,7 +313,7 @@ class TriviaTime(callbacks.Plugin):
             irc.error("You cannot give less than 1 point.")
             return
         try:
-            user = ircdb.users.getUser(username) # rootcoma!~rootcomaa@unaffiliated/rootcoma
+            user = ircdb.users.getUser(username)
             username = user.name
         except KeyError:
             pass
@@ -322,7 +356,7 @@ class TriviaTime(callbacks.Plugin):
         """
         channel = msg.args[0]
         username = msg.nick
-        irc.sendMsg(ircmsgs.privmsg(username, '\x01PING %s*%s\x01' % (time.time(),channel)))
+        irc.sendMsg(ircmsgs.privmsg(username, '\x01PING %s*%s\x01' % (time.time(), channel)))
     ping = wrap(ping)
 
     def me(self, irc, msg, arg):
@@ -332,7 +366,7 @@ class TriviaTime(callbacks.Plugin):
         username = msg.nick
         identified = False
         try:
-            user = ircdb.users.getUser(msg.prefix) # rootcoma!~rootcomaa@unaffiliated/rootcoma
+            user = ircdb.users.getUser(msg.prefix)
             username = user.name
             identified = True
         except KeyError:
@@ -341,50 +375,57 @@ class TriviaTime(callbacks.Plugin):
         info = self.storage.getUser(username, channel)
         if len(info) < 3:
             errorMessage = 'You do not have any points.'
+            identifyMessage = ''
             if not identified:
-                errorMessage += ' You should identify to keep track of your score more accurately.'
-            irc.reply(errorMessage)
+                identifyMessage = ' You should identify to keep track of your score more accurately.'
+            irc.reply('%s%s' % (errorMessage, identifyMessage))
         else:
             hasPoints = False
-            infoText = '%s\'s Stats: Points (answers)' % (info[1])
+            infoList = ['%s\'s Stats: Points (answers)' % (info[1])]
             if info[10] > 0 or info[16] > 0 or info[11] > 0:
                 hasPoints = True
-                infoText += ' \x02Today:\x02 #%d %d (%d)' % (info[16], info[10], info[11])
+                infoList.append(' \x02Today:\x02 #%d %d (%d)' % (info[16], info[10], info[11]))
             if info[15] > 0 or info[8] > 0 or info[9] > 0:
                 hasPoints = True
-                infoText += ' \x02This Week:\x02 #%d %d (%d)' % (info[15], info[8], info[9])
+                infoList.append(' \x02This Week:\x02 #%d %d (%d)' % (info[15], info[8], info[9]))
             if info[14] > 0 or info[6] > 0 or info[7] > 0:
                 hasPoints = True
-                infoText += ' \x02This Month:\x02 #%d %d (%d)' % (info[14], info[6], info[7])
+                infoList.append(' \x02This Month:\x02 #%d %d (%d)' % (info[14], info[6], info[7]))
             if info[13] > 0 or info[4] > 0 or info[5] > 0:
                 hasPoints = True
-                infoText += ' \x02This Year:\x02 #%d %d (%d)' % (info[13], info[4], info[5])
+                infoList.append(' \x02This Year:\x02 #%d %d (%d)' % (info[13], info[4], info[5]))
             if not hasPoints:
-                infoText = """%s: You do not have any points.""" % (username)
+                infoList = ['%s: You do not have any points.' % (username)]
                 if not identified:
-                    infoText += """You should identify to keep track of your score more accurately."""
+                    infoList.append(' You should identify to keep track of your score more accurately.')
+            infoText = ''.join(infoList)
             irc.sendMsg(ircmsgs.privmsg(channel, infoText))
         irc.noReply()
     me = wrap(me)
 
     def month(self, irc, msg, arg, num):
         """[<number>]
-            Displays the top ten scores of the month. Parameter is optional, display up to that number. eg 20 - display 11-20
+            Displays the top ten scores of the month. 
+            Parameter is optional, display up to that number. 
+            eg 20 - display 11-20
         """
         if num is None or num < 10:
             num=10
         channel = msg.args[0]
         tops = self.storage.viewMonthTop10(channel, num)
-        topsText = 'This MONTHS Top 10 Players: '
+        topsList = ['This MONTHS Top 10 Players: ']
+        offset = num-9
         for i in range(len(tops)):
-            topsText += '\x02 #%d:\x02 %s %d ' % ((i+1+num-10) , tops[i][1], tops[i][2])
+            topsList.append('\x02 #%d:\x02 %s %d ' % ((i+offset) , tops[i][1], tops[i][2]))
+        topsText = ''.join(topsList)
         irc.sendMsg(ircmsgs.privmsg(channel, topsText))
         irc.noReply()
     month = wrap(month, [optional('int')])
 
     def removeedit(self, irc, msg, arg, user, channel, num):
         """[<channel>] <int>
-        Remove a edit without accepting it. Channel is only necessary when editing from outside of the channel
+        Remove a edit without accepting it. 
+        Channel is only necessary when editing from outside of the channel
         """
         edit = self.storage.getEditById(num)
         if len(edit) < 1:
@@ -397,7 +438,8 @@ class TriviaTime(callbacks.Plugin):
 
     def removereport(self, irc, msg, arg, user, channel, num):
         """[<channel>] <report num>
-        Remove a old report by report number. Channel is only necessary when editing from outside of the channel
+        Remove a old report by report number. 
+        Channel is only necessary when editing from outside of the channel
         """
         report = self.storage.getReportById(num)
         if len(report) < 1:
@@ -433,20 +475,23 @@ class TriviaTime(callbacks.Plugin):
 
     def report(self, irc, msg, arg, channel, roundNum, text):
         """[channel] <round number> <report text>
-        Provide a report for a bad question. Be sure to include the round number and any problems. Channel is a optional parameter which is only needed when reporting outside of the channel
+        Provide a report for a bad question. Be sure to include the round number and any problems. 
+        Channel is a optional parameter which is only needed when reporting outside of the channel
         """
         username = msg.nick
         inp = text.strip()
         try:
-            user = ircdb.users.getUser(msg.prefix) # rootcoma!~rootcomaa@unaffiliated/rootcoma
+            user = ircdb.users.getUser(msg.prefix)
             username = user.name
         except KeyError:
             pass
         channelCanonical = ircutils.toLower(channel)
         if channelCanonical in self.games:
+            numAsked = self.games[channelCanonical].numAsked
+            questionOver = self.games[channelCanonical].questionOver
             if inp[:2] == 's/':
-                if self.games[channelCanonical].numAsked == roundNum and self.games[channelCanonical].questionOver == False:
-                    irc.reply("Sorry you must wait until the current question is over to report it.")
+                if numAsked == roundNum and questionOver == False:
+                    irc.reply('Sorry you must wait until the current question is over to report it.')
                     return
         question = self.storage.getQuestionByRound(roundNum, channel)
         if len(question) > 0:
@@ -548,52 +593,56 @@ class TriviaTime(callbacks.Plugin):
             irc.error("I couldn't find that user in the database.")
         else:
             hasPoints = False
-            infoText = '%s\'s Stats: Points (answers)' % (info[1])
+            infoList = ['%s\'s Stats: Points (answers)' % (info[1])]
             if info[10] > 0 or info[16] > 0 or info[11] > 0:
                 hasPoints = True
-                infoText += ' \x02Today:\x02 #%d %d (%d)' % (info[16], info[10], info[11])
+                infoList.append(' \x02Today:\x02 #%d %d (%d)' % (info[16], info[10], info[11]))
             if info[15] > 0 or info[8] > 0 or info[9] > 0:
                 hasPoints = True
-                infoText += ' \x02This Week:\x02 #%d %d (%d)' % (info[15], info[8], info[9])
+                infoList.append(' \x02This Week:\x02 #%d %d (%d)' % (info[15], info[8], info[9]))
             if info[14] > 0 or info[6] > 0 or info[7] > 0:
                 hasPoints = True
-                infoText += ' \x02This Month:\x02 #%d %d (%d)' % (info[14], info[6], info[7])
+                infoList.append(' \x02This Month:\x02 #%d %d (%d)' % (info[14], info[6], info[7]))
             if info[13] > 0 or info[4] > 0 or info[5] > 0:
                 hasPoints = True
-                infoText += ' \x02This Year:\x02 #%d %d (%d)' % (info[13], info[4], info[5])
+                infoList.append(' \x02This Year:\x02 #%d %d (%d)' % (info[13], info[4], info[5]))
             if not hasPoints:
-                infoText = '%s: %s does not have any points.' % (msg.nick, username)
+                infoList = ['%s: %s does not have any points.' % (msg.nick, username)]
+            infoText = ''.join(infoList)
             irc.sendMsg(ircmsgs.privmsg(channel, infoText))
         irc.noReply()
     stats = wrap(stats,['nick'])
 
     def showquestion(self, irc, msg, arg, user, channel, num):
         """[<channel>] <num>
-        Search question database for question at line num. Channel is only necessary when editing from outside of the channel
+        Search question database for question at line num. 
+        Channel is only necessary when editing from outside of the channel
         """
         question = self.storage.getQuestion(num)
         if len(question) < 1:
-            irc.error("Question not found")
+            irc.error('Question not found')
         else:
             question = question[0]
-            irc.reply('''Question#%d: %s''' % (num, question[2]))
+            irc.reply('Question#%d: %s' % (num, question[2]))
     showquestion = wrap(showquestion, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
 
     def showround(self, irc, msg, arg, user, channel, num):
         """[<channel>] <round num>
-        Show what question was asked during the round. Channel is only necessary when editing from outside of the channel
+        Show what question was asked during the round. 
+        Channel is only necessary when editing from outside of the channel
         """
         question = self.storage.getQuestionByRound(num, msg.args[0])
         if len(question) < 1:
-            irc.error("Round not found")
+            irc.error('Round not found')
         else:
             question = question[0]
-            irc.reply('''Round %d: Question#%d, Text:%s''' % (num, question[0], question[2]))
+            irc.reply('Round %d: Question#%d, Text:%s' % (num, question[0], question[2]))
     showround = wrap(showround, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
 
     def showreport(self, irc, msg, arg, user, channel, num):
         """[<channel>] [<report num>]
-        Shows report information, if num is provided one record is shown, otherwise the last 3 are. Channel is only necessary when editing from outside of the channel
+        Shows report information, if num is provided one record is shown, otherwise the last 3 are. 
+        Channel is only necessary when editing from outside of the channel
         """
         if num is not None:
             report = self.storage.getReportById(num)
@@ -605,10 +654,10 @@ class TriviaTime(callbacks.Plugin):
 
                 question = self.storage.getQuestion(report[7])
                 if len(question) < 1:
-                    irc.reply("Error: Tried to find question but couldn't")
+                    irc.reply('Error: Tried to find question but couldn\'t')
                 else:
                     question = question[0]
-                    irc.reply('''Question#%d: %s''' % (question[0], question[2]))
+                    irc.reply('Question#%d: %s' % (question[0], question[2]))
         else:
             reports  = self.storage.getReportTop3()
             if len(reports) < 1:
@@ -619,7 +668,8 @@ class TriviaTime(callbacks.Plugin):
 
     def showedit(self, irc, msg, arg, user, channel, num):
         """[<channel>] [<edit num>]
-        Show top 3 edits, or provide edit num to view one. Channel is only necessary when editing from outside of the channel
+        Show top 3 edits, or provide edit num to view one. 
+        Channel is only necessary when editing from outside of the channel
         """
         if num is not None:
             edit = self.storage.getEditById(num)
@@ -668,7 +718,7 @@ class TriviaTime(callbacks.Plugin):
 
     def start(self, irc, msg, args):
         """
-            Begins a round of Trivia inside of your current channel.
+        Begins a round of Trivia inside of your current channel.
         """
         channel = msg.args[0]
         channelCanonical = ircutils.toLower(channel)
@@ -685,20 +735,21 @@ class TriviaTime(callbacks.Plugin):
                     schedule.removeEvent('%s.trivia' % channel)
                 except KeyError:
                     pass
-                irc.sendMsg(ircmsgs.privmsg(channel, """Another epic round of trivia is about to begin."""))
+                irc.sendMsg(ircmsgs.privmsg(channel, 'Another epic round of trivia is about to begin.'))
                 self.games[channelCanonical] = self.Game(irc, channel, self)
             else:
-                irc.sendMsg(ircmsgs.privmsg(channel, """Trivia has already been started."""))
+                irc.sendMsg(ircmsgs.privmsg(channel, 'Trivia has already been started.'))
         else:
             # create a new game
-            irc.sendMsg(ircmsgs.privmsg(channel, """Another epic round of trivia is about to begin."""))
+            irc.sendMsg(ircmsgs.privmsg(channel, 'Another epic round of trivia is about to begin.'))
             self.games[channelCanonical] = self.Game(irc, channel, self)
         irc.noReply()
     start = wrap(start)
 
     def stop(self, irc, msg, args, channel):
         """[<channel>]
-            Ends Trivia. Only use this if you know what you are doing.. Channel is only necessary when editing from outside of the channel
+        Ends Trivia. Only use this if you know what you are doing.. 
+        Channel is only necessary when editing from outside of the channel
         """
         channelCanonical = ircutils.toLower(channel)
         if channelCanonical in self.games:
@@ -710,7 +761,7 @@ class TriviaTime(callbacks.Plugin):
                 irc.sendMsg(ircmsgs.privmsg(channel, 'Trivia will now stop after this question.'))
             else:
                 del self.games[channelCanonical]
-                irc.sendMsg(ircmsgs.privmsg(channel, """Trivia stopped. :'("""))
+                irc.sendMsg(ircmsgs.privmsg(channel, 'Trivia stopped. :\'('))
         else:
             irc.sendMsg(ircmsgs.privmsg(channel, 'Game is already stopped'))
         irc.noReply()
@@ -718,7 +769,7 @@ class TriviaTime(callbacks.Plugin):
 
     def time(self, irc, msg, arg):
         """
-            Figure out what time/day it is for the server
+        Figure out what time/day it is for the server
         """
         channel = msg.args[0]
         timeObject = time.asctime(time.localtime())
@@ -729,7 +780,6 @@ class TriviaTime(callbacks.Plugin):
 
     def transferpoints(self, irc, msg, arg, userfrom, userto):
         """<userfrom> <userto>
-
         Transfers all points and records from one user to another
         """
         userfrom = userfrom
@@ -740,15 +790,19 @@ class TriviaTime(callbacks.Plugin):
 
     def week(self, irc, msg, arg, num):
         """[<number>]
-            Displays the top ten scores of the week. Parameter is optional, display up to that number. eg 20 - display 11-20
+        Displays the top ten scores of the week. 
+        Parameter is optional, display up to that number. 
+        eg 20 - display 11-20
         """
         if num is None or num < 10:
             num=10
         channel = msg.args[0]
         tops = self.storage.viewWeekTop10(channel, num)
-        topsText = 'This week\'s Top 10 Players: '
+        topsList = ['This week\'s Top 10 Players: ']
+        offset = num-9
         for i in range(len(tops)):
-            topsText += '\x02 #%d:\x02 %s %d ' % ((i+1+num-10) , tops[i][1], tops[i][2])
+            topsList.append('\x02 #%d:\x02 %s %d ' % ((i+offset) , tops[i][1], tops[i][2]))
+        topsText = ''.join(topsList)
         irc.sendMsg(ircmsgs.privmsg(channel, topsText))
         irc.noReply()
     week = wrap(week, [optional('int')])
@@ -761,9 +815,11 @@ class TriviaTime(callbacks.Plugin):
             num=10
         channel = msg.args[0]
         tops = self.storage.viewYearTop10(channel, num)
-        topsText = 'This Year\'s Top 10 Players: '
+        topsList = ['This Year\'s Top 10 Players: ']
+        offset = num-9
         for i in range(len(tops)):
-            topsText += '\x02 #%d:\x02 %s %d ' % ((i+1+num-10) , tops[i][1], tops[i][2])
+            topsList.append('\x02 #%d:\x02 %s %d ' % ((i+offset) , tops[i][1], tops[i][2]))
+        topsText = ''.join(topsList)
         irc.sendMsg(ircmsgs.privmsg(channel, topsText))
         irc.noReply()
     year = wrap(year, [optional('int')])
@@ -771,7 +827,7 @@ class TriviaTime(callbacks.Plugin):
     #Game instance
     class Game:
         """
-            Main game logic, single game instance for each channel.
+        Main game logic, single game instance for each channel.
         """
         def __init__(self, irc, channel, base):
             # get utilities from base plugin
@@ -805,12 +861,12 @@ class TriviaTime(callbacks.Plugin):
 
         def checkAnswer(self, msg):
             """
-                Check users input to see if answer was given.
+            Check users input to see if answer was given.
             """
             username = msg.nick
             # is it a user?
             try:
-                user = ircdb.users.getUser(msg.prefix) # rootcoma!~rootcomaa@unaffiliated/rootcoma
+                user = ircdb.users.getUser(msg.prefix)
                 username = user.name
             except KeyError:
                 pass
@@ -858,8 +914,7 @@ class TriviaTime(callbacks.Plugin):
                     # report the correct guess for kaos item
                     self.storage.updateUserLog(username, self.channel, pointsAdded,0, 0)
                     self.lastAnswer = time.time()
-                    self.sendMessage("""\x02%s\x02 gets \x02%d\x02 points for: \x02%s\x02"""
-                            % (username, pointsAdded, correctAnswer))
+                    self.sendMessage('\x02%s\x02 gets \x02%d\x02 points for: \x02%s\x02' % (username, pointsAdded, correctAnswer))
                 else:
                     # Normal question solved
                     streakBonus = 0
@@ -881,8 +936,7 @@ class TriviaTime(callbacks.Plugin):
                     # report correct guess, and show players streak
                     self.storage.updateUserLog(username, self.channel, pointsAdded,1, timeElapsed)
                     self.lastAnswer = time.time()
-                    self.sendMessage("""DING DING DING, \x02%s\x02 got the answer -> \x02%s\x02 <- in \x02%0.4f\x02 seconds for \x02%d(+%d)\x02 points"""
-                            % (username, correctAnswer, timeElapsed, pointsAdded, streakBonus))
+                    self.sendMessage('DING DING DING, \x02%s\x02 got the answer -> \x02%s\x02 <- in \x02%0.4f\x02 seconds for \x02%d(+%d)\x02 points' % (username, correctAnswer, timeElapsed, pointsAdded, streakBonus))
 
                     if self.registryValue('general.showStats', self.channel):
                         userInfo = self.storage.getUser(username, self.channel)
@@ -890,18 +944,19 @@ class TriviaTime(callbacks.Plugin):
                             todaysScore = userInfo[10]
                             weekScore = userInfo[8]
                             monthScore = userInfo[6]
-                            recapMessage = """\x02%s\x02 has won \x02%d\x02 in a row!""" % (username, self.streak)
+                            recapMessageList = ['\x02%s\x02 has won \x02%d\x02 in a row!' % (username, self.streak)]
                             if todaysScore > pointsAdded or weekScore > pointsAdded or monthScore > pointsAdded:
-                                recapMessage += """ Total Points"""
+                                recapMessageList.append(' Total Points')
                             if todaysScore > pointsAdded:
-                                recapMessage += """ TODAY: \x02%d\x02""" % (todaysScore)
+                                recapMessageList.append(' TODAY: \x02%d\x02' % (todaysScore))
                             if weekScore > pointsAdded:
-                                recapMessage += """ this WEEK \x02%d\x02""" % (weekScore)
+                                recapMessageList.append(' this WEEK \x02%d\x02' % (weekScore))
                             if weekScore > pointsAdded or todaysScore > pointsAdded:
                                 if monthScore > pointsAdded:
-                                    recapMessage += """ &"""
+                                    recapMessageList.append(' &')
                             if monthScore > pointsAdded:
-                                recapMessage += """ this MONTH: \x02%d\x02""" % (monthScore)
+                                recapMessageList.append(' this MONTH: \x02%d\x02' % (monthScore))
+                            recapMessage = ''.join(recapMessageList)
                             self.sendMessage(recapMessage)
 
                 # add guessed word to list so we can cross it out
@@ -924,11 +979,11 @@ class TriviaTime(callbacks.Plugin):
                         if bonusPoints > 0:
                             for nick in self.correctPlayers:
                                 self.storage.updateUserLog(nick, self.channel, bonusPoints, 0, 0)
-                            bonusPointsText += """Everyone gets a %d Point Bonus!!""" % int(bonusPoints)
+                            bonusPointsText = 'Everyone gets a %d Point Bonus!!' % int(bonusPoints)
 
                         # give a special message if it was KAOS
-                        self.sendMessage("""All KAOS answered! %s""" % bonusPointsText)
-                        self.sendMessage("""Total Awarded: \x02%d Points to %d Players\x02""" % (int(self.totalAmountWon), len(self.correctPlayers)))
+                        self.sendMessage('All KAOS answered! %s' % bonusPointsText)
+                        self.sendMessage('Total Awarded: \x02%d Points to %d Players\x02' % (int(self.totalAmountWon), len(self.correctPlayers)))
 
                     self.removeEvent()
 
@@ -1077,7 +1132,7 @@ class TriviaTime(callbacks.Plugin):
 
             return hints
 
-        def getOtherHint(self, username):
+        def getOtherHint(self):
             if self.questionOver:
                 return
             if self.shownHint == False:
@@ -1383,8 +1438,7 @@ class TriviaTime(callbacks.Plugin):
 
         def sendMessage(self, msg, color=None, bgcolor=None):
             """ <msg>, [<color>], [<bgcolor>]
-
-                helper for game instance to send messages to channel
+            helper for game instance to send messages to channel
             """
             # no color
             self.irc.sendMsg(ircmsgs.privmsg(self.channel, ' %s ' % msg))
@@ -1396,7 +1450,7 @@ class TriviaTime(callbacks.Plugin):
             # responsible for stopping a timer/thread after being told to stop
             self.active = False
             self.removeEvent()
-            self.sendMessage("""Trivia stopped. :'(""")
+            self.sendMessage('Trivia stopped. :\'(')
             channelCanonical = ircutils.toLower(self.channel)
             if channelCanonical in self.games:
                 del self.games[channelCanonical]
@@ -1404,7 +1458,7 @@ class TriviaTime(callbacks.Plugin):
     #Storage for users and points using sqlite3
     class Storage:
         """
-            Storage class
+        Storage class
         """
         def __init__(self,loc):
             self.loc = loc
