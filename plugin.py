@@ -880,7 +880,7 @@ class TriviaTime(callbacks.Plugin):
             correctAnswerFound = False
             correctAnswer = ''
 
-            attempt = ircutils.toLower(msg.args[1])
+            attempt = str.lower(msg.args[1])
             attempt = self.removeAccents(attempt)
             attempt = self.removeExtraSpaces(attempt)
 
