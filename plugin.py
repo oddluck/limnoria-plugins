@@ -1398,11 +1398,12 @@ class TriviaTime(callbacks.Plugin):
                     for ans in answers:
                         answer.append(str(ans).strip())
                         question = 'Unscramble the letters: '
-                        shuffledLetters = list(ans)
+                        shuffledLetters = list(unicode(ans.decode('utf-8')))
                         random.shuffle(shuffledLetters)
                         for letter in shuffledLetters:
                             question += letter
                             question += ' '
+                        question = question.encode('utf-8')
                         break
                 else:
                     for ans in answers:
