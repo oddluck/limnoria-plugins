@@ -3,9 +3,14 @@
 <?php
   include('config.php');
   if(array_key_exists('username', $_GET)) {
-    $username = strtolower($_GET['username']);
+    // Convert username to lowercase in irc
+    $username = $_GET['username'];
+    $ircLowerSymbols = array("\\"=>"|", "["=>"{", "]"=>"}", "~"=>"^");
+    $usernameCanonical = strtr($username, $ircLowerSymbols);
+    $usernameCanonical = strtolower($usernameCanonical);
   } else {
     $username = '';
+    $usernameCanonical = '';
   }
 ?>
   <head>
@@ -96,9 +101,61 @@
         <div class="span12">
             <h2>Search</h2>
             <form method="get">
-                Username: <input name="username"></input>
+                Username: <input name="username" value="<?php echo $username; ?>"></input>
                 <input type="submit"></input>
             </form>
+<?php
+    if ($db && $username != '') {
+        $q = $db->prepare('select
+            tl.username as usrname,
+            sum(tl2.t * (tl2.n / 
+                (select sum(num_answered) 
+                    from triviauserlog 
+                    where username_canonical=:username))
+                ) as count,
+            sum(tl2.p * (tl2.n / 
+                (select sum(num_answered) 
+                    from triviauserlog 
+                    where username_canonical=:username))
+                ) as score,
+            (select sum(points_made) from triviauserlog t3 where username_canonical=:username) as points,
+            (select sum(num_answered) from triviauserlog t4 where username_canonical=:username) as q_asked,
+            (select num_editted from triviausers where username_canonical=:username) as num_e,
+            (select num_editted_accepted from triviausers where username_canonical=:username) as num_e_accepted,
+            (select num_questions_added from triviausers where username_canonical=:username) as num_q,
+            (select num_questions_accepted from triviausers where username_canonical=:username) as num_q_accepted,
+            (select num_reported from triviausers where username_canonical=:username) as num_r
+            from (select 
+                    tl3.id as id2, 
+                    tl3.average_time * 1.0 as t, 
+                    tl3.average_score * 1.0 as p, 
+                    tl3.num_answered * 1.0 as n 
+                    from triviauserlog tl3
+                ) tl2
+            inner join triviauserlog tl
+            on tl.username_canonical=:username
+            and tl.id=tl2.id2
+            ');
+        $q->execute(array(':username'=>$usernameCanonical));
+        if ($q === false) {
+            die("Error: database error: table does not exist\n");
+        } else {
+            $result = $q->fetchAll();
+            foreach($result as $res) {
+                if(is_null($res['usrname'])) {
+                    echo "<div class='alert alert-error'>User not found.</div>";
+                }
+            }
+        }
+    } else {
+        if(isset($err)) {
+            die($err);
+        }
+        else {
+            echo "<div class='alert alert-info'>Enter a username above to search for stats.</div>";
+        }
+    }
+?>
         </div>
     </div>
 
@@ -124,59 +181,25 @@
               </thead>
               <tbody>
 <?php
-    if ($db) {
-        $q = $db->prepare('select
-            sum(tl2.t * (tl2.n / 
-                (select sum(num_answered) 
-                    from triviauserlog 
-                    where username=:username))
-                ) as count,
-            sum(tl2.p * (tl2.n / 
-                (select sum(num_answered) 
-                    from triviauserlog 
-                    where username=:username))
-                ) as score,
-            (select sum(points_made) from triviauserlog t3 where lower(username)=:username) as points,
-            (select sum(num_answered) from triviauserlog t4 where lower(username)=:username) as q_asked,
-            (select num_editted from triviausers where lower(username)=:username) as num_e,
-            (select num_editted_accepted from triviausers where lower(username)=:username) as num_e_accepted,
-            (select num_questions_added from triviausers where lower(username)=:username) as num_q,
-            (select num_questions_accepted from triviausers where lower(username)=:username) as num_q_accepted,
-            (select num_reported from triviausers where lower(username)=:username) as num_r
-            from (select 
-                    tl3.id as id2, 
-                    tl3.average_time * 1.0 as t, 
-                    tl3.average_score * 1.0 as p, 
-                    tl3.num_answered * 1.0 as n 
-                    from triviauserlog tl3
-                ) tl2
-            inner join triviauserlog tl
-            on tl.username=:username
-            and id=tl2.id2
-            ');
-        $q->execute(array('username'=>$username));
-        if ($q === false) {
-            die("Error: database error: table does not exist\n");
-        } else {
-            $result = $q->fetchAll();
+
+        if(isset($result)) {
             foreach($result as $res) {
-                echo '<tr>';
-                echo '<td>' . $username . '</td>';
-                echo '<td>' . number_format($res['count'],2) . '</td>';
-                echo '<td>' . number_format($res['score'],2) . '</td>';
-                echo '<td>' . number_format($res['points'],0) . '</td>';
-                echo '<td>' . number_format($res['q_asked'],0) . '</td>';
-                echo '<td>' . number_format($res['num_e'],0) . '</td>';
-                echo '<td>' . number_format($res['num_e_accepted'],0) . '</td>';
-                echo '<td>' . number_format($res['num_q'],0) . '</td>';
-                echo '<td>' . number_format($res['num_q_accepted'],0) . '</td>';
-                echo '<td>' . number_format($res['num_r'],0) . '</td>';
-                echo '</tr>';
+                if(!is_null($res['usrname'])) {
+                    echo '<tr>';
+                    echo '<td>' . $res['usrname'] . '</td>';
+                    echo '<td>' . number_format($res['count'],2) . '</td>';
+                    echo '<td>' . number_format($res['score'],2) . '</td>';
+                    echo '<td>' . number_format($res['points'],0) . '</td>';
+                    echo '<td>' . number_format($res['q_asked'],0) . '</td>';
+                    echo '<td>' . number_format($res['num_e'],0) . '</td>';
+                    echo '<td>' . number_format($res['num_e_accepted'],0) . '</td>';
+                    echo '<td>' . number_format($res['num_q'],0) . '</td>';
+                    echo '<td>' . number_format($res['num_q_accepted'],0) . '</td>';
+                    echo '<td>' . number_format($res['num_r'],0) . '</td>';
+                    echo '</tr>';
+                }
             }
         }
-    } else {
-        die($err);
-    }
 ?>
               </tbody>
             </table>
@@ -189,7 +212,7 @@
         </div>
       </div>
       <div class="footer">
-        <p>&copy; Trivialand 2013 - <a href="https://github.com/tannn/TriviaTime">github</a></p>
+        <p>&copy; Trivialand 2013 - <a target="_blank" href="https://github.com/tannn/TriviaTime">github</a></p>
       </div>
 
     </div> <!-- /container -->

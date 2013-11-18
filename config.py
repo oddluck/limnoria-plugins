@@ -17,115 +17,123 @@ def configure(advanced):
     conf.registerPlugin('TriviaTime', True)
 
 TriviaTime = conf.registerPlugin('TriviaTime')
+
+conf.registerGroup(TriviaTime, 'kaos')
+conf.registerGroup(TriviaTime, 'admin')
+conf.registerGroup(TriviaTime, 'questions')
+conf.registerGroup(TriviaTime, 'general')
+conf.registerGroup(TriviaTime, 'commands')
+conf.registerGroup(TriviaTime, 'voice')
+conf.registerGroup(TriviaTime, 'skip')
 # CONFIGURATION
 # file locations for database and question
-conf.registerChannelValue(TriviaTime, 'sqlitedb', 
+conf.registerChannelValue(TriviaTime.admin, 'sqlitedb', 
         registry.NormalizedString("""plugins/TriviaTime/storage/db/trivia.db""", 
                 """Location of sqlite database file""")
         )
 
-conf.registerChannelValue(TriviaTime, 'quizfile', 
+conf.registerChannelValue(TriviaTime.admin, 'quizfile', 
         registry.NormalizedString("""plugins/TriviaTime/storage/samplequestions""", 
                 """Location of question file""")
         )
 
 # timeout, number of hints, values
-conf.registerChannelValue(TriviaTime, 'showOtherHintCommand', 
+conf.registerChannelValue(TriviaTime.commands, 'extraHint', 
         registry.NormalizedString(""".""", 
                 """The command to show alternative hints""")
         )
 
-conf.registerChannelValue(TriviaTime, 'showHintCommandKAOS', 
+conf.registerChannelValue(TriviaTime.commands, 'showHintCommandKAOS', 
         registry.NormalizedString(""",""", 
                 """The command for showing the remaining KAOS""")
         )
 
-conf.registerChannelValue(TriviaTime, 'showVowelsThirdHint',
+conf.registerChannelValue(TriviaTime.general, 'vowelsHint',
         registry.Boolean(True,
                 """Show all vowels on the third hint. If false, random letters will be shown instead""")
         )
 
-conf.registerChannelValue(TriviaTime, 'showPlayerStats', 
+conf.registerChannelValue(TriviaTime.general, 'showStats', 
         registry.Boolean(True, 
                 """Show player stats after correct answer?""")
         )
 
-conf.registerChannelValue(TriviaTime, 'skipThreshold', 
+conf.registerChannelValue(TriviaTime.skip, 'skipThreshold', 
         registry.Float(.5, 
                 """Percentage of active players who need to vote to skip""")
         )
 
-conf.registerChannelValue(TriviaTime, 'skipActiveTime', 
+conf.registerChannelValue(TriviaTime.skip, 'skipActiveTime', 
         registry.Integer((10*60), 
                 """Amount of time a user is considered active after answering a question""")
         )
 
-conf.registerChannelValue(TriviaTime, 'skipLimitTime', 
+conf.registerChannelValue(TriviaTime.skip, 'skipTime', 
         registry.Integer(90, 
                 """Time a user must wait to skip a question again after skipping in seconds""")
         )
 
-conf.registerChannelValue(TriviaTime, 'timeout', 
+conf.registerChannelValue(TriviaTime.questions, 'hintTime', 
         registry.Integer(10, 
                 """Time in between hints""")
         )
 
-conf.registerChannelValue(TriviaTime, 'timeoutKAOS', 
+conf.registerChannelValue(TriviaTime.kaos, 'hintKAOS', 
         registry.Integer(15, 
                 """Time in between hints""")
         )
 
-conf.registerChannelValue(TriviaTime, 'sleepTime', 
+conf.registerChannelValue(TriviaTime.general, 'waitTime', 
         registry.Integer(15, 
                 """Time in between the end of one question and the start of another""")
         )
 
-conf.registerChannelValue(TriviaTime, 'numTopToVoice',
+conf.registerChannelValue(TriviaTime.voice, 'numTopToVoice',
         registry.Integer(10,
                 """The number of top players who are elligible for voice""")
         )
 
-conf.registerChannelValue(TriviaTime, 'minPointsVoiceWeek',
+conf.registerChannelValue(TriviaTime.voice, 'minPointsVoiceWeek',
         registry.Integer(30000,
                 """Points required to be voiced for being top player in the week""")
         )
 
-conf.registerChannelValue(TriviaTime, 'minPointsVoiceMonth',
+conf.registerChannelValue(TriviaTime.voice, 'minPointsVoiceMonth',
         registry.Integer(100000,
                 """Points required to be voiced for being top player in the month""")
         )
 
-conf.registerChannelValue(TriviaTime, 'minPointsVoiceYear',
+conf.registerChannelValue(TriviaTime.voice, 'minPointsVoiceYear',
         registry.Integer(5000000,
                 """Points required to be voiced for being top player in the year""")
         )
 
-conf.registerChannelValue(TriviaTime, 'payoutKAOS', 
+conf.registerChannelValue(TriviaTime.kaos, 'payoutKAOS', 
         registry.Integer(1000, 
                 """Extra points for teamwork on KAOS""")
         )
 
-conf.registerChannelValue(TriviaTime, 'inactivityDelay', 
+conf.registerChannelValue(TriviaTime.general, 'timeout', 
         registry.Integer(600, 
                 """Time before game shuts off in seconds""")
         )
 
-conf.registerChannelValue(TriviaTime, 'defaultPoints', 
+conf.registerChannelValue(TriviaTime.questions, 'defaultPoints', 
         registry.Integer(500, 
                 """Default points for a correct answer to a normal question""")
         )
 
-conf.registerChannelValue(TriviaTime, 'defaultPointsKAOS', 
+conf.registerChannelValue(TriviaTime.kaos, 'defaultKAOS', 
         registry.Integer(300, 
                 """Default points for a correct KAOS answer""")
         )
 
-conf.registerChannelValue(TriviaTime, 'hintShowRatio', 
+conf.registerChannelValue(TriviaTime.general, 'hintRatio', 
         registry.Integer(35, 
                 """Percent of word to show per hint""")
         )
 
-conf.registerChannelValue(TriviaTime, 'charMask', 
+conf.registerChannelValue(TriviaTime.general, 'charMask', 
         registry.NormalizedString('*', 
                 """Masking character for hints""")
         )

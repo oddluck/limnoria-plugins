@@ -2,5 +2,6 @@
 /**
  * Change db location here to point to your database from the bot
  */
-  $db = new PDO('sqlite:trivia.db');
+  $dbLocation = "trivia.db"; // eg "/home/trivia/trivia.db"
+  $db = new PDO('sqlite:' . $dbLocation);
 ?>
