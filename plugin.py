@@ -21,6 +21,7 @@ import sqlite3
 import random
 import time
 import datetime
+import unicodedata
 
 class TriviaTime(callbacks.Plugin):
     """
@@ -885,14 +886,14 @@ class TriviaTime(callbacks.Plugin):
 
             # was a correct answer guessed?
             for ans in self.alternativeAnswers:
-                normalizedAns = self.removeAccents(ircutils.toLower(ans))
-                normalizedAns = self.removeExtraSpaces(ircutils.toLower(ans))
+                normalizedAns = self.removeAccents(str.lower(ans))
+                normalizedAns = self.removeExtraSpaces(normalizedAns)
                 if normalizedAns == attempt and normalizedAns not in self.guessedAnswers:
                     correctAnswerFound = True
                     correctAnswer = ans
             for ans in self.answers:
-                normalizedAns = self.removeAccents(ircutils.toLower(ans))
-                normalizedAns = self.removeExtraSpaces(ircutils.toLower(ans))
+                normalizedAns = self.removeAccents(str.lower(ans))
+                normalizedAns = self.removeExtraSpaces(normalizedAns)
                 if normalizedAns == attempt and normalizedAns not in self.guessedAnswers:
                     correctAnswerFound = True
                     correctAnswer = ans
@@ -1018,6 +1019,7 @@ class TriviaTime(callbacks.Plugin):
             for ans in self.answers:
                 if ircutils.toLower(ans) in self.guessedAnswers:
                     continue
+                ans = unicode(ans.decode('utf-8'))
                 if hints != '':
                     hints += ' '
                 if len(self.answers) > 1:
@@ -1060,24 +1062,25 @@ class TriviaTime(callbacks.Plugin):
                         hints+= self.getMaskedRandom(ansend, divider-1)
                 if len(self.answers) > 1:
                     hints += ']'
-            return hints
+            return hints.encode('utf-8')
 
         def getMaskedVowels(self, letters):
             charMask = self.registryValue('general.charMask', self.channel)
-            hints = ''
+            hintsList = ['']
             unmasked = 0
             lettersInARow = 0
             for i in range(len(letters)):
                 masked = letters[i]
                 if masked in " -'\"_=+&%$#@!~`[]{}?.,<>|\\/":
-                    hints += masked
-                elif masked in 'aeiou' and unmasked < (len(letters)-1) and lettersInARow < 3:
-                    hints += masked
+                    hintsList.append(masked)
+                elif self.removeAccents(masked.encode('utf-8')) in 'aeiou' and unmasked < (len(letters)-1) and lettersInARow < 3:
+                    hintsList.append(masked)
                     lettersInARow += 1
                     unmasked += 1
                 else:
-                    hints += charMask
+                    hintsList.append(charMask)
                     lettersInARow = 0
+            hints = ''.join(hintsList)
             return hints
 
         def getMaskedRandom(self, letters, sizeOfUnmasked):
@@ -1337,10 +1340,10 @@ class TriviaTime(callbacks.Plugin):
                 schedule.addEvent(event, hintTime, '%s.trivia' % self.channel)
 
         def removeAccents(self, text):
-            replacements = [('á', 'a'),('é','e'),('í', 'i'),('ó','o'),('ú','u'),('ü','u'),('ñ','n')]
-            for a,b in replacements:
-                text = text.replace(a,b)
-            return text
+            text = unicode(text.decode('utf-8'))
+            normalized = unicodedata.normalize('NFKD', text)
+            normalized = u''.join([c for c in normalized if not unicodedata.combining(c)])
+            return normalized.encode('utf-8')
 
         def removeExtraSpaces(self, text):
             return utils.str.normalizeWhitespace(text)
@@ -1388,10 +1391,10 @@ class TriviaTime(callbacks.Plugin):
                 alternativeAnswers = []
                 if ircutils.toLower(question[:4]) == 'kaos':
                     for ans in answers:
-                        answer.append(self.removeAccents(ans.strip()))
+                        answer.append(str(ans).strip())
                 elif ircutils.toLower(question[:5]) == 'uword':
                     for ans in answers:
-                        answer.append(self.removeAccents(ans))
+                        answer.append(str(ans).strip())
                         question = 'Unscramble the letters: '
                         shuffledLetters = list(ans)
                         random.shuffle(shuffledLetters)
@@ -1402,9 +1405,9 @@ class TriviaTime(callbacks.Plugin):
                 else:
                     for ans in answers:
                         if answer == []:
-                            answer.append(self.removeAccents(str(ans).strip()))
+                            answer.append(str(ans).strip())
                         else:
-                            alternativeAnswers.append(self.removeAccents(str(ans).strip()))
+                            alternativeAnswers.append(str(ans).strip())
 
                 points = self.registryValue('questions.defaultPoints', self.channel)
                 if len(answer) > 1:
