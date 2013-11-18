@@ -160,6 +160,12 @@ class TriviaTime(callbacks.Plugin):
                                 )
                         )
 
+    def addZeroWidthSpace(self, text):
+        if len(text) <= 1:
+            return text
+        s = '%s​%s' % (text[:1], text[1:]) # WARNING: this has a zero width space, though its invisible
+        return s
+
     def acceptedit(self, irc, msg, arg, user, channel, num):
         """[<channel>] <num>
         Accept a question edit, and remove edit. 
@@ -255,7 +261,7 @@ class TriviaTime(callbacks.Plugin):
         offset = num-9
         topsList = ['Today\'s Top 10 Players: ']
         for i in range(len(tops)):
-            topsList.append('\x02 #%d:\x02 %s %d ' % ((i+offset) , tops[i][1], tops[i][2]))
+            topsList.append('\x02 #%d:\x02 %s %d ' % ((i+offset) , self.addZeroWidthSpace(tops[i][1]), tops[i][2]))
         topsText = ''.join(topsList)
         irc.sendMsg(ircmsgs.privmsg(channel, topsText))
         irc.noReply()
@@ -381,7 +387,7 @@ class TriviaTime(callbacks.Plugin):
             irc.reply('%s%s' % (errorMessage, identifyMessage))
         else:
             hasPoints = False
-            infoList = ['%s\'s Stats: Points (answers)' % (info[1])]
+            infoList = ['%s\'s Stats: Points (answers)' % (self.addZeroWidthSpace(info[1]))]
             if info[10] > 0 or info[16] > 0 or info[11] > 0:
                 hasPoints = True
                 infoList.append(' \x02Today:\x02 #%d %d (%d)' % (info[16], info[10], info[11]))
@@ -413,10 +419,10 @@ class TriviaTime(callbacks.Plugin):
             num=10
         channel = msg.args[0]
         tops = self.storage.viewMonthTop10(channel, num)
-        topsList = ['This MONTHS Top 10 Players: ']
+        topsList = ['This Month\'s Top 10 Players: ']
         offset = num-9
         for i in range(len(tops)):
-            topsList.append('\x02 #%d:\x02 %s %d ' % ((i+offset) , tops[i][1], tops[i][2]))
+            topsList.append('\x02 #%d:\x02 %s %d ' % ((i+offset) , self.addZeroWidthSpace(tops[i][1]), tops[i][2]))
         topsText = ''.join(topsList)
         irc.sendMsg(ircmsgs.privmsg(channel, topsText))
         irc.noReply()
@@ -593,7 +599,7 @@ class TriviaTime(callbacks.Plugin):
             irc.error("I couldn't find that user in the database.")
         else:
             hasPoints = False
-            infoList = ['%s\'s Stats: Points (answers)' % (info[1])]
+            infoList = ['%s\'s Stats: Points (answers)' % (self.addZeroWidthSpace(info[1]))]
             if info[10] > 0 or info[16] > 0 or info[11] > 0:
                 hasPoints = True
                 infoList.append(' \x02Today:\x02 #%d %d (%d)' % (info[16], info[10], info[11]))
@@ -798,10 +804,10 @@ class TriviaTime(callbacks.Plugin):
             num=10
         channel = msg.args[0]
         tops = self.storage.viewWeekTop10(channel, num)
-        topsList = ['This week\'s Top 10 Players: ']
+        topsList = ['This Week\'s Top 10 Players: ']
         offset = num-9
         for i in range(len(tops)):
-            topsList.append('\x02 #%d:\x02 %s %d ' % ((i+offset) , tops[i][1], tops[i][2]))
+            topsList.append('\x02 #%d:\x02 %s %d ' % ((i+offset) , self.addZeroWidthSpace(tops[i][1]), tops[i][2]))
         topsText = ''.join(topsList)
         irc.sendMsg(ircmsgs.privmsg(channel, topsText))
         irc.noReply()
@@ -818,7 +824,7 @@ class TriviaTime(callbacks.Plugin):
         topsList = ['This Year\'s Top 10 Players: ']
         offset = num-9
         for i in range(len(tops)):
-            topsList.append('\x02 #%d:\x02 %s %d ' % ((i+offset) , tops[i][1], tops[i][2]))
+            topsList.append('\x02 #%d:\x02 %s %d ' % ((i+offset) , self.addZeroWidthSpace(tops[i][1]), tops[i][2]))
         topsText = ''.join(topsList)
         irc.sendMsg(ircmsgs.privmsg(channel, topsText))
         irc.noReply()
