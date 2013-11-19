@@ -154,7 +154,7 @@ class TriviaTime(callbacks.Plugin):
             pingMsg = pingMsg[:-1]
             pingMsg = pingMsg.split('*', 1)
             if len(pingMsg) == 2:
-                pingTime = time.time()-float(pingMsg[0])
+                pingTime = time.time()-float(pingMsg[0])-1300000000
                 channelHash = pingMsg[1]
                 channel = ''
                 for name in irc.state.channels:
@@ -175,7 +175,16 @@ class TriviaTime(callbacks.Plugin):
 
     def shortHash(self, text):
         hashText = hashlib.sha1(text).hexdigest()
-        return hashText[:8]
+        hashText = self.numToBase94(int(hashText, 16), 8)
+        return hashText
+
+    def numToBase94(self, n, maxChars):
+        chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHUJKLMNOPQRSTUVWXYZ~!@#$%^&()_+=-`[]{}\\/|?,.><:;\'" '
+        L = []
+        for i in range(maxChars):
+            L.append(chars[n % len(chars)])
+            n = int(n / len(chars))
+        return ''.join(L)
 
     def acceptedit(self, irc, msg, arg, user, channel, num):
         """[<channel>] <num>
@@ -374,7 +383,7 @@ class TriviaTime(callbacks.Plugin):
         channel = msg.args[0]
         channelHash = self.shortHash(channel)
         username = msg.nick
-        irc.sendMsg(ircmsgs.privmsg(username, '\x01PING %s*%s\x01' % (time.time(), channelHash)))
+        irc.sendMsg(ircmsgs.privmsg(username, '\x01PING %0.2f*%s\x01' % (time.time()-1300000000, channelHash)))
     ping = wrap(ping)
 
     def me(self, irc, msg, arg):
