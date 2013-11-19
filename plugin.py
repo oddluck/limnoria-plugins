@@ -175,7 +175,7 @@ class TriviaTime(callbacks.Plugin):
 
     def shortHash(self, text):
         hashText = hashlib.sha1(text).hexdigest()
-        return hashText[:5]
+        return hashText[:8]
 
     def acceptedit(self, irc, msg, arg, user, channel, num):
         """[<channel>] <num>
