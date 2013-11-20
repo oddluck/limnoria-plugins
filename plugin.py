@@ -912,10 +912,11 @@ class TriviaTime(callbacks.Plugin):
         """
         def __init__(self, irc, channel, base):
             # get utilities from base plugin
-            self.games         = base.games
-            self.storage       = base.storage
+            self.games = base.games
+            self.storage = base.storage
+            self.Storage = base.Storage
             self.registryValue = base.registryValue
-            self.channel       = channel
+            self.channel = channel
             self.irc = irc
 
             # reset stats
@@ -923,11 +924,11 @@ class TriviaTime(callbacks.Plugin):
             self.shownHint = False
             self.questionRepeated = False
             self.skipVoteCount = {}
-            self.streak       = 0
-            self.lastWinner   = ''
+            self.streak = 0
+            self.lastWinner = ''
             self.hintsCounter = 0
-            self.numAsked     = 0
-            self.lastAnswer   = time.time()
+            self.numAsked = 0
+            self.lastAnswer = time.time()
             self.roundStartedAt = time.mktime(time.localtime())
 
             self.loadGameState()
@@ -975,6 +976,8 @@ class TriviaTime(callbacks.Plugin):
                     correctAnswer = ans
 
             if correctAnswerFound:
+                dbLocation = self.registryValue('admin.sqlitedb')
+                threadStorage = self.Storage(dbLocation)
                 # time stats
                 timeElapsed = float(time.time() - self.askedAt)
                 pointsAdded = self.points
@@ -995,7 +998,7 @@ class TriviaTime(callbacks.Plugin):
 
                     self.totalAmountWon += pointsAdded
                     # report the correct guess for kaos item
-                    self.storage.updateUserLog(username, self.channel, pointsAdded,0, 0)
+                    threadStorage.updateUserLog(username, self.channel, pointsAdded,0, 0)
                     self.lastAnswer = time.time()
                     self.sendMessage('\x02%s\x02 gets \x02%d\x02 points for: \x02%s\x02' % (username, pointsAdded, correctAnswer))
                 else:
@@ -1011,18 +1014,18 @@ class TriviaTime(callbacks.Plugin):
                         if streakBonus > pointsAdded:
                             streakBonus = pointsAdded
                         pointsAdded += streakBonus
-                    self.storage.updateGameStreak(self.channel, self.lastWinner, self.streak)
-                    self.storage.updateGameLongestStreak(self.channel, username, self.streak)
+                    threadStorage.updateGameStreak(self.channel, self.lastWinner, self.streak)
+                    threadStorage.updateGameLongestStreak(self.channel, username, self.streak)
                     # Convert score to int
                     pointsAdded = int(pointsAdded)
 
                     # report correct guess, and show players streak
-                    self.storage.updateUserLog(username, self.channel, pointsAdded,1, timeElapsed)
+                    threadStorage.updateUserLog(username, self.channel, pointsAdded,1, timeElapsed)
                     self.lastAnswer = time.time()
                     self.sendMessage('DING DING DING, \x02%s\x02 got the answer -> \x02%s\x02 <- in \x02%0.4f\x02 seconds for \x02%d(+%d)\x02 points' % (username, correctAnswer, timeElapsed, pointsAdded, streakBonus))
 
                     if self.registryValue('general.showStats', self.channel):
-                        userInfo = self.storage.getUser(username, self.channel)
+                        userInfo = threadStorage.getUser(username, self.channel)
                         if len(userInfo) >= 3:
                             todaysScore = userInfo[10]
                             weekScore = userInfo[8]
@@ -1061,7 +1064,7 @@ class TriviaTime(callbacks.Plugin):
                         bonusPointsText = ''
                         if bonusPoints > 0:
                             for nick in self.correctPlayers:
-                                self.storage.updateUserLog(nick, self.channel, bonusPoints, 0, 0)
+                                threadStorage.updateUserLog(nick, self.channel, bonusPoints, 0, 0)
                             bonusPointsText = 'Everyone gets a %d Point Bonus!!' % int(bonusPoints)
 
                         # give a special message if it was KAOS
@@ -1070,7 +1073,7 @@ class TriviaTime(callbacks.Plugin):
 
                     self.removeEvent()
 
-                    self.storage.updateQuestionStats(self.lineNumber, (4-self.hintsCounter), 0)
+                    threadStorage.updateQuestionStats(self.lineNumber, (4-self.hintsCounter), 0)
 
                     if self.stopPending == True:
                         self.stop()
