@@ -163,9 +163,9 @@ class TriviaTime(callbacks.Plugin):
                             channel = name
                             break
                 if channel == '':
-                    irc.sendMsg(ircmsgs.notice(username, '%s Ping reply: %0.2f seconds' % (username, pingTime)))
+                    irc.sendMsg(ircmsgs.notice(username, '%s: Ping reply: %0.2f seconds' % (username, pingTime)))
                 else:
-                    irc.sendMsg(ircmsgs.privmsg(channel, '%s Ping reply: %0.2f seconds' % (username, pingTime)))
+                    irc.sendMsg(ircmsgs.privmsg(channel, '%s: Ping reply: %0.2f seconds' % (username, pingTime)))
 
     def addZeroWidthSpace(self, text):
         if len(text) <= 1:
