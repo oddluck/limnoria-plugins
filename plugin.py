@@ -160,7 +160,7 @@ class TriviaTime(callbacks.Plugin):
                 channelHash = pingMsg[1]
                 channel = ''
                 for name in irc.state.channels:
-                    if channelHash == self.shortHash(name):
+                    if channelHash == self.shortHash(ircutils.toLower(name)):
                         if username in irc.state.channels[name].users:
                             channel = name
                             break
@@ -181,7 +181,7 @@ class TriviaTime(callbacks.Plugin):
         return hashText
 
     def numToBase94(self, n, maxChars):
-        chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHUJKLMNOPQRSTUVWXYZ~!@#$%^&()_+=-`[]{}\\/|?,.><:;\'" '
+        chars = '!"#$%&\'() +,-./0123456789:;<=>?@ABCDEFGHUJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~'
         L = []
         for i in range(maxChars):
             L.append(chars[n % len(chars)])
@@ -403,7 +403,7 @@ class TriviaTime(callbacks.Plugin):
         Check your ping to the bot. Make sure your client correclty responds to ctcp pings
         """
         channel = msg.args[0]
-        channelHash = self.shortHash(channel)
+        channelHash = self.shortHash(ircutils.toLower(channel))
         username = msg.nick
         irc.sendMsg(ircmsgs.privmsg(username, '\x01PING %0.2f*%s\x01' % (time.time()-1300000000, channelHash)))
     ping = wrap(ping)
