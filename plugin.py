@@ -22,6 +22,7 @@ import random
 import time
 import datetime
 import unicodedata
+import hashlib
 
 class TriviaTime(callbacks.Plugin):
     """
@@ -153,19 +154,37 @@ class TriviaTime(callbacks.Plugin):
             pingMsg = pingMsg[:-1]
             pingMsg = pingMsg.split('*', 1)
             if len(pingMsg) == 2:
-                pingTime = time.time()-float(pingMsg[0])
-                channel = pingMsg[1]
-                irc.sendMsg(
-                        ircmsgs.privmsg(channel, 
-                                '%s Ping reply: %0.2f seconds' % (username, pingTime)
-                                )
-                        )
+                pingTime = time.time()-float(pingMsg[0])-1300000000
+                channelHash = pingMsg[1]
+                channel = ''
+                for name in irc.state.channels:
+                    if channelHash == self.shortHash(name):
+                        if username in irc.state.channels[name].users:
+                            channel = name
+                            break
+                if channel == '':
+                    irc.sendMsg(ircmsgs.notice(username, '%s Ping reply: %0.2f seconds' % (username, pingTime)))
+                else:
+                    irc.sendMsg(ircmsgs.privmsg(channel, '%s Ping reply: %0.2f seconds' % (username, pingTime)))
 
     def addZeroWidthSpace(self, text):
         if len(text) <= 1:
             return text
         s = u'%s\u200b%s' % (text[:1], text[1:])
         return s.encode('utf-8')
+
+    def shortHash(self, text):
+        hashText = hashlib.sha1(text).hexdigest()
+        hashText = self.numToBase94(int(hashText, 16), 8)
+        return hashText
+
+    def numToBase94(self, n, maxChars):
+        chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHUJKLMNOPQRSTUVWXYZ~!@#$%^&()_+=-`[]{}\\/|?,.><:;\'" '
+        L = []
+        for i in range(maxChars):
+            L.append(chars[n % len(chars)])
+            n = int(n / len(chars))
+        return ''.join(L)
 
     def acceptedit(self, irc, msg, arg, user, channel, num):
         """[<channel>] <num>
@@ -359,11 +378,12 @@ class TriviaTime(callbacks.Plugin):
 
     def ping(self, irc, msg, arg):
         """
-            Check your latency to the server.
+        Check your ping to the bot. Make sure your client correclty responds to ctcp pings
         """
         channel = msg.args[0]
+        channelHash = self.shortHash(channel)
         username = msg.nick
-        irc.sendMsg(ircmsgs.privmsg(username, '\x01PING %s*%s\x01' % (time.time(), channel)))
+        irc.sendMsg(ircmsgs.privmsg(username, '\x01PING %0.2f*%s\x01' % (time.time()-1300000000, channelHash)))
     ping = wrap(ping)
 
     def me(self, irc, msg, arg):
