@@ -119,7 +119,9 @@ class TriviaTime(callbacks.Plugin):
         except KeyError:
             pass
         channel = msg.args[0]
-        user = self.storage.getUser(username, channel)
+        dbLocation = self.registryValue('admin.sqlitedb')
+        threadStorage = self.Storage(dbLocation)
+        user = threadStorage.getUser(username, channel)
         numTopToVoice = self.registryValue('voice.numTopToVoice')
         minPointsVoiceYear = self.registryValue('voice.minPointsVoiceYear')
         minPointsVoiceMonth = self.registryValue('voice.minPointsVoiceMonth')
@@ -191,15 +193,17 @@ class TriviaTime(callbacks.Plugin):
         Accept a question edit, and remove edit. 
         Channel is only necessary when editing from outside of the channel
         """
+        dbLocation = self.registryValue('admin.sqlitedb')
+        threadStorage = self.Storage(dbLocation)
         edit = self.storage.getEditById(num)
         if len(edit) < 1:
             irc.error('Could not find that edit')
         else:
             edit = edit[0]
-            question = self.storage.getQuestion(edit[1])
-            self.storage.updateQuestion(edit[1], edit[2])
-            self.storage.updateUser(edit[4], 0, 1)
-            self.storage.removeEdit(edit[0])
+            question = threadStorage.getQuestion(edit[1])
+            threadStorage.updateQuestion(edit[1], edit[2])
+            threadStorage.updateUser(edit[4], 0, 1)
+            threadStorage.removeEdit(edit[0])
             irc.reply('Question #%d updated!' % edit[1])
             irc.sendMsg(ircmsgs.notice(msg.nick, 'NEW: %s' % (edit[2])))
             if len(question) > 0:
@@ -214,14 +218,16 @@ class TriviaTime(callbacks.Plugin):
         Accept a new question, and add it to the database. 
         Channel is only necessary when editing from outside of the channel
         """
-        q = self.storage.getTemporaryQuestionById(num)
+        dbLocation = self.registryValue('admin.sqlitedb')
+        threadStorage = self.Storage(dbLocation)
+        q = threadStorage.getTemporaryQuestionById(num)
         if len(q) < 1:
             irc.error('Could not find that temp question')
         else:
             q = q[0]
-            self.storage.updateUser(q[1], 0, 0, 0, 0, 1)
-            self.storage.insertQuestionsBulk([(q[3], q[3])])
-            self.storage.removeTemporaryQuestion(q[0])
+            threadStorage.updateUser(q[1], 0, 0, 0, 0, 1)
+            threadStorage.insertQuestionsBulk([(q[3], q[3])])
+            threadStorage.removeTemporaryQuestion(q[0])
             irc.reply('Question accepted!')
     acceptnew = wrap(acceptnew, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
 
@@ -235,8 +241,10 @@ class TriviaTime(callbacks.Plugin):
         if charMask not in question:
             irc.error(' The question must include the separating character %s ' % (charMask))
             return
-        self.storage.updateUser(username, 0, 0, 0, 1)
-        self.storage.insertTemporaryQuestion(username, channel, question)
+        dbLocation = self.registryValue('admin.sqlitedb')
+        threadStorage = self.Storage(dbLocation)
+        threadStorage.updateUser(username, 0, 0, 0, 1)
+        threadStorage.insertTemporaryQuestion(username, channel, question)
         irc.reply(' Thank you for adding your question to the question database, it is awaiting approval. ')
     addquestion = wrap(addquestion, ['text'])
 
@@ -256,7 +264,9 @@ class TriviaTime(callbacks.Plugin):
         insertList = []
         for line in filesLines:
             insertList.append((str(line).strip(),str(line).strip()))
-        info = self.storage.insertQuestionsBulk(insertList)
+        dbLocation = self.registryValue('admin.sqlitedb')
+        threadStorage = self.Storage(dbLocation)
+        info = threadStorage.insertQuestionsBulk(insertList)
         irc.reply('Successfully added %d questions, skipped %d' % (info[0], info[1]))
     addquestionfile = wrap(addquestionfile, ['admin', optional('text')])
 
@@ -264,7 +274,9 @@ class TriviaTime(callbacks.Plugin):
         """<username>
         Deletes all of a users points, and removes all their records
         """
-        self.storage.removeUserLogs(username)
+        dbLocation = self.registryValue('admin.sqlitedb')
+        threadStorage = self.Storage(dbLocation)
+        threadStorage.removeUserLogs(username)
         irc.reply('Removed all points from %s' % (username))
     clearpoints = wrap(clearpoints, ['admin','nick'])
 
@@ -277,7 +289,9 @@ class TriviaTime(callbacks.Plugin):
         if num is None or num < 10:
             num=10
         channel = msg.args[0]
-        tops = self.storage.viewDayTop10(channel, num)
+        dbLocation = self.registryValue('admin.sqlitedb')
+        threadStorage = self.Storage(dbLocation)
+        tops = threadStorage.viewDayTop10(channel, num)
         offset = num-9
         topsList = ['Today\'s Top 10 Players: ']
         for i in range(len(tops)):
@@ -291,10 +305,12 @@ class TriviaTime(callbacks.Plugin):
         """<question id>
             Deletes a question from the database.
         """
-        if not self.storage.questionIdExists(id):
+        dbLocation = self.registryValue('admin.sqlitedb')
+        threadStorage = self.Storage(dbLocation)
+        if not threadStorage.questionIdExists(id):
             self.error('That question does not exist.')
             return
-        self.storage.deleteQuestion(id)
+        threadStorage.deleteQuestion(id)
         irc.reply('Deleted question %d.' % id)
     deletequestion = wrap(deletequestion, ['admin', 'int'])
 
@@ -310,7 +326,9 @@ class TriviaTime(callbacks.Plugin):
             username = user.name
         except KeyError:
             pass
-        q = self.storage.getQuestion(num)
+        dbLocation = self.registryValue('admin.sqlitedb')
+        threadStorage = self.Storage(dbLocation)
+        q = threadStorage.getQuestion(num)
         if len(question) > 0:
             q = q[0]
             questionParts = question.split('*')
@@ -321,8 +339,8 @@ class TriviaTime(callbacks.Plugin):
                 for part in questionParts[1:]:
                     question += '*'
                     question += part
-            self.storage.insertEdit(num, question, username, msg.args[0])
-            self.storage.updateUser(username, 1, 0)
+            threadStorage.insertEdit(num, question, username, msg.args[0])
+            threadStorage.updateUser(username, 1, 0)
             irc.reply('Success! Submitted edit for further review.')
             irc.sendMsg(ircmsgs.notice(msg.nick, 'NEW: %s' % (question)))
             irc.sendMsg(ircmsgs.notice(msg.nick, 'OLD: %s' % (q[2])))
@@ -353,7 +371,9 @@ class TriviaTime(callbacks.Plugin):
             month = d.month
             year = d.year
         channel = msg.args[0]
-        self.storage.updateUserLog(username, channel, points, 0, 0, day, month, year)
+        dbLocation = self.registryValue('admin.sqlitedb')
+        threadStorage = self.Storage(dbLocation)
+        threadStorage.updateUserLog(username, channel, points, 0, 0, day, month, year)
         irc.reply('Added %d points to %s' % (points, username))
     givepoints = wrap(givepoints, ['admin','nick', 'int', optional('int')])
 
@@ -362,16 +382,18 @@ class TriviaTime(callbacks.Plugin):
         Get TriviaTime information, how many questions/users in database, time, etc
         """
         channel = msg.args[0]
-        totalUsersEver = self.storage.getNumUser(channel)
-        numActiveThisWeek = self.storage.getNumActiveThisWeek(channel)
+        dbLocation = self.registryValue('admin.sqlitedb')
+        threadStorage = self.Storage(dbLocation)
+        totalUsersEver = threadStorage.getNumUser(channel)
+        numActiveThisWeek = threadStorage.getNumActiveThisWeek(channel)
         infoText = ' TriviaTime v1.0-beta by Trivialand on Freenode https://github.com/tannn/TriviaTime '
         irc.sendMsg(ircmsgs.privmsg(msg.args[0], infoText))
         infoText = ' Time is %s ' % (time.asctime(time.localtime(),))
         irc.sendMsg(ircmsgs.privmsg(msg.args[0], infoText))
         infoText = '\x02 %d Users\x02 on scoreboard \x02%d Active This Week\x02' % (totalUsersEver, numActiveThisWeek)
         irc.sendMsg(ircmsgs.privmsg(msg.args[0], infoText))
-        numKaos = self.storage.getNumKAOS()
-        numQuestionTotal = self.storage.getNumQuestions()
+        numKaos = threadStorage.getNumKAOS()
+        numQuestionTotal = threadStorage.getNumQuestions()
         infoText = '\x02 %d Questions\x02 and \x02%d KAOS\x02 (\x02%d Total\x02) in the database ' % ((numQuestionTotal-numKaos), numKaos, numQuestionTotal)
         irc.sendMsg(ircmsgs.privmsg(msg.args[0], infoText))
     info = wrap(info)
@@ -399,7 +421,9 @@ class TriviaTime(callbacks.Plugin):
         except KeyError:
             pass
         channel = msg.args[0]
-        info = self.storage.getUser(username, channel)
+        dbLocation = self.registryValue('admin.sqlitedb')
+        threadStorage = self.Storage(dbLocation)
+        info = threadStorage.getUser(username, channel)
         if len(info) < 3:
             errorMessage = 'You do not have any points.'
             identifyMessage = ''
@@ -439,7 +463,9 @@ class TriviaTime(callbacks.Plugin):
         if num is None or num < 10:
             num=10
         channel = msg.args[0]
-        tops = self.storage.viewMonthTop10(channel, num)
+        dbLocation = self.registryValue('admin.sqlitedb')
+        threadStorage = self.Storage(dbLocation)
+        tops = threadStorage.viewMonthTop10(channel, num)
         topsList = ['This Month\'s Top 10 Players: ']
         offset = num-9
         for i in range(len(tops)):
@@ -454,12 +480,14 @@ class TriviaTime(callbacks.Plugin):
         Remove a edit without accepting it. 
         Channel is only necessary when editing from outside of the channel
         """
-        edit = self.storage.getEditById(num)
+        dbLocation = self.registryValue('admin.sqlitedb')
+        threadStorage = self.Storage(dbLocation)
+        edit = threadStorage.getEditById(num)
         if len(edit) < 1:
             irc.error('Could not find that edit')
         else:
             edit = edit[0]
-            self.storage.removeEdit(edit[0])
+            threadStorage.removeEdit(edit[0])
             irc.reply('Edit %d removed!' % edit[0])
     removeedit = wrap(removeedit, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
 
@@ -468,12 +496,14 @@ class TriviaTime(callbacks.Plugin):
         Remove a old report by report number. 
         Channel is only necessary when editing from outside of the channel
         """
-        report = self.storage.getReportById(num)
+        dbLocation = self.registryValue('admin.sqlitedb')
+        threadStorage = self.Storage(dbLocation)
+        report = threadStorage.getReportById(num)
         if len(report) < 1:
             irc.error('Could not find that report')
         else:
             report = report[0]
-            self.storage.removeReport(report[0])
+            threadStorage.removeReport(report[0])
             irc.reply('Report %d removed!' % report[0])
     removereport = wrap(removereport, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
 
@@ -481,12 +511,14 @@ class TriviaTime(callbacks.Plugin):
         """[<channel>] <int>
         Remove a temp question without accepting it. Channel is only necessary when editing from outside of the channel
         """
-        q = self.storage.getTemporaryQuestionById(num)
+        dbLocation = self.registryValue('admin.sqlitedb')
+        threadStorage = self.Storage(dbLocation)
+        q = threadStorage.getTemporaryQuestionById(num)
         if len(q) < 1:
             irc.error('Could not find that temp question')
         else:
             q = q[0]
-            self.storage.removeTemporaryQuestion(q[0])
+            threadStorage.removeTemporaryQuestion(q[0])
             irc.reply('Temp question #%d removed!' % q[0])
     delnew = wrap(delnew, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
 
@@ -520,23 +552,25 @@ class TriviaTime(callbacks.Plugin):
                 if numAsked == roundNum and questionOver == False:
                     irc.reply('Sorry you must wait until the current question is over to report it.')
                     return
-        question = self.storage.getQuestionByRound(roundNum, channel)
+        dbLocation = self.registryValue('admin.sqlitedb')
+        threadStorage = self.Storage(dbLocation)
+        question = threadStorage.getQuestionByRound(roundNum, channel)
         if len(question) > 0:
             question = question[0]
             if inp[:2] == 's/':
                 regex = inp[2:].split('/')
                 if len(regex) > 1:
-                    self.storage.updateUser(username, 1, 0)
+                    threadStorage.updateUser(username, 1, 0)
                     newOne = regex[1]
                     oldOne = regex[0]
                     newQuestionText = question[2].replace(oldOne, newOne)
-                    self.storage.insertEdit(question[0], newQuestionText, username, channel)
+                    threadStorage.insertEdit(question[0], newQuestionText, username, channel)
                     irc.reply('** Regex detected ** Your report has been submitted!')
                     irc.sendMsg(ircmsgs.notice(username, 'NEW: %s' % (newQuestionText)))
                     irc.sendMsg(ircmsgs.notice(username, 'OLD: %s' % (question[2])))
                     return
-            self.storage.updateUser(username, 0, 0, 1)
-            self.storage.insertReport(channel, username, text, question[0])
+            threadStorage.updateUser(username, 0, 0, 1)
+            threadStorage.insertReport(channel, username, text, question[0])
             irc.reply('Your report has been submitted!')
         else:
             irc.error('Sorry, round %d could not be found in the database' % (roundNum))
@@ -549,8 +583,10 @@ class TriviaTime(callbacks.Plugin):
         username = msg.nick
         channel = msg.args[0]
 
+        dbLocation = self.registryValue('admin.sqlitedb')
+        threadStorage = self.Storage(dbLocation)
         timeSeconds = self.registryValue('skip.skipActiveTime', channel)
-        totalActive = self.storage.getNumUserActiveIn(timeSeconds)
+        totalActive = threadStorage.getNumUserActiveIn(timeSeconds)
         channelCanonical = ircutils.toLower(channel)
         if channelCanonical not in self.games:
             irc.error('No questions are currently being asked.')
@@ -560,7 +596,7 @@ class TriviaTime(callbacks.Plugin):
             irc.error('No question is currently being asked.')
             return
 
-        if not self.storage.wasUserActiveIn(username, timeSeconds):
+        if not threadStorage.wasUserActiveIn(username, timeSeconds):
             irc.error('Only users who have answered a question in the last 10 minutes can skip.')
             return
 
@@ -615,7 +651,9 @@ class TriviaTime(callbacks.Plugin):
             Show a  player's rank, score & questions asked for day, month, and year
         """
         channel = msg.args[0]
-        info = self.storage.getUser(username, channel)
+        dbLocation = self.registryValue('admin.sqlitedb')
+        threadStorage = self.Storage(dbLocation)
+        info = threadStorage.getUser(username, channel)
         if len(info) < 3:
             irc.error("I couldn't find that user in the database.")
         else:
@@ -645,7 +683,9 @@ class TriviaTime(callbacks.Plugin):
         Search question database for question at line num. 
         Channel is only necessary when editing from outside of the channel
         """
-        question = self.storage.getQuestion(num)
+        dbLocation = self.registryValue('admin.sqlitedb')
+        threadStorage = self.Storage(dbLocation)
+        question = threadStorage.getQuestion(num)
         if len(question) < 1:
             irc.error('Question not found')
         else:
@@ -658,7 +698,9 @@ class TriviaTime(callbacks.Plugin):
         Show what question was asked during the round. 
         Channel is only necessary when editing from outside of the channel
         """
-        question = self.storage.getQuestionByRound(num, msg.args[0])
+        dbLocation = self.registryValue('admin.sqlitedb')
+        threadStorage = self.Storage(dbLocation)
+        question = threadStorage.getQuestionByRound(num, msg.args[0])
         if len(question) < 1:
             irc.error('Round not found')
         else:
@@ -671,22 +713,24 @@ class TriviaTime(callbacks.Plugin):
         Shows report information, if num is provided one record is shown, otherwise the last 3 are. 
         Channel is only necessary when editing from outside of the channel
         """
+        dbLocation = self.registryValue('admin.sqlitedb')
+        threadStorage = self.Storage(dbLocation)
         if num is not None:
-            report = self.storage.getReportById(num)
+            report = threadStorage.getReportById(num)
             if len(report) < 1:
                 irc.reply('No reports found')
             else:
                 report = report[0]
                 irc.reply('Report #%d `%s` by %s on %s Q#%d '%(report[0], report[3], report[2], report[1], report[7]))
 
-                question = self.storage.getQuestion(report[7])
+                question = threadStorage.getQuestion(report[7])
                 if len(question) < 1:
                     irc.reply('Error: Tried to find question but couldn\'t')
                 else:
                     question = question[0]
                     irc.reply('Question#%d: %s' % (question[0], question[2]))
         else:
-            reports  = self.storage.getReportTop3()
+            reports  = threadStorage.getReportTop3()
             if len(reports) < 1:
                 irc.reply('No reports found')
             for report in reports:
@@ -698,11 +742,13 @@ class TriviaTime(callbacks.Plugin):
         Show top 3 edits, or provide edit num to view one. 
         Channel is only necessary when editing from outside of the channel
         """
+        dbLocation = self.registryValue('admin.sqlitedb')
+        threadStorage = self.Storage(dbLocation)
         if num is not None:
-            edit = self.storage.getEditById(num)
+            edit = threadStorage.getEditById(num)
             if len(edit) > 0:
                 edit = edit[0]
-                question = self.storage.getQuestion(edit[1])
+                question = threadStorage.getQuestion(edit[1])
                 irc.reply('Edit #%d, Question#%d'%(edit[0], edit[1]))
                 irc.reply('NEW:%s' %(edit[2]))
                 if len(question) > 0:
@@ -713,11 +759,11 @@ class TriviaTime(callbacks.Plugin):
             else:
                 irc.error('Edit #%d not found' % num)
         else:
-            edits = self.storage.getEditTop3()
+            edits = threadStorage.getEditTop3()
             if len(edits) < 1:
                 irc.reply('No edits found')
             for edit in edits:
-                question = self.storage.getQuestion(edit[1])
+                question = threadStorage.getQuestion(edit[1])
                 question = question[0]
                 irc.reply('Edit #%d, Question#%d, NEW:%s'%(edit[0], edit[1], edit[2]))
             irc.reply('type .showedit <edit number> to see more information')
@@ -727,15 +773,17 @@ class TriviaTime(callbacks.Plugin):
         """[<temp question #>]
         Show questions awaiting approval
         """
+        dbLocation = self.registryValue('admin.sqlitedb')
+        threadStorage = self.Storage(dbLocation)
         if num is not None:
-            q = self.storage.getTemporaryQuestionById(num)
+            q = threadStorage.getTemporaryQuestionById(num)
             if len(q) > 0:
                 q = q[0]
                 irc.reply('Temp Q #%d: %s'%(q[0], q[3]))
             else:
                 irc.error('Temp Q #%d not found' % num)
         else:
-            q = self.storage.getTemporaryQuestionTop3()
+            q = threadStorage.getTemporaryQuestionTop3()
             if len(q) < 1:
                 irc.reply('No temp questions found')
             for ques in q:
@@ -811,7 +859,9 @@ class TriviaTime(callbacks.Plugin):
         """
         userfrom = userfrom
         userto = userto
-        self.storage.transferUserLogs(userfrom, userto)
+        dbLocation = self.registryValue('admin.sqlitedb')
+        threadStorage = self.Storage(dbLocation)
+        threadStorage.transferUserLogs(userfrom, userto)
         irc.reply('Done! Transfered records from %s to %s' % (userfrom, userto))
     transferpoints = wrap(transferpoints, ['admin', 'nick', 'nick'])
 
@@ -824,7 +874,9 @@ class TriviaTime(callbacks.Plugin):
         if num is None or num < 10:
             num=10
         channel = msg.args[0]
-        tops = self.storage.viewWeekTop10(channel, num)
+        dbLocation = self.registryValue('admin.sqlitedb')
+        threadStorage = self.Storage(dbLocation)
+        tops = threadStorage.viewWeekTop10(channel, num)
         topsList = ['This Week\'s Top 10 Players: ']
         offset = num-9
         for i in range(len(tops)):
@@ -841,7 +893,9 @@ class TriviaTime(callbacks.Plugin):
         if num is None or num < 10:
             num=10
         channel = msg.args[0]
-        tops = self.storage.viewYearTop10(channel, num)
+        dbLocation = self.registryValue('admin.sqlitedb')
+        threadStorage = self.Storage(dbLocation)
+        tops = threadStorage.viewYearTop10(channel, num)
         topsList = ['This Year\'s Top 10 Players: ']
         offset = num-9
         for i in range(len(tops)):
@@ -858,10 +912,11 @@ class TriviaTime(callbacks.Plugin):
         """
         def __init__(self, irc, channel, base):
             # get utilities from base plugin
-            self.games         = base.games
-            self.storage       = base.storage
+            self.games = base.games
+            self.storage = base.storage
+            self.Storage = base.Storage
             self.registryValue = base.registryValue
-            self.channel       = channel
+            self.channel = channel
             self.irc = irc
 
             # reset stats
@@ -869,11 +924,11 @@ class TriviaTime(callbacks.Plugin):
             self.shownHint = False
             self.questionRepeated = False
             self.skipVoteCount = {}
-            self.streak       = 0
-            self.lastWinner   = ''
+            self.streak = 0
+            self.lastWinner = ''
             self.hintsCounter = 0
-            self.numAsked     = 0
-            self.lastAnswer   = time.time()
+            self.numAsked = 0
+            self.lastAnswer = time.time()
             self.roundStartedAt = time.mktime(time.localtime())
 
             self.loadGameState()
@@ -921,6 +976,8 @@ class TriviaTime(callbacks.Plugin):
                     correctAnswer = ans
 
             if correctAnswerFound:
+                dbLocation = self.registryValue('admin.sqlitedb')
+                threadStorage = self.Storage(dbLocation)
                 # time stats
                 timeElapsed = float(time.time() - self.askedAt)
                 pointsAdded = self.points
@@ -941,7 +998,7 @@ class TriviaTime(callbacks.Plugin):
 
                     self.totalAmountWon += pointsAdded
                     # report the correct guess for kaos item
-                    self.storage.updateUserLog(username, self.channel, pointsAdded,0, 0)
+                    threadStorage.updateUserLog(username, self.channel, pointsAdded,0, 0)
                     self.lastAnswer = time.time()
                     self.sendMessage('\x02%s\x02 gets \x02%d\x02 points for: \x02%s\x02' % (username, pointsAdded, correctAnswer))
                 else:
@@ -957,18 +1014,18 @@ class TriviaTime(callbacks.Plugin):
                         if streakBonus > pointsAdded:
                             streakBonus = pointsAdded
                         pointsAdded += streakBonus
-                    self.storage.updateGameStreak(self.channel, self.lastWinner, self.streak)
-                    self.storage.updateGameLongestStreak(self.channel, username, self.streak)
+                    threadStorage.updateGameStreak(self.channel, self.lastWinner, self.streak)
+                    threadStorage.updateGameLongestStreak(self.channel, username, self.streak)
                     # Convert score to int
                     pointsAdded = int(pointsAdded)
 
                     # report correct guess, and show players streak
-                    self.storage.updateUserLog(username, self.channel, pointsAdded,1, timeElapsed)
+                    threadStorage.updateUserLog(username, self.channel, pointsAdded,1, timeElapsed)
                     self.lastAnswer = time.time()
                     self.sendMessage('DING DING DING, \x02%s\x02 got the answer -> \x02%s\x02 <- in \x02%0.4f\x02 seconds for \x02%d(+%d)\x02 points' % (username, correctAnswer, timeElapsed, pointsAdded, streakBonus))
 
                     if self.registryValue('general.showStats', self.channel):
-                        userInfo = self.storage.getUser(username, self.channel)
+                        userInfo = threadStorage.getUser(username, self.channel)
                         if len(userInfo) >= 3:
                             todaysScore = userInfo[10]
                             weekScore = userInfo[8]
@@ -1007,7 +1064,7 @@ class TriviaTime(callbacks.Plugin):
                         bonusPointsText = ''
                         if bonusPoints > 0:
                             for nick in self.correctPlayers:
-                                self.storage.updateUserLog(nick, self.channel, bonusPoints, 0, 0)
+                                threadStorage.updateUserLog(nick, self.channel, bonusPoints, 0, 0)
                             bonusPointsText = 'Everyone gets a %d Point Bonus!!' % int(bonusPoints)
 
                         # give a special message if it was KAOS
@@ -1016,7 +1073,7 @@ class TriviaTime(callbacks.Plugin):
 
                     self.removeEvent()
 
-                    self.storage.updateQuestionStats(self.lineNumber, (4-self.hintsCounter), 0)
+                    threadStorage.updateQuestionStats(self.lineNumber, (4-self.hintsCounter), 0)
 
                     if self.stopPending == True:
                         self.stop()
