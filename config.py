@@ -138,4 +138,9 @@ conf.registerChannelValue(TriviaTime.general, 'charMask',
                 """Masking character for hints""")
         )
 
+conf.registerChannelValue(TriviaTime.general, 'nextMinStreak', 
+        registry.Integer(5, 
+                """The amount of streak needed to use the next command""")
+        )
+
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
