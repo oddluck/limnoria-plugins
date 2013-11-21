@@ -248,10 +248,10 @@ class TriviaTime(callbacks.Plugin):
         irc.reply(' Thank you for adding your question to the question database, it is awaiting approval. ')
     addquestion = wrap(addquestion, ['text'])
 
-    def addquestionfile(self, irc, msg, arg, filename):
+    def addfile(self, irc, msg, arg, filename):
         """[<filename>]
-        Add a file of questions to the servers question database, 
-        filename defaults to configured quesiton file
+        Add a file of questions to the question database, 
+        filename defaults to configured quesiton file.
         """
         if filename is None:
             filename = self.registryValue('admin.quizfile')
@@ -268,7 +268,7 @@ class TriviaTime(callbacks.Plugin):
         threadStorage = self.Storage(dbLocation)
         info = threadStorage.insertQuestionsBulk(insertList)
         irc.reply('Successfully added %d questions, skipped %d' % (info[0], info[1]))
-    addquestionfile = wrap(addquestionfile, ['admin', optional('text')])
+    addfile = wrap(addfile, ['admin', optional('text')])
 
     def clearpoints(self, irc, msg, arg, username):
         """<username>
@@ -477,7 +477,7 @@ class TriviaTime(callbacks.Plugin):
 
     def next(self, irc, msg, arg):
         """
-        Skip to the next question immediately. This can only be used by someone with a streak above 5.
+        Skip to the next question immediately. This can only be used by someone with a certain streak.
         """
         username = msg.nick
         channel = msg.args[0]
@@ -790,7 +790,7 @@ class TriviaTime(callbacks.Plugin):
                 question = threadStorage.getQuestion(edit[1])
                 question = question[0]
                 irc.reply('Edit #%d, Question#%d, NEW:%s'%(edit[0], edit[1], edit[2]))
-            irc.reply('type .showedit <edit number> to see more information')
+            irc.reply('Use the showedit command to see more information')
     showedit = wrap(showedit, ['user', ('checkChannelCapability', 'triviamod'), optional('int')])
 
     def shownew(self, irc, msg, arg, user, channel, num):
@@ -812,17 +812,17 @@ class TriviaTime(callbacks.Plugin):
                 irc.reply('No temp questions found')
             for ques in q:
                 irc.reply('Temp Q #%d: %s'%(ques[0], ques[3]))
-            irc.reply('type .shownew <temp question #> to see more information')
+            irc.reply('Use the shownew to see more information')
     shownew = wrap(shownew, ['user', ('checkChannelCapability', 'triviamod'),optional('int')])
 
     def start(self, irc, msg, args):
         """
-        Begins a round of Trivia inside of your current channel.
+        Begins a round of Trivia inside the current channel.
         """
         channel = msg.args[0]
         channelCanonical = ircutils.toLower(channel)
         if not irc.isChannel(channel):
-            irc.reply('Sorry, I can start inside of a channel, try joining #trivialand. Or fork TriviaLand on github')
+            irc.error('This command can only be used in a channel.')
             return
         if channelCanonical in self.games:
             if self.games[channelCanonical].stopPending == True:
@@ -847,8 +847,8 @@ class TriviaTime(callbacks.Plugin):
 
     def stop(self, irc, msg, args, channel):
         """[<channel>]
-        Ends Trivia. Only use this if you know what you are doing.. 
-        Channel is only necessary when editing from outside of the channel
+        Stops the current Trivia round.
+        Channel is only necessary when using from outside of the channel
         """
         channelCanonical = ircutils.toLower(channel)
         if channelCanonical in self.games:
@@ -1046,7 +1046,7 @@ class TriviaTime(callbacks.Plugin):
                     # report correct guess, and show players streak
                     threadStorage.updateUserLog(username, self.channel, pointsAdded,1, timeElapsed)
                     self.lastAnswer = time.time()
-                    self.sendMessage('DING DING DING, \x02%s\x02 got the answer -> \x02%s\x02 <- in \x02%0.4f\x02 seconds for \x02%d(+%d)\x02 points' % (username, correctAnswer, timeElapsed, pointsAdded, streakBonus))
+                    self.sendMessage('DING DING DING, \x02%s\x02 got the answer correct answer, \x02%s\x02, in \x02%0.4f\x02 seconds for \x02%d(+%d)\x02 points!' % (username, correctAnswer, timeElapsed, pointsAdded, streakBonus))
 
                     if self.registryValue('general.showStats', self.channel):
                         userInfo = threadStorage.getUser(username, self.channel)
@@ -1220,7 +1220,7 @@ class TriviaTime(callbacks.Plugin):
                 return
             ans = self.answers[0]
 
-            hints = 'Hint: \x02'
+            hints = 'Hint: \x02\x0312'
 
             divider = 0
 
@@ -1325,7 +1325,7 @@ class TriviaTime(callbacks.Plugin):
             hints = self.getHintString(self.hintsCounter)
             #increment hints counter
             self.hintsCounter += 1
-            self.sendMessage('Hint %s: \x02%s' % (self.hintsCounter, hints), 1, 9)
+            self.sendMessage('Hint %s: \x02\x0312%s' % (self.hintsCounter, hints), 1, 9)
             #reset hint shown
             self.shownHint = False
 
@@ -1375,7 +1375,7 @@ class TriviaTime(callbacks.Plugin):
             numQuestion = self.storage.getNumQuestions()
             if numQuestion == 0:
                 self.stop()
-                self.sendMessage('There are no questions. Stopping. If you are an admin use the addquestionfile to add questions to the database')
+                self.sendMessage('There are no questions. Stopping. If you are an admin use the addfile to add questions to the database')
                 return
 
             numQuestionsLeftInRound = self.storage.getNumQuestionsNotAsked(self.channel, self.roundStartedAt)
@@ -1409,8 +1409,8 @@ class TriviaTime(callbacks.Plugin):
             if tempQuestion[-1:] != '?':
                 tempQuestion = '%s?' % (tempQuestion)
 
-            # bold the q
-            questionText = '\x02%s' % (tempQuestion)
+            # bold the q, add color
+            questionText = '\x02\x0303%s' % (tempQuestion)
 
             # KAOS? report # of answers
             if len(self.answers) > 1:
