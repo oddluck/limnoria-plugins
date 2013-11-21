@@ -475,6 +475,27 @@ class TriviaTime(callbacks.Plugin):
         irc.noReply()
     month = wrap(month, [optional('int')])
 
+    def next(self, irc, msg, arg):
+        username = msg.nick
+        channel = msg.args[0]
+        try:
+            user = ircdb.users.getUser(msg.prefix)
+            username = user.name
+        except KeyError:
+            pass
+        minStreak = self.registryValue('general.nextMinStreak', channel)
+        channelCanonical = ircutils.toLower(channel)
+        if channelCanonical in self.games:
+            if self.games[channelCanonical].streak >= minStreak:
+                if self.games[channelCanonical].lastWinner == ircutils.toLower(username):
+                    if self.games[channelCanonical].active == True:
+                        if self.games[channelCanonical].questionOver:
+                            irc.sendMsg(ircmsgs.privmsg(channel, 'Skipping to next question.'))
+                            self.games[channelCanonical].removeEvent()
+                            self.games[channelCanonical].nextQuestion()
+                            return
+    next = wrap(next)
+
     def removeedit(self, irc, msg, arg, user, channel, num):
         """[<channel>] <int>
         Remove a edit without accepting it. 
