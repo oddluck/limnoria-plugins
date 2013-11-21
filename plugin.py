@@ -476,6 +476,9 @@ class TriviaTime(callbacks.Plugin):
     month = wrap(month, [optional('int')])
 
     def next(self, irc, msg, arg):
+        """
+        Skip to the next question immediately. This can only be used by someone with a streak above 5.
+        """
         username = msg.nick
         channel = msg.args[0]
         try:
