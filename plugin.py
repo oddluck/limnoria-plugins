@@ -1046,7 +1046,7 @@ class TriviaTime(callbacks.Plugin):
                     # report correct guess, and show players streak
                     threadStorage.updateUserLog(username, self.channel, pointsAdded,1, timeElapsed)
                     self.lastAnswer = time.time()
-                    self.sendMessage('DING DING DING, \x02%s\x02 got the answer correct answer, \x02%s\x02, in \x02%0.4f\x02 seconds for \x02%d(+%d)\x02 points!' % (username, correctAnswer, timeElapsed, pointsAdded, streakBonus))
+                    self.sendMessage('DING DING DING, \x02%s\x02 got the correct answer, \x02%s\x02, in \x02%0.4f\x02 seconds for \x02%d(+%d)\x02 points!' % (username, correctAnswer, timeElapsed, pointsAdded, streakBonus))
 
                     if self.registryValue('general.showStats', self.channel):
                         userInfo = threadStorage.getUser(username, self.channel)
@@ -1416,7 +1416,7 @@ class TriviaTime(callbacks.Plugin):
             if len(self.answers) > 1:
                 questionText += ' %d possible answers' % (len(self.answers))
 
-            questionMessageString = '.%s. %s' % (self.numAsked, questionText)
+            questionMessageString = '%s: %s' % (self.numAsked, questionText)
 
             maxLength = 400
 
