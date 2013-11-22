@@ -105,44 +105,23 @@
                 <input type="submit"></input>
             </form>
 <?php
-    if ($db && $username != '') {
+    if ($db) {
         $q = $db->prepare('select
-            tl.username as usrname,
-            sum(tl2.t * (tl2.n / 
-                (select sum(num_answered) 
-                    from triviauserlog 
-                    where username_canonical=:username))
-                ) as count,
-            sum(tl2.p * (tl2.n / 
-                (select sum(num_answered) 
-                    from triviauserlog 
-                    where username_canonical=:username))
-                ) as score,
-            (select sum(points_made) from triviauserlog t3 where username_canonical=:username) as points,
-            (select sum(num_answered) from triviauserlog t4 where username_canonical=:username) as q_asked,
-            (select num_editted from triviausers where username_canonical=:username) as num_e,
-            (select num_editted_accepted from triviausers where username_canonical=:username) as num_e_accepted,
-            (select num_questions_added from triviausers where username_canonical=:username) as num_q,
-            (select num_questions_accepted from triviausers where username_canonical=:username) as num_q_accepted,
-            (select num_reported from triviausers where username_canonical=:username) as num_r
-            from (select 
-                    tl3.id as id2, 
-                    tl3.average_time * 1.0 as t, 
-                    tl3.average_score * 1.0 as p, 
-                    tl3.num_answered * 1.0 as n 
-                    from triviauserlog tl3
-                ) tl2
-            inner join triviauserlog tl
-            on tl.username_canonical=:username
-            and tl.id=tl2.id2
+            tl.username,
+            sum(tl.points_made) as points,
+            sum(tl.num_answered) as total
+            from triviauserlog tl
+            where tl.username_canonical like :username
+            group by tl.username_canonical
+            limit 20
             ');
-        $q->execute(array(':username'=>$usernameCanonical));
+        $q->execute(array(':username'=>'%'.$usernameCanonical.'%'));
         if ($q === false) {
             die("Error: database error: table does not exist\n");
         } else {
             $result = $q->fetchAll();
             foreach($result as $res) {
-                if(is_null($res['usrname'])) {
+                if(is_null($res['username'])) {
                     echo "<div class='alert alert-error'>User not found.</div>";
                 }
             }
@@ -168,15 +147,8 @@
               <thead>
                 <tr>
                   <th>Username</th>
-                  <th>Average Time/Question*</th>
-                  <th>Average Points/Question*</th>
                   <th>Total Points</th>
                   <th>Question Answered*</th>
-                  <th>Edits Made</th>
-                  <th>Edits Accepted</th>
-                  <th>Questions Made</th>
-                  <th>Questions Accepted</th>
-                  <th>Reports Made</th>
                 </tr>
               </thead>
               <tbody>
@@ -184,18 +156,11 @@
 
         if(isset($result)) {
             foreach($result as $res) {
-                if(!is_null($res['usrname'])) {
+                if(!is_null($res['username'])) {
                     echo '<tr>';
-                    echo '<td>' . $res['usrname'] . '</td>';
-                    echo '<td>' . number_format($res['count'],2) . '</td>';
-                    echo '<td>' . number_format($res['score'],2) . '</td>';
+                    echo '<td><a href="profile.php?username=' . $res['username'] . '">' . $res['username'] . '</a></td>';
                     echo '<td>' . number_format($res['points'],0) . '</td>';
-                    echo '<td>' . number_format($res['q_asked'],0) . '</td>';
-                    echo '<td>' . number_format($res['num_e'],0) . '</td>';
-                    echo '<td>' . number_format($res['num_e_accepted'],0) . '</td>';
-                    echo '<td>' . number_format($res['num_q'],0) . '</td>';
-                    echo '<td>' . number_format($res['num_q_accepted'],0) . '</td>';
-                    echo '<td>' . number_format($res['num_r'],0) . '</td>';
+                    echo '<td>' . number_format($res['total'],0) . '</td>';
                     echo '</tr>';
                 }
             }
