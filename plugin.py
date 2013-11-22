@@ -493,7 +493,7 @@ class TriviaTime(callbacks.Plugin):
                 if self.games[channelCanonical].lastWinner == ircutils.toLower(username):
                     if self.games[channelCanonical].active == True:
                         if self.games[channelCanonical].questionOver:
-                            irc.sendMsg(ircmsgs.privmsg(channel, 'Skipping to next question.'))
+                            irc.sendMsg(ircmsgs.privmsg(channel, 'No more waiting; starting next question.'))
                             self.games[channelCanonical].removeEvent()
                             self.games[channelCanonical].nextQuestion()
                             return
@@ -602,7 +602,7 @@ class TriviaTime(callbacks.Plugin):
 
     def skip(self, irc, msg, arg):
         """
-            Skip a question
+            Skip the cureent question and start the next. Rate-limited.
         """
         username = msg.nick
         channel = msg.args[0]
