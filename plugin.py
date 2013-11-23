@@ -991,6 +991,10 @@ class TriviaTime(callbacks.Plugin):
             """
             Check users input to see if answer was given.
             """
+            # Already done? get out of here
+            if self.questionOver:
+                return
+            
             username = msg.nick
             # is it a user?
             try:
