@@ -90,29 +90,6 @@
 
 
       <div class="row">
-
-                <?php /*
-                    if ($db) {
-                        $q = $db->query('SELECT username, sum(points_made) as points FROM triviauserlog GROUP BY username_canonical ORDER BY points DESC LIMIT 10');
-                        if ($q === false) {
-                            die("Error: database error: table does not exist\n");
-                        } else {
-                            $result = $q->fetchAll();
-
-                            foreach($result as $key=>$res) {
-
-                                echo '<tr>';
-                                echo '<td>' . ($key+1) . '</td>';
-                                echo '<td>' . $res['username'] . '</td>';
-                                echo '<td>' . $res['points'] . '</td>';
-                                echo '</tr>';
-                            }
-                        }
-                    } else {
-                        die($err);
-                    }
-                    */
-                ?>
         <div class="span12">
           <h2>Todays Top Scores</h2>
             <table class="table">
@@ -131,7 +108,7 @@
 
                     if ($db) {
                         $q = $db->prepare("SELECT username, sum(points_made) as points FROM triviauserlog WHERE day=:day AND year=:year AND month=:month GROUP BY username_canonical ORDER BY points DESC LIMIT 10");
-                        $q->execute(array(':day'=>$day, 'year'=>$year, 'month'=>$month));
+                        $q->execute(array(':day'=>$day, ':year'=>$year, ':month'=>$month));
                         if ($q === false) {
                             die("Error: database error: table does not exist\n");
                         } else {
@@ -194,7 +171,7 @@
             foreach($result as $key=>$res) {
                 echo '<tr>';
                 echo '<td>' . ($key+1) . '</td>';
-                                echo '<td><a href="user.php?username=' . $res['username'] . '">' . $res['username'] . '</a></td>';
+                                echo '<td><a href="profile.php?username=' . $res['username'] . '">' . $res['username'] . '</a></td>';
                 echo '<td>' . number_format($res['points'],0) . '</td>';
                 echo '</tr>';
             }
@@ -227,7 +204,7 @@
 
                     if ($db) {
                         $q = $db->prepare("SELECT username, sum(points_made) as points FROM triviauserlog WHERE year=:year AND month=:month GROUP BY username_canonical ORDER BY points DESC LIMIT 10");
-                        $q->execute(array('year'=>$year, 'month'=>$month));
+                        $q->execute(array(':year'=>$year, ':month'=>$month));
                         if ($q === false) {
                             die("Error: database error: table does not exist\n");
                         } else {
@@ -235,7 +212,7 @@
                             foreach($result as $key=>$res) {
                                 echo '<tr>';
                                 echo '<td>' . ($key+1) . '</td>';
-                                echo '<td><a href="user.php?username=' . $res['username'] . '">' . $res['username'] . '</a></td>';
+                                echo '<td><a href="profile.php?username=' . $res['username'] . '">' . $res['username'] . '</a></td>';
                                 echo '<td>' . number_format($res['points'],0) . '</td>';
                                 echo '</tr>';
                             }
@@ -268,7 +245,7 @@
 
                     if ($db) {
                         $q = $db->prepare("SELECT username, sum(points_made) as points FROM triviauserlog WHERE year=:year GROUP BY username_canonical ORDER BY points DESC LIMIT 10");
-                        $q->execute(array('year'=>$year));
+                        $q->execute(array(':year'=>$year));
                         if ($q === false) {
                             die("Error: database error: table does not exist\n");
                         } else {
@@ -276,7 +253,7 @@
                             foreach($result as $key=>$res) {
                                 echo '<tr>';
                                 echo '<td>' . ($key+1) . '</td>';
-                                echo '<td><a href="user.php?username=' . $res['username'] . '">' . $res['username'] . '</a></td>';
+                                echo '<td><a href="profile.php?username=' . $res['username'] . '">' . $res['username'] . '</a></td>';
                                 echo '<td>' . number_format($res['points'],0) . '</td>';
                                 echo '</tr>';
                             }
@@ -292,7 +269,7 @@
       </div>
 
       <div class="footer">
-        <p>&copy; Trivialand 2013 - <a href="https://github.com/tannn/TriviaTime">github</a></p>
+        <p>&copy; Trivialand 2013 - <a target="_blank" href="https://github.com/tannn/TriviaTime">github</a></p>
       </div>
 
     </div> <!-- /container -->
@@ -305,5 +282,3 @@
 
   </body>
 </html>
-
-
