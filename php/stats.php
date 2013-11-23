@@ -116,7 +116,7 @@
                             foreach($result as $key=>$res) {
                                 echo '<tr>';
                                 echo '<td>' . ($key+1) . '</td>';
-                                echo '<td><a href="user.php?username=' . $res['username'] . '">' . $res['username'] . '</a></td>';
+                                echo '<td><a href="profile.php?username=' . $res['username'] . '">' . $res['username'] . '</a></td>';
                                 echo '<td>' . number_format($res['points'],0) . '</td>';
                                 echo '</tr>';
                             }
@@ -269,7 +269,7 @@
       </div>
 
       <div class="footer">
-        <p>&copy; Trivialand 2013 - <a target="_blank" href="https://github.com/tannn/TriviaTime">github</a></p>
+        <p>&copy; Trivialand 2013 - <a target="_blank" href="https://github.com/tannn/TriviaTime">Github</a></p>
       </div>
 
     </div> <!-- /container -->
