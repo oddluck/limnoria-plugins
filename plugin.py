@@ -39,7 +39,6 @@ class TriviaTime(callbacks.Plugin):
 
         # games info
         self.games = {} # separate game for each channel
-        self.skips = {}
 
         #Database amend statements for outdated versions
         self.dbamends = {} #Formatted like this: <DBVersion>: "<ALTERSTATEMENT>; <ALTERSTATEMENT>;" (This IS valid SQL as long as we include the semicolons)
@@ -652,18 +651,18 @@ class TriviaTime(callbacks.Plugin):
 
         skipSeconds = self.registryValue('skip.skipTime', channel)
         oldSkips = []
-        for usr in self.skips:
-            if int(time.mktime(time.localtime())) - self.skips[usr] > skipSeconds:
+        for usr in self.games[channelCanonical].skips:
+            if int(time.mktime(time.localtime())) - self.games[channelCanonical].skips[usr] > skipSeconds:
                 oldSkips.append(usr)
         for usr in oldSkips:
-            del self.skips[usr]
-        if username in self.skips:
-            if int(time.mktime(time.localtime())) - self.skips[username] < skipSeconds:
+            del self.games[channelCanonical].skips[usr]
+        if username in self.games[channelCanonical].skips:
+            if int(time.mktime(time.localtime())) - self.games[channelCanonical].skips[username] < skipSeconds:
                 irc.error('You must wait to be able to skip again.')
                 return
 
         self.games[channelCanonical].skipVoteCount[username] = 1
-        self.skips[username] = int(time.mktime(time.localtime()))
+        self.games[channelCanonical].skips[username] = int(time.mktime(time.localtime()))
 
         irc.sendMsg(ircmsgs.privmsg(channel, '%s voted to skip this question.' % username))
         if totalActive < 1:
@@ -966,6 +965,7 @@ class TriviaTime(callbacks.Plugin):
             self.irc = irc
 
             # reset stats
+            self.skips = {}
             self.stopPending = False
             self.shownHint = False
             self.questionRepeated = False
