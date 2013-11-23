@@ -95,7 +95,6 @@
                 <tr>
                   <th>Round #</th>
                   <th>Channel</th>
-                  <th>Question #</th>
                   <th>Question</th>
                 </tr>
               </thead>
@@ -111,7 +110,6 @@
                 echo '<tr>';
                 echo '<td>' . $res['round_num'] . '</td>';
                 echo '<td>' . $res['channel'] . '</td>';
-                echo '<td>' . $res['line_num'] . '</td>';
                 echo '<td>' . $res['question'] . '</td>';
                 echo '</tr>';
             }
@@ -126,7 +124,7 @@
       </div>
 
       <div class="footer">
-        <p>&copy; Trivialand 2013 - <a target="_blank" href="https://github.com/tannn/TriviaTime">github</a></p>
+        <p>&copy; Trivialand 2013 - <a target="_blank" href="https://github.com/tannn/TriviaTime">Github</a></p>
       </div>
 
     </div> <!-- /container -->
