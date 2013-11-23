@@ -486,17 +486,39 @@ class TriviaTime(callbacks.Plugin):
             username = user.name
         except KeyError:
             pass
+
+        if not irc.isChannel(channel):
+            irc.error('This command can only be used in a channel.')
+            return
+
         minStreak = self.registryValue('general.nextMinStreak', channel)
         channelCanonical = ircutils.toLower(channel)
-        if channelCanonical in self.games:
-            if self.games[channelCanonical].streak >= minStreak:
-                if self.games[channelCanonical].lastWinner == ircutils.toLower(username):
-                    if self.games[channelCanonical].active == True:
-                        if self.games[channelCanonical].questionOver:
-                            irc.sendMsg(ircmsgs.privmsg(channel, 'No more waiting; starting next question.'))
-                            self.games[channelCanonical].removeEvent()
-                            self.games[channelCanonical].nextQuestion()
-                            return
+
+        # Trivia isn't running
+        if channelCanonical not in self.games or self.games[channelCanonical].active != True:
+            irc.sendMsg(ircmsgs.privmsg(channel, '%s: Trivia is not currently running.' % (username)))
+            irc.noReply()
+            return
+        # Question is still being asked, not over
+        if self.games[channelCanonical].questionOver == False:
+            irc.sendMsg(ircmsgs.privmsg(channel, '%s: You must wait until the current question is over.' % (username)))
+            irc.noReply()
+            return
+        # Username isnt the streak holder
+        if self.games[channelCanonical].lastWinner != ircutils.toLower(username):
+            irc.sendMsg(ircmsgs.privmsg(channel, '%s: You are not currently the streak holder.' % (username)))
+            irc.noReply()
+            return
+        # Streak isnt high enough
+        if self.games[channelCanonical].streak < minStreak:
+            irc.sendMsg(ircmsgs.privmsg(channel, '%s: You do not have a large enough streak yet (%i of %i).' % (username, self.games[channelCanonical].streak, minStreak)))
+            irc.noReply()
+            return
+
+        irc.sendMsg(ircmsgs.privmsg(channel, 'No more waiting; starting next question.'))
+        self.games[channelCanonical].removeEvent()
+        self.games[channelCanonical].nextQuestion()
+        irc.noReply()
     next = wrap(next)
 
     def removeedit(self, irc, msg, arg, user, channel, num):
