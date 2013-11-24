@@ -376,6 +376,77 @@ class TriviaTime(callbacks.Plugin):
         irc.reply('Added %d points to %s' % (points, username))
     givepoints = wrap(givepoints, ['admin','nick', 'int', optional('int')])
 
+    def listedits(self, irc, msg, arg, user, channel, page):
+        """[<channel>] [<page>]
+        List edits.
+        Channel is only required when using the command outside of a channel
+        """
+        dbLocation = self.registryValue('admin.sqlitedb')
+        threadStorage = self.Storage(dbLocation)
+        count = threadStorage.countEdits()
+        if page is None or page < 1:
+            page=1
+        pages = int(count/3)
+        edits = threadStorage.getEditTop3(page)
+        if count % 3 > 0:
+            pages += 1
+        if count < 1:
+            irc.reply('No edits found')
+        else:
+            irc.reply('Showing page %i of %i' % (page, pages))
+            for edit in edits:
+                question = threadStorage.getQuestion(edit[1])
+                question = question[0]
+                irc.reply('Edit #%d, Question#%d, NEW:%s'%(edit[0], edit[1], edit[2]))
+            irc.reply('Use the showedit command to see more information')
+    listedits = wrap(listedits, ['user', ('checkChannelCapability', 'triviamod'), optional('int')])
+
+    def listreports(self, irc, msg, arg, user, channel, page):
+        """[<channel>] [<page>]
+        List reports.
+        Channel is only required when using the command outside of a channel
+        """
+        dbLocation = self.registryValue('admin.sqlitedb')
+        threadStorage = self.Storage(dbLocation)
+        count = threadStorage.countReports()
+        if page is None or page < 1:
+            page=1
+        pages = int(count/3)
+        reports = threadStorage.getReportTop3(page)
+        if count % 3 > 0:
+            pages += 1
+        if count < 1:
+            irc.reply('No reports found')
+        else:
+            irc.reply('Showing page %i of %i' % (page, pages))
+            for report in reports:
+                irc.reply('Report #%d `%s` by %s on %s Q#%d '%(report[0], report[3], report[2], report[1], report[7]))
+            irc.reply('Use the showreport command to see more information')
+    listreports = wrap(listreports, ['user', ('checkChannelCapability', 'triviamod'), optional('int')])
+
+    def listnew(self, irc, msg, arg, user, channel, page):
+        """[<channel>] [<page>]
+        List questions awaiting approval.
+        Channel is only required when using the command outside of a channel
+        """
+        dbLocation = self.registryValue('admin.sqlitedb')
+        threadStorage = self.Storage(dbLocation)
+        count = threadStorage.countTemporaryQuestions()
+        if page is None or page < 1:
+            page=1
+        pages = int(count/3)
+        if count % 3 > 0:
+            pages += 1
+        q = threadStorage.getTemporaryQuestionTop3(page)
+        if count < 1:
+            irc.reply('No new questions found')
+        else:
+            irc.reply('Showing page %i of %i' % (page, pages))
+            for ques in q:
+                irc.reply('Temp Q #%d: %s'%(ques[0], ques[3]))
+            irc.reply('Use the shownew to see more information')
+    listnew = wrap(listnew, ['user', ('checkChannelCapability', 'triviamod'), optional('int')])
+
     def info(self, irc, msg, arg):
         """
         Get TriviaTime information, how many questions/users in database, time, etc
@@ -1610,6 +1681,27 @@ class TriviaTime(callbacks.Plugin):
             for i in xrange(0, len(qs), rows):
                 yield qs[i:i+rows]
 
+        def countTemporaryQuestions(self):
+            c = self.conn.cursor()
+            result = c.execute('''select count(*) from triviatemporaryquestion''')
+            rows = result.fetchone()[0]
+            c.close()
+            return rows
+
+        def countEdits(self):
+            c = self.conn.cursor()
+            result = c.execute('''select count(*) from triviaedit''')
+            rows = result.fetchone()[0]
+            c.close()
+            return rows
+
+        def countReports(self):
+            c = self.conn.cursor()
+            result = c.execute('''select count(*) from triviareport''')
+            rows = result.fetchone()[0]
+            c.close()
+            return rows
+
         def deleteQuestion(self, questionId):
             c = self.conn.cursor()
             test = c.execute('''UPDATE triviaquestion set
@@ -2133,18 +2225,30 @@ class TriviaTime(callbacks.Plugin):
             c.close()
             return data
 
-        def getReportTop3(self):
+        def getReportTop3(self, page=1, amount=3):
+            if page < 1:
+                page=1
+            if amount < 1:
+                amount=3
+            page -= 1
+            start = page * amount
             c = self.conn.cursor()
-            c.execute('SELECT * FROM triviareport order by id desc limit 3')
+            c.execute('SELECT * FROM triviareport order by id desc limit ?, ?', (start, amount))
             data = []
             for row in c:
                 data.append(row)
             c.close()
             return data
 
-        def getTemporaryQuestionTop3(self):
+        def getTemporaryQuestionTop3(self, page=1, amount=3):
+            if page < 1:
+                page=1
+            if amount < 1:
+                amount=3
+            page -= 1
+            start = page * amount
             c = self.conn.cursor()
-            c.execute('SELECT * FROM triviatemporaryquestion order by id desc limit 3')
+            c.execute('SELECT * FROM triviatemporaryquestion order by id desc limit ?, ?', (start, amount))
             data = []
             for row in c:
                 data.append(row)
@@ -2193,9 +2297,15 @@ class TriviaTime(callbacks.Plugin):
                 return True
             return False
 
-        def getEditTop3(self):
+        def getEditTop3(self, page=1, amount=3):
+            if page < 1:
+                page=1
+            if amount < 1:
+                amount=3
+            page -= 1
+            start = page * amount
             c = self.conn.cursor()
-            c.execute('SELECT * FROM triviaedit order by id desc limit 3')
+            c.execute('SELECT * FROM triviaedit order by id desc limit ?, ?', (start, amount))
             data = []
             for row in c:
                 data.append(row)
