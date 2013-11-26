@@ -1523,7 +1523,7 @@ class TriviaTime(callbacks.Plugin):
 
             for msgPiece in questionMesagePieces:
                 if multipleMessages:
-                    msgPiece = '\x02%s' % (msgPiece)
+                    msgPiece = '\x02\x0303%s' % (msgPiece)
                 multipleMessages = True
                 self.sendMessage(msgPiece, 1, 9)
             self.queueEvent(0, self.loopEvent)
@@ -1559,14 +1559,26 @@ class TriviaTime(callbacks.Plugin):
                 if tempQuestion[-1:] != '?':
                     tempQuestion += ' ?'
 
-                # bold the q
-                questionText = '%s' % (tempQuestion)
+                # bold the q, add color
+                questionText = '\x02\x0303%s' % (tempQuestion)
 
                 # KAOS? report # of answers
                 if len(self.answers) > 1:
                     questionText += ' %d possible answers' % (len(self.answers))
 
-                self.sendMessage('.%s. %s' % (self.numAsked, questionText), 1, 9)
+                questionMessageString = '%s: %s' % (self.numAsked, questionText)
+
+                maxLength = 400
+
+                questionMesagePieces = [questionMessageString[i:i+maxLength] for i in range(0, len(questionMessageString), maxLength)]
+
+                multipleMessages=False
+
+                for msgPiece in questionMesagePieces:
+                    if multipleMessages:
+                        msgPiece = '\x02\x0303%s' % (msgPiece)
+                    multipleMessages = True
+                    self.sendMessage(msgPiece, 1, 9)
             except AttributeError:
                 pass
 
