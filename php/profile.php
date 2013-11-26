@@ -60,7 +60,7 @@ if ($db && $username != '') {
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Players &middot; TriviaTime</title>
+  <title><?php echo $result['usrname']; ?> &middot; TriviaTime</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="">
   <meta name="author" content="">
