@@ -7,6 +7,7 @@
 ###
 # my libs
 import json
+import re
 # supybot libs
 import supybot.utils as utils
 from supybot.commands import *
@@ -35,24 +36,56 @@ class UrbanDictionary(callbacks.Plugin):
         """bold and underline string."""
         return ircutils.bold(ircutils.underline(string))
 
+    def _repairjson(self, original):
+        original = original.replace(r'\r','').replace(r'\n','')
+        original = original.replace('\\x', '\\u00')
+        regex = re.compile(r'\\(?![/u"])')
+        fixed = regex.sub(r"\\\\", original)
+        return fixed
+
+    def _rj(self, v):
+        """repair broken JSON. (Stolen from google visualzation api)"""
+
+        ESCAPE_FOR_JSON = {
+            u'\\': u'\\\\',
+            u'\'': u'\\\'',
+            u'"': u'\\"',
+            u'\b': u'\\b',
+            u'\f': u'\\f',
+            u'\n': u'\\n',
+            u'\r': u'\\r',
+            u'\t': u'\\t',
+        }
+
+        JSON_QUOTE_CHAR = '"'
+
+        if isinstance(v, unicode):
+            v_unicode = v
+        else:
+            v_unicode = str(v).decode('utf-8')
+        # return
+        return u'%s%s%s' % (JSON_QUOTE_CHAR, u''.join(ESCAPE_FOR_JSON.get(char, char) for char in v_unicode), JSON_QUOTE_CHAR)
+
     ####################
     # PUBLIC FUNCTIONS #
     ####################
 
     def urbandictionary(self, irc, msg, args, optlist, optterm):
-        """[--disableexamples | --showvotes | --num #] <term>
+        """[--disableexamples | --showvotes | --num # | --showtags] <term>
 
         Fetches definition for <term> on UrbanDictionary.com
 
         Use --disableexamples to not display examples.
         Use --showvotes to show votes [default: off]
         Use --num # to limit the number of definitions. [default:10]
+        Use --showtags to display tags (if available)
         """
 
         # default args for output. can manip via --getopts.
         args = {'showExamples': True,
                 'numberOfDefinitions':self.registryValue('maxNumberOfDefinitions'),
-                'showVotes': False
+                'showVotes': False,
+                'showTags':False
                }
         # optlist to change args.
         if optlist:
@@ -61,6 +94,8 @@ class UrbanDictionary(callbacks.Plugin):
                     args['showExamples'] = False
                 if key == 'showvotes':
                     args['showVotes'] = True
+                if key == 'showtags':
+                    args['showTags'] = True
                 if key == 'num':  # if number is >, default to config var.
                     if 0 <= value <= self.registryValue('maxNumberOfDefinitions'):
                         args['numberOfDefinitions'] = value
@@ -74,9 +109,10 @@ class UrbanDictionary(callbacks.Plugin):
             return
         # try parsing json.
         try:
-            jsondata = html.decode('utf-8')  # decode utf-8. fix \r\n that ud puts in below.
-            jsondata = json.loads(jsondata.replace(r'\r','').replace(r'\n',''))  # odds chars in UD.
-        except:
+            jsondata = self._repairjson(html.decode('utf-8'))  # decode utf-8. fix \r\n that ud puts in below.
+            jsondata = json.loads(jsondata)  # odds chars in UD.
+        except Exception, e:
+            self.log.error("Error parsing JSON from UD: {0}".format(e))
             irc.reply("ERROR: Failed to parse json data. Check logs for error")
             return
         # process json.
@@ -99,13 +135,32 @@ class UrbanDictionary(callbacks.Plugin):
         if results == "no_results" or len(definitions) == 0:  # NOTHING FOUND.
             irc.reply("ERROR: '{0}' not defined on UrbanDictionary.".format(optterm))
             return
-        else:  # we have definitions.
+        else:  # we have definitions, so we're gonna output.
+            # check if we should add tags.
+            if args['showTags']:  # display tags.
+                tags = jsondata.get('tags')
+                if tags:  # we have tags. add it to optterm.
+                    tags = " | ".join([i for i in tags])
+                else:
+                    tags = False
+            else:
+                tags = False
+            # now lets output.
             if self.registryValue('disableANSI'):  # disable formatting.
-                irc.reply("{0} :: {1}".format(optterm, ircutils.stripFormatting(output)))
+                if tags:
+                    irc.reply("{0} :: {1} :: {2}".format(optterm, tags, ircutils.stripFormatting(output)))
+                else:
+                    irc.reply("{0} :: {1}".format(optterm, ircutils.stripFormatting(output)))
             else:  # colors.
-                irc.reply("{0} :: {1}".format(self._red(optterm), output))
+                if tags:
+                    irc.reply("{0} :: {1} :: {2}".format(self._red(optterm), tags, output))
+                else:
+                    irc.reply("{0} :: {1}".format(self._red(optterm), output))
 
-    urbandictionary = wrap(urbandictionary, [getopts({'showvotes':'', 'num':('int'), 'disableexamples':''}), ('text')])
+    urbandictionary = wrap(urbandictionary, [getopts({'showtags':'',
+                                                      'showvotes':'',
+                                                      'num':('int'),
+                                                      'disableexamples':''}), ('text')])
 
 Class = UrbanDictionary
 
