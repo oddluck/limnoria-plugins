@@ -2,6 +2,39 @@
 <html lang="en">
 <?php
   include('config.php');
+  include('pagination.php');
+
+  if(array_key_exists('rp', $_GET)) {
+      $reportPage = $_GET['rp'];
+  }
+  if(!isset($reportPage)) {
+      $reportPage = 1;
+  }
+  if($reportPage < 1) {
+      $reportPage = 1;
+  }
+
+  if(array_key_exists('ep', $_GET)) {
+      $editPage = $_GET['ep'];
+  }
+  if(!isset($editPage)) {
+      $editPage = 1;
+  }
+  if($editPage < 1) {
+      $editPage = 1;
+  }
+
+  if(array_key_exists('np', $_GET)) {
+      $newPage = $_GET['np'];
+  }
+  if(!isset($newPage)) {
+      $newPage = 1;
+  }
+  if($newPage < 1) {
+      $newPage = 1;
+  }
+
+  $maxResults = 5;
 ?>
   <head>
     <meta charset="utf-8">
@@ -111,12 +144,20 @@
                   </thead>
                   <tbody>
                     <?php
+                        $resultCount = 0;
                         if ($db) {
-                          $q = $db->query('SELECT tr.*, tq.question as original  FROM triviareport tr INNER JOIN triviaquestion tq on tq.id=question_num ORDER BY id DESC LIMIT 10');
+                            $q = $db->prepare('SELECT tr.*, tq.question as original  
+                                                      FROM triviareport tr 
+                                                      INNER JOIN triviaquestion tq 
+                                                      on tq.id=question_num 
+                                                      ORDER BY id DESC LIMIT :offset, :maxResults');
+                            $qCount = $db->query('SELECT count(id) FROM triviareport');
+                            $q->execute(array(':offset'=>($reportPage-1) * $maxResults, ':maxResults'=>$maxResults));
                             if ($q === false) {
                               die("Error: database error: table does not exist\n");
                             } else {
                               $result = $q->fetchAll();
+                              $resultCount = $qCount->fetchColumn();
                               foreach($result as $res) {
                                 echo '<tr>';
                                 echo '<td>' . $res['id'] . '</td>';
@@ -133,6 +174,10 @@
                     ?>
                   </tbody>
                 </table>
+      <?php
+          $pagination = new Paginator($reportPage, $resultCount, $maxResults, 'rp'); 
+          $pagination->paginate(); 
+      ?>
               </div>
             </div>
           </div>
@@ -161,12 +206,20 @@
                 </thead>
                 <tbody>
                   <?php
+                      $resultCount = 0;
                       if ($db) {
-                          $q = $db->query('SELECT te.*, tq.question as original  FROM triviaedit te INNER JOIN triviaquestion tq on tq.id=question_id ORDER BY id DESC LIMIT 10');
+                          $q = $db->prepare('SELECT te.*, tq.question as original  
+                                              FROM triviaedit te 
+                                              INNER JOIN triviaquestion tq 
+                                              on tq.id=question_id 
+                                              ORDER BY id DESC LIMIT :offset, :maxResults');
+                          $q->execute(array(':offset'=>($editPage-1) * $maxResults, ':maxResults'=>$maxResults));
+                          $qCount = $db->query('SELECT count(id) FROM triviaedit');
                           if ($q === false) {
                               die("Error: database error: table does not exist\n");
                           } else {
                               $result = $q->fetchAll();
+                              $resultCount = $qCount->fetchColumn();
                               foreach($result as $res) {
                                 $isItalic = false;
                                 $splitNew = explode('*', $res['question']);
@@ -224,6 +277,10 @@
                   ?>
                 </tbody>
               </table>
+      <?php
+          $pagination = new Paginator($editPage, $resultCount, $maxResults, 'ep'); 
+          $pagination->paginate(); 
+      ?>
           </div>
         </div>
       </div>
@@ -251,12 +308,16 @@
                 </thead>
                 <tbody>
                     <?php
+                        $resultCount = 0;
                         if ($db) {
-                          $q = $db->query('SELECT tq.*  FROM triviatemporaryquestion tq ORDER BY tq.id DESC LIMIT 10');
+                          $q = $db->prepare('SELECT tq.*  FROM triviatemporaryquestion tq ORDER BY tq.id DESC LIMIT :offset, :maxResults');
+                          $q->execute(array(':offset'=>($newPage-1) * $maxResults, ':maxResults'=>$maxResults));
+                          $qCount = $db->query('SELECT count(id) FROM triviatemporaryquestion');
                             if ($q === false) {
                               die("Error: database error: table does not exist\n");
                             } else {
                               $result = $q->fetchAll();
+                              $resultCount = $qCount->fetchColumn();
                               foreach($result as $res) {
                                 echo '<tr>';
                                 echo '<td>' . $res['id'] . '</td>';
@@ -271,6 +332,10 @@
                     ?>
                 </tbody>
               </table>
+      <?php
+          $pagination = new Paginator($newPage, $resultCount, $maxResults, 'np'); 
+          $pagination->paginate(); 
+      ?>
           </div>
         </div>
       </div>
