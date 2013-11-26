@@ -22,11 +22,11 @@
             if(!is_null($target)) {
                 $this->target = $target;
             } else {
-                $this->target = $this->getCurrentPage();
+                $this->target = $this->getCurrentURI();
             }
         }
 
-        protected function getCurrentPage() {
+        protected function getCurrentURI() {
             return $_SERVER['REQUEST_URI'];
         }
 
@@ -86,13 +86,17 @@
             if($this->currentPage > 1) {
                 echo '<li>';
                 echo '<a href="';
-                echo $this->replacePageVariable($this->target, $this->currentPage-1);
+                if($this->currentPage > $this->getMaxPages()) {
+                    echo $this->replacePageVariable($this->target, $this->getMaxPages());
+                } else {
+                    echo $this->replacePageVariable($this->target, $this->currentPage-1);
+                }
                 echo '">';
             } else {
                 echo '<li class="disabled"><span>';
             }
             echo $this->previous;
-            if($this->currentPage != 1) {
+            if($this->currentPage > 1) {
                 echo '</a></li>';
             } else {
                 echo '</span></li>';
@@ -126,13 +130,17 @@
             if($this->currentPage < $this->getMaxPages()) {
                 echo '<li>';
                 echo '<a href="';
-                echo $this->replacePageVariable($this->target, $this->currentPage+1);
+                if($this->currentPage < 1) {
+                    echo $this->replacePageVariable($this->target, 1);
+                } else {
+                    echo $this->replacePageVariable($this->target, $this->currentPage+1);
+                }
                 echo '">';
             } else {
                 echo '<li class="disabled"><span>';
             }
             echo $this->next;
-            if($this->currentPage != $this->getMaxPages()) {
+            if($this->currentPage < $this->getMaxPages()) {
                 echo '</a></li>';
             } else {
                 echo '</span></li>';
