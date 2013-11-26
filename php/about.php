@@ -42,8 +42,6 @@ include('config.php');
       <h1>About Us</h1>
       <p>TriviaTime is a trivia word game meant for irc. The source code is on <a target="_blank" href="https://github.com/tannn/TriviaTime">Github</a>, be sure to check it out.</p>
       <p>We are <a href="irc://irc.freenode.net/#trivialand">#trivialand</a> on Freenode. Come join us!</p>
-      <p>
-      </p>
     </div>
 
     <div class="footer">
