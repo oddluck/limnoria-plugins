@@ -39,8 +39,14 @@
             }
             parse_str($queryString, $queryArray);
             $queryArray[$this->key] = $pageNumber;
+            if($pageNumber == 1) {
+                unset($queryArray[$this->key]);
+            }
             $queryString = http_build_query($queryArray);
-            $new = $pathInfo['path'] . '?' . $queryString;
+            $new = $pathInfo['path'];
+            if($queryString != ''){
+                $new .=  '?' . $queryString;
+            }
             return $new;  
         }
 
