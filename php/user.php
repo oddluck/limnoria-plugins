@@ -2,6 +2,7 @@
 <html lang="en">
 <?php
   include('config.php');
+  include('pagination.php');
   if(array_key_exists('username', $_GET)) {
     // Convert username to lowercase in irc
     $username = $_GET['username'];
@@ -12,6 +13,18 @@
     $username = '';
     $usernameCanonical = '';
   }
+
+  if(array_key_exists('page', $_GET)) {
+      $page = $_GET['page'];
+  }
+  if(!isset($page)) {
+      $page = 1;
+  }
+  if($page < 1) {
+      $page = 1;
+  }
+
+  $maxResults = 10;
 ?>
   <head>
     <meta charset="utf-8">
@@ -105,6 +118,7 @@
                 <input type="submit"></input>
             </form>
 <?php
+    $resultCount = 0;
     if ($db) {
         $q = $db->prepare('select
             tl.username,
@@ -113,13 +127,20 @@
             from triviauserlog tl
             where tl.username_canonical like :username
             group by tl.username_canonical
-            limit 20
+            limit :offset, :maxResults
             ');
-        $q->execute(array(':username'=>'%'.$usernameCanonical.'%'));
+        $qCount = $db->prepare('select
+            count(distinct(tl.username_canonical))
+            from triviauserlog tl
+            where tl.username_canonical like :username
+            ');
+        $q->execute(array(':offset'=>($page-1) * $maxResults, ':maxResults'=>$maxResults, ':username'=>'%'.$usernameCanonical.'%'));
+        $qCount->execute(array(':username'=>'%'.$usernameCanonical.'%'));
         if ($q === false) {
             die("Error: database error: table does not exist\n");
         } else {
             $result = $q->fetchAll();
+            $resultCount = $qCount->fetchColumn();
             foreach($result as $res) {
                 if(is_null($res['username'])) {
                     echo "<div class='alert alert-error'>User not found.</div>";
@@ -168,6 +189,10 @@
 ?>
               </tbody>
             </table>
+      <?php
+          $pagination = new Paginator($page, $resultCount, $maxResults); 
+          $pagination->paginate(); 
+      ?>
         </div>
       </div>
 
