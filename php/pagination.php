@@ -3,8 +3,8 @@
     {
         protected $key = 'page';
         protected $target = '';
-        protected $next = 'Next &raquo;';
-        protected $previous = '&laquo; Previous';
+        protected $next = '&raquo;';
+        protected $previous = '&laquo;';
         protected $crumbs = 5;
         protected $resultsPerPage = 10;
         protected $currentPage;
