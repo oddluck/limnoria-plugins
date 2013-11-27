@@ -16,10 +16,11 @@
                 try {
                     $this->db = new PDO($this->dbType . $this->dbLocation);
                     if(!$this->db) {
-                        throw new StorageConnectionException($err);
+                        $this->db = null;
+                        throw new StorageConnectionException();
                     }
                 } catch (Exception $e) {
-
+                    $this->db = null;
                 }
             }
         }
