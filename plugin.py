@@ -1227,7 +1227,7 @@ class TriviaTime(callbacks.Plugin):
                 if hintNum == 0:
                     masked = ans
                     for i in range(len(masked)):
-                        if masked[i] in " -'\"_=+&%$#@!~`[]{}?.,<>|\\/":
+                        if masked[i] in " -'\"_=+&%$#@!~`[]{}?.,<>|\\/:;":
                             hints+= masked[i]
                         else:
                             hints += charMask
@@ -1240,7 +1240,7 @@ class TriviaTime(callbacks.Plugin):
                     hints += ans[:divider]
                     masked = ans[divider:]
                     for i in range(len(masked)):
-                        if masked[i] in " -'\"_=+&%$#@!~`[]{}?.,<>|\\/":
+                        if masked[i] in " -'\"_=+&%$#@!~`[]{}?.,<>|\\/:;":
                             hints+= masked[i]
                         else:
                             hints += charMask
@@ -1271,7 +1271,7 @@ class TriviaTime(callbacks.Plugin):
             lettersInARow = sizeOfUnmasked
             for i in range(len(letters)):
                 masked = letters[i]
-                if masked in " -'\"_=+&%$#@!~`[]{}?.,<>|\\/":
+                if masked in " -'\"_=+&%$#@!~`[]{}?.,<>|\\/:;":
                     hintsList.append(masked)
                 elif str.lower(self.removeAccents(masked.encode('utf-8'))) in 'aeiou' and unmasked < (len(letters)-1) and lettersInARow < 3:
                     hintsList.append(masked)
@@ -1292,7 +1292,7 @@ class TriviaTime(callbacks.Plugin):
             lettersInARow=sizeOfUnmasked
             for i in range(len(letters)):
                 masked = letters[i]
-                if masked in " -'\"_=+&%$#@!~`[]{}?.,<>|\\/":
+                if masked in " -'\"_=+&%$#@!~`[]{}?.,<>|\\/:;":
                     hints += masked
                     unmasked += 1
                 elif maskedInARow > 2 and unmasked < (len(letters)-1):
