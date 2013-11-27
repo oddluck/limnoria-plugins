@@ -48,12 +48,12 @@ $maxResults = 10;
           <span class="icon-bar"></span>
           <span class="icon-bar"></span>
         </button>
-        <span class="brand">TriviaTime</span>
+        <a href="index.php" class="brand">TriviaTime</a>
         <div class="nav-collapse collapse">
           <ul class="nav">
-            <li class="active"><a href="index.php">Home</a></li>
+            <li><a href="index.php">Home</a></li>
             <li><a href="stats.php">Stats</a></li>
-            <li><a href="user.php">Players</a></li>
+            <li class="active"><a href="user.php">Players</a></li>
             <li><a href="reports.php">Reports</a></li>
             <li><a href="about.php">About</a></li>
           </ul>

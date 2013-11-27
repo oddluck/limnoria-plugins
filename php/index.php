@@ -25,7 +25,7 @@ include('config.php');
           <span class="icon-bar"></span>
           <span class="icon-bar"></span>
         </button>
-        <span class="brand">TriviaTime</span>
+        <a href="index.php" class="brand">TriviaTime</a>
         <div class="nav-collapse collapse">
           <ul class="nav">
             <li class="active"><a href="index.php">Home</a></li>
