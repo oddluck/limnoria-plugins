@@ -2,16 +2,23 @@
 <html lang="en">
 <?php
 include('config.php');
-include('pagination.php');
+include('includes/pagination.php');
+include('includes/storage.php');
+try {
+    $storage = new Storage($config['dbLocation']);
+} catch(StorageException $e) {
+
+}
+
+$username = '';
+$usernameCanonical = '';
+
 if(array_key_exists('username', $_GET)) {
     // Convert username to lowercase in irc
   $username = $_GET['username'];
   $ircLowerSymbols = array("\\"=>"|", "["=>"{", "]"=>"}", "~"=>"^");
   $usernameCanonical = strtr($username, $ircLowerSymbols);
   $usernameCanonical = strtolower($usernameCanonical);
-} else {
-  $username = '';
-  $usernameCanonical = '';
 }
 
 if(array_key_exists('page', $_GET)) {
@@ -25,6 +32,7 @@ if($page < 1) {
 }
 
 $maxResults = 10;
+
 ?>
 <head>
   <meta charset="utf-8">
@@ -76,43 +84,24 @@ $maxResults = 10;
           <input type="submit"></input>
         </form>
         <?php
-        $resultCount = 0;
-        if ($db) {
-          $q = $db->prepare('select
-            tl.username,
-            sum(tl.points_made) as points,
-            sum(tl.num_answered) as total
-            from triviauserlog tl
-            where tl.username_canonical like :username
-            group by tl.username_canonical
-            limit :offset, :maxResults
-            ');
-          $qCount = $db->prepare('select
-            count(distinct(tl.username_canonical))
-            from triviauserlog tl
-            where tl.username_canonical like :username
-            ');
-          $q->execute(array(':offset'=>($page-1) * $maxResults, ':maxResults'=>$maxResults, ':username'=>'%'.$usernameCanonical.'%'));
-          $qCount->execute(array(':username'=>'%'.$usernameCanonical.'%'));
-          if ($q === false) {
-            die("Error: database error: table does not exist\n");
-          } else {
-            $result = $q->fetchAll();
-            $resultCount = $qCount->fetchColumn();
-            foreach($result as $res) {
-              if(is_null($res['username'])) {
-                echo "<div class='alert alert-error'>User not found.</div>";
-              }
-            }
-          }
-        } else {
-          if(isset($err)) {
-            die($err);
-          }
-          else {
-            echo "<div class='alert alert-info'>Enter a username above to search for stats.</div>";
-          }
+        $usersCount = 0;
+        $users = array();
+        try {
+          $users = $storage->getUserLikeUsernameCanonical($usernameCanonical, $page, $maxResults);
+          $usersCount = $storage->getCountUserLikeUsernameCanonical($usernameCanonical);
+        } catch(StorageSchemaException $e) {
+          echo "<div class='alert alert-error'>Error: Database schema is not queryable</div>";
+        } catch(StorageConnectionException $e) {
+          echo "<div class='alert alert-error'>Error: Database is not available</div>";
         }
+        if($usersCount==0) {
+          echo "<div class='alert alert-error'>User not found.</div>";
+          $users = array();
+        }
+        if($usernameCanonical=='') {
+          echo "<div class='alert alert-info'>Enter a username above to search for stats.</div>";
+        }
+        $storage->close();
         ?>
       </div>
     </div>
@@ -132,23 +121,18 @@ $maxResults = 10;
           </thead>
           <tbody>
             <?php
-
-            if(isset($result)) {
-              foreach($result as $res) {
-                if(!is_null($res['username'])) {
-                  echo '<tr>';
-                  echo '<td><a href="profile.php?username=' . $res['username'] . '">' . $res['username'] . '</a></td>';
-                  echo '<td>' . number_format($res['points'],0) . '</td>';
-                  echo '<td>' . number_format($res['total'],0) . '</td>';
-                  echo '</tr>';
-                }
-              }
+            foreach($users as $res) {
+              echo '<tr>';
+              echo '<td><a href="profile.php?username=' . $res['username'] . '">' . $res['username'] . '</a></td>';
+              echo '<td>' . number_format($res['points'],0) . '</td>';
+              echo '<td>' . number_format($res['total'],0) . '</td>';
+              echo '</tr>';
             }
             ?>
           </tbody>
         </table>
         <?php
-        $pagination = new Paginator($page, $resultCount, $maxResults); 
+        $pagination = new Paginator($page, $usersCount, $maxResults); 
         $pagination->paginate(); 
         ?>
       </div>

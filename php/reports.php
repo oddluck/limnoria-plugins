@@ -2,7 +2,13 @@
 <html lang="en">
 <?php
 include('config.php');
-include('pagination.php');
+include('includes/pagination.php');
+include('includes/storage.php');
+try {
+    $storage = new Storage($config['dbLocation']);
+} catch(StorageException $e) {
+
+}
 
 if(array_key_exists('rp', $_GET)) {
   $reportPage = $_GET['rp'];
@@ -82,6 +88,18 @@ $maxResults = 5;
     <div class="row">
       <div class="span12">
         <h2>Reports</h2>
+        <?php
+        $resultCount = 0;
+        $result = array();
+        try {
+          $result = $storage->getTopReports($reportPage, $maxResults);
+          $resultCount = $storage->getCountReports();
+        } catch(StorageSchemaException $e) {
+          echo "<div class='alert alert-error'>Error: Database schema is not queryable</div>";
+        } catch(StorageConnectionException $e) {
+          echo "<div class='alert alert-error'>Error: Database is not available</div>";
+        }
+        ?>
         <table class="table">
           <thead>
             <tr>
@@ -94,32 +112,14 @@ $maxResults = 5;
           </thead>
           <tbody>
             <?php
-            $resultCount = 0;
-            if ($db) {
-              $q = $db->prepare('SELECT tr.*, tq.question as original  
-                FROM triviareport tr 
-                INNER JOIN triviaquestion tq 
-                on tq.id=question_num 
-                ORDER BY id DESC LIMIT :offset, :maxResults');
-              $qCount = $db->query('SELECT count(id) FROM triviareport');
-              $q->execute(array(':offset'=>($reportPage-1) * $maxResults, ':maxResults'=>$maxResults));
-              if ($q === false) {
-                die("Error: database error: table does not exist\n");
-              } else {
-                $result = $q->fetchAll();
-                $resultCount = $qCount->fetchColumn();
-                foreach($result as $res) {
-                  echo '<tr>';
-                  echo '<td>' . $res['id'] . '</td>';
-                  echo '<td class="hidden-phone">' . $res['username'] . '</td>';
-                  echo '<td>' . $res['question_num'] . '</td>';
-                  echo '<td class="breakable">' . $res['original'] . '</td>';
-                  echo '<td class="breakable">' . $res['report_text'] . '</td>';
-                  echo '</tr>';
-                }
-              }
-            } else {
-              die('Couldnt connect to db');
+            foreach($result as $res) {
+              echo '<tr>';
+              echo '<td>' . $res['id'] . '</td>';
+              echo '<td class="hidden-phone">' . $res['username'] . '</td>';
+              echo '<td>' . $res['question_num'] . '</td>';
+              echo '<td class="breakable">' . $res['original'] . '</td>';
+              echo '<td class="breakable">' . $res['report_text'] . '</td>';
+              echo '</tr>';
             }
             ?>
           </tbody>
@@ -135,6 +135,18 @@ $maxResults = 5;
     <div class="row">
       <div class="span12">
         <h2>Edits</h2>
+        <?php
+        $resultCount = 0;
+        $result = array();
+        try {
+          $result = $storage->getTopEdits($editPage, $maxResults);
+          $resultCount = $storage->getCountEdits();
+        } catch(StorageSchemaException $e) {
+          echo "<div class='alert alert-error'>Error: Database schema is not queryable</div>";
+        } catch(StorageConnectionException $e) {
+          echo "<div class='alert alert-error'>Error: Database is not available</div>";
+        }
+        ?>
         <table class="table">
           <thead>
             <tr>
@@ -147,73 +159,55 @@ $maxResults = 5;
           </thead>
           <tbody>
             <?php
-            $resultCount = 0;
-            if ($db) {
-              $q = $db->prepare('SELECT te.*, tq.question as original  
-                FROM triviaedit te 
-                INNER JOIN triviaquestion tq 
-                on tq.id=question_id 
-                ORDER BY id DESC LIMIT :offset, :maxResults');
-              $q->execute(array(':offset'=>($editPage-1) * $maxResults, ':maxResults'=>$maxResults));
-              $qCount = $db->query('SELECT count(id) FROM triviaedit');
-              if ($q === false) {
-                die("Error: database error: table does not exist\n");
-              } else {
-                $result = $q->fetchAll();
-                $resultCount = $qCount->fetchColumn();
-                foreach($result as $res) {
-                  $isItalic = false;
-                  $splitNew = explode('*', $res['question']);
-                  $splitOld = explode('*', $res['original']);
+            foreach($result as $res) {
+              $isItalic = false;
+              $splitNew = explode('*', $res['question']);
+              $splitOld = explode('*', $res['original']);
 
-                  $differenceString = '';
-                  for($y=0;$y<sizeof($splitNew);$y++){
-                    if($y>0) {
-                      $isItalic = false;
-                      $differenceString .= '</u>';
-                      $differenceString .= '*';
+              $differenceString = '';
+              for($y=0;$y<sizeof($splitNew);$y++){
+                if($y>0) {
+                  $isItalic = false;
+                  $differenceString .= '</u>';
+                  $differenceString .= '*';
+                }
+                $brokenNew = str_split($splitNew[$y]);
+                if(!array_key_exists($y, $splitOld)){
+                  $splitOld[$y] = '*';
+                }
+                $brokenOld = str_split($splitOld[$y]);
+                for($i=0;$i<sizeof($brokenNew);$i++) {
+                  if(!array_key_exists($i, $brokenOld)||!array_key_exists($i, $brokenNew)) {
+                    if($isItalic==false){
+                      $isItalic = true;
+                      $differenceString .= '<u>';
                     }
-                    $brokenNew = str_split($splitNew[$y]);
-                    if(!array_key_exists($y, $splitOld)){
-                      $splitOld[$y] = '*';
+                  } else if($brokenNew[$i]=='*') {
+                    $isItalic = false;
+                    $differenceString .= '</u>';
+                  } else if($brokenNew[$i]!=$brokenOld[$i]) {
+                    if($isItalic==false){
+                      $isItalic = true;
+                      $differenceString .= '<u>';
                     }
-                    $brokenOld = str_split($splitOld[$y]);
-                    for($i=0;$i<sizeof($brokenNew);$i++) {
-                      if(!array_key_exists($i, $brokenOld)||!array_key_exists($i, $brokenNew)) {
-                        if($isItalic==false){
-                          $isItalic = true;
-                          $differenceString .= '<u>';
-                        }
-                      } else if($brokenNew[$i]=='*') {
-                        $isItalic = false;
-                        $differenceString .= '</u>';
-                      } else if($brokenNew[$i]!=$brokenOld[$i]) {
-                        if($isItalic==false){
-                          $isItalic = true;
-                          $differenceString .= '<u>';
-                        }
-                      } else if($brokenNew[$i]==$brokenOld[$i]&&$isItalic==true) {
-                        $isItalic = false;
-                        $differenceString .= '</u>';
-                      }
-                      $differenceString.=$brokenNew[$i];
-                    }
-                  }
-                  if($isItalic==true) {
+                  } else if($brokenNew[$i]==$brokenOld[$i]&&$isItalic==true) {
+                    $isItalic = false;
                     $differenceString .= '</u>';
                   }
-
-                  echo '<tr>';
-                  echo '<td>' . $res['id'] . '</td>';
-                  echo '<td class="hidden-phone">' . $res['username'] . '</td>';
-                  echo '<td class="breakable">' . $differenceString . '</td>';
-                  echo '<td class="breakable">' . $res['original'] . '</td>';
-                  echo '<td>' . $res['question_id'] . '</td>';
-                  echo '</tr>';
+                  $differenceString.=$brokenNew[$i];
                 }
               }
-            } else {
-              die($err);
+              if($isItalic==true) {
+                $differenceString .= '</u>';
+              }
+
+              echo '<tr>';
+              echo '<td>' . $res['id'] . '</td>';
+              echo '<td class="hidden-phone">' . $res['username'] . '</td>';
+              echo '<td class="breakable">' . $differenceString . '</td>';
+              echo '<td class="breakable">' . $res['original'] . '</td>';
+              echo '<td>' . $res['question_id'] . '</td>';
+              echo '</tr>';
             }
             ?>
           </tbody>
@@ -229,6 +223,18 @@ $maxResults = 5;
     <div class="row">
       <div class="span12">
         <h2>Added Questions</h2>
+        <?php
+        $resultCount = 0;
+        $result = array();
+        try {
+          $result = $storage->getTopNewQuestions($newPage, $maxResults);
+          $resultCount = $storage->getCountNewQuestions();
+        } catch(StorageSchemaException $e) {
+          echo "<div class='alert alert-error'>Error: Database schema is not queryable</div>";
+        } catch(StorageConnectionException $e) {
+          echo "<div class='alert alert-error'>Error: Database is not available</div>";
+        }
+        ?>
         <table class="table">
           <thead>
             <tr>
@@ -239,26 +245,12 @@ $maxResults = 5;
           </thead>
           <tbody>
             <?php
-            $resultCount = 0;
-            if ($db) {
-              $q = $db->prepare('SELECT tq.*  FROM triviatemporaryquestion tq ORDER BY tq.id DESC LIMIT :offset, :maxResults');
-              $q->execute(array(':offset'=>($newPage-1) * $maxResults, ':maxResults'=>$maxResults));
-              $qCount = $db->query('SELECT count(id) FROM triviatemporaryquestion');
-              if ($q === false) {
-                die("Error: database error: table does not exist\n");
-              } else {
-                $result = $q->fetchAll();
-                $resultCount = $qCount->fetchColumn();
-                foreach($result as $res) {
-                  echo '<tr>';
-                  echo '<td>' . $res['id'] . '</td>';
-                  echo '<td>' . $res['username'] . '</td>';
-                  echo '<td class="breakable">' . $res['question'] . '</td>';
-                  echo '</tr>';
-                }
-              }
-            } else {
-              die('Couldnt connect to db');
+            foreach($result as $res) {
+              echo '<tr>';
+              echo '<td>' . $res['id'] . '</td>';
+              echo '<td>' . $res['username'] . '</td>';
+              echo '<td class="breakable">' . $res['question'] . '</td>';
+              echo '</tr>';
             }
             ?>
           </tbody>

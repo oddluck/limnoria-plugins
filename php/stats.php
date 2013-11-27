@@ -2,6 +2,12 @@
 <html lang="en">
 <?php
 include('config.php');
+include('includes/storage.php');
+try {
+    $storage = new Storage($config['dbLocation']);
+} catch(StorageException $e) {
+
+}
 ?>
 <head>
   <meta charset="utf-8">
@@ -49,6 +55,16 @@ include('config.php');
     <div class="row">
       <div class="span6">
         <h2>Todays Top Scores</h2>
+        <?php
+        $result = array();
+        try {
+          $result = $storage->getDayTopScores();
+        } catch(StorageSchemaException $e) {
+          echo "<div class='alert alert-error'>Error: Database schema is not queryable</div>";
+        } catch(StorageConnectionException $e) {
+          echo "<div class='alert alert-error'>Error: Database is not available</div>";
+        }
+        ?>
         <table class="table">
           <thead>
             <tr>
@@ -59,53 +75,30 @@ include('config.php');
           </thead>
           <tbody>
             <?php
-            $day = date('j');
-            $month = date('m');
-            $year = date('Y');
-
-            if ($db) {
-              $q = $db->prepare("SELECT username, sum(points_made) as points FROM triviauserlog WHERE day=:day AND year=:year AND month=:month GROUP BY username_canonical ORDER BY points DESC LIMIT 10");
-              $q->execute(array(':day'=>$day, ':year'=>$year, ':month'=>$month));
-              if ($q === false) {
-                die("Error: database error: table does not exist\n");
-              } else {
-                $result = $q->fetchAll();
-                foreach($result as $key=>$res) {
-                  echo '<tr>';
-                  echo '<td>' . ($key+1) . '</td>';
-                  echo '<td><a href="profile.php?username=' . $res['username'] . '">' . $res['username'] . '</a></td>';
-                  echo '<td>' . number_format($res['points'],0) . '</td>';
-                  echo '</tr>';
-                }
-              }
-            } else {
-              die($err);
+            foreach($result as $key=>$res) {
+              echo '<tr>';
+              echo '<td>' . ($key+1) . '</td>';
+              echo '<td><a href="profile.php?username=' . $res['username'] . '">' . $res['username'] . '</a></td>';
+              echo '<td>' . number_format($res['points'],0) . '</td>';
+              echo '</tr>';
             }
             ?>
           </tbody>
         </table>
       </div>
 
-      <?php
-      $sqlClause = '';
-      $day = date('N')-1;
-      $week = new DateTime();
-      $interval = new DateInterval('P'.$day.'D');
-      $week->sub($interval);
-      $interval = new DateInterval('P1D');
-      for($i=0;$i<7;$i++) {
-        if($i>0) {
-          $sqlClause .= ' or ';
-        }
-        $sqlClause .= '(day=' . $week->format('j') . 
-          ' and month=' . $week->format('n') .
-          ' and year=' . $week->format('Y') . 
-          ')';
-      $week->add($interval);
-      }
-      ?>
       <div class="span6">
         <h2>Week Top Scores</h2>
+        <?php
+        $result = array();
+        try {
+          $result = $storage->getWeekTopScores();
+        } catch(StorageSchemaException $e) {
+          echo "<div class='alert alert-error'>Error: Database schema is not queryable</div>";
+        } catch(StorageConnectionException $e) {
+          echo "<div class='alert alert-error'>Error: Database is not available</div>";
+        }
+        ?>
         <table class="table">
           <thead>
             <tr>
@@ -116,25 +109,14 @@ include('config.php');
           </thead>
           <tbody>
             <?php
-            if ($db) {
-              $q = $db->query("SELECT username, sum(points_made) as points FROM triviauserlog WHERE $sqlClause GROUP BY username_canonical ORDER BY points DESC LIMIT 10");
-              if ($q === false) {
-                die("Error: database error: table does not exist\n");
-              } else {
-                $result = $q->fetchAll();
-                foreach($result as $key=>$res) {
-                  echo '<tr>';
-                  echo '<td>' . ($key+1) . '</td>';
-                  echo '<td><a href="profile.php?username=' . $res['username'] . '">' . $res['username'] . '</a></td>';
-                  echo '<td>' . number_format($res['points'],0) . '</td>';
-                  echo '</tr>';
-                }
-              }
-            } else {
-              die($err);
+            foreach($result as $key=>$res) {
+              echo '<tr>';
+              echo '<td>' . ($key+1) . '</td>';
+              echo '<td><a href="profile.php?username=' . $res['username'] . '">' . $res['username'] . '</a></td>';
+              echo '<td>' . number_format($res['points'],0) . '</td>';
+              echo '</tr>';
             }
             ?>
-
           </tbody>
         </table>
       </div>
@@ -142,6 +124,16 @@ include('config.php');
     <div class="row">
       <div class="span6">
         <h2>Month Top Scores</h2>
+        <?php
+        $result = array();
+        try {
+          $result = $storage->getMonthTopScores();
+        } catch(StorageSchemaException $e) {
+          echo "<div class='alert alert-error'>Error: Database schema is not queryable</div>";
+        } catch(StorageConnectionException $e) {
+          echo "<div class='alert alert-error'>Error: Database is not available</div>";
+        }
+        ?>
         <table class="table">
           <thead>
             <tr>
@@ -152,27 +144,12 @@ include('config.php');
           </thead>
           <tbody>
             <?php
-            $day = date('j');
-            $month = date('m');
-            $year = date('Y');
-
-            if ($db) {
-              $q = $db->prepare("SELECT username, sum(points_made) as points FROM triviauserlog WHERE year=:year AND month=:month GROUP BY username_canonical ORDER BY points DESC LIMIT 10");
-              $q->execute(array(':year'=>$year, ':month'=>$month));
-              if ($q === false) {
-                die("Error: database error: table does not exist\n");
-              } else {
-                $result = $q->fetchAll();
-                foreach($result as $key=>$res) {
-                  echo '<tr>';
-                  echo '<td>' . ($key+1) . '</td>';
-                  echo '<td><a href="profile.php?username=' . $res['username'] . '">' . $res['username'] . '</a></td>';
-                  echo '<td>' . number_format($res['points'],0) . '</td>';
-                  echo '</tr>';
-                }
-              }
-            } else {
-              die($err);
+            foreach($result as $key=>$res) {
+              echo '<tr>';
+              echo '<td>' . ($key+1) . '</td>';
+              echo '<td><a href="profile.php?username=' . $res['username'] . '">' . $res['username'] . '</a></td>';
+              echo '<td>' . number_format($res['points'],0) . '</td>';
+              echo '</tr>';
             }
             ?>
           </tbody>
@@ -180,6 +157,16 @@ include('config.php');
       </div>
       <div class="span6">
         <h2>Year Top Scores</h2>
+        <?php
+        $result = array();
+        try {
+          $result = $storage->getYearTopScores();
+        } catch(StorageSchemaException $e) {
+          echo "<div class='alert alert-error'>Error: Database schema is not queryable</div>";
+        } catch(StorageConnectionException $e) {
+          echo "<div class='alert alert-error'>Error: Database is not available</div>";
+        }
+        ?>
         <table class="table">
           <thead>
             <tr>
@@ -190,30 +177,15 @@ include('config.php');
           </thead>
           <tbody>
             <?php
-            $day = date('j');
-            $month = date('m');
-            $year = date('Y');
-
-            if ($db) {
-              $q = $db->prepare("SELECT username, sum(points_made) as points FROM triviauserlog WHERE year=:year GROUP BY username_canonical ORDER BY points DESC LIMIT 10");
-              $q->execute(array(':year'=>$year));
-              if ($q === false) {
-                die("Error: database error: table does not exist\n");
-              } else {
-                $result = $q->fetchAll();
-                foreach($result as $key=>$res) {
-                  echo '<tr>';
-                  echo '<td>' . ($key+1) . '</td>';
-                  echo '<td><a href="profile.php?username=' . $res['username'] . '">' . $res['username'] . '</a></td>';
-                  echo '<td>' . number_format($res['points'],0) . '</td>';
-                  echo '</tr>';
-                }
-              }
-            } else {
-              die($err);
+            foreach($result as $key=>$res) {
+              echo '<tr>';
+              echo '<td>' . ($key+1) . '</td>';
+              echo '<td><a href="profile.php?username=' . $res['username'] . '">' . $res['username'] . '</a></td>';
+              echo '<td>' . number_format($res['points'],0) . '</td>';
+              echo '</tr>';
             }
+            $storage->close();
             ?>
-
           </tbody>
         </table>
       </div>
