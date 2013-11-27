@@ -33,7 +33,6 @@ $maxResults = 10;
   <meta name="description" content="">
   <meta name="author" content="">
 
-  <!-- Le styles -->
   <link href="css/bootstrap.css" rel="stylesheet">
   <link href="css/triviatime.css" rel="stylesheet">
   <link href="css/bootstrap-responsive.css" rel="stylesheet">
@@ -41,26 +40,28 @@ $maxResults = 10;
 </head>
 
 <body>
-
-  <div class="container">
-
-    <div class="masthead">
-      <h3 class="muted">TriviaTime</h3>
-      <div class="navbar">
-        <div class="navbar-inner">
-          <div class="container">
-            <ul class="nav">
-              <li><a href="index.php">Home</a></li>
-              <li><a href="stats.php">Stats</a></li>
-              <li class="active"><a href="user.php">Players</a></li>
-              <li><a href="reports.php">Reports</a></li>
-              <li><a href="about.php">About</a></li>
-            </ul>
-          </div>
+  <div class="navbar navbar-inverse navbar-fixed-top">
+    <div class="navbar-inner">
+      <div class="container">
+        <button class="btn btn-navbar collapsed" data-toggle="collapse" data-target=".nav-collapse" type="button">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <span class="brand">TriviaTime</span>
+        <div class="nav-collapse collapse">
+          <ul class="nav">
+            <li class="active"><a href="index.php">Home</a></li>
+            <li><a href="stats.php">Stats</a></li>
+            <li><a href="user.php">Players</a></li>
+            <li><a href="reports.php">Reports</a></li>
+            <li><a href="about.php">About</a></li>
+          </ul>
         </div>
-      </div><!-- /.navbar -->
+      </div>
     </div>
-
+  </div><!-- /.navbar -->
+  <div class="container">
     <div class="hero-unit">
       <h1>Players</h1>
       <p>Show stats for users.</p>
@@ -164,11 +165,7 @@ $maxResults = 10;
 
   </div> <!-- /container -->
 
-    <!-- Le javascript
-    ================================================== -->
-    <!-- Placed at the end of the document so the pages load faster -->
-    <script src="http://codeorigin.jquery.com/jquery-2.0.3.min.js"></script>
-    <script src="js/bootstrap.min.js"></script>
-
+  <script src="http://codeorigin.jquery.com/jquery-2.0.3.min.js"></script>
+  <script src="js/bootstrap.min.js"></script>
 </body>
 </html>
