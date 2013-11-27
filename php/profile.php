@@ -65,7 +65,6 @@ if ($db && $username != '') {
   <meta name="description" content="">
   <meta name="author" content="">
 
-  <!-- Le styles -->
   <link href="css/bootstrap.css" rel="stylesheet">
   <link href="css/triviatime.css" rel="stylesheet">
   <link href="css/bootstrap-responsive.css" rel="stylesheet">
@@ -73,33 +72,34 @@ if ($db && $username != '') {
 </head>
 
 <body>
-
-  <div class="container">
-
-    <div class="masthead">
-      <h3 class="muted">TriviaTime</h3>
-      <div class="navbar">
-        <div class="navbar-inner">
-          <div class="container">
-            <ul class="nav">
-              <li><a href="index.php">Home</a></li>
-              <li><a href="stats.php">Stats</a></li>
-              <li><a href="user.php">Players</a></li>
-              <li><a href="reports.php">Reports</a></li>
-              <li><a href="about.php">About</a></li>
-            </ul>
-          </div>
+  <div class="navbar navbar-inverse navbar-fixed-top">
+    <div class="navbar-inner">
+      <div class="container">
+        <button class="btn btn-navbar collapsed" data-toggle="collapse" data-target=".nav-collapse" type="button">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <span class="brand">TriviaTime</span>
+        <div class="nav-collapse collapse">
+          <ul class="nav">
+            <li class="active"><a href="index.php">Home</a></li>
+            <li><a href="stats.php">Stats</a></li>
+            <li><a href="user.php">Players</a></li>
+            <li><a href="reports.php">Reports</a></li>
+            <li><a href="about.php">About</a></li>
+          </ul>
         </div>
-      </div><!-- /.navbar -->
+      </div>
     </div>
-
+  </div><!-- /.navbar -->
+  <div class="container">
     <div class="hero-unit">
       <h1><?php echo $result['usrname']; ?></h1>
       <p>Profile and user summary.</p>
       <p>
       </p>
     </div>
-
 
     <div class="row">
       <div class="span6">
@@ -155,11 +155,9 @@ if ($db && $username != '') {
         <table class="table">
           <thead>
             <tr>
-              <th>Number Edited</th>
-              <th>Edits Accepted</th>
-              <th>Questions Added</th>
-              <th>Questions Accepted</th>
               <th>Reports Made</th>
+              <th>Edits (Made/Accepted)</th>
+              <th>Questions (Made/Accepted)</th>
             </tr>
           </thead>
           <tbody>
@@ -167,11 +165,9 @@ if ($db && $username != '') {
             if(isset($result)) {
               if(!is_null($result['usrname']) && $result['usrname'] != 'Not found') {
                 echo '<tr>';
-                echo '<td>' . number_format($result['num_e'],0) . '</td>';
-                echo '<td>' . number_format($result['num_e_accepted'],0) . '</td>';
-                echo '<td>' . number_format($result['num_q'],0) . '</td>';
-                echo '<td>' . number_format($result['num_q_accepted'],0) . '</td>';
                 echo '<td>' . number_format($result['num_r'],0) . '</td>';
+                echo '<td>' . number_format($result['num_e'],0) . '/' . number_format($result['num_e_accepted'],0) . '</td>';
+                echo '<td>' . number_format($result['num_q'],0) . '/' . number_format($result['num_q_accepted'],0) . '</td>';
                 echo '</tr>';
               }
             }
@@ -192,11 +188,8 @@ if ($db && $username != '') {
 
   </div> <!-- /container -->
 
-    <!-- Le javascript
-    ================================================== -->
-    <!-- Placed at the end of the document so the pages load faster -->
-    <script src="http://codeorigin.jquery.com/jquery-2.0.3.min.js"></script>
-    <script src="js/bootstrap.min.js"></script>
+  <script src="http://codeorigin.jquery.com/jquery-2.0.3.min.js"></script>
+  <script src="js/bootstrap.min.js"></script>
 
 </body>
 </html>
