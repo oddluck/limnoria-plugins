@@ -64,7 +64,7 @@ $maxResults = 10;
   <div class="container">
     <div class="hero-unit">
       <h1>Players</h1>
-      <p>Show stats for users.</p>
+      <p>Show stats for players.</p>
       <p>
       </p>
     </div>

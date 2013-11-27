@@ -94,13 +94,12 @@ if ($db && $username != '') {
     </div>
   </div><!-- /.navbar -->
   <div class="container">
-    <div class="hero-unit">
-      <h1><?php echo $result['usrname']; ?></h1>
-      <p>Profile and user summary.</p>
-      <p>
-      </p>
+    <div class="row profile-header">
+      <div class="span12">
+        <h1><?php echo $result['usrname']; ?></h1>
+        <p>Profile and stats.</p>
+      </div>
     </div>
-
     <div class="row">
       <div class="span6">
         <h2>Averages</h2>
