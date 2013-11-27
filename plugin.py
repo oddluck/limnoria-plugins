@@ -1027,6 +1027,9 @@ class TriviaTime(callbacks.Plugin):
         Main game logic, single game instance for each channel.
         """
         def __init__(self, irc, channel, base):
+            # constants
+            self.unmaskedChars = " -'\"_=+&%$#@!~`[]{}?.,<>|\\/:;"
+            
             # get utilities from base plugin
             self.games = base.games
             self.storage = base.storage
@@ -1227,7 +1230,7 @@ class TriviaTime(callbacks.Plugin):
                 if hintNum == 0:
                     masked = ans
                     for i in range(len(masked)):
-                        if masked[i] in " -'\"_=+&%$#@!~`[]{}?.,<>|\\/:;":
+                        if masked[i] in self.unmaskedChars:
                             hints+= masked[i]
                         else:
                             hints += charMask
@@ -1240,7 +1243,7 @@ class TriviaTime(callbacks.Plugin):
                     hints += ans[:divider]
                     masked = ans[divider:]
                     for i in range(len(masked)):
-                        if masked[i] in " -'\"_=+&%$#@!~`[]{}?.,<>|\\/:;":
+                        if masked[i] in self.unmaskedChars:
                             hints+= masked[i]
                         else:
                             hints += charMask
@@ -1271,7 +1274,7 @@ class TriviaTime(callbacks.Plugin):
             lettersInARow = sizeOfUnmasked
             for i in range(len(letters)):
                 masked = letters[i]
-                if masked in " -'\"_=+&%$#@!~`[]{}?.,<>|\\/:;":
+                if masked in self.unmaskedChars:
                     hintsList.append(masked)
                 elif str.lower(self.removeAccents(masked.encode('utf-8'))) in 'aeiou' and unmasked < (len(letters)-1) and lettersInARow < 3:
                     hintsList.append(masked)
@@ -1292,7 +1295,7 @@ class TriviaTime(callbacks.Plugin):
             lettersInARow=sizeOfUnmasked
             for i in range(len(letters)):
                 masked = letters[i]
-                if masked in " -'\"_=+&%$#@!~`[]{}?.,<>|\\/:;":
+                if masked in self.unmaskedChars:
                     hints += masked
                     unmasked += 1
                 elif maskedInARow > 2 and unmasked < (len(letters)-1):
