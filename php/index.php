@@ -2,6 +2,12 @@
 <html lang="en">
 <?php
 include('config.php');
+include('includes/storage.php');
+try {
+    $storage = new Storage($config['dbLocation']);
+} catch(StorageException $e) {
+
+}
 ?>
 <head>
   <meta charset="utf-8">
@@ -46,6 +52,20 @@ include('config.php');
     <div class="row">
       <div class="span12">
         <h2>Latest questions asked</h2>
+            <?php
+            try {
+              $result = $storage->getRecentAskedQuestions();
+            } catch(StorageSchemaException $e) {
+              echo "<div class='alert alert-error'>Error: Database schema is not queryable</div>";
+              $result = array();
+              $result[0] = array('round_num'=>'', 'channel'=>'', 'question'=>'', 'line_num'=>'');
+            } catch(StorageConnectionException $e) {
+              echo "<div class='alert alert-error'>Error: Database is not available</div>";
+              $result = array();
+              $result[0] = array('round_num'=>'', 'channel'=>'', 'question'=>'', 'line_num'=>'');
+            }
+            $storage->close();
+            ?>
         <table class="table">
           <thead>
             <tr>
@@ -57,23 +77,13 @@ include('config.php');
           </thead>
           <tbody>
             <?php
-            if ($db) {
-              $q = $db->query('SELECT asked_at, channel, round_num, question, line_num FROM triviagameslog ORDER BY id DESC LIMIT 10');
-              if ($q === false) {
-                die("Error: database error: table does not exist\n");
-              } else {
-                $result = $q->fetchAll();
-                foreach($result as $res) {
-                  echo '<tr>';
-                  echo '<td>' . $res['round_num'] . '</td>';
-                  echo '<td>' . $res['channel'] . '</td>';
-                  echo '<td class="breakable">' . $res['question'] . '</td>';
-                  echo '<td>' . $res['line_num'] . '</td>';
-                  echo '</tr>';
-                }
-              }
-            } else {
-              die($err);
+            foreach($result as $res) {
+              echo '<tr>';
+              echo '<td>' . $res['round_num'] . '</td>';
+              echo '<td>' . $res['channel'] . '</td>';
+              echo '<td class="breakable">' . $res['question'] . '</td>';
+              echo '<td>' . $res['line_num'] . '</td>';
+              echo '</tr>';
             }
             ?>
           </tbody>
