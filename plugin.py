@@ -333,9 +333,8 @@ class TriviaTime(callbacks.Plugin):
             self.error('That question does not exist.')
             return
         threadStorage.insertDelete(username, channel, id)
-        #threadStorage.deleteQuestion(id)
         irc.reply('Questions %d marked for deletion and pending review.' % id)
-    deletequestion = wrap(deletequestion, ['admin', 'int'])
+    deletequestion = wrap(deletequestion, ['int'])
 
     def edit(self, irc, msg, arg, user, channel, num, question):
         """[<channel>] <question number> <corrected text>
