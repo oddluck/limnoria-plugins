@@ -29,6 +29,23 @@
             $this->db = null;
         }
 
+        public function getTimeSinceLastPlayed($usernameCanonical) {
+            if(!$this->isConnected()) {
+                throw new StorageConnectionException();
+            }
+            $q = $this->db->prepare('SELECT last_updated
+                    FROM triviauserlog 
+                    WHERE username_canonical=:username
+                    ORDER BY last_updated DESC
+                    LIMIT 1');
+            $q->execute(array(':username'=>$usernameCanonical));
+            if ($q === false) {
+                throw new StorageSchemaException();
+            }
+            $result = $q->fetchAll();
+            return $result;
+        }
+
         public function getTopReports($page, $max) {
             if(!$this->isConnected()) {
                 throw new StorageConnectionException();
@@ -273,7 +290,8 @@
                     (select num_editted_accepted from triviausers where username_canonical=:username) as num_e_accepted,
                     (select num_questions_added from triviausers where username_canonical=:username) as num_q,
                     (select num_questions_accepted from triviausers where username_canonical=:username) as num_q_accepted,
-                    (select num_reported from triviausers where username_canonical=:username) as num_r
+                    (select num_reported from triviausers where username_canonical=:username) as num_r,
+                    (select highest_streak from triviausers where username_canonical=:username) as highest_streak
                     from (select tl3.id as id2, tl3.average_time * 1.0 as t, tl3.average_score * 1.0 as p, tl3.num_answered * 1.0 as n from triviauserlog tl3) tl2
                     inner join triviauserlog tl
                     on tl.username_canonical=:username

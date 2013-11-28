@@ -18,6 +18,7 @@ if(array_key_exists('username', $_GET)) {
   $usernameCanonical = strtolower($usernameCanonical);
 }
 
+$lastSeen = 'Never';
 
 function emptyResult() {
   $result = array();
@@ -31,7 +32,39 @@ function emptyResult() {
   $result['num_q'] = 0;
   $result['num_q_accepted'] = 0;
   $result['num_r'] = 0;
+  $result['highest_streak'] = 0;
   return $result;
+}
+
+function secondsToTime($inputSeconds) {
+
+  $secondsInAMinute = 60;
+  $secondsInAnHour  = 60 * $secondsInAMinute;
+  $secondsInADay    = 24 * $secondsInAnHour;
+
+  // extract days
+  $days = floor($inputSeconds / $secondsInADay);
+
+  // extract hours
+  $hourSeconds = $inputSeconds % $secondsInADay;
+  $hours = floor($hourSeconds / $secondsInAnHour);
+
+  // extract minutes
+  $minuteSeconds = $hourSeconds % $secondsInAnHour;
+  $minutes = floor($minuteSeconds / $secondsInAMinute);
+
+  // extract the remaining seconds
+  $remainingSeconds = $minuteSeconds % $secondsInAMinute;
+  $seconds = ceil($remainingSeconds);
+
+  // return the final array
+  $obj = array(
+      'd' => (int) $days,
+      'h' => (int) $hours,
+      'm' => (int) $minutes,
+      's' => (int) $seconds,
+  );
+  return $obj;
 }
 
 $userProfile = emptyResult();
@@ -39,16 +72,38 @@ $userProfile = emptyResult();
 if ($username != '') {
   try {
     $profileResult = $storage->getUserProfileInformation($usernameCanonical);
-    $storage->close();
-    if(sizeOf($profileResult) > 0) {
+    if(count($profileResult) > 0) {
       if(array_key_exists('usrname', $profileResult[0])) {
         if(!is_null($profileResult[0]['usrname'])) {
           $userProfile = $profileResult[0];
         }
       }
     }
+    $lastSeenQuery = $storage->getTimeSinceLastPlayed($usernameCanonical);
+    if(count($lastSeenQuery) > 0) {
+      if(array_key_exists('last_updated', $lastSeenQuery[0])) {
+        if(!is_null($lastSeenQuery[0]['last_updated'])) {
+          $lastSeenSeconds = strtotime("now") - $lastSeenQuery[0]['last_updated'];
+          $lastSeenObj = secondsToTime($lastSeenSeconds);
+          $lastSeen = '';
+          if($lastSeenObj["d"] > 0) {
+            $lastSeen .= $lastSeenObj["d"] . ' days ';
+          }
+          if($lastSeenObj["h"] > 0) {
+            $lastSeen .= $lastSeenObj["h"] . ' hours ';
+          }
+          if($lastSeenObj["m"] > 0) {
+            $lastSeen .= $lastSeenObj["m"] . ' mins ';
+          }
+          if($lastSeenObj["s"] > 0) {
+            $lastSeen .= $lastSeenObj["s"] . ' secs';
+          }
+        }
+      }
+    }
+    $storage->close();
   } catch(StorageException $e) {
-
+    $storage->close();
   }
 }
 
@@ -94,6 +149,16 @@ if ($username != '') {
       <div class="span12">
         <h1><?php echo $userProfile['usrname']; ?></h1>
         <p>Profile and stats.</p>
+      </div>
+    </div>
+    <div class="row">
+      <div class="span6">
+        <h2>Last seen</h2>
+        <p> <?php echo $lastSeen; ?> ago</p>
+      </div>
+      <div span="span6">
+        <h2>Highest Streak</h2>
+        <p><?php echo $userProfile['highest_streak']; ?>
       </div>
     </div>
     <div class="row">
