@@ -98,6 +98,9 @@ if ($username != '') {
           if($lastSeenObj["s"] > 0) {
             $lastSeen .= $lastSeenObj["s"] . ' secs';
           }
+          if($lastSeen != '') {
+            $lastSeen .= ' ago';
+          }
         }
       }
     }
@@ -154,11 +157,22 @@ if ($username != '') {
     <div class="row">
       <div class="span6">
         <h2>Last seen</h2>
-        <p> <?php echo $lastSeen; ?> ago</p>
+        <p>
+        <?php
+        if($userProfile['usrname'] != 'Not found') {
+          echo $lastSeen;
+        }
+        ?>
+        </p>
       </div>
       <div span="span6">
         <h2>Highest Streak</h2>
-        <p><?php echo $userProfile['highest_streak']; ?>
+        <p>
+        <?php
+        if($userProfile['usrname'] != 'Not found') {
+          echo number_format($userProfile['highest_streak'],0);
+        }
+        ?>
       </div>
     </div>
     <div class="row">
