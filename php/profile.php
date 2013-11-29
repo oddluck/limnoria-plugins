@@ -173,6 +173,7 @@ if ($username != '') {
           echo number_format($userProfile['highest_streak'],0);
         }
         ?>
+        </p>
       </div>
     </div>
     <div class="row">
