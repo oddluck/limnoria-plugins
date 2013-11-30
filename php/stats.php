@@ -58,7 +58,7 @@ try {
         <?php
         $result = array();
         try {
-          $result = $storage->getDayTopScores();
+          $result = $storage->getDayTopScores(1, 10);
         } catch(StorageSchemaException $e) {
           echo "<div class='alert alert-error'>Error: Database schema is not queryable</div>";
         } catch(StorageConnectionException $e) {
@@ -85,6 +85,7 @@ try {
             ?>
           </tbody>
         </table>
+        <p><a class="btn btn-info btn-block" href="top.php">View all</a></p>
       </div>
 
       <div class="span6">
@@ -92,7 +93,7 @@ try {
         <?php
         $result = array();
         try {
-          $result = $storage->getWeekTopScores();
+          $result = $storage->getWeekTopScores(1, 10);
         } catch(StorageSchemaException $e) {
           echo "<div class='alert alert-error'>Error: Database schema is not queryable</div>";
         } catch(StorageConnectionException $e) {
@@ -119,6 +120,7 @@ try {
             ?>
           </tbody>
         </table>
+        <p><a class="btn btn-info btn-block" href="top.php?t=w">View all</a></p>
       </div>
     </div>
     <div class="row">
@@ -127,7 +129,7 @@ try {
         <?php
         $result = array();
         try {
-          $result = $storage->getMonthTopScores();
+          $result = $storage->getMonthTopScores(1, 10);
         } catch(StorageSchemaException $e) {
           echo "<div class='alert alert-error'>Error: Database schema is not queryable</div>";
         } catch(StorageConnectionException $e) {
@@ -154,13 +156,14 @@ try {
             ?>
           </tbody>
         </table>
+        <p><a class="btn btn-info btn-block" href="top.php?t=m">View all</a></p>
       </div>
       <div class="span6">
         <h2>Year Top Scores</h2>
         <?php
         $result = array();
         try {
-          $result = $storage->getYearTopScores();
+          $result = $storage->getYearTopScores(1, 10);
         } catch(StorageSchemaException $e) {
           echo "<div class='alert alert-error'>Error: Database schema is not queryable</div>";
         } catch(StorageConnectionException $e) {
@@ -188,6 +191,7 @@ try {
             ?>
           </tbody>
         </table>
+        <p><a class="btn btn-info btn-block" href="top.php?t=y">View all</a></p>
       </div>
     </div>
 
