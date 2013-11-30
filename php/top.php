@@ -145,7 +145,7 @@ function replaceTimespanVariable($t) {
             foreach($result as $res) {
               echo '<tr>';
               echo '<td>' . $currentRank . '</td>';
-              echo '<td>' . $res['username'] . '</td>';
+              echo '<td><a href="profile.php?username=' . $res['username'] . '">' . $res['username'] . '</a></td>';
               echo '<td>' . $res['points'] . '</td>';
               echo '</tr>';
               $currentRank++;
