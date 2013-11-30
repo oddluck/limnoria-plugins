@@ -147,15 +147,29 @@
             return $result;
         }
 
-        public function getDayTopScores() {
+        public function getDayTopScores($page=1, $max=10) {
             if(!$this->isConnected()) {
                 throw new StorageConnectionException();
+            }
+            if($page < 1) {
+                $page = 1;
+            }
+            if($max < 1) {
+                $max = 1;
             }
             $day = date('j');
             $month = date('m');
             $year = date('Y');
-            $q = $this->db->prepare("SELECT username, sum(points_made) as points FROM triviauserlog WHERE day=:day AND year=:year AND month=:month GROUP BY username_canonical ORDER BY points DESC LIMIT 10");
-            $q->execute(array(':day'=>$day, ':year'=>$year, ':month'=>$month));
+            $q = $this->db->prepare("SELECT username, 
+                                    sum(points_made) as points 
+                                    FROM triviauserlog 
+                                    WHERE day=:day 
+                                    AND year=:year 
+                                    AND month=:month 
+                                    GROUP BY username_canonical 
+                                    ORDER BY points DESC 
+                                    LIMIT :offset, :maxResults");
+            $q->execute(array(':offset'=>($page-1) * $max, ':maxResults'=>$max, ':day'=>$day, ':year'=>$year, ':month'=>$month));
             if ($q === false) {
                 throw new StorageSchemaException();
             }
@@ -163,10 +177,27 @@
             return $result;
         }
 
-        public function getWeekTopScores() {
+        public function getCountDayTopScores() {
             if(!$this->isConnected()) {
                 throw new StorageConnectionException();
             }
+            $day = date('j');
+            $month = date('m');
+            $year = date('Y');
+            $q = $this->db->prepare('SELECT count(distinct(username_canonical)) 
+                                    FROM triviauserlog
+                                    WHERE day=:day 
+                                    AND year=:year 
+                                    AND month=:month');
+            $q->execute(array(':day'=>$day, ':year'=>$year, ':month'=>$month));
+            if ($q === false) {
+                throw new StorageSchemaException();
+            }
+            $result = $q->fetchColumn();
+            return $result;
+        }
+
+        protected function generateWeekSqlClause() {
             $sqlClause = '';
             $day = date('N')-1;
             $week = new DateTime();
@@ -183,7 +214,22 @@
                                     ')';
                 $week->add($interval);
             }
-            $q = $this->db->query("SELECT username, sum(points_made) as points FROM triviauserlog WHERE $sqlClause GROUP BY username_canonical ORDER BY points DESC LIMIT 10");
+            return $sqlClause;
+        }
+
+        public function getWeekTopScores($page=1, $max=10) {
+            if(!$this->isConnected()) {
+                throw new StorageConnectionException();
+            }
+            if($page < 1) {
+                $page = 1;
+            }
+            if($max < 1) {
+                $max = 1;
+            }
+            $sqlClause = $this->generateWeekSqlClause();
+            $q = $this->db->prepare("SELECT username, sum(points_made) as points FROM triviauserlog WHERE $sqlClause GROUP BY username_canonical ORDER BY points DESC LIMIT :offset, :maxResults");
+            $q->execute(array(':offset'=>($page-1) * $max, ':maxResults'=>$max));
             if ($q === false) {
                 throw new StorageSchemaException();
             }
@@ -191,14 +237,73 @@
             return $result;
         }
 
-        public function getMonthTopScores() {
+        public function getCountWeekTopScores() {
+            if(!$this->isConnected()) {
+                throw new StorageConnectionException();
+            }
+            $sqlClause = $this->generateWeekSqlClause();
+            $q = $this->db->query('SELECT count(distinct(username_canonical)) 
+                                    FROM triviauserlog
+                                    WHERE $sqlClause');
+            if ($q === false) {
+                throw new StorageSchemaException();
+            }
+            $result = $q->fetchColumn();
+            return $result;
+        }
+
+        public function getMonthTopScores($page=1, $max=10) {
+            if(!$this->isConnected()) {
+                throw new StorageConnectionException();
+            }
+            if($page < 1) {
+                $page = 1;
+            }
+            if($max < 1) {
+                $max = 1;
+            }
+            $month = date('m');
+            $year = date('Y');
+            $q = $this->db->prepare("SELECT username, sum(points_made) as points FROM triviauserlog WHERE year=:year AND month=:month GROUP BY username_canonical ORDER BY points DESC LIMIT :offset, :maxResults");
+            $q->execute(array(':offset'=>($page-1) * $max, ':maxResults'=>$max, ':year'=>$year, ':month'=>$month));
+            if ($q === false) {
+                throw new StorageSchemaException();
+            }
+            $result = $q->fetchAll();
+            return $result;
+        }
+
+        public function getCountMonthTopScores() {
             if(!$this->isConnected()) {
                 throw new StorageConnectionException();
             }
             $month = date('m');
             $year = date('Y');
-            $q = $this->db->prepare("SELECT username, sum(points_made) as points FROM triviauserlog WHERE year=:year AND month=:month GROUP BY username_canonical ORDER BY points DESC LIMIT 10");
+            $q = $this->db->prepare('SELECT count(distinct(username_canonical)) 
+                                    FROM triviauserlog
+                                    WHERE year=:year 
+                                    AND month=:month');
             $q->execute(array(':year'=>$year, ':month'=>$month));
+            if ($q === false) {
+                throw new StorageSchemaException();
+            }
+            $result = $q->fetchColumn();
+            return $result;
+        }
+
+        public function getYearTopScores($page=1, $max=10) {
+            if(!$this->isConnected()) {
+                throw new StorageConnectionException();
+            }
+            if($page < 1) {
+                $page = 1;
+            }
+            if($max < 1) {
+                $max = 1;
+            }
+            $year = date('Y');
+            $q = $this->db->prepare("SELECT username, sum(points_made) as points FROM triviauserlog WHERE year=:year GROUP BY username_canonical ORDER BY points DESC LIMIT :offset, :maxResults");
+            $q->execute(array(':offset'=>($page-1) * $max, ':maxResults'=>$max, ':year'=>$year));
             if ($q === false) {
                 throw new StorageSchemaException();
             }
@@ -206,17 +311,19 @@
             return $result;
         }
 
-        public function getYearTopScores() {
+        public function getCountYearTopScores() {
             if(!$this->isConnected()) {
                 throw new StorageConnectionException();
             }
             $year = date('Y');
-            $q = $this->db->prepare("SELECT username, sum(points_made) as points FROM triviauserlog WHERE year=:year GROUP BY username_canonical ORDER BY points DESC LIMIT 10");
+            $q = $this->db->prepare('SELECT count(distinct(username_canonical)) 
+                                    FROM triviauserlog
+                                    WHERE year=:year');
             $q->execute(array(':year'=>$year));
             if ($q === false) {
                 throw new StorageSchemaException();
             }
-            $result = $q->fetchAll();
+            $result = $q->fetchColumn();
             return $result;
         }
 
@@ -239,7 +346,8 @@
                     group by tl.username_canonical
                     limit :offset, :maxResults
                     ');
-            $q->execute(array(':offset'=>($page-1) * $max, ':maxResults'=>$max, ':username'=>'%'.$usernameCanonical.'%'));
+            $likeString = '%'.$this->escapeLikeQuery($usernameCanonical).'%';
+            $q->execute(array(':offset'=>($page-1) * $max, ':maxResults'=>$max, ':username'=>$likeString));
             if ($q === false) {
                 throw new StorageSchemaException();
             }
@@ -256,7 +364,8 @@
                     from triviauserlog tl
                     where tl.username_canonical like :username
                     ');
-            $q->execute(array(':username'=>'%'.$usernameCanonical.'%'));
+            $likeString = '%'.$this->escapeLikeQuery($usernameCanonical).'%';
+            $q->execute(array(':username'=>$likeString));
             if ($q === false) {
                 throw new StorageSchemaException();
             }
@@ -305,11 +414,16 @@
             return $result;
         }
 
-        private function isConnected() {
+        public function isConnected() {
             if(is_null($this->db)) {
                 return false;
             }
             return true;
+        }
+
+        protected function escapeLikeQuery($s) {
+            $translations = array("%"=>"\\%", "_"=>"\\_");
+            return strtr($s, $translations);
         }
     }
 
