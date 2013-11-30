@@ -105,7 +105,7 @@ function replaceTimespanVariable($t) {
       </div>
     </div>
     <div class="row">
-      <div class="span12">
+      <div class="span6">
         <h2>Top Scores for <?php echo $timeDesc; ?></h2>
             <?php
             $resultCount = 0;
@@ -158,6 +158,7 @@ function replaceTimespanVariable($t) {
         $pagination->paginate(); 
         ?>
       </div>
+      <div class="offset6"></div>
     </div>
     <div class="footer">
       <p>&copy; Trivialand 2013 - <a target="_blank" href="https://github.com/tannn/TriviaTime">Github</a></p>
