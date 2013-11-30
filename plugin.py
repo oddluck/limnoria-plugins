@@ -915,7 +915,7 @@ class TriviaTime(callbacks.Plugin):
         """
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
-        question = threadStorage.getQuestionByRound(num, msg.args[0])
+        question = threadStorage.getQuestionByRound(num, channel)
         if len(question) < 1:
             irc.error('Round not found')
         else:
@@ -987,6 +987,7 @@ class TriviaTime(callbacks.Plugin):
     def shownew(self, irc, msg, arg, user, channel, num):
         """[<temp question #>]
         Show questions awaiting approval
+        Channel is only necessary when editing from outside of the channel
         """
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
