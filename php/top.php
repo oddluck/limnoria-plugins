@@ -109,6 +109,7 @@ function replaceTimespanVariable($t) {
         <h2>Top Scores for <?php echo $timeDesc; ?></h2>
             <?php
             $resultCount = 0;
+            $result = array();
             try {
               if ($timespan == 'w') {
                 $result = $storage->getWeekTopScores($page, $maxResults);
@@ -125,12 +126,8 @@ function replaceTimespanVariable($t) {
               }
             } catch(StorageSchemaException $e) {
               echo "<div class='alert alert-error'>Error: Database schema is not queryable</div>";
-              $result = array();
-              $result[0] = array('round_num'=>'', 'channel'=>'', 'question'=>'', 'line_num'=>'');
             } catch(StorageConnectionException $e) {
               echo "<div class='alert alert-error'>Error: Database is not available</div>";
-              $result = array();
-              $result[0] = array('round_num'=>'', 'channel'=>'', 'question'=>'', 'line_num'=>'');
             }
             $storage->close();
             ?>
