@@ -146,7 +146,7 @@ function replaceTimespanVariable($t) {
               echo '<tr>';
               echo '<td>' . $currentRank . '</td>';
               echo '<td><a href="profile.php?username=' . $res['username'] . '">' . $res['username'] . '</a></td>';
-              echo '<td>' . $res['points'] . '</td>';
+              echo '<td>' . number_format($res['points'],0) . '</td>';
               echo '</tr>';
               $currentRank++;
             }
