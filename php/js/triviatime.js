@@ -15,7 +15,7 @@ var createModalDiv = function() {
     }
 };
 $(function() {
-    $(".modal-table > tbody > tr").click(function() {
+    $(".modal-table tbody tr").click(function() {
         createModalDiv();
         var headers = $(this).parent("tbody").parent("table").find('th');
         var values = $(this).children("td");
