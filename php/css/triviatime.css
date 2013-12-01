@@ -1,0 +1,32 @@
+
+body {
+  padding-top: 40px;
+  padding-bottom: 60px;
+}
+.strong-text {
+  color: inherit;
+  font-size: 18px;
+  font-weight: 200;
+  line-height: 30px;
+}
+.profile-header h1 {
+  font-size: 30px;
+  line-height: 30px;
+}
+.profile-header {
+  padding: 30px 14px;
+  background-color: #f0f0f0;
+  border-radius: 6px 6px 6px 6px;
+  color: inherit;
+  font-size: 16px;
+  font-weight: 200;
+  line-height: 16px;
+  margin-bottom: 10px;
+}
+
+.breakable {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  -ms-word-break: break-all;
+  word-break: break-all
+}

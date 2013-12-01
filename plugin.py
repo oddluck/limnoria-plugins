@@ -39,7 +39,6 @@ class TriviaTime(callbacks.Plugin):
 
         # games info
         self.games = {} # separate game for each channel
-        self.skips = {}
 
         #Database amend statements for outdated versions
         self.dbamends = {} #Formatted like this: <DBVersion>: "<ALTERSTATEMENT>; <ALTERSTATEMENT>;" (This IS valid SQL as long as we include the semicolons)
@@ -71,6 +70,8 @@ class TriviaTime(callbacks.Plugin):
         self.storage.makeTemporaryQuestionTable()
         #self.storage.dropEditTable()
         self.storage.makeEditTable()
+        #self.storage.dropDeleteTable()
+        self.storage.makeDeleteTable()
         self.storage.makeInfoTable()
         #triviainfo table check
         #if self.storage.isTriviaVersionSet():
@@ -188,6 +189,24 @@ class TriviaTime(callbacks.Plugin):
             n = int(n / len(chars))
         return ''.join(L)
 
+    def acceptdelete(self, irc, msg, arg, user, channel, num):
+        """[<channel>] <num>
+        Accept a question deletion
+        Channel is only necessary when editing from outside of the channel
+        """
+        dbLocation = self.registryValue('admin.sqlitedb')
+        threadStorage = self.Storage(dbLocation)
+        delete = self.storage.getDeleteById(num)
+        if len(delete) < 1:
+            irc.error('Could not find that delete')
+        else:
+            delete = delete[0]
+            irc.reply('Question #%d deleted!' % delete[3])
+            threadStorage.removeReportByQuestionNumber(delete[3])
+            threadStorage.deleteQuestion(num)
+            threadStorage.removeDelete(num)
+    acceptdelete = wrap(acceptdelete, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
+        
     def acceptedit(self, irc, msg, arg, user, channel, num):
         """[<channel>] <num>
         Accept a question edit, and remove edit. 
@@ -204,6 +223,7 @@ class TriviaTime(callbacks.Plugin):
             threadStorage.updateQuestion(edit[1], edit[2])
             threadStorage.updateUser(edit[4], 0, 1)
             threadStorage.removeEdit(edit[0])
+            threadStorage.removeReportByQuestionNumber(edit[1])
             irc.reply('Question #%d updated!' % edit[1])
             irc.sendMsg(ircmsgs.notice(msg.nick, 'NEW: %s' % (edit[2])))
             if len(question) > 0:
@@ -305,14 +325,16 @@ class TriviaTime(callbacks.Plugin):
         """<question id>
             Deletes a question from the database.
         """
+        username = msg.nick
+        channel = msg.args[0]
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
         if not threadStorage.questionIdExists(id):
             self.error('That question does not exist.')
             return
-        threadStorage.deleteQuestion(id)
-        irc.reply('Deleted question %d.' % id)
-    deletequestion = wrap(deletequestion, ['admin', 'int'])
+        threadStorage.insertDelete(username, channel, id)
+        irc.reply('Questions %d marked for deletion and pending review.' % id)
+    deletequestion = wrap(deletequestion, ['int'])
 
     def edit(self, irc, msg, arg, user, channel, num, question):
         """[<channel>] <question number> <corrected text>
@@ -376,6 +398,103 @@ class TriviaTime(callbacks.Plugin):
         threadStorage.updateUserLog(username, channel, points, 0, 0, day, month, year)
         irc.reply('Added %d points to %s' % (points, username))
     givepoints = wrap(givepoints, ['admin','nick', 'int', optional('int')])
+
+    def listdeletes(self, irc, msg, arg, user, channel, page):
+        """[<channel>] [<page>]
+        List deletes.
+        Channel is only required when using the command outside of a channel
+        """
+        dbLocation = self.registryValue('admin.sqlitedb')
+        threadStorage = self.Storage(dbLocation)
+        count = threadStorage.countDeletes()
+        if page is None or page < 1:
+            page=1
+        pages = int(count/3)
+        deletes = threadStorage.getDeleteTop3(page)
+        if count % 3 > 0:
+            pages += 1
+        if count < 1:
+            irc.reply('No deletes found')
+        else:
+            irc.reply('Showing page %i of %i' % (page, pages))
+            for delete in deletes:
+                question = threadStorage.getQuestion(delete[3])
+                questionText = 'Question not found'
+                if len(question) > 0:
+                    question = question[0]
+                    questionText = question[2]
+                irc.reply('Delete #%d, by %s Question#%d: %s'%(delete[0], delete[1], delete[3], questionText))
+            irc.reply('Use the showdelete command to see more information')
+    listdeletes = wrap(listdeletes, ['user', ('checkChannelCapability', 'triviamod'), optional('int')])
+
+    def listedits(self, irc, msg, arg, user, channel, page):
+        """[<channel>] [<page>]
+        List edits.
+        Channel is only required when using the command outside of a channel
+        """
+        dbLocation = self.registryValue('admin.sqlitedb')
+        threadStorage = self.Storage(dbLocation)
+        count = threadStorage.countEdits()
+        if page is None or page < 1:
+            page=1
+        pages = int(count/3)
+        edits = threadStorage.getEditTop3(page)
+        if count % 3 > 0:
+            pages += 1
+        if count < 1:
+            irc.reply('No edits found')
+        else:
+            irc.reply('Showing page %i of %i' % (page, pages))
+            for edit in edits:
+                irc.reply('Edit #%d, Question#%d, NEW:%s'%(edit[0], edit[1], edit[2]))
+            irc.reply('Use the showedit command to see more information')
+    listedits = wrap(listedits, ['user', ('checkChannelCapability', 'triviamod'), optional('int')])
+
+    def listreports(self, irc, msg, arg, user, channel, page):
+        """[<channel>] [<page>]
+        List reports.
+        Channel is only required when using the command outside of a channel
+        """
+        dbLocation = self.registryValue('admin.sqlitedb')
+        threadStorage = self.Storage(dbLocation)
+        count = threadStorage.countReports()
+        if page is None or page < 1:
+            page=1
+        pages = int(count/3)
+        reports = threadStorage.getReportTop3(page)
+        if count % 3 > 0:
+            pages += 1
+        if count < 1:
+            irc.reply('No reports found')
+        else:
+            irc.reply('Showing page %i of %i' % (page, pages))
+            for report in reports:
+                irc.reply('Report #%d `%s` by %s on %s Q#%d '%(report[0], report[3], report[2], report[1], report[7]))
+            irc.reply('Use the showreport command to see more information')
+    listreports = wrap(listreports, ['user', ('checkChannelCapability', 'triviamod'), optional('int')])
+
+    def listnew(self, irc, msg, arg, user, channel, page):
+        """[<channel>] [<page>]
+        List questions awaiting approval.
+        Channel is only required when using the command outside of a channel
+        """
+        dbLocation = self.registryValue('admin.sqlitedb')
+        threadStorage = self.Storage(dbLocation)
+        count = threadStorage.countTemporaryQuestions()
+        if page is None or page < 1:
+            page=1
+        pages = int(count/3)
+        if count % 3 > 0:
+            pages += 1
+        q = threadStorage.getTemporaryQuestionTop3(page)
+        if count < 1:
+            irc.reply('No new questions found')
+        else:
+            irc.reply('Showing page %i of %i' % (page, pages))
+            for ques in q:
+                irc.reply('Temp Q #%d: %s'%(ques[0], ques[3]))
+            irc.reply('Use the shownew to see more information')
+    listnew = wrap(listnew, ['user', ('checkChannelCapability', 'triviamod'), optional('int')])
 
     def info(self, irc, msg, arg):
         """
@@ -486,17 +605,39 @@ class TriviaTime(callbacks.Plugin):
             username = user.name
         except KeyError:
             pass
+
+        if not irc.isChannel(channel):
+            irc.error('This command can only be used in a channel.')
+            return
+
         minStreak = self.registryValue('general.nextMinStreak', channel)
         channelCanonical = ircutils.toLower(channel)
-        if channelCanonical in self.games:
-            if self.games[channelCanonical].streak >= minStreak:
-                if self.games[channelCanonical].lastWinner == ircutils.toLower(username):
-                    if self.games[channelCanonical].active == True:
-                        if self.games[channelCanonical].questionOver:
-                            irc.sendMsg(ircmsgs.privmsg(channel, 'Skipping to next question.'))
-                            self.games[channelCanonical].removeEvent()
-                            self.games[channelCanonical].nextQuestion()
-                            return
+
+        # Trivia isn't running
+        if channelCanonical not in self.games or self.games[channelCanonical].active != True:
+            irc.sendMsg(ircmsgs.privmsg(channel, '%s: Trivia is not currently running.' % (username)))
+            irc.noReply()
+            return
+        # Question is still being asked, not over
+        if self.games[channelCanonical].questionOver == False:
+            irc.sendMsg(ircmsgs.privmsg(channel, '%s: You must wait until the current question is over.' % (username)))
+            irc.noReply()
+            return
+        # Username isnt the streak holder
+        if self.games[channelCanonical].lastWinner != ircutils.toLower(username):
+            irc.sendMsg(ircmsgs.privmsg(channel, '%s: You are not currently the streak holder.' % (username)))
+            irc.noReply()
+            return
+        # Streak isnt high enough
+        if self.games[channelCanonical].streak < minStreak:
+            irc.sendMsg(ircmsgs.privmsg(channel, '%s: You do not have a large enough streak yet (%i of %i).' % (username, self.games[channelCanonical].streak, minStreak)))
+            irc.noReply()
+            return
+
+        irc.sendMsg(ircmsgs.privmsg(channel, 'No more waiting; starting next question.'))
+        self.games[channelCanonical].removeEvent()
+        self.games[channelCanonical].nextQuestion()
+        irc.noReply()
     next = wrap(next)
 
     def removeedit(self, irc, msg, arg, user, channel, num):
@@ -514,6 +655,22 @@ class TriviaTime(callbacks.Plugin):
             threadStorage.removeEdit(edit[0])
             irc.reply('Edit %d removed!' % edit[0])
     removeedit = wrap(removeedit, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
+
+    def removedelete(self, irc, msg, arg, user, channel, num):
+        """[<channel>] <int>
+        Remove a delete without accepting it. 
+        Channel is only necessary when editing from outside of the channel
+        """
+        dbLocation = self.registryValue('admin.sqlitedb')
+        threadStorage = self.Storage(dbLocation)
+        delete = threadStorage.getDeleteById(num)
+        if len(delete) < 1:
+            irc.error('Could not find that delete')
+        else:
+            delete = delete[0]
+            threadStorage.removeDelete(num)
+            irc.reply('Delete %d removed!' % num)
+    removedelete = wrap(removedelete, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
 
     def removereport(self, irc, msg, arg, user, channel, num):
         """[<channel>] <report num>
@@ -602,7 +759,7 @@ class TriviaTime(callbacks.Plugin):
 
     def skip(self, irc, msg, arg):
         """
-            Skip a question
+            Skip the cureent question and start the next. Rate-limited.
         """
         username = msg.nick
         channel = msg.args[0]
@@ -630,18 +787,18 @@ class TriviaTime(callbacks.Plugin):
 
         skipSeconds = self.registryValue('skip.skipTime', channel)
         oldSkips = []
-        for usr in self.skips:
-            if int(time.mktime(time.localtime())) - self.skips[usr] > skipSeconds:
+        for usr in self.games[channelCanonical].skips:
+            if int(time.mktime(time.localtime())) - self.games[channelCanonical].skips[usr] > skipSeconds:
                 oldSkips.append(usr)
         for usr in oldSkips:
-            del self.skips[usr]
-        if username in self.skips:
-            if int(time.mktime(time.localtime())) - self.skips[username] < skipSeconds:
+            del self.games[channelCanonical].skips[usr]
+        if username in self.games[channelCanonical].skips:
+            if int(time.mktime(time.localtime())) - self.games[channelCanonical].skips[username] < skipSeconds:
                 irc.error('You must wait to be able to skip again.')
                 return
 
         self.games[channelCanonical].skipVoteCount[username] = 1
-        self.skips[username] = int(time.mktime(time.localtime()))
+        self.games[channelCanonical].skips[username] = int(time.mktime(time.localtime()))
 
         irc.sendMsg(ircmsgs.privmsg(channel, '%s voted to skip this question.' % username))
         if totalActive < 1:
@@ -702,6 +859,38 @@ class TriviaTime(callbacks.Plugin):
         irc.noReply()
     stats = wrap(stats,['nick'])
 
+    def showdelete(self, irc, msg, arg, user, channel, num):
+        """[<temp question #>]
+        Show deletes awaiting approval
+        """
+        dbLocation = self.registryValue('admin.sqlitedb')
+        threadStorage = self.Storage(dbLocation)
+        if num is not None:
+            q = threadStorage.getDeleteById(num)
+            if len(q) > 0:
+                q = q[0]
+                question = threadStorage.getQuestion(q[3])
+                questionText = 'Question not found'
+                if len(question) > 0:
+                    question = question[0]
+                    questionText = question[2]
+                irc.reply('Delete #%d, by %s Question#%d: %s'%(q[0], q[1], q[3], questionText))
+            else:
+                irc.error('Delete #%d not found' % num)
+        else:
+            q = threadStorage.getDeleteTop3()
+            if len(q) < 1:
+                irc.reply('No deletes found')
+            for ques in q:
+                question = threadStorage.getQuestion(ques[3])
+                questionText = 'Delete not found'
+                if len(question) > 0:
+                    question = question[0]
+                    questionText = question[2]
+                irc.reply('Delete #%d, by %s Question#%d: %s'%(ques[0], ques[1], ques[3], questionText))
+            irc.reply('Use the showdelete to see more information')
+    showdelete = wrap(showdelete, ['user', ('checkChannelCapability', 'triviamod'),optional('int')])
+
     def showquestion(self, irc, msg, arg, user, channel, num):
         """[<channel>] <num>
         Search question database for question at line num. 
@@ -714,6 +903,8 @@ class TriviaTime(callbacks.Plugin):
             irc.error('Question not found')
         else:
             question = question[0]
+            if question[3] == 1:
+                irc.reply('Info: This question is currently deleted.')
             irc.reply('Question#%d: %s' % (num, question[2]))
     showquestion = wrap(showquestion, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
 
@@ -724,7 +915,7 @@ class TriviaTime(callbacks.Plugin):
         """
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
-        question = threadStorage.getQuestionByRound(num, msg.args[0])
+        question = threadStorage.getQuestionByRound(num, channel)
         if len(question) < 1:
             irc.error('Round not found')
         else:
@@ -796,6 +987,7 @@ class TriviaTime(callbacks.Plugin):
     def shownew(self, irc, msg, arg, user, channel, num):
         """[<temp question #>]
         Show questions awaiting approval
+        Channel is only necessary when editing from outside of the channel
         """
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
@@ -935,6 +1127,9 @@ class TriviaTime(callbacks.Plugin):
         Main game logic, single game instance for each channel.
         """
         def __init__(self, irc, channel, base):
+            # constants
+            self.unmaskedChars = " -'\"_=+&%$#@!~`[]{}?.,<>|\\/:;"
+            
             # get utilities from base plugin
             self.games = base.games
             self.storage = base.storage
@@ -944,6 +1139,7 @@ class TriviaTime(callbacks.Plugin):
             self.irc = irc
 
             # reset stats
+            self.skips = {}
             self.stopPending = False
             self.shownHint = False
             self.questionRepeated = False
@@ -969,6 +1165,10 @@ class TriviaTime(callbacks.Plugin):
             """
             Check users input to see if answer was given.
             """
+            # Already done? get out of here
+            if self.questionOver:
+                return
+            
             username = msg.nick
             # is it a user?
             try:
@@ -1039,6 +1239,7 @@ class TriviaTime(callbacks.Plugin):
                             streakBonus = pointsAdded
                         pointsAdded += streakBonus
                     threadStorage.updateGameStreak(self.channel, self.lastWinner, self.streak)
+                    threadStorage.updateUserHighestStreak(self.lastWinner, self.streak)
                     threadStorage.updateGameLongestStreak(self.channel, username, self.streak)
                     # Convert score to int
                     pointsAdded = int(pointsAdded)
@@ -1130,7 +1331,7 @@ class TriviaTime(callbacks.Plugin):
                 if hintNum == 0:
                     masked = ans
                     for i in range(len(masked)):
-                        if masked[i] in " -'\"_=+&%$#@!~`[]{}?.,<>|\\/":
+                        if masked[i] in self.unmaskedChars:
                             hints+= masked[i]
                         else:
                             hints += charMask
@@ -1143,7 +1344,7 @@ class TriviaTime(callbacks.Plugin):
                     hints += ans[:divider]
                     masked = ans[divider:]
                     for i in range(len(masked)):
-                        if masked[i] in " -'\"_=+&%$#@!~`[]{}?.,<>|\\/":
+                        if masked[i] in self.unmaskedChars:
                             hints+= masked[i]
                         else:
                             hints += charMask
@@ -1174,7 +1375,7 @@ class TriviaTime(callbacks.Plugin):
             lettersInARow = sizeOfUnmasked
             for i in range(len(letters)):
                 masked = letters[i]
-                if masked in " -'\"_=+&%$#@!~`[]{}?.,<>|\\/":
+                if masked in self.unmaskedChars:
                     hintsList.append(masked)
                 elif str.lower(self.removeAccents(masked.encode('utf-8'))) in 'aeiou' and unmasked < (len(letters)-1) and lettersInARow < 3:
                     hintsList.append(masked)
@@ -1195,7 +1396,7 @@ class TriviaTime(callbacks.Plugin):
             lettersInARow=sizeOfUnmasked
             for i in range(len(letters)):
                 masked = letters[i]
-                if masked in " -'\"_=+&%$#@!~`[]{}?.,<>|\\/":
+                if masked in self.unmaskedChars:
                     hints += masked
                     unmasked += 1
                 elif maskedInARow > 2 and unmasked < (len(letters)-1):
@@ -1426,7 +1627,7 @@ class TriviaTime(callbacks.Plugin):
 
             for msgPiece in questionMesagePieces:
                 if multipleMessages:
-                    msgPiece = '\x02%s' % (msgPiece)
+                    msgPiece = '\x02\x0303%s' % (msgPiece)
                 multipleMessages = True
                 self.sendMessage(msgPiece, 1, 9)
             self.queueEvent(0, self.loopEvent)
@@ -1462,14 +1663,26 @@ class TriviaTime(callbacks.Plugin):
                 if tempQuestion[-1:] != '?':
                     tempQuestion += ' ?'
 
-                # bold the q
-                questionText = '%s' % (tempQuestion)
+                # bold the q, add color
+                questionText = '\x02\x0303%s' % (tempQuestion)
 
                 # KAOS? report # of answers
                 if len(self.answers) > 1:
                     questionText += ' %d possible answers' % (len(self.answers))
 
-                self.sendMessage('.%s. %s' % (self.numAsked, questionText), 1, 9)
+                questionMessageString = '%s: %s' % (self.numAsked, questionText)
+
+                maxLength = 400
+
+                questionMesagePieces = [questionMessageString[i:i+maxLength] for i in range(0, len(questionMessageString), maxLength)]
+
+                multipleMessages=False
+
+                for msgPiece in questionMesagePieces:
+                    if multipleMessages:
+                        msgPiece = '\x02\x0303%s' % (msgPiece)
+                    multipleMessages = True
+                    self.sendMessage(msgPiece, 1, 9)
             except AttributeError:
                 pass
 
@@ -1584,12 +1797,48 @@ class TriviaTime(callbacks.Plugin):
             for i in xrange(0, len(qs), rows):
                 yield qs[i:i+rows]
 
+        def countTemporaryQuestions(self):
+            c = self.conn.cursor()
+            result = c.execute('''select count(*) from triviatemporaryquestion''')
+            rows = result.fetchone()[0]
+            c.close()
+            return rows
+
+        def countDeletes(self):
+            c = self.conn.cursor()
+            result = c.execute('''select count(*) from triviadelete''')
+            rows = result.fetchone()[0]
+            c.close()
+            return rows
+
+        def countEdits(self):
+            c = self.conn.cursor()
+            result = c.execute('''select count(*) from triviaedit''')
+            rows = result.fetchone()[0]
+            c.close()
+            return rows
+
+        def countReports(self):
+            c = self.conn.cursor()
+            result = c.execute('''select count(*) from triviareport''')
+            rows = result.fetchone()[0]
+            c.close()
+            return rows
+
         def deleteQuestion(self, questionId):
             c = self.conn.cursor()
             test = c.execute('''UPDATE triviaquestion set
                                 deleted=1
                                 WHERE id=?''', (questionId,))
             self.conn.commit()
+            c.close()
+
+        def dropDeleteTable(self):
+            c = self.conn.cursor()
+            try:
+                c.execute('''DROP TABLE triviadelete''')
+            except:
+                pass
             c.close()
 
         def dropUserTable(self):
@@ -2098,6 +2347,30 @@ class TriviaTime(callbacks.Plugin):
             rows = result.fetchone()[0]
             return rows
 
+        def getDeleteById(self, id):
+            c = self.conn.cursor()
+            c.execute('SELECT * FROM triviadelete where id=? limit 1', (id,))
+            data = []
+            for row in c:
+                data.append(row)
+            c.close()
+            return data
+
+        def getDeleteTop3(self, page=1, amount=3):
+            if page < 1:
+                page=1
+            if amount < 1:
+                amount=3
+            page -= 1
+            start = page * amount
+            c = self.conn.cursor()
+            c.execute('SELECT * FROM triviadelete order by id desc limit ?, ?', (start, amount))
+            data = []
+            for row in c:
+                data.append(row)
+            c.close()
+            return data
+
         def getReportById(self, id):
             c = self.conn.cursor()
             c.execute('SELECT * FROM triviareport where id=? limit 1', (id,))
@@ -2107,18 +2380,30 @@ class TriviaTime(callbacks.Plugin):
             c.close()
             return data
 
-        def getReportTop3(self):
+        def getReportTop3(self, page=1, amount=3):
+            if page < 1:
+                page=1
+            if amount < 1:
+                amount=3
+            page -= 1
+            start = page * amount
             c = self.conn.cursor()
-            c.execute('SELECT * FROM triviareport order by id desc limit 3')
+            c.execute('SELECT * FROM triviareport order by id desc limit ?, ?', (start, amount))
             data = []
             for row in c:
                 data.append(row)
             c.close()
             return data
 
-        def getTemporaryQuestionTop3(self):
+        def getTemporaryQuestionTop3(self, page=1, amount=3):
+            if page < 1:
+                page=1
+            if amount < 1:
+                amount=3
+            page -= 1
+            start = page * amount
             c = self.conn.cursor()
-            c.execute('SELECT * FROM triviatemporaryquestion order by id desc limit 3')
+            c.execute('SELECT * FROM triviatemporaryquestion order by id desc limit ?, ?', (start, amount))
             data = []
             for row in c:
                 data.append(row)
@@ -2167,14 +2452,28 @@ class TriviaTime(callbacks.Plugin):
                 return True
             return False
 
-        def getEditTop3(self):
+        def getEditTop3(self, page=1, amount=3):
+            if page < 1:
+                page=1
+            if amount < 1:
+                amount=3
+            page -= 1
+            start = page * amount
             c = self.conn.cursor()
-            c.execute('SELECT * FROM triviaedit order by id desc limit 3')
+            c.execute('SELECT * FROM triviaedit order by id desc limit ?, ?', (start, amount))
             data = []
             for row in c:
                 data.append(row)
             c.close()
             return data
+
+        def insertDelete(self, username, channel, lineNumber):
+            usernameCanonical = ircutils.toLower(username)
+            channelCanonical = ircutils.toLower(channel)
+            c = self.conn.cursor()
+            c.execute('insert into triviadelete values (NULL, ?, ?, ?, ?, ?)',
+                                    (username, usernameCanonical, lineNumber, channel, channelCanonical))
+            self.conn.commit()
 
         def insertUserLog(self, username, channel, score, numAnswered, timeTaken, day=None, month=None, year=None, epoch=None):
             if day == None and month == None and year == None:
@@ -2203,7 +2502,7 @@ class TriviaTime(callbacks.Plugin):
             if self.userExists(username):
                 return self.updateUser(username, numEditted, numEdittedAccepted, numReported, numQuestionsAdded, numQuestionsAccepted)
             c = self.conn.cursor()
-            c.execute('insert into triviausers values (NULL, ?, ?, ?, ?, ?, ?, ?)', 
+            c.execute('insert into triviausers values (NULL, ?, ?, ?, ?, ?, ?, ?, 0)', 
                             (
                                     username,
                                     numEditted,
@@ -2280,18 +2579,35 @@ class TriviaTime(callbacks.Plugin):
             self.conn.commit()
             c.close()
 
+        def makeDeleteTable(self):
+            c = self.conn.cursor()
+            try:
+                c.execute('''create table triviadelete (
+                        id integer primary key autoincrement,
+                        username text,
+                        username_canonical text,
+                        line_num integer,
+                        channel text,
+                        channel_canonical text
+                        )''')
+            except:
+                pass
+            self.conn.commit()
+            c.close()
+
         def makeUserTable(self):
             c = self.conn.cursor()
             try:
                 c.execute('''create table triviausers (
                         id integer primary key autoincrement,
-                        username text not null unique,
+                        username text,
                         num_editted integer,
                         num_editted_accepted integer,
-                        username_canonical,
+                        username_canonical text not null unique,
                         num_reported integer,
                         num_questions_added integer,
-                        num_questions_accepted integer
+                        num_questions_accepted integer,
+                        highest_streak integer
                         )''')
             except:
                 pass
@@ -2454,6 +2770,13 @@ class TriviaTime(callbacks.Plugin):
                 return True
             return False
 
+        def removeDelete(self, deleteId):
+            c = self.conn.cursor()
+            c.execute('''delete from triviadelete
+                        where id=?''', (deleteId,))
+            self.conn.commit()
+            c.close()
+
         def removeDuplicateQuestions(self):
             c = self.conn.cursor()
             c.execute('''delete from triviaquestion where id not in (select min(id) from triviaquestion GROUP BY question_canonical)''')
@@ -2473,6 +2796,13 @@ class TriviaTime(callbacks.Plugin):
             c = self.conn.cursor()
             c.execute('''delete from triviareport
                         where id=?''', (repId,))
+            self.conn.commit()
+            c.close()
+
+        def removeReportByQuestionNumber(self, id):
+            c = self.conn.cursor()
+            c.execute('''delete from triviareport
+                        where question_num=?''', (id,))
             self.conn.commit()
             c.close()
 
@@ -2629,6 +2959,19 @@ class TriviaTime(callbacks.Plugin):
                                                 usernameCanonical
                                         )
                                 )
+            self.conn.commit()
+            c.close()
+
+        def updateUserHighestStreak(self, username, streak):
+            if not self.userExists(username):
+                return self.insertUser(username)
+            usernameCanonical = ircutils.toLower(username)
+            c = self.conn.cursor()
+            c.execute('''update triviausers set
+                            highest_streak=?
+                            where highest_streak < ?
+                            and username_canonical=?''', (streak, streak, usernameCanonical)
+                            )
             self.conn.commit()
             c.close()
 
