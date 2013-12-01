@@ -1,7 +1,7 @@
 var createModalDiv = function() {
     if($('#infoModal').length == 0) {
         $('body').append('<!-- Modal -->'
-            + '<div id="infoModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">'
+            + '<div id="infoModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="infoModalLabel" aria-hidden="true">'
             + '  <div class="modal-header">'
             + '    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>'
             + '    <h3 id="infoModalLabel">Table Information</h3>'
