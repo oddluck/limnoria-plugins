@@ -1,5 +1,3 @@
-<!DOCTYPE html>
-<html lang="en">
 <?php
 include('config.php');
 include('includes/pagination.php');
@@ -32,8 +30,28 @@ if($page < 1) {
 }
 
 $maxResults = 10;
+$usersCount = 0;
+$users = array();
+$errors = array();
 
-?>
+try {
+  $users = $storage->getUserLikeUsernameCanonical($usernameCanonical, $page, $maxResults);
+  $usersCount = $storage->getCountUserLikeUsernameCanonical($usernameCanonical);
+} catch(StorageSchemaException $e) {
+  $errors[] = "Error: Database schema is not queryable";
+} catch(StorageConnectionException $e) {
+  $errors[] = "Error: Database is not available";
+}
+
+$storage->close();
+
+// Redirect to profile if only 1 result found
+if(count($users) == 1) {
+  header('Location: profile.php?username=' . $users[0]['username']);
+  die();
+}
+?><!DOCTYPE html>
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <title>Players &middot; TriviaTime</title>
@@ -84,15 +102,10 @@ $maxResults = 10;
           <input type="submit"></input>
         </form>
         <?php
-        $usersCount = 0;
-        $users = array();
-        try {
-          $users = $storage->getUserLikeUsernameCanonical($usernameCanonical, $page, $maxResults);
-          $usersCount = $storage->getCountUserLikeUsernameCanonical($usernameCanonical);
-        } catch(StorageSchemaException $e) {
-          echo "<div class='alert alert-error'>Error: Database schema is not queryable</div>";
-        } catch(StorageConnectionException $e) {
-          echo "<div class='alert alert-error'>Error: Database is not available</div>";
+        if(count($errors) != 0) {
+          foreach($errors as $error) {
+            echo "<div class='alert alert-error'>$error</div>";
+          }
         }
         if($usersCount==0) {
           echo "<div class='alert alert-error'>User not found.</div>";
@@ -101,7 +114,6 @@ $maxResults = 10;
         if($usernameCanonical=='') {
           echo "<div class='alert alert-info'>Enter a username above to search for stats.</div>";
         }
-        $storage->close();
         ?>
       </div>
     </div>

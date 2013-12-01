@@ -46,6 +46,41 @@
             return $result;
         }
 
+        public function getTopDeletions($page, $max) {
+            if(!$this->isConnected()) {
+                throw new StorageConnectionException();
+            }
+            if($page < 1) {
+                $page = 1;
+            }
+            if($max < 1) {
+                $max = 1;
+            }
+            $q = $this->db->prepare('SELECT td.*, tq.question as question  
+                    FROM triviadelete td 
+                    INNER JOIN triviaquestion tq 
+                    ON tq.id=td.line_num
+                    ORDER BY id DESC LIMIT :offset, :maxResults');
+            $q->execute(array(':offset'=>($page-1) * $max, ':maxResults'=>$max));
+            if ($q === false) {
+                throw new StorageSchemaException();
+            }
+            $result = $q->fetchAll();
+            return $result;
+        }
+
+        public function getCountDeletions() {
+            if(!$this->isConnected()) {
+                throw new StorageConnectionException();
+            }
+            $q = $this->db->query('SELECT count(id) FROM triviareport');
+            if ($q === false) {
+                throw new StorageSchemaException();
+            }
+            $result = $q->fetchColumn();
+            return $result;
+        }
+
         public function getTopReports($page, $max) {
             if(!$this->isConnected()) {
                 throw new StorageConnectionException();

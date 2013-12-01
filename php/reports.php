@@ -40,6 +40,16 @@ if($newPage < 1) {
   $newPage = 1;
 }
 
+if(array_key_exists('dp', $_GET)) {
+  $deletePage = $_GET['dp'];
+}
+if(!isset($deletePage)) {
+  $deletePage = 1;
+}
+if($deletePage < 1) {
+  $deletePage = 1;
+}
+
 $maxResults = 5;
 ?>
 <head>
@@ -100,7 +110,7 @@ $maxResults = 5;
           echo "<div class='alert alert-error'>Error: Database is not available</div>";
         }
         ?>
-        <table class="table">
+        <table class="table modal-table">
           <thead>
             <tr>
               <th>Report #</th>
@@ -147,7 +157,7 @@ $maxResults = 5;
           echo "<div class='alert alert-error'>Error: Database is not available</div>";
         }
         ?>
-        <table class="table">
+        <table class="table modal-table">
           <thead>
             <tr>
               <th>Edit #</th>
@@ -219,7 +229,6 @@ $maxResults = 5;
       </div>
     </div>
 
-
     <div class="row">
       <div class="span12">
         <h2>Added Questions</h2>
@@ -235,7 +244,7 @@ $maxResults = 5;
           echo "<div class='alert alert-error'>Error: Database is not available</div>";
         }
         ?>
-        <table class="table">
+        <table class="table modal-table">
           <thead>
             <tr>
               <th>#</th>
@@ -262,6 +271,50 @@ $maxResults = 5;
       </div>
     </div>
 
+    <div class="row">
+      <div class="span12">
+        <h2>Pending Deletions</h2>
+        <?php
+        $resultCount = 0;
+        $result = array();
+        try {
+          $result = $storage->getTopDeletions($deletePage, $maxResults);
+          $resultCount = $storage->getCountDeletions();
+        } catch(StorageSchemaException $e) {
+          echo "<div class='alert alert-error'>Error: Database schema is not queryable</div>";
+        } catch(StorageConnectionException $e) {
+          echo "<div class='alert alert-error'>Error: Database is not available</div>";
+        }
+        ?>
+        <table class="table modal-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th class="hidden-phone">Username</th>
+              <th>New Question</th>
+              <th>Question #</th>
+            </tr>
+          </thead>
+          <tbody>
+            <?php
+            foreach($result as $res) {
+              echo '<tr>';
+              echo '<td>' . $res['id'] . '</td>';
+              echo '<td class="hidden-phone">' . $res['username'] . '</td>';
+              echo '<td class="breakable">' . $res['question'] . '</td>';
+              echo '<td>' . $res['line_num'] . '</td>';
+              echo '</tr>';
+            }
+            ?>
+          </tbody>
+        </table>
+        <?php
+        $pagination = new Paginator($deletePage, $resultCount, $maxResults, 'dp'); 
+        $pagination->paginate(); 
+        ?>
+      </div>
+    </div>
+
     <div class="footer">
       <p>&copy; Trivialand 2013 - <a target="_blank" href="https://github.com/tannn/TriviaTime">Github</a></p>
     </div>
@@ -270,6 +323,7 @@ $maxResults = 5;
 
   <script src="http://codeorigin.jquery.com/jquery-2.0.3.min.js"></script>
   <script src="js/bootstrap.min.js"></script>
+  <script src="js/triviatime.js"></script>
 
 </body>
 </html>

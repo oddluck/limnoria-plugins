@@ -66,7 +66,7 @@ try {
             }
             $storage->close();
             ?>
-        <table class="table">
+        <table class="table modal-table">
           <thead>
             <tr>
               <th>Round #</th>
@@ -98,6 +98,7 @@ try {
 
   <script src="http://codeorigin.jquery.com/jquery-2.0.3.min.js"></script>
   <script src="js/bootstrap.min.js"></script>
+  <script src="js/triviatime.js"></script>
 
 </body>
 </html>
