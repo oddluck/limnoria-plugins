@@ -68,6 +68,7 @@ function secondsToTime($inputSeconds) {
 }
 
 $userProfile = emptyResult();
+$errors = array();
 
 if ($username != '') {
   try {
@@ -104,10 +105,12 @@ if ($username != '') {
         }
       }
     }
-    $storage->close();
-  } catch(StorageException $e) {
-    $storage->close();
+  } catch(StorageSchemaException $e) {
+    $errors[] = "Error: Database schema is not queryable";
+  } catch(StorageConnectionException $e) {
+    $errors[] = "Error: Database is not available";
   }
+  $storage->close();
 }
 
 ?>
@@ -154,6 +157,18 @@ if ($username != '') {
         <p>Profile and stats.</p>
       </div>
     </div>
+  <?php
+  if(count($errors) > 0) {
+    echo '<div class="row">
+            <div class="span12">';
+    foreach($errors as $error) {
+      echo "<div class='alert alert-error'>$error</div>";
+    }
+    echo '  </div>
+          </div>
+          ';
+  }
+  ?>
     <div class="row">
       <div class="span6">
         <h2>Last seen</h2>
