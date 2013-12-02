@@ -156,7 +156,7 @@ if(count($users) == 1) {
       </div>
     </div>
     <div class="footer">
-      <p>&copy; Trivialand 2013 - <a target="_blank" href="https://github.com/tannn/TriviaTime">Github</a></p>
+      <p>&copy; Trivialand 2013 - <a target="_blank" href="https://github.com/tannn/TriviaTime">GitHub</a></p>
     </div>
 
   </div> <!-- /container -->
