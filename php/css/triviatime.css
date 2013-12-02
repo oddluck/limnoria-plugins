@@ -52,7 +52,7 @@ body {
     max-height: 150px;
   }
 }
-@media screen and (max-height: 290px) {
+@media screen and (max-height: 320px) {
   .modal-body {
     max-height: 70px;
   }
