@@ -73,7 +73,7 @@
             if(!$this->isConnected()) {
                 throw new StorageConnectionException();
             }
-            $q = $this->db->query('SELECT count(id) FROM triviareport');
+            $q = $this->db->query('SELECT count(id) FROM triviadelete');
             if ($q === false) {
                 throw new StorageSchemaException();
             }
