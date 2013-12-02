@@ -21,7 +21,7 @@ $(function() {
         var values = $(this).children("td");
         var content = '';
         for(var i=0;i<values.length;i++) {
-            content += "<h2>" + headers.eq(i).text() + "</h2>";
+            content += "<h4>" + headers.eq(i).text() + "</h4>";
             content += "<p>" + values.eq(i).text() + "</p>";
         }
         $('#infoModal > .modal-body').html(content);

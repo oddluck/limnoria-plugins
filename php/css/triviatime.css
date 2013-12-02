@@ -26,9 +26,34 @@ body {
   word-wrap: break-word;
   overflow-wrap: break-word;
   -ms-word-break: break-all;
-  word-break: break-all
+  word-break: break-all;
 }
 .modal-table tbody tr:hover {
   background-color: #E0E0E0;
   cursor: pointer;
+}
+@media screen and (max-height: 600px) {
+  .modal-body {
+    max-height: 340px;
+  }
+}
+@media screen and (max-height: 520px) {
+  .modal-body {
+    max-height: 260px;
+  }
+}
+@media screen and (max-height: 438px) {
+  .modal-body {
+    max-height: 200px;
+  }
+}
+@media screen and (max-height: 370px) {
+  .modal-body {
+    max-height: 150px;
+  }
+}
+@media screen and (max-height: 320px) {
+  .modal-body {
+    max-height: 70px;
+  }
 }
