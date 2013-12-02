@@ -321,20 +321,27 @@ class TriviaTime(callbacks.Plugin):
         irc.noReply()
     day = wrap(day, [optional('int')])
 
-    def deletequestion(self, irc, msg, arg, id):
-        """<question id>
-            Deletes a question from the database.
+    def deletequestion(self, irc, msg, arg, channel, t, id):
+        """[<channel>] [<type "R" or "Q">] <question id>
+        Deletes a question from the database. Type decides whether to delete
+        by round number (r), or question number (q) (default round).
+        Channel is only necessary when editing from outside of the channel
         """
         username = msg.nick
-        channel = msg.args[0]
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
+        if t is None or str.lower(t) == "round":
+            q = threadStorage.getQuestionByRound(id, channel)
+            if len(q) < 1:
+                self.error('Could not find that round.')
+                return
+            id = q[0][0]
         if not threadStorage.questionIdExists(id):
             self.error('That question does not exist.')
             return
         threadStorage.insertDelete(username, channel, id)
-        irc.reply('Questions %d marked for deletion and pending review.' % id)
-    deletequestion = wrap(deletequestion, ['int'])
+        irc.reply('Question %d marked for deletion and pending review.' % id)
+    deletequestion = wrap(deletequestion, ["channel", optional(('literal',("question", "QUESTION", "ROUND", "round"))),'int'])
 
     def edit(self, irc, msg, arg, user, channel, num, question):
         """[<channel>] <question number> <corrected text>
