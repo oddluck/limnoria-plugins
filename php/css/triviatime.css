@@ -37,7 +37,7 @@ body {
     max-height: 340px;
   }
 }
-@media screen and (max-height: 500px) {
+@media screen and (max-height: 520px) {
   .modal-body {
     max-height: 260px;
   }
