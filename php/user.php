@@ -135,7 +135,7 @@ if(count($users) == 1) {
             <?php
             foreach($users as $res) {
               echo '<tr>';
-              echo '<td><a href="profile.php?username=' . $res['username'] . '">' . $res['username'] . '</a></td>';
+              echo '<td><a href="profile.php?username=' . rawurlencode($res['username']) . '">' . $res['username'] . '</a></td>';
               echo '<td>' . number_format($res['points'],0) . '</td>';
               echo '<td>' . number_format($res['total'],0) . '</td>';
               echo '</tr>';

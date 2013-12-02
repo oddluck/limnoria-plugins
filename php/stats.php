@@ -78,7 +78,7 @@ try {
             foreach($result as $key=>$res) {
               echo '<tr>';
               echo '<td>' . ($key+1) . '</td>';
-              echo '<td><a href="profile.php?username=' . $res['username'] . '">' . $res['username'] . '</a></td>';
+              echo '<td><a href="profile.php?username=' . rawurlencode($res['username']) . '">' . $res['username'] . '</a></td>';
               echo '<td>' . number_format($res['points'],0) . '</td>';
               echo '</tr>';
             }
@@ -113,7 +113,7 @@ try {
             foreach($result as $key=>$res) {
               echo '<tr>';
               echo '<td>' . ($key+1) . '</td>';
-              echo '<td><a href="profile.php?username=' . $res['username'] . '">' . $res['username'] . '</a></td>';
+              echo '<td><a href="profile.php?username=' . rawurlencode($res['username']) . '">' . $res['username'] . '</a></td>';
               echo '<td>' . number_format($res['points'],0) . '</td>';
               echo '</tr>';
             }
@@ -149,7 +149,7 @@ try {
             foreach($result as $key=>$res) {
               echo '<tr>';
               echo '<td>' . ($key+1) . '</td>';
-              echo '<td><a href="profile.php?username=' . $res['username'] . '">' . $res['username'] . '</a></td>';
+              echo '<td><a href="profile.php?username=' . rawurlencode($res['username']) . '">' . $res['username'] . '</a></td>';
               echo '<td>' . number_format($res['points'],0) . '</td>';
               echo '</tr>';
             }
@@ -183,7 +183,7 @@ try {
             foreach($result as $key=>$res) {
               echo '<tr>';
               echo '<td>' . ($key+1) . '</td>';
-              echo '<td><a href="profile.php?username=' . $res['username'] . '">' . $res['username'] . '</a></td>';
+              echo '<td><a href="profile.php?username=' . rawurlencode($res['username']) . '">' . $res['username'] . '</a></td>';
               echo '<td>' . number_format($res['points'],0) . '</td>';
               echo '</tr>';
             }
