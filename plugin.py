@@ -1464,7 +1464,7 @@ class TriviaTime(callbacks.Plugin):
             if len(self.answers) > 1:
                 if self.shownHint == False:
                     self.shownHint = True
-                    self.sendMessage(self.getHintString(self.hintsCounter-1))
+                    self.sendMessage('\x02\x0312' + self.getHintString(self.hintsCounter-1))
 
         def loadGameState(self):
             gameInfo = self.storage.getGame(self.channel)
