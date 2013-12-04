@@ -35,7 +35,7 @@ conf.registerChannelValue(TriviaTime.admin, 'sqlitedb',
 
 conf.registerChannelValue(TriviaTime.admin, 'quizfile', 
         registry.NormalizedString("""plugins/TriviaTime/storage/samplequestions""", 
-                """Location of question file""")
+                """Location of question file. Changes require reloading the plugin""")
         )
 
 # timeout, number of hints, values
@@ -51,7 +51,7 @@ conf.registerChannelValue(TriviaTime.commands, 'showHintCommandKAOS',
 
 conf.registerChannelValue(TriviaTime.general, 'globalStats',
         registry.Boolean(False,
-                """Stats are global accross all channels""")
+                """Stats are global across all channels""")
         )
 
 conf.registerChannelValue(TriviaTime.hints, 'vowelsHint',

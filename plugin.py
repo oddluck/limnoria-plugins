@@ -779,6 +779,19 @@ class TriviaTime(callbacks.Plugin):
                     irc.sendMsg(ircmsgs.notice(username, 'NEW: %s' % (newQuestionText)))
                     irc.sendMsg(ircmsgs.notice(username, 'OLD: %s' % (question[2])))
                     return
+            elif str.lower(utils.str.normalizeWhitespace(inp)) == 'delete':
+                if not threadStorage.questionIdExists(question[0]):
+                    irc.error('That question does not exist.')
+                    return
+                if threadStorage.isQuestionDeleted(question[0]):
+                    irc.error('That question is already deleted.')
+                    return
+                if threadStorage.isQuestionPendingDeletion(question[0]):
+                    irc.error('That question is already pending deletion.')
+                    return
+                irc.reply('Marked question for deletion.')
+                threadStorage.insertDelete(username, channel, question[0])
+                return
             threadStorage.updateUser(username, 0, 0, 1)
             threadStorage.insertReport(channel, username, text, question[0])
             irc.reply('Your report has been submitted!')
