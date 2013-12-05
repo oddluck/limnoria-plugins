@@ -14,3 +14,8 @@ $config['libLocation'] = "includes/";
  * Views location
  */
 $config['viewLocation'] = "views/";
+
+/**
+ * Default page after logging in
+ */
+$config['defaultLoginRedirectPage'] = "index.php";

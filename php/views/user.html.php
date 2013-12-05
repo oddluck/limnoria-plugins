@@ -7,7 +7,7 @@
         <h2>Search</h2>
         <form method="get">
           Username: <input name="username" value="<?php echo $values['username']; ?>"></input>
-          <input type="submit"></input>
+          <button class="btn btn-small btn-primary" type="submit">Search</button>
         </form>
         <?php
         if(count($values['errors']) != 0) {

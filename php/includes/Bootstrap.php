@@ -10,7 +10,7 @@ class Bootstrap
         $this->config = $config;
         $this->storage = new Storage($this->config['dbLocation']);
         $this->login = new Login($this->storage);
-        $this->renderer = new Renderer($config);
+        $this->renderer = new Renderer($config, $this);
 
         $this->setCurrentPage(basename($_SERVER['PHP_SELF']));
     }
@@ -19,12 +19,30 @@ class Bootstrap
         $this->renderer->render($page, $values);
     }
 
+    public function clearNotice() {
+        if(array_key_exists('notice', $_SESSION)) {
+            unset($_SESSION['notice']);
+        }
+    }
+
     public function setTitle($title) {
         $this->renderer->setTitle($title);
     }
 
+    public function setNotice($notice) {
+        $_SESSION['notice'] = $notice;
+    }
+
     public function setCurrentPage($currentPage) {
         $this->renderer->setCurrentPage($currentPage);
+    }
+
+    public function getNotice() {
+        if(array_key_exists('notice', $_SESSION)) {
+            return $_SESSION['notice'];
+        } else {
+            return null;
+        }
     }
 
     public function getLogin() {

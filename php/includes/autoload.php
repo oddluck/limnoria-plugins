@@ -2,7 +2,7 @@
 include 'config.php';
 
 function autoloadIncludes($class) {
-    include 'config.php';
+    global $config;
     $filename = $class . ".php";
     if(file_exists($config['libLocation'] . $filename)) {
         require_once($config['libLocation'] . $filename);

@@ -10,9 +10,11 @@
   <link href="css/bootstrap.css" rel="stylesheet">
   <link href="css/triviatime.css" rel="stylesheet">
   <link href="css/bootstrap-responsive.css" rel="stylesheet">
-
+    <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="js/html5shiv.min.js"></script>
+    <![endif]-->
 </head>
-
 <body>
   <div class="navbar navbar-inverse navbar-fixed-top">
     <div class="navbar-inner">
@@ -24,6 +26,17 @@
         </button>
         <a href="index.php" class="brand">TriviaTime</a>
         <div class="nav-collapse collapse">
+          <?php
+          // Handle username information in nav
+          if($container->login->isLoggedIn() && !is_null($container->login->getUser())) {
+            $user = $container->login->getUser();
+            echo '<p class="navbar-text pull-right">
+                    Logged in as ';
+            echo $user->getUsername();
+            echo ' (<a class="navbar-link" href="logout.php">logout</a>)';
+            echo '</p>';
+          }
+          ?>
           <ul class="nav">
             <li<?php if($viewVars['currentPage']=='index.php') { echo ' class="active"'; } ?>><a href="index.php">Home</a></li>
             <li<?php if($viewVars['currentPage']=='stats.php') { echo ' class="active"'; } ?>><a href="stats.php">Stats</a></li>
@@ -36,3 +49,10 @@
     </div>
   </div><!-- /.navbar -->
   <div class="container">
+    <?php
+    $notice = $container->getNotice();
+    if(!is_null($notice)) {
+      echo "<div class='alert alert-info' style='margin-top:10px;'>$notice</div>";
+    }
+    $container->clearNotice();
+    ?>
