@@ -1,8 +1,8 @@
 <?php
 class Renderer
 {
-    protected $title;
-    protected $currentPage;
+    protected $title = '';
+    protected $currentPage = '';
     protected $config;
 
     public function __construct($config) {
