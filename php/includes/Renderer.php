@@ -11,7 +11,7 @@ class Renderer
         $this->container = $container;
     }
 
-    public function render($page, $values) {
+    public function render($page, $values, $useTemplate=true) {
         $viewVars = array();
         $viewVars['title'] = $this->title;
         if($this->title != '') {
@@ -20,10 +20,14 @@ class Renderer
 
         $viewVars['currentPage'] = $this->currentPage;
         $container = $this->container;
-        
-        include($this->config['viewLocation'] . 'header.html.php');
-        include($this->config['viewLocation'] . $page);
-        include($this->config['viewLocation'] . 'footer.html.php');
+
+        if($useTemplate) {
+            include($this->config['viewLocation'] . 'header.html.php');
+            include($this->config['viewLocation'] . $page);
+            include($this->config['viewLocation'] . 'footer.html.php');
+        } else {
+            include($this->config['viewLocation'] . $page);
+        }
     }
 
     public function setTitle($title) {

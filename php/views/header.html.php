@@ -7,9 +7,9 @@
   <meta name="description" content="">
   <meta name="author" content="">
 
-  <link href="css/bootstrap.css" rel="stylesheet">
-  <link href="css/triviatime.css" rel="stylesheet">
-  <link href="css/bootstrap-responsive.css" rel="stylesheet">
+  <link href="<?php echo $container->config['baseFolder']; ?>/css/bootstrap.css" rel="stylesheet">
+  <link href="<?php echo $container->config['baseFolder']; ?>/css/triviatime.css" rel="stylesheet">
+  <link href="<?php echo $container->config['baseFolder']; ?>/css/bootstrap-responsive.css" rel="stylesheet">
     <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
     <!--[if lt IE 9]>
       <script src="js/html5shiv.min.js"></script>
@@ -24,7 +24,7 @@
           <span class="icon-bar"></span>
           <span class="icon-bar"></span>
         </button>
-        <a href="index.php" class="brand">TriviaTime</a>
+        <a href="<?php echo $container->router->generate('home'); ?>" class="brand">TriviaTime</a>
         <div class="nav-collapse collapse">
           <?php
           // Handle username information in nav
@@ -33,16 +33,33 @@
             echo '<p class="navbar-text pull-right">
                     Logged in as ';
             echo $user->getUsername();
-            echo ' (<a class="navbar-link" href="logout.php">logout</a>)';
+            echo ' (<a class="navbar-link" href="<' . $container->router->generate('logout') . '">logout</a>)';
             echo '</p>';
           }
           ?>
           <ul class="nav">
-            <li<?php if($viewVars['currentPage']=='index.php') { echo ' class="active"'; } ?>><a href="index.php">Home</a></li>
-            <li<?php if($viewVars['currentPage']=='stats.php') { echo ' class="active"'; } ?>><a href="stats.php">Stats</a></li>
-            <li<?php if($viewVars['currentPage']=='user.php') { echo ' class="active"'; } ?>><a href="user.php">Players</a></li>
-            <li<?php if($viewVars['currentPage']=='reports.php') { echo ' class="active"'; } ?>><a href="reports.php">Reports</a></li>
-            <li<?php if($viewVars['currentPage']=='about.php') { echo ' class="active"'; } ?>><a href="about.php">About</a></li>
+            <?php
+            $currentPageName = '';
+            $route = $container->router->matchCurrentRequest();
+            if($route) {
+              $currentPageName = $route->getName();
+            }
+            ?>
+            <li<?php if($currentPageName=='home') { echo ' class="active"'; } ?>>
+              <a href="<?php echo $container->router->generate('home'); ?>">Home</a>
+            </li>
+            <li<?php if($currentPageName=='stats') { echo ' class="active"'; } ?>>
+              <a href="<?php echo $container->router->generate('stats'); ?>">Stats</a>
+            </li>
+            <li<?php if($currentPageName=='search') { echo ' class="active"'; } ?>>
+              <a href="<?php echo $container->router->generate('search'); ?>">Players</a>
+            </li>
+            <li<?php if($currentPageName=='reports') { echo ' class="active"'; } ?>>
+              <a href="<?php echo $container->router->generate('reports'); ?>">Reports</a>
+            </li>
+            <li<?php if($currentPageName=='about') { echo ' class="active"'; } ?>>
+              <a href="<?php echo $container->router->generate('about'); ?>">About</a>
+            </li>
           </ul>
         </div>
       </div>
