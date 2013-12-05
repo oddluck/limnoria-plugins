@@ -31,6 +31,18 @@ class Login
 
     protected function checkLoggedIn() {
         $this->loggedIn = $this->checkSessionLoggedIn();
+
+        if($this->isLoggedIn()) {
+            $usernameCanonical = $this->ircToLower($_SESSION['username']);
+            $results = $this->storage->getLoginByUsernameCanonical($usernameCanonical);
+
+            if(count($results) > 0) {
+                $result = $results[0];
+                $username = $result['username'];
+                $capability = $result['capability'];
+                $this->createUser($username, $capability);
+            }
+        }
     }
 
     protected function hashPassword($salt, $password) {
