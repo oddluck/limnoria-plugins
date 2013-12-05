@@ -8,7 +8,7 @@ class Login
     public function __construct($storage) {
         $this->storage=$storage;
         $this->startSession();
-        $this->isLoggedIn();
+        $this->checkLoggedIn();
     }
 
     protected function startSession() {
