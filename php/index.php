@@ -4,6 +4,7 @@ require_once('includes/autoload.php');
 $storage = $container->getStorage();
 
 $errors = array();
+$result = array();
 try {
   $result = $storage->getRecentAskedQuestions();
 } catch(StorageSchemaException $e) {
