@@ -12,7 +12,7 @@ class LoginController extends Controller
     }
 
     protected function doRedirect() {
-        $defaultPage = $this->container->getConfig()['defaultLoginRedirectPage'];
+        $defaultPage = $this->container->config['defaultLoginRedirectPage'];
         if(array_key_exists('lastPage', $_SESSION)) {
             $this->redirect($_SESSION('lastPage'));
         } else {
