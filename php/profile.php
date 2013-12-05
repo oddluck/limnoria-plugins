@@ -3,8 +3,6 @@ require_once('includes/autoload.php');
 
 $storage = $container->getStorage();
 
-$values = array();
-
 $username = '';
 $usernameCanonical = '';
 
@@ -110,6 +108,8 @@ if ($username != '') {
   }
   $storage->close();
 }
+
+$values = array();
 
 $values['userProfile'] = $userProfile;
 $values['username'] = $username;

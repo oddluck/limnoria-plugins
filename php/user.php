@@ -45,6 +45,7 @@ if(count($users) == 1) {
   die();
 }
 
+$values = array();
 $values['username'] = $username;
 $values['usernameCanonical'] = $usernameCanonical;
 $values['page'] = $page;
