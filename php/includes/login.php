@@ -15,6 +15,10 @@ class Login
         session_start();
     }
 
+    protected function endSession() {
+        session_destroy();
+    }
+
     protected function checkSessionLoggedIn() {
         if(!isset($_SESSION['username']) || !isset($_SESSION['loggedIn'])) {
             return false;
@@ -91,7 +95,7 @@ class Login
 
     public function logout() {
         $_SESSION = array();
-        session_destroy();
+        $this->endSession();
         $this->loggedIn = false;
         $this->user = null;
     }
