@@ -58,6 +58,5 @@ $values['timeDesc'] = $timeDesc;
 $values['errors'] = $errors;
 
 $container->setTitle('Top Scores for ' . $timeDesc);
-$container->setCurrentPage('top.php');
 
 $container->render('top.html.php', $values);

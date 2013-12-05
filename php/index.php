@@ -19,6 +19,5 @@ $values['result'] = $result;
 $values['errors'] = $errors;
 
 $container->setTitle('Home');
-$container->setCurrentPage('index.php');
 
 $container->render('home.html.php', $values);

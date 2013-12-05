@@ -54,6 +54,5 @@ $values['yearResult'] = $yearResult;
 $values['yearErrors'] = $yearErrors;
 
 $container->setTitle('Stats');
-$container->setCurrentPage('stats.php');
 
 $container->render('stats.html.php', $values);

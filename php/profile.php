@@ -118,6 +118,5 @@ $values['errors'] = $errors;
 $values['lastSeen'] = $lastSeen;
 
 $container->setTitle($username);
-$container->setCurrentPage('profile.php');
 
 $container->render('profile.html.php', $values);
