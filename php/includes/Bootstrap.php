@@ -4,35 +4,27 @@ class Bootstrap
     public $storage;
     public $config;
     public $login;
-
-    public $title = '';
-    public $currentPage = '';
+    public $renderer;
 
     public function __construct($config) {
         $this->config = $config;
         $this->storage = new Storage($this->config['dbLocation']);
         $this->login = new Login($this->storage);
+        $this->renderer = new Renderer($config);
+
+        $this->setCurrentPage(basename($_SERVER['PHP_SELF']));
     }
 
     public function render($page, $values=array()) {
-        $viewVars = array();
-        $viewVars['title'] = $this->title;
-        if($this->title != '') {
-            $viewVars['title'] .= ' &middot; ';
-        }
-        $viewVars['currentPage'] = $this->currentPage;
-        $container = $this;
-        include($this->config['viewLocation'] . 'header.html.php');
-        include($this->config['viewLocation'] . $page);
-        include($this->config['viewLocation'] . 'footer.html.php');
+        $this->renderer->render($page, $values);
     }
 
     public function setTitle($title) {
-        $this->title = $title;
+        $this->renderer->setTitle($title);
     }
 
     public function setCurrentPage($currentPage) {
-        $this->currentPage = $currentPage;
+        $this->renderer->setCurrentPage($currentPage);
     }
 
     public function getTitle() {
