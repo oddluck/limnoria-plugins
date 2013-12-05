@@ -1,6 +1,3 @@
-<?php
-$storage = $container->getStorage();
-?>
     <div class="hero-unit">
       <h1>Home</h1>
       <p>Get the latest stats for players and updates.</p>
@@ -9,15 +6,9 @@ $storage = $container->getStorage();
       <div class="span12">
         <h2>Latest questions asked</h2>
             <?php
-            $result = array();
-            try {
-              $result = $storage->getRecentAskedQuestions();
-            } catch(StorageSchemaException $e) {
-              echo "<div class='alert alert-error'>Error: Database schema is not queryable</div>";
-            } catch(StorageConnectionException $e) {
-              echo "<div class='alert alert-error'>Error: Database is not available</div>";
+            foreach($values['errors'] as $error) {
+              echo "<div class='alert alert-error'>$error</div>";
             }
-            $storage->close();
             ?>
         <table class="table modal-table">
           <thead>
@@ -30,7 +21,7 @@ $storage = $container->getStorage();
           </thead>
           <tbody>
             <?php
-            foreach($result as $res) {
+            foreach($values['result'] as $res) {
               echo '<tr>';
               echo '<td>' . $res['round_num'] . '</td>';
               echo '<td>' . $res['channel'] . '</td>';
