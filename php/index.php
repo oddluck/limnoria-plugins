@@ -21,4 +21,4 @@ $values['errors'] = $errors;
 $container->setTitle('Home');
 $container->setCurrentPage('index.php');
 
-$container->render('home.php', $values);
+$container->render('home.html.php', $values);

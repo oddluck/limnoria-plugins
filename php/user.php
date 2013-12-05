@@ -57,4 +57,4 @@ $values['errors'] = $errors;
 $container->setTitle('Players');
 $container->setCurrentPage('user.php');
 
-$container->render('user.php', $values);
+$container->render('user.html.php', $values);
