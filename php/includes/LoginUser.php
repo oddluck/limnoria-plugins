@@ -1,5 +1,5 @@
 <?php
-class User
+class LoginUser
 {
     protected $username;
     protected $capabilty;
