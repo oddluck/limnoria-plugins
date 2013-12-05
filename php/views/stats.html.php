@@ -1,8 +1,6 @@
     <div class="hero-unit">
       <h1>Stats</h1>
       <p>Stats are updated continuously and instantly.</p>
-      <p>
-      </p>
     </div>
 
     <div class="row">

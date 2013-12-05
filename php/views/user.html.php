@@ -1,8 +1,6 @@
     <div class="hero-unit">
       <h1>Players</h1>
       <p>Show stats for players.</p>
-      <p>
-      </p>
     </div>
     <div class="row">
       <div class="span12">

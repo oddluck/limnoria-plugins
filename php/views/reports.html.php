@@ -1,8 +1,6 @@
     <div class="hero-unit">
       <h1>Reports</h1>
       <p>The reports and edits that are currently pending.</p>
-      <p>
-      </p>
     </div>
 
     <div class="row">
