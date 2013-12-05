@@ -1,9 +1,9 @@
 <?php
 require_once("includes/autoload.php");
 
-function getPostVariable($value) {
-    if(array_key_exists($value, $_POST)) {
-        $value = $_POST[$value];
+function getPostVariable($key) {
+    if(array_key_exists($key, $_POST)) {
+        $value = $_POST[$key];
     }
     if(!isset($value)) {
       $value = null;
