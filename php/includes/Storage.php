@@ -17,7 +17,6 @@ class Storage
                 $this->db = new PDO($this->dbType . $this->dbLocation);
                 if(!$this->db) {
                     $this->db = null;
-                    throw new StorageConnectionException();
                 }
             } catch(Exception $e) {
                 $this->db = null;
