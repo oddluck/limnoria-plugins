@@ -20,7 +20,7 @@ class Login
     }
 
     protected function checkSessionLoggedIn() {
-        if(!isset($_SESSION['username']) || !isset($_SESSION['loggedIn'])) {
+        if(!isset($_SESSION['username']) || !isset($_SESSION['loggedIn']) || !isset($_SESSION['capability'])) {
             return false;
         }
         if(!empty($_SESSION['username']) && $_SESSION['loggedIn']) {
@@ -33,15 +33,7 @@ class Login
         $this->loggedIn = $this->checkSessionLoggedIn();
 
         if($this->isLoggedIn()) {
-            $usernameCanonical = $this->ircToLower($_SESSION['username']);
-            $results = $this->storage->getLoginByUsernameCanonical($usernameCanonical);
-
-            if(count($results) > 0) {
-                $result = $results[0];
-                $username = $result['username'];
-                $capability = $result['capability'];
-                $this->createUser($username, $capability);
-            }
+            $this->createUser($_SESSION['username'], $_SESSION['capability']);
         }
     }
 
@@ -69,7 +61,7 @@ class Login
     }
 
     public function login($username, $password) {
-        if($this->loggedIn) {
+        if($this->isLoggedIn()) {
             return true;
         }
 
@@ -98,6 +90,7 @@ class Login
         if($targetPassword == $hashPassword) {
             $_SESSION['username'] = $username;
             $_SESSION['loggedIn'] = true;
+            $_SESSION['capability'] = $capability;
             $this->loggedIn = true;
             $this->createUser($username, $capability);
             return true;
