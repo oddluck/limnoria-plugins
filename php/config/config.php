@@ -33,4 +33,4 @@ $config['baseRoute'] = '';
 /**
  * Default page after logging in
  */
-$config['defaultLoginRedirectPage'] = "/";
+$config['defaultLoginRedirectPage'] = "home";

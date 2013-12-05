@@ -16,7 +16,7 @@ class LoginController extends Controller
         if(array_key_exists('lastPage', $_SESSION)) {
             $this->redirect($_SESSION('lastPage'));
         } else {
-            $this->redirect($defaultPage);
+            $this->redirect($this->container->router->generate($defaultPage));
         } 
     }
 
@@ -64,6 +64,6 @@ class LoginController extends Controller
         $this->container->login = new Login($this->container->storage);
 
         $this->container->setNotice("<strong>Success!</strong> You have been successfully logged out.");
-        $this->redirect($this->container->getConfig()['defaultLoginRedirectPage']);
+        $this->doRedirect();
     }
 }
