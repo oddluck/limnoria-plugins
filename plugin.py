@@ -62,6 +62,8 @@ class TriviaTime(callbacks.Plugin):
         self.storage.makeGameLogTable()
         #self.storage.dropUserTable()
         self.storage.makeUserTable()
+        #self.storage.dropLoginTable()
+        self.storage.makeLoginTable()
         #self.storage.dropReportTable()
         self.storage.makeReportTable()
         #self.storage.dropQuestionTable()
@@ -295,6 +297,39 @@ class TriviaTime(callbacks.Plugin):
         info = threadStorage.insertQuestionsBulk(insertList)
         irc.reply('Successfully added %d questions, skipped %d' % (info[0], info[1]))
     addfile = wrap(addfile, ['admin', optional('text')])
+
+    def authweb(self, irc, msg, arg):
+        """
+        Triviamods only. Register for web access
+        """
+        try:
+            user = ircdb.users.getUser(msg.prefix)
+        except KeyError:
+            irc.error('Sorry, you must be at least a triviamod to register for web login')
+            return
+
+        if not user.capabilities.check('triviamod'):
+            irc.error('Sorry, you must be at least a triviamod to register for web login')
+
+        capability = 'triviamod'
+
+        if user.capabilities.check('owner'):
+            capability = 'owner'
+
+        username = user.name
+        salt = ''
+        password = ''
+        isHashed = user.hashed
+        if isHashed:
+            (salt, password) = user.password.split('|')
+        else:
+            password = user.password
+
+        dbLocation = self.registryValue('admin.sqlitedb')
+        threadStorage = self.Storage(dbLocation)
+        info = threadStorage.insertLogin(username, salt, isHashed, password, capability)
+        irc.reply('Success, updated your web access login.')
+    authweb = wrap(authweb)
 
     def clearpoints(self, irc, msg, arg, username):
         """<username>
@@ -1922,6 +1957,14 @@ class TriviaTime(callbacks.Plugin):
                 pass
             c.close()
 
+        def dropLoginTable(self):
+            c = self.conn.cursor()
+            try:
+                c.execute('''DROP TABLE trivialogin''')
+            except:
+                pass
+            c.close()
+
         def dropUserLogTable(self):
             c = self.conn.cursor()
             try:
@@ -2682,12 +2725,35 @@ class TriviaTime(callbacks.Plugin):
             c.close()
             return data
 
+        def loginExists(self, username):
+            usernameCanonical = ircutils.toLower(username)
+            c = self.conn.cursor()
+            result = c.execute('select count(id) from trivialogin where username_canonical=?', (usernameCanonical,))
+            rows = result.fetchone()[0]
+            c.close()
+            if rows > 0:
+                return True
+            return False
+
         def insertDelete(self, username, channel, lineNumber):
             usernameCanonical = ircutils.toLower(username)
             channelCanonical = ircutils.toLower(channel)
             c = self.conn.cursor()
             c.execute('insert into triviadelete values (NULL, ?, ?, ?, ?, ?)',
                                     (username, usernameCanonical, lineNumber, channel, channelCanonical))
+            self.conn.commit()
+
+        def insertLogin(self, username, salt, isHashed, password, capability):
+            usernameCanonical = ircutils.toLower(username)
+            if self.loginExists(username):
+                self.updateLogin(username, salt, isHashed, password, capability)
+            if not isHashed:
+                isHashed = 0
+            else:
+                isHashed = 1
+            c = self.conn.cursor()
+            c.execute('insert into trivialogin values (NULL, ?, ?, ?, ?, ?, ?)',
+                                    (username, usernameCanonical, salt, isHashed, password, capability))
             self.conn.commit()
 
         def insertUserLog(self, username, channel, score, numAnswered, timeTaken, day=None, month=None, year=None, epoch=None):
@@ -2824,6 +2890,23 @@ class TriviaTime(callbacks.Plugin):
                         line_num integer,
                         channel text,
                         channel_canonical text
+                        )''')
+            except:
+                pass
+            self.conn.commit()
+            c.close()
+
+        def makeLoginTable(self):
+            c = self.conn.cursor()
+            try:
+                c.execute('''create table trivialogin (
+                        id integer primary key autoincrement,
+                        username text,
+                        username_canonical text not null unique,
+                        salt text,
+                        is_hashed  integer not null default 1,
+                        password text,
+                        capability text
                         )''')
             except:
                 pass
@@ -3027,6 +3110,14 @@ class TriviaTime(callbacks.Plugin):
             self.conn.commit()
             c.close()
 
+        def removeLogin(self, username):
+            usernameCanonical = ircutils.toLower(username)
+            c = self.conn.cursor()
+            c.execute('''delete from trivialogin
+                        where username_canonical=?''', (usernameCanonical,))
+            self.conn.commit()
+            c.close()
+
         def removeReport(self, repId):
             c = self.conn.cursor()
             c.execute('''delete from triviareport
@@ -3162,6 +3253,25 @@ class TriviaTime(callbacks.Plugin):
             if rows > 0:
                 return True
             return False
+
+        def updateLogin(self, username, salt, isHashed, password, capability):
+            if not self.loginExists(username):
+                return self.insertLogin(username, salt, isHashed, password, capability)
+            usernameCanonical = ircutils.toLower(username)
+            if not isHashed:
+                isHashed = 0
+            else:
+                isHashed = 1
+            c = self.conn.cursor()
+            c.execute('''update trivialogin set
+                            username=?,
+                            salt=?,
+                            password=?,
+                            capability=?
+                            where username_canonical=?''', (username, salt, isHashed, password, capability, usernameCanonical)
+                            )
+            self.conn.commit()
+            c.close()
 
         def updateUserLog(self, username, channel, score, numAnswered, timeTaken, day=None, month=None, year=None, epoch=None):
             if not self.userExists(username):
