@@ -29,4 +29,12 @@ class Renderer
     public function setCurrentPage($currentPage) {
         $this->currentPage = $currentPage;
     }
+
+    public function getTitle() {
+        return $this->title;
+    }
+
+    public function getCurrentPage() {
+        return $this->currentPage;
+    }
 }

@@ -19,7 +19,7 @@ class Storage
                     $this->db = null;
                     throw new StorageConnectionException();
                 }
-            } catch (Exception $e) {
+            } catch(Exception $e) {
                 $this->db = null;
             }
         }
@@ -44,7 +44,7 @@ class Storage
                 FROM trivialogin 
                 WHERE username_canonical=:username
                 LIMIT 1');
-        if ($q === false) {
+        if($q === false) {
             throw new StorageSchemaException();
         }
         $q->execute(array(':username'=>$usernameCanonical));
@@ -61,7 +61,7 @@ class Storage
                 WHERE username_canonical=:username
                 ORDER BY last_updated DESC
                 LIMIT 1');
-        if ($q === false) {
+        if($q === false) {
             throw new StorageSchemaException();
         }
         $q->execute(array(':username'=>$usernameCanonical));
@@ -84,7 +84,7 @@ class Storage
                 INNER JOIN triviaquestion tq 
                 ON tq.id=td.line_num
                 ORDER BY id DESC LIMIT :offset, :maxResults');
-        if ($q === false) {
+        if($q === false) {
             throw new StorageSchemaException();
         }
         $q->execute(array(':offset'=>($page-1) * $max, ':maxResults'=>$max));
@@ -97,7 +97,7 @@ class Storage
             throw new StorageConnectionException();
         }
         $q = $this->db->query('SELECT count(id) FROM triviadelete');
-        if ($q === false) {
+        if($q === false) {
             throw new StorageSchemaException();
         }
         $result = $q->fetchColumn();
@@ -119,7 +119,7 @@ class Storage
                 INNER JOIN triviaquestion tq 
                 ON tq.id=question_num 
                 ORDER BY id DESC LIMIT :offset, :maxResults');
-        if ($q === false) {
+        if($q === false) {
             throw new StorageSchemaException();
         }
         $q->execute(array(':offset'=>($page-1) * $max, ':maxResults'=>$max));
@@ -132,7 +132,7 @@ class Storage
             throw new StorageConnectionException();
         }
         $q = $this->db->query('SELECT count(id) FROM triviareport');
-        if ($q === false) {
+        if($q === false) {
             throw new StorageSchemaException();
         }
         $result = $q->fetchColumn();
@@ -150,7 +150,7 @@ class Storage
             $max = 1;
         }
         $q = $this->db->prepare('SELECT tq.*  FROM triviatemporaryquestion tq ORDER BY tq.id DESC LIMIT :offset, :maxResults');
-        if ($q === false) {
+        if($q === false) {
             throw new StorageSchemaException();
         }
         $q->execute(array(':offset'=>($page-1) * $max, ':maxResults'=>$max));
@@ -163,7 +163,7 @@ class Storage
             throw new StorageConnectionException();
         }
         $q = $this->db->query('SELECT count(id) FROM triviatemporaryquestion');
-        if ($q === false) {
+        if($q === false) {
             throw new StorageSchemaException();
         }
         $result = $q->fetchColumn();
@@ -185,7 +185,7 @@ class Storage
                 INNER JOIN triviaquestion tq 
                 ON tq.id=question_id 
                 ORDER BY id DESC LIMIT :offset, :maxResults');
-        if ($q === false) {
+        if($q === false) {
             throw new StorageSchemaException();
         }
         $q->execute(array(':offset'=>($page-1) * $max, ':maxResults'=>$max));
@@ -198,7 +198,7 @@ class Storage
             throw new StorageConnectionException();
         }
         $q = $this->db->query('SELECT count(id) FROM triviaedit');
-        if ($q === false) {
+        if($q === false) {
             throw new StorageSchemaException();
         }
         $result = $q->fetchColumn();
@@ -227,7 +227,7 @@ class Storage
                                 GROUP BY username_canonical 
                                 ORDER BY points DESC 
                                 LIMIT :offset, :maxResults");
-        if ($q === false) {
+        if($q === false) {
             throw new StorageSchemaException();
         }
         $q->execute(array(':offset'=>($page-1) * $max, ':maxResults'=>$max, ':day'=>$day, ':year'=>$year, ':month'=>$month));
@@ -247,7 +247,7 @@ class Storage
                                 WHERE day=:day 
                                 AND year=:year 
                                 AND month=:month');
-        if ($q === false) {
+        if($q === false) {
             throw new StorageSchemaException();
         }
         $q->execute(array(':day'=>$day, ':year'=>$year, ':month'=>$month));
@@ -287,7 +287,7 @@ class Storage
         }
         $sqlClause = $this->generateWeekSqlClause();
         $q = $this->db->prepare("SELECT username, sum(points_made) as points FROM triviauserlog WHERE $sqlClause GROUP BY username_canonical ORDER BY points DESC LIMIT :offset, :maxResults");
-        if ($q === false) {
+        if($q === false) {
             throw new StorageSchemaException();
         }
         $q->execute(array(':offset'=>($page-1) * $max, ':maxResults'=>$max));
@@ -303,7 +303,7 @@ class Storage
         $q = $this->db->query('SELECT count(distinct(username_canonical)) 
                                 FROM triviauserlog
                                 WHERE $sqlClause');
-        if ($q === false) {
+        if($q === false) {
             throw new StorageSchemaException();
         }
         $result = $q->fetchColumn();
@@ -323,7 +323,7 @@ class Storage
         $month = date('m');
         $year = date('Y');
         $q = $this->db->prepare("SELECT username, sum(points_made) as points FROM triviauserlog WHERE year=:year AND month=:month GROUP BY username_canonical ORDER BY points DESC LIMIT :offset, :maxResults");
-        if ($q === false) {
+        if($q === false) {
             throw new StorageSchemaException();
         }
         $q->execute(array(':offset'=>($page-1) * $max, ':maxResults'=>$max, ':year'=>$year, ':month'=>$month));
@@ -341,7 +341,7 @@ class Storage
                                 FROM triviauserlog
                                 WHERE year=:year 
                                 AND month=:month');
-        if ($q === false) {
+        if($q === false) {
             throw new StorageSchemaException();
         }
         $q->execute(array(':year'=>$year, ':month'=>$month));
@@ -361,7 +361,7 @@ class Storage
         }
         $year = date('Y');
         $q = $this->db->prepare("SELECT username, sum(points_made) as points FROM triviauserlog WHERE year=:year GROUP BY username_canonical ORDER BY points DESC LIMIT :offset, :maxResults");
-        if ($q === false) {
+        if($q === false) {
             throw new StorageSchemaException();
         }
         $q->execute(array(':offset'=>($page-1) * $max, ':maxResults'=>$max, ':year'=>$year));
@@ -377,7 +377,7 @@ class Storage
         $q = $this->db->prepare('SELECT count(distinct(username_canonical)) 
                                 FROM triviauserlog
                                 WHERE year=:year');
-        if ($q === false) {
+        if($q === false) {
             throw new StorageSchemaException();
         }
         $q->execute(array(':year'=>$year));
@@ -404,7 +404,7 @@ class Storage
                 group by tl.username_canonical
                 limit :offset, :maxResults
                 ');
-        if ($q === false) {
+        if($q === false) {
             throw new StorageSchemaException();
         }
         $likeString = '%'.$this->escapeLikeQuery($usernameCanonical).'%';
@@ -422,7 +422,7 @@ class Storage
                 from triviauserlog tl
                 where tl.username_canonical like :username
                 ');
-        if ($q === false) {
+        if($q === false) {
             throw new StorageSchemaException();
         }
         $likeString = '%'.$this->escapeLikeQuery($usernameCanonical).'%';
@@ -436,7 +436,7 @@ class Storage
             throw new StorageConnectionException();
         }
         $q = $this->db->query('SELECT asked_at, channel, round_num, question, line_num FROM triviagameslog ORDER BY id DESC LIMIT 10');
-        if ($q === false) {
+        if($q === false) {
             throw new StorageSchemaException();
         }
         $result = $q->fetchAll();
@@ -464,7 +464,7 @@ class Storage
                 on tl.username_canonical=:username
                 and tl.id=tl2.id2
                 limit 1');
-        if ($q === false) {
+        if($q === false) {
             throw new StorageSchemaException();
         }
         $q->execute(array(':username'=>$usernameCanonical));

@@ -27,14 +27,6 @@ class Bootstrap
         $this->renderer->setCurrentPage($currentPage);
     }
 
-    public function getTitle() {
-        return $this->title;
-    }
-
-    public function getCurrentPage() {
-        return $this->currentPage;
-    }
-
     public function getLogin() {
         return $this->login;
     }
