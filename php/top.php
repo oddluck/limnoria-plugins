@@ -11,4 +11,7 @@ if(array_key_exists('t', $_GET)) {
   }
 }
 
-$container->render('top.php', 'Top Scores for ' . $timeDesc, 'top.php');
+$container->setTitle('Top Scores for ' . $timeDesc);
+$container->setCurrentPage('top.php');
+
+$container->render('top.php');

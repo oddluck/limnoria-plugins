@@ -53,4 +53,7 @@ $values['usersCount'] = $usersCount;
 $values['users'] = $users;
 $values['errors'] = $errors;
 
-$container->render('user.php', 'Players', 'user.php', $values);
+$container->setTitle('Players');
+$container->setCurrentPage('user.php');
+
+$container->render('user.php', $values);

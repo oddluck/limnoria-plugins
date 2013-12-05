@@ -1,3 +1,7 @@
 <?php
 require_once('includes/autoload.php');
-$container->render('stats.php', 'Stats', 'stats.php');
+
+$container->setTitle('Stats');
+$container->setCurrentPage('stats.php');
+
+$container->render('stats.php');

@@ -117,4 +117,7 @@ $values['usernameCanonical'] = $usernameCanonical;
 $values['errors'] = $errors;
 $values['lastSeen'] = $lastSeen;
 
-$container->render('profile.php', $username, '', $values);
+$container->setTitle($username);
+$container->setCurrentPage('profile.php');
+
+$container->render('profile.php', $values);
