@@ -78,7 +78,7 @@ class Login
         // Storage get salt, hashedPassword, capabilities for user
         $results = $this->storage->getLoginByUsernameCanonical($usernameCanonical);
 
-        if(count($results) < 0) {
+        if(count($results) < 1) {
             return false;
         }
 
