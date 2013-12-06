@@ -366,8 +366,8 @@ class TriviaTime(callbacks.Plugin):
         irc.noReply()
     day = wrap(day, [optional('int')])
 
-    def deletequestion(self, irc, msg, arg, channel, t, id):
-        """[<channel>] [<type "R" or "Q">] <question id>
+    def deletequestion(self, irc, msg, arg, channel, t, id, reason):
+        """[<channel>] [<type "R" or "Q">] <question id> [<reason>]
         Deletes a question from the database. Type decides whether to delete
         by round number (r), or question number (q) (default round).
         Channel is only necessary when editing from outside of the channel
@@ -390,9 +390,9 @@ class TriviaTime(callbacks.Plugin):
         if threadStorage.isQuestionPendingDeletion(id):
             irc.error('That question is already pending deletion.')
             return
-        threadStorage.insertDelete(username, channel, id)
+        threadStorage.insertDelete(username, channel, id, reason)
         irc.reply('Question %d marked for deletion and pending review.' % id)
-    deletequestion = wrap(deletequestion, ["channel", optional(('literal',("question", "QUESTION", "ROUND", "round"))),'int'])
+    deletequestion = wrap(deletequestion, ["channel", optional(('literal',("question", "QUESTION", "ROUND", "round"))),'int', optional('text')])
 
     def edit(self, irc, msg, arg, user, channel, num, question):
         """[<channel>] <question number> <corrected text>
@@ -481,7 +481,7 @@ class TriviaTime(callbacks.Plugin):
                 if len(question) > 0:
                     question = question[0]
                     questionText = question[2]
-                irc.reply('Delete #%d, by %s Question#%d: %s'%(delete[0], delete[1], delete[3], questionText))
+                irc.reply('Delete #%d, by %s Question#%d: %s, Reason:%s'%(delete[0], delete[1], delete[3], questionText, delete[6]))
             irc.reply('Use the showdelete command to see more information')
     listdeletes = wrap(listdeletes, ['user', ('checkChannelCapability', 'triviamod'), optional('int')])
 
@@ -814,7 +814,7 @@ class TriviaTime(callbacks.Plugin):
                     irc.sendMsg(ircmsgs.notice(username, 'NEW: %s' % (newQuestionText)))
                     irc.sendMsg(ircmsgs.notice(username, 'OLD: %s' % (question[2])))
                     return
-            elif str.lower(utils.str.normalizeWhitespace(inp)) == 'delete':
+            elif str.lower(utils.str.normalizeWhitespace(inp))[:6] == 'delete':
                 if not threadStorage.questionIdExists(question[0]):
                     irc.error('That question does not exist.')
                     return
@@ -824,8 +824,10 @@ class TriviaTime(callbacks.Plugin):
                 if threadStorage.isQuestionPendingDeletion(question[0]):
                     irc.error('That question is already pending deletion.')
                     return
+                reason = utils.str.normalizeWhitespace(inp)[6:]
+                reason = utils.str.normalizeWhitespace(reason)
                 irc.reply('Marked question for deletion.')
-                threadStorage.insertDelete(username, channel, question[0])
+                threadStorage.insertDelete(username, channel, question[0], reason)
                 return
             threadStorage.updateUser(username, 0, 0, 1)
             threadStorage.insertReport(channel, username, text, question[0])
@@ -971,7 +973,7 @@ class TriviaTime(callbacks.Plugin):
                 if len(question) > 0:
                     question = question[0]
                     questionText = question[2]
-                irc.reply('Delete #%d, by %s Question#%d: %s'%(q[0], q[1], q[3], questionText))
+                irc.reply('Delete #%d, by %s Question#%d: %s, Reason: %s'%(q[0], q[1], q[3], questionText, q[6]))
             else:
                 irc.error('Delete #%d not found' % num)
         else:
@@ -2735,12 +2737,12 @@ class TriviaTime(callbacks.Plugin):
                 return True
             return False
 
-        def insertDelete(self, username, channel, lineNumber):
+        def insertDelete(self, username, channel, lineNumber, reason):
             usernameCanonical = ircutils.toLower(username)
             channelCanonical = ircutils.toLower(channel)
             c = self.conn.cursor()
-            c.execute('insert into triviadelete values (NULL, ?, ?, ?, ?, ?)',
-                                    (username, usernameCanonical, lineNumber, channel, channelCanonical))
+            c.execute('insert into triviadelete values (NULL, ?, ?, ?, ?, ?, ?)',
+                                    (username, usernameCanonical, lineNumber, channel, channelCanonical, reason))
             self.conn.commit()
 
         def insertLogin(self, username, salt, isHashed, password, capability):
@@ -2889,7 +2891,8 @@ class TriviaTime(callbacks.Plugin):
                         username_canonical text,
                         line_num integer,
                         channel text,
-                        channel_canonical text
+                        channel_canonical text,
+                        reason text
                         )''')
             except:
                 pass

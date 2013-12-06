@@ -208,8 +208,9 @@ if($login->isLoggedIn()) {
             <tr>
               <th>#</th>
               <th class="hidden-phone">Username</th>
-              <th>New Question</th>
-              <th>Question #</th>
+              <th>Question</th>
+              <th class="hidden-phone">Question #</th>
+              <th>Reason</th>
               <?php
               if($isMod) {
                 echo '<th> </th>';
@@ -224,7 +225,8 @@ if($login->isLoggedIn()) {
               echo '<td>' . $res['id'] . '</td>';
               echo '<td class="hidden-phone">' . $res['username'] . '</td>';
               echo '<td class="breakable">' . $res['question'] . '</td>';
-              echo '<td>' . $res['line_num'] . '</td>';
+              echo '<td class="hidden-phone">' . $res['line_num'] . '</td>';
+              echo '<td class="breakable">' . $res['reason'] . '</td>';
               if($isMod) {
                 echo '<td><a href="' . $container->router->generate('accept-delete', array("id"=>$res['id'])) . '" class="btn btn-mini"><i class="icon-ok"></i></a> <a href="' . $container->router->generate('remove-delete', array("id"=>$res['id'])) . '" class="btn btn-mini"><i class="icon-ban-circle"></i></a></td>';
               }
