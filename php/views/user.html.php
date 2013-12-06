@@ -41,7 +41,7 @@
             <?php
             foreach($values['users'] as $res) {
               echo '<tr>';
-              echo '<td><a href="profile.php?username=' . rawurlencode($res['username']) . '">' . $res['username'] . '</a></td>';
+              echo '<td><a href="' . $container->router->generate('profile', array("username"=>$res['username'])) . '">' . $res['username'] . '</a></td>';
               echo '<td>' . number_format($res['points'],0) . '</td>';
               echo '<td>' . number_format($res['total'],0) . '</td>';
               echo '</tr>';
