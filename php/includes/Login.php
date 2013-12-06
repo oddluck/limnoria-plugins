@@ -68,8 +68,11 @@ class Login
         $usernameCanonical = $this->ircToLower($username);
 
         // Storage get salt, hashedPassword, capabilities for user
-        $results = $this->storage->getLoginByUsernameCanonical($usernameCanonical);
-
+        try {
+            $results = $this->storage->getLoginByUsernameCanonical($usernameCanonical);
+        } catch(StorageException $e) {
+            throw $e;
+        }
         if(count($results) < 1) {
             return false;
         }

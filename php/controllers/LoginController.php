@@ -39,12 +39,18 @@ class LoginController extends Controller
                 $errors['password'] = "Please enter a Password.";
             }
             if(!empty($username) && !empty($password)) {
-                if($login->login($username, $password)) {
-                    $this->container->setNotice("<strong>Success!</strong> You have been successfully logged in.");
-                    $this->doRedirect();
-                } else {
-                    $errors['login'] = "Invalid credentials. Please check your username and password, and try again.";
+                try {
+                    if($login->login($username, $password)) {
+                        $this->container->setNotice("<strong>Success!</strong> You have been successfully logged in.");
+                        $this->doRedirect();
+                    } else {
+                        $errors['login'] = "Invalid credentials. Please check your username and password, and try again.";
+                    }
+                } catch (StorageException $e) {
+                    $errors['login'] = "Error: Database is not available.";
                 }
+
+
             }
         }
 
