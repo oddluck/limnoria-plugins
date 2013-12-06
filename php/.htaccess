@@ -4,5 +4,5 @@
 </FilesMatch>
 Options +FollowSymLinks
 RewriteEngine On
-RewriteCond %{REQUEST_URI} !^.+/?(css|js|fonts|img)/
+RewriteCond %{REQUEST_URI} !^(.+/|/?)(css|js|fonts|img)/
 RewriteRule ^(.*)$ app.php [NC,L]
