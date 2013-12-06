@@ -16,6 +16,21 @@ $config['libLocation'] = "includes/";
 $config['viewLocation'] = "views/";
 
 /**
+ * Config location
+ */
+$config['configLocation'] = "config/";
+
+/**
+ * Controllers location
+ */
+$config['controllerLocation'] = "controllers/";
+
+/**
+ * Prefix for all routes (eg '/trivia')
+ */
+$config['baseRoute'] = '';
+
+/**
  * Default page after logging in
  */
-$config['defaultLoginRedirectPage'] = "index.php";
+$config['defaultLoginRedirectPage'] = "home";

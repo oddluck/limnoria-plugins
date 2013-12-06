@@ -5,14 +5,36 @@ class Bootstrap
     public $config;
     public $login;
     public $renderer;
+    public $router;
 
-    public function __construct($config) {
+    public function __construct($config, $routes) {
         $this->config = $config;
         $this->storage = new Storage($this->config['dbLocation']);
         $this->login = new Login($this->storage);
         $this->renderer = new Renderer($config, $this);
+        $this->router = new Router();
+        $this->loadRoutes($routes);
 
         $this->setCurrentPage(basename($_SERVER['PHP_SELF']));
+    }
+
+    public function loadRoutes($routes) {
+        $this->router->setBasePath($routes['base']);
+        foreach($routes['routes'] as $route) {
+            $pattern = '';
+            $target = '';
+            $args = array();
+            if(array_key_exists('pattern', $route)) {
+                $pattern = $route['pattern'];
+            }
+            if(array_key_exists('target', $route)) {
+                $target = $route['target'];
+            }
+            if(array_key_exists('args', $route)) {
+                $args = $route['args'];
+            }
+            $this->router->map($pattern, $target, $args);
+        }
     }
 
     public function render($page, $values=array()) {
@@ -55,5 +77,20 @@ class Bootstrap
 
     public function getConfig() {
         return $this->config;
+    }
+
+    public function set404() {
+        header("HTTP/1.0 404 Not Found");
+    }
+
+    public function render404() {
+        $this->set404();
+        $this->render('404.html.php');
+        die();
+    }
+
+    public function redirect($page) {
+        header('Location: ' . $page);
+        die();
     }
 }

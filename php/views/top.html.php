@@ -5,10 +5,10 @@
     <div class="row">
       <div class="span12">
         <ul class="nav nav-pills">
-          <li<?php if($values['timespan']=='d') { echo ' class="active"'; } ?>><a href="top.php?t=d">Day</a></li>
-          <li<?php if($values['timespan']=='w') { echo ' class="active"'; } ?>><a href="top.php?t=w">Week</a></li>
-          <li<?php if($values['timespan']=='m') { echo ' class="active"'; } ?>><a href="top.php?t=m">Month</a></li>
-          <li<?php if($values['timespan']=='y') { echo ' class="active"'; } ?>><a href="top.php?t=y">Year</a></li>
+          <li<?php if($values['timespan']=='day') { echo ' class="active"'; } ?>><a href="<?php echo $container->router->generate('top', array('timespan'=>'day')); ?>">Day</a></li>
+          <li<?php if($values['timespan']=='week') { echo ' class="active"'; } ?>><a href="<?php echo $container->router->generate('top', array('timespan'=>'week')); ?>">Week</a></li>
+          <li<?php if($values['timespan']=='month') { echo ' class="active"'; } ?>><a href="<?php echo $container->router->generate('top', array('timespan'=>'month')); ?>">Month</a></li>
+          <li<?php if($values['timespan']=='year') { echo ' class="active"'; } ?>><a href="<?php echo $container->router->generate('top', array('timespan'=>'year')); ?>">Year</a></li>
         </ul>
       </div>
     </div>
@@ -34,7 +34,7 @@
             foreach($values['result'] as $res) {
               echo '<tr>';
               echo '<td>' . $currentRank . '</td>';
-              echo '<td><a href="profile.php?username=' . rawurlencode($res['username']) . '">' . $res['username'] . '</a></td>';
+              echo '<td><a href="' . $container->router->generate('profile', array("username"=>$res['username'])) . '">' . $res['username'] . '</a></td>';
               echo '<td>' . number_format($res['points'],0) . '</td>';
               echo '</tr>';
               $currentRank++;
