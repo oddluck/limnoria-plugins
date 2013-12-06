@@ -2748,7 +2748,7 @@ class TriviaTime(callbacks.Plugin):
         def insertLogin(self, username, salt, isHashed, password, capability):
             usernameCanonical = ircutils.toLower(username)
             if self.loginExists(username):
-                self.updateLogin(username, salt, isHashed, password, capability)
+                return self.updateLogin(username, salt, isHashed, password, capability)
             if not isHashed:
                 isHashed = 0
             else:
@@ -3269,6 +3269,7 @@ class TriviaTime(callbacks.Plugin):
             c.execute('''update trivialogin set
                             username=?,
                             salt=?,
+                            is_hashed=?,
                             password=?,
                             capability=?
                             where username_canonical=?''', (username, salt, isHashed, password, capability, usernameCanonical)

@@ -27,7 +27,7 @@ if($login->isLoggedIn()) {
         <table class="table modal-table">
           <thead>
             <tr>
-              <th>Report #</th>
+              <th>#</th>
               <th class="hidden-phone">Username</th>
               <th class="hidden-phone">Question #</th>
               <th>Question</th>
@@ -75,7 +75,7 @@ if($login->isLoggedIn()) {
         <table class="table modal-table">
           <thead>
             <tr>
-              <th>Edit #</th>
+              <th>#</th>
               <th class="hidden-phone">Username</th>
               <th>New Question</th>
               <th>Old Question</th>
