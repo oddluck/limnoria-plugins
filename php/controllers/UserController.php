@@ -72,6 +72,9 @@ class UserController extends Controller
             $username = $args['username'];
         }
 
+        $username = str_replace('+', '%2b', $username);
+        $username = urldecode($username);
+
         $ircLowerSymbols = array("\\"=>"|", "["=>"{", "]"=>"}", "~"=>"^");
         $usernameCanonical = strtr($username, $ircLowerSymbols);
         $usernameCanonical = strtolower($usernameCanonical);
