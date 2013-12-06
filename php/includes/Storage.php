@@ -68,6 +68,97 @@ class Storage
         return $result;
     }
 
+    public function getTemporaryQuestionById($id) {
+        if(!$this->isConnected()) {
+            throw new StorageConnectionException();
+        }
+        $q = $this->db->prepare('SELECT *
+                FROM triviatemporaryquestion
+                WHERE id=:id
+                LIMIT 1');
+        if($q === false) {
+            throw new StorageSchemaException();
+        }
+        $q->execute(array(':id'=>$id));
+        $result = $q->fetchAll();
+        return $result;
+    }
+
+    public function getDeleteById($id) {
+        if(!$this->isConnected()) {
+            throw new StorageConnectionException();
+        }
+        $q = $this->db->prepare('SELECT *
+                FROM triviadelete 
+                WHERE id=:id
+                LIMIT 1');
+        if($q === false) {
+            throw new StorageSchemaException();
+        }
+        $q->execute(array(':id'=>$id));
+        $result = $q->fetchAll();
+        return $result;
+    }
+
+    public function getEditById($id) {
+        if(!$this->isConnected()) {
+            throw new StorageConnectionException();
+        }
+        $q = $this->db->prepare('SELECT *
+                FROM triviaedit 
+                WHERE id=:id
+                LIMIT 1');
+        if($q === false) {
+            throw new StorageSchemaException();
+        }
+        $q->execute(array(':id'=>$id));
+        $result = $q->fetchAll();
+        return $result;
+    }
+
+    public function temporaryQuestionExists($id) {
+        if(!$this->isConnected()) {
+            throw new StorageConnectionException();
+        }
+        $q = $this->db->prepare('SELECT count(id) FROM triviatemporaryquestion WHERE id=:id');
+        if($q === false) {
+            throw new StorageSchemaException();
+        }
+        $q->execute(array(':id'=>$id));
+        $result = $q->fetchColumn();
+        if($result > 0) {
+            return true;
+        }
+        return false;
+    }
+
+    public function insertQuestion($question) {
+        if(!$this->isConnected()) {
+            throw new StorageConnectionException();
+        }
+        $q = $this->db->prepare('INSERT INTO triviaquestion VALUES (NULL, :question, :question, 0, 0, 0)');
+        $result = $q->execute(array(':question'=>$question));
+        if($result === false) {
+            throw new StorageSchemaException();
+        }
+    }
+
+    public function deleteExists($id) {
+        if(!$this->isConnected()) {
+            throw new StorageConnectionException();
+        }
+        $q = $this->db->prepare('SELECT count(id) FROM triviadelete WHERE id=:id');
+        if($q === false) {
+            throw new StorageSchemaException();
+        }
+        $q->execute(array(':id'=>$id));
+        $result = $q->fetchColumn();
+        if($result > 0) {
+            return true;
+        }
+        return false;
+    }
+
     public function getTopDeletions($page, $max) {
         if(!$this->isConnected()) {
             throw new StorageConnectionException();
@@ -101,6 +192,120 @@ class Storage
         }
         $result = $q->fetchColumn();
         return $result;
+    }
+
+    public function removeQuestion($id) {
+        if(!$this->isConnected()) {
+            throw new StorageConnectionException();
+        }
+        $q = $this->db->prepare('DELETE FROM triviaquestion WHERE id=:id');
+        $result = $q->execute(array(':id'=>$id));
+        if($result === false) {
+            throw new StorageSchemaException();
+        }
+    }
+
+    public function removeDelete($id) {
+        if(!$this->isConnected()) {
+            throw new StorageConnectionException();
+        }
+        $q = $this->db->prepare('DELETE FROM triviadelete WHERE id=:id');
+        $result = $q->execute(array(':id'=>$id));
+        if($result === false) {
+            throw new StorageSchemaException();
+        }
+    }
+
+    public function removeTemporaryQuestion($id) {
+        if(!$this->isConnected()) {
+            throw new StorageConnectionException();
+        }
+        $q = $this->db->prepare('DELETE FROM triviatemporaryquestion WHERE id=:id');
+        $result = $q->execute(array(':id'=>$id));
+        if($result === false) {
+            throw new StorageSchemaException();
+        }
+    }
+
+    public function removeReport($id) {
+        if(!$this->isConnected()) {
+            throw new StorageConnectionException();
+        }
+        $q = $this->db->prepare('DELETE FROM triviareport WHERE id=:id');
+        $result = $q->execute(array(':id'=>$id));
+        if($result === false) {
+            throw new StorageSchemaException();
+        }
+    }
+
+    public function removeEdit($id) {
+        if(!$this->isConnected()) {
+            throw new StorageConnectionException();
+        }
+        $q = $this->db->prepare('DELETE FROM triviaedit WHERE id=:id');
+        $result = $q->execute(array(':id'=>$id));
+        if($result === false) {
+            throw new StorageSchemaException();
+        }
+    }
+
+    public function reportExists($id) {
+        if(!$this->isConnected()) {
+            throw new StorageConnectionException();
+        }
+        $q = $this->db->prepare('SELECT count(id) FROM triviareport WHERE id=:id');
+        if($q === false) {
+            throw new StorageSchemaException();
+        }
+        $q->execute(array(':id'=>$id));
+        $result = $q->fetchColumn();
+        if($result > 0) {
+            return true;
+        }
+        return false;
+    }
+
+    public function editExists($id) {
+        if(!$this->isConnected()) {
+            throw new StorageConnectionException();
+        }
+        $q = $this->db->prepare('SELECT count(id) FROM triviaedit WHERE id=:id');
+        if($q === false) {
+            throw new StorageSchemaException();
+        }
+        $q->execute(array(':id'=>$id));
+        $result = $q->fetchColumn();
+        if($result > 0) {
+            return true;
+        }
+        return false;
+    }
+
+    public function questionExists($id) {
+        if(!$this->isConnected()) {
+            throw new StorageConnectionException();
+        }
+        $q = $this->db->prepare('SELECT count(id) FROM triviaquestion WHERE id=:id');
+        if($q === false) {
+            throw new StorageSchemaException();
+        }
+        $q->execute(array(':id'=>$id));
+        $result = $q->fetchColumn();
+        if($result > 0) {
+            return true;
+        }
+        return false;
+    }
+
+    public function updateQuestion($id, $question) {
+        if(!$this->isConnected()) {
+            throw new StorageConnectionException();
+        }
+        $q = $this->db->prepare('UPDATE triviaquestion SET question=:question WHERE id=:id');
+        $result = $q->execute(array(':id'=>$id, ':question'=>$question));
+        if($result === false) {
+            throw new StorageSchemaException();
+        }
     }
 
     public function getTopReports($page, $max) {

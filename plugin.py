@@ -409,7 +409,7 @@ class TriviaTime(callbacks.Plugin):
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
         q = threadStorage.getQuestion(num)
-        if len(question) > 0:
+        if len(q) > 0:
             q = q[0]
             questionParts = question.split('*')
             if len(questionParts) < 2:
