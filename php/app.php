@@ -1,11 +1,11 @@
 <?php
 // Load config
-include "config/config.php"; // $config
+require "config/config.php"; // $config
 // Load routes
-include $config['configLocation'] . "routes.php"; // $routes
+require $config['configLocation'] . "routes.php"; // $routes
 
 // Make the autoloader, requires $config
-include $config['libLocation'] . "autoload.php";
+require $config['libLocation'] . "autoload.php";
 
 // some base folder hacking for websites not in base dir
 $config['baseFolder'] = dirname($_SERVER['PHP_SELF']);
