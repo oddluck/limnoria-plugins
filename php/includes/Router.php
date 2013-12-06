@@ -67,13 +67,9 @@ class Router
                 // loop trough parameter names, store matching value in $params array
                 foreach ($argument_keys as $key => $name) {
                     if (isset($matches[$key + 1])) {
-                        if($matches[$key + 1] == '*' || $matches[$key + 1] == '**') {
-                            $matches[$key + 1] = str_replace('*', '.', $matches[$key + 1]);
-                        }
                         $params[$name] = $matches[$key + 1];
                     }
                 }
-
             }
 
             $route->setParameters($params);
@@ -103,9 +99,6 @@ class Router
             // loop trough parameter names, store matching value in $params array
             foreach ($param_keys as $i => $key) {
                 if (isset($params[$key])) {
-                    if($params[$key] == '.' || $params[$key] == '..') {
-                        $params[$key] = str_replace('.', '*', $params[$key]);
-                    }
                     $url = preg_replace("/:(\w+)/", $params[$key], $url, 1);
                 }
             }

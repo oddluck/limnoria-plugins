@@ -19,12 +19,12 @@ class Controller
         $this->container->setTitle($title);
     }
 
-    protected function render($page, $args=array()) {
-        $this->container->render($page, $args);
+    protected function render($page, $args=array(), $useTemplate=true) {
+        $this->container->render($page, $args, $useTemplate);
     }
 
     protected function getNotice($notice) {
-        return $this->container->getNotice;
+        return $this->container->getNotice();
     }
 
     protected function clearNotice() {
@@ -33,6 +33,18 @@ class Controller
 
     protected function setNotice($notice) {
         $this->container->setNotice($notice);
+    }
+
+    protected function getError($error) {
+        return $this->container->getError();
+    }
+
+    protected function clearError() {
+        $this->container->clearError();
+    }
+
+    protected function setError($error) {
+        $this->container->setError($error);
     }
 
     protected function render404() {

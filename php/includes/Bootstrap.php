@@ -37,13 +37,19 @@ class Bootstrap
         }
     }
 
-    public function render($page, $values=array()) {
-        $this->renderer->render($page, $values);
+    public function render($page, $values=array(), $useTemplate=true) {
+        $this->renderer->render($page, $values, $useTemplate);
     }
 
     public function clearNotice() {
         if(array_key_exists('notice', $_SESSION)) {
             unset($_SESSION['notice']);
+        }
+    }
+
+    public function clearError() {
+        if(array_key_exists('error', $_SESSION)) {
+            unset($_SESSION['error']);
         }
     }
 
@@ -55,6 +61,10 @@ class Bootstrap
         $_SESSION['notice'] = $notice;
     }
 
+    public function setError($error) {
+        $_SESSION['error'] = $error;
+    }
+
     public function setCurrentPage($currentPage) {
         $this->renderer->setCurrentPage($currentPage);
     }
@@ -62,6 +72,14 @@ class Bootstrap
     public function getNotice() {
         if(array_key_exists('notice', $_SESSION)) {
             return $_SESSION['notice'];
+        } else {
+            return null;
+        }
+    }
+
+    public function getError() {
+        if(array_key_exists('error', $_SESSION)) {
+            return $_SESSION['error'];
         } else {
             return null;
         }

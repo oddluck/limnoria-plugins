@@ -33,7 +33,7 @@
             echo '<p class="navbar-text pull-right">
                     Logged in as ';
             echo $user->getUsername();
-            echo ' (<a class="navbar-link" href="<' . $container->router->generate('logout') . '">logout</a>)';
+            echo ' (<a class="navbar-link" href="' . $container->router->generate('logout') . '">logout</a>)';
             echo '</p>';
           }
           ?>
@@ -72,4 +72,10 @@
       echo "<div class='alert alert-info' style='margin-top:10px;'>$notice</div>";
     }
     $container->clearNotice();
+
+    $error = $container->getError();
+    if(!is_null($error)) {
+      echo "<div class='alert alert-error' style='margin-top:10px;'>$error</div>";
+    }
+    $container->clearError();
     ?>

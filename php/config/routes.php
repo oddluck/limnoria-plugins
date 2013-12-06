@@ -21,3 +21,18 @@ $routes[] = array("pattern"=>"/reports", "target"=>"Reports:list", "args"=>array
 // Login/Logout
 $routes[] = array("pattern"=>"/login", "target"=>"Login:login", "args"=>array("name"=>"login"));
 $routes[] = array("pattern"=>"/logout", "target"=>"Login:logout", "args"=>array("name"=>"logout"));
+
+// Admin Report remove
+$routes[] = array("pattern"=>"/manage/report/:id/remove", "target"=>"AdminReport:removeReport", "args"=>array("name"=>"remove-report", "filters"=> array("id"=>"([\d]+)")));
+
+// Admin Edit accept/remove
+$routes[] = array("pattern"=>"/manage/edit/:id/accept", "target"=>"AdminEdit:acceptEdit", "args"=>array("name"=>"accept-edit", "filters"=> array("id"=>"([\d]+)")));
+$routes[] = array("pattern"=>"/manage/edit/:id/remove", "target"=>"AdminEdit:removeEdit", "args"=>array("name"=>"remove-edit", "filters"=> array("id"=>"([\d]+)")));
+
+// Admin Delete accept/remove
+$routes[] = array("pattern"=>"/manage/delete/:id/accept", "target"=>"AdminDelete:acceptDelete", "args"=>array("name"=>"accept-delete", "filters"=> array("id"=>"([\d]+)")));
+$routes[] = array("pattern"=>"/manage/delete/:id/remove", "target"=>"AdminDelete:removeDelete", "args"=>array("name"=>"remove-delete", "filters"=> array("id"=>"([\d]+)")));
+
+// Admin new accept/remove
+$routes[] = array("pattern"=>"/manage/new/:id/accept", "target"=>"AdminNew:acceptNew", "args"=>array("name"=>"accept-new", "filters"=> array("id"=>"([\d]+)")));
+$routes[] = array("pattern"=>"/manage/new/:id/remove", "target"=>"AdminNew:removeNew", "args"=>array("name"=>"remove-new", "filters"=> array("id"=>"([\d]+)")));

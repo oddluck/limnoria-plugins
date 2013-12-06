@@ -1,3 +1,16 @@
+<?php
+$login = $container->login;
+
+$isMod = false;
+
+if($login->isLoggedIn()) {
+  if(!is_null($login->getUser())) {
+    if($login->getUser()->getCapability() == "owner" || $login->getUser()->getCapability() == "triviamod") {
+      $isMod = true;
+    }
+  }
+}
+?>
     <div class="hero-unit">
       <h1>Reports</h1>
       <p>The reports and edits that are currently pending.</p>
@@ -16,9 +29,14 @@
             <tr>
               <th>Report #</th>
               <th class="hidden-phone">Username</th>
-              <th>Question #</th>
+              <th class="hidden-phone">Question #</th>
               <th>Question</th>
               <th>Report Text</th>
+              <?php
+              if($isMod) {
+                echo '<th> </th>';
+              }
+              ?>
             </tr>
           </thead>
           <tbody>
@@ -27,9 +45,12 @@
               echo '<tr>';
               echo '<td>' . $res['id'] . '</td>';
               echo '<td class="hidden-phone">' . $res['username'] . '</td>';
-              echo '<td>' . $res['question_num'] . '</td>';
+              echo '<td class="hidden-phone">' . $res['question_num'] . '</td>';
               echo '<td class="breakable">' . $res['original'] . '</td>';
               echo '<td class="breakable">' . $res['report_text'] . '</td>';
+              if($isMod) {
+                echo '<td><a href="' . $container->router->generate('remove-report', array("id"=>$res['id'])) . '" class="btn btn-mini"><i class="icon-ban-circle"></i></a></td>';
+              }
               echo '</tr>';
             }
             ?>
@@ -58,7 +79,12 @@
               <th class="hidden-phone">Username</th>
               <th>New Question</th>
               <th>Old Question</th>
-              <th>Question #</th>
+              <th class="hidden-phone">Question #</th>
+              <?php
+              if($isMod) {
+                echo '<th> </th>';
+              }
+              ?>
             </tr>
           </thead>
           <tbody>
@@ -110,7 +136,10 @@
               echo '<td class="hidden-phone">' . $res['username'] . '</td>';
               echo '<td class="breakable">' . $differenceString . '</td>';
               echo '<td class="breakable">' . $res['original'] . '</td>';
-              echo '<td>' . $res['question_id'] . '</td>';
+              echo '<td class="hidden-phone">' . $res['question_id'] . '</td>';
+              if($isMod) {
+                echo '<td><a href="' . $container->router->generate('accept-edit', array("id"=>$res['id'])) . '" class="btn btn-mini"><i class="icon-ok"></i></a> <a href="' . $container->router->generate('remove-edit', array("id"=>$res['id'])) . '" class="btn btn-mini"><i class="icon-ban-circle"></i></a></td>';
+              }
               echo '</tr>';
             }
             ?>
@@ -137,6 +166,11 @@
               <th>#</th>
               <th>Author</th>
               <th>New Question</th>
+              <?php
+              if($isMod) {
+                echo '<th> </th>';
+              }
+              ?>
             </tr>
           </thead>
           <tbody>
@@ -146,6 +180,9 @@
               echo '<td>' . $res['id'] . '</td>';
               echo '<td>' . $res['username'] . '</td>';
               echo '<td class="breakable">' . $res['question'] . '</td>';
+              if($isMod) {
+                echo '<td><a href="' . $container->router->generate('accept-new', array("id"=>$res['id'])) . '" class="btn btn-mini"><i class="icon-ok"></i></a> <a href="' . $container->router->generate('remove-new', array("id"=>$res['id'])) . '" class="btn btn-mini"><i class="icon-ban-circle"></i></a></td>';
+              }
               echo '</tr>';
             }
             ?>
@@ -173,6 +210,11 @@
               <th class="hidden-phone">Username</th>
               <th>New Question</th>
               <th>Question #</th>
+              <?php
+              if($isMod) {
+                echo '<th> </th>';
+              }
+              ?>
             </tr>
           </thead>
           <tbody>
@@ -183,6 +225,9 @@
               echo '<td class="hidden-phone">' . $res['username'] . '</td>';
               echo '<td class="breakable">' . $res['question'] . '</td>';
               echo '<td>' . $res['line_num'] . '</td>';
+              if($isMod) {
+                echo '<td><a href="' . $container->router->generate('accept-delete', array("id"=>$res['id'])) . '" class="btn btn-mini"><i class="icon-ok"></i></a> <a href="' . $container->router->generate('remove-delete', array("id"=>$res['id'])) . '" class="btn btn-mini"><i class="icon-ban-circle"></i></a></td>';
+              }
               echo '</tr>';
             }
             ?>

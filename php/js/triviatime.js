@@ -15,16 +15,22 @@ var createModalDiv = function() {
     }
 };
 $(function() {
-    $(".modal-table tbody tr").click(function() {
+    $(".modal-table tbody tr").click(function(e) {
         createModalDiv();
         var headers = $(this).parent("tbody").parent("table").find('th');
         var values = $(this).children("td");
         var content = '';
         for(var i=0;i<values.length;i++) {
             content += "<h4>" + headers.eq(i).text() + "</h4>";
-            content += "<p>" + values.eq(i).text() + "</p>";
+            content += "<p>" + values.eq(i).html() + "</p>";
         }
         $('#infoModal > .modal-body').html(content);
         $('#infoModal').modal('show');
+    });
+    $(".modal-table tbody tr td a").click(function(e) {
+            e.stopPropagation();
+            e.preventDefault();
+            window.location.href = $(this).attr("href");
+            return false;
     });
 });
