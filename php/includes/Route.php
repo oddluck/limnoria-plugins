@@ -16,7 +16,9 @@ class Route
         $url = (string) $url;
 
         // make sure that the URL is suffixed with a forward slash
-        if(substr($url,-1) !== '/') $url .= '/';
+        if(substr($url,-1) !== '/') {
+            $url .= '/';   
+        }
         
         $this->url = $url;
     }
@@ -55,10 +57,10 @@ class Route
 
     private function substituteFilter($matches) {
         if (isset($matches[1]) && isset($this->filters[$matches[1]])) {
-                return $this->filters[$matches[1]];
-            }
-        
-            return "([\w-]+)";
+            return $this->filters[$matches[1]];
+        }
+    
+        return "([\w-]+)";
     }
 
     public function getParameters() {
