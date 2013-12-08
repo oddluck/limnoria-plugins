@@ -40,6 +40,7 @@ class TriviaTime(callbacks.Plugin):
         # games info
         self.games = {} # separate game for each channel
         self.voiceTimeouts = self.TimeoutList(self.registryValue('voice.timeoutVoice'))
+        self.voiceError = self.TimeoutList(120)
 
         #Database amend statements for outdated versions
         self.dbamends = {} #Formatted like this: <DBVersion>: "<ALTERSTATEMENT>; <ALTERSTATEMENT>;" (This IS valid SQL as long as we include the semicolons)
@@ -114,18 +115,14 @@ class TriviaTime(callbacks.Plugin):
                 self.games[channelCanonical].checkAnswer(msg)
 
     def voiceUser(self, irc, username, channel):
-        # irc.nick
         prefix = irc.state.nickToHostmask(irc.nick)
         cap = ircdb.canonicalCapability('op')
         cap = ircdb.makeChannelCapability(channel, cap)
         if not ircdb.checkCapability(prefix, cap):
+            if self.voiceError.has(ircutils.toLower(channel)):
+                return
+            self.voiceError.append(ircutils.toLower(channel))
             log.error("Bot does not have op capability to voice user %s" % (username))
-            return
-
-        prefix = irc.state.nickToHostmask(username)
-        cap = ircdb.canonicalCapability('voice')
-        cap = ircdb.makeChannelCapability(channel, cap)
-        if ircdb.checkCapability(prefix, cap):
             return
 
         irc.queueMsg(ircmsgs.voice(channel, username))
@@ -136,6 +133,20 @@ class TriviaTime(callbacks.Plugin):
     def handleVoice(self, irc, username, channel):
         if not self.registryValue('voice.enableVoice'):
             return
+
+        prefix = irc.state.nickToHostmask(username)
+        cap = ircdb.canonicalCapability('voice')
+        cap = ircdb.makeChannelCapability(channel, cap)
+        try:
+            u = ircdb.users.getUser(prefix)
+        except KeyError:
+            if ircdb.checkCapability(prefix, cap):
+                return
+        else:
+            for c in u.capabilities:
+                if cap == c:
+                    return
+
         timeoutVoice = self.registryValue('voice.timeoutVoice')
         self.voiceTimeouts.setTimeout(timeoutVoice)
         usernameCanonical = ircutils.toLower(username)
@@ -1250,6 +1261,7 @@ class TriviaTime(callbacks.Plugin):
             self.unmaskedChars = " -'\"_=+&%$#@!~`[]{}?.,<>|\\/:;"
             
             # get utilities from base plugin
+            self.base = base
             self.games = base.games
             self.storage = base.storage
             self.Storage = base.Storage
@@ -1289,6 +1301,7 @@ class TriviaTime(callbacks.Plugin):
                 return
             
             username = msg.nick
+            channel = msg.args[0]
             # is it a user?
             try:
                 user = ircdb.users.getUser(msg.prefix)
@@ -1432,6 +1445,7 @@ class TriviaTime(callbacks.Plugin):
                         log.error('waitTime was set too low (<2 seconds). Setting to 2 seconds')
                     waitTime = time.time() + waitTime
                     self.queueEvent(waitTime, self.nextQuestion)
+                self.base.handleVoice(self.irc, username, channel)
 
         def getHintString(self, hintNum=None):
             if hintNum == None:
