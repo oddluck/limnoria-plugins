@@ -143,8 +143,16 @@ class TriviaTime(callbacks.Plugin):
             if ircdb.checkCapability(prefix, cap):
                 return
         else:
+            capop = ircdb.canonicalCapability('op')
+            capop = ircdb.makeChannelCapability(channel, cap)
+            caphop = ircdb.canonicalCapability('halfop')
+            caphop = ircdb.makeChannelCapability(channel, cap)
             for c in u.capabilities:
                 if cap == c:
+                    return
+                if capop == c:
+                    return
+                if caphop == c:
                     return
 
         timeoutVoice = self.registryValue('voice.timeoutVoice')
