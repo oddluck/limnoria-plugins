@@ -114,7 +114,24 @@ class TriviaTime(callbacks.Plugin):
                 self.games[channelCanonical].checkAnswer(msg)
 
     def voiceUser(self, irc, username, channel):
+        # irc.nick
+        prefix = irc.state.nickToHostmask(irc.nick)
+        cap = ircdb.canonicalCapability('op')
+        cap = ircdb.makeChannelCapability(channel, cap)
+        if not ircdb.checkCapability(prefix, cap):
+            log.error("Bot does not have op capability to voice user %s" % (username))
+            return
+
+        prefix = irc.state.nickToHostmask(username)
+        cap = ircdb.canonicalCapability('voice')
+        cap = ircdb.makeChannelCapability(channel, cap)
+        if ircdb.checkCapability(prefix, cap):
+            return
+
         irc.queueMsg(ircmsgs.voice(channel, username))
+        if not self.voiceTimeouts.has(usernameCanonical):
+            self.voiceTimeouts.append(usernameCanonical)
+            irc.sendMsg(ircmsgs.privmsg(channel, 'Giving MVP to %s for being top #%d this WEEK' % (username, user[15])))
 
     def handleVoice(self, irc, username, channel):
         if not self.registryValue('voice.enableVoice'):
@@ -134,20 +151,11 @@ class TriviaTime(callbacks.Plugin):
         minPointsVoiceWeek = self.registryValue('voice.minPointsVoiceWeek')
         if len(user) >= 1:
             if user[13] <= numTopToVoice and user[4] >= minPointsVoiceYear:
-                if not self.voiceTimeouts.has(usernameCanonical):
-                    self.voiceTimeouts.append(usernameCanonical)
-                    irc.sendMsg(ircmsgs.privmsg(channel, 'Giving MVP to %s for being top #%d this YEAR' % (username, user[13])))
-                self.voiceUser(irc,channel, username)
+                self.voiceUser(irc, username, channel)
             elif user[14] <= numTopToVoice and user[6] >= minPointsVoiceMonth:
-                if not self.voiceTimeouts.has(usernameCanonical):
-                    self.voiceTimeouts.append(usernameCanonical)
-                    irc.sendMsg(ircmsgs.privmsg(channel, 'Giving MVP to %s for being top #%d this MONTH' % (username, user[14])))
-                self.voiceUser(irc,channel, username)
+                self.voiceUser(irc, username, channel)
             elif user[15] <= numTopToVoice and user[8] >= minPointsVoiceWeek:
-                if not self.voiceTimeouts.has(usernameCanonical):
-                    self.voiceTimeouts.append(usernameCanonical)
-                    irc.sendMsg(ircmsgs.privmsg(channel, 'Giving MVP to %s for being top #%d this WEEK' % (username, user[15])))
-                self.voiceUser(irc,channel, username)
+                self.voiceUser(irc, username, channel)
 
     def doJoin(self,irc,msg):
         username = msg.nick
