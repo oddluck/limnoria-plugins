@@ -94,6 +94,16 @@ conf.registerChannelValue(TriviaTime.general, 'waitTime',
                 """Time in between the end of one question and the start of another""")
         )
 
+conf.registerChannelValue(TriviaTime.voice, 'enableVoice',
+        registry.Boolean(True,
+                """Enable voicing of top players for week, month, and year""")
+        )
+
+conf.registerChannelValue(TriviaTime.voice, 'timeoutVoice',
+        registry.Integer(60,
+                """The minimum amount of time between anouncing voicing of a user""")
+        )
+
 conf.registerChannelValue(TriviaTime.voice, 'numTopToVoice',
         registry.Integer(10,
                 """The number of top players who are elligible for voice""")

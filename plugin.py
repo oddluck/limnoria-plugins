@@ -39,6 +39,8 @@ class TriviaTime(callbacks.Plugin):
 
         # games info
         self.games = {} # separate game for each channel
+        self.voiceTimeouts = self.TimeoutList(self.registryValue('voice.timeoutVoice'))
+        self.voiceError = self.TimeoutList(120)
 
         #Database amend statements for outdated versions
         self.dbamends = {} #Formatted like this: <DBVersion>: "<ALTERSTATEMENT>; <ALTERSTATEMENT>;" (This IS valid SQL as long as we include the semicolons)
@@ -112,16 +114,50 @@ class TriviaTime(callbacks.Plugin):
                 # check the answer
                 self.games[channelCanonical].checkAnswer(msg)
 
-    def doJoin(self,irc,msg):
-        username = msg.nick
-        # is it a user?
+    def voiceUser(self, irc, username, channel):
+        prefix = irc.state.nickToHostmask(irc.nick)
+        cap = ircdb.canonicalCapability('op')
+        cap = ircdb.makeChannelCapability(channel, cap)
+        if not ircdb.checkCapability(prefix, cap):
+            if self.voiceError.has(ircutils.toLower(channel)):
+                return
+            self.voiceError.append(ircutils.toLower(channel))
+            log.error("Bot does not have op capability to voice user %s" % (username))
+            return
+
+        irc.queueMsg(ircmsgs.voice(channel, username))
+        if not self.voiceTimeouts.has(usernameCanonical):
+            self.voiceTimeouts.append(usernameCanonical)
+            irc.sendMsg(ircmsgs.privmsg(channel, 'Giving MVP to %s for being top #%d this WEEK' % (username, user[15])))
+
+    def handleVoice(self, irc, username, channel):
+        if not self.registryValue('voice.enableVoice'):
+            return
+
+        prefix = irc.state.nickToHostmask(username)
+        cap = ircdb.canonicalCapability('voice')
+        cap = ircdb.makeChannelCapability(channel, cap)
         try:
-            # rootcoma!~rootcomaa@unaffiliated/rootcoma
-            user = ircdb.users.getUser(msg.prefix)
-            username = user.name
+            u = ircdb.users.getUser(prefix)
         except KeyError:
-            pass
-        channel = msg.args[0]
+            if ircdb.checkCapability(prefix, cap):
+                return
+        else:
+            capop = ircdb.canonicalCapability('op')
+            capop = ircdb.makeChannelCapability(channel, cap)
+            caphop = ircdb.canonicalCapability('halfop')
+            caphop = ircdb.makeChannelCapability(channel, cap)
+            for c in u.capabilities:
+                if cap == c:
+                    return
+                if capop == c:
+                    return
+                if caphop == c:
+                    return
+
+        timeoutVoice = self.registryValue('voice.timeoutVoice')
+        self.voiceTimeouts.setTimeout(timeoutVoice)
+        usernameCanonical = ircutils.toLower(username)
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
         if self.registryValue('general.globalStats'):
@@ -134,26 +170,23 @@ class TriviaTime(callbacks.Plugin):
         minPointsVoiceWeek = self.registryValue('voice.minPointsVoiceWeek')
         if len(user) >= 1:
             if user[13] <= numTopToVoice and user[4] >= minPointsVoiceYear:
-                irc.sendMsg(
-                        ircmsgs.privmsg(channel, 
-                                'Giving MVP to %s for being top #%d this YEAR' % (username, user[13])
-                                )
-                        )
-                irc.queueMsg(ircmsgs.voice(channel, username))
+                self.voiceUser(irc, username, channel)
             elif user[14] <= numTopToVoice and user[6] >= minPointsVoiceMonth:
-                irc.sendMsg(
-                        ircmsgs.privmsg(channel, 
-                                'Giving MVP to %s for being top #%d this MONTH' % (username, user[14])
-                                )
-                        )
-                irc.queueMsg(ircmsgs.voice(channel, username))
+                self.voiceUser(irc, username, channel)
             elif user[15] <= numTopToVoice and user[8] >= minPointsVoiceWeek:
-                irc.sendMsg(
-                        ircmsgs.privmsg(channel, 
-                                'Giving MVP to %s for being top #%d this WEEK' % (username, user[15])
-                                )
-                        )
-                irc.queueMsg(ircmsgs.voice(channel, username))
+                self.voiceUser(irc, username, channel)
+
+    def doJoin(self,irc,msg):
+        username = msg.nick
+        # is it a user?
+        try:
+            # rootcoma!~rootcomaa@unaffiliated/rootcoma
+            user = ircdb.users.getUser(msg.prefix)
+            username = user.name
+        except KeyError:
+            pass
+        channel = msg.args[0]
+        self.handleVoice(irc, username, channel)
 
     def doNotice(self,irc,msg):
         username = msg.nick
@@ -1236,6 +1269,7 @@ class TriviaTime(callbacks.Plugin):
             self.unmaskedChars = " -'\"_=+&%$#@!~`[]{}?.,<>|\\/:;"
             
             # get utilities from base plugin
+            self.base = base
             self.games = base.games
             self.storage = base.storage
             self.Storage = base.Storage
@@ -1275,6 +1309,7 @@ class TriviaTime(callbacks.Plugin):
                 return
             
             username = msg.nick
+            channel = msg.args[0]
             # is it a user?
             try:
                 user = ircdb.users.getUser(msg.prefix)
@@ -1418,6 +1453,7 @@ class TriviaTime(callbacks.Plugin):
                         log.error('waitTime was set too low (<2 seconds). Setting to 2 seconds')
                     waitTime = time.time() + waitTime
                     self.queueEvent(waitTime, self.nextQuestion)
+                self.base.handleVoice(self.irc, username, channel)
 
         def getHintString(self, hintNum=None):
             if hintNum == None:
@@ -3618,6 +3654,30 @@ class TriviaTime(callbacks.Plugin):
                     )''')
             except:
                 pass
+
+    class TimeoutList:
+        def __init__(self, timeout):
+            self.timeout = timeout
+            self.dict = {}
+
+        def setTimeout(self, timeout):
+            self.timeout = timeout
+
+        def clearTimeout(self):
+            for k, t in self.dict.items():
+                if t < (time.time() - self.timeout):
+                    del self.dict[k]
+
+        def append(self, value):
+            self.clearTimeout()
+            self.dict[value] = time.time()
+
+        def has(self, value):
+            self.clearTimeout()
+            if value in self.dict:
+                return True
+            return False
+
 
 Class = TriviaTime
 # vim:set shiftwidth=4 softtabstop=4 expandtab textwidth=79:
