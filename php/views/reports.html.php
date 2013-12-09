@@ -46,8 +46,8 @@ if($login->isLoggedIn()) {
               echo '<td>' . $res['id'] . '</td>';
               echo '<td class="hidden-phone">' . htmlspecialchars($res['username']) . '</td>';
               echo '<td class="hidden-phone">' . $res['question_num'] . '</td>';
-              echo '<td class="breakable">' . $res['original'] . '</td>';
-              echo '<td class="breakable">' . $res['report_text'] . '</td>';
+              echo '<td class="breakable">' . htmlspecialchars($res['original']) . '</td>';
+              echo '<td class="breakable">' . htmlspecialchars($res['report_text']) . '</td>';
               if($isMod) {
                 echo '<td><a href="' . $container->router->generate('remove-report', array("id"=>$res['id'])) . '" class="btn btn-mini"><i class="icon-ban-circle"></i></a></td>';
               }
