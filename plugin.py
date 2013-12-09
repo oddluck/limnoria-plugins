@@ -15,6 +15,7 @@ import supybot.ircdb as ircdb
 import supybot.ircmsgs as ircmsgs
 import supybot.schedule as schedule
 import supybot.log as log
+import supybot.conf as conf
 import os
 import re
 import sqlite3
@@ -39,9 +40,14 @@ class TriviaTime(callbacks.Plugin):
 
         # games info
         self.games = {} # separate game for each channel
+        self.voiceTimeouts = self.TimeoutList(self.registryValue('voice.timeoutVoice'))
+        self.voiceError = self.TimeoutList(120)
 
         #Database amend statements for outdated versions
         self.dbamends = {} #Formatted like this: <DBVersion>: "<ALTERSTATEMENT>; <ALTERSTATEMENT>;" (This IS valid SQL as long as we include the semicolons)
+
+        #logger
+        self.logger = self.Logger()
 
         # connections
         dbLocation = self.registryValue('admin.sqlitedb')
@@ -62,6 +68,8 @@ class TriviaTime(callbacks.Plugin):
         self.storage.makeGameLogTable()
         #self.storage.dropUserTable()
         self.storage.makeUserTable()
+        #self.storage.dropLoginTable()
+        self.storage.makeLoginTable()
         #self.storage.dropReportTable()
         self.storage.makeReportTable()
         #self.storage.dropQuestionTable()
@@ -110,6 +118,68 @@ class TriviaTime(callbacks.Plugin):
                 # check the answer
                 self.games[channelCanonical].checkAnswer(msg)
 
+    def voiceUser(self, irc, username, channel):
+        prefix = irc.state.nickToHostmask(irc.nick)
+        cap = ircdb.canonicalCapability('op')
+        cap = ircdb.makeChannelCapability(channel, cap)
+        if not ircdb.checkCapability(prefix, cap):
+            if self.voiceError.has(ircutils.toLower(channel)):
+                return
+            self.voiceError.append(ircutils.toLower(channel))
+            log.error("Bot does not have op capability to voice user %s" % (username))
+            return
+
+        irc.queueMsg(ircmsgs.voice(channel, username))
+        if not self.voiceTimeouts.has(usernameCanonical):
+            self.voiceTimeouts.append(usernameCanonical)
+            irc.sendMsg(ircmsgs.privmsg(channel, 'Giving MVP to %s for being top #%d this WEEK' % (username, user[15])))
+
+    def handleVoice(self, irc, username, channel):
+        if not self.registryValue('voice.enableVoice'):
+            return
+
+        prefix = irc.state.nickToHostmask(username)
+        cap = ircdb.canonicalCapability('voice')
+        cap = ircdb.makeChannelCapability(channel, cap)
+        try:
+            u = ircdb.users.getUser(prefix)
+        except KeyError:
+            if ircdb.checkCapability(prefix, cap):
+                return
+        else:
+            capop = ircdb.canonicalCapability('op')
+            capop = ircdb.makeChannelCapability(channel, cap)
+            caphop = ircdb.canonicalCapability('halfop')
+            caphop = ircdb.makeChannelCapability(channel, cap)
+            for c in u.capabilities:
+                if cap == c:
+                    return
+                if capop == c:
+                    return
+                if caphop == c:
+                    return
+
+        timeoutVoice = self.registryValue('voice.timeoutVoice')
+        self.voiceTimeouts.setTimeout(timeoutVoice)
+        usernameCanonical = ircutils.toLower(username)
+        dbLocation = self.registryValue('admin.sqlitedb')
+        threadStorage = self.Storage(dbLocation)
+        if self.registryValue('general.globalStats'):
+            user = threadStorage.getUser(username, None)
+        else:
+            user = threadStorage.getUser(username, channel)
+        numTopToVoice = self.registryValue('voice.numTopToVoice')
+        minPointsVoiceYear = self.registryValue('voice.minPointsVoiceYear')
+        minPointsVoiceMonth = self.registryValue('voice.minPointsVoiceMonth')
+        minPointsVoiceWeek = self.registryValue('voice.minPointsVoiceWeek')
+        if len(user) >= 1:
+            if user[13] <= numTopToVoice and user[4] >= minPointsVoiceYear:
+                self.voiceUser(irc, username, channel)
+            elif user[14] <= numTopToVoice and user[6] >= minPointsVoiceMonth:
+                self.voiceUser(irc, username, channel)
+            elif user[15] <= numTopToVoice and user[8] >= minPointsVoiceWeek:
+                self.voiceUser(irc, username, channel)
+
     def doJoin(self,irc,msg):
         username = msg.nick
         # is it a user?
@@ -120,35 +190,7 @@ class TriviaTime(callbacks.Plugin):
         except KeyError:
             pass
         channel = msg.args[0]
-        dbLocation = self.registryValue('admin.sqlitedb')
-        threadStorage = self.Storage(dbLocation)
-        user = threadStorage.getUser(username, channel)
-        numTopToVoice = self.registryValue('voice.numTopToVoice')
-        minPointsVoiceYear = self.registryValue('voice.minPointsVoiceYear')
-        minPointsVoiceMonth = self.registryValue('voice.minPointsVoiceMonth')
-        minPointsVoiceWeek = self.registryValue('voice.minPointsVoiceWeek')
-        if len(user) >= 1:
-            if user[13] <= numTopToVoice and user[4] >= minPointsVoiceYear:
-                irc.sendMsg(
-                        ircmsgs.privmsg(channel, 
-                                'Giving MVP to %s for being top #%d this YEAR' % (username, user[13])
-                                )
-                        )
-                irc.queueMsg(ircmsgs.voice(channel, username))
-            elif user[14] <= numTopToVoice and user[6] >= minPointsVoiceMonth:
-                irc.sendMsg(
-                        ircmsgs.privmsg(channel, 
-                                'Giving MVP to %s for being top #%d this MONTH' % (username, user[14])
-                                )
-                        )
-                irc.queueMsg(ircmsgs.voice(channel, username))
-            elif user[15] <= numTopToVoice and user[8] >= minPointsVoiceWeek:
-                irc.sendMsg(
-                        ircmsgs.privmsg(channel, 
-                                'Giving MVP to %s for being top #%d this WEEK' % (username, user[15])
-                                )
-                        )
-                irc.queueMsg(ircmsgs.voice(channel, username))
+        self.handleVoice(irc, username, channel)
 
     def doNotice(self,irc,msg):
         username = msg.nick
@@ -201,10 +243,14 @@ class TriviaTime(callbacks.Plugin):
             irc.error('Could not find that delete')
         else:
             delete = delete[0]
+            questionNumber = delete[3]
             irc.reply('Question #%d deleted!' % delete[3])
             threadStorage.removeReportByQuestionNumber(delete[3])
-            threadStorage.deleteQuestion(num)
+            threadStorage.removeEditByQuestionNumber(delete[3])
+            threadStorage.deleteQuestion(questionNumber)
             threadStorage.removeDelete(num)
+            threadStorage.removeDeleteByQuestionNumber(questionNumber)
+            self.logger.doLog(irc, channel, "%s accepted delete# %i, question# %i deleted" % (msg.nick, num, questionNumber))
     acceptdelete = wrap(acceptdelete, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
         
     def acceptedit(self, irc, msg, arg, user, channel, num):
@@ -225,10 +271,14 @@ class TriviaTime(callbacks.Plugin):
             threadStorage.removeEdit(edit[0])
             threadStorage.removeReportByQuestionNumber(edit[1])
             irc.reply('Question #%d updated!' % edit[1])
-            irc.sendMsg(ircmsgs.notice(msg.nick, 'NEW: %s' % (edit[2])))
+            questionOld = ''
             if len(question) > 0:
                 question = question[0]
-                irc.sendMsg(ircmsgs.notice(msg.nick, 'OLD: %s' % (question[2])))
+                questionOld = question[2]
+            self.logger.doLog(irc, channel, "%s accepted edit# %i, question# %i edited NEW: '%s' OLD '%s'" % (msg.nick, num, edit[1], edit[2], questionOld))
+            irc.sendMsg(ircmsgs.notice(msg.nick, 'NEW: %s' % (edit[2])))
+            if questionOld != '':
+                irc.sendMsg(ircmsgs.notice(msg.nick, 'OLD: %s' % (questionOld)))
             else:
                 irc.error('Question could not be found for this edit')
     acceptedit = wrap(acceptedit, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
@@ -249,6 +299,7 @@ class TriviaTime(callbacks.Plugin):
             threadStorage.insertQuestionsBulk([(q[3], q[3])])
             threadStorage.removeTemporaryQuestion(q[0])
             irc.reply('Question accepted!')
+            self.logger.doLog(irc, channel, "%s accepted new question# %i, '%s'" % (msg.nick, num, q[3]))
     acceptnew = wrap(acceptnew, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
 
     def addquestion(self, irc, msg, arg, question):
@@ -257,7 +308,7 @@ class TriviaTime(callbacks.Plugin):
         """
         username = msg.nick
         channel = msg.args[0]
-        charMask = self.registryValue('general.charMask', channel)
+        charMask = self.registryValue('hints.charMask', channel)
         if charMask not in question:
             irc.error(' The question must include the separating character %s ' % (charMask))
             return
@@ -266,6 +317,7 @@ class TriviaTime(callbacks.Plugin):
         threadStorage.updateUser(username, 0, 0, 0, 1)
         threadStorage.insertTemporaryQuestion(username, channel, question)
         irc.reply(' Thank you for adding your question to the question database, it is awaiting approval. ')
+        self.logger.doLog(irc, channel, "%s added new question: '%s'" % (username, question))
     addquestion = wrap(addquestion, ['text'])
 
     def addfile(self, irc, msg, arg, filename):
@@ -288,16 +340,53 @@ class TriviaTime(callbacks.Plugin):
         threadStorage = self.Storage(dbLocation)
         info = threadStorage.insertQuestionsBulk(insertList)
         irc.reply('Successfully added %d questions, skipped %d' % (info[0], info[1]))
+        self.logger.doLog(irc, channel, "%s added question file: '%s', added: %i, skipped: %i" % (msg.nick, filename, info[0], info[1]))
     addfile = wrap(addfile, ['admin', optional('text')])
+
+    def authweb(self, irc, msg, arg):
+        """
+        Triviamods only. Register for web access
+        """
+        try:
+            user = ircdb.users.getUser(msg.prefix)
+        except KeyError:
+            irc.error('Sorry, you must be at least a triviamod to register for web login')
+            return
+
+        if not user.capabilities.check('triviamod'):
+            irc.error('Sorry, you must be at least a triviamod to register for web login')
+
+        capability = 'triviamod'
+
+        if user.capabilities.check('owner'):
+            capability = 'owner'
+
+        username = user.name
+        salt = ''
+        password = ''
+        isHashed = user.hashed
+        if isHashed:
+            (salt, password) = user.password.split('|')
+        else:
+            password = user.password
+
+        dbLocation = self.registryValue('admin.sqlitedb')
+        threadStorage = self.Storage(dbLocation)
+        info = threadStorage.insertLogin(username, salt, isHashed, password, capability)
+        irc.reply('Success, updated your web access login.')
+        self.logger.doLog(irc, channel, "%s authed for web access" % (username))
+    authweb = wrap(authweb)
 
     def clearpoints(self, irc, msg, arg, username):
         """<username>
         Deletes all of a users points, and removes all their records
         """
+        channel = msg.args[0]
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
         threadStorage.removeUserLogs(username)
         irc.reply('Removed all points from %s' % (username))
+        self.logger.doLog(irc, channel, "%s cleared points for %s" % (msg.nick, username))
     clearpoints = wrap(clearpoints, ['admin','nick'])
 
     def day(self, irc, msg, arg, num):
@@ -311,7 +400,11 @@ class TriviaTime(callbacks.Plugin):
         channel = msg.args[0]
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
-        tops = threadStorage.viewDayTop10(channel, num)
+        tops = []
+        if self.registryValue('general.globalStats'):
+            tops = threadStorage.viewDayTop10(None, num)
+        else:
+            tops = threadStorage.viewDayTop10(channel, num)
         offset = num-9
         topsList = ['Today\'s Top 10 Players: ']
         for i in range(len(tops)):
@@ -321,20 +414,34 @@ class TriviaTime(callbacks.Plugin):
         irc.noReply()
     day = wrap(day, [optional('int')])
 
-    def deletequestion(self, irc, msg, arg, id):
-        """<question id>
-            Deletes a question from the database.
+    def deletequestion(self, irc, msg, arg, channel, t, id, reason):
+        """[<channel>] [<type "R" or "Q">] <question id> [<reason>]
+        Deletes a question from the database. Type decides whether to delete
+        by round number (r), or question number (q) (default round).
+        Channel is only necessary when editing from outside of the channel
         """
         username = msg.nick
-        channel = msg.args[0]
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
+        if t is None or str.lower(t) == "round":
+            q = threadStorage.getQuestionByRound(id, channel)
+            if len(q) < 1:
+                irc.error('Could not find that round.')
+                return
+            id = q[0][0]
         if not threadStorage.questionIdExists(id):
-            self.error('That question does not exist.')
+            irc.error('That question does not exist.')
             return
-        threadStorage.insertDelete(username, channel, id)
-        irc.reply('Questions %d marked for deletion and pending review.' % id)
-    deletequestion = wrap(deletequestion, ['int'])
+        if threadStorage.isQuestionDeleted(id):
+            irc.error('That question is already deleted.')
+            return
+        if threadStorage.isQuestionPendingDeletion(id):
+            irc.error('That question is already pending deletion.')
+            return
+        threadStorage.insertDelete(username, channel, id, reason)
+        irc.reply('Question %d marked for deletion and pending review.' % id)
+        self.logger.doLog(irc, channel, "%s marked question# %i for deletion: '%s'" % (username, id, q[0][2]))
+    deletequestion = wrap(deletequestion, ["channel", optional(('literal',("question", "QUESTION", "ROUND", "round"))),'int', optional('text')])
 
     def edit(self, irc, msg, arg, user, channel, num, question):
         """[<channel>] <question number> <corrected text>
@@ -351,7 +458,7 @@ class TriviaTime(callbacks.Plugin):
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
         q = threadStorage.getQuestion(num)
-        if len(question) > 0:
+        if len(q) > 0:
             q = q[0]
             questionParts = question.split('*')
             if len(questionParts) < 2:
@@ -366,6 +473,7 @@ class TriviaTime(callbacks.Plugin):
             irc.reply('Success! Submitted edit for further review.')
             irc.sendMsg(ircmsgs.notice(msg.nick, 'NEW: %s' % (question)))
             irc.sendMsg(ircmsgs.notice(msg.nick, 'OLD: %s' % (q[2])))
+            self.logger.doLog(irc, channel, "%s edited question# %i: OLD: '%s' NEW: '%s'" % (username, num, q[2], question))
         else:
             irc.error('Question does not exist')
     edit = wrap(edit, ['user', ('checkChannelCapability', 'triviamod'), 'int', 'text'])
@@ -397,6 +505,7 @@ class TriviaTime(callbacks.Plugin):
         threadStorage = self.Storage(dbLocation)
         threadStorage.updateUserLog(username, channel, points, 0, 0, day, month, year)
         irc.reply('Added %d points to %s' % (points, username))
+        self.logger.doLog(irc, channel, "%s gave %i points to %s" % (msg.nick, points, username))
     givepoints = wrap(givepoints, ['admin','nick', 'int', optional('int')])
 
     def listdeletes(self, irc, msg, arg, user, channel, page):
@@ -423,7 +532,7 @@ class TriviaTime(callbacks.Plugin):
                 if len(question) > 0:
                     question = question[0]
                     questionText = question[2]
-                irc.reply('Delete #%d, by %s Question#%d: %s'%(delete[0], delete[1], delete[3], questionText))
+                irc.reply('Delete #%d, by %s Question#%d: %s, Reason:%s'%(delete[0], delete[1], delete[3], questionText, delete[6]))
             irc.reply('Use the showdelete command to see more information')
     listdeletes = wrap(listdeletes, ['user', ('checkChannelCapability', 'triviamod'), optional('int')])
 
@@ -542,7 +651,10 @@ class TriviaTime(callbacks.Plugin):
         channel = msg.args[0]
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
-        info = threadStorage.getUser(username, channel)
+        if self.registryValue('general.globalStats'):
+            info = threadStorage.getUser(username, None)
+        else:
+            info = threadStorage.getUser(username, channel)
         if len(info) < 3:
             errorMessage = 'You do not have any points.'
             identifyMessage = ''
@@ -584,7 +696,10 @@ class TriviaTime(callbacks.Plugin):
         channel = msg.args[0]
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
-        tops = threadStorage.viewMonthTop10(channel, num)
+        if self.registryValue('general.globalStats'):
+            tops = threadStorage.viewMonthTop10(None, num)
+        else:
+            tops = threadStorage.viewMonthTop10(channel, num)
         topsList = ['This Month\'s Top 10 Players: ']
         offset = num-9
         for i in range(len(tops)):
@@ -654,6 +769,7 @@ class TriviaTime(callbacks.Plugin):
             edit = edit[0]
             threadStorage.removeEdit(edit[0])
             irc.reply('Edit %d removed!' % edit[0])
+            self.logger.doLog(irc, channel, "%s removed edit# %i, for question# %i, text: %s" % (msg.nick, edit[0], edit[1], edit[2]))
     removeedit = wrap(removeedit, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
 
     def removedelete(self, irc, msg, arg, user, channel, num):
@@ -670,6 +786,7 @@ class TriviaTime(callbacks.Plugin):
             delete = delete[0]
             threadStorage.removeDelete(num)
             irc.reply('Delete %d removed!' % num)
+            self.logger.doLog(irc, channel, "%s removed delete# %i, for question# %i, reason was '%s'" % (msg.nick, num, delete[3], delete[6]))
     removedelete = wrap(removedelete, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
 
     def removereport(self, irc, msg, arg, user, channel, num):
@@ -686,6 +803,7 @@ class TriviaTime(callbacks.Plugin):
             report = report[0]
             threadStorage.removeReport(report[0])
             irc.reply('Report %d removed!' % report[0])
+            self.logger.doLog(irc, channel, "%s removed report# %i, for question# %i text was %s" % (msg.nick, report[0], report[7], report[3]))
     removereport = wrap(removereport, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
 
     def delnew(self, irc, msg, arg, user, channel, num):
@@ -701,6 +819,7 @@ class TriviaTime(callbacks.Plugin):
             q = q[0]
             threadStorage.removeTemporaryQuestion(q[0])
             irc.reply('Temp question #%d removed!' % q[0])
+            self.logger.doLog(irc, channel, "%s removed new question# %i, '%s'" % (msg.nick, q[0], q[3]))
     delnew = wrap(delnew, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
 
     def repeat(self, irc, msg, arg):
@@ -749,13 +868,49 @@ class TriviaTime(callbacks.Plugin):
                     irc.reply('** Regex detected ** Your report has been submitted!')
                     irc.sendMsg(ircmsgs.notice(username, 'NEW: %s' % (newQuestionText)))
                     irc.sendMsg(ircmsgs.notice(username, 'OLD: %s' % (question[2])))
+                    self.logger.doLog(irc, channel, "%s edited question# %i, NEW: '%s', OLD: '%s'" % (msg.nick, question[0], newQuestionText, question[2]))
                     return
+            elif str.lower(utils.str.normalizeWhitespace(inp))[:6] == 'delete':
+                if not threadStorage.questionIdExists(question[0]):
+                    irc.error('That question does not exist.')
+                    return
+                if threadStorage.isQuestionDeleted(question[0]):
+                    irc.error('That question is already deleted.')
+                    return
+                if threadStorage.isQuestionPendingDeletion(question[0]):
+                    irc.error('That question is already pending deletion.')
+                    return
+                reason = utils.str.normalizeWhitespace(inp)[6:]
+                reason = utils.str.normalizeWhitespace(reason)
+                irc.reply('Marked question for deletion.')
+                self.logger.doLog(irc, channel, "%s marked question# %i for deletion" % (msg.nick, question[0]))
+                threadStorage.insertDelete(username, channel, question[0], reason)
+                return
             threadStorage.updateUser(username, 0, 0, 1)
             threadStorage.insertReport(channel, username, text, question[0])
+            self.logger.doLog(irc, channel, "%s reported question# %i, Text: '%s'" % (msg.nick, question[0], text))
             irc.reply('Your report has been submitted!')
         else:
             irc.error('Sorry, round %d could not be found in the database' % (roundNum))
     report = wrap(report, ['channel', 'int', 'text'])
+
+    def restorequestion(self, irc, msg, arg, channel, questionNum):
+        """[<channel>] <Question num>
+        Restore a question from being deleted.
+        """
+        username = msg.nick
+        dbLocation = self.registryValue('admin.sqlitedb')
+        threadStorage = self.Storage(dbLocation)
+        if not threadStorage.questionIdExists(questionNum):
+            irc.error('That question does not exist.')
+            return
+        if not threadStorage.isQuestionDeleted(questionNum):
+            irc.error('That question is not deleted.')
+            return
+        threadStorage.restoreQuestion(questionNum)
+        irc.reply('Question %d restored.' % questionNum)
+        self.logger.doLog(irc, channel, "%s restored question# %i" % (username, questionNum))
+    restorequestion = wrap(restorequestion, [('checkChannelCapability', 'triviamod'), 'int'])
 
     def skip(self, irc, msg, arg):
         """
@@ -767,7 +922,7 @@ class TriviaTime(callbacks.Plugin):
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
         timeSeconds = self.registryValue('skip.skipActiveTime', channel)
-        totalActive = threadStorage.getNumUserActiveIn(timeSeconds)
+        totalActive = threadStorage.getNumUserActiveIn(channel, timeSeconds)
         channelCanonical = ircutils.toLower(channel)
         if channelCanonical not in self.games:
             irc.error('No questions are currently being asked.')
@@ -777,7 +932,7 @@ class TriviaTime(callbacks.Plugin):
             irc.error('No question is currently being asked.')
             return
 
-        if not threadStorage.wasUserActiveIn(username, timeSeconds):
+        if not threadStorage.wasUserActiveIn(username, channel, timeSeconds):
             irc.error('Only users who have answered a question in the last 10 minutes can skip.')
             return
 
@@ -834,7 +989,10 @@ class TriviaTime(callbacks.Plugin):
         channel = msg.args[0]
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
-        info = threadStorage.getUser(username, channel)
+        if self.registryValue('general.globalStats'):
+            info = threadStorage.getUser(username, None)
+        else:
+            info = threadStorage.getUser(username, channel)
         if len(info) < 3:
             irc.error("I couldn't find that user in the database.")
         else:
@@ -874,7 +1032,7 @@ class TriviaTime(callbacks.Plugin):
                 if len(question) > 0:
                     question = question[0]
                     questionText = question[2]
-                irc.reply('Delete #%d, by %s Question#%d: %s'%(q[0], q[1], q[3], questionText))
+                irc.reply('Delete #%d, by %s Question#%d: %s, Reason: %s'%(q[0], q[1], q[3], questionText, q[6]))
             else:
                 irc.error('Delete #%d not found' % num)
         else:
@@ -1075,10 +1233,12 @@ class TriviaTime(callbacks.Plugin):
         """
         userfrom = userfrom
         userto = userto
+        channel = msg.args[0]
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
         threadStorage.transferUserLogs(userfrom, userto)
         irc.reply('Done! Transfered records from %s to %s' % (userfrom, userto))
+        self.logger.doLog(irc, channel, "%s transfered points from %s to %s" % (msg.nick, userfrom, userto))
     transferpoints = wrap(transferpoints, ['admin', 'nick', 'nick'])
 
     def week(self, irc, msg, arg, num):
@@ -1092,7 +1252,10 @@ class TriviaTime(callbacks.Plugin):
         channel = msg.args[0]
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
-        tops = threadStorage.viewWeekTop10(channel, num)
+        if self.registryValue('general.globalStats'):
+            tops = threadStorage.viewWeekTop10(None, num)
+        else:
+            tops = threadStorage.viewWeekTop10(channel, num)
         topsList = ['This Week\'s Top 10 Players: ']
         offset = num-9
         for i in range(len(tops)):
@@ -1111,7 +1274,10 @@ class TriviaTime(callbacks.Plugin):
         channel = msg.args[0]
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
-        tops = threadStorage.viewYearTop10(channel, num)
+        if self.registryValue('general.globalStats'):
+            tops = threadStorage.viewYearTop10(None, num)
+        else:
+            tops = threadStorage.viewYearTop10(channel, num)
         topsList = ['This Year\'s Top 10 Players: ']
         offset = num-9
         for i in range(len(tops)):
@@ -1131,6 +1297,7 @@ class TriviaTime(callbacks.Plugin):
             self.unmaskedChars = " -'\"_=+&%$#@!~`[]{}?.,<>|\\/:;"
             
             # get utilities from base plugin
+            self.base = base
             self.games = base.games
             self.storage = base.storage
             self.Storage = base.Storage
@@ -1170,6 +1337,7 @@ class TriviaTime(callbacks.Plugin):
                 return
             
             username = msg.nick
+            channel = msg.args[0]
             # is it a user?
             try:
                 user = ircdb.users.getUser(msg.prefix)
@@ -1250,7 +1418,10 @@ class TriviaTime(callbacks.Plugin):
                     self.sendMessage('DING DING DING, \x02%s\x02 got the correct answer, \x02%s\x02, in \x02%0.4f\x02 seconds for \x02%d(+%d)\x02 points!' % (username, correctAnswer, timeElapsed, pointsAdded, streakBonus))
 
                     if self.registryValue('general.showStats', self.channel):
-                        userInfo = threadStorage.getUser(username, self.channel)
+                        if self.registryValue('general.globalStats'):
+                            userInfo = threadStorage.getUser(username, None)
+                        else:
+                            userInfo = threadStorage.getUser(username, self.channel)
                         if len(userInfo) >= 3:
                             todaysScore = userInfo[10]
                             weekScore = userInfo[8]
@@ -1310,14 +1481,15 @@ class TriviaTime(callbacks.Plugin):
                         log.error('waitTime was set too low (<2 seconds). Setting to 2 seconds')
                     waitTime = time.time() + waitTime
                     self.queueEvent(waitTime, self.nextQuestion)
+                self.base.handleVoice(self.irc, username, channel)
 
         def getHintString(self, hintNum=None):
             if hintNum == None:
                 hintNum = self.hintsCounter
-            hintRatio = self.registryValue('general.hintRatio') # % to show each hint
+            hintRatio = self.registryValue('hints.hintRatio') # % to show each hint
             hints = ''
             ratio = float(hintRatio * .01)
-            charMask = self.registryValue('general.charMask', self.channel)
+            charMask = self.registryValue('hints.charMask', self.channel)
 
             # create a string with hints for all of the answers
             for ans in self.answers:
@@ -1360,7 +1532,7 @@ class TriviaTime(callbacks.Plugin):
                     ansend = ans[divider:]
                     hintsend = ''
                     unmasked = 0
-                    if self.registryValue('general.vowelsHint', self.channel):
+                    if self.registryValue('hints.vowelsHint', self.channel):
                         hints+= self.getMaskedVowels(ansend, divider-1)
                     else:
                         hints+= self.getMaskedRandom(ansend, divider-1)
@@ -1369,7 +1541,7 @@ class TriviaTime(callbacks.Plugin):
             return hints.encode('utf-8')
 
         def getMaskedVowels(self, letters, sizeOfUnmasked):
-            charMask = self.registryValue('general.charMask', self.channel)
+            charMask = self.registryValue('hints.charMask', self.channel)
             hintsList = ['']
             unmasked = 0
             lettersInARow = sizeOfUnmasked
@@ -1388,8 +1560,8 @@ class TriviaTime(callbacks.Plugin):
             return hints
 
         def getMaskedRandom(self, letters, sizeOfUnmasked):
-            charMask = self.registryValue('general.charMask', self.channel)
-            hintRatio = self.registryValue('general.hintRatio') # % to show each hint
+            charMask = self.registryValue('hints.charMask', self.channel)
+            hintRatio = self.registryValue('hints.hintRatio') # % to show each hint
             hints = ''
             unmasked = 0
             maskedInARow=0
@@ -1416,7 +1588,7 @@ class TriviaTime(callbacks.Plugin):
             return hints
 
         def getOtherHintString(self):
-            charMask = self.registryValue('general.charMask', self.channel)
+            charMask = self.registryValue('hints.charMask', self.channel)
             if len(self.answers) > 1 or len(self.answers) < 1:
                 return
             ans = self.answers[0]
@@ -1457,7 +1629,7 @@ class TriviaTime(callbacks.Plugin):
             if len(self.answers) > 1:
                 if self.shownHint == False:
                     self.shownHint = True
-                    self.sendMessage(self.getHintString(self.hintsCounter-1))
+                    self.sendMessage('\x02\x0312%s' % (self.getHintString(self.hintsCounter-1)))
 
         def loadGameState(self):
             gameInfo = self.storage.getGame(self.channel)
@@ -1535,9 +1707,11 @@ class TriviaTime(callbacks.Plugin):
                 hintTime = self.registryValue('kaos.hintKAOS', self.channel)
             else:
                 hintTime = self.registryValue('questions.hintTime', self.channel)
+
             if hintTime < 2:
                 timout = 2
                 log.error('hintTime was set too low(<2 seconds). setting to 2 seconds')
+
             hintTime += time.time()
             self.queueEvent(hintTime, self.loopEvent)
 
@@ -1849,6 +2023,14 @@ class TriviaTime(callbacks.Plugin):
                 pass
             c.close()
 
+        def dropLoginTable(self):
+            c = self.conn.cursor()
+            try:
+                c.execute('''DROP TABLE trivialogin''')
+            except:
+                pass
+            c.close()
+
         def dropUserLogTable(self):
             c = self.conn.cursor()
             try:
@@ -1945,35 +2127,55 @@ class TriviaTime(callbacks.Plugin):
 
         def getUserRanks(self, username, channel):
             usernameCanonical = ircutils.toLower(username)
-            channelCanonical = ircutils.toLower(channel)
+            channelCanonical = None
+            if channel is not None:
+                channelCanonical = ircutils.toLower(channel)
             dateObject = datetime.date.today()
             day   = dateObject.day
             month = dateObject.month
             year  = dateObject.year
-            c = self.conn.cursor()
-            c.execute('''select tr.rank
+
+            query = '''select tr.rank
                         from (
                             select count(tu2.id)+1 as rank
                             from (
                                 select id, username, sum(points_made) as totalscore
-                                from triviauserlog
-                                where channel_canonical=?
-                                group by username_canonical
+                                from triviauserlog'''
+            arguments = []
+
+            if channel is not None:
+                query = '''%s where channel_canonical=?''' % (query)
+                arguments.append(channelCanonical)
+
+            query = '''%s group by username_canonical
                             ) as tu2
                             where tu2.totalscore > (
                                 select sum(points_made)
                                 from triviauserlog
-                                where channel_canonical=?
-                                and username_canonical=?
-                                )
+                                where username_canonical=?''' % (query)
+            arguments.append(usernameCanonical)
+
+            if channel is not None:
+                query = '''%s and channel_canonical=?''' % (query)
+                arguments.append(channelCanonical)
+
+            query = '''%s )
                         ) as tr
                         where
                             exists(
                                 select *
                                 from triviauserlog
-                                where channel_canonical=?
-                                and username_canonical=?
-                            )''', (channelCanonical, channelCanonical, usernameCanonical, channelCanonical, usernameCanonical))
+                                where username_canonical=?''' % (query)
+            arguments.append(usernameCanonical)
+
+            if channel is not None:
+                query = '''%s and channel_canonical=?''' % (query)
+                arguments.append(channelCanonical)
+
+            query = '''%s ) limit 1''' % (query)
+
+            c = self.conn.cursor()
+            c.execute(query, tuple(arguments))
             data = []
 
             rank = 0
@@ -1985,32 +2187,51 @@ class TriviaTime(callbacks.Plugin):
                 break
             data.append(rank)
 
-            c.execute('''select tr.rank
+            query = '''select tr.rank
                         from (
                             select count(tu2.id)+1 as rank
                             from (
                                 select id, username, sum(points_made) as totalscore
                                 from triviauserlog
-                                where year=?
-                                and channel_canonical=?
-                                group by username_canonical
+                                where year=?'''
+            arguments = [year]
+
+            if channel is not None:
+                query = '''%s and channel_canonical=?''' % (query)
+                arguments.append(channelCanonical)
+
+            query = '''%s group by username_canonical
                             ) as tu2
                             where tu2.totalscore > (
                                 select sum(points_made)
                                 from triviauserlog
                                 where year=?
-                                and username_canonical=?
-                                and channel_canonical=?
-                                )
+                                and username_canonical=?''' % (query)
+            arguments.append(year)
+            arguments.append(usernameCanonical)
+
+            if channel is not None:
+                query = '''%s and channel_canonical=?''' % (query)
+                arguments.append(channelCanonical)
+
+            query = '''%s )
                         ) as tr
                         where
                             exists(
                                 select *
                                 from triviauserlog
                                 where year=?
-                                and username_canonical=?
-                                and channel_canonical=?
-                            )''', (year, channelCanonical, year, usernameCanonical, channelCanonical, year, usernameCanonical, channelCanonical))
+                                and username_canonical=?''' % (query)
+            arguments.append(year)
+            arguments.append(usernameCanonical)
+
+            if channel is not None:
+                query = '''%s and channel_canonical=?''' % (query)
+                arguments.append(channelCanonical)
+
+            query = '''%s ) limit 1''' % (query)
+
+            c.execute(query, tuple(arguments))
 
             rank = 0
             for row in c:
@@ -2021,25 +2242,37 @@ class TriviaTime(callbacks.Plugin):
                 break
             data.append(rank)
 
-            c.execute('''select tr.rank
+            query = '''select tr.rank
                         from (
                             select count(tu2.id)+1 as rank
                             from (
                                 select id, username, sum(points_made) as totalscore
                                 from triviauserlog
                                 where month=?
-                                and year=?
-                                and channel_canonical=?
-                                group by username_canonical
+                                and year=?'''
+            arguments = [month, year]
+
+            if channel is not None:
+                query = '''%s and channel_canonical=?''' % (query)
+                arguments.append(channelCanonical)
+
+            query = '''%s group by username_canonical
                             ) as tu2
                             where tu2.totalscore > (
                                 select sum(points_made)
                                 from triviauserlog
                                 where month=?
                                 and year=?
-                                and username_canonical=?
-                                and channel_canonical=?
-                                )
+                                and username_canonical=?''' % (query)
+            arguments.append(month)
+            arguments.append(year)
+            arguments.append(usernameCanonical)
+
+            if channel is not None:
+                query = '''%s and channel_canonical=?''' % (query)
+                arguments.append(channelCanonical)
+
+            query = '''%s )
                         ) as tr
                         where
                             exists(
@@ -2047,9 +2280,18 @@ class TriviaTime(callbacks.Plugin):
                                 from triviauserlog
                                 where month=?
                                 and year=?
-                                and username=?
-                                and channel_canonical=?
-                            )''', (month, year, channelCanonical, month, year, usernameCanonical, channelCanonical, month, year, usernameCanonical, channelCanonical))
+                                and username=?''' % (query)
+            arguments.append(month)
+            arguments.append(year)
+            arguments.append(usernameCanonical)
+
+            if channel is not None:
+                query = '''%s and channel_canonical=?''' % (query)
+                arguments.append(channelCanonical)
+
+            query = '''%s ) limit 1''' % (query)
+
+            c.execute(query, tuple(arguments))
 
             rank = 0
             for row in c:
@@ -2080,18 +2322,29 @@ class TriviaTime(callbacks.Plugin):
                                 select id, username, sum(points_made) as totalscore
                                 from triviauserlog
                                 where ('''
+            arguments = []
+
             weekSql += weekSqlClause
             weekSql +='''
-                                )
-                                and channel_canonical=?
-                                group by username_canonical
+                                )'''
+
+            if channel is not None:
+                weekSql = '''%s and channel_canonical=?''' % (weekSql)
+                arguments.append(channelCanonical)
+
+            weekSql += '''group by username_canonical
                             ) as tu2
                             where tu2.totalscore > (
                                 select sum(points_made)
                                 from triviauserlog
-                                where username_canonical=?
-                                and channel_canonical=?
-                                and ('''
+                                where username_canonical=?'''
+            arguments.append(usernameCanonical)
+
+            if channel is not None:
+                weekSql = '''%s and channel_canonical=?''' % (weekSql)
+                arguments.append(channelCanonical)
+
+            weekSql += ''' and ('''
             weekSql += weekSqlClause
             weekSql += '''
                                     )
@@ -2101,14 +2354,19 @@ class TriviaTime(callbacks.Plugin):
                             exists(
                                 select *
                                 from triviauserlog
-                                where username_canonical=?
-                                and channel_canonical=?
-                                and ('''
+                                where username_canonical=?'''
+            arguments.append(usernameCanonical)
+
+            if channel is not None:
+                weekSql = '''%s and channel_canonical=?''' % (weekSql)
+                arguments.append(channelCanonical)
+
+            weekSql += ''' and ('''
             weekSql += weekSqlClause
             weekSql += '''
                                 )
-                            )'''
-            c.execute(weekSql, (channelCanonical, usernameCanonical, channelCanonical, usernameCanonical, channelCanonical))
+                            ) limit 1'''
+            c.execute(weekSql, tuple(arguments))
 
             rank = 0
             for row in c:
@@ -2119,7 +2377,7 @@ class TriviaTime(callbacks.Plugin):
                 break
             data.append(rank)
 
-            c.execute('''select tr.rank
+            query = '''select tr.rank
                         from (
                             select count(tu2.id)+1 as rank
                             from (
@@ -2127,9 +2385,14 @@ class TriviaTime(callbacks.Plugin):
                                 from triviauserlog
                                 where day=?
                                 and month=?
-                                and year=?
-                                and channel_canonical=?
-                                group by username_canonical
+                                and year=?'''
+            arguments = [day, month, year]
+
+            if channel is not None:
+                query = '''%s and channel_canonical=?''' % (query)
+                arguments.append(channelCanonical)
+
+            query = '''%s group by username_canonical
                             ) as tu2
                             where tu2.totalscore > (
                                 select sum(points_made)
@@ -2137,9 +2400,17 @@ class TriviaTime(callbacks.Plugin):
                                 where day=?
                                 and month=?
                                 and year=?
-                                and username_canonical=?
-                                and channel_canonical=?
-                                )
+                                and username_canonical=?''' % (query)
+            arguments.append(day)
+            arguments.append(month)
+            arguments.append(year)
+            arguments.append(usernameCanonical)
+
+            if channel is not None:
+                query = '''%s and channel_canonical=?''' % (query)
+                arguments.append(channelCanonical)
+
+            query = '''%s )
                         ) as tr
                         where
                             exists(
@@ -2148,9 +2419,19 @@ class TriviaTime(callbacks.Plugin):
                                 where day=?
                                 and month=?
                                 and year=?
-                                and username_canonical=?
-                                and channel_canonical=?
-                            )''', (day, month, year, channelCanonical, day, month, year, usernameCanonical, channelCanonical, day, month, year, usernameCanonical, channelCanonical))
+                                and username_canonical=?''' % (query)
+            arguments.append(day)
+            arguments.append(month)
+            arguments.append(year)
+            arguments.append(usernameCanonical)
+
+            if channel is not None:
+                query = '''%s and channel_canonical=?''' % (query)
+                arguments.append(channelCanonical)
+
+            query = '''%s ) limit 1''' % (query)
+
+            c.execute(query, tuple(arguments))
 
             rank = 0
             for row in c:
@@ -2166,7 +2447,9 @@ class TriviaTime(callbacks.Plugin):
 
         def getUser(self, username, channel):
             usernameCanonical = ircutils.toLower(username)
-            channelCanonical = ircutils.toLower(channel)
+            channelCanonical = None
+            if channel is not None:
+                channelCanonical = ircutils.toLower(channel)
             dateObject = datetime.date.today()
             day   = dateObject.day
             month = dateObject.month
@@ -2178,12 +2461,20 @@ class TriviaTime(callbacks.Plugin):
             data.append(username)
             data.append(username)
 
-            c.execute('''select
+            query = '''select
                             sum(tl.points_made) as points,
                             sum(tl.num_answered) as answered
                         from triviauserlog tl
-                        where tl.username_canonical=?
-                        and tl.channel_canonical=?''', (usernameCanonical,channelCanonical))
+                        where tl.username_canonical=?'''
+            arguments = [usernameCanonical]
+
+            if channel is not None:
+                query = '''%s and tl.channel_canonical=?''' % (query)
+                arguments.append(channelCanonical)
+
+            query = '''%s limit 1''' % (query)
+
+            c.execute(query, tuple(arguments))
 
             for row in c:
                 for d in row:
@@ -2192,14 +2483,47 @@ class TriviaTime(callbacks.Plugin):
                     data.append(d)
                 break
 
-            c.execute('''select
+            query = '''select
+                            sum(tl.points_made) as yearPoints,
+                            sum(tl.num_answered) as yearAnswered
+                        from triviauserlog tl
+                        where
+                            tl.username_canonical=?
+                        and tl.year=?'''
+            arguments = [usernameCanonical, year]
+
+            if channel is not None:
+                query = '''%s and tl.channel_canonical=?''' % (query)
+                arguments.append(channelCanonical)
+
+            query = '''%s limit 1''' % (query)
+
+            c.execute(query, tuple(arguments))
+
+            for row in c:
+                for d in row:
+                    if d is None:
+                        d=0
+                    data.append(d)
+                break
+
+            query = '''select
                             sum(tl.points_made) as yearPoints,
                             sum(tl.num_answered) as yearAnswered
                         from triviauserlog tl
                         where
                             tl.username_canonical=?
                         and tl.year=?
-                        and tl.channel_canonical=?''', (usernameCanonical, year, channelCanonical))
+                        and tl.month=?'''
+            arguments = [usernameCanonical, year, month]
+
+            if channel is not None:
+                query = '''%s and tl.channel_canonical=?''' % (query)
+                arguments.append(channelCanonical)
+
+            query = '''%s limit 1''' % (query)
+            
+            c.execute(query, tuple(arguments))
 
             for row in c:
                 for d in row:
@@ -2208,30 +2532,12 @@ class TriviaTime(callbacks.Plugin):
                     data.append(d)
                 break
 
-            c.execute('''select
+            query = '''select
                             sum(tl.points_made) as yearPoints,
                             sum(tl.num_answered) as yearAnswered
                         from triviauserlog tl
                         where
                             tl.username_canonical=?
-                        and tl.year=?
-                        and tl.month=?
-                        and tl.channel_canonical=?''', (usernameCanonical, year, month, channelCanonical))
-
-            for row in c:
-                for d in row:
-                    if d is None:
-                        d=0
-                    data.append(d)
-                break
-
-            weekSqlString = '''select
-                            sum(tl.points_made) as yearPoints,
-                            sum(tl.num_answered) as yearAnswered
-                        from triviauserlog tl
-                        where
-                            tl.username_canonical=?
-                        and tl.channel_canonical=?
                         and ('''
 
             d = datetime.date.today()
@@ -2239,15 +2545,23 @@ class TriviaTime(callbacks.Plugin):
             d -= datetime.timedelta(weekday)
             for i in range(7):
                 if i > 0:
-                    weekSqlString += ' or '
-                weekSqlString += '''
+                    query += ' or '
+                query += '''
                             (tl.year=%d
                             and tl.month=%d
                             and tl.day=%d)''' % (d.year, d.month, d.day)
                 d += datetime.timedelta(1)
 
-            weekSqlString += ')'
-            c.execute(weekSqlString, (usernameCanonical, channelCanonical))
+            query += ')'
+            arguments = [usernameCanonical]
+
+            if channel is not None:
+                query = '''%s and tl.channel_canonical=?''' % (query)
+                arguments.append(channelCanonical)
+
+            query = '''%s limit 1''' % (query)
+            
+            c.execute(query, tuple(arguments))
 
             for row in c:
                 for d in row:
@@ -2256,16 +2570,24 @@ class TriviaTime(callbacks.Plugin):
                     data.append(d)
                 break
 
-            c.execute('''select
+            query = '''select
                             sum(tl.points_made) as yearPoints,
                             sum(tl.num_answered) as yearAnswered
                         from triviauserlog tl
                         where
                             tl.username_canonical=?
-                        and tl.channel_canonical=?
                         and tl.year=?
                         and tl.month=?
-                        and tl.day=?''', (usernameCanonical, channelCanonical, year, month, day))
+                        and tl.day=?'''
+            arguments = [usernameCanonical, year, month, day]
+
+            if channel is not None:
+                query = '''%s and tl.channel_canonical=?''' % (query)
+                arguments.append(channelCanonical)
+
+            query = '''%s limit 1''' % (query)
+
+            c.execute(query, tuple(arguments))
 
             for row in c:
                 for d in row:
@@ -2428,7 +2750,8 @@ class TriviaTime(callbacks.Plugin):
             c.close()
             return data
 
-        def getNumUserActiveIn(self,timeSeconds):
+        def getNumUserActiveIn(self, channel, timeSeconds):
+            channelCanonical = ircutils.toLower(channel)
             epoch = int(time.mktime(time.localtime()))
             dateObject = datetime.date.today()
             day   = dateObject.day
@@ -2437,7 +2760,8 @@ class TriviaTime(callbacks.Plugin):
             c = self.conn.cursor()
             result = c.execute('''select count(*) from triviauserlog
                         where day=? and month=? and year=?
-                        and last_updated>?''', (day, month, year,(epoch-timeSeconds)))
+                        and channel_canonical=?
+                        and last_updated>?''', (day, month, year, channelCanonical, (epoch-timeSeconds)))
             rows = result.fetchone()[0]
             c.close()
             return rows
@@ -2467,12 +2791,35 @@ class TriviaTime(callbacks.Plugin):
             c.close()
             return data
 
-        def insertDelete(self, username, channel, lineNumber):
+        def loginExists(self, username):
+            usernameCanonical = ircutils.toLower(username)
+            c = self.conn.cursor()
+            result = c.execute('select count(id) from trivialogin where username_canonical=?', (usernameCanonical,))
+            rows = result.fetchone()[0]
+            c.close()
+            if rows > 0:
+                return True
+            return False
+
+        def insertDelete(self, username, channel, lineNumber, reason):
             usernameCanonical = ircutils.toLower(username)
             channelCanonical = ircutils.toLower(channel)
             c = self.conn.cursor()
-            c.execute('insert into triviadelete values (NULL, ?, ?, ?, ?, ?)',
-                                    (username, usernameCanonical, lineNumber, channel, channelCanonical))
+            c.execute('insert into triviadelete values (NULL, ?, ?, ?, ?, ?, ?)',
+                                    (username, usernameCanonical, lineNumber, channel, channelCanonical, reason))
+            self.conn.commit()
+
+        def insertLogin(self, username, salt, isHashed, password, capability):
+            usernameCanonical = ircutils.toLower(username)
+            if self.loginExists(username):
+                return self.updateLogin(username, salt, isHashed, password, capability)
+            if not isHashed:
+                isHashed = 0
+            else:
+                isHashed = 1
+            c = self.conn.cursor()
+            c.execute('insert into trivialogin values (NULL, ?, ?, ?, ?, ?, ?)',
+                                    (username, usernameCanonical, salt, isHashed, password, capability))
             self.conn.commit()
 
         def insertUserLog(self, username, channel, score, numAnswered, timeTaken, day=None, month=None, year=None, epoch=None):
@@ -2579,6 +2926,26 @@ class TriviaTime(callbacks.Plugin):
             self.conn.commit()
             c.close()
 
+        def isQuestionDeleted(self, id):
+            c = self.conn.cursor()
+            result = c.execute('''select count(*) from triviaquestion
+                        where deleted=1 and id=?''', (id,))
+            rows = result.fetchone()[0]
+            c.close()
+            if rows > 0:
+                return True
+            return False
+
+        def isQuestionPendingDeletion(self, id):
+            c = self.conn.cursor()
+            result = c.execute('''select count(*) from triviadelete
+                        where line_num=?''', (id,))
+            rows = result.fetchone()[0]
+            c.close()
+            if rows > 0:
+                return True
+            return False
+
         def makeDeleteTable(self):
             c = self.conn.cursor()
             try:
@@ -2588,7 +2955,25 @@ class TriviaTime(callbacks.Plugin):
                         username_canonical text,
                         line_num integer,
                         channel text,
-                        channel_canonical text
+                        channel_canonical text,
+                        reason text
+                        )''')
+            except:
+                pass
+            self.conn.commit()
+            c.close()
+
+        def makeLoginTable(self):
+            c = self.conn.cursor()
+            try:
+                c.execute('''create table trivialogin (
+                        id integer primary key autoincrement,
+                        username text,
+                        username_canonical text not null unique,
+                        salt text,
+                        is_hashed  integer not null default 1,
+                        password text,
+                        capability text
                         )''')
             except:
                 pass
@@ -2792,6 +3177,14 @@ class TriviaTime(callbacks.Plugin):
             self.conn.commit()
             c.close()
 
+        def removeLogin(self, username):
+            usernameCanonical = ircutils.toLower(username)
+            c = self.conn.cursor()
+            c.execute('''delete from trivialogin
+                        where username_canonical=?''', (usernameCanonical,))
+            self.conn.commit()
+            c.close()
+
         def removeReport(self, repId):
             c = self.conn.cursor()
             c.execute('''delete from triviareport
@@ -2803,6 +3196,20 @@ class TriviaTime(callbacks.Plugin):
             c = self.conn.cursor()
             c.execute('''delete from triviareport
                         where question_num=?''', (id,))
+            self.conn.commit()
+            c.close()
+
+        def removeEditByQuestionNumber(self, id):
+            c = self.conn.cursor()
+            c.execute('''delete from triviaedit
+                        where question_id=?''', (id,))
+            self.conn.commit()
+            c.close()
+
+        def removeDeleteByQuestionNumber(self, id):
+            c = self.conn.cursor()
+            c.execute('''delete from triviadelete
+                        where line_num=?''', (id,))
             self.conn.commit()
             c.close()
 
@@ -2818,6 +3225,14 @@ class TriviaTime(callbacks.Plugin):
             c = self.conn.cursor()
             c.execute('''delete from triviauserlog
                         where username_canonical=?''', (usernameCanonical,))
+            self.conn.commit()
+            c.close()
+
+        def restoreQuestion(self, id):
+            c = self.conn.cursor()
+            test = c.execute('''update triviaquestion set
+                                deleted=0
+                                where id=?''', (id,))
             self.conn.commit()
             c.close()
 
@@ -2905,6 +3320,26 @@ class TriviaTime(callbacks.Plugin):
             if rows > 0:
                 return True
             return False
+
+        def updateLogin(self, username, salt, isHashed, password, capability):
+            if not self.loginExists(username):
+                return self.insertLogin(username, salt, isHashed, password, capability)
+            usernameCanonical = ircutils.toLower(username)
+            if not isHashed:
+                isHashed = 0
+            else:
+                isHashed = 1
+            c = self.conn.cursor()
+            c.execute('''update trivialogin set
+                            username=?,
+                            salt=?,
+                            is_hashed=?,
+                            password=?,
+                            capability=?
+                            where username_canonical=?''', (username, salt, isHashed, password, capability, usernameCanonical)
+                            )
+            self.conn.commit()
+            c.close()
 
         def updateUserLog(self, username, channel, score, numAnswered, timeTaken, day=None, month=None, year=None, epoch=None):
             if not self.userExists(username):
@@ -3047,19 +3482,28 @@ class TriviaTime(callbacks.Plugin):
             day   = dateObject.day
             month = dateObject.month
             year  = dateObject.year
-            channelCanonical = ircutils.toLower(channel)
-            c = self.conn.cursor()
-            c.execute('''select id,
+
+            query = '''select id,
                         username,
                         sum(points_made) as points,
                         sum(num_answered)
                         from triviauserlog
                         where day=?
                         and month=?
-                        and year=?
-                        and channel_canonical=?
-                        group by username_canonical
-                        order by points desc limit ?, 10''', (day, month, year, channelCanonical, numUpTo))
+                        and year=?'''
+            arguments = [day, month, year]
+
+            if channel is not None:
+                channelCanonical = ircutils.toLower(channel)
+                query = '''%s and channel_canonical=?''' % (query)
+                arguments.append(channelCanonical)
+
+            query = '''%s group by username_canonical
+                        order by points desc limit ?, 10''' % (query)
+            arguments.append(numUpTo)
+
+            c = self.conn.cursor()
+            c.execute(query, tuple(arguments))
             data = []
             for row in c:
                 data.append(row)
@@ -3068,17 +3512,26 @@ class TriviaTime(callbacks.Plugin):
 
         def viewAllTimeTop10(self, channel, numUpTo=10):
             numUpTo -= 10
-            c = self.conn.cursor()
-            channelCanonical = ircutils.toLower(channel)
-            c.execute('''select id,
+
+            query = '''select id,
                         username,
                         sum(points_made) as points,
                         sum(num_answered)
-                        from triviauserlog
-                        where channel_canonical=?
-                        group by username_canonical
+                        from triviauserlog'''
+            arguments = []
+
+            if channel is not None:
+                channelCanonical = ircutils.toLower(channel)
+                query = '''%s where channel_canonical=?''' % (query)
+                arguments.append(channelCanonical)
+
+            query = '''%s group by username_canonical
                         order by points desc
-                        limit ?, 10''', (channelCanonical,numUpTo))
+                        limit ?, 10''' % (query)
+            arguments.append(numUpTo)
+
+            c = self.conn.cursor()
+            c.execute(query, tuple(arguments))
 
             data = []
             for row in c:
@@ -3092,19 +3545,27 @@ class TriviaTime(callbacks.Plugin):
             if year is None or month is None:
                 year = d.year
                 month = d.month
-            c = self.conn.cursor()
-            channelCanonical = ircutils.toLower(channel)
-            c.execute('''select id,
+
+            query = '''select id,
                         username,
                         sum(points_made) as points,
                         sum(num_answered)
                         from triviauserlog
-                        where year=?
-                        and month=?
-                        and channel_canonical=?
-                        group by username_canonical
-                        order by points desc
-                        limit ?, 10''', (year,month, channelCanonical, numUpTo))
+                        where month=?
+                        and year=?'''
+            arguments = [month, year]
+
+            if channel is not None:
+                channelCanonical = ircutils.toLower(channel)
+                query = '''%s and channel_canonical=?''' % (query)
+                arguments.append(channelCanonical)
+
+            query = '''%s group by username_canonical
+                        order by points desc limit ?, 10''' % (query)
+            arguments.append(numUpTo)
+
+            c = self.conn.cursor()
+            c.execute(query, tuple(arguments))
 
             data = []
             for row in c:
@@ -3117,18 +3578,26 @@ class TriviaTime(callbacks.Plugin):
             d = datetime.date.today()
             if year is None:
                 year = d.year
-            c = self.conn.cursor()
-            channelCanonical = ircutils.toLower(channel)
-            c.execute('''select id,
+
+            query = '''select id,
                         username,
                         sum(points_made) as points,
                         sum(num_answered)
                         from triviauserlog
-                        where year=?
-                        and channel_canonical=?
-                        group by username_canonical
-                        order by points desc
-                        limit ?, 10''', (year,channelCanonical,numUpTo))
+                        where year=?'''
+            arguments = [year]
+
+            if channel is not None:
+                channelCanonical = ircutils.toLower(channel)
+                query = '''%s and channel_canonical=?''' % (query)
+                arguments.append(channelCanonical)
+
+            query = '''%s group by username_canonical
+                        order by points desc limit ?, 10''' % (query)
+            arguments.append(numUpTo)
+
+            c = self.conn.cursor()
+            c.execute(query, tuple(arguments))
 
             data = []
             for row in c:
@@ -3150,20 +3619,26 @@ class TriviaTime(callbacks.Plugin):
                             and month=%d
                             and day=%d)''' % (d.year, d.month, d.day)
                 d += datetime.timedelta(1)
-            c = self.conn.cursor()
-            weekSql = '''select id,
+
+            query = '''select id,
                         username,
                         sum(points_made) as points,
                         sum(num_answered)
                         from triviauserlog
-                        where ('''
-            weekSql += weekSqlString
-            weekSql += ''' ) and channel_canonical=?
-                            group by username_canonical
-                            order by points desc
-                            limit ?, 10'''
-            channelCanonical = ircutils.toLower(channel)
-            c.execute(weekSql, (channelCanonical,numUpTo))
+                        where (%s)''' % weekSqlString
+            arguments = []
+
+            if channel is not None:
+                channelCanonical = ircutils.toLower(channel)
+                query = '''%s and channel_canonical=?''' % (query)
+                arguments.append(channelCanonical)
+
+            query = '''%s group by username_canonical
+                        order by points desc limit ?, 10''' % (query)
+            arguments.append(numUpTo)
+
+            c = self.conn.cursor()
+            c.execute(query, tuple(arguments))
 
             data = []
             for row in c:
@@ -3171,8 +3646,9 @@ class TriviaTime(callbacks.Plugin):
             c.close()
             return data
 
-        def wasUserActiveIn(self,username,timeSeconds):
-            username = ircutils.toLower(username)
+        def wasUserActiveIn(self, username, channel, timeSeconds):
+            usernameCanonical = ircutils.toLower(username)
+            channelCanonical = ircutils.toLower(channel)
             epoch = int(time.mktime(time.localtime()))
             dateObject = datetime.date.today()
             day   = dateObject.day
@@ -3181,7 +3657,9 @@ class TriviaTime(callbacks.Plugin):
             c = self.conn.cursor()
             result = c.execute('''select count(*) from triviauserlog
                         where day=? and month=? and year=?
-                        and username_canonical=? and last_updated>?''', (day, month, year,username,(epoch-timeSeconds)))
+                        and username_canonical=?
+                        and channel_canonical=?
+                        and last_updated>?''', (day, month, year, usernameCanonical, channelCanonical, (epoch-timeSeconds)))
             rows = result.fetchone()[0]
             c.close()
             if rows > 0:
@@ -3204,6 +3682,106 @@ class TriviaTime(callbacks.Plugin):
                     )''')
             except:
                 pass
+
+    #A list with items that are removed when timeout is reached, values must be unique
+    class TimeoutList:
+        def __init__(self, timeout):
+            self.timeout = timeout
+            self.dict = {}
+
+        def setTimeout(self, timeout):
+            self.timeout = timeout
+
+        def clearTimeout(self):
+            for k, t in self.dict.items():
+                if t < (time.time() - self.timeout):
+                    del self.dict[k]
+
+        def append(self, value):
+            self.clearTimeout()
+            self.dict[value] = time.time()
+
+        def has(self, value):
+            self.clearTimeout()
+            if value in self.dict:
+                return True
+            return False
+
+    #A log wrapper, ripoff of ChannelLogger
+    class Logger:
+        def __init__(self):
+            self.logs = {}
+
+        def logNameTimestamp(self, channel):
+            return time.strftime('%Y-%m-%d')
+
+        def getLogName(self, channel):
+            return '%s.%s.log' % (channel, self.logNameTimestamp(channel))
+
+        def getLogDir(self, irc, channel):
+            logDir = conf.supybot.directories.log.dirize('TriviaTime')
+            logDir = os.path.join(logDir, irc.network)
+            logDir = os.path.join(logDir, channel)
+            timeDir = time.strftime('%B')
+            logDir = os.path.join(logDir, timeDir)
+            if not os.path.exists(logDir):
+                os.makedirs(logDir)
+            return logDir
+
+        def timestamp(self, log):
+            format = conf.supybot.log.timestampFormat()
+            if format:
+                log.write(time.strftime(format))
+                log.write(' ')
+
+        def checkLogNames(self):
+            for (irc, logs) in self.logs.items():
+                for (channel, log) in logs.items():
+                    name = self.getLogName(channel)
+                    if name != log.name:
+                        log.close()
+                        del logs[channel]
+
+        def getLog(self, irc, channel):
+            self.checkLogNames()
+            try:
+                logs = self.logs[irc]
+            except KeyError:
+                logs = ircutils.IrcDict()
+                self.logs[irc] = logs
+            if channel in logs:
+                return logs[channel]
+            else:
+                try:
+                    name = self.getLogName(channel)
+                    logDir = self.getLogDir(irc, channel)
+                    log = file(os.path.join(logDir, name), 'a')
+                    logs[channel] = log
+                    return log
+                except IOError:
+                    self.log.exception('Error opening log:')
+                    return self.FakeLog()
+
+        def doLog(self, irc, channel, s, *args):
+            s = format(s, *args)
+            channel = self.normalizeChannel(irc, channel)
+            log = self.getLog(irc, channel)
+            self.timestamp(log)
+            s = ircutils.stripFormatting(s)
+            log.write(s)
+            log.write('\n')
+            log.flush()
+
+        def normalizeChannel(self, irc, channel):
+            return ircutils.toLower(channel)
+
+        class FakeLog(object):
+            def flush(self):
+                return
+            def close(self):
+                return
+            def write(self, s):
+                return
 
 Class = TriviaTime
 # vim:set shiftwidth=4 softtabstop=4 expandtab textwidth=79:

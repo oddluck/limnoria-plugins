@@ -25,6 +25,7 @@ conf.registerGroup(TriviaTime, 'general')
 conf.registerGroup(TriviaTime, 'commands')
 conf.registerGroup(TriviaTime, 'voice')
 conf.registerGroup(TriviaTime, 'skip')
+conf.registerGroup(TriviaTime, 'hints')
 # CONFIGURATION
 # file locations for database and question
 conf.registerChannelValue(TriviaTime.admin, 'sqlitedb', 
@@ -34,7 +35,7 @@ conf.registerChannelValue(TriviaTime.admin, 'sqlitedb',
 
 conf.registerChannelValue(TriviaTime.admin, 'quizfile', 
         registry.NormalizedString("""plugins/TriviaTime/storage/samplequestions""", 
-                """Location of question file""")
+                """Location of question file. Changes require reloading the plugin""")
         )
 
 # timeout, number of hints, values
@@ -48,7 +49,12 @@ conf.registerChannelValue(TriviaTime.commands, 'showHintCommandKAOS',
                 """The command for showing the remaining KAOS""")
         )
 
-conf.registerChannelValue(TriviaTime.general, 'vowelsHint',
+conf.registerChannelValue(TriviaTime.general, 'globalStats',
+        registry.Boolean(False,
+                """Stats are global across all channels""")
+        )
+
+conf.registerChannelValue(TriviaTime.hints, 'vowelsHint',
         registry.Boolean(True,
                 """Show all vowels on the third hint. If false, random letters will be shown instead""")
         )
@@ -86,6 +92,16 @@ conf.registerChannelValue(TriviaTime.kaos, 'hintKAOS',
 conf.registerChannelValue(TriviaTime.general, 'waitTime', 
         registry.Integer(15, 
                 """Time in between the end of one question and the start of another""")
+        )
+
+conf.registerChannelValue(TriviaTime.voice, 'enableVoice',
+        registry.Boolean(True,
+                """Enable voicing of top players for week, month, and year""")
+        )
+
+conf.registerChannelValue(TriviaTime.voice, 'timeoutVoice',
+        registry.Integer(60,
+                """The minimum amount of time between anouncing voicing of a user""")
         )
 
 conf.registerChannelValue(TriviaTime.voice, 'numTopToVoice',
@@ -128,12 +144,12 @@ conf.registerChannelValue(TriviaTime.kaos, 'defaultKAOS',
                 """Default points for a correct KAOS answer""")
         )
 
-conf.registerChannelValue(TriviaTime.general, 'hintRatio', 
+conf.registerChannelValue(TriviaTime.hints, 'hintRatio', 
         registry.Integer(35, 
                 """Percent of word to show per hint""")
         )
 
-conf.registerChannelValue(TriviaTime.general, 'charMask', 
+conf.registerChannelValue(TriviaTime.hints, 'charMask', 
         registry.NormalizedString('*', 
                 """Masking character for hints""")
         )

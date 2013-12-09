@@ -2,8 +2,7 @@
     Order Allow,Deny
     Deny from all
 </FilesMatch>
-<FilesMatch "config\.php">
-    Order Allow,Deny
-    Deny from all
-</FilesMatch>
-AcceptPathInfo Off
+Options +FollowSymLinks
+RewriteEngine On
+RewriteCond %{REQUEST_URI} !^(.+/|/?)(css|js|fonts|img)/
+RewriteRule ^(.*)$ app.php [NC,L]
