@@ -15,6 +15,7 @@ import supybot.ircdb as ircdb
 import supybot.ircmsgs as ircmsgs
 import supybot.schedule as schedule
 import supybot.log as log
+import supybot.conf as conf
 import os
 import re
 import sqlite3
@@ -44,6 +45,9 @@ class TriviaTime(callbacks.Plugin):
 
         #Database amend statements for outdated versions
         self.dbamends = {} #Formatted like this: <DBVersion>: "<ALTERSTATEMENT>; <ALTERSTATEMENT>;" (This IS valid SQL as long as we include the semicolons)
+
+        #logger
+        self.logger = self.Logger()
 
         # connections
         dbLocation = self.registryValue('admin.sqlitedb')
@@ -246,6 +250,7 @@ class TriviaTime(callbacks.Plugin):
             threadStorage.deleteQuestion(questionNumber)
             threadStorage.removeDelete(num)
             threadStorage.removeDeleteByQuestionNumber(questionNumber)
+            self.logger.doLog(irc, channel, "%s accepted delete# %i, question# %i deleted" % (msg.nick, num, questionNumber))
     acceptdelete = wrap(acceptdelete, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
         
     def acceptedit(self, irc, msg, arg, user, channel, num):
@@ -266,10 +271,14 @@ class TriviaTime(callbacks.Plugin):
             threadStorage.removeEdit(edit[0])
             threadStorage.removeReportByQuestionNumber(edit[1])
             irc.reply('Question #%d updated!' % edit[1])
-            irc.sendMsg(ircmsgs.notice(msg.nick, 'NEW: %s' % (edit[2])))
+            questionOld = ''
             if len(question) > 0:
                 question = question[0]
-                irc.sendMsg(ircmsgs.notice(msg.nick, 'OLD: %s' % (question[2])))
+                questionOld = question[2]
+            self.logger.doLog(irc, channel, "%s accepted edit# %i, question# %i edited NEW: '%s' OLD '%s'" % (msg.nick, num, edit[1], edit[2], questionOld))
+            irc.sendMsg(ircmsgs.notice(msg.nick, 'NEW: %s' % (edit[2])))
+            if questionOld != '':
+                irc.sendMsg(ircmsgs.notice(msg.nick, 'OLD: %s' % (questionOld)))
             else:
                 irc.error('Question could not be found for this edit')
     acceptedit = wrap(acceptedit, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
@@ -290,6 +299,7 @@ class TriviaTime(callbacks.Plugin):
             threadStorage.insertQuestionsBulk([(q[3], q[3])])
             threadStorage.removeTemporaryQuestion(q[0])
             irc.reply('Question accepted!')
+            self.logger.doLog(irc, channel, "%s accepted new question# %i, '%s'" % (msg.nick, num, q[3]))
     acceptnew = wrap(acceptnew, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
 
     def addquestion(self, irc, msg, arg, question):
@@ -307,6 +317,7 @@ class TriviaTime(callbacks.Plugin):
         threadStorage.updateUser(username, 0, 0, 0, 1)
         threadStorage.insertTemporaryQuestion(username, channel, question)
         irc.reply(' Thank you for adding your question to the question database, it is awaiting approval. ')
+        self.logger.doLog(irc, channel, "%s added new question: '%s'" % (username, question))
     addquestion = wrap(addquestion, ['text'])
 
     def addfile(self, irc, msg, arg, filename):
@@ -329,6 +340,7 @@ class TriviaTime(callbacks.Plugin):
         threadStorage = self.Storage(dbLocation)
         info = threadStorage.insertQuestionsBulk(insertList)
         irc.reply('Successfully added %d questions, skipped %d' % (info[0], info[1]))
+        self.logger.doLog(irc, channel, "%s added question file: '%s', added: %i, skipped: %i" % (msg.nick, filename, info[0], info[1]))
     addfile = wrap(addfile, ['admin', optional('text')])
 
     def authweb(self, irc, msg, arg):
@@ -362,16 +374,19 @@ class TriviaTime(callbacks.Plugin):
         threadStorage = self.Storage(dbLocation)
         info = threadStorage.insertLogin(username, salt, isHashed, password, capability)
         irc.reply('Success, updated your web access login.')
+        self.logger.doLog(irc, channel, "%s authed for web access" % (username))
     authweb = wrap(authweb)
 
     def clearpoints(self, irc, msg, arg, username):
         """<username>
         Deletes all of a users points, and removes all their records
         """
+        channel = msg.args[0]
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
         threadStorage.removeUserLogs(username)
         irc.reply('Removed all points from %s' % (username))
+        self.logger.doLog(irc, channel, "%s cleared points for %s" % (msg.nick, username))
     clearpoints = wrap(clearpoints, ['admin','nick'])
 
     def day(self, irc, msg, arg, num):
@@ -425,6 +440,7 @@ class TriviaTime(callbacks.Plugin):
             return
         threadStorage.insertDelete(username, channel, id, reason)
         irc.reply('Question %d marked for deletion and pending review.' % id)
+        self.logger.doLog(irc, channel, "%s marked question# %i for deletion: '%s'" % (username, id, q[0][2]))
     deletequestion = wrap(deletequestion, ["channel", optional(('literal',("question", "QUESTION", "ROUND", "round"))),'int', optional('text')])
 
     def edit(self, irc, msg, arg, user, channel, num, question):
@@ -457,6 +473,7 @@ class TriviaTime(callbacks.Plugin):
             irc.reply('Success! Submitted edit for further review.')
             irc.sendMsg(ircmsgs.notice(msg.nick, 'NEW: %s' % (question)))
             irc.sendMsg(ircmsgs.notice(msg.nick, 'OLD: %s' % (q[2])))
+            self.logger.doLog(irc, channel, "%s edited question# %i: OLD: '%s' NEW: '%s'" % (username, num, q[2], question))
         else:
             irc.error('Question does not exist')
     edit = wrap(edit, ['user', ('checkChannelCapability', 'triviamod'), 'int', 'text'])
@@ -488,6 +505,7 @@ class TriviaTime(callbacks.Plugin):
         threadStorage = self.Storage(dbLocation)
         threadStorage.updateUserLog(username, channel, points, 0, 0, day, month, year)
         irc.reply('Added %d points to %s' % (points, username))
+        self.logger.doLog(irc, channel, "%s gave %i points to %s" % (msg.nick, points, username))
     givepoints = wrap(givepoints, ['admin','nick', 'int', optional('int')])
 
     def listdeletes(self, irc, msg, arg, user, channel, page):
@@ -751,6 +769,7 @@ class TriviaTime(callbacks.Plugin):
             edit = edit[0]
             threadStorage.removeEdit(edit[0])
             irc.reply('Edit %d removed!' % edit[0])
+            self.logger.doLog(irc, channel, "%s removed edit# %i, for question# %i, text: %s" % (msg.nick, edit[0], edit[1], edit[2]))
     removeedit = wrap(removeedit, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
 
     def removedelete(self, irc, msg, arg, user, channel, num):
@@ -767,6 +786,7 @@ class TriviaTime(callbacks.Plugin):
             delete = delete[0]
             threadStorage.removeDelete(num)
             irc.reply('Delete %d removed!' % num)
+            self.logger.doLog(irc, channel, "%s removed delete# %i, for question# %i, reason was '%s'" % (msg.nick, num, delete[3], delete[6]))
     removedelete = wrap(removedelete, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
 
     def removereport(self, irc, msg, arg, user, channel, num):
@@ -783,6 +803,7 @@ class TriviaTime(callbacks.Plugin):
             report = report[0]
             threadStorage.removeReport(report[0])
             irc.reply('Report %d removed!' % report[0])
+            self.logger.doLog(irc, channel, "%s removed report# %i, for question# %i text was %s" % (msg.nick, report[0], report[7], report[3]))
     removereport = wrap(removereport, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
 
     def delnew(self, irc, msg, arg, user, channel, num):
@@ -798,6 +819,7 @@ class TriviaTime(callbacks.Plugin):
             q = q[0]
             threadStorage.removeTemporaryQuestion(q[0])
             irc.reply('Temp question #%d removed!' % q[0])
+            self.logger.doLog(irc, channel, "%s removed new question# %i, '%s'" % (msg.nick, q[0], q[3]))
     delnew = wrap(delnew, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
 
     def repeat(self, irc, msg, arg):
@@ -846,6 +868,7 @@ class TriviaTime(callbacks.Plugin):
                     irc.reply('** Regex detected ** Your report has been submitted!')
                     irc.sendMsg(ircmsgs.notice(username, 'NEW: %s' % (newQuestionText)))
                     irc.sendMsg(ircmsgs.notice(username, 'OLD: %s' % (question[2])))
+                    self.logger.doLog(irc, channel, "%s edited question# %i, NEW: '%s', OLD: '%s'" % (msg.nick, question[0], newQuestionText, question[2]))
                     return
             elif str.lower(utils.str.normalizeWhitespace(inp))[:6] == 'delete':
                 if not threadStorage.questionIdExists(question[0]):
@@ -860,10 +883,12 @@ class TriviaTime(callbacks.Plugin):
                 reason = utils.str.normalizeWhitespace(inp)[6:]
                 reason = utils.str.normalizeWhitespace(reason)
                 irc.reply('Marked question for deletion.')
+                self.logger.doLog(irc, channel, "%s marked question# %i for deletion" % (msg.nick, question[0]))
                 threadStorage.insertDelete(username, channel, question[0], reason)
                 return
             threadStorage.updateUser(username, 0, 0, 1)
             threadStorage.insertReport(channel, username, text, question[0])
+            self.logger.doLog(irc, channel, "%s reported question# %i, Text: '%s'" % (msg.nick, question[0], text))
             irc.reply('Your report has been submitted!')
         else:
             irc.error('Sorry, round %d could not be found in the database' % (roundNum))
@@ -884,6 +909,7 @@ class TriviaTime(callbacks.Plugin):
             return
         threadStorage.restoreQuestion(questionNum)
         irc.reply('Question %d restored.' % questionNum)
+        self.logger.doLog(irc, channel, "%s restored question# %i" % (username, questionNum))
     restorequestion = wrap(restorequestion, [('checkChannelCapability', 'triviamod'), 'int'])
 
     def skip(self, irc, msg, arg):
@@ -1207,10 +1233,12 @@ class TriviaTime(callbacks.Plugin):
         """
         userfrom = userfrom
         userto = userto
+        channel = msg.args[0]
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
         threadStorage.transferUserLogs(userfrom, userto)
         irc.reply('Done! Transfered records from %s to %s' % (userfrom, userto))
+        self.logger.doLog(irc, channel, "%s transfered points from %s to %s" % (msg.nick, userfrom, userto))
     transferpoints = wrap(transferpoints, ['admin', 'nick', 'nick'])
 
     def week(self, irc, msg, arg, num):
@@ -3655,6 +3683,7 @@ class TriviaTime(callbacks.Plugin):
             except:
                 pass
 
+    #A list with items that are removed when timeout is reached, values must be unique
     class TimeoutList:
         def __init__(self, timeout):
             self.timeout = timeout
@@ -3678,6 +3707,81 @@ class TriviaTime(callbacks.Plugin):
                 return True
             return False
 
+    #A log wrapper, ripoff of ChannelLogger
+    class Logger:
+        def __init__(self):
+            self.logs = {}
+
+        def logNameTimestamp(self, channel):
+            return time.strftime('%Y-%m-%d')
+
+        def getLogName(self, channel):
+            return '%s.%s.log' % (channel, self.logNameTimestamp(channel))
+
+        def getLogDir(self, irc, channel):
+            logDir = conf.supybot.directories.log.dirize('TriviaTime')
+            logDir = os.path.join(logDir, irc.network)
+            logDir = os.path.join(logDir, channel)
+            timeDir = time.strftime('%B')
+            logDir = os.path.join(logDir, timeDir)
+            if not os.path.exists(logDir):
+                os.makedirs(logDir)
+            return logDir
+
+        def timestamp(self, log):
+            format = conf.supybot.log.timestampFormat()
+            if format:
+                log.write(time.strftime(format))
+                log.write(' ')
+
+        def checkLogNames(self):
+            for (irc, logs) in self.logs.items():
+                for (channel, log) in logs.items():
+                    name = self.getLogName(channel)
+                    if name != log.name:
+                        log.close()
+                        del logs[channel]
+
+        def getLog(self, irc, channel):
+            self.checkLogNames()
+            try:
+                logs = self.logs[irc]
+            except KeyError:
+                logs = ircutils.IrcDict()
+                self.logs[irc] = logs
+            if channel in logs:
+                return logs[channel]
+            else:
+                try:
+                    name = self.getLogName(channel)
+                    logDir = self.getLogDir(irc, channel)
+                    log = file(os.path.join(logDir, name), 'a')
+                    logs[channel] = log
+                    return log
+                except IOError:
+                    self.log.exception('Error opening log:')
+                    return self.FakeLog()
+
+        def doLog(self, irc, channel, s, *args):
+            s = format(s, *args)
+            channel = self.normalizeChannel(irc, channel)
+            log = self.getLog(irc, channel)
+            self.timestamp(log)
+            s = ircutils.stripFormatting(s)
+            log.write(s)
+            log.write('\n')
+            log.flush()
+
+        def normalizeChannel(self, irc, channel):
+            return ircutils.toLower(channel)
+
+        class FakeLog(object):
+            def flush(self):
+                return
+            def close(self):
+                return
+            def write(self, s):
+                return
 
 Class = TriviaTime
 # vim:set shiftwidth=4 softtabstop=4 expandtab textwidth=79:
