@@ -24,8 +24,8 @@
             foreach($values['resultQuestions'] as $res) {
               echo '<tr>';
               echo '<td>' . $res['round_num'] . '</td>';
-              echo '<td>' . $res['channel'] . '</td>';
-              echo '<td class="breakable">' . $res['question'] . '</td>';
+              echo '<td>' . htmlspecialchars($res['channel']) . '</td>';
+              echo '<td class="breakable">' . htmlspecialchars($res['question']) . '</td>';
               echo '<td class="hidden-phone">' . $res['line_num'] . '</td>';
               echo '</tr>';
             }
@@ -54,7 +54,7 @@
             foreach($values['resultActivities'] as $res) {
               echo '<tr>';
               echo '<td>' . date('Y/m/d h:i:s A',$res['timestamp']) . '</td>';
-              echo '<td>' . $res['activity'] . '</td>';
+              echo '<td>' . htmlspecialchars($res['activity']) . '</td>';
               echo '</tr>';
             }
             ?>

@@ -24,7 +24,7 @@
             foreach($values['dayResult'] as $key=>$res) {
               echo '<tr>';
               echo '<td>' . ($key+1) . '</td>';
-              echo '<td><a href="' . $container->router->generate('profile', array("username"=>$res['username'])) . '">' . $res['username'] . '</a></td>';
+              echo '<td><a href="' . $container->router->generate('profile', array("username"=>$res['username'])) . '">' . htmlspecialchars($res['username']) . '</a></td>';
               echo '<td>' . number_format($res['points'],0) . '</td>';
               echo '</tr>';
             }
@@ -54,7 +54,7 @@
             foreach($values['weekResult'] as $key=>$res) {
               echo '<tr>';
               echo '<td>' . ($key+1) . '</td>';
-              echo '<td><a href="' . $container->router->generate('profile', array("username"=>$res['username'])) . '">' . $res['username'] . '</a></td>';
+              echo '<td><a href="' . $container->router->generate('profile', array("username"=>$res['username'])) . '">' . htmlspecialchars($res['username']) . '</a></td>';
               echo '<td>' . number_format($res['points'],0) . '</td>';
               echo '</tr>';
             }
@@ -85,7 +85,7 @@
             foreach($values['monthResult'] as $key=>$res) {
               echo '<tr>';
               echo '<td>' . ($key+1) . '</td>';
-              echo '<td><a href="' . $container->router->generate('profile', array("username"=>$res['username'])) . '">' . $res['username'] . '</a></td>';
+              echo '<td><a href="' . $container->router->generate('profile', array("username"=>$res['username'])) . '">' . htmlspecialchars($res['username']) . '</a></td>';
               echo '<td>' . number_format($res['points'],0) . '</td>';
               echo '</tr>';
             }
@@ -114,7 +114,7 @@
             foreach($values['yearResult'] as $key=>$res) {
               echo '<tr>';
               echo '<td>' . ($key+1) . '</td>';
-              echo '<td><a href="' . $container->router->generate('profile', array("username"=>$res['username'])) . '">' . $res['username'] . '</a></td>';
+              echo '<td><a href="' . $container->router->generate('profile', array("username"=>$res['username'])) . '">' . htmlspecialchars($res['username']) . '</a></td>';
               echo '<td>' . number_format($res['points'],0) . '</td>';
               echo '</tr>';
             }
