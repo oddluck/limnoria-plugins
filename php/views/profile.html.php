@@ -3,7 +3,7 @@ $userProfile = $values['userProfile'];
 ?>
     <div class="row profile-header">
       <div class="span12">
-        <h1><?php echo $userProfile['usrname']; ?></h1>
+        <h1><?php echo htmlspecialchars($userProfile['usrname']); ?></h1>
         <p>Profile and stats.</p>
       </div>
     </div>

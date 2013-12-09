@@ -44,10 +44,10 @@ if($login->isLoggedIn()) {
             foreach($values['reportResult'] as $res) {
               echo '<tr>';
               echo '<td>' . $res['id'] . '</td>';
-              echo '<td class="hidden-phone">' . $res['username'] . '</td>';
+              echo '<td class="hidden-phone">' . htmlspecialchars($res['username']) . '</td>';
               echo '<td class="hidden-phone">' . $res['question_num'] . '</td>';
-              echo '<td class="breakable">' . $res['original'] . '</td>';
-              echo '<td class="breakable">' . $res['report_text'] . '</td>';
+              echo '<td class="breakable">' . htmlspecialchars($res['original']) . '</td>';
+              echo '<td class="breakable">' . htmlspecialchars($res['report_text']) . '</td>';
               if($isMod) {
                 echo '<td><a href="' . $container->router->generate('remove-report', array("id"=>$res['id'])) . '" class="btn btn-mini"><i class="icon-ban-circle"></i></a></td>';
               }
@@ -91,8 +91,8 @@ if($login->isLoggedIn()) {
             <?php
             foreach($values['editResult'] as $res) {
               $isItalic = false;
-              $splitNew = explode('*', $res['question']);
-              $splitOld = explode('*', $res['original']);
+              $splitNew = explode('*', htmlspecialchars($res['question']));
+              $splitOld = explode('*', htmlspecialchars($res['original']));
 
               $differenceString = '';
               for($y=0;$y<sizeof($splitNew);$y++){
@@ -133,9 +133,9 @@ if($login->isLoggedIn()) {
 
               echo '<tr>';
               echo '<td>' . $res['id'] . '</td>';
-              echo '<td class="hidden-phone">' . $res['username'] . '</td>';
+              echo '<td class="hidden-phone">' . htmlspecialchars($res['username']) . '</td>';
               echo '<td class="breakable">' . $differenceString . '</td>';
-              echo '<td class="breakable">' . $res['original'] . '</td>';
+              echo '<td class="breakable">' . htmlspecialchars($res['original']) . '</td>';
               echo '<td class="hidden-phone">' . $res['question_id'] . '</td>';
               if($isMod) {
                 echo '<td><a href="' . $container->router->generate('accept-edit', array("id"=>$res['id'])) . '" class="btn btn-mini"><i class="icon-ok"></i></a> <a href="' . $container->router->generate('remove-edit', array("id"=>$res['id'])) . '" class="btn btn-mini"><i class="icon-ban-circle"></i></a></td>';
@@ -178,8 +178,8 @@ if($login->isLoggedIn()) {
             foreach($values['newResult'] as $res) {
               echo '<tr>';
               echo '<td>' . $res['id'] . '</td>';
-              echo '<td>' . $res['username'] . '</td>';
-              echo '<td class="breakable">' . $res['question'] . '</td>';
+              echo '<td>' . htmlspecialchars($res['username']) . '</td>';
+              echo '<td class="breakable">' . htmlspecialchars($res['question']) . '</td>';
               if($isMod) {
                 echo '<td><a href="' . $container->router->generate('accept-new', array("id"=>$res['id'])) . '" class="btn btn-mini"><i class="icon-ok"></i></a> <a href="' . $container->router->generate('remove-new', array("id"=>$res['id'])) . '" class="btn btn-mini"><i class="icon-ban-circle"></i></a></td>';
               }
@@ -223,10 +223,10 @@ if($login->isLoggedIn()) {
             foreach($values['deleteResult'] as $res) {
               echo '<tr>';
               echo '<td>' . $res['id'] . '</td>';
-              echo '<td class="hidden-phone">' . $res['username'] . '</td>';
-              echo '<td class="breakable">' . $res['question'] . '</td>';
+              echo '<td class="hidden-phone">' . htmlspecialchars($res['username']) . '</td>';
+              echo '<td class="breakable">' . htmlspecialchars($res['question']) . '</td>';
               echo '<td class="hidden-phone">' . $res['line_num'] . '</td>';
-              echo '<td class="breakable">' . $res['reason'] . '</td>';
+              echo '<td class="breakable">' . htmlspecialchars($res['reason']) . '</td>';
               if($isMod) {
                 echo '<td><a href="' . $container->router->generate('accept-delete', array("id"=>$res['id'])) . '" class="btn btn-mini"><i class="icon-ok"></i></a> <a href="' . $container->router->generate('remove-delete', array("id"=>$res['id'])) . '" class="btn btn-mini"><i class="icon-ban-circle"></i></a></td>';
               }

@@ -47,7 +47,7 @@ class TriviaTime(callbacks.Plugin):
         self.dbamends = {} #Formatted like this: <DBVersion>: "<ALTERSTATEMENT>; <ALTERSTATEMENT>;" (This IS valid SQL as long as we include the semicolons)
 
         #logger
-        self.logger = self.Logger()
+        self.logger = self.Logger(self)
 
         # connections
         dbLocation = self.registryValue('admin.sqlitedb')
@@ -60,6 +60,8 @@ class TriviaTime(callbacks.Plugin):
             log.info('The database location did not exist, creating folder structure')
             os.makedirs(dbFolder)
         self.storage = self.Storage(dbLocation)
+        #self.storage.dropActivityTable()
+        self.storage.makeActivityTable()
         #self.storage.dropUserLogTable()
         self.storage.makeUserLogTable()
         #self.storage.dropGameTable()
@@ -231,11 +233,21 @@ class TriviaTime(callbacks.Plugin):
             n = int(n / len(chars))
         return ''.join(L)
 
+    def addActivity(self, activityType, activityText, channel, irc, storage=None):
+        if storage is None:
+            dbLocation = self.registryValue('admin.sqlitedb')
+            threadStorage = self.Storage(dbLocation)
+        else:
+            threadStorage = storage
+        threadStorage.removeOldActivity()
+        threadStorage.insertActivity(activityType, activityText, channel, irc.network)
+
     def acceptdelete(self, irc, msg, arg, user, channel, num):
         """[<channel>] <num>
         Accept a question deletion
         Channel is only necessary when editing from outside of the channel
         """
+        channel = msg.args[0]
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
         delete = self.storage.getDeleteById(num)
@@ -251,6 +263,8 @@ class TriviaTime(callbacks.Plugin):
             threadStorage.removeDelete(num)
             threadStorage.removeDeleteByQuestionNumber(questionNumber)
             self.logger.doLog(irc, channel, "%s accepted delete# %i, question# %i deleted" % (msg.nick, num, questionNumber))
+            activityText = '%s deleted a question, approved by %s' % (delete[1], msg.nick)
+            self.addActivity('delete', activityText, channel, irc, threadStorage)
     acceptdelete = wrap(acceptdelete, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
         
     def acceptedit(self, irc, msg, arg, user, channel, num):
@@ -258,6 +272,7 @@ class TriviaTime(callbacks.Plugin):
         Accept a question edit, and remove edit. 
         Channel is only necessary when editing from outside of the channel
         """
+        channel = msg.args[0]
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
         edit = self.storage.getEditById(num)
@@ -276,6 +291,8 @@ class TriviaTime(callbacks.Plugin):
                 question = question[0]
                 questionOld = question[2]
             self.logger.doLog(irc, channel, "%s accepted edit# %i, question# %i edited NEW: '%s' OLD '%s'" % (msg.nick, num, edit[1], edit[2], questionOld))
+            activityText = '%s edited a question, approved by %s' % (edit[4], msg.nick)
+            self.addActivity('edit', activityText, channel, irc, threadStorage)
             irc.sendMsg(ircmsgs.notice(msg.nick, 'NEW: %s' % (edit[2])))
             if questionOld != '':
                 irc.sendMsg(ircmsgs.notice(msg.nick, 'OLD: %s' % (questionOld)))
@@ -288,6 +305,7 @@ class TriviaTime(callbacks.Plugin):
         Accept a new question, and add it to the database. 
         Channel is only necessary when editing from outside of the channel
         """
+        channel = msg.args[0]
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
         q = threadStorage.getTemporaryQuestionById(num)
@@ -300,6 +318,8 @@ class TriviaTime(callbacks.Plugin):
             threadStorage.removeTemporaryQuestion(q[0])
             irc.reply('Question accepted!')
             self.logger.doLog(irc, channel, "%s accepted new question# %i, '%s'" % (msg.nick, num, q[3]))
+            activityText = '%s added a new question, approved by %s' % (q[1], msg.nick)
+            self.addActivity('new', activityText, channel, irc, threadStorage)
     acceptnew = wrap(acceptnew, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
 
     def addquestion(self, irc, msg, arg, question):
@@ -450,7 +470,7 @@ class TriviaTime(callbacks.Plugin):
             return
         threadStorage.insertDelete(username, channel, id, reason)
         irc.reply('Question %d marked for deletion and pending review.' % id)
-        self.logger.doLog(irc, channel, "%s marked question# %i for deletion: '%s'" % (username, id, q[0][2]))
+        self.logger.doLog(irc, channel, "%s marked question# %i for deletion" % (username, id))
     deletequestion = wrap(deletequestion, ["channel", optional(('literal',("question", "QUESTION", "ROUND", "round"))),'int', optional('text')])
 
     def edit(self, irc, msg, arg, user, channel, num, question):
@@ -2017,6 +2037,14 @@ class TriviaTime(callbacks.Plugin):
             self.conn.commit()
             c.close()
 
+        def dropActivityTable(self):
+            c = self.conn.cursor()
+            try:
+                c.execute('''DROP TABLE triviaactivity''')
+            except:
+                pass
+            c.close()
+
         def dropDeleteTable(self):
             c = self.conn.cursor()
             try:
@@ -2811,6 +2839,15 @@ class TriviaTime(callbacks.Plugin):
                 return True
             return False
 
+        def insertActivity(self, aType, activity, channel, network, timestamp=None):
+            if timestamp is None:
+                timestamp = int(time.mktime(time.localtime()))
+            channelCanonical = ircutils.toLower(channel)
+            c = self.conn.cursor()
+            c.execute('insert into triviaactivity values (NULL, ?, ?, ?, ?, ?, ?)',
+                                    (aType, activity, channel, channelCanonical, network, timestamp))
+            self.conn.commit()
+
         def insertDelete(self, username, channel, lineNumber, reason):
             usernameCanonical = ircutils.toLower(username)
             channelCanonical = ircutils.toLower(channel)
@@ -2955,6 +2992,23 @@ class TriviaTime(callbacks.Plugin):
             if rows > 0:
                 return True
             return False
+
+        def makeActivityTable(self):
+            c = self.conn.cursor()
+            try:
+                c.execute('''create table triviaactivity (
+                        id integer primary key autoincrement,
+                        type text,
+                        activity text,
+                        channel text,
+                        channel_canonical text,
+                        network text,
+                        timestamp integer
+                        )''')
+            except:
+                pass
+            self.conn.commit()
+            c.close()
 
         def makeDeleteTable(self):
             c = self.conn.cursor()
@@ -3164,6 +3218,18 @@ class TriviaTime(callbacks.Plugin):
             if rows > 0:
                 return True
             return False
+
+        def removeOldActivity(self,count=100):
+            c = self.conn.cursor()
+            c.execute('''delete from triviaactivity
+                        where id not in (
+                            select id
+                            from triviaactivity
+                            order by id desc
+                            limit ?
+                        )''', (count,))
+            self.conn.commit()
+            c.close()
 
         def removeDelete(self, deleteId):
             c = self.conn.cursor()
@@ -3719,8 +3785,9 @@ class TriviaTime(callbacks.Plugin):
 
     #A log wrapper, ripoff of ChannelLogger
     class Logger:
-        def __init__(self):
+        def __init__(self, base):
             self.logs = {}
+            self.registryValue = base.registryValue
 
         def logNameTimestamp(self, channel):
             return time.strftime('%Y-%m-%d')
@@ -3773,6 +3840,8 @@ class TriviaTime(callbacks.Plugin):
                     return self.FakeLog()
 
         def doLog(self, irc, channel, s, *args):
+            if not self.registryValue('general.logGames'):
+                return
             s = format(s, *args)
             channel = self.normalizeChannel(irc, channel)
             log = self.getLog(irc, channel)

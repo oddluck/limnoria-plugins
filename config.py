@@ -49,6 +49,11 @@ conf.registerChannelValue(TriviaTime.commands, 'showHintCommandKAOS',
                 """The command for showing the remaining KAOS""")
         )
 
+conf.registerChannelValue(TriviaTime.general, 'logGames',
+        registry.Boolean(True,
+                """Log changes to questions and games""")
+        )
+
 conf.registerChannelValue(TriviaTime.general, 'globalStats',
         registry.Boolean(False,
                 """Stats are global across all channels""")

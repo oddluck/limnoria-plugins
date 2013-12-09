@@ -647,6 +647,18 @@ class Storage
         return $result;
     }
 
+    public function getRecentActivities() {
+        if(!$this->isConnected()) {
+            throw new StorageConnectionException();
+        }
+        $q = $this->db->query('SELECT * FROM triviaactivity ORDER BY id DESC LIMIT 10');
+        if($q === false) {
+            throw new StorageSchemaException();
+        }
+        $result = $q->fetchAll();
+        return $result;
+    }
+
     public function getUserProfileInformation($usernameCanonical) {
         if(!$this->isConnected()) {
             throw new StorageConnectionException();
