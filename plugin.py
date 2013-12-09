@@ -88,6 +88,14 @@ class TriviaTime(callbacks.Plugin):
         if self.storage.getVersion() != None and self.storage.getVersion() != self.currentDBVersion:
             return
 
+    def die(self):
+        for (k, game) in self.games.items():
+            game.stop()
+
+    def reset(self):
+        for (k, game) in self.games.items():
+            game.stop()
+
     def doPrivmsg(self, irc, msg):
         """
             Catches all PRIVMSG, including channels communication
