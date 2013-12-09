@@ -354,17 +354,13 @@ class TriviaTime(callbacks.Plugin):
             irc.error('Sorry, you must be at least a triviamod to register for web login')
             return
 
-        hasMod = False
-
         try:
             if user.capabilities.check('triviamod'):
-                hasMod = True
                 capability = 'triviamod'
+            else:
+                irc.error('Sorry, you must be at least a triviamod to register for web login')
+                return
         except KeyError:
-            irc.error('Sorry, you must be at least a triviamod to register for web login')
-            return
-            
-        if not hasMod:
             irc.error('Sorry, you must be at least a triviamod to register for web login')
             return
 
