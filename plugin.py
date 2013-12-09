@@ -334,6 +334,7 @@ class TriviaTime(callbacks.Plugin):
             return
         irc.reply('Adding questions from %s to database.. This may take a few minutes' % filename)
         insertList = []
+        channel = msg.args[0]
         for line in filesLines:
             insertList.append((str(line).strip(),str(line).strip()))
         dbLocation = self.registryValue('admin.sqlitedb')
@@ -362,6 +363,7 @@ class TriviaTime(callbacks.Plugin):
             capability = 'owner'
 
         username = user.name
+        channel = msg.args[0]
         salt = ''
         password = ''
         isHashed = user.hashed
