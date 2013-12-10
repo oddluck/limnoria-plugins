@@ -91,8 +91,8 @@ if($login->isLoggedIn()) {
             <?php
             foreach($values['editResult'] as $res) {
               $isItalic = false;
-              $splitNew = explode('*', htmlspecialchars($res['question']));
-              $splitOld = explode('*', htmlspecialchars($res['original']));
+              $splitNew = explode('*', $res['question']);
+              $splitOld = explode('*', $res['original']);
 
               $differenceString = '';
               for($y=0;$y<sizeof($splitNew);$y++){
@@ -124,7 +124,7 @@ if($login->isLoggedIn()) {
                     $isItalic = false;
                     $differenceString .= '</u>';
                   }
-                  $differenceString.=$brokenNew[$i];
+                  $differenceString.=htmlspecialchars($brokenNew[$i]);
                 }
               }
               if($isItalic==true) {
