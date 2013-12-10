@@ -18,6 +18,7 @@ def configure(advanced):
 
 TriviaTime = conf.registerPlugin('TriviaTime')
 
+# Config groups
 conf.registerGroup(TriviaTime, 'kaos')
 conf.registerGroup(TriviaTime, 'admin')
 conf.registerGroup(TriviaTime, 'questions')
@@ -26,6 +27,7 @@ conf.registerGroup(TriviaTime, 'commands')
 conf.registerGroup(TriviaTime, 'voice')
 conf.registerGroup(TriviaTime, 'skip')
 conf.registerGroup(TriviaTime, 'hints')
+
 # CONFIGURATION
 # file locations for database and question
 conf.registerChannelValue(TriviaTime.admin, 'sqlitedb', 
