@@ -150,7 +150,9 @@ class Tweety(callbacks.Plugin):
     def _unescape(self, text):
         """Created by Fredrik Lundh (http://effbot.org/zone/re-sub.htm#unescape-html)"""
 
-        text = text.replace('\n', ' ')
+        # quick dump \n and \r, usually coming from bots that autopost html.
+        text = text.replace('\n', ' ').replace('\r', ' ')
+        # now the actual unescape.
         def fixup(m):
             text = m.group(0)
             if text[:2] == "&#":
