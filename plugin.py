@@ -381,7 +381,7 @@ class TriviaTime(callbacks.Plugin):
             self.addActivity('new', activityText, channel, irc, threadStorage)
     acceptnew = wrap(acceptnew, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
 
-    def addquestion(self, irc, msg, arg, question):
+    def add(self, irc, msg, arg, question):
         """<question text>
         Adds a question to the database
         """
@@ -397,7 +397,7 @@ class TriviaTime(callbacks.Plugin):
         threadStorage.insertTemporaryQuestion(username, channel, question)
         irc.reply(' Thank you for adding your question to the question database, it is awaiting approval. ')
         self.logger.doLog(irc, channel, "%s added new question: '%s'" % (username, question))
-    addquestion = wrap(addquestion, ['text'])
+    add = wrap(add, ['text'])
 
     def addfile(self, irc, msg, arg, filename):
         """[<filename>]
@@ -503,7 +503,7 @@ class TriviaTime(callbacks.Plugin):
         irc.noReply()
     day = wrap(day, [optional('int')])
 
-    def deletequestion(self, irc, msg, arg, channel, t, id, reason):
+    def delete(self, irc, msg, arg, channel, t, id, reason):
         """[<channel>] [<type "R" or "Q">] <question id> [<reason>]
         Deletes a question from the database. Type decides whether to delete
         by round number (r), or question number (q) (default round).
@@ -530,7 +530,7 @@ class TriviaTime(callbacks.Plugin):
         threadStorage.insertDelete(username, channel, id, reason)
         irc.reply('Question %d marked for deletion and pending review.' % id)
         self.logger.doLog(irc, channel, "%s marked question# %i for deletion" % (username, id))
-    deletequestion = wrap(deletequestion, ["channel", optional(('literal',("question", "QUESTION", "ROUND", "round"))),'int', optional('text')])
+    delete = wrap(delete, ["channel", optional(('literal',("question", "QUESTION", "ROUND", "round"))),'int', optional('text')])
 
     def edit(self, irc, msg, arg, user, channel, num, question):
         """[<channel>] <question number> <corrected text>
@@ -846,7 +846,7 @@ class TriviaTime(callbacks.Plugin):
         irc.noReply()
     next = wrap(next)
 
-    def removeedit(self, irc, msg, arg, user, channel, num):
+    def rmedit(self, irc, msg, arg, user, channel, num):
         """[<channel>] <int>
         Remove a edit without accepting it. 
         Channel is only necessary when editing from outside of the channel
@@ -861,9 +861,9 @@ class TriviaTime(callbacks.Plugin):
             threadStorage.removeEdit(edit[0])
             irc.reply('Edit %d removed!' % edit[0])
             self.logger.doLog(irc, channel, "%s removed edit# %i, for question# %i, text: %s" % (msg.nick, edit[0], edit[1], edit[2]))
-    removeedit = wrap(removeedit, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
+    rmedit = wrap(rmedit, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
 
-    def removedelete(self, irc, msg, arg, user, channel, num):
+    def rmdelete(self, irc, msg, arg, user, channel, num):
         """[<channel>] <int>
         Remove a delete without accepting it. 
         Channel is only necessary when editing from outside of the channel
@@ -878,9 +878,9 @@ class TriviaTime(callbacks.Plugin):
             threadStorage.removeDelete(num)
             irc.reply('Delete %d removed!' % num)
             self.logger.doLog(irc, channel, "%s removed delete# %i, for question# %i, reason was '%s'" % (msg.nick, num, delete[3], delete[6]))
-    removedelete = wrap(removedelete, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
+    rmdelete = wrap(rmdelete, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
 
-    def removereport(self, irc, msg, arg, user, channel, num):
+    def rmreport(self, irc, msg, arg, user, channel, num):
         """[<channel>] <report num>
         Remove a old report by report number. 
         Channel is only necessary when editing from outside of the channel
@@ -895,9 +895,9 @@ class TriviaTime(callbacks.Plugin):
             threadStorage.removeReport(report[0])
             irc.reply('Report %d removed!' % report[0])
             self.logger.doLog(irc, channel, "%s removed report# %i, for question# %i text was %s" % (msg.nick, report[0], report[7], report[3]))
-    removereport = wrap(removereport, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
+    rmreport = wrap(rmreport, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
 
-    def delnew(self, irc, msg, arg, user, channel, num):
+    def mnew(self, irc, msg, arg, user, channel, num):
         """[<channel>] <int>
         Remove a temp question without accepting it. Channel is only necessary when editing from outside of the channel
         """
@@ -911,7 +911,7 @@ class TriviaTime(callbacks.Plugin):
             threadStorage.removeTemporaryQuestion(q[0])
             irc.reply('Temp question #%d removed!' % q[0])
             self.logger.doLog(irc, channel, "%s removed new question# %i, '%s'" % (msg.nick, q[0], q[3]))
-    delnew = wrap(delnew, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
+    rmnew = wrap(rmnew, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
 
     def repeat(self, irc, msg, arg):
         """
@@ -1009,7 +1009,7 @@ class TriviaTime(callbacks.Plugin):
 
     def skip(self, irc, msg, arg):
         """
-            Skip the cureent question and start the next. Rate-limited.
+            Skip the current question and start the next. Rate-limited.
         """
         username = msg.nick
         usernameCanonical = ircutils.toLower(username)
