@@ -897,7 +897,7 @@ class TriviaTime(callbacks.Plugin):
             self.logger.doLog(irc, channel, "%s removed report# %i, for question# %i text was %s" % (msg.nick, report[0], report[7], report[3]))
     rmreport = wrap(rmreport, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
 
-    def mnew(self, irc, msg, arg, user, channel, num):
+    def rmnew(self, irc, msg, arg, user, channel, num):
         """[<channel>] <int>
         Remove a temp question without accepting it. Channel is only necessary when editing from outside of the channel
         """
@@ -1980,7 +1980,8 @@ class TriviaTime(callbacks.Plugin):
                 alternativeAnswers = []
                 if ircutils.toLower(question[:4]) == 'kaos':
                     for ans in answers:
-                        answer.append(str(ans).strip())
+                        if answer.count(ans) == 0:
+                            answer.append(str(ans).strip())
                 elif ircutils.toLower(question[:5]) == 'uword':
                     for ans in answers:
                         answer.append(str(ans).strip())
