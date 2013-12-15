@@ -36,3 +36,6 @@ nosetests.xml
 
 # PyCharm
 *.iml
+
+# trivia.db
+*.db
