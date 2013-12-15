@@ -192,6 +192,13 @@ class TriviaTime(callbacks.Plugin):
 
     def voiceUser(self, irc, username, channel):
         irc.queueMsg(ircmsgs.voice(channel, username))
+        usernameCanonical = ircutils.toLower(username)
+        dbLocation = self.registryValue('admin.sqlitedb')
+        threadStorage = self.Storage(dbLocation)
+        if self.registryValue('general.globalStats'):
+            user = threadStorage.getUser(username, None)
+        else:
+            user = threadStorage.getUser(username, channel)
         if not self.voiceTimeouts.has(usernameCanonical):
             self.voiceTimeouts.append(usernameCanonical)
             irc.sendMsg(ircmsgs.privmsg(channel, 'Giving MVP to %s for being top #%d this WEEK' % (username, user[15])))
