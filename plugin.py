@@ -65,7 +65,6 @@ class TriviaTime(callbacks.Plugin):
         # games info
         self.games = {} # separate game for each channel
         self.voiceTimeouts = TimeoutList(self.registryValue('voice.timeoutVoice'))
-        self.voiceError = TimeoutList(120)
 
         #Database amend statements for outdated versions
         self.dbamends = {} #Formatted like this: <DBVersion>: "<ALTERSTATEMENT>; <ALTERSTATEMENT>;" (This IS valid SQL as long as we include the semicolons)
@@ -192,17 +191,14 @@ class TriviaTime(callbacks.Plugin):
                     irc.sendMsg(ircmsgs.privmsg(channel, '%s: Ping reply: %0.2f seconds' % (username, pingTime)))
 
     def voiceUser(self, irc, username, channel):
-        prefix = irc.state.nickToHostmask(irc.nick)
-        cap = ircdb.canonicalCapability('op')
-        cap = ircdb.makeChannelCapability(channel, cap)
-        if not ircdb.checkCapability(prefix, cap):
-            if self.voiceError.has(ircutils.toLower(channel)):
-                return
-            self.voiceError.append(ircutils.toLower(channel))
-            log.error("Bot does not have op capability to voice user %s" % (username))
-            return
-
         irc.queueMsg(ircmsgs.voice(channel, username))
+        usernameCanonical = ircutils.toLower(username)
+        dbLocation = self.registryValue('admin.sqlitedb')
+        threadStorage = self.Storage(dbLocation)
+        if self.registryValue('general.globalStats'):
+            user = threadStorage.getUser(username, None)
+        else:
+            user = threadStorage.getUser(username, channel)
         if not self.voiceTimeouts.has(usernameCanonical):
             self.voiceTimeouts.append(usernameCanonical)
             irc.sendMsg(ircmsgs.privmsg(channel, 'Giving MVP to %s for being top #%d this WEEK' % (username, user[15])))
@@ -210,27 +206,6 @@ class TriviaTime(callbacks.Plugin):
     def handleVoice(self, irc, username, channel):
         if not self.registryValue('voice.enableVoice'):
             return
-
-        prefix = irc.state.nickToHostmask(username)
-        cap = ircdb.canonicalCapability('voice')
-        cap = ircdb.makeChannelCapability(channel, cap)
-        try:
-            u = ircdb.users.getUser(prefix)
-        except KeyError:
-            if ircdb.checkCapability(prefix, cap):
-                return
-        else:
-            capop = ircdb.canonicalCapability('op')
-            capop = ircdb.makeChannelCapability(channel, cap)
-            caphop = ircdb.canonicalCapability('halfop')
-            caphop = ircdb.makeChannelCapability(channel, cap)
-            for c in u.capabilities:
-                if cap == c:
-                    return
-                if capop == c:
-                    return
-                if caphop == c:
-                    return
 
         timeoutVoice = self.registryValue('voice.timeoutVoice')
         self.voiceTimeouts.setTimeout(timeoutVoice)
