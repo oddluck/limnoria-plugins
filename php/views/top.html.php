@@ -34,7 +34,7 @@
             foreach($values['result'] as $res) {
               echo '<tr>';
               echo '<td>' . $currentRank . '</td>';
-              echo '<td><a href="' . $container->router->generate('profile', array("username"=>$res['username'])) . '">' . $res['username'] . '</a></td>';
+              echo '<td><a href="' . $container->router->generate('profile', array("username"=>$res['username'])) . '">' . htmlspecialchars($res['username']) . '</a></td>';
               echo '<td>' . number_format($res['points'],0) . '</td>';
               echo '</tr>';
               $currentRank++;

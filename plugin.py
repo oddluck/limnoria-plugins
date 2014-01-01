@@ -25,6 +25,30 @@ import datetime
 import unicodedata
 import hashlib
 
+#A list with items that are removed when timeout is reached, values must be unique
+class TimeoutList:
+    def __init__(self, timeout):
+        self.timeout = timeout
+        self.dict = {}
+
+    def setTimeout(self, timeout):
+        self.timeout = timeout
+
+    def clearTimeout(self):
+        for k, t in self.dict.items():
+            if t < (time.time() - self.timeout):
+                del self.dict[k]
+
+    def append(self, value):
+        self.clearTimeout()
+        self.dict[value] = time.time()
+
+    def has(self, value):
+        self.clearTimeout()
+        if value in self.dict:
+            return True
+        return False
+
 class TriviaTime(callbacks.Plugin):
     """
     TriviaTime - A trivia word game, guess the word and score points. 
@@ -40,14 +64,13 @@ class TriviaTime(callbacks.Plugin):
 
         # games info
         self.games = {} # separate game for each channel
-        self.voiceTimeouts = self.TimeoutList(self.registryValue('voice.timeoutVoice'))
-        self.voiceError = self.TimeoutList(120)
+        self.voiceTimeouts = TimeoutList(self.registryValue('voice.timeoutVoice'))
 
         #Database amend statements for outdated versions
         self.dbamends = {} #Formatted like this: <DBVersion>: "<ALTERSTATEMENT>; <ALTERSTATEMENT>;" (This IS valid SQL as long as we include the semicolons)
 
         #logger
-        self.logger = self.Logger()
+        self.logger = self.Logger(self)
 
         # connections
         dbLocation = self.registryValue('admin.sqlitedb')
@@ -60,6 +83,8 @@ class TriviaTime(callbacks.Plugin):
             log.info('The database location did not exist, creating folder structure')
             os.makedirs(dbFolder)
         self.storage = self.Storage(dbLocation)
+        #self.storage.dropActivityTable()
+        self.storage.makeActivityTable()
         #self.storage.dropUserLogTable()
         self.storage.makeUserLogTable()
         #self.storage.dropGameTable()
@@ -86,6 +111,19 @@ class TriviaTime(callbacks.Plugin):
         if self.storage.getVersion() != None and self.storage.getVersion() != self.currentDBVersion:
             return
 
+    def _games(self):
+        for (network, games) in self.games.items():
+            for (channel, game) in games.items():
+                yield game
+
+    def die(self):
+        for game in self._games():
+            game.stop()
+
+    def reset(self):
+        for game in self._games():
+            game.stop()
+
     def doPrivmsg(self, irc, msg):
         """
             Catches all PRIVMSG, including channels communication
@@ -108,77 +146,17 @@ class TriviaTime(callbacks.Plugin):
         otherHintCommand = self.registryValue('commands.showHintCommandKAOS', channel)
         kaosRemainingCommand = self.registryValue('commands.extraHint', channel)
 
-        if channelCanonical in self.games:
+        game = self.getGame(irc, channel)
+
+        if game is not None:
             # Look for command to list remaining KAOS
             if msg.args[1] == otherHintCommand:
-                self.games[channelCanonical].getRemainingKAOS()
+                game.getRemainingKAOS()
             elif msg.args[1] == kaosRemainingCommand:
-                self.games[channelCanonical].getOtherHint()
+                game.getOtherHint()
             else:
                 # check the answer
-                self.games[channelCanonical].checkAnswer(msg)
-
-    def voiceUser(self, irc, username, channel):
-        prefix = irc.state.nickToHostmask(irc.nick)
-        cap = ircdb.canonicalCapability('op')
-        cap = ircdb.makeChannelCapability(channel, cap)
-        if not ircdb.checkCapability(prefix, cap):
-            if self.voiceError.has(ircutils.toLower(channel)):
-                return
-            self.voiceError.append(ircutils.toLower(channel))
-            log.error("Bot does not have op capability to voice user %s" % (username))
-            return
-
-        irc.queueMsg(ircmsgs.voice(channel, username))
-        if not self.voiceTimeouts.has(usernameCanonical):
-            self.voiceTimeouts.append(usernameCanonical)
-            irc.sendMsg(ircmsgs.privmsg(channel, 'Giving MVP to %s for being top #%d this WEEK' % (username, user[15])))
-
-    def handleVoice(self, irc, username, channel):
-        if not self.registryValue('voice.enableVoice'):
-            return
-
-        prefix = irc.state.nickToHostmask(username)
-        cap = ircdb.canonicalCapability('voice')
-        cap = ircdb.makeChannelCapability(channel, cap)
-        try:
-            u = ircdb.users.getUser(prefix)
-        except KeyError:
-            if ircdb.checkCapability(prefix, cap):
-                return
-        else:
-            capop = ircdb.canonicalCapability('op')
-            capop = ircdb.makeChannelCapability(channel, cap)
-            caphop = ircdb.canonicalCapability('halfop')
-            caphop = ircdb.makeChannelCapability(channel, cap)
-            for c in u.capabilities:
-                if cap == c:
-                    return
-                if capop == c:
-                    return
-                if caphop == c:
-                    return
-
-        timeoutVoice = self.registryValue('voice.timeoutVoice')
-        self.voiceTimeouts.setTimeout(timeoutVoice)
-        usernameCanonical = ircutils.toLower(username)
-        dbLocation = self.registryValue('admin.sqlitedb')
-        threadStorage = self.Storage(dbLocation)
-        if self.registryValue('general.globalStats'):
-            user = threadStorage.getUser(username, None)
-        else:
-            user = threadStorage.getUser(username, channel)
-        numTopToVoice = self.registryValue('voice.numTopToVoice')
-        minPointsVoiceYear = self.registryValue('voice.minPointsVoiceYear')
-        minPointsVoiceMonth = self.registryValue('voice.minPointsVoiceMonth')
-        minPointsVoiceWeek = self.registryValue('voice.minPointsVoiceWeek')
-        if len(user) >= 1:
-            if user[13] <= numTopToVoice and user[4] >= minPointsVoiceYear:
-                self.voiceUser(irc, username, channel)
-            elif user[14] <= numTopToVoice and user[6] >= minPointsVoiceMonth:
-                self.voiceUser(irc, username, channel)
-            elif user[15] <= numTopToVoice and user[8] >= minPointsVoiceWeek:
-                self.voiceUser(irc, username, channel)
+                game.checkAnswer(msg)
 
     def doJoin(self,irc,msg):
         username = msg.nick
@@ -212,6 +190,44 @@ class TriviaTime(callbacks.Plugin):
                 else:
                     irc.sendMsg(ircmsgs.privmsg(channel, '%s: Ping reply: %0.2f seconds' % (username, pingTime)))
 
+    def voiceUser(self, irc, username, channel):
+        irc.queueMsg(ircmsgs.voice(channel, username))
+        usernameCanonical = ircutils.toLower(username)
+        dbLocation = self.registryValue('admin.sqlitedb')
+        threadStorage = self.Storage(dbLocation)
+        if self.registryValue('general.globalStats'):
+            user = threadStorage.getUser(username, None)
+        else:
+            user = threadStorage.getUser(username, channel)
+        if not self.voiceTimeouts.has(usernameCanonical):
+            self.voiceTimeouts.append(usernameCanonical)
+            irc.sendMsg(ircmsgs.privmsg(channel, 'Giving MVP to %s for being top #%d this WEEK' % (username, user[15])))
+
+    def handleVoice(self, irc, username, channel):
+        if not self.registryValue('voice.enableVoice'):
+            return
+
+        timeoutVoice = self.registryValue('voice.timeoutVoice')
+        self.voiceTimeouts.setTimeout(timeoutVoice)
+        usernameCanonical = ircutils.toLower(username)
+        dbLocation = self.registryValue('admin.sqlitedb')
+        threadStorage = self.Storage(dbLocation)
+        if self.registryValue('general.globalStats'):
+            user = threadStorage.getUser(username, None)
+        else:
+            user = threadStorage.getUser(username, channel)
+        numTopToVoice = self.registryValue('voice.numTopToVoice')
+        minPointsVoiceYear = self.registryValue('voice.minPointsVoiceYear')
+        minPointsVoiceMonth = self.registryValue('voice.minPointsVoiceMonth')
+        minPointsVoiceWeek = self.registryValue('voice.minPointsVoiceWeek')
+        if len(user) >= 1:
+            if user[13] <= numTopToVoice and user[4] >= minPointsVoiceYear:
+                self.voiceUser(irc, username, channel)
+            elif user[14] <= numTopToVoice and user[6] >= minPointsVoiceMonth:
+                self.voiceUser(irc, username, channel)
+            elif user[15] <= numTopToVoice and user[8] >= minPointsVoiceWeek:
+                self.voiceUser(irc, username, channel)
+
     def addZeroWidthSpace(self, text):
         if len(text) <= 1:
             return text
@@ -231,11 +247,41 @@ class TriviaTime(callbacks.Plugin):
             n = int(n / len(chars))
         return ''.join(L)
 
+    def addActivity(self, activityType, activityText, channel, irc, storage=None):
+        if storage is None:
+            dbLocation = self.registryValue('admin.sqlitedb')
+            threadStorage = self.Storage(dbLocation)
+        else:
+            threadStorage = storage
+        threadStorage.removeOldActivity()
+        threadStorage.insertActivity(activityType, activityText, channel, irc.network)
+
+    def deleteGame(self, irc, channel):
+        if irc.network in self.games:
+            if channelCanonical in self.games[irc.network]:
+                del self.games[irc.network][channelCanonical]
+                if len(self.games[irc.network]) < 1:
+                    del self.games[irc.network]
+
+    def createGame(self, irc, channel):
+        if irc.network not in self.games:
+            self.games[irc.network] = {}
+        channelCanonical = ircutils.toLower(channel)
+        self.games[irc.network][channelCanonical] = self.Game(irc, channel, self)
+
+    def getGame(self, irc, channel):
+        channelCanonical = ircutils.toLower(channel)
+        if irc.network in self.games:
+            if channelCanonical in self.games[irc.network]:
+                return self.games[irc.network][channelCanonical]
+        return None
+
     def acceptdelete(self, irc, msg, arg, user, channel, num):
         """[<channel>] <num>
         Accept a question deletion
         Channel is only necessary when editing from outside of the channel
         """
+        channel = msg.args[0]
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
         delete = self.storage.getDeleteById(num)
@@ -251,6 +297,8 @@ class TriviaTime(callbacks.Plugin):
             threadStorage.removeDelete(num)
             threadStorage.removeDeleteByQuestionNumber(questionNumber)
             self.logger.doLog(irc, channel, "%s accepted delete# %i, question# %i deleted" % (msg.nick, num, questionNumber))
+            activityText = '%s deleted a question, approved by %s' % (delete[1], msg.nick)
+            self.addActivity('delete', activityText, channel, irc, threadStorage)
     acceptdelete = wrap(acceptdelete, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
         
     def acceptedit(self, irc, msg, arg, user, channel, num):
@@ -258,6 +306,7 @@ class TriviaTime(callbacks.Plugin):
         Accept a question edit, and remove edit. 
         Channel is only necessary when editing from outside of the channel
         """
+        channel = msg.args[0]
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
         edit = self.storage.getEditById(num)
@@ -276,6 +325,8 @@ class TriviaTime(callbacks.Plugin):
                 question = question[0]
                 questionOld = question[2]
             self.logger.doLog(irc, channel, "%s accepted edit# %i, question# %i edited NEW: '%s' OLD '%s'" % (msg.nick, num, edit[1], edit[2], questionOld))
+            activityText = '%s edited a question, approved by %s' % (edit[4], msg.nick)
+            self.addActivity('edit', activityText, channel, irc, threadStorage)
             irc.sendMsg(ircmsgs.notice(msg.nick, 'NEW: %s' % (edit[2])))
             if questionOld != '':
                 irc.sendMsg(ircmsgs.notice(msg.nick, 'OLD: %s' % (questionOld)))
@@ -288,6 +339,7 @@ class TriviaTime(callbacks.Plugin):
         Accept a new question, and add it to the database. 
         Channel is only necessary when editing from outside of the channel
         """
+        channel = msg.args[0]
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
         q = threadStorage.getTemporaryQuestionById(num)
@@ -300,9 +352,11 @@ class TriviaTime(callbacks.Plugin):
             threadStorage.removeTemporaryQuestion(q[0])
             irc.reply('Question accepted!')
             self.logger.doLog(irc, channel, "%s accepted new question# %i, '%s'" % (msg.nick, num, q[3]))
+            activityText = '%s added a new question, approved by %s' % (q[1], msg.nick)
+            self.addActivity('new', activityText, channel, irc, threadStorage)
     acceptnew = wrap(acceptnew, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
 
-    def addquestion(self, irc, msg, arg, question):
+    def add(self, irc, msg, arg, question):
         """<question text>
         Adds a question to the database
         """
@@ -318,7 +372,7 @@ class TriviaTime(callbacks.Plugin):
         threadStorage.insertTemporaryQuestion(username, channel, question)
         irc.reply(' Thank you for adding your question to the question database, it is awaiting approval. ')
         self.logger.doLog(irc, channel, "%s added new question: '%s'" % (username, question))
-    addquestion = wrap(addquestion, ['text'])
+    add = wrap(add, ['text'])
 
     def addfile(self, irc, msg, arg, filename):
         """[<filename>]
@@ -334,6 +388,7 @@ class TriviaTime(callbacks.Plugin):
             return
         irc.reply('Adding questions from %s to database.. This may take a few minutes' % filename)
         insertList = []
+        channel = msg.args[0]
         for line in filesLines:
             insertList.append((str(line).strip(),str(line).strip()))
         dbLocation = self.registryValue('admin.sqlitedb')
@@ -353,15 +408,24 @@ class TriviaTime(callbacks.Plugin):
             irc.error('Sorry, you must be at least a triviamod to register for web login')
             return
 
-        if not user.capabilities.check('triviamod'):
+        try:
+            if user.capabilities.check('triviamod'):
+                capability = 'triviamod'
+            else:
+                irc.error('Sorry, you must be at least a triviamod to register for web login')
+                return
+        except KeyError:
             irc.error('Sorry, you must be at least a triviamod to register for web login')
+            return
 
-        capability = 'triviamod'
-
-        if user.capabilities.check('owner'):
-            capability = 'owner'
+        try:
+            if user.capabilities.check('owner'):
+                capability = 'owner'
+        except KeyError:
+            pass
 
         username = user.name
+        channel = msg.args[0]
         salt = ''
         password = ''
         isHashed = user.hashed
@@ -414,7 +478,7 @@ class TriviaTime(callbacks.Plugin):
         irc.noReply()
     day = wrap(day, [optional('int')])
 
-    def deletequestion(self, irc, msg, arg, channel, t, id, reason):
+    def delete(self, irc, msg, arg, channel, t, id, reason):
         """[<channel>] [<type "R" or "Q">] <question id> [<reason>]
         Deletes a question from the database. Type decides whether to delete
         by round number (r), or question number (q) (default round).
@@ -440,8 +504,8 @@ class TriviaTime(callbacks.Plugin):
             return
         threadStorage.insertDelete(username, channel, id, reason)
         irc.reply('Question %d marked for deletion and pending review.' % id)
-        self.logger.doLog(irc, channel, "%s marked question# %i for deletion: '%s'" % (username, id, q[0][2]))
-    deletequestion = wrap(deletequestion, ["channel", optional(('literal',("question", "QUESTION", "ROUND", "round"))),'int', optional('text')])
+        self.logger.doLog(irc, channel, "%s marked question# %i for deletion" % (username, id))
+    delete = wrap(delete, ["channel", optional(('literal',("question", "QUESTION", "ROUND", "round"))),'int', optional('text')])
 
     def edit(self, irc, msg, arg, user, channel, num, question):
         """[<channel>] <question number> <corrected text>
@@ -728,34 +792,36 @@ class TriviaTime(callbacks.Plugin):
         minStreak = self.registryValue('general.nextMinStreak', channel)
         channelCanonical = ircutils.toLower(channel)
 
+        game = self.getGame(irc, channel)
+
         # Trivia isn't running
-        if channelCanonical not in self.games or self.games[channelCanonical].active != True:
+        if game is None or game.active != True:
             irc.sendMsg(ircmsgs.privmsg(channel, '%s: Trivia is not currently running.' % (username)))
             irc.noReply()
             return
         # Question is still being asked, not over
-        if self.games[channelCanonical].questionOver == False:
+        if game.questionOver == False:
             irc.sendMsg(ircmsgs.privmsg(channel, '%s: You must wait until the current question is over.' % (username)))
             irc.noReply()
             return
         # Username isnt the streak holder
-        if self.games[channelCanonical].lastWinner != ircutils.toLower(username):
+        if game.lastWinner != ircutils.toLower(username):
             irc.sendMsg(ircmsgs.privmsg(channel, '%s: You are not currently the streak holder.' % (username)))
             irc.noReply()
             return
         # Streak isnt high enough
-        if self.games[channelCanonical].streak < minStreak:
-            irc.sendMsg(ircmsgs.privmsg(channel, '%s: You do not have a large enough streak yet (%i of %i).' % (username, self.games[channelCanonical].streak, minStreak)))
+        if game.streak < minStreak:
+            irc.sendMsg(ircmsgs.privmsg(channel, '%s: You do not have a large enough streak yet (%i of %i).' % (username, game.streak, minStreak)))
             irc.noReply()
             return
 
         irc.sendMsg(ircmsgs.privmsg(channel, 'No more waiting; starting next question.'))
-        self.games[channelCanonical].removeEvent()
-        self.games[channelCanonical].nextQuestion()
+        game.removeEvent()
+        game.nextQuestion()
         irc.noReply()
     next = wrap(next)
 
-    def removeedit(self, irc, msg, arg, user, channel, num):
+    def rmedit(self, irc, msg, arg, user, channel, num):
         """[<channel>] <int>
         Remove a edit without accepting it. 
         Channel is only necessary when editing from outside of the channel
@@ -770,9 +836,9 @@ class TriviaTime(callbacks.Plugin):
             threadStorage.removeEdit(edit[0])
             irc.reply('Edit %d removed!' % edit[0])
             self.logger.doLog(irc, channel, "%s removed edit# %i, for question# %i, text: %s" % (msg.nick, edit[0], edit[1], edit[2]))
-    removeedit = wrap(removeedit, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
+    rmedit = wrap(rmedit, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
 
-    def removedelete(self, irc, msg, arg, user, channel, num):
+    def rmdelete(self, irc, msg, arg, user, channel, num):
         """[<channel>] <int>
         Remove a delete without accepting it. 
         Channel is only necessary when editing from outside of the channel
@@ -787,9 +853,9 @@ class TriviaTime(callbacks.Plugin):
             threadStorage.removeDelete(num)
             irc.reply('Delete %d removed!' % num)
             self.logger.doLog(irc, channel, "%s removed delete# %i, for question# %i, reason was '%s'" % (msg.nick, num, delete[3], delete[6]))
-    removedelete = wrap(removedelete, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
+    rmdelete = wrap(rmdelete, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
 
-    def removereport(self, irc, msg, arg, user, channel, num):
+    def rmreport(self, irc, msg, arg, user, channel, num):
         """[<channel>] <report num>
         Remove a old report by report number. 
         Channel is only necessary when editing from outside of the channel
@@ -804,9 +870,9 @@ class TriviaTime(callbacks.Plugin):
             threadStorage.removeReport(report[0])
             irc.reply('Report %d removed!' % report[0])
             self.logger.doLog(irc, channel, "%s removed report# %i, for question# %i text was %s" % (msg.nick, report[0], report[7], report[3]))
-    removereport = wrap(removereport, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
+    rmreport = wrap(rmreport, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
 
-    def delnew(self, irc, msg, arg, user, channel, num):
+    def rmnew(self, irc, msg, arg, user, channel, num):
         """[<channel>] <int>
         Remove a temp question without accepting it. Channel is only necessary when editing from outside of the channel
         """
@@ -820,7 +886,7 @@ class TriviaTime(callbacks.Plugin):
             threadStorage.removeTemporaryQuestion(q[0])
             irc.reply('Temp question #%d removed!' % q[0])
             self.logger.doLog(irc, channel, "%s removed new question# %i, '%s'" % (msg.nick, q[0], q[3]))
-    delnew = wrap(delnew, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
+    rmnew = wrap(rmnew, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
 
     def repeat(self, irc, msg, arg):
         """
@@ -828,8 +894,11 @@ class TriviaTime(callbacks.Plugin):
         """
         channel = msg.args[0]
         channelCanonical = ircutils.toLower(channel)
-        if channelCanonical in self.games:
-            self.games[channelCanonical].repeatQuestion()
+
+        game = self.getGame(irc, channel)
+
+        if game is not None:
+            game.repeatQuestion()
     repeat = wrap(repeat)
 
     def report(self, irc, msg, arg, channel, roundNum, text):
@@ -845,9 +914,10 @@ class TriviaTime(callbacks.Plugin):
         except KeyError:
             pass
         channelCanonical = ircutils.toLower(channel)
-        if channelCanonical in self.games:
-            numAsked = self.games[channelCanonical].numAsked
-            questionOver = self.games[channelCanonical].questionOver
+        game = self.getGame(irc, channel)
+        if game is not None:
+            numAsked = game.numAsked
+            questionOver = game.questionOver
             if inp[:2] == 's/':
                 if numAsked == roundNum and questionOver == False:
                     irc.reply('Sorry you must wait until the current question is over to report it.')
@@ -914,9 +984,10 @@ class TriviaTime(callbacks.Plugin):
 
     def skip(self, irc, msg, arg):
         """
-            Skip the cureent question and start the next. Rate-limited.
+            Skip the current question and start the next. Rate-limited.
         """
         username = msg.nick
+        usernameCanonical = ircutils.toLower(username)
         channel = msg.args[0]
 
         dbLocation = self.registryValue('admin.sqlitedb')
@@ -924,11 +995,12 @@ class TriviaTime(callbacks.Plugin):
         timeSeconds = self.registryValue('skip.skipActiveTime', channel)
         totalActive = threadStorage.getNumUserActiveIn(channel, timeSeconds)
         channelCanonical = ircutils.toLower(channel)
-        if channelCanonical not in self.games:
+        game = self.getGame(irc, channel)
+        if game is None:
             irc.error('No questions are currently being asked.')
             return
 
-        if self.games[channelCanonical].questionOver == True:
+        if game.questionOver == True:
             irc.error('No question is currently being asked.')
             return
 
@@ -936,49 +1008,45 @@ class TriviaTime(callbacks.Plugin):
             irc.error('Only users who have answered a question in the last 10 minutes can skip.')
             return
 
-        if username in self.games[channelCanonical].skipVoteCount:
+        if usernameCanonical in game.skipVoteCount:
             irc.error('You can only vote to skip once.')
             return
 
         skipSeconds = self.registryValue('skip.skipTime', channel)
-        oldSkips = []
-        for usr in self.games[channelCanonical].skips:
-            if int(time.mktime(time.localtime())) - self.games[channelCanonical].skips[usr] > skipSeconds:
-                oldSkips.append(usr)
-        for usr in oldSkips:
-            del self.games[channelCanonical].skips[usr]
-        if username in self.games[channelCanonical].skips:
-            if int(time.mktime(time.localtime())) - self.games[channelCanonical].skips[username] < skipSeconds:
-                irc.error('You must wait to be able to skip again.')
-                return
 
-        self.games[channelCanonical].skipVoteCount[username] = 1
-        self.games[channelCanonical].skips[username] = int(time.mktime(time.localtime()))
+        game.skips.setTimeout(skipSeconds)
+        if game.skips.has(usernameCanonical):
+            irc.error('You must wait to be able to skip again.')
+            return
+
+        game.skipVoteCount[usernameCanonical] = 1
+
+        game.skips.append(usernameCanonical)
 
         irc.sendMsg(ircmsgs.privmsg(channel, '%s voted to skip this question.' % username))
         if totalActive < 1:
             return
 
-        percentAnswered = ((1.0*len(self.games[channelCanonical].skipVoteCount))/(totalActive*1.0))
+        percentAnswered = ((1.0*len(game.skipVoteCount))/(totalActive*1.0))
 
         # not all have skipped yet, we need to get out of here
         if percentAnswered < self.registryValue('skip.skipThreshold', channel):
             irc.noReply()
             return
 
-        if channelCanonical not in self.games:
+        if game is None:
             irc.error('Trivia is not running.')
             return
-        if self.games[channelCanonical].active == False:
+        if game.active == False:
             irc.error('Trivia is not running.')
             return
         try:
             schedule.removeEvent('%s.trivia' % channel)
         except KeyError:
             pass
-        irc.sendMsg(ircmsgs.privmsg(channel, 'Skipped question! (%d of %d voted)' % (len(self.games[channelCanonical].skipVoteCount), totalActive)))
+        irc.sendMsg(ircmsgs.privmsg(channel, 'Skipped question! (%d of %d voted)' % (len(game.skipVoteCount), totalActive)))
 
-        self.games[channelCanonical].nextQuestion()
+        game.nextQuestion()
         irc.noReply()
     skip = wrap(skip)
 
@@ -1174,24 +1242,25 @@ class TriviaTime(callbacks.Plugin):
         if not irc.isChannel(channel):
             irc.error('This command can only be used in a channel.')
             return
-        if channelCanonical in self.games:
-            if self.games[channelCanonical].stopPending == True:
-                self.games[channelCanonical].stopPending = False
+        game = self.getGame(irc, channel)
+        if game is not None:
+            if game.stopPending == True:
+                game.stopPending = False
                 irc.sendMsg(ircmsgs.privmsg(channel, 'Pending stop aborted'))
-            elif not self.games[channelCanonical].active:
-                del self.games[channelCanonical]
+            elif not game.active:
+                self.deleteGame(irc, channel)
                 try:
                     schedule.removeEvent('%s.trivia' % channel)
                 except KeyError:
                     pass
                 irc.sendMsg(ircmsgs.privmsg(channel, 'Another epic round of trivia is about to begin.'))
-                self.games[channelCanonical] = self.Game(irc, channel, self)
+                self.createGame(irc, channel)
             else:
                 irc.sendMsg(ircmsgs.privmsg(channel, 'Trivia has already been started.'))
         else:
             # create a new game
             irc.sendMsg(ircmsgs.privmsg(channel, 'Another epic round of trivia is about to begin.'))
-            self.games[channelCanonical] = self.Game(irc, channel, self)
+            self.createGame(irc, channel)
         irc.noReply()
     start = wrap(start)
 
@@ -1201,15 +1270,19 @@ class TriviaTime(callbacks.Plugin):
         Channel is only necessary when using from outside of the channel
         """
         channelCanonical = ircutils.toLower(channel)
-        if channelCanonical in self.games:
-            if self.games[channelCanonical].questionOver == True:
-                self.games[channelCanonical].stop()
+        game = self.getGame(irc, channel)
+        if game is not None:
+            if game.questionOver == True:
+                game.stop()
                 return
-            if self.games[channelCanonical].active:
-                self.games[channelCanonical].stopPending = True
+            if game.stopPending:
+                irc.sendMsg(ircmsgs.privmsg(channel, 'Trivia is already pending stop'))
+                return
+            if game.active:
+                game.stopPending = True
                 irc.sendMsg(ircmsgs.privmsg(channel, 'Trivia will now stop after this question.'))
             else:
-                del self.games[channelCanonical]
+                self.deleteGame(irc, channel)
                 irc.sendMsg(ircmsgs.privmsg(channel, 'Trivia stopped. :\'('))
         else:
             irc.sendMsg(ircmsgs.privmsg(channel, 'Game is already stopped'))
@@ -1304,9 +1377,10 @@ class TriviaTime(callbacks.Plugin):
             self.registryValue = base.registryValue
             self.channel = channel
             self.irc = irc
+            self.network = irc.network
 
             # reset stats
-            self.skips = {}
+            self.skips = TimeoutList(self.registryValue('skip.skipTime', channel))
             self.stopPending = False
             self.shownHint = False
             self.questionRepeated = False
@@ -1881,7 +1955,8 @@ class TriviaTime(callbacks.Plugin):
                 alternativeAnswers = []
                 if ircutils.toLower(question[:4]) == 'kaos':
                     for ans in answers:
-                        answer.append(str(ans).strip())
+                        if answer.count(ans) == 0:
+                            answer.append(str(ans).strip())
                 elif ircutils.toLower(question[:5]) == 'uword':
                     for ans in answers:
                         answer.append(str(ans).strip())
@@ -1949,11 +2024,13 @@ class TriviaTime(callbacks.Plugin):
             """
             # responsible for stopping a timer/thread after being told to stop
             self.active = False
+            self.stopPending = False
             self.removeEvent()
             self.sendMessage('Trivia stopped. :\'(')
             channelCanonical = ircutils.toLower(self.channel)
-            if channelCanonical in self.games:
-                del self.games[channelCanonical]
+            if self.network in self.games:
+                if channelCanonical in self.games[self.network]:
+                    del self.games[self.network][channelCanonical]
 
     #Storage for users and points using sqlite3
     class Storage:
@@ -2005,6 +2082,14 @@ class TriviaTime(callbacks.Plugin):
                                 deleted=1
                                 WHERE id=?''', (questionId,))
             self.conn.commit()
+            c.close()
+
+        def dropActivityTable(self):
+            c = self.conn.cursor()
+            try:
+                c.execute('''DROP TABLE triviaactivity''')
+            except:
+                pass
             c.close()
 
         def dropDeleteTable(self):
@@ -2801,6 +2886,15 @@ class TriviaTime(callbacks.Plugin):
                 return True
             return False
 
+        def insertActivity(self, aType, activity, channel, network, timestamp=None):
+            if timestamp is None:
+                timestamp = int(time.mktime(time.localtime()))
+            channelCanonical = ircutils.toLower(channel)
+            c = self.conn.cursor()
+            c.execute('insert into triviaactivity values (NULL, ?, ?, ?, ?, ?, ?)',
+                                    (aType, activity, channel, channelCanonical, network, timestamp))
+            self.conn.commit()
+
         def insertDelete(self, username, channel, lineNumber, reason):
             usernameCanonical = ircutils.toLower(username)
             channelCanonical = ircutils.toLower(channel)
@@ -2945,6 +3039,23 @@ class TriviaTime(callbacks.Plugin):
             if rows > 0:
                 return True
             return False
+
+        def makeActivityTable(self):
+            c = self.conn.cursor()
+            try:
+                c.execute('''create table triviaactivity (
+                        id integer primary key autoincrement,
+                        type text,
+                        activity text,
+                        channel text,
+                        channel_canonical text,
+                        network text,
+                        timestamp integer
+                        )''')
+            except:
+                pass
+            self.conn.commit()
+            c.close()
 
         def makeDeleteTable(self):
             c = self.conn.cursor()
@@ -3154,6 +3265,18 @@ class TriviaTime(callbacks.Plugin):
             if rows > 0:
                 return True
             return False
+
+        def removeOldActivity(self,count=100):
+            c = self.conn.cursor()
+            c.execute('''delete from triviaactivity
+                        where id not in (
+                            select id
+                            from triviaactivity
+                            order by id desc
+                            limit ?
+                        )''', (count,))
+            self.conn.commit()
+            c.close()
 
         def removeDelete(self, deleteId):
             c = self.conn.cursor()
@@ -3683,34 +3806,11 @@ class TriviaTime(callbacks.Plugin):
             except:
                 pass
 
-    #A list with items that are removed when timeout is reached, values must be unique
-    class TimeoutList:
-        def __init__(self, timeout):
-            self.timeout = timeout
-            self.dict = {}
-
-        def setTimeout(self, timeout):
-            self.timeout = timeout
-
-        def clearTimeout(self):
-            for k, t in self.dict.items():
-                if t < (time.time() - self.timeout):
-                    del self.dict[k]
-
-        def append(self, value):
-            self.clearTimeout()
-            self.dict[value] = time.time()
-
-        def has(self, value):
-            self.clearTimeout()
-            if value in self.dict:
-                return True
-            return False
-
     #A log wrapper, ripoff of ChannelLogger
     class Logger:
-        def __init__(self):
+        def __init__(self, base):
             self.logs = {}
+            self.registryValue = base.registryValue
 
         def logNameTimestamp(self, channel):
             return time.strftime('%Y-%m-%d')
@@ -3763,6 +3863,8 @@ class TriviaTime(callbacks.Plugin):
                     return self.FakeLog()
 
         def doLog(self, irc, channel, s, *args):
+            if not self.registryValue('general.logGames'):
+                return
             s = format(s, *args)
             channel = self.normalizeChannel(irc, channel)
             log = self.getLog(irc, channel)

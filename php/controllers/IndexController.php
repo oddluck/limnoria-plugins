@@ -5,21 +5,33 @@ class IndexController extends Controller
         $container = $this->container;
         $storage = $container->getStorage();
 
-        $errors = array();
-        $result = array();
+        $errorsQ = array();
+        $resultQ = array();
         try {
-          $result = $storage->getRecentAskedQuestions();
+            $resultQ = $storage->getRecentAskedQuestions();
         } catch(StorageSchemaException $e) {
-          $errors[] = "Error: Database schema is not queryable";
+            $errorsQ[] = "Error: Database schema is not queryable";
         } catch(StorageConnectionException $e) {
-          $errors[] = "Error: Database is not available";
+            $errorsQ[] = "Error: Database is not available";
+        }
+
+        $errorsA = array();
+        $resultA = array();
+        try {
+            $resultA = $storage->getRecentActivities();
+        } catch(StorageSchemaException $e) {
+            $errorsA[] = "Error: Database schema is not queryable";
+        } catch(StorageConnectionException $e) {
+            $errorsA[] = "Error: Database is not available";
         }
         $storage->close();
 
         $values = array();
 
-        $values['result'] = $result;
-        $values['errors'] = $errors;
+        $values['resultQuestions'] = $resultQ;
+        $values['errorsQuestions'] = $errorsQ;
+        $values['resultActivities'] = $resultA;
+        $values['errorsActivities'] = $errorsA;
 
         $container->setTitle('Home');
 

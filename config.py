@@ -18,6 +18,7 @@ def configure(advanced):
 
 TriviaTime = conf.registerPlugin('TriviaTime')
 
+# Config groups
 conf.registerGroup(TriviaTime, 'kaos')
 conf.registerGroup(TriviaTime, 'admin')
 conf.registerGroup(TriviaTime, 'questions')
@@ -26,6 +27,7 @@ conf.registerGroup(TriviaTime, 'commands')
 conf.registerGroup(TriviaTime, 'voice')
 conf.registerGroup(TriviaTime, 'skip')
 conf.registerGroup(TriviaTime, 'hints')
+
 # CONFIGURATION
 # file locations for database and question
 conf.registerChannelValue(TriviaTime.admin, 'sqlitedb', 
@@ -47,6 +49,11 @@ conf.registerChannelValue(TriviaTime.commands, 'extraHint',
 conf.registerChannelValue(TriviaTime.commands, 'showHintCommandKAOS', 
         registry.NormalizedString(""",""", 
                 """The command for showing the remaining KAOS""")
+        )
+
+conf.registerChannelValue(TriviaTime.general, 'logGames',
+        registry.Boolean(True,
+                """Log changes to questions and games""")
         )
 
 conf.registerChannelValue(TriviaTime.general, 'globalStats',

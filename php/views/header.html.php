@@ -32,7 +32,7 @@
             $user = $container->login->getUser();
             echo '<p class="navbar-text pull-right">
                     Logged in as ';
-            echo $user->getUsername();
+            echo htmlspecialchars($user->getUsername());
             echo ' (<a class="navbar-link" href="' . $container->router->generate('logout') . '">logout</a>)';
             echo '</p>';
           }

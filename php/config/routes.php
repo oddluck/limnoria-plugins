@@ -13,7 +13,7 @@ $routes[] = array("pattern"=>"/top/:timespan", "target"=>"Stats:top", "args"=>ar
 
 // Players
 $routes[] = array("pattern"=>"/search", "target"=>"User:search", "args"=>array("name"=>"search"));
-$routes[] = array("pattern"=>"/profile/:username", "target"=>"User:profile", "args"=>array("name"=>"profile", "filters" => array("username" => "([^\s/]+)")));
+$routes[] = array("pattern"=>"/profile/:username", "target"=>"User:profile", "args"=>array("name"=>"profile", "filters" => array("username" => "([a-zA-Z\d_\-\[\]\\^{}|`%]*)")));
 
 // Reports
 $routes[] = array("pattern"=>"/reports", "target"=>"Reports:list", "args"=>array("name"=>"reports"));
