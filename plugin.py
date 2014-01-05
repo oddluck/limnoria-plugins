@@ -1554,7 +1554,7 @@ class TriviaTime(callbacks.Plugin):
                         log.error('waitTime was set too low (<2 seconds). Setting to 2 seconds')
                     waitTime = time.time() + waitTime
                     self.queueEvent(waitTime, self.nextQuestion)
-                self.base.handleVoice(self.irc, username, channel)
+                #self.base.handleVoice(self.irc, username, channel)
 
         def getHintString(self, hintNum=None):
             if hintNum == None:
