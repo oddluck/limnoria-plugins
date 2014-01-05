@@ -682,7 +682,7 @@ class TriviaTime(callbacks.Plugin):
         irc.sendMsg(ircmsgs.privmsg(msg.args[0], infoText))
         infoText = ' Time is %s ' % (time.asctime(time.localtime(),))
         irc.sendMsg(ircmsgs.privmsg(msg.args[0], infoText))
-        infoText = '\x02 %d Users\x02 on scoreboard \x02%d Active This Week\x02' % (totalUsersEver, numActiveThisWeek)
+        infoText = '\x02 %d Users\x02 on scoreboard with \x02%d Active This Week\x02' % (totalUsersEver, numActiveThisWeek)
         irc.sendMsg(ircmsgs.privmsg(msg.args[0], infoText))
         numKaos = threadStorage.getNumKAOS()
         numQuestionTotal = threadStorage.getNumQuestions()
