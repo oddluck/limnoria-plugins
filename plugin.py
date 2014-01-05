@@ -1479,7 +1479,6 @@ class TriviaTime(callbacks.Plugin):
                         streakBonus = pointsAdded * .01 * (self.streak-1)
                         if streakBonus > pointsAdded:
                             streakBonus = pointsAdded
-                        pointsAdded += streakBonus
                     threadStorage.updateGameStreak(self.channel, self.lastWinner, self.streak)
                     threadStorage.updateUserHighestStreak(self.lastWinner, self.streak)
                     threadStorage.updateGameLongestStreak(self.channel, username, self.streak)
