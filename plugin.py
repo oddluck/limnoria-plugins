@@ -678,7 +678,7 @@ class TriviaTime(callbacks.Plugin):
         threadStorage = self.Storage(dbLocation)
         totalUsersEver = threadStorage.getNumUser(channel)
         numActiveThisWeek = threadStorage.getNumActiveThisWeek(channel)
-        infoText = ' TriviaTime v1.0-beta by Trivialand on Freenode https://github.com/tannn/TriviaTime '
+        infoText = ' TriviaTime v1.01 by Trivialand on Freenode https://github.com/tannn/TriviaTime '
         irc.sendMsg(ircmsgs.privmsg(msg.args[0], infoText))
         infoText = ' Time is %s ' % (time.asctime(time.localtime(),))
         irc.sendMsg(ircmsgs.privmsg(msg.args[0], infoText))
@@ -692,7 +692,7 @@ class TriviaTime(callbacks.Plugin):
 
     def ping(self, irc, msg, arg):
         """
-        Check your ping to the bot. Make sure your client correclty responds to ctcp pings
+            Check your ping time to the bot. The client must respond correctly to pings.
         """
         channel = msg.args[0]
         channelHash = self.shortHash(ircutils.toLower(channel))
@@ -775,7 +775,7 @@ class TriviaTime(callbacks.Plugin):
 
     def next(self, irc, msg, arg):
         """
-        Skip to the next question immediately. This can only be used by someone with a certain streak.
+        Skip to the next question immediately. This can only be used by a user with a certain streak, set in the config.
         """
         username = msg.nick
         channel = msg.args[0]
@@ -815,7 +815,7 @@ class TriviaTime(callbacks.Plugin):
             irc.noReply()
             return
 
-        irc.sendMsg(ircmsgs.privmsg(channel, 'No more waiting; starting next question.'))
+        irc.sendMsg(ircmsgs.privmsg(channel, 'No more waiting; starting the next question.'))
         game.removeEvent()
         game.nextQuestion()
         irc.noReply()
@@ -823,7 +823,7 @@ class TriviaTime(callbacks.Plugin):
 
     def rmedit(self, irc, msg, arg, user, channel, num):
         """[<channel>] <int>
-        Remove a edit without accepting it. 
+        Remove an edit without accepting it. 
         Channel is only necessary when editing from outside of the channel
         """
         dbLocation = self.registryValue('admin.sqlitedb')
@@ -840,7 +840,7 @@ class TriviaTime(callbacks.Plugin):
 
     def rmdelete(self, irc, msg, arg, user, channel, num):
         """[<channel>] <int>
-        Remove a delete without accepting it. 
+        Remove a deletion request without accepting it. 
         Channel is only necessary when editing from outside of the channel
         """
         dbLocation = self.registryValue('admin.sqlitedb')
@@ -857,7 +857,7 @@ class TriviaTime(callbacks.Plugin):
 
     def rmreport(self, irc, msg, arg, user, channel, num):
         """[<channel>] <report num>
-        Remove a old report by report number. 
+        Delete a report by report number. 
         Channel is only necessary when editing from outside of the channel
         """
         dbLocation = self.registryValue('admin.sqlitedb')
@@ -1291,7 +1291,7 @@ class TriviaTime(callbacks.Plugin):
 
     def time(self, irc, msg, arg):
         """
-        Figure out what time/day it is for the server
+        Figure out what time/day it is on the server.
         """
         channel = msg.args[0]
         timeObject = time.asctime(time.localtime())
@@ -1479,7 +1479,6 @@ class TriviaTime(callbacks.Plugin):
                         streakBonus = pointsAdded * .01 * (self.streak-1)
                         if streakBonus > pointsAdded:
                             streakBonus = pointsAdded
-                        pointsAdded += streakBonus
                     threadStorage.updateGameStreak(self.channel, self.lastWinner, self.streak)
                     threadStorage.updateUserHighestStreak(self.lastWinner, self.streak)
                     threadStorage.updateGameLongestStreak(self.channel, username, self.streak)
