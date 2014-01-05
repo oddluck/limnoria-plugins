@@ -1,6 +1,4 @@
-This plugin is in beta. Please report all bugs on GitHub.
-
-# Configuration
+ Configuration
 ## Setting up plugin
 1. Download [Supybot][]
 2. Download TriviaTime and place it into the plugins folder
@@ -12,13 +10,10 @@ This plugin is in beta. Please report all bugs on GitHub.
 1. Download PHP and PHP-MySQL (for PDO)
 2. Configure config.php to point to your TriviaTime database in the plugin/TriviaTime/Storage/db folder
 
-## How to update (beta only)
-1. Unload TriviaTime
-2. Install the new files
-3. Drop all the tables (uncomment all the drops in plugin.py)
-4. Load TriviaTime
+## How to update
+Simply replace all files in the plugins/TriviaTime directory. Do not delete any files in TriviaTime/storage (aside from samplequestions, if you wish). If there were any changes to the database or config, they should be updated automatically. Otherwise, further instructions for updating that version will appear here.
 
-## Important - Setting up permissions for sqlite
+## Important - Setting up permissions for sqlite (website)
 If you do not plan on using the webpage you can ignore this.
 
 In order to use the website to delete/accept edits, reports, new questions, and deletes, you will need to set the proper permissions for the sqlite db, called 'trivia.db' by default. The default location for the database is inside of the supybot's directory, with the .conf file, inside of plugins/TriviaTime/storage/db.
