@@ -1,4 +1,4 @@
- Configuration
+#Configuration
 ## Setting up plugin
 1. Download [Supybot][]
 2. Download TriviaTime and place it into the plugins folder
