@@ -11,7 +11,12 @@
 2. Configure config.php to point to your TriviaTime database in the plugin/TriviaTime/Storage/db folder
 
 ## How to update
-Simply replace all files in the plugins/TriviaTime directory. Do not delete any files in TriviaTime/storage (aside from samplequestions, if you wish). If there were any changes to the database or config, they should be updated automatically. Otherwise, further instructions for updating that version will appear here.
+1. Stop the game, if it is currently in progress.
+2. Unload TriviaTime
+3. Move files into plugins/TriviaTime directory. Do not delete any files in TriviaTime/storage (aside from samplequestions, if you wish). 
+4. If there were any changes to the database or config, they should be updated automatically. Otherwise, further instructions for updating that version will appear here.
+5. Load TriviaTime
+6. If everything went smoothly, you have now sucessfully updated the plugin to the latest version.
 
 ## Important - Setting up permissions for sqlite (website)
 If you do not plan on using the webpage you can ignore this.
