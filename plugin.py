@@ -1486,7 +1486,7 @@ class TriviaTime(callbacks.Plugin):
                     pointsAdded = int(pointsAdded)
 
                     # report correct guess, and show players streak
-                    threadStorage.updateUserLog(username, self.channel, pointsAdded,1, timeElapsed)
+                    threadStorage.updateUserLog(username, self.channel, (pointsAdded+streakBonus), 1, timeElapsed)
                     self.lastAnswer = time.time()
                     self.sendMessage('DING DING DING, \x02%s\x02 got the correct answer, \x02%s\x02, in \x02%0.4f\x02 seconds for \x02%d(+%d)\x02 points!' % (username, correctAnswer, timeElapsed, pointsAdded, streakBonus))
 
