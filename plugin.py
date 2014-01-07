@@ -2364,7 +2364,7 @@ class TriviaTime(callbacks.Plugin):
                                 from triviauserlog
                                 where month=?
                                 and year=?
-                                and username=?''' % (query)
+                                and username_canonical=?''' % (query)
             arguments.append(month)
             arguments.append(year)
             arguments.append(usernameCanonical)
