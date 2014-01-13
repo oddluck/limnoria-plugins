@@ -257,6 +257,7 @@ class TriviaTime(callbacks.Plugin):
         threadStorage.insertActivity(activityType, activityText, channel, irc.network)
 
     def deleteGame(self, irc, channel):
+        channelCanonical = ircutils.toLower(channel)
         if irc.network in self.games:
             if channelCanonical in self.games[irc.network]:
                 del self.games[irc.network][channelCanonical]
@@ -1500,10 +1501,8 @@ class TriviaTime(callbacks.Plugin):
                             weekScore = userInfo[8]
                             monthScore = userInfo[6]
                             recapMessageList = ['\x02%s\x02 has won \x02%d\x02 in a row!' % (username, self.streak)]
-                            if todaysScore > pointsAdded or weekScore > pointsAdded or monthScore > pointsAdded:
-                                recapMessageList.append(' Total Points')
-                            if todaysScore > pointsAdded:
-                                recapMessageList.append(' TODAY: \x02%d\x02' % (todaysScore))
+                            recapMessageList.append(' Total Points')
+                            recapMessageList.append(' TODAY: \x02%d\x02' % (todaysScore))
                             if weekScore > pointsAdded:
                                 recapMessageList.append(' this WEEK \x02%d\x02' % (weekScore))
                             if weekScore > pointsAdded or todaysScore > pointsAdded:
