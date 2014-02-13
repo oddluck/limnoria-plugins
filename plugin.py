@@ -127,7 +127,7 @@ class WorldTime(callbacks.Plugin):
         # now lets use pytz to convert into the localtime in the place.
         lt = self._converttz(utcnow, ll['timeZoneId'])
         if lt:  # make sure we get it back.
-            irc.reply("{0} :: Current local time is: {1}".format(gc['place'].encode('utf-8'), lt))
+            irc.reply("{0} :: Current local time is: {1} ({2})".format(gc['place'].encode('utf-8'), lt, ll['timeZoneName'].encode('utf-8')))
         else:
             irc.reply("ERROR: Something went wrong during conversion to timezone. Check logs.")
 
