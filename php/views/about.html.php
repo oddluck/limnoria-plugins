@@ -15,3 +15,10 @@
           Fork us and contribute!</p>
       </div>
     </div>
+    <!--CSS to keep footer on bottom, since there isn't much content on about.html-->
+    <style>
+    .footer {
+        position:absolute;
+        bottom:0px;
+    }
+    </style>
