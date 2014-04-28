@@ -50,6 +50,7 @@ class _Plugin(callbacks.Plugin):
 
     make_sure_path_exists(r'%s%suno' % (conf.supybot.directories.data(),os.sep))
     dataPath=r'%s%suno%s' % (conf.supybot.directories.data(),os.sep,os.sep)
+    prefixChar = conf.supybot.reply.whenAddressedBy.chars()[0]
 
     def start(self, irc, msg, args, text):
         """takes no arguments
@@ -96,7 +97,7 @@ class _Plugin(callbacks.Plugin):
             self.game[table]['players'][nick]={}
             #self.game[table]['nplayers']=int(self.channeloptions[gametype+'_nplayers'])
             self.game[table]['nplayers']=int(self.channeloptions['nplayers'])
-            irc.reply('%s has started a new game of %s at table %s.  For the rules of the game, type ".unorules".  To accept this challenge, join with ".uno join".  To add a cpu player, type ".uno join cpu".' % (nick, gametype.capitalize(), table+1), prefixNick=False)
+            irc.reply('%s has started a new game of %s at table %s.  For the rules of the game, type "%sunorules".  To accept this challenge, join with "%suno join".  To add a cpu player, type "%suno join cpu".' % (nick, gametype.capitalize(), table+1, self.prefixChar,self.prefixChar,self.prefixChar), prefixNick=False)
         self.game[table]['phase']='join'
         
     start = wrap(start, ['public', optional('something')])
@@ -239,6 +240,11 @@ class _Plugin(callbacks.Plugin):
         self._uno_tell_status(irc, msg.nick)
     tellstatus=wrap(tellstatus)
 
+    def test(self,irc,msg,args):
+        prefixChar = conf.supybot.reply.whenAddressedBy.chars()[0]
+        irc.reply(chars)
+    test=wrap(test)
+
     def rules(self, irc, msg, args, text):
         """takes no arguments
         
@@ -320,7 +326,7 @@ class _Plugin(callbacks.Plugin):
                     self.game[table]['players'][nick]['fake']=True
                 
                 if len(self.game[table]['players'].keys()) < self.game[table]['nplayers']:
-                    irc.reply('%s has joined the %s game at table %s.  Use .unobegin to begin the game.' % (nick,self.game[table]['type'],table+1), prefixNick=False, to=self.game[table]['channel'])
+                    irc.reply('%s has joined the %s game at table %s.  Use %suno begin to begin the game.' % (nick,self.game[table]['type'],table+1, self.prefixChar), prefixNick=False, to=self.game[table]['channel'])
                     return
                 
                 for n in self.game[table]['players'].keys():
@@ -393,8 +399,9 @@ class _Plugin(callbacks.Plugin):
         
         channel=self.game[table]['channel']
         
+        # leaving a game when you're the only player
         if len(self.game[table]['players'])==1:
-            irc.reply('There are no more players; the game is over.', to=channel)
+            irc.reply('There are no more players; The game is over.', to=channel)
             self.game[table]['phase']='gameover'
             self._cleanup(table)
             return
@@ -562,7 +569,7 @@ class _Plugin(callbacks.Plugin):
     def play(self, irc, msg, args, text):
         """<card>
         
-        Play a <card> for the Uno game.  Examples: ".uno play red 0", ".uno play wild blue", ".uno play draw", ".uno play done"
+        Play a <card> for the Uno game.  Examples: "uno play red 0", "uno play wild blue", "uno play draw", "uno play done"
         """
 
         nick=msg.nick
@@ -615,7 +622,7 @@ class _Plugin(callbacks.Plugin):
                     c=self.game[table]['deck'].pop(random.randint(0,len(self.game[table]['deck'])-1))
                     self.game[table]['players'][nick]['hand'].append(c)
                     if self._uno_is_valid_play(table, c, discard)==True:
-                        self.reply(irc, 'You draw a %s from the draw pile.  You can choose not to play this card using ".uno play done"' % c, to=nick, private=True)
+                        self.reply(irc, 'You draw a %s from the draw pile.  You can choose not to play this card using "%suno play done"' % (c, self.prefixChar), to=nick, private=True)
                         self.game[table]['players'][nick]['hasdrawn']=True
                         return
                         # card=c
