@@ -5,13 +5,14 @@
 import re
 import random
 
+import supybot.conf as conf
 import supybot.utils as utils
 from supybot.commands import *
 import supybot.ircmsgs as ircmsgs
 import supybot.ircutils as ircutils
 import supybot.callbacks as callbacks
 import time
-import os
+import os, errno
 import pickle
 
 # This will be used to change the name of the class to the folder name
@@ -22,7 +23,6 @@ class _Plugin(callbacks.Plugin):
     in Metamagical Themas by Douglas Hoffsteder.
     """
     threaded = True
-    pluginpath=os.path.dirname( __file__ ) + os.sep
     
     game=[{},{},{},{},{}]
 
@@ -35,6 +35,17 @@ class _Plugin(callbacks.Plugin):
     channeloptions['flaunt2_goal']=200
     channeloptions['flaunt3_goal']=40
     lastgame=time.time()
+
+    def make_sure_path_exists(path):
+        try:
+            os.makedirs(path)
+        except OSError as exception:
+            if exception.errno != errno.EEXIST:
+                raise
+
+    make_sure_path_exists(r'%s%sundercut' % (conf.supybot.directories.data(),os.sep))
+    dataPath=r'%s%sundercut%s' % (conf.supybot.directories.data(),os.sep,os.sep)
+    prefixChar = conf.supybot.reply.whenAddressedBy.chars()[0]
 
     def ucstart(self, irc, msg, args, text):
         """[<gametype>]
@@ -485,7 +496,7 @@ class _Plugin(callbacks.Plugin):
         network=irc.network.replace(' ','_')
         channel=irc.msg.args[0]
         #irc.reply('test: %s.%s.options' % (irc.network, irc.msg.args[0] ))
-        f="%s%s.%s.options" % (self.pluginpath, network, channel)
+        f="%s%s.%s.options" % (self.dataPath, network, channel)
         if os.path.isfile(f):
             inputfile = open(f, "rb")
             self.channeloptions = pickle.load(inputfile)
@@ -505,7 +516,7 @@ class _Plugin(callbacks.Plugin):
     def _write_options(self, irc):
         network=irc.network.replace(' ','_')
         channel=irc.msg.args[0]
-        outputfile = open("%s%s.%s.options" % (self.pluginpath, network, channel), "wb")
+        outputfile = open("%s%s.%s.options" % (self.dataPath, network, channel), "wb")
         pickle.dump(self.channeloptions, outputfile)
         outputfile.close()
 
