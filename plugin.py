@@ -13,13 +13,14 @@
 import re
 import random
 
+import supybot.conf as conf
 import supybot.utils as utils
 from supybot.commands import *
 import supybot.ircmsgs as ircmsgs
 import supybot.ircutils as ircutils
 import supybot.callbacks as callbacks
 import time
-import os
+import os, errno
 import pickle
 
 # This will be used to change the name of the class to the folder name
@@ -29,7 +30,6 @@ class _Plugin(callbacks.Plugin):
     Uno!
     """
     threaded = True
-    pluginpath=os.path.dirname( __file__ ) + os.sep
     
     game=[{},{},{},{},{}]
 
@@ -40,6 +40,16 @@ class _Plugin(callbacks.Plugin):
     channeloptions['nplayers']=10
     channeloptions['maxbots']=9
     lastgame=time.time()
+    
+    def make_sure_path_exists(path):
+        try:
+            os.makedirs(path)
+        except OSError as exception:
+            if exception.errno != errno.EEXIST:
+                raise
+
+    make_sure_path_exists(r'%s%suno' % (conf.supybot.directories.data(),os.sep))
+    dataPath=r'%s%suno%s' % (conf.supybot.directories.data(),os.sep,os.sep)
 
     def start(self, irc, msg, args, text):
         """takes no arguments
@@ -380,6 +390,27 @@ class _Plugin(callbacks.Plugin):
         if table==None:
             return
         
+        
+        channel=self.game[table]['channel']
+        
+        if len(self.game[table]['players'])==1:
+            irc.reply('There are no more players; the game is over.', to=channel)
+            self.game[table]['phase']='gameover'
+            self._cleanup(table)
+            return
+        
+        # check if it's only bot players left
+        Human=False
+        for n in self.game[table]['players'].keys():
+            if not self.game[table]['players'][n].get('cpu'):
+                if n!=nick: Human=True
+        
+        if not Human:
+            irc.reply('There are no more human players; the game is over.', to=channel)
+            self.game[table]['phase']='gameover'
+            self._cleanup(table)
+            return
+        
         # ---- replace with cpu ----
         oldnick=nick
         nick=self._uno_make_cpu(table)
@@ -446,6 +477,18 @@ class _Plugin(callbacks.Plugin):
 
     def _uno_cpu_play(self, irc, table):
         channel=self.game[table]['channel']
+        
+        Human=False
+        for n in self.game[table]['players'].keys():
+            if not self.game[table]['players'][n].get('cpu'):
+                Human=True
+        
+        if not Human:
+            irc.reply('There are no more human players; the game is over.  ', to=channel)
+            self.game[table]['phase']='gameover'
+            self._cleanup(table)
+            return
+        
         nick=self.game[table]['players'].keys()[self.game[table]['turn']]
         discard=self.game[table]['discard'][-1]
         novalid=True
@@ -769,7 +812,8 @@ class _Plugin(callbacks.Plugin):
         network=irc.network.replace(' ','_')
         channel=irc.msg.args[0]
         #irc.reply('test: %s.%s.options' % (irc.network, irc.msg.args[0] ))
-        f="%s%s.%s.options" % (self.pluginpath, network, channel)
+        
+        f="%s%s.%s.options" % (self.dataPath, network, channel)
         if os.path.isfile(f):
             inputfile = open(f, "rb")
             self.channeloptions = pickle.load(inputfile)
@@ -787,7 +831,7 @@ class _Plugin(callbacks.Plugin):
     def _write_options(self, irc):
         network=irc.network.replace(' ','_')
         channel=irc.msg.args[0]
-        outputfile = open("%s%s.%s.options" % (self.pluginpath, network, channel), "wb")
+        outputfile = open("%s%s.%s.options" % (self.dataPath, network, channel), "wb")
         pickle.dump(self.channeloptions, outputfile)
         outputfile.close()
 
