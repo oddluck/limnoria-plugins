@@ -23,7 +23,6 @@ class Geo(callbacks.Plugin):
     """
     Geolocation using GeoLiteCity
     """
-    pluginpath=os.path.dirname( __file__ ) + os.sep
     
     def make_sure_path_exists(self, path):
         try:
