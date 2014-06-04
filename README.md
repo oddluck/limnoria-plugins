@@ -1,5 +1,5 @@
 #Configuration
-## Setting up plugin
+## Setting up the plugin
 1. Download [Supybot][]
 2. Download TriviaTime and place it into the plugins folder
 3. Load TriviaTime
@@ -10,15 +10,19 @@
 1. Download PHP and PHP-MySQL (for PDO)
 2. Configure config.php to point to your TriviaTime database in the plugin/TriviaTime/Storage/db folder
 
-## How to update
+## IMPORTANT: How to update
 1. Stop the game, if it is currently in progress.
-2. Unload TriviaTime
-3. Move files into plugins/TriviaTime directory. Do not delete any files in TriviaTime/storage (aside from samplequestions, if you wish). 
-4. If there were any changes to the database or config, they should be updated automatically. Otherwise, further instructions for updating that version will appear here.
-5. Load TriviaTime
-6. If everything went smoothly, you have now sucessfully updated the plugin to the latest version.
+2. Backup your entire Supybot directory. The most important file needed is the database in /storage/, but it's best to be safe.
+3. Unload TriviaTime.
+4. Do not delete any files in TriviaTime/storage during this process (aside from samplequestions, if you wish).
+5. Copy over the changed files.
+	Version v1.01 to v1.02 files changed: **README.md, triviatime.css, about.html.php, plugin.py** (no changes to config or database; should be a quick and easy update).
+6. If there were any changes to the database, they should be updated automatically. Otherwise, further instructions for updating that version will appear here.
+7. If config.py was changed, you will need to manually add your desired values again. You can compare the previous file (the backup) to the new file.
+8. Load TriviaTime again. If you get an error, something went wrong.
+9. If everything went smoothly, you have now sucessfully updated the plugin to the latest version. Use .info to verify you are on the latest version (v1.02).
 
-## Important - Setting up permissions for sqlite (website)
+## Setting up permissions for sqlite (website)
 If you do not plan on using the webpage you can ignore this.
 
 In order to use the website to delete/accept edits, reports, new questions, and deletes, you will need to set the proper permissions for the sqlite db, called 'trivia.db' by default. The default location for the database is inside of the supybot's directory, with the .conf file, inside of plugins/TriviaTime/storage/db.
