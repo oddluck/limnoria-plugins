@@ -143,17 +143,21 @@ class TriviaTime(callbacks.Plugin):
             return
         channelCanonical = ircutils.toLower(channel)
 
-        otherHintCommand = self.registryValue('commands.showHintCommandKAOS', channel)
-        kaosRemainingCommand = self.registryValue('commands.extraHint', channel)
+        kaosRemainingCommand= self.registryValue('commands.showHintCommandKAOS', channel)
+        otherHintCommand  = self.registryValue('commands.extraHint', channel)
 
         game = self.getGame(irc, channel)
 
         if game is not None:
             # Look for command to list remaining KAOS
-            if msg.args[1] == otherHintCommand:
+            if msg.args[1] == kaosRemainingCommand:
+                irc.sendMsg(ircmsgs.notice(username, "'{0}' now also works for KAOS hints! Please try it out!".format(otherHintCommand)))
                 game.getRemainingKAOS()
-            elif msg.args[1] == kaosRemainingCommand:
-                game.getOtherHint()
+            elif msg.args[1] == otherHintCommand:
+                if game.question.find("KAOS:") == 0:
+                    game.getRemainingKAOS()
+                else:
+                    game.getOtherHint()
             else:
                 # check the answer
                 game.checkAnswer(msg)
@@ -257,6 +261,7 @@ class TriviaTime(callbacks.Plugin):
         threadStorage.insertActivity(activityType, activityText, channel, irc.network)
 
     def deleteGame(self, irc, channel):
+        channelCanonical = ircutils.toLower(channel)
         if irc.network in self.games:
             if channelCanonical in self.games[irc.network]:
                 del self.games[irc.network][channelCanonical]
@@ -377,7 +382,7 @@ class TriviaTime(callbacks.Plugin):
     def addfile(self, irc, msg, arg, filename):
         """[<filename>]
         Add a file of questions to the question database, 
-        filename defaults to configured quesiton file.
+        filename defaults to configured question file.
         """
         if filename is None:
             filename = self.registryValue('admin.quizfile')
@@ -1190,7 +1195,7 @@ class TriviaTime(callbacks.Plugin):
             if len(edit) > 0:
                 edit = edit[0]
                 question = threadStorage.getQuestion(edit[1])
-                irc.reply('Edit #%d, Question#%d'%(edit[0], edit[1]))
+                irc.reply('Edit #%d by %s, Question#%d'%(edit[0], edit[4], edit[1]))
                 irc.reply('NEW:%s' %(edit[2]))
                 if len(question) > 0:
                     question = question[0]
@@ -1486,7 +1491,7 @@ class TriviaTime(callbacks.Plugin):
                     pointsAdded = int(pointsAdded)
 
                     # report correct guess, and show players streak
-                    threadStorage.updateUserLog(username, self.channel, pointsAdded,1, timeElapsed)
+                    threadStorage.updateUserLog(username, self.channel, (pointsAdded+streakBonus), 1, timeElapsed)
                     self.lastAnswer = time.time()
                     self.sendMessage('DING DING DING, \x02%s\x02 got the correct answer, \x02%s\x02, in \x02%0.4f\x02 seconds for \x02%d(+%d)\x02 points!' % (username, correctAnswer, timeElapsed, pointsAdded, streakBonus))
 
@@ -1500,10 +1505,8 @@ class TriviaTime(callbacks.Plugin):
                             weekScore = userInfo[8]
                             monthScore = userInfo[6]
                             recapMessageList = ['\x02%s\x02 has won \x02%d\x02 in a row!' % (username, self.streak)]
-                            if todaysScore > pointsAdded or weekScore > pointsAdded or monthScore > pointsAdded:
-                                recapMessageList.append(' Total Points')
-                            if todaysScore > pointsAdded:
-                                recapMessageList.append(' TODAY: \x02%d\x02' % (todaysScore))
+                            recapMessageList.append(' Total Points')
+                            recapMessageList.append(' TODAY: \x02%d\x02' % (todaysScore))
                             if weekScore > pointsAdded:
                                 recapMessageList.append(' this WEEK \x02%d\x02' % (weekScore))
                             if weekScore > pointsAdded or todaysScore > pointsAdded:
@@ -1554,7 +1557,7 @@ class TriviaTime(callbacks.Plugin):
                         log.error('waitTime was set too low (<2 seconds). Setting to 2 seconds')
                     waitTime = time.time() + waitTime
                     self.queueEvent(waitTime, self.nextQuestion)
-                self.base.handleVoice(self.irc, username, channel)
+                #self.base.handleVoice(self.irc, username, channel)
 
         def getHintString(self, hintNum=None):
             if hintNum == None:
@@ -2364,7 +2367,7 @@ class TriviaTime(callbacks.Plugin):
                                 from triviauserlog
                                 where month=?
                                 and year=?
-                                and username=?''' % (query)
+                                and username_canonical=?''' % (query)
             arguments.append(month)
             arguments.append(year)
             arguments.append(usernameCanonical)
