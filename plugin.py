@@ -301,7 +301,7 @@ class TriviaTime(callbacks.Plugin):
             threadStorage.deleteQuestion(questionNumber)
             threadStorage.removeDelete(num)
             threadStorage.removeDeleteByQuestionNumber(questionNumber)
-            self.logger.doLog(irc, channel, "%s accepted delete# %i, question# %i deleted" % (msg.nick, num, questionNumber))
+            self.logger.doLog(irc, channel, "%s accepted delete# %i, question #%i deleted" % (msg.nick, num, questionNumber))
             activityText = '%s deleted a question, approved by %s' % (delete[1], msg.nick)
             self.addActivity('delete', activityText, channel, irc, threadStorage)
     acceptdelete = wrap(acceptdelete, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
@@ -329,7 +329,7 @@ class TriviaTime(callbacks.Plugin):
             if len(question) > 0:
                 question = question[0]
                 questionOld = question[2]
-            self.logger.doLog(irc, channel, "%s accepted edit# %i, question# %i edited NEW: '%s' OLD '%s'" % (msg.nick, num, edit[1], edit[2], questionOld))
+            self.logger.doLog(irc, channel, "%s accepted edit# %i, question #%i edited NEW: '%s' OLD '%s'" % (msg.nick, num, edit[1], edit[2], questionOld))
             activityText = '%s edited a question, approved by %s' % (edit[4], msg.nick)
             self.addActivity('edit', activityText, channel, irc, threadStorage)
             irc.sendMsg(ircmsgs.notice(msg.nick, 'NEW: %s' % (edit[2])))
@@ -356,7 +356,7 @@ class TriviaTime(callbacks.Plugin):
             threadStorage.insertQuestionsBulk([(q[3], q[3])])
             threadStorage.removeTemporaryQuestion(q[0])
             irc.reply('Question accepted!')
-            self.logger.doLog(irc, channel, "%s accepted new question# %i, '%s'" % (msg.nick, num, q[3]))
+            self.logger.doLog(irc, channel, "%s accepted new question #%i, '%s'" % (msg.nick, num, q[3]))
             activityText = '%s added a new question, approved by %s' % (q[1], msg.nick)
             self.addActivity('new', activityText, channel, irc, threadStorage)
     acceptnew = wrap(acceptnew, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
@@ -509,7 +509,7 @@ class TriviaTime(callbacks.Plugin):
             return
         threadStorage.insertDelete(username, channel, id, reason)
         irc.reply('Question %d marked for deletion and pending review.' % id)
-        self.logger.doLog(irc, channel, "%s marked question# %i for deletion" % (username, id))
+        self.logger.doLog(irc, channel, "%s marked question #%i for deletion" % (username, id))
     delete = wrap(delete, ["channel", optional(('literal',("question", "QUESTION", "ROUND", "round"))),'int', optional('text')])
 
     def edit(self, irc, msg, arg, user, channel, num, question):
@@ -542,7 +542,7 @@ class TriviaTime(callbacks.Plugin):
             irc.reply('Success! Submitted edit for further review.')
             irc.sendMsg(ircmsgs.notice(msg.nick, 'NEW: %s' % (question)))
             irc.sendMsg(ircmsgs.notice(msg.nick, 'OLD: %s' % (q[2])))
-            self.logger.doLog(irc, channel, "%s edited question# %i: OLD: '%s' NEW: '%s'" % (username, num, q[2], question))
+            self.logger.doLog(irc, channel, "%s edited question #%i: OLD: '%s' NEW: '%s'" % (username, num, q[2], question))
         else:
             irc.error('Question does not exist')
     edit = wrap(edit, ['user', ('checkChannelCapability', 'triviamod'), 'int', 'text'])
@@ -601,7 +601,7 @@ class TriviaTime(callbacks.Plugin):
                 if len(question) > 0:
                     question = question[0]
                     questionText = question[2]
-                irc.reply('Delete #%d, by %s Question#%d: %s, Reason:%s'%(delete[0], delete[1], delete[3], questionText, delete[6]))
+                irc.reply('Delete #%d, by %s Question #%d: %s, Reason:%s'%(delete[0], delete[1], delete[3], questionText, delete[6]))
             irc.reply('Use the showdelete command to see more information')
     listdeletes = wrap(listdeletes, ['user', ('checkChannelCapability', 'triviamod'), optional('int')])
 
@@ -624,7 +624,7 @@ class TriviaTime(callbacks.Plugin):
         else:
             irc.reply('Showing page %i of %i' % (page, pages))
             for edit in edits:
-                irc.reply('Edit #%d, Question#%d, NEW:%s'%(edit[0], edit[1], edit[2]))
+                irc.reply('Edit #%d, Question #%d, NEW:%s'%(edit[0], edit[1], edit[2]))
             irc.reply('Use the showedit command to see more information')
     listedits = wrap(listedits, ['user', ('checkChannelCapability', 'triviamod'), optional('int')])
 
@@ -647,7 +647,7 @@ class TriviaTime(callbacks.Plugin):
         else:
             irc.reply('Showing page %i of %i' % (page, pages))
             for report in reports:
-                irc.reply('Report #%d `%s` by %s on %s Q#%d '%(report[0], report[3], report[2], report[1], report[7]))
+                irc.reply('Report #%d \'%s\' by %s on %s Q#%d '%(report[0], report[3], report[2], report[1], report[7]))
             irc.reply('Use the showreport command to see more information')
     listreports = wrap(listreports, ['user', ('checkChannelCapability', 'triviamod'), optional('int')])
 
@@ -683,7 +683,7 @@ class TriviaTime(callbacks.Plugin):
         threadStorage = self.Storage(dbLocation)
         totalUsersEver = threadStorage.getNumUser(channel)
         numActiveThisWeek = threadStorage.getNumActiveThisWeek(channel)
-        infoText = ' TriviaTime v1.01 by Trivialand on Freenode https://github.com/tannn/TriviaTime '
+        infoText = ' TriviaTime v1.02 by Trivialand on Freenode https://github.com/tannn/TriviaTime '
         irc.sendMsg(ircmsgs.privmsg(msg.args[0], infoText))
         infoText = ' Time is %s ' % (time.asctime(time.localtime(),))
         irc.sendMsg(ircmsgs.privmsg(msg.args[0], infoText))
@@ -820,7 +820,7 @@ class TriviaTime(callbacks.Plugin):
             irc.noReply()
             return
 
-        irc.sendMsg(ircmsgs.privmsg(channel, 'No more waiting; starting the next question.'))
+        irc.sendMsg(ircmsgs.privmsg(channel, 'Let\'s keep going.'))
         game.removeEvent()
         game.nextQuestion()
         irc.noReply()
@@ -840,7 +840,7 @@ class TriviaTime(callbacks.Plugin):
             edit = edit[0]
             threadStorage.removeEdit(edit[0])
             irc.reply('Edit %d removed!' % edit[0])
-            self.logger.doLog(irc, channel, "%s removed edit# %i, for question# %i, text: %s" % (msg.nick, edit[0], edit[1], edit[2]))
+            self.logger.doLog(irc, channel, "%s removed edit# %i, for question #%i, text: %s" % (msg.nick, edit[0], edit[1], edit[2]))
     rmedit = wrap(rmedit, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
 
     def rmdelete(self, irc, msg, arg, user, channel, num):
@@ -857,7 +857,7 @@ class TriviaTime(callbacks.Plugin):
             delete = delete[0]
             threadStorage.removeDelete(num)
             irc.reply('Delete %d removed!' % num)
-            self.logger.doLog(irc, channel, "%s removed delete# %i, for question# %i, reason was '%s'" % (msg.nick, num, delete[3], delete[6]))
+            self.logger.doLog(irc, channel, "%s removed delete# %i, for question #%i, reason was '%s'" % (msg.nick, num, delete[3], delete[6]))
     rmdelete = wrap(rmdelete, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
 
     def rmreport(self, irc, msg, arg, user, channel, num):
@@ -874,7 +874,7 @@ class TriviaTime(callbacks.Plugin):
             report = report[0]
             threadStorage.removeReport(report[0])
             irc.reply('Report %d removed!' % report[0])
-            self.logger.doLog(irc, channel, "%s removed report# %i, for question# %i text was %s" % (msg.nick, report[0], report[7], report[3]))
+            self.logger.doLog(irc, channel, "%s removed report# %i, for question #%i text was %s" % (msg.nick, report[0], report[7], report[3]))
     rmreport = wrap(rmreport, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
 
     def rmnew(self, irc, msg, arg, user, channel, num):
@@ -890,7 +890,7 @@ class TriviaTime(callbacks.Plugin):
             q = q[0]
             threadStorage.removeTemporaryQuestion(q[0])
             irc.reply('Temp question #%d removed!' % q[0])
-            self.logger.doLog(irc, channel, "%s removed new question# %i, '%s'" % (msg.nick, q[0], q[3]))
+            self.logger.doLog(irc, channel, "%s removed new question #%i, '%s'" % (msg.nick, q[0], q[3]))
     rmnew = wrap(rmnew, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
 
     def repeat(self, irc, msg, arg):
@@ -908,7 +908,7 @@ class TriviaTime(callbacks.Plugin):
 
     def report(self, irc, msg, arg, channel, roundNum, text):
         """[channel] <round number> <report text>
-        Provide a report for a bad question. Be sure to include the round number and any problems. 
+        Provide a report for a bad question. Be sure to include the round number and the problem(s). 
         Channel is a optional parameter which is only needed when reporting outside of the channel
         """
         username = msg.nick
@@ -925,7 +925,7 @@ class TriviaTime(callbacks.Plugin):
             questionOver = game.questionOver
             if inp[:2] == 's/':
                 if numAsked == roundNum and questionOver == False:
-                    irc.reply('Sorry you must wait until the current question is over to report it.')
+                    irc.reply('Sorry, you must wait until the current question is over to report it.')
                     return
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
@@ -940,10 +940,10 @@ class TriviaTime(callbacks.Plugin):
                     oldOne = regex[0]
                     newQuestionText = question[2].replace(oldOne, newOne)
                     threadStorage.insertEdit(question[0], newQuestionText, username, channel)
-                    irc.reply('** Regex detected ** Your report has been submitted!')
+                    irc.reply('** Regex detected ** Edited question!')
                     irc.sendMsg(ircmsgs.notice(username, 'NEW: %s' % (newQuestionText)))
                     irc.sendMsg(ircmsgs.notice(username, 'OLD: %s' % (question[2])))
-                    self.logger.doLog(irc, channel, "%s edited question# %i, NEW: '%s', OLD: '%s'" % (msg.nick, question[0], newQuestionText, question[2]))
+                    self.logger.doLog(irc, channel, "%s edited question #%i, NEW: '%s', OLD: '%s'" % (msg.nick, question[0], newQuestionText, question[2]))
                     return
             elif str.lower(utils.str.normalizeWhitespace(inp))[:6] == 'delete':
                 if not threadStorage.questionIdExists(question[0]):
@@ -958,12 +958,12 @@ class TriviaTime(callbacks.Plugin):
                 reason = utils.str.normalizeWhitespace(inp)[6:]
                 reason = utils.str.normalizeWhitespace(reason)
                 irc.reply('Marked question for deletion.')
-                self.logger.doLog(irc, channel, "%s marked question# %i for deletion" % (msg.nick, question[0]))
+                self.logger.doLog(irc, channel, "%s marked question #%i for deletion" % (msg.nick, question[0]))
                 threadStorage.insertDelete(username, channel, question[0], reason)
                 return
             threadStorage.updateUser(username, 0, 0, 1)
             threadStorage.insertReport(channel, username, text, question[0])
-            self.logger.doLog(irc, channel, "%s reported question# %i, Text: '%s'" % (msg.nick, question[0], text))
+            self.logger.doLog(irc, channel, "%s reported question #%i, Text: '%s'" % (msg.nick, question[0], text))
             irc.reply('Your report has been submitted!')
         else:
             irc.error('Sorry, round %d could not be found in the database' % (roundNum))
@@ -984,7 +984,7 @@ class TriviaTime(callbacks.Plugin):
             return
         threadStorage.restoreQuestion(questionNum)
         irc.reply('Question %d restored.' % questionNum)
-        self.logger.doLog(irc, channel, "%s restored question# %i" % (username, questionNum))
+        self.logger.doLog(irc, channel, "%s restored question #%i" % (username, questionNum))
     restorequestion = wrap(restorequestion, [('checkChannelCapability', 'triviamod'), 'int'])
 
     def skip(self, irc, msg, arg):
@@ -1002,7 +1002,7 @@ class TriviaTime(callbacks.Plugin):
         channelCanonical = ircutils.toLower(channel)
         game = self.getGame(irc, channel)
         if game is None:
-            irc.error('No questions are currently being asked.')
+            irc.error('Trivia is not running.')
             return
 
         if game.questionOver == True:
@@ -1105,7 +1105,7 @@ class TriviaTime(callbacks.Plugin):
                 if len(question) > 0:
                     question = question[0]
                     questionText = question[2]
-                irc.reply('Delete #%d, by %s Question#%d: %s, Reason: %s'%(q[0], q[1], q[3], questionText, q[6]))
+                irc.reply('Delete #%d, by %s Question #%d: %s, Reason: %s'%(q[0], q[1], q[3], questionText, q[6]))
             else:
                 irc.error('Delete #%d not found' % num)
         else:
@@ -1118,7 +1118,7 @@ class TriviaTime(callbacks.Plugin):
                 if len(question) > 0:
                     question = question[0]
                     questionText = question[2]
-                irc.reply('Delete #%d, by %s Question#%d: %s'%(ques[0], ques[1], ques[3], questionText))
+                irc.reply('Delete #%d, by %s Question #%d: %s'%(ques[0], ques[1], ques[3], questionText))
             irc.reply('Use the showdelete to see more information')
     showdelete = wrap(showdelete, ['user', ('checkChannelCapability', 'triviamod'),optional('int')])
 
@@ -1136,7 +1136,7 @@ class TriviaTime(callbacks.Plugin):
             question = question[0]
             if question[3] == 1:
                 irc.reply('Info: This question is currently deleted.')
-            irc.reply('Question#%d: %s' % (num, question[2]))
+            irc.reply('Question #%d: %s' % (num, question[2]))
     showquestion = wrap(showquestion, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
 
     def showround(self, irc, msg, arg, user, channel, num):
@@ -1151,12 +1151,12 @@ class TriviaTime(callbacks.Plugin):
             irc.error('Round not found')
         else:
             question = question[0]
-            irc.reply('Round %d: Question#%d, Text:%s' % (num, question[0], question[2]))
+            irc.reply('Round %d: Question #%d, Text:%s' % (num, question[0], question[2]))
     showround = wrap(showround, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
 
     def showreport(self, irc, msg, arg, user, channel, num):
         """[<channel>] [<report num>]
-        Shows report information, if num is provided one record is shown, otherwise the last 3 are. 
+        Shows report information, if number is provided one record is shown, otherwise the last 3 are. 
         Channel is only necessary when editing from outside of the channel
         """
         dbLocation = self.registryValue('admin.sqlitedb')
@@ -1167,20 +1167,20 @@ class TriviaTime(callbacks.Plugin):
                 irc.reply('No reports found')
             else:
                 report = report[0]
-                irc.reply('Report #%d `%s` by %s on %s Q#%d '%(report[0], report[3], report[2], report[1], report[7]))
+                irc.reply('Report #%d \'%s\' by %s on %s Q#%d '%(report[0], report[3], report[2], report[1], report[7]))
 
                 question = threadStorage.getQuestion(report[7])
                 if len(question) < 1:
-                    irc.reply('Error: Tried to find question but couldn\'t')
+                    irc.error('Question could not be found.')
                 else:
                     question = question[0]
-                    irc.reply('Question#%d: %s' % (question[0], question[2]))
+                    irc.reply('Question #%d: %s' % (question[0], question[2]))
         else:
             reports  = threadStorage.getReportTop3()
             if len(reports) < 1:
                 irc.reply('No reports found')
             for report in reports:
-                irc.reply('Report #%d `%s` by %s on %s Q#%d '%(report[0], report[3], report[2], report[1], report[7]))
+                irc.reply('Report #%d \'%s\' by %s on %s Q#%d '%(report[0], report[3], report[2], report[1], report[7]))
     showreport = wrap(showreport, ['user', ('checkChannelCapability', 'triviamod'), optional('int')])
 
     def showedit(self, irc, msg, arg, user, channel, num):
@@ -1195,7 +1195,7 @@ class TriviaTime(callbacks.Plugin):
             if len(edit) > 0:
                 edit = edit[0]
                 question = threadStorage.getQuestion(edit[1])
-                irc.reply('Edit #%d by %s, Question#%d'%(edit[0], edit[4], edit[1]))
+                irc.reply('Edit #%d by %s, Question #%d'%(edit[0], edit[4], edit[1]))
                 irc.reply('NEW:%s' %(edit[2]))
                 if len(question) > 0:
                     question = question[0]
@@ -1211,7 +1211,7 @@ class TriviaTime(callbacks.Plugin):
             for edit in edits:
                 question = threadStorage.getQuestion(edit[1])
                 question = question[0]
-                irc.reply('Edit #%d, Question#%d, NEW:%s'%(edit[0], edit[1], edit[2]))
+                irc.reply('Edit #%d, Question #%d, NEW:%s'%(edit[0], edit[1], edit[2]))
             irc.reply('Use the showedit command to see more information')
     showedit = wrap(showedit, ['user', ('checkChannelCapability', 'triviamod'), optional('int')])
 
@@ -1315,7 +1315,7 @@ class TriviaTime(callbacks.Plugin):
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
         threadStorage.transferUserLogs(userfrom, userto)
-        irc.reply('Done! Transfered records from %s to %s' % (userfrom, userto))
+        irc.reply('Transfered all records from %s to %s' % (userfrom, userto))
         self.logger.doLog(irc, channel, "%s transfered points from %s to %s" % (msg.nick, userfrom, userto))
     transferpoints = wrap(transferpoints, ['admin', 'nick', 'nick'])
 
@@ -1826,7 +1826,7 @@ class TriviaTime(callbacks.Plugin):
             numQuestion = self.storage.getNumQuestions()
             if numQuestion == 0:
                 self.stop()
-                self.sendMessage('There are no questions. Stopping. If you are an admin use the addfile to add questions to the database')
+                self.sendMessage('There are no questions. Stopping. If you are an admin, use the addfile coomand to add questions to the database')
                 return
 
             numQuestionsLeftInRound = self.storage.getNumQuestionsNotAsked(self.channel, self.roundStartedAt)
