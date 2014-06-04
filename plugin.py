@@ -156,7 +156,7 @@ class TriviaTime(callbacks.Plugin):
             elif msg.args[1] == otherHintCommand:
                 if game.question.find("KAOS:") == 0:
                     game.getRemainingKAOS()
-                else
+                else:
                     game.getOtherHint()
             else:
                 # check the answer
@@ -382,7 +382,7 @@ class TriviaTime(callbacks.Plugin):
     def addfile(self, irc, msg, arg, filename):
         """[<filename>]
         Add a file of questions to the question database, 
-        filename defaults to configured quesiton file.
+        filename defaults to configured question file.
         """
         if filename is None:
             filename = self.registryValue('admin.quizfile')
@@ -1195,7 +1195,7 @@ class TriviaTime(callbacks.Plugin):
             if len(edit) > 0:
                 edit = edit[0]
                 question = threadStorage.getQuestion(edit[1])
-                irc.reply('Edit #%d, Question#%d'%(edit[0], edit[1]))
+                irc.reply('Edit #%d by %s, Question#%d'%(edit[0], edit[4], edit[1]))
                 irc.reply('NEW:%s' %(edit[2]))
                 if len(question) > 0:
                     question = question[0]
