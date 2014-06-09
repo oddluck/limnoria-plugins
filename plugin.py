@@ -150,7 +150,7 @@ class TriviaTime(callbacks.Plugin):
 
         if game is not None:
             # Look for command to list remaining KAOS
-            if msg.args[1] == kaosRemainingCommand:
+            if msg.args[1] == kaosRemainingCommand and game.question.find("KAOS:") == 0:
                 irc.sendMsg(ircmsgs.notice(username, "'{0}' now also works for KAOS hints! Please try it out!".format(otherHintCommand)))
                 game.getRemainingKAOS()
             elif msg.args[1] == otherHintCommand:
