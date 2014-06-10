@@ -1151,7 +1151,7 @@ class TriviaTime(callbacks.Plugin):
             irc.error('Round not found')
         else:
             question = question[0]
-            irc.reply('Round %d: Question #%d, Text:%s' % (num, question[0], question[2]))
+            irc.reply('Round %d: Question #%d: %s' % (num, question[0], question[2]))
     showround = wrap(showround, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
 
     def showreport(self, irc, msg, arg, user, channel, num):
@@ -1226,7 +1226,7 @@ class TriviaTime(callbacks.Plugin):
             q = threadStorage.getTemporaryQuestionById(num)
             if len(q) > 0:
                 q = q[0]
-                irc.reply('Temp Q #%d: %s'%(q[0], q[3]))
+                irc.reply('Temp Q #%d by %s: %s'%(q[0], q[1], q[3]))
             else:
                 irc.error('Temp Q #%d not found' % num)
         else:
