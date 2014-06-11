@@ -1144,14 +1144,18 @@ class TriviaTime(callbacks.Plugin):
         Show what question was asked during the round. 
         Channel is only necessary when editing from outside of the channel
         """
-        dbLocation = self.registryValue('admin.sqlitedb')
-        threadStorage = self.Storage(dbLocation)
-        question = threadStorage.getQuestionByRound(num, channel)
-        if len(question) < 1:
-            irc.error('Round not found')
+        game = self.getGame(irc, channel)
+        if game is not None and num == game.numAsked and not game.questionOver:
+            irc.error('The current question can\'t be displayed until it is over.')
         else:
-            question = question[0]
-            irc.reply('Round %d: Question #%d: %s' % (num, question[0], question[2]))
+            dbLocation = self.registryValue('admin.sqlitedb')
+            threadStorage = self.Storage(dbLocation)
+            question = threadStorage.getQuestionByRound(num, channel)
+            if len(question) < 1:
+                irc.error('Round not found')
+            else:
+                question = question[0]
+                irc.reply('Round %d: Question #%d: %s' % (num, question[0], question[2]))
     showround = wrap(showround, ['user', ('checkChannelCapability', 'triviamod'), 'int'])
 
     def showreport(self, irc, msg, arg, user, channel, num):
