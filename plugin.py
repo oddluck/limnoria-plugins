@@ -1233,24 +1233,11 @@ class TriviaTime(callbacks.Plugin):
             irc.reply('Use the shownew to see more information')
     shownew = wrap(shownew, [('checkChannelCapability', 'triviamod'), 'channel', optional('int')])
 
-    def start(self, irc, msg, args):
+    def start(self, irc, msg, args, channel):
         """
         Begins a round of Trivia inside the current channel.
         """
-        channel = msg.args[0]
-        channelCanonical = ircutils.toLower(channel)
-        if not irc.isChannel(channel):
-            irc.error('This command can only be used in a channel.')
-            return
         game = self.getGame(irc, channel)
-        
-        # Add channel capabilities if necessary
-        chan = ircdb.channels.getChannel(channel)
-        for c in ['-triviamod', '-triviaadmin']:
-            if c not in chan.capabilities:
-                chan.addCapability(c)
-        ircdb.channels.setChannel(channel, chan)
-        
         if game is not None:
             if game.stopPending == True:
                 game.stopPending = False
@@ -1269,8 +1256,15 @@ class TriviaTime(callbacks.Plugin):
             # create a new game
             irc.sendMsg(ircmsgs.privmsg(channel, 'Another epic round of trivia is about to begin.'))
             self.createGame(irc, channel)
+            
+        # Add channel capabilities if necessary
+        chan = ircdb.channels.getChannel(channel)
+        for c in ['-triviamod', '-triviaadmin']:
+            if c not in chan.capabilities:
+                chan.addCapability(c)
+        ircdb.channels.setChannel(channel, chan)
         irc.noReply()
-    start = wrap(start)
+    start = wrap(start, ['onlyInChannel'])
 
     def stop(self, irc, msg, args, user, channel):
         """[<channel>]
