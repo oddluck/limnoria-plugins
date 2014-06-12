@@ -1243,6 +1243,14 @@ class TriviaTime(callbacks.Plugin):
             irc.error('This command can only be used in a channel.')
             return
         game = self.getGame(irc, channel)
+        
+        # Add channel capabilities if necessary
+        chan = ircdb.channels.getChannel(channel)
+        for c in ['-triviamod', '-triviaadmin']:
+            if c not in chan.capabilities:
+                chan.addCapability(c)
+        ircdb.channels.setChannel(channel, chan)
+        
         if game is not None:
             if game.stopPending == True:
                 game.stopPending = False
