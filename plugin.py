@@ -874,18 +874,26 @@ class TriviaTime(callbacks.Plugin):
             self.logger.doLog(irc, channel, "%s removed new question #%i, '%s'" % (msg.nick, q[0], q[3]))
     rmnew = wrap(rmnew, [('checkChannelCapability', 'triviamod'), 'channel', 'int'])
 
-    def repeat(self, irc, msg, arg):
+    def repeat(self, irc, msg, arg, channel):
         """
         Repeat the current question.
         """
-        channel = msg.args[0]
-        channelCanonical = ircutils.toLower(channel)
-
+        nick = msg.nick
         game = self.getGame(irc, channel)
-
-        if game is not None:
+        
+        # Trivia isn't running
+        if game is None or game.active == False:
+            irc.error('{0}: Trivia is not currently running.'.format(nick))
+        # Not currently asking a question
+        elif game.questionOver == True:
+            irc.error('{0}: No question is currently being asked.'.format(nick))
+        # Question has already been repeated
+        elif game.questionRepeated == True:
+            irc.error('{0}: The question has already been repeated.'.format(nick))
+        # Passed sanity checks
+        else:
             game.repeatQuestion()
-    repeat = wrap(repeat)
+    repeat = wrap(repeat, ['onlyInChannel'])
 
     def report(self, irc, msg, arg, user, channel, roundNum, text):
         """[channel] <round number> <report text>
@@ -1277,11 +1285,8 @@ class TriviaTime(callbacks.Plugin):
         """
         Figure out what time/day it is on the server.
         """
-        channel = msg.args[0]
         timeObject = time.asctime(time.localtime())
-        timeString = 'The current server time appears to be %s' % timeObject
-        irc.sendMsg(ircmsgs.privmsg(channel, timeString))
-        irc.noReply()
+        irc.reply('The current server time appears to be %s' % timeObject)
     time = wrap(time)
 
     def transferpoints(self, irc, msg, arg, userfrom, userto):
@@ -1882,10 +1887,6 @@ class TriviaTime(callbacks.Plugin):
             return utils.str.normalizeWhitespace(text)
 
         def repeatQuestion(self):
-            if self.questionRepeated == True:
-                return
-            if self.questionOver == True:
-                return
             self.questionRepeated = True
             try:
                 tempQuestion = self.question.rstrip()
