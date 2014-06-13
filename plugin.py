@@ -405,7 +405,7 @@ class TriviaTime(callbacks.Plugin):
 
     def authweb(self, irc, msg, arg):
         """
-        Triviamods only. Register for web access
+        This registers triviamods and triviaadmins on the website. Use this command again if the account password has changed.
         """
         username = user.name
         channel = msg.args[0]
@@ -415,10 +415,12 @@ class TriviaTime(callbacks.Plugin):
                 capability = 'triviamod'
             elif user.capabilities.check('owner'):
                 capability = 'owner'
+            elif user.capabilities.check('{0},triviaadmin'.format(channel)):
+                capability = 'triviaadmin'
             else:
                 raise KeyError
         except KeyError:
-            irc.error('Sorry, you must be at least a triviamod to register for web login')
+            irc.error('Sorry, you must be a triviamod, triviaadmin, or owner to use this command.')
             return
 
         
@@ -782,7 +784,7 @@ class TriviaTime(callbacks.Plugin):
             pass
 
         if not irc.isChannel(channel):
-            irc.error('This command can only be used in a channel.')
+            irc.error('Please use this command in a channel.')
             return
 
         minStreak = self.registryValue('general.nextMinStreak', channel)
