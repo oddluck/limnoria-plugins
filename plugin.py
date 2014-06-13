@@ -151,7 +151,7 @@ class TriviaTime(callbacks.Plugin):
         if game is not None:
             # Look for command to list remaining KAOS
             if msg.args[1] == kaosRemainingCommand and game.question.find("KAOS:") == 0:
-                irc.sendMsg(ircmsgs.notice(username, "'{0}' now also works for KAOS hints! Please try it out!".format(otherHintCommand)))
+                irc.sendMsg(ircmsgs.notice(msg.nick, "'{0}' now also works for KAOS hints! Please try it out!".format(otherHintCommand)))
                 game.getRemainingKAOS()
             elif msg.args[1] == otherHintCommand:
                 if game.question.find("KAOS:") == 0:
@@ -980,13 +980,17 @@ class TriviaTime(callbacks.Plugin):
         self.logger.doLog(irc, channel, "%s restored question #%i" % (username, questionNum))
     restorequestion = wrap(restorequestion, [('checkChannelCapability', 'triviamod'), 'channel', 'int'])
 
-    def skip(self, irc, msg, arg):
+    def skip(self, irc, msg, arg, channel):
         """
             Skip the current question and start the next. Rate-limited.
         """
         username = msg.nick
+        try:
+            user = ircdb.users.getUser(msg.prefix)
+            username = user.name
+        except KeyError:
+            pass
         usernameCanonical = ircutils.toLower(username)
-        channel = msg.args[0]
 
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
@@ -994,59 +998,51 @@ class TriviaTime(callbacks.Plugin):
         totalActive = threadStorage.getNumUserActiveIn(channel, timeSeconds)
         channelCanonical = ircutils.toLower(channel)
         game = self.getGame(irc, channel)
+        
+        # Sanity checks
         if game is None:
             irc.error('Trivia is not running.')
             return
-
-        if game.questionOver == True:
+        elif game.active == False:
+            irc.error('Trivia is not running.')
+            return
+        elif game.questionOver == True:
             irc.error('No question is currently being asked.')
             return
-
-        if not threadStorage.wasUserActiveIn(username, channel, timeSeconds):
+        elif not threadStorage.wasUserActiveIn(username, channel, timeSeconds):
             irc.error('Only users who have answered a question in the last 10 minutes can skip.')
             return
-
-        if usernameCanonical in game.skipVoteCount:
+        elif usernameCanonical in game.skipVoteCount:
             irc.error('You can only vote to skip once.')
             return
+        elif totalActive < 1:
+            return
 
+        # Ensure the game's skip timeout is set? and then check the user
         skipSeconds = self.registryValue('skip.skipTime', channel)
-
         game.skips.setTimeout(skipSeconds)
         if game.skips.has(usernameCanonical):
             irc.error('You must wait to be able to skip again.')
             return
 
+        # Update skip count
         game.skipVoteCount[usernameCanonical] = 1
-
         game.skips.append(usernameCanonical)
-
         irc.sendMsg(ircmsgs.privmsg(channel, '%s voted to skip this question.' % username))
-        if totalActive < 1:
-            return
-
         percentAnswered = ((1.0*len(game.skipVoteCount))/(totalActive*1.0))
 
-        # not all have skipped yet, we need to get out of here
-        if percentAnswered < self.registryValue('skip.skipThreshold', channel):
-            irc.noReply()
-            return
-
-        if game is None:
-            irc.error('Trivia is not running.')
-            return
-        if game.active == False:
-            irc.error('Trivia is not running.')
-            return
-        try:
-            schedule.removeEvent('%s.trivia' % channel)
-        except KeyError:
-            pass
-        irc.sendMsg(ircmsgs.privmsg(channel, 'Skipped question! (%d of %d voted)' % (len(game.skipVoteCount), totalActive)))
-
-        game.nextQuestion()
+        # Check if skip threshold has been reached
+        if percentAnswered >= self.registryValue('skip.skipThreshold', channel):        
+            try:
+                schedule.removeEvent('%s.trivia' % channel)
+            except KeyError:
+                pass
+                
+            irc.sendMsg(ircmsgs.privmsg(channel, 'Skipped question! (%d of %d voted)' % (len(game.skipVoteCount), totalActive)))
+            game.nextQuestion()
+        
         irc.noReply()
-    skip = wrap(skip)
+    skip = wrap(skip, ['onlyInChannel'])
 
     def stats(self, irc, msg, arg, username):
         """ <username>
