@@ -1250,29 +1250,28 @@ class TriviaTime(callbacks.Plugin):
     start = wrap(start, ['onlyInChannel'])
 
     def stop(self, irc, msg, args, user, channel):
-        """[<channel>]
+        """
         Stops the current Trivia round.
-        Channel is only necessary when using from outside of the channel
         """
         channelCanonical = ircutils.toLower(channel)
         game = self.getGame(irc, channel)
-        if game is not None:
-            if game.questionOver == True:
-                game.stop()
-                return
-            if game.stopPending:
-                irc.sendMsg(ircmsgs.privmsg(channel, 'Trivia is already pending stop'))
-                return
-            if game.active:
-                game.stopPending = True
-                irc.sendMsg(ircmsgs.privmsg(channel, 'Trivia will now stop after this question.'))
-            else:
-                self.deleteGame(irc, channel)
-                irc.sendMsg(ircmsgs.privmsg(channel, 'Trivia stopped. :\'('))
-        else:
+        if game is None:
             irc.sendMsg(ircmsgs.privmsg(channel, 'Game is already stopped'))
+        elif game.questionOver == True:
+            game.stop()
+            return
+        elif game.stopPending:
+            irc.sendMsg(ircmsgs.privmsg(channel, 'Trivia is already pending stop'))
+            return
+        elif game.active:
+            game.stopPending = True
+            irc.sendMsg(ircmsgs.privmsg(channel, 'Trivia will now stop after this question.'))
+        else:
+            self.deleteGame(irc, channel)
+            irc.sendMsg(ircmsgs.privmsg(channel, 'Trivia stopped. :\'('))
+            
         irc.noReply()
-    stop = wrap(stop, ['user', 'channel'])
+    stop = wrap(stop, ['user', 'onlyInChannel'])
 
     def time(self, irc, msg, arg):
         """
