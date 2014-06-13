@@ -783,28 +783,25 @@ class TriviaTime(callbacks.Plugin):
             pass
 
         minStreak = self.registryValue('general.nextMinStreak', channel)
-        channelCanonical = ircutils.toLower(channel)
         game = self.getGame(irc, channel)
 
         # Trivia isn't running
         if game is None or game.active == False:
-            irc.sendMsg(ircmsgs.privmsg(channel, '%s: Trivia is not currently running.' % (username)))
+            irc.reply('Trivia is not currently running.')
         # Question is still being asked, not over
         elif game.questionOver == False:
-            irc.sendMsg(ircmsgs.privmsg(channel, '%s: You must wait until the current question is over.' % (username)))
+            irc.reply('You must wait until the current question is over.')
         # Username isnt the streak holder
         elif game.lastWinner != ircutils.toLower(username):
-            irc.sendMsg(ircmsgs.privmsg(channel, '%s: You are not currently the streak holder.' % (username)))
+            irc.reply('You are not currently the streak holder.')
         # Streak isnt high enough
         elif game.streak < minStreak:
-            irc.sendMsg(ircmsgs.privmsg(channel, '%s: You do not have a large enough streak yet (%i of %i).' % (username, game.streak, minStreak)))
+            irc.reply('You do not have a large enough streak yet (%i of %i).' % (username, game.streak, minStreak))
         # Passes sanity checks
         else:
-            irc.sendMsg(ircmsgs.privmsg(channel, 'Let\'s keep going.'))
+            irc.reply('Let\'s keep going.', prefixNick=False)
             game.removeEvent()
             game.nextQuestion()
-            
-        irc.noReply()
     next = wrap(next, ['onlyInChannel'])
 
     def rmedit(self, irc, msg, arg, channel, num):
@@ -883,13 +880,13 @@ class TriviaTime(callbacks.Plugin):
         
         # Trivia isn't running
         if game is None or game.active == False:
-            irc.error('{0}: Trivia is not currently running.'.format(nick))
+            irc.reply('Trivia is not currently running.')
         # Not currently asking a question
         elif game.questionOver == True:
-            irc.error('{0}: No question is currently being asked.'.format(nick))
+            irc.reply('No question is currently being asked.')
         # Question has already been repeated
         elif game.questionRepeated == True:
-            irc.error('{0}: The question has already been repeated.'.format(nick))
+            irc.reply('The question has already been repeated.')
         # Passed sanity checks
         else:
             game.repeatQuestion()
@@ -997,16 +994,16 @@ class TriviaTime(callbacks.Plugin):
         
         # Sanity checks
         if game is None or game.active == False:
-            irc.error('Trivia is not running.')
+            irc.reply('Trivia is not currently running.')
             return
         elif game.questionOver == True:
-            irc.error('No question is currently being asked.')
+            irc.reply('No question is currently being asked.')
             return
         elif not threadStorage.wasUserActiveIn(username, channel, timeSeconds):
-            irc.error('Only users who have answered a question in the last 10 minutes can skip.')
+            irc.reply('Only users who have answered a question in the last 10 minutes can skip.')
             return
         elif usernameCanonical in game.skipVoteCount:
-            irc.error('You can only vote to skip once.')
+            irc.reply('You can only vote to skip once.')
             return
         elif totalActive < 1:
             return
@@ -1015,13 +1012,13 @@ class TriviaTime(callbacks.Plugin):
         skipSeconds = self.registryValue('skip.skipTime', channel)
         game.skips.setTimeout(skipSeconds)
         if game.skips.has(usernameCanonical):
-            irc.error('You must wait to be able to skip again.')
+            irc.reply('You must wait to be able to skip again.')
             return
 
         # Update skip count
         game.skipVoteCount[usernameCanonical] = 1
         game.skips.append(usernameCanonical)
-        irc.sendMsg(ircmsgs.privmsg(channel, '%s voted to skip this question.' % username))
+        irc.reply('%s voted to skip this question.' % username, prefixNick=False)
         percentAnswered = ((1.0*len(game.skipVoteCount))/(totalActive*1.0))
 
         # Check if skip threshold has been reached
@@ -1031,10 +1028,8 @@ class TriviaTime(callbacks.Plugin):
             except KeyError:
                 pass
                 
-            irc.sendMsg(ircmsgs.privmsg(channel, 'Skipped question! (%d of %d voted)' % (len(game.skipVoteCount), totalActive)))
+            irc.reply('Skipped question! (%d of %d voted)' % (len(game.skipVoteCount), totalActive), prefixNick=False)
             game.nextQuestion()
-        
-        irc.noReply()
     skip = wrap(skip, ['onlyInChannel'])
 
     def stats(self, irc, msg, arg, username):
@@ -1229,24 +1224,23 @@ class TriviaTime(callbacks.Plugin):
         Begins a round of Trivia inside the current channel.
         """
         game = self.getGame(irc, channel)
-        if game is not None:
-            if game.stopPending == True:
-                game.stopPending = False
-                irc.sendMsg(ircmsgs.privmsg(channel, 'Pending stop aborted'))
-            elif not game.active:
-                self.deleteGame(irc, channel)
-                try:
-                    schedule.removeEvent('%s.trivia' % channel)
-                except KeyError:
-                    pass
-                irc.sendMsg(ircmsgs.privmsg(channel, 'Another epic round of trivia is about to begin.'))
-                self.createGame(irc, channel)
-            else:
-                irc.sendMsg(ircmsgs.privmsg(channel, 'Trivia has already been started.'))
-        else:
+        if game is None:
             # create a new game
-            irc.sendMsg(ircmsgs.privmsg(channel, 'Another epic round of trivia is about to begin.'))
+            irc.reply('Another epic round of trivia is about to begin.', prefixNick=False)
             self.createGame(irc, channel)
+        elif game.stopPending == True:
+            game.stopPending = False
+            irc.reply('Pending stop aborted', prefixNick=False)
+        elif not game.active:
+            self.deleteGame(irc, channel)
+            try:
+                schedule.removeEvent('%s.trivia' % channel)
+            except KeyError:
+                pass
+            irc.reply('Another epic round of trivia is about to begin.', prefixNick=False)
+            self.createGame(irc, channel)
+        else:
+            irc.reply('Trivia has already been started.')
             
         # Add channel capabilities if necessary
         chan = ircdb.channels.getChannel(channel)
@@ -1254,31 +1248,26 @@ class TriviaTime(callbacks.Plugin):
             if c not in chan.capabilities:
                 chan.addCapability(c)
         ircdb.channels.setChannel(channel, chan)
-        irc.noReply()
     start = wrap(start, ['onlyInChannel'])
 
     def stop(self, irc, msg, args, user, channel):
         """
         Stops the current Trivia round.
         """
-        channelCanonical = ircutils.toLower(channel)
         game = self.getGame(irc, channel)
         if game is None:
-            irc.sendMsg(ircmsgs.privmsg(channel, 'Game is already stopped'))
+            irc.reply('Game is already stopped.')
         elif game.questionOver == True:
             game.stop()
-            return
+            irc.noReply()
         elif game.stopPending:
-            irc.sendMsg(ircmsgs.privmsg(channel, 'Trivia is already pending stop'))
-            return
+            irc.reply('Trivia is already pending stop.')
         elif game.active:
             game.stopPending = True
-            irc.sendMsg(ircmsgs.privmsg(channel, 'Trivia will now stop after this question.'))
+            irc.reply('Trivia will now stop after this question.', prefixNick=False)
         else:
             self.deleteGame(irc, channel)
-            irc.sendMsg(ircmsgs.privmsg(channel, 'Trivia stopped. :\'('))
-            
-        irc.noReply()
+            irc.reply('Trivia stopped. :\'(', prefixNick=False)
     stop = wrap(stop, ['user', 'onlyInChannel'])
 
     def time(self, irc, msg, arg):
@@ -1286,7 +1275,7 @@ class TriviaTime(callbacks.Plugin):
         Figure out what time/day it is on the server.
         """
         timeObject = time.asctime(time.localtime())
-        irc.reply('The current server time appears to be %s' % timeObject)
+        irc.reply('The current server time appears to be %s' % timeObject, prefixNick=False)
     time = wrap(time)
 
     def transferpoints(self, irc, msg, arg, userfrom, userto):
