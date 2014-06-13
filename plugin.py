@@ -1840,30 +1840,7 @@ class TriviaTime(callbacks.Plugin):
             self.storage.insertGameLog(self.channel, self.numAsked,
                                 self.lineNumber, self.question)
 
-            tempQuestion = self.question.rstrip()
-            if tempQuestion[-1:] != '?':
-                tempQuestion = '%s?' % (tempQuestion)
-
-            # bold the q, add color
-            questionText = '\x02\x0303%s' % (tempQuestion)
-
-            # KAOS? report # of answers
-            if len(self.answers) > 1:
-                questionText += ' %d possible answers' % (len(self.answers))
-
-            questionMessageString = '%s: %s' % (self.numAsked, questionText)
-
-            maxLength = 400
-
-            questionMesagePieces = [questionMessageString[i:i+maxLength] for i in range(0, len(questionMessageString), maxLength)]
-
-            multipleMessages=False
-
-            for msgPiece in questionMesagePieces:
-                if multipleMessages:
-                    msgPiece = '\x02\x0303%s' % (msgPiece)
-                multipleMessages = True
-                self.sendMessage(msgPiece, 1, 9)
+            self.sendQuestion()
             self.queueEvent(0, self.loopEvent)
             self.askedAt = time.time()
 
@@ -1889,30 +1866,7 @@ class TriviaTime(callbacks.Plugin):
         def repeatQuestion(self):
             self.questionRepeated = True
             try:
-                tempQuestion = self.question.rstrip()
-                if tempQuestion[-1:] != '?':
-                    tempQuestion += ' ?'
-
-                # bold the q, add color
-                questionText = '\x02\x0303%s' % (tempQuestion)
-
-                # KAOS? report # of answers
-                if len(self.answers) > 1:
-                    questionText += ' %d possible answers' % (len(self.answers))
-
-                questionMessageString = '%s: %s' % (self.numAsked, questionText)
-
-                maxLength = 400
-
-                questionMesagePieces = [questionMessageString[i:i+maxLength] for i in range(0, len(questionMessageString), maxLength)]
-
-                multipleMessages=False
-
-                for msgPiece in questionMesagePieces:
-                    if multipleMessages:
-                        msgPiece = '\x02\x0303%s' % (msgPiece)
-                    multipleMessages = True
-                    self.sendMessage(msgPiece, 1, 9)
+                self.sendQuestion()
             except AttributeError:
                 pass
 
@@ -2000,6 +1954,29 @@ class TriviaTime(callbacks.Plugin):
             # no color
             self.irc.sendMsg(ircmsgs.privmsg(self.channel, ' %s ' % msg))
 
+        def sendQuestion(self):
+            question = self.question.rstrip()
+            if question[-1:] != '?':
+                question += '?'
+
+            # bold the q, add color
+            questionText = '\x02\x0303%s' % (question)
+
+            # KAOS? report # of answers
+            if len(self.answers) > 1:
+                questionText += ' %d possible answers' % (len(self.answers))
+
+            questionMessageString = '%s: %s' % (self.numAsked, questionText)
+            maxLength = 400
+            questionMesagePieces = [questionMessageString[i:i+maxLength] for i in range(0, len(questionMessageString), maxLength)]
+            multipleMessages=False
+
+            for msgPiece in questionMesagePieces:
+                if multipleMessages:
+                    msgPiece = '\x02\x0303%s' % (msgPiece)
+                multipleMessages = True
+                self.sendMessage(msgPiece, 1, 9)
+            
         def stop(self):
             """
                 Stop a game in progress
