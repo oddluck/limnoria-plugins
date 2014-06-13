@@ -771,53 +771,41 @@ class TriviaTime(callbacks.Plugin):
         irc.noReply()
     month = wrap(month, [optional('int')])
 
-    def next(self, irc, msg, arg):
+    def next(self, irc, msg, arg, channel):
         """
         Skip to the next question immediately. This can only be used by a user with a certain streak, set in the config.
         """
         username = msg.nick
-        channel = msg.args[0]
         try:
             user = ircdb.users.getUser(msg.prefix)
             username = user.name
         except KeyError:
             pass
 
-        if not irc.isChannel(channel):
-            irc.error('Please use this command in a channel.')
-            return
-
         minStreak = self.registryValue('general.nextMinStreak', channel)
         channelCanonical = ircutils.toLower(channel)
-
         game = self.getGame(irc, channel)
 
         # Trivia isn't running
-        if game is None or game.active != True:
+        if game is None or game.active == False:
             irc.sendMsg(ircmsgs.privmsg(channel, '%s: Trivia is not currently running.' % (username)))
-            irc.noReply()
-            return
         # Question is still being asked, not over
-        if game.questionOver == False:
+        elif game.questionOver == False:
             irc.sendMsg(ircmsgs.privmsg(channel, '%s: You must wait until the current question is over.' % (username)))
-            irc.noReply()
-            return
         # Username isnt the streak holder
-        if game.lastWinner != ircutils.toLower(username):
+        elif game.lastWinner != ircutils.toLower(username):
             irc.sendMsg(ircmsgs.privmsg(channel, '%s: You are not currently the streak holder.' % (username)))
-            irc.noReply()
-            return
         # Streak isnt high enough
-        if game.streak < minStreak:
+        elif game.streak < minStreak:
             irc.sendMsg(ircmsgs.privmsg(channel, '%s: You do not have a large enough streak yet (%i of %i).' % (username, game.streak, minStreak)))
-            irc.noReply()
-            return
-
-        irc.sendMsg(ircmsgs.privmsg(channel, 'Let\'s keep going.'))
-        game.removeEvent()
-        game.nextQuestion()
+        # Passes sanity checks
+        else:
+            irc.sendMsg(ircmsgs.privmsg(channel, 'Let\'s keep going.'))
+            game.removeEvent()
+            game.nextQuestion()
+            
         irc.noReply()
-    next = wrap(next)
+    next = wrap(next, ['onlyInChannel'])
 
     def rmedit(self, irc, msg, arg, channel, num):
         """[<channel>] <int>
@@ -1000,10 +988,7 @@ class TriviaTime(callbacks.Plugin):
         game = self.getGame(irc, channel)
         
         # Sanity checks
-        if game is None:
-            irc.error('Trivia is not running.')
-            return
-        elif game.active == False:
+        if game is None or game.active == False:
             irc.error('Trivia is not running.')
             return
         elif game.questionOver == True:
