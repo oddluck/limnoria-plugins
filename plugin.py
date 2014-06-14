@@ -1223,10 +1223,12 @@ class TriviaTime(callbacks.Plugin):
         Begins a round of Trivia inside the current channel.
         """
         game = self.getGame(irc, channel)
-        if game is None or game.active == False:
-            if game is not None:
-                self.deleteGame(irc, channel)
         
+        # Sanity checks
+        # 1. Is trivia running?
+        # 2. Is the previous trivia session still in the shutdown phase?
+        # 3. Is there a stop pending?
+        if game is None:
             # create a new game
             self.createGame(irc, channel)
             
@@ -1238,6 +1240,8 @@ class TriviaTime(callbacks.Plugin):
             ircdb.channels.setChannel(channel, chan)
             
             irc.noReply()
+        elif game.active == False:
+            irc.reply('Please wait for the previous game instance to stop.')
         elif game.stopPending == True:
             game.stopPending = False
             irc.reply('Pending stop aborted', prefixNick=False)
