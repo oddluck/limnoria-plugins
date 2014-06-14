@@ -439,8 +439,8 @@ class TriviaTime(callbacks.Plugin):
         self.logger.doLog(irc, channel, "%s authed for web access" % (username))
     authweb = wrap(authweb, [('checkChannelCapability', 'triviamod')])
 
-    def clearpoints(self, irc, msg, arg, username):
-        """<username>
+    def clearpoints(self, irc, msg, arg, channel, username):
+        """[<channel>] <username>
         Deletes all of a users points, and removes all their records
         """
         channel = msg.args[0]
@@ -540,8 +540,8 @@ class TriviaTime(callbacks.Plugin):
             irc.error('Question does not exist')
     edit = wrap(edit, ['user', 'channel', 'int', 'text'])
 
-    def givepoints(self, irc, msg, arg, username, points, days):
-        """<username> <points> [<daysAgo>]
+    def givepoints(self, irc, msg, arg, channel, username, points, days):
+        """[<channel>] <username> <points> [<daysAgo>]
 
         Give a user points, last argument is optional amount of days in past to add records
         """
@@ -1280,8 +1280,8 @@ class TriviaTime(callbacks.Plugin):
         irc.reply('The current server time appears to be %s' % timeObject, prefixNick=False)
     time = wrap(time)
 
-    def transferpoints(self, irc, msg, arg, userfrom, userto):
-        """<userfrom> <userto>
+    def transferpoints(self, irc, msg, arg, channel, userfrom, userto):
+        """[<channel>] <userfrom> <userto>
         Transfers all points and records from one user to another
         """
         userfrom = userfrom
