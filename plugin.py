@@ -476,14 +476,19 @@ class TriviaTime(callbacks.Plugin):
     def clearpoints(self, irc, msg, arg, channel, username):
         """[<channel>] <username>
         Deletes all of a users points, and removes all their records
+        Channel is only necessary when clearing from outside of the channel
         """
-        channel = msg.args[0]
+        hostmask = msg.prefix
+        if self.isTriviaAdmin(hostmask, channel) == False:
+            irc.reply('You must be a TriviaAdmin in {0} to use this command.'.format(channel))
+            return
+            
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
         threadStorage.removeUserLogs(username)
         irc.reply('Removed all points from %s' % (username))
         self.logger.doLog(irc, channel, "%s cleared points for %s" % (msg.nick, username))
-    clearpoints = wrap(clearpoints, [('checkChannelCapability', 'triviaadmin'), 'nick'])
+    clearpoints = wrap(clearpoints, ['channel', 'nick'])
 
     def day(self, irc, msg, arg, num):
         """[<number>]
@@ -576,9 +581,14 @@ class TriviaTime(callbacks.Plugin):
 
     def givepoints(self, irc, msg, arg, channel, username, points, days):
         """[<channel>] <username> <points> [<daysAgo>]
-
         Give a user points, last argument is optional amount of days in past to add records
+        Channel is only necessary when giving from outside of the channel
         """
+        hostmask = msg.prefix
+        if self.isTriviaAdmin(hostmask, channel) == False:
+            irc.reply('You must be a TriviaAdmin in {0} to use this command.'.format(channel))
+            return
+        
         if points < 1:
             irc.error("You cannot give less than 1 point.")
             return
@@ -602,7 +612,7 @@ class TriviaTime(callbacks.Plugin):
         threadStorage.updateUserLog(username, channel, points, 0, 0, day, month, year)
         irc.reply('Added %d points to %s' % (points, username))
         self.logger.doLog(irc, channel, "%s gave %i points to %s" % (msg.nick, points, username))
-    givepoints = wrap(givepoints, [('checkChannelCapability', 'triviaadmin'), 'nick', 'int', optional('int')])
+    givepoints = wrap(givepoints, ['channel', 'nick', 'int', optional('int')])
 
     def listdeletes(self, irc, msg, arg, channel, page):
         """[<channel>] [<page>]
@@ -1317,7 +1327,13 @@ class TriviaTime(callbacks.Plugin):
     def transferpoints(self, irc, msg, arg, channel, userfrom, userto):
         """[<channel>] <userfrom> <userto>
         Transfers all points and records from one user to another
+        Channel is only necessary when transferring from outside of the channel
         """
+        hostmask = msg.prefix
+        if self.isTriviaAdmin(hostmask, channel) == False:
+            irc.reply('You must be a TriviaAdmin in {0} to use this command.'.format(channel))
+            return
+        
         userfrom = userfrom
         userto = userto
         channel = msg.args[0]
@@ -1326,7 +1342,7 @@ class TriviaTime(callbacks.Plugin):
         threadStorage.transferUserLogs(userfrom, userto)
         irc.reply('Transfered all records from %s to %s' % (userfrom, userto))
         self.logger.doLog(irc, channel, "%s transfered points from %s to %s" % (msg.nick, userfrom, userto))
-    transferpoints = wrap(transferpoints, [('checkChannelCapability', 'triviaadmin'), 'nick', 'nick'])
+    transferpoints = wrap(transferpoints, ['channel', 'nick', 'nick'])
 
     def week(self, irc, msg, arg, num):
         """[<number>]
