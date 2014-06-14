@@ -785,19 +785,19 @@ class TriviaTime(callbacks.Plugin):
         minStreak = self.registryValue('general.nextMinStreak', channel)
         game = self.getGame(irc, channel)
 
-        # Trivia isn't running
+        # Sanity checks
+        # 1. Is trivia running?
+        # 2. Is question is still being asked?
+        # 3. Is caller the streak holder?
+        # 4. Is streak high enough?
         if game is None or game.active == False:
             irc.reply('Trivia is not currently running.')
-        # Question is still being asked, not over
         elif game.questionOver == False:
             irc.reply('You must wait until the current question is over.')
-        # Username isnt the streak holder
         elif game.lastWinner != ircutils.toLower(username):
             irc.reply('You are not currently the streak holder.')
-        # Streak isnt high enough
         elif game.streak < minStreak:
             irc.reply('You do not have a large enough streak yet (%i of %i).' % (username, game.streak, minStreak))
-        # Passes sanity checks
         else:
             irc.reply('Let\'s keep going.', prefixNick=False)
             game.removeEvent()
@@ -875,19 +875,18 @@ class TriviaTime(callbacks.Plugin):
         """
         Repeat the current question.
         """
-        nick = msg.nick
         game = self.getGame(irc, channel)
         
-        # Trivia isn't running
+        # Sanity checks
+        # 1. Is trivia running?
+        # 2. Is a question being asked?
+        # 3. Has the question already been repeated?
         if game is None or game.active == False:
             irc.reply('Trivia is not currently running.')
-        # Not currently asking a question
         elif game.questionOver == True:
             irc.reply('No question is currently being asked.')
-        # Question has already been repeated
         elif game.questionRepeated == True:
             irc.reply('The question has already been repeated.')
-        # Passed sanity checks
         else:
             game.repeatQuestion()
     repeat = wrap(repeat, ['onlyInChannel'])
@@ -1255,19 +1254,22 @@ class TriviaTime(callbacks.Plugin):
         Stops the current Trivia round.
         """
         game = self.getGame(irc, channel)
-        if game is None:
+        
+        # Sanity checks
+        # 1. Is trivia running?
+        # 2. Is a question being asked?
+        # 2.1 Is a stop pending?
+        if game is None or game.active == False:
             irc.reply('Game is already stopped.')
-        elif game.questionOver == True:
+        elif game.questionOver == False:
+            if game.stopPending == True:
+                irc.reply('Trivia is already pending stop.')
+            else:
+                game.stopPending = True
+                irc.reply('Trivia will now stop after this question.', prefixNick=False)
+        else:
             game.stop()
             irc.noReply()
-        elif game.stopPending:
-            irc.reply('Trivia is already pending stop.')
-        elif game.active:
-            game.stopPending = True
-            irc.reply('Trivia will now stop after this question.', prefixNick=False)
-        else:
-            self.deleteGame(irc, channel)
-            irc.reply('Trivia stopped. :\'(', prefixNick=False)
     stop = wrap(stop, ['user', 'onlyInChannel'])
 
     def time(self, irc, msg, arg):
