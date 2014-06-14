@@ -281,12 +281,43 @@ class TriviaTime(callbacks.Plugin):
                 return self.games[irc.network][channelCanonical]
         return None
 
+    def isTriviaMod(self, hostmask, channel):
+        cap = self.getTriviaCapability(hostmask, channel)
+        return cap in ['{0},{1}'.format(channel,'triviamod'), 
+                       '{0},{1}'.format(channel,'triviaadmin'), 'owner']
+    
+    def isTriviaAdmin(self, hostmask, channel):
+        cap = self.getTriviaCapability(hostmask, channel)
+        return cap in ['{0},{1}'.format(channel,'triviaadmin'), 'owner']
+                
+    def getTriviaCapability(self, hostmask, channel):
+        if ircdb.users.hasUser(hostmask):
+            caps = ircdb.users.getUser(hostmask).capabilities
+            triviamod = '{0},{1}'.format(channel,'triviamod')
+            triviaadmin = '{0},{1}'.format(channel,'triviaadmin')
+            
+            # If multiple capabilities exist, pick the most important
+            if 'owner' in caps:
+                return 'owner'
+            elif triviaadmin in caps:
+                return triviaadmin
+            elif triviamod in caps:
+                return triviamod
+            else:
+                return 'user'
+                
+        return None
+        
     def acceptdelete(self, irc, msg, arg, channel, num):
         """[<channel>] <num>
         Accept a question deletion
         Channel is only necessary when editing from outside of the channel
         """
-        channel = msg.args[0]
+        hostmask = msg.prefix
+        if self.isTriviaMod(hostmask, channel) == False:
+            irc.reply('You must be a TriviaMod in {0} to use this command.'.format(channel))
+            return
+        
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
         delete = self.storage.getDeleteById(num)
@@ -304,14 +335,18 @@ class TriviaTime(callbacks.Plugin):
             self.logger.doLog(irc, channel, "%s accepted delete# %i, question #%i deleted" % (msg.nick, num, questionNumber))
             activityText = '%s deleted a question, approved by %s' % (delete[1], msg.nick)
             self.addActivity('delete', activityText, channel, irc, threadStorage)
-    acceptdelete = wrap(acceptdelete, [('checkChannelCapability', 'triviamod'), 'channel', 'int'])
+    acceptdelete = wrap(acceptdelete, ['channel', 'int'])
         
     def acceptedit(self, irc, msg, arg, channel, num):
         """[<channel>] <num>
         Accept a question edit, and remove edit. 
         Channel is only necessary when editing from outside of the channel
         """
-        channel = msg.args[0]
+        hostmask = msg.prefix
+        if self.isTriviaMod(hostmask, channel) == False:
+            irc.reply('You must be a TriviaMod in {0} to use this command.'.format(channel))
+            return
+        
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
         edit = self.storage.getEditById(num)
@@ -337,14 +372,18 @@ class TriviaTime(callbacks.Plugin):
                 irc.sendMsg(ircmsgs.notice(msg.nick, 'OLD: %s' % (questionOld)))
             else:
                 irc.error('Question could not be found for this edit')
-    acceptedit = wrap(acceptedit, [('checkChannelCapability', 'triviamod'), 'channel', 'int'])
+    acceptedit = wrap(acceptedit, ['channel', 'int'])
 
     def acceptnew(self, irc, msg, arg, channel, num):
         """[<channel>] <num>
         Accept a new question, and add it to the database. 
         Channel is only necessary when editing from outside of the channel
         """
-        channel = msg.args[0]
+        hostmask = msg.prefix
+        if self.isTriviaMod(hostmask, channel) == False:
+            irc.reply('You must be a TriviaMod in {0} to use this command.'.format(channel))
+            return
+        
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
         q = threadStorage.getTemporaryQuestionById(num)
@@ -359,14 +398,19 @@ class TriviaTime(callbacks.Plugin):
             self.logger.doLog(irc, channel, "%s accepted new question #%i, '%s'" % (msg.nick, num, q[3]))
             activityText = '%s added a new question, approved by %s' % (q[1], msg.nick)
             self.addActivity('new', activityText, channel, irc, threadStorage)
-    acceptnew = wrap(acceptnew, [('checkChannelCapability', 'triviamod'), 'channel', 'int'])
+    acceptnew = wrap(acceptnew, ['channel', 'int'])
 
-    def add(self, irc, msg, arg, user, question):
-        """<question text>
+    def add(self, irc, msg, arg, channel, question):
+        """[<channel>] <question text>
         Adds a question to the database
+        Channel is only necessary when adding from outside of the channel
         """
+        hostmask = msg.prefix
+        if ircdb.users.hasUser(hostmask) == False:
+            irc.reply('You must be registered to use this command.')
+            return
+        
         username = msg.nick
-        channel = msg.args[0]
         charMask = self.registryValue('hints.charMask', channel)
         if charMask not in question:
             irc.error(' The question must include the separating character %s ' % (charMask))
@@ -377,7 +421,7 @@ class TriviaTime(callbacks.Plugin):
         threadStorage.insertTemporaryQuestion(username, channel, question)
         irc.reply(' Thank you for adding your question to the question database, it is awaiting approval. ')
         self.logger.doLog(irc, channel, "%s added new question: '%s'" % (username, question))
-    add = wrap(add, ['user', 'text'])
+    add = wrap(add, ['channel', 'text'])
 
     def addfile(self, irc, msg, arg, filename):
         """[<filename>]
@@ -407,21 +451,13 @@ class TriviaTime(callbacks.Plugin):
         """
         This registers triviamods and triviaadmins on the website. Use this command again if the account password has changed.
         """
-        try:
-            user = ircdb.users.getUser(msg.prefix)
-            if user.capabilities.check('owner'):
-                capability = 'owner'
-            elif user.capabilities.check('{0},triviaadmin'.format(channel)):
-                capability = 'triviaadmin'
-            elif user.capabilities.check('{0},triviamod'.format(channel)):
-                capability = 'triviamod'
-            else:
-                raise KeyError
-        except KeyError:
-            irc.reply('Sorry, you must be a triviamod, triviaadmin, or owner to use this command.')
+        hostmask = msg.prefix
+        capability = self.getTriviaCapability(hostmask, channel)
+        if capability is None or capability == 'user':
+            irc.reply('You must be a TriviaMod in {0} to use this command.'.format(channel))
             return
 
-        username = user.name
+        user = ircdb.users.getUser(hostmask)
         salt = ''
         password = ''
         isHashed = user.hashed
@@ -432,9 +468,9 @@ class TriviaTime(callbacks.Plugin):
 
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
-        info = threadStorage.insertLogin(username, salt, isHashed, password, capability)
+        info = threadStorage.insertLogin(user.name, salt, isHashed, password, capability)
         irc.reply('Success, updated your web access login.')
-        self.logger.doLog(irc, channel, "%s authed for web access" % (username))
+        self.logger.doLog(irc, channel, "%s authed for web access" % (user.name))
     authweb = wrap(authweb, ['channel'])
 
     def clearpoints(self, irc, msg, arg, channel, username):
