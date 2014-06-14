@@ -1223,30 +1223,26 @@ class TriviaTime(callbacks.Plugin):
         Begins a round of Trivia inside the current channel.
         """
         game = self.getGame(irc, channel)
-        if game is None:
+        if game is None or game.active == False:
+            if game is not None:
+                self.deleteGame(irc, channel)
+        
             # create a new game
-            irc.reply('Another epic round of trivia is about to begin.', prefixNick=False)
             self.createGame(irc, channel)
+            
+            # Add channel capabilities if necessary
+            chan = ircdb.channels.getChannel(channel)
+            for c in ['-triviamod', '-triviaadmin']:
+                if c not in chan.capabilities:
+                    chan.addCapability(c)
+            ircdb.channels.setChannel(channel, chan)
+            
+            irc.noReply()
         elif game.stopPending == True:
             game.stopPending = False
             irc.reply('Pending stop aborted', prefixNick=False)
-        elif not game.active:
-            self.deleteGame(irc, channel)
-            try:
-                schedule.removeEvent('%s.trivia' % channel)
-            except KeyError:
-                pass
-            irc.reply('Another epic round of trivia is about to begin.', prefixNick=False)
-            self.createGame(irc, channel)
         else:
             irc.reply('Trivia has already been started.')
-            
-        # Add channel capabilities if necessary
-        chan = ircdb.channels.getChannel(channel)
-        for c in ['-triviamod', '-triviaadmin']:
-            if c not in chan.capabilities:
-                chan.addCapability(c)
-        ircdb.channels.setChannel(channel, chan)
     start = wrap(start, ['onlyInChannel'])
 
     def stop(self, irc, msg, args, user, channel):
@@ -1373,7 +1369,8 @@ class TriviaTime(callbacks.Plugin):
             self.roundStartedAt = time.mktime(time.localtime())
 
             self.loadGameState()
-
+            self.sendMessage('Another epic round of trivia is about to begin.')
+            
             # activate
             self.questionOver = True
             self.active = True
@@ -1775,12 +1772,9 @@ class TriviaTime(callbacks.Plugin):
                 self.stop()
                 self.sendMessage('Stopping due to inactivity')
                 return
-
-
-            if self.stopPending == True:
+            elif self.stopPending == True:
                 self.stop()
                 return
-
 
             # reset and increment
             self.questionOver = False
