@@ -403,27 +403,25 @@ class TriviaTime(callbacks.Plugin):
         self.logger.doLog(irc, channel, "%s added question file: '%s', added: %i, skipped: %i" % (msg.nick, filename, info[0], info[1]))
     addfile = wrap(addfile, ['owner', optional('text')])
 
-    def authweb(self, irc, msg, arg):
+    def authweb(self, irc, msg, arg, channel):
         """
         This registers triviamods and triviaadmins on the website. Use this command again if the account password has changed.
         """
-        username = user.name
-        channel = msg.args[0]
         try:
             user = ircdb.users.getUser(msg.prefix)
             if user.capabilities.check('{0},triviamod'.format(channel)):
                 capability = 'triviamod'
-            elif user.capabilities.check('owner'):
-                capability = 'owner'
             elif user.capabilities.check('{0},triviaadmin'.format(channel)):
                 capability = 'triviaadmin'
+            elif user.capabilities.check('owner'):
+                capability = 'owner'
             else:
                 raise KeyError
         except KeyError:
-            irc.error('Sorry, you must be a triviamod, triviaadmin, or owner to use this command.')
+            irc.reply('Sorry, you must be a triviamod, triviaadmin, or owner to use this command.')
             return
 
-        
+        username = user.name
         salt = ''
         password = ''
         isHashed = user.hashed
@@ -437,7 +435,7 @@ class TriviaTime(callbacks.Plugin):
         info = threadStorage.insertLogin(username, salt, isHashed, password, capability)
         irc.reply('Success, updated your web access login.')
         self.logger.doLog(irc, channel, "%s authed for web access" % (username))
-    authweb = wrap(authweb, [('checkChannelCapability', 'triviamod')])
+    authweb = wrap(authweb, ['channel'])
 
     def clearpoints(self, irc, msg, arg, channel, username):
         """[<channel>] <username>
