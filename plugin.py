@@ -409,12 +409,12 @@ class TriviaTime(callbacks.Plugin):
         """
         try:
             user = ircdb.users.getUser(msg.prefix)
-            if user.capabilities.check('{0},triviamod'.format(channel)):
-                capability = 'triviamod'
+            if user.capabilities.check('owner'):
+                capability = 'owner'
             elif user.capabilities.check('{0},triviaadmin'.format(channel)):
                 capability = 'triviaadmin'
-            elif user.capabilities.check('owner'):
-                capability = 'owner'
+            elif user.capabilities.check('{0},triviamod'.format(channel)):
+                capability = 'triviamod'
             else:
                 raise KeyError
         except KeyError:
