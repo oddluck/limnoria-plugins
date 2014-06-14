@@ -400,16 +400,11 @@ class TriviaTime(callbacks.Plugin):
             self.addActivity('new', activityText, channel, irc, threadStorage)
     acceptnew = wrap(acceptnew, ['channel', 'int'])
 
-    def add(self, irc, msg, arg, channel, question):
+    def add(self, irc, msg, arg, user, channel, question):
         """[<channel>] <question text>
         Adds a question to the database
         Channel is only necessary when adding from outside of the channel
         """
-        hostmask = msg.prefix
-        if ircdb.users.hasUser(hostmask) == False:
-            irc.reply('You must be registered to use this command.')
-            return
-        
         username = msg.nick
         charMask = self.registryValue('hints.charMask', channel)
         if charMask not in question:
@@ -421,7 +416,7 @@ class TriviaTime(callbacks.Plugin):
         threadStorage.insertTemporaryQuestion(username, channel, question)
         irc.reply(' Thank you for adding your question to the question database, it is awaiting approval. ')
         self.logger.doLog(irc, channel, "%s added new question: '%s'" % (username, question))
-    add = wrap(add, ['channel', 'text'])
+    add = wrap(add, ['user', 'channel', 'text'])
 
     def addfile(self, irc, msg, arg, filename):
         """[<filename>]
