@@ -311,7 +311,7 @@ class TriviaTime(callbacks.Plugin):
     def acceptdelete(self, irc, msg, arg, channel, num):
         """[<channel>] <num>
         Accept a question deletion
-        Channel is only necessary when editing from outside of the channel
+        Channel is only necessary when accepting from outside of the channel
         """
         hostmask = msg.prefix
         if self.isTriviaMod(hostmask, channel) == False:
@@ -340,7 +340,7 @@ class TriviaTime(callbacks.Plugin):
     def acceptedit(self, irc, msg, arg, channel, num):
         """[<channel>] <num>
         Accept a question edit, and remove edit. 
-        Channel is only necessary when editing from outside of the channel
+        Channel is only necessary when accepting from outside of the channel
         """
         hostmask = msg.prefix
         if self.isTriviaMod(hostmask, channel) == False:
@@ -377,7 +377,7 @@ class TriviaTime(callbacks.Plugin):
     def acceptnew(self, irc, msg, arg, channel, num):
         """[<channel>] <num>
         Accept a new question, and add it to the database. 
-        Channel is only necessary when editing from outside of the channel
+        Channel is only necessary when accepting from outside of the channel
         """
         hostmask = msg.prefix
         if self.isTriviaMod(hostmask, channel) == False:
@@ -619,6 +619,11 @@ class TriviaTime(callbacks.Plugin):
         List deletes.
         Channel is only required when using the command outside of a channel
         """
+        hostmask = msg.prefix
+        if self.isTriviaMod(hostmask, channel) == False:
+            irc.reply('You must be a TriviaMod in {0} to use this command.'.format(channel))
+            return
+        
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
         count = threadStorage.countDeletes()
@@ -640,13 +645,18 @@ class TriviaTime(callbacks.Plugin):
                     questionText = question[2]
                 irc.reply('Delete #%d, by %s Question #%d: %s, Reason:%s'%(delete[0], delete[1], delete[3], questionText, delete[6]))
             irc.reply('Use the showdelete command to see more information')
-    listdeletes = wrap(listdeletes, [('checkChannelCapability', 'triviamod'), 'channel', optional('int')])
+    listdeletes = wrap(listdeletes, ['channel', optional('int')])
 
     def listedits(self, irc, msg, arg, channel, page):
         """[<channel>] [<page>]
         List edits.
         Channel is only required when using the command outside of a channel
         """
+        hostmask = msg.prefix
+        if self.isTriviaMod(hostmask, channel) == False:
+            irc.reply('You must be a TriviaMod in {0} to use this command.'.format(channel))
+            return
+        
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
         count = threadStorage.countEdits()
@@ -663,7 +673,7 @@ class TriviaTime(callbacks.Plugin):
             for edit in edits:
                 irc.reply('Edit #%d, Question #%d, NEW:%s'%(edit[0], edit[1], edit[2]))
             irc.reply('Use the showedit command to see more information')
-    listedits = wrap(listedits, [('checkChannelCapability', 'triviamod'), 'channel', optional('int')])
+    listedits = wrap(listedits, ['channel', optional('int')])
 
     def listreports(self, irc, msg, arg, user, channel, page):
         """[<channel>] [<page>]
@@ -693,6 +703,11 @@ class TriviaTime(callbacks.Plugin):
         List questions awaiting approval.
         Channel is only required when using the command outside of a channel
         """
+        hostmask = msg.prefix
+        if self.isTriviaMod(hostmask, channel) == False:
+            irc.reply('You must be a TriviaMod in {0} to use this command.'.format(channel))
+            return
+        
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
         count = threadStorage.countTemporaryQuestions()
@@ -709,7 +724,7 @@ class TriviaTime(callbacks.Plugin):
             for ques in q:
                 irc.reply('Temp Q #%d: %s'%(ques[0], ques[3]))
             irc.reply('Use the shownew to see more information')
-    listnew = wrap(listnew, [('checkChannelCapability', 'triviamod'), 'channel', optional('int')])
+    listnew = wrap(listnew, ['channel', optional('int')])
 
     def info(self, irc, msg, arg):
         """
@@ -851,8 +866,13 @@ class TriviaTime(callbacks.Plugin):
     def rmedit(self, irc, msg, arg, channel, num):
         """[<channel>] <int>
         Remove an edit without accepting it. 
-        Channel is only necessary when editing from outside of the channel
+        Channel is only required when using the command outside of a channel.
         """
+        hostmask = msg.prefix
+        if self.isTriviaMod(hostmask, channel) == False:
+            irc.reply('You must be a TriviaMod in {0} to use this command.'.format(channel))
+            return
+        
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
         edit = threadStorage.getEditById(num)
@@ -863,13 +883,18 @@ class TriviaTime(callbacks.Plugin):
             threadStorage.removeEdit(edit[0])
             irc.reply('Edit %d removed!' % edit[0])
             self.logger.doLog(irc, channel, "%s removed edit# %i, for question #%i, text: %s" % (msg.nick, edit[0], edit[1], edit[2]))
-    rmedit = wrap(rmedit, [('checkChannelCapability', 'triviamod'), 'channel', 'int'])
+    rmedit = wrap(rmedit, ['channel', 'int'])
 
     def rmdelete(self, irc, msg, arg, channel, num):
         """[<channel>] <int>
         Remove a deletion request without accepting it. 
-        Channel is only necessary when editing from outside of the channel
+        Channel is only required when using the command outside of a channel.
         """
+        hostmask = msg.prefix
+        if self.isTriviaMod(hostmask, channel) == False:
+            irc.reply('You must be a TriviaMod in {0} to use this command.'.format(channel))
+            return
+        
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
         delete = threadStorage.getDeleteById(num)
@@ -880,13 +905,18 @@ class TriviaTime(callbacks.Plugin):
             threadStorage.removeDelete(num)
             irc.reply('Delete %d removed!' % num)
             self.logger.doLog(irc, channel, "%s removed delete# %i, for question #%i, reason was '%s'" % (msg.nick, num, delete[3], delete[6]))
-    rmdelete = wrap(rmdelete, [('checkChannelCapability', 'triviamod'), 'channel', 'int'])
+    rmdelete = wrap(rmdelete, ['channel', 'int'])
 
     def rmreport(self, irc, msg, arg, channel, num):
         """[<channel>] <report num>
         Delete a report by report number. 
-        Channel is only necessary when editing from outside of the channel
+        Channel is only required when using the command outside of a channel.
         """
+        hostmask = msg.prefix
+        if self.isTriviaMod(hostmask, channel) == False:
+            irc.reply('You must be a TriviaMod in {0} to use this command.'.format(channel))
+            return
+        
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
         report = threadStorage.getReportById(num)
@@ -897,12 +927,18 @@ class TriviaTime(callbacks.Plugin):
             threadStorage.removeReport(report[0])
             irc.reply('Report %d removed!' % report[0])
             self.logger.doLog(irc, channel, "%s removed report# %i, for question #%i text was %s" % (msg.nick, report[0], report[7], report[3]))
-    rmreport = wrap(rmreport, [('checkChannelCapability', 'triviamod'), 'channel', 'int'])
+    rmreport = wrap(rmreport, ['channel', 'int'])
 
     def rmnew(self, irc, msg, arg, channel, num):
         """[<channel>] <int>
-        Remove a temp question without accepting it. Channel is only necessary when editing from outside of the channel
+        Remove a temp question without accepting it. 
+        Channel is only required when using the command outside of a channel.
         """
+        hostmask = msg.prefix
+        if self.isTriviaMod(hostmask, channel) == False:
+            irc.reply('You must be a TriviaMod in {0} to use this command.'.format(channel))
+            return
+        
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
         q = threadStorage.getTemporaryQuestionById(num)
@@ -913,7 +949,7 @@ class TriviaTime(callbacks.Plugin):
             threadStorage.removeTemporaryQuestion(q[0])
             irc.reply('Temp question #%d removed!' % q[0])
             self.logger.doLog(irc, channel, "%s removed new question #%i, '%s'" % (msg.nick, q[0], q[3]))
-    rmnew = wrap(rmnew, [('checkChannelCapability', 'triviamod'), 'channel', 'int'])
+    rmnew = wrap(rmnew, ['channel', 'int'])
 
     def repeat(self, irc, msg, arg, channel):
         """
@@ -1001,7 +1037,13 @@ class TriviaTime(callbacks.Plugin):
     def restorequestion(self, irc, msg, arg, channel, questionNum):
         """[<channel>] <Question num>
         Restore a question from being deleted.
+        Channel is only required when using the command outside of a channel.
         """
+        hostmask = msg.prefix
+        if self.isTriviaMod(hostmask, channel) == False:
+            irc.reply('You must be a TriviaMod in {0} to use this command.'.format(channel))
+            return
+        
         username = msg.nick
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
@@ -1014,7 +1056,7 @@ class TriviaTime(callbacks.Plugin):
         threadStorage.restoreQuestion(questionNum)
         irc.reply('Question %d restored.' % questionNum)
         self.logger.doLog(irc, channel, "%s restored question #%i" % (username, questionNum))
-    restorequestion = wrap(restorequestion, [('checkChannelCapability', 'triviamod'), 'channel', 'int'])
+    restorequestion = wrap(restorequestion, ['channel', 'int'])
 
     def skip(self, irc, msg, arg, channel):
         """
@@ -1111,9 +1153,15 @@ class TriviaTime(callbacks.Plugin):
     stats = wrap(stats,['nick'])
 
     def showdelete(self, irc, msg, arg, channel, num):
-        """[<temp question #>]
+        """[<channel>] [<temp question #>]
         Show deletes awaiting approval
+        Channel is only required when using the command outside of a channel.
         """
+        hostmask = msg.prefix
+        if self.isTriviaMod(hostmask, channel) == False:
+            irc.reply('You must be a TriviaMod in {0} to use this command.'.format(channel))
+            return
+        
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
         if num is not None:
@@ -1140,7 +1188,7 @@ class TriviaTime(callbacks.Plugin):
                     questionText = question[2]
                 irc.reply('Delete #%d, by %s Question #%d: %s'%(ques[0], ques[1], ques[3], questionText))
             irc.reply('Use the showdelete to see more information')
-    showdelete = wrap(showdelete, [('checkChannelCapability', 'triviamod'), 'channel', optional('int')])
+    showdelete = wrap(showdelete, ['channel', optional('int')])
 
     def showquestion(self, irc, msg, arg, user, channel, num):
         """[<channel>] <num>
@@ -1210,8 +1258,13 @@ class TriviaTime(callbacks.Plugin):
     def showedit(self, irc, msg, arg, channel, num):
         """[<channel>] [<edit num>]
         Show top 3 edits, or provide edit num to view one. 
-        Channel is only necessary when editing from outside of the channel
+        Channel is only required when using the command outside of a channel.
         """
+        hostmask = msg.prefix
+        if self.isTriviaMod(hostmask, channel) == False:
+            irc.reply('You must be a TriviaMod in {0} to use this command.'.format(channel))
+            return
+            
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
         if num is not None:
@@ -1237,13 +1290,18 @@ class TriviaTime(callbacks.Plugin):
                 question = question[0]
                 irc.reply('Edit #%d, Question #%d, NEW:%s'%(edit[0], edit[1], edit[2]))
             irc.reply('Use the showedit command to see more information')
-    showedit = wrap(showedit, [('checkChannelCapability', 'triviamod'), 'channel', optional('int')])
+    showedit = wrap(showedit, ['channel', optional('int')])
 
     def shownew(self, irc, msg, arg, channel, num):
-        """[<temp question #>]
+        """[<channel>] [<temp question #>]
         Show questions awaiting approval
-        Channel is only necessary when editing from outside of the channel
+        Channel is only required when using the command outside of a channel.
         """
+        hostmask = msg.prefix
+        if self.isTriviaMod(hostmask, channel) == False:
+            irc.reply('You must be a TriviaMod in {0} to use this command.'.format(channel))
+            return
+            
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
         if num is not None:
@@ -1260,7 +1318,7 @@ class TriviaTime(callbacks.Plugin):
             for ques in q:
                 irc.reply('Temp Q #%d: %s'%(ques[0], ques[3]))
             irc.reply('Use the shownew to see more information')
-    shownew = wrap(shownew, [('checkChannelCapability', 'triviamod'), 'channel', optional('int')])
+    shownew = wrap(shownew, ['channel', optional('int')])
 
     def start(self, irc, msg, args, channel):
         """
@@ -1327,7 +1385,7 @@ class TriviaTime(callbacks.Plugin):
     def transferpoints(self, irc, msg, arg, channel, userfrom, userto):
         """[<channel>] <userfrom> <userto>
         Transfers all points and records from one user to another
-        Channel is only necessary when transferring from outside of the channel
+        Channel is only required when using the command outside of a channel.
         """
         hostmask = msg.prefix
         if self.isTriviaAdmin(hostmask, channel) == False:
