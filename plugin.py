@@ -308,6 +308,18 @@ class TriviaTime(callbacks.Plugin):
                 
         return None
         
+    def reply(self, irc, msg, outstr, prefixNick=True):
+        if ircutils.isChannel(msg.args[0]):
+            target = msg.args[0]
+        else:
+            target = msg.nick
+        
+        if prefixNick == False or ircutils.isNick(target):
+            irc.sendMsg(ircmsgs.privmsg(target, outstr))
+        else:
+            irc.sendMsg(ircmsgs.privmsg(target, '%s: %s' % (msg.nick, outstr)))
+        irc.noReply()
+    
     def acceptdelete(self, irc, msg, arg, channel, num):
         """[<channel>] <num>
         Accept a question deletion.
@@ -507,7 +519,7 @@ class TriviaTime(callbacks.Plugin):
         for i in range(len(tops)):
             topsList.append('\x02 #%d:\x02 %s %d ' % ((i+offset) , self.addZeroWidthSpace(tops[i][1]), tops[i][2]))
         topsText = ''.join(topsList)
-        irc.reply(topsText, prefixNick=False)
+        self.reply(irc, msg, topsText, prefixNick=False)
     day = wrap(day, ['channel', optional('int')])
 
     def delete(self, irc, msg, arg, user, channel, t, id, reason):
@@ -725,24 +737,20 @@ class TriviaTime(callbacks.Plugin):
         Get TriviaTime information, how many questions/users in database, time, etc.
         Channel is only required when using the command outside of a channel.
         """
-        if ircutils.isChannel(msg.args[0]):
-            recip = msg.args[0]
-        else:
-            recip = msg.nick
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
         totalUsersEver = threadStorage.getNumUser(channel)
         numActiveThisWeek = threadStorage.getNumActiveThisWeek(channel)
         infoText = ' TriviaTime v1.03 by Trivialand on Freenode https://github.com/tannn/TriviaTime '
-        irc.sendMsg(ircmsgs.privmsg(recip, infoText))
+        self.reply(irc, msg, infoText, prefixNick=False)
         infoText = ' Time is %s ' % (time.asctime(time.localtime(),))
-        irc.sendMsg(ircmsgs.privmsg(recip, infoText))
+        self.reply(irc, msg, infoText, prefixNick=False)
         infoText = '\x02 %d Users\x02 on scoreboard with \x02%d Active This Week\x02' % (totalUsersEver, numActiveThisWeek)
-        irc.sendMsg(ircmsgs.privmsg(recip, infoText))
+        self.reply(irc, msg, infoText, prefixNick=False)
         numKaos = threadStorage.getNumKAOS()
         numQuestionTotal = threadStorage.getNumQuestions()
         infoText = '\x02 %d Questions\x02 and \x02%d KAOS\x02 (\x02%d Total\x02) in the database ' % ((numQuestionTotal-numKaos), numKaos, numQuestionTotal)
-        irc.sendMsg(ircmsgs.privmsg(recip, infoText))
+        self.reply(irc, msg, infoText, prefixNick=False)
     info = wrap(info, ['channel'])
 
     def ping(self, irc, msg, arg):
@@ -800,7 +808,7 @@ class TriviaTime(callbacks.Plugin):
                 if not identified:
                     infoList.append(' You should identify to keep track of your score more accurately.')
             infoText = ''.join(infoList)
-            irc.reply(infoText, prefixNick=False)
+            self.reply(irc, msg, infoText, prefixNick=False)
     me = wrap(me, ['channel'])
 
     def month(self, irc, msg, arg, channel, num):
@@ -822,7 +830,7 @@ class TriviaTime(callbacks.Plugin):
         for i in range(len(tops)):
             topsList.append('\x02 #%d:\x02 %s %d ' % ((i+offset) , self.addZeroWidthSpace(tops[i][1]), tops[i][2]))
         topsText = ''.join(topsList)
-        irc.reply(topsText, prefixNick=False)
+        self.reply(irc, msg, topsText, prefixNick=False)
     month = wrap(month, ['channel', optional('int')])
 
     def next(self, irc, msg, arg, channel):
@@ -846,15 +854,15 @@ class TriviaTime(callbacks.Plugin):
         # 3. Is caller the streak holder?
         # 4. Is streak high enough?
         if game is None or game.active == False:
-            irc.reply('Trivia is not currently running.')
+            self.reply(irc, msg, 'Trivia is not currently running.')
         elif game.questionOver == False:
-            irc.reply('You must wait until the current question is over.')
+            self.reply(irc, msg, 'You must wait until the current question is over.')
         elif game.lastWinner != ircutils.toLower(username):
-            irc.reply('You are not currently the streak holder.')
+            self.reply(irc, msg, 'You are not currently the streak holder.')
         elif game.streak < minStreak:
-            irc.reply('You do not have a large enough streak yet (%i of %i).' % (username, game.streak, minStreak))
+            self.reply(irc, msg, 'You do not have a large enough streak yet (%i of %i).' % (username, game.streak, minStreak))
         else:
-            irc.reply('Let\'s keep going.', prefixNick=False)
+            self.reply(irc, msg, 'Let\'s keep going.', prefixNick=False)
             game.removeEvent()
             game.nextQuestion()
     next = wrap(next, ['onlyInChannel'])
@@ -957,14 +965,16 @@ class TriviaTime(callbacks.Plugin):
         # 1. Is trivia running?
         # 2. Is a question being asked?
         # 3. Has the question already been repeated?
+        # 4. Is the question currently blank?
         if game is None or game.active == False:
-            irc.reply('Trivia is not currently running.')
+            self.reply(irc, msg, 'Trivia is not currently running.')
         elif game.questionOver == True:
-            irc.reply('No question is currently being asked.')
-        elif game.questionRepeated == True:
-            irc.reply('The question has already been repeated.')
-        else:
+            self.reply(irc, msg, 'No question is currently being asked.')
+        elif game.questionRepeated == False and game.question != '':
             game.repeatQuestion()
+            irc.noReply()
+        else:
+            irc.noReply()
     repeat = wrap(repeat, ['onlyInChannel'])
 
     def report(self, irc, msg, arg, user, channel, roundNum, text):
@@ -1075,16 +1085,16 @@ class TriviaTime(callbacks.Plugin):
         
         # Sanity checks
         if game is None or game.active == False:
-            irc.reply('Trivia is not currently running.')
+            self.reply(irc, msg, 'Trivia is not currently running.')
             return
         elif game.questionOver == True:
-            irc.reply('No question is currently being asked.')
+            self.reply(irc, msg, 'No question is currently being asked.')
             return
         elif not threadStorage.wasUserActiveIn(username, channel, timeSeconds):
-            irc.reply('Only users who have answered a question in the last 10 minutes can skip.')
+            self.reply(irc, msg, 'Only users who have answered a question in the last 10 minutes can skip.')
             return
         elif usernameCanonical in game.skipVoteCount:
-            irc.reply('You can only vote to skip once.')
+            self.reply(irc, msg, 'You can only vote to skip once.')
             return
         elif totalActive < 1:
             return
@@ -1093,23 +1103,19 @@ class TriviaTime(callbacks.Plugin):
         skipSeconds = self.registryValue('skip.skipTime', channel)
         game.skips.setTimeout(skipSeconds)
         if game.skips.has(usernameCanonical):
-            irc.reply('You must wait to be able to skip again.')
+            self.reply(irc, msg, 'You must wait to be able to skip again.')
             return
 
         # Update skip count
         game.skipVoteCount[usernameCanonical] = 1
         game.skips.append(usernameCanonical)
-        irc.reply('%s voted to skip this question.' % username, prefixNick=False)
+        self.reply(irc, msg, '%s voted to skip this question.' % username, prefixNick=False)
         percentAnswered = ((1.0*len(game.skipVoteCount))/(totalActive*1.0))
 
         # Check if skip threshold has been reached
         if percentAnswered >= self.registryValue('skip.skipThreshold', channel):        
-            try:
-                schedule.removeEvent('%s.trivia' % channel)
-            except KeyError:
-                pass
-                
-            irc.reply('Skipped question! (%d of %d voted)' % (len(game.skipVoteCount), totalActive), prefixNick=False)
+            self.reply(irc, msg, 'Skipped question! (%d of %d voted)' % (len(game.skipVoteCount), totalActive), prefixNick=False)
+            game.removeEvent()
             game.nextQuestion()
     skip = wrap(skip, ['onlyInChannel'])
 
@@ -1144,7 +1150,7 @@ class TriviaTime(callbacks.Plugin):
             if not hasPoints:
                 infoList = ['%s: %s does not have any points.' % (msg.nick, username)]
             infoText = ''.join(infoList)
-            irc.reply(infoText, prefixNick=False)
+            self.reply(irc, msg, infoText, prefixNick=False)
     stats = wrap(stats, ['channel', 'nick'])
 
     def showdelete(self, irc, msg, arg, channel, num):
@@ -1327,15 +1333,15 @@ class TriviaTime(callbacks.Plugin):
         # 3. Is there a stop pending?
         if game is None:
             # create a new game
+            self.reply(irc, msg, 'Another epic round of trivia is about to begin.', prefixNick=False)
             self.createGame(irc, channel)
-            irc.noReply()
         elif game.active == False:
-            irc.reply('Please wait for the previous game instance to stop.')
+            self.reply(irc, msg, 'Please wait for the previous game instance to stop.')
         elif game.stopPending == True:
             game.stopPending = False
-            irc.reply('Pending stop aborted', prefixNick=False)
+            self.reply(irc, msg, 'Pending stop aborted', prefixNick=False)
         else:
-            irc.reply('Trivia has already been started.')
+            self.reply(irc, msg, 'Trivia has already been started.')
     start = wrap(start, ['onlyInChannel'])
 
     def stop(self, irc, msg, args, user, channel):
@@ -1349,13 +1355,13 @@ class TriviaTime(callbacks.Plugin):
         # 2. Is a question being asked?
         # 2.1 Is a stop pending?
         if game is None or game.active == False:
-            irc.reply('Game is already stopped.')
+            self.reply(irc, msg, 'Game is already stopped.')
         elif game.questionOver == False:
             if game.stopPending == True:
-                irc.reply('Trivia is already pending stop.')
+                self.reply(irc, msg, 'Trivia is already pending stop.')
             else:
                 game.stopPending = True
-                irc.reply('Trivia will now stop after this question.', prefixNick=False)
+                self.reply(irc, msg, 'Trivia will now stop after this question.', prefixNick=False)
         else:
             game.stop()
             irc.noReply()
@@ -1366,7 +1372,7 @@ class TriviaTime(callbacks.Plugin):
         Figure out what time/day it is on the server.
         """
         timeStr = time.asctime(time.localtime())
-        irc.reply('The current server time appears to be {0}'.format(timeStr), prefixNick=False)
+        self.reply(irc, msg, 'The current server time appears to be {0}'.format(timeStr), prefixNick=False)
     time = wrap(time)
 
     def transferpoints(self, irc, msg, arg, channel, userfrom, userto):
@@ -1407,7 +1413,7 @@ class TriviaTime(callbacks.Plugin):
         for i in range(len(tops)):
             topsList.append('\x02 #%d:\x02 %s %d ' % ((i+offset) , self.addZeroWidthSpace(tops[i][1]), tops[i][2]))
         topsText = ''.join(topsList)
-        irc.reply(topsText, prefixNick=False)
+        self.reply(irc, msg, topsText, prefixNick=False)
     week = wrap(week, ['channel', optional('int')])
 
     def year(self, irc, msg, arg, channel, num):
@@ -1429,7 +1435,7 @@ class TriviaTime(callbacks.Plugin):
         for i in range(len(tops)):
             topsList.append('\x02 #%d:\x02 %s %d ' % ((i+offset) , self.addZeroWidthSpace(tops[i][1]), tops[i][2]))
         topsText = ''.join(topsList)
-        irc.reply(topsText, prefixNick=False)
+        self.reply(irc, msg, topsText, prefixNick=False)
     year = wrap(year, ['channel', optional('int')])
 
     #Game instance
@@ -1465,7 +1471,6 @@ class TriviaTime(callbacks.Plugin):
             self.roundStartedAt = time.mktime(time.localtime())
 
             self.loadGameState()
-            self.sendMessage('Another epic round of trivia is about to begin.')
             
             # activate
             self.questionOver = True
