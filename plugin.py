@@ -482,9 +482,9 @@ class TriviaTime(callbacks.Plugin):
             
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
-        threadStorage.removeUserLogs(username)
-        irc.reply('Removed all points from %s' % (username))
-        self.logger.doLog(irc, channel, "%s cleared points for %s" % (msg.nick, username))
+        threadStorage.removeUserLogs(username, channel)
+        irc.reply('Removed all points from {0} in {1}.'.format(username, channel))
+        self.logger.doLog(irc, channel, '{0} cleared points for {1} in {2}.'.format(msg.nick, username, channel))
     clearpoints = wrap(clearpoints, ['channel', 'nick'])
 
     def day(self, irc, msg, arg, channel, num):
@@ -576,7 +576,7 @@ class TriviaTime(callbacks.Plugin):
 
     def givepoints(self, irc, msg, arg, channel, username, points, days):
         """[<channel>] <username> <points> [<daysAgo>]
-        Give a user points, last argument is optional amount of days in past to add records
+        Give a user points, last argument is optional amount of days in past to add records.
         Channel is only required when using the command outside of a channel.
         """
         hostmask = msg.prefix
@@ -604,8 +604,8 @@ class TriviaTime(callbacks.Plugin):
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
         threadStorage.updateUserLog(username, channel, points, 0, 0, day, month, year)
-        irc.reply('Added %d points to %s' % (points, username))
-        self.logger.doLog(irc, channel, "%s gave %i points to %s" % (msg.nick, points, username))
+        irc.reply('Added {0} points to {1} in {2}.'.format(points, username, channel))
+        self.logger.doLog(irc, channel, '{0} gave {1} points to {2} in {3}.'.format(msg.nick, points, username, channel))
     givepoints = wrap(givepoints, ['channel', 'nick', 'int', optional('int')])
 
     def listdeletes(self, irc, msg, arg, channel, page):
@@ -1369,13 +1369,13 @@ class TriviaTime(callbacks.Plugin):
         """
         Figure out what time/day it is on the server.
         """
-        timeObject = time.asctime(time.localtime())
-        irc.reply('The current server time appears to be %s' % timeObject, prefixNick=False)
+        timeStr = time.asctime(time.localtime())
+        irc.reply('The current server time appears to be {0}'.format(timeStr), prefixNick=False)
     time = wrap(time)
 
     def transferpoints(self, irc, msg, arg, channel, userfrom, userto):
         """[<channel>] <userfrom> <userto>
-        Transfers all points and records from one user to another
+        Transfers all points and records from one user to another.
         Channel is only required when using the command outside of a channel.
         """
         hostmask = msg.prefix
@@ -1387,9 +1387,9 @@ class TriviaTime(callbacks.Plugin):
         userto = userto
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
-        threadStorage.transferUserLogs(userfrom, userto)
-        irc.reply('Transferred all records from %s to %s' % (userfrom, userto))
-        self.logger.doLog(irc, channel, "%s transfered points from %s to %s" % (msg.nick, userfrom, userto))
+        threadStorage.transferUserLogs(userfrom, userto, channel)
+        irc.reply('Transferred all records from {0} to {1} in {2}.'.format(userfrom, userto, channel))
+        self.logger.doLog(irc, channel, '{0} transferred records from {1} to {2} in {3}.'.format(msg.nick, userfrom, userto, channel))
     transferpoints = wrap(transferpoints, ['channel', 'nick', 'nick'])
 
     def week(self, irc, msg, arg, channel, num):
@@ -3387,11 +3387,14 @@ class TriviaTime(callbacks.Plugin):
             self.conn.commit()
             c.close()
 
-        def removeUserLogs(self, username):
+        def removeUserLogs(self, username, channel):
             usernameCanonical = ircutils.toLower(username)
+            channelCanonical = ircutils.toLower(channel)
             c = self.conn.cursor()
             c.execute('''delete from triviauserlog
-                        where username_canonical=?''', (usernameCanonical,))
+                        where username_canonical=?
+                        and channel_canonical=?''', 
+                        (usernameCanonical, channelCanonical))
             self.conn.commit()
             c.close()
 
@@ -3403,9 +3406,10 @@ class TriviaTime(callbacks.Plugin):
             self.conn.commit()
             c.close()
 
-        def transferUserLogs(self, userFrom, userTo):
+        def transferUserLogs(self, userFrom, userTo, channel):
             userFromCanonical = ircutils.toLower(userFrom)
             userToCanonical = ircutils.toLower(userTo)
+            channelCanonical = ircutils.toLower(channel)
             c = self.conn.cursor()
             c.execute('''
                     update triviauserlog
@@ -3417,7 +3421,7 @@ class TriviaTime(callbacks.Plugin):
                                             where t3.day=triviauserlog.day
                                             and t3.month=triviauserlog.month
                                             and t3.year=triviauserlog.year
-                                            and t3.channel_canonical=triviauserlog.channel_canonical
+                                            and t3.channel_canonical=?
                                             and t3.username_canonical=?
                                     )
                             ,0),
@@ -3429,44 +3433,50 @@ class TriviaTime(callbacks.Plugin):
                                             where t2.day=triviauserlog.day
                                             and t2.month=triviauserlog.month
                                             and t2.year=triviauserlog.year
-                                            and t2.channel_canonical=triviauserlog.channel_canonical
+                                            and t2.channel_canonical=?
                                             and t2.username_canonical=?
                                     )
                             ,0)
                     where id in (
                             select id
                             from triviauserlog tl
-                            where username_canonical=?
+                            where channel_canonical=?
+                            and username_canonical=?
                             and exists (
                                     select id
                                     from triviauserlog tl2
                                     where tl2.day=tl.day
                                     and tl2.month=tl.month
                                     and tl2.year=tl.year
-                                    and tl2.channel_canonical=tl.channel_canonical
-                                    and username_canonical=?
+                                    and tl2.channel_canonical=?
+                                    and tl2.username_canonical=?
                             )
                     )
-            ''', (userFromCanonical,userFromCanonical,userToCanonical,userFromCanonical))
+            ''', (channelCanonical, userFromCanonical,
+                  channelCanonical, userFromCanonical, 
+                  channelCanonical, userToCanonical,
+                  channelCanonical, userFromCanonical))
 
             c.execute('''
                     update triviauserlog
                     set username=?,
                     username_canonical=?
                     where username_canonical=?
+                    and channel_canonical=?
                     and not exists (
                             select 1
                             from triviauserlog tl
                             where tl.day=triviauserlog.day
                             and tl.month=triviauserlog.month
                             and tl.year=triviauserlog.year
-                            and tl.channel_canonical=triviauserlog.channel_canonical
+                            and tl.channel_canonical=?
                             and tl.username_canonical=?
                     )
-            ''',(userTo, userToCanonical, userFromCanonical, userToCanonical))
+            ''', (userTo, userToCanonical, userFromCanonical, 
+                  channelCanonical, channelCanonical, userToCanonical))
             self.conn.commit()
 
-            self.removeUserLogs(userFrom)
+            self.removeUserLogs(userFrom, channel)
 
         def userLogExists(self, username, channel, day, month, year):
             c = self.conn.cursor()
