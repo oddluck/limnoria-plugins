@@ -601,7 +601,6 @@ class TriviaTime(callbacks.Plugin):
             day = d.day
             month = d.month
             year = d.year
-        channel = msg.args[0]
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
         threadStorage.updateUserLog(username, channel, points, 0, 0, day, month, year)
@@ -1386,11 +1385,10 @@ class TriviaTime(callbacks.Plugin):
         
         userfrom = userfrom
         userto = userto
-        channel = msg.args[0]
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
         threadStorage.transferUserLogs(userfrom, userto)
-        irc.reply('Transfered all records from %s to %s' % (userfrom, userto))
+        irc.reply('Transferred all records from %s to %s' % (userfrom, userto))
         self.logger.doLog(irc, channel, "%s transfered points from %s to %s" % (msg.nick, userfrom, userto))
     transferpoints = wrap(transferpoints, ['channel', 'nick', 'nick'])
 
