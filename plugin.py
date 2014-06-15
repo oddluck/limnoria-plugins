@@ -644,7 +644,7 @@ class TriviaTime(callbacks.Plugin):
     def listedits(self, irc, msg, arg, channel, page):
         """[<channel>] [<page>]
         List edits.
-        Channel is only required when using the command outside of a channel
+        Channel is only required when using the command outside of a channel.
         """
         hostmask = msg.prefix
         if self.isTriviaMod(hostmask, channel) == False:
@@ -672,7 +672,7 @@ class TriviaTime(callbacks.Plugin):
     def listreports(self, irc, msg, arg, user, channel, page):
         """[<channel>] [<page>]
         List reports.
-        Channel is only required when using the command outside of a channel
+        Channel is only required when using the command outside of a channel.
         """
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
@@ -695,7 +695,7 @@ class TriviaTime(callbacks.Plugin):
     def listnew(self, irc, msg, arg, channel, page):
         """[<channel>] [<page>]
         List questions awaiting approval.
-        Channel is only required when using the command outside of a channel
+        Channel is only required when using the command outside of a channel.
         """
         hostmask = msg.prefix
         if self.isTriviaMod(hostmask, channel) == False:
@@ -720,26 +720,30 @@ class TriviaTime(callbacks.Plugin):
             irc.reply('Use the shownew to see more information')
     listnew = wrap(listnew, ['channel', optional('int')])
 
-    def info(self, irc, msg, arg):
+    def info(self, irc, msg, arg, channel):
+        """[<channel>]
+        Get TriviaTime information, how many questions/users in database, time, etc.
+        Channel is only required when using the command outside of a channel.
         """
-        Get TriviaTime information, how many questions/users in database, time, etc
-        """
-        channel = msg.args[0]
+        if ircutils.isChannel(msg.args[0]):
+            recip = msg.args[0]
+        else:
+            recip = msg.nick
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
         totalUsersEver = threadStorage.getNumUser(channel)
         numActiveThisWeek = threadStorage.getNumActiveThisWeek(channel)
         infoText = ' TriviaTime v1.03 by Trivialand on Freenode https://github.com/tannn/TriviaTime '
-        irc.sendMsg(ircmsgs.privmsg(msg.args[0], infoText))
+        irc.sendMsg(ircmsgs.privmsg(recip, infoText))
         infoText = ' Time is %s ' % (time.asctime(time.localtime(),))
-        irc.sendMsg(ircmsgs.privmsg(msg.args[0], infoText))
+        irc.sendMsg(ircmsgs.privmsg(recip, infoText))
         infoText = '\x02 %d Users\x02 on scoreboard with \x02%d Active This Week\x02' % (totalUsersEver, numActiveThisWeek)
-        irc.sendMsg(ircmsgs.privmsg(msg.args[0], infoText))
+        irc.sendMsg(ircmsgs.privmsg(recip, infoText))
         numKaos = threadStorage.getNumKAOS()
         numQuestionTotal = threadStorage.getNumQuestions()
         infoText = '\x02 %d Questions\x02 and \x02%d KAOS\x02 (\x02%d Total\x02) in the database ' % ((numQuestionTotal-numKaos), numKaos, numQuestionTotal)
-        irc.sendMsg(ircmsgs.privmsg(msg.args[0], infoText))
-    info = wrap(info)
+        irc.sendMsg(ircmsgs.privmsg(recip, infoText))
+    info = wrap(info, ['channel'])
 
     def ping(self, irc, msg, arg):
         """
@@ -1324,14 +1328,6 @@ class TriviaTime(callbacks.Plugin):
         if game is None:
             # create a new game
             self.createGame(irc, channel)
-            
-            # Add channel capabilities if necessary
-            chan = ircdb.channels.getChannel(channel)
-            for c in ['-triviamod', '-triviaadmin']:
-                if c not in chan.capabilities:
-                    chan.addCapability(c)
-            ircdb.channels.setChannel(channel, chan)
-            
             irc.noReply()
         elif game.active == False:
             irc.reply('Please wait for the previous game instance to stop.')
