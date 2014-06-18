@@ -50,7 +50,7 @@ class TimeoutList:
         return False
 		
 	def getTimeLeft(self, value):
-		return self.timeout - (time.time() - self.dict[value])
+	    return self.timeout - (time.time() - self.dict[value])
 
 class TriviaTime(callbacks.Plugin):
     """
