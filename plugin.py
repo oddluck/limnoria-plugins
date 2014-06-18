@@ -1106,7 +1106,7 @@ class TriviaTime(callbacks.Plugin):
         skipSeconds = self.registryValue('skip.skipTime', channel)
         game.skips.setTimeout(skipSeconds)
         if game.skips.has(usernameCanonical):
-            self.reply(irc, msg, 'You must wait %s seconds to be able to skip again.' % (game.skips.getTimeLeft(usernameCanonical)))
+            self.reply(irc, msg, 'You must wait %s seconds to be able to skip again.' % (game.skips.getTimeLeft(usernameCanonical))')
             return
 
         # Update skip count
