@@ -61,7 +61,7 @@ class TriviaTime(callbacks.Plugin):
     currentDBVersion = 1.2
 
     def __init__(self, irc):
-        log.info('*** Loaded TriviaTime!!! ***')
+        log.info('** TriviaTime loaded! **')
         self.__parent = super(TriviaTime, self)
         self.__parent.__init__(irc)
 
@@ -154,7 +154,7 @@ class TriviaTime(callbacks.Plugin):
         if game is not None:
             # Look for command to list remaining KAOS
             if msg.args[1] == kaosRemainingCommand and game.question.find("KAOS:") == 0:
-                irc.sendMsg(ircmsgs.notice(msg.nick, "'{0}' now also works for KAOS hints! Please try it out!".format(otherHintCommand)))
+                irc.sendMsg(ircmsgs.notice(msg.nick, "'{0}' now also works for KAOS hints, check it out!".format(otherHintCommand)))
                 game.getRemainingKAOS()
             elif msg.args[1] == otherHintCommand:
                 if game.question.find("KAOS:") == 0:
@@ -193,7 +193,7 @@ class TriviaTime(callbacks.Plugin):
                             channel = name
                             break
                 if channel == '':
-                    irc.sendMsg(ircmsgs.notice(username, '%s: Ping reply: %0.2f seconds' % (username, pingTime)))
+                    irc.sendMsg(ircmsgs.notice(username, 'Ping reply: %0.2f seconds' % (pingTime)))
                 else:
                     irc.sendMsg(ircmsgs.privmsg(channel, '%s: Ping reply: %0.2f seconds' % (username, pingTime)))
 
@@ -208,7 +208,7 @@ class TriviaTime(callbacks.Plugin):
             user = threadStorage.getUser(username, channel)
         if not self.voiceTimeouts.has(usernameCanonical):
             self.voiceTimeouts.append(usernameCanonical)
-            irc.sendMsg(ircmsgs.privmsg(channel, 'Giving MVP to %s for being top #%d this WEEK' % (username, user[15])))
+            irc.sendMsg(ircmsgs.privmsg(channel, 'Giving voice to %s for being MVP this WEEK (#%d)' % (username, user[15])))
 
     def handleVoice(self, irc, username, channel):
         if not self.registryValue('voice.enableVoice'):
