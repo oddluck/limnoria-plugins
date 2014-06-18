@@ -676,7 +676,7 @@ class TriviaTime(callbacks.Plugin):
         threadStorage = self.Storage(dbLocation)
         totalUsersEver = threadStorage.getNumUser(channel)
         numActiveThisWeek = threadStorage.getNumActiveThisWeek(channel)
-        infoText = ' TriviaTime v1.04 by Trivialand on Freenode: https://github.com/tannn/TriviaTime '
+        infoText = ' TriviaTime v1.03 by Trivialand on Freenode https://github.com/tannn/TriviaTime '
         irc.sendMsg(ircmsgs.privmsg(msg.args[0], infoText))
         infoText = ' Time is %s ' % (time.asctime(time.localtime(),))
         irc.sendMsg(ircmsgs.privmsg(msg.args[0], infoText))
@@ -813,7 +813,7 @@ class TriviaTime(callbacks.Plugin):
             irc.noReply()
             return
 
-        irc.sendMsg(ircmsgs.privmsg(channel, 'Onto the next question!'))
+        irc.sendMsg(ircmsgs.privmsg(channel, 'Let\'s keep going.'))
         game.removeEvent()
         game.nextQuestion()
         irc.noReply()
@@ -933,7 +933,7 @@ class TriviaTime(callbacks.Plugin):
                     oldOne = regex[0]
                     newQuestionText = question[2].replace(oldOne, newOne)
                     threadStorage.insertEdit(question[0], newQuestionText, username, channel)
-                    irc.reply('Regex detected: Question edited!')
+                    irc.reply('** Regex detected ** Edited question!')
                     irc.sendMsg(ircmsgs.notice(username, 'NEW: %s' % (newQuestionText)))
                     irc.sendMsg(ircmsgs.notice(username, 'OLD: %s' % (question[2])))
                     self.logger.doLog(irc, channel, "%s edited question #%i, NEW: '%s', OLD: '%s'" % (msg.nick, question[0], newQuestionText, question[2]))
@@ -973,10 +973,10 @@ class TriviaTime(callbacks.Plugin):
             irc.error('That question does not exist.')
             return
         if not threadStorage.isQuestionDeleted(questionNum):
-            irc.error('That question was not deleted.')
+            irc.error('That question is not deleted.')
             return
         threadStorage.restoreQuestion(questionNum)
-        irc.reply('Question %d restored!' % questionNum)
+        irc.reply('Question %d restored.' % questionNum)
         self.logger.doLog(irc, channel, "%s restored question #%i" % (username, questionNum))
     restorequestion = wrap(restorequestion, [('checkChannelCapability', 'triviamod'), 'channel', 'int'])
 
@@ -1003,7 +1003,7 @@ class TriviaTime(callbacks.Plugin):
             return
 
         if not threadStorage.wasUserActiveIn(username, channel, timeSeconds):
-            irc.error('Only users who have answered a question in the last %s seconds can vote to skip.' % (timeSeconds))
+            irc.error('Only users who have answered a question in the last 10 minutes can skip.')
             return
 
         if usernameCanonical in game.skipVoteCount:
@@ -1014,7 +1014,7 @@ class TriviaTime(callbacks.Plugin):
 
         game.skips.setTimeout(skipSeconds)
         if game.skips.has(usernameCanonical):
-            irc.error('You must wait %s seconds to be able to skip again.' % (skipSeconds))
+            irc.error('You must wait to be able to skip again.')
             return
 
         game.skipVoteCount[usernameCanonical] = 1
