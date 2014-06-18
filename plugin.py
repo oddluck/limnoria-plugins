@@ -863,7 +863,7 @@ class TriviaTime(callbacks.Plugin):
         elif game.lastWinner != ircutils.toLower(username):
             self.reply(irc, msg, 'You are not currently the streak holder.')
         elif game.streak < minStreak:
-            self.reply(irc, msg, 'You do not have a large enough streak yet (%i of %i).' % (username, game.streak, minStreak))
+            self.reply(irc, msg, 'You do not have a large enough streak yet (%i of %i).' % (game.streak, minStreak))
         else:
             self.reply(irc, msg, 'Onto the next question!', prefixNick=False)
             game.removeEvent()
