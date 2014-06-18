@@ -1094,7 +1094,7 @@ class TriviaTime(callbacks.Plugin):
             self.reply(irc, msg, 'No question is currently being asked.')
             return
         elif not threadStorage.wasUserActiveIn(username, channel, timeSeconds):
-            self.reply(irc, msg, 'Only users who have answered a question in the last %s seconds can vote to skip.' % (timeSeconds)')
+            self.reply(irc, msg, 'Only users who have answered a question in the last %s seconds can vote to skip.' % (timeSeconds))
             return
         elif usernameCanonical in game.skipVoteCount:
             self.reply(irc, msg, 'You can only vote to skip once.')
@@ -1106,7 +1106,7 @@ class TriviaTime(callbacks.Plugin):
         skipSeconds = self.registryValue('skip.skipTime', channel)
         game.skips.setTimeout(skipSeconds)
         if game.skips.has(usernameCanonical):
-            self.reply(irc, msg, 'You must wait %s seconds to be able to skip again.' % (game.skips.getTimeLeft(usernameCanonical))')
+            self.reply(irc, msg, 'You must wait %s seconds to be able to skip again.' % (game.skips.getTimeLeft(usernameCanonical)))
             return
 
         # Update skip count
