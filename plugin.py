@@ -48,6 +48,9 @@ class TimeoutList:
         if value in self.dict:
             return True
         return False
+		
+	def getTimeLeft(self, getTimeLeft):
+		return self.timeout - (time.time() - self.dict[value])
 
 class TriviaTime(callbacks.Plugin):
     """
@@ -741,7 +744,7 @@ class TriviaTime(callbacks.Plugin):
         threadStorage = self.Storage(dbLocation)
         totalUsersEver = threadStorage.getNumUser(channel)
         numActiveThisWeek = threadStorage.getNumActiveThisWeek(channel)
-        infoText = ' TriviaTime v1.03 by Trivialand on Freenode https://github.com/tannn/TriviaTime '
+        infoText = ' TriviaTime v1.04 by Trivialand on Freenode https://github.com/tannn/TriviaTime '
         self.reply(irc, msg, infoText, prefixNick=False)
         infoText = ' Time is %s ' % (time.asctime(time.localtime(),))
         self.reply(irc, msg, infoText, prefixNick=False)
@@ -862,7 +865,7 @@ class TriviaTime(callbacks.Plugin):
         elif game.streak < minStreak:
             self.reply(irc, msg, 'You do not have a large enough streak yet (%i of %i).' % (username, game.streak, minStreak))
         else:
-            self.reply(irc, msg, 'Let\'s keep going.', prefixNick=False)
+            self.reply(irc, msg, 'Onto the next question!', prefixNick=False)
             game.removeEvent()
             game.nextQuestion()
     next = wrap(next, ['onlyInChannel'])
@@ -1011,7 +1014,7 @@ class TriviaTime(callbacks.Plugin):
                     oldOne = regex[0]
                     newQuestionText = question[2].replace(oldOne, newOne)
                     threadStorage.insertEdit(question[0], newQuestionText, username, channel)
-                    irc.reply('** Regex detected ** Edited question!')
+                    irc.reply('Regex detected: Question edited!')
                     irc.sendMsg(ircmsgs.notice(username, 'NEW: %s' % (newQuestionText)))
                     irc.sendMsg(ircmsgs.notice(username, 'OLD: %s' % (question[2])))
                     self.logger.doLog(irc, channel, "%s edited question #%i, NEW: '%s', OLD: '%s'" % (msg.nick, question[0], newQuestionText, question[2]))
@@ -1057,16 +1060,16 @@ class TriviaTime(callbacks.Plugin):
             irc.error('That question does not exist.')
             return
         if not threadStorage.isQuestionDeleted(questionNum):
-            irc.error('That question is not deleted.')
+            irc.error('That question was not deleted.')
             return
         threadStorage.restoreQuestion(questionNum)
-        irc.reply('Question %d restored.' % questionNum)
+        irc.reply('Question %d restored!' % questionNum)
         self.logger.doLog(irc, channel, "%s restored question #%i" % (username, questionNum))
     restorequestion = wrap(restorequestion, ['channel', 'int'])
 
     def skip(self, irc, msg, arg, channel):
         """
-            Skip the current question and start the next. Rate-limited.
+            Skip the current question and start the next. Rate-limited. Requires a certain percentage of active players to skip.
         """
         username = msg.nick
         try:
@@ -1091,7 +1094,7 @@ class TriviaTime(callbacks.Plugin):
             self.reply(irc, msg, 'No question is currently being asked.')
             return
         elif not threadStorage.wasUserActiveIn(username, channel, timeSeconds):
-            self.reply(irc, msg, 'Only users who have answered a question in the last 10 minutes can skip.')
+            self.reply(irc, msg, 'Only users who have answered a question in the last %s seconds can vote to skip.' % (timeSeconds)')
             return
         elif usernameCanonical in game.skipVoteCount:
             self.reply(irc, msg, 'You can only vote to skip once.')
@@ -1103,7 +1106,7 @@ class TriviaTime(callbacks.Plugin):
         skipSeconds = self.registryValue('skip.skipTime', channel)
         game.skips.setTimeout(skipSeconds)
         if game.skips.has(usernameCanonical):
-            self.reply(irc, msg, 'You must wait to be able to skip again.')
+            self.reply(irc, msg, 'You must wait %s seconds to be able to skip again.' % (game.skips.getTimeLeft(usernameCanonical)))
             return
 
         # Update skip count

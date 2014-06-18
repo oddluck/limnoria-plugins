@@ -13,15 +13,16 @@
 ## IMPORTANT: How to update
 1. Stop the game, if it is currently in progress.
 2. Backup your entire Supybot directory. The most important file needed is the database in /storage/, but it's best to be safe.
-3. Unload TriviaTime.
+3. Unload TriviaTime. Since you are unloading the plugin, you will not have to restart or kill your bot.
 4. Do not delete any files in TriviaTime/storage during this process (aside from samplequestions, if you wish).
 5. Copy over the changed files.
 	Version v1.01 to v1.02 files changed: **README.md, triviatime.css, about.html.php, plugin.py** (no changes to config or database; should be a quick and easy update).
-	Version v1.02 to v1.03 files changes: **README.md, plugin.py** (no changes to config or database; should be an even quicker and easier update).
+	Version v1.02 to v1.03 files changed: **README.md, plugin.py** (no changes to config or database; should be an even quicker and easier update).
+	Version v1.03 to v1.04 files changed: **README.md, plugin.py, config.py** (the changes to config only involded descriptions; no changed to database
 6. If there were any changes to the database, they should be updated automatically. Otherwise, further instructions for updating that version will appear here.
 7. If config.py was changed, you will need to manually add your desired values again. You can compare the previous file (the backup) to the new file.
-8. Load TriviaTime again. If you get an error, something went wrong.
-9. If everything went smoothly, you have now sucessfully updated the plugin to the latest version. Use .info to verify you are on the latest version (v1.02).
+8. Load TriviaTime again. If you followed the instructions correctly, you won't have an error.
+9. If everything went smoothly, you have now sucessfully updated the plugin to the latest version. Use .info to verify you are on the latest version.
 
 ## Setting up permissions for sqlite (website)
 If you do not plan on using the webpage you can ignore this.

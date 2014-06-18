@@ -37,7 +37,7 @@ conf.registerChannelValue(TriviaTime.admin, 'sqlitedb',
 
 conf.registerChannelValue(TriviaTime.admin, 'quizfile', 
         registry.NormalizedString("""plugins/TriviaTime/storage/samplequestions""", 
-                """Location of question file. Changes require reloading the plugin""")
+                """Location of question file. Reload the plugin if changed.""")
         )
 
 # timeout, number of hints, values
@@ -68,47 +68,47 @@ conf.registerChannelValue(TriviaTime.hints, 'vowelsHint',
 
 conf.registerChannelValue(TriviaTime.general, 'showStats', 
         registry.Boolean(True, 
-                """Show player stats after correct answer?""")
+                """Show player stats after correct answer""")
         )
 
 conf.registerChannelValue(TriviaTime.skip, 'skipThreshold', 
         registry.Float(.5, 
-                """Percentage of active players who need to vote to skip""")
+                """Percentage of active players who need to vote for a question to be skipped""")
         )
 
 conf.registerChannelValue(TriviaTime.skip, 'skipActiveTime', 
-        registry.Integer((10*60), 
-                """Amount of time a user is considered active after answering a question""")
+        registry.Integer((10*60), #10 minutes
+                """Amount of seconds a user is considered active after answering a question""")
         )
 
 conf.registerChannelValue(TriviaTime.skip, 'skipTime', 
         registry.Integer(90, 
-                """Time a user must wait to skip a question again after skipping in seconds""")
+                """Seconds a user must wait to skip a question again after skipping""")
         )
 
 conf.registerChannelValue(TriviaTime.questions, 'hintTime', 
         registry.Integer(10, 
-                """Time in between hints""")
+                """Seconds between hints""")
         )
 
 conf.registerChannelValue(TriviaTime.kaos, 'hintKAOS', 
         registry.Integer(15, 
-                """Time in between hints""")
+                """Seconds between KAOS hints""")
         )
 
 conf.registerChannelValue(TriviaTime.general, 'waitTime', 
         registry.Integer(15, 
-                """Time in between the end of one question and the start of another""")
+                """Seconds between the end of one question and the start of another""")
         )
 
 conf.registerChannelValue(TriviaTime.voice, 'enableVoice',
         registry.Boolean(True,
-                """Enable voicing of top players for week, month, and year""")
+                """Voice top players for week, month, and year""")
         )
 
 conf.registerChannelValue(TriviaTime.voice, 'timeoutVoice',
         registry.Integer(60,
-                """The minimum amount of time between anouncing voicing of a user""")
+                """The minimum amount of seconds between anouncing the topped users that were voiced""")
         )
 
 conf.registerChannelValue(TriviaTime.voice, 'numTopToVoice',
@@ -163,7 +163,7 @@ conf.registerChannelValue(TriviaTime.hints, 'charMask',
 
 conf.registerChannelValue(TriviaTime.general, 'nextMinStreak', 
         registry.Integer(5, 
-                """The amount of streak needed to use the next command""")
+                """The streak needed to use the Next command""")
         )
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
