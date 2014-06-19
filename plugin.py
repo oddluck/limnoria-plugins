@@ -295,7 +295,7 @@ class TriviaTime(callbacks.Plugin):
                 
     def getTriviaCapability(self, hostmask, channel):
         if ircdb.users.hasUser(hostmask):
-            caps = ircdb.users.getUser(hostmask).capabilities
+            caps = list(ircdb.users.getUser(hostmask).capabilities)
             triviamod = '{0},{1}'.format(channel,'triviamod')
             triviaadmin = '{0},{1}'.format(channel,'triviaadmin')
             
