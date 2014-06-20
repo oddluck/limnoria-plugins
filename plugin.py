@@ -275,7 +275,9 @@ class TriviaTime(callbacks.Plugin):
         if irc.network not in self.games:
             self.games[irc.network] = {}
         channelCanonical = ircutils.toLower(channel)
-        self.games[irc.network][channelCanonical] = self.Game(irc, channel, self)
+        newGame = self.Game(irc, channel, self)
+        if newGame.active == True:
+            self.games[irc.network][channelCanonical] = newGame
 
     def getGame(self, irc, channel):
         channelCanonical = ircutils.toLower(channel)
@@ -295,7 +297,7 @@ class TriviaTime(callbacks.Plugin):
                 
     def getTriviaCapability(self, hostmask, channel):
         if ircdb.users.hasUser(hostmask):
-            caps = ircdb.users.getUser(hostmask).capabilities
+            caps = list(ircdb.users.getUser(hostmask).capabilities)
             triviamod = '{0},{1}'.format(channel,'triviamod')
             triviaadmin = '{0},{1}'.format(channel,'triviaadmin')
             
@@ -1898,8 +1900,8 @@ class TriviaTime(callbacks.Plugin):
             # grab the next q
             numQuestion = self.storage.getNumQuestions()
             if numQuestion == 0:
+                self.sendMessage('There are no questions. Stopping. If you are an admin, use the addfile command to add questions to the database.')
                 self.stop()
-                self.sendMessage('There are no questions. Stopping. If you are an admin, use the addfile coomand to add questions to the database')
                 return
 
             numQuestionsLeftInRound = self.storage.getNumQuestionsNotAsked(self.channel, self.roundStartedAt)
