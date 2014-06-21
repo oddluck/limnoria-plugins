@@ -131,13 +131,7 @@ class TriviaTime(callbacks.Plugin):
         """
             Catches all PRIVMSG, including channels communication
         """
-        username = msg.nick
-        try:
-            # rootcoma!~rootcomaa@unaffiliated/rootcoma
-            user = ircdb.users.getUser(msg.prefix)
-            username = user.name
-        except KeyError:
-            pass
+        username = self.getUsername(msg.nick, msg.prefix)
         channel = msg.args[0]
         # Make sure that it is starting inside of a channel, not in pm
         if not irc.isChannel(channel):
@@ -166,14 +160,7 @@ class TriviaTime(callbacks.Plugin):
                 game.checkAnswer(msg)
 
     def doJoin(self,irc,msg):
-        username = msg.nick
-        # is it a user?
-        try:
-            # rootcoma!~rootcomaa@unaffiliated/rootcoma
-            user = ircdb.users.getUser(msg.prefix)
-            username = user.name
-        except KeyError:
-            pass
+        username = self.getUsername(msg.nick, msg.prefix)
         channel = msg.args[0]
         self.handleVoice(irc, username, channel)
 
@@ -310,6 +297,16 @@ class TriviaTime(callbacks.Plugin):
                 return 'user'
                 
         return None
+    
+    def getUsername(self, nick, hostmask):
+        username = nick
+        try:
+            #rootcoma!~rootcomaa@unaffiliated/rootcoma
+            user = ircdb.users.getUser(hostmask) 
+            username = user.name
+        except KeyError:
+            pass
+        return username    
         
     def reply(self, irc, msg, outstr, prefixNick=True):
         if ircutils.isChannel(msg.args[0]):
@@ -559,13 +556,7 @@ class TriviaTime(callbacks.Plugin):
         Correct a question by providing the question number and the corrected text. 
         Channel is only required when using the command outside of a channel.
         """
-        username = msg.nick
-        try:
-            #rootcoma!~rootcomaa@unaffiliated/rootcoma
-            user = ircdb.users.getUser(msg.prefix) 
-            username = user.name
-        except KeyError:
-            pass
+        username = self.getUsername(msg.nick, msg.prefix)
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
         q = threadStorage.getQuestion(num)
@@ -598,15 +589,11 @@ class TriviaTime(callbacks.Plugin):
         if self.isTriviaAdmin(hostmask, channel) == False:
             irc.reply('You must be a TriviaAdmin in {0} to use this command.'.format(channel))
             return
-        
-        if points < 1:
+        elif points < 1:
             irc.error("You cannot give less than 1 point.")
             return
-        try:
-            user = ircdb.users.getUser(username)
-            username = user.name
-        except KeyError:
-            pass
+        
+        username = self.getUsername(msg.nick, msg.prefix)
         day=None
         month=None
         year=None
@@ -771,14 +758,8 @@ class TriviaTime(callbacks.Plugin):
             Get your rank, score & questions asked for day, month, year.
             Channel is only required when using the command outside of a channel.
         """
-        username = msg.nick
-        identified = False
-        try:
-            user = ircdb.users.getUser(msg.prefix)
-            username = user.name
-            identified = True
-        except KeyError:
-            pass
+        username = self.getUsername(msg.nick, msg.prefix)
+        identified = ircdb.users.hasUser(msg.prefix)
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
         if self.registryValue('general.globalStats'):
@@ -841,13 +822,7 @@ class TriviaTime(callbacks.Plugin):
         Skip to the next question immediately.
         This can only be used by a user with a certain streak, set in the config.
         """
-        username = msg.nick
-        try:
-            user = ircdb.users.getUser(msg.prefix)
-            username = user.name
-        except KeyError:
-            pass
-
+        username = self.getUsername(msg.nick, msg.prefix)
         minStreak = self.registryValue('general.nextMinStreak', channel)
         game = self.getGame(irc, channel)
 
@@ -985,13 +960,8 @@ class TriviaTime(callbacks.Plugin):
         Provide a report for a bad question. Be sure to include the round number and the problem(s). 
         Channel is a optional parameter which is only needed when reporting outside of the channel
         """
-        username = msg.nick
         inp = text.strip()
-        try:
-            user = ircdb.users.getUser(msg.prefix)
-            username = user.name
-        except KeyError:
-            pass
+        username = self.getUsername(msg.nick, msg.prefix)
         channelCanonical = ircutils.toLower(channel)
         game = self.getGame(irc, channel)
         if game is not None:
@@ -1071,12 +1041,7 @@ class TriviaTime(callbacks.Plugin):
         """
             Skip the current question and start the next. Rate-limited. Requires a certain percentage of active players to skip.
         """
-        username = msg.nick
-        try:
-            user = ircdb.users.getUser(msg.prefix)
-            username = user.name
-        except KeyError:
-            pass
+        username = self.getUsername(msg.nick, msg.prefix)
         usernameCanonical = ircutils.toLower(username)
 
         dbLocation = self.registryValue('admin.sqlitedb')
@@ -1491,14 +1456,9 @@ class TriviaTime(callbacks.Plugin):
             if self.questionOver:
                 return
             
-            username = msg.nick
             channel = msg.args[0]
             # is it a user?
-            try:
-                user = ircdb.users.getUser(msg.prefix)
-                username = user.name
-            except KeyError:
-                pass
+            username = self.base.getUsername(msg.nick, msg.prefix)
             correctAnswerFound = False
             correctAnswer = ''
 
