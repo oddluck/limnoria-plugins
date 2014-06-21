@@ -198,17 +198,10 @@ class TriviaTime(callbacks.Plugin):
                     irc.sendMsg(ircmsgs.privmsg(channel, '%s: Ping reply: %0.2f seconds' % (username, pingTime)))
 
     def voiceUser(self, irc, username, channel):
-        irc.queueMsg(ircmsgs.voice(channel, username))
         usernameCanonical = ircutils.toLower(username)
-        dbLocation = self.registryValue('admin.sqlitedb')
-        threadStorage = self.Storage(dbLocation)
-        if self.registryValue('general.globalStats'):
-            user = threadStorage.getUser(username, None)
-        else:
-            user = threadStorage.getUser(username, channel)
         if not self.voiceTimeouts.has(usernameCanonical):
+            irc.queueMsg(ircmsgs.voice(channel, username))
             self.voiceTimeouts.append(usernameCanonical)
-            irc.sendMsg(ircmsgs.privmsg(channel, 'Giving voice to %s for being MVP this WEEK (#%d)' % (username, user[15])))
 
     def handleVoice(self, irc, username, channel):
         if not self.registryValue('voice.enableVoice'):
@@ -223,17 +216,22 @@ class TriviaTime(callbacks.Plugin):
             user = threadStorage.getUser(username, None)
         else:
             user = threadStorage.getUser(username, channel)
-        numTopToVoice = self.registryValue('voice.numTopToVoice')
-        minPointsVoiceYear = self.registryValue('voice.minPointsVoiceYear')
-        minPointsVoiceMonth = self.registryValue('voice.minPointsVoiceMonth')
-        minPointsVoiceWeek = self.registryValue('voice.minPointsVoiceWeek')
+        
         if len(user) >= 1:
+            numTopToVoice = self.registryValue('voice.numTopToVoice')
+            minPointsVoiceYear = self.registryValue('voice.minPointsVoiceYear')
+            minPointsVoiceMonth = self.registryValue('voice.minPointsVoiceMonth')
+            minPointsVoiceWeek = self.registryValue('voice.minPointsVoiceWeek')
+        
             if user[13] <= numTopToVoice and user[4] >= minPointsVoiceYear:
                 self.voiceUser(irc, username, channel)
+                irc.sendMsg(ircmsgs.privmsg(channel, 'Giving voice to %s for being MVP this YEAR (#%d)' % (username, user[13])))
             elif user[14] <= numTopToVoice and user[6] >= minPointsVoiceMonth:
                 self.voiceUser(irc, username, channel)
+                irc.sendMsg(ircmsgs.privmsg(channel, 'Giving voice to %s for being MVP this MONTH (#%d)' % (username, user[14])))
             elif user[15] <= numTopToVoice and user[8] >= minPointsVoiceWeek:
                 self.voiceUser(irc, username, channel)
+                irc.sendMsg(ircmsgs.privmsg(channel, 'Giving voice to %s for being MVP this WEEK (#%d)' % (username, user[15])))
 
     def addZeroWidthSpace(self, text):
         if len(text) <= 1:
