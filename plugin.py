@@ -595,7 +595,7 @@ class TriviaTime(callbacks.Plugin):
             irc.error("You cannot give less than 1 point.")
             return
         
-        username = self.getUsername(msg.nick, msg.prefix)
+        username = self.getUsername(username, username)
         day=None
         month=None
         year=None
