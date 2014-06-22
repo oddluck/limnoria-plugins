@@ -1545,22 +1545,23 @@ class TriviaTime(callbacks.Plugin):
                             stat = threadStorage.getUserStat(username, None)
                         else:
                             stat = threadStorage.getUserStat(username, self.channel)
-                            
-                        todaysScore = stat['points_day']
-                        weekScore = stat['points_week']
-                        monthScore = stat['points_month']
-                        recapMessageList = ['\x02%s\x02 has won \x02%d\x02 in a row!' % (username, self.streak)]
-                        recapMessageList.append(' Total Points')
-                        recapMessageList.append(' TODAY: \x02%d\x02' % (todaysScore))
-                        if weekScore > pointsAdded:
-                            recapMessageList.append(' this WEEK \x02%d\x02' % (weekScore))
-                        if weekScore > pointsAdded or todaysScore > pointsAdded:
+                        
+                        if stat:
+                            todaysScore = stat['points_day']
+                            weekScore = stat['points_week']
+                            monthScore = stat['points_month']
+                            recapMessageList = ['\x02%s\x02 has won \x02%d\x02 in a row!' % (username, self.streak)]
+                            recapMessageList.append(' Total Points')
+                            recapMessageList.append(' TODAY: \x02%d\x02' % (todaysScore))
+                            if weekScore > pointsAdded:
+                                recapMessageList.append(' this WEEK \x02%d\x02' % (weekScore))
+                            if weekScore > pointsAdded or todaysScore > pointsAdded:
+                                if monthScore > pointsAdded:
+                                    recapMessageList.append(' &')
                             if monthScore > pointsAdded:
-                                recapMessageList.append(' &')
-                        if monthScore > pointsAdded:
-                            recapMessageList.append(' this MONTH: \x02%d\x02' % (monthScore))
-                        recapMessage = ''.join(recapMessageList)
-                        self.sendMessage(recapMessage)
+                                recapMessageList.append(' this MONTH: \x02%d\x02' % (monthScore))
+                            recapMessage = ''.join(recapMessageList)
+                            self.sendMessage(recapMessage)
 
                 # add guessed word to list so we can cross it out
                 if self.guessedAnswers.count(attempt) == 0:
