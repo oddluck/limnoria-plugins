@@ -186,9 +186,8 @@ class TriviaTime(callbacks.Plugin):
 
     def voiceUser(self, irc, username, channel):
         usernameCanonical = ircutils.toLower(username)
-        if not self.voiceTimeouts.has(usernameCanonical):
-            irc.queueMsg(ircmsgs.voice(channel, username))
-            self.voiceTimeouts.append(usernameCanonical)
+        irc.queueMsg(ircmsgs.voice(channel, username))
+        self.voiceTimeouts.append(usernameCanonical)
 
     def handleVoice(self, irc, username, channel):
         if not self.registryValue('voice.enableVoice'):
@@ -206,7 +205,7 @@ class TriviaTime(callbacks.Plugin):
             stat = threadStorage.getUserStat(username, channel)
             rank = threadStorage.getUserRank(username, channel)
         
-        if stat:
+        if stat and not self.voiceTimeouts.has(usernameCanonical):
             numTopToVoice = self.registryValue('voice.numTopToVoice')
             minPointsVoiceYear = self.registryValue('voice.minPointsVoiceYear')
             minPointsVoiceMonth = self.registryValue('voice.minPointsVoiceMonth')
