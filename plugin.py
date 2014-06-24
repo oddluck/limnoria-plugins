@@ -218,7 +218,7 @@ class TriviaTime(callbacks.Plugin):
             elif rank['month'] <= numTopToVoice and stat['points_month'] >= minPointsVoiceMonth:
                 self.voiceUser(irc, username, channel)
                 irc.sendMsg(ircmsgs.privmsg(channel, 'Giving voice to %s for being MVP this MONTH (#%d)' % (username, rank['month'])))
-            elif rank['week'] <= numTopToVoice and user['points_week'] >= minPointsVoiceWeek:
+            elif rank['week'] <= numTopToVoice and stat['points_week'] >= minPointsVoiceWeek:
                 self.voiceUser(irc, username, channel)
                 irc.sendMsg(ircmsgs.privmsg(channel, 'Giving voice to %s for being MVP this WEEK (#%d)' % (username, rank['week'])))
 
