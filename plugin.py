@@ -54,8 +54,8 @@ class TimeoutList:
 
 class TriviaTime(callbacks.Plugin):
     """
-    TriviaTime - A trivia word game, guess the word and score points. 
-    Play KAOS rounds and work together to solve clues to find groups of words.
+    TriviaTime - An enhanced multiplayer and multichannel trivia game for Supybot.
+    Includes KAOS: work together to get all the answers before time runs out.
     """
     threaded = True # enables threading for supybot plugin
     currentDBVersion = 1.2
@@ -613,7 +613,7 @@ class TriviaTime(callbacks.Plugin):
 
     def listdeletes(self, irc, msg, arg, channel, page):
         """[<channel>] [<page>]
-        List deletes.
+        List questions pending deletion.
         Channel is only required when using the command outside of a channel.
         """
         hostmask = msg.prefix
@@ -646,7 +646,7 @@ class TriviaTime(callbacks.Plugin):
 
     def listedits(self, irc, msg, arg, channel, page):
         """[<channel>] [<page>]
-        List edits.
+        List edits pending approval.
         Channel is only required when using the command outside of a channel.
         """
         hostmask = msg.prefix
@@ -674,7 +674,7 @@ class TriviaTime(callbacks.Plugin):
 
     def listreports(self, irc, msg, arg, user, channel, page):
         """[<channel>] [<page>]
-        List reports.
+        List reports pending edit.
         Channel is only required when using the command outside of a channel.
         """
         dbLocation = self.registryValue('admin.sqlitedb')
@@ -852,7 +852,7 @@ class TriviaTime(callbacks.Plugin):
 
     def rmedit(self, irc, msg, arg, channel, num):
         """[<channel>] <int>
-        Remove an edit without accepting it. 
+        Deny a question edit.
         Channel is only required when using the command outside of a channel.
         """
         hostmask = msg.prefix
@@ -874,7 +874,7 @@ class TriviaTime(callbacks.Plugin):
 
     def rmdelete(self, irc, msg, arg, channel, num):
         """[<channel>] <int>
-        Remove a deletion request without accepting it. 
+        Deny a deletion request.
         Channel is only required when using the command outside of a channel.
         """
         hostmask = msg.prefix
@@ -896,7 +896,7 @@ class TriviaTime(callbacks.Plugin):
 
     def rmreport(self, irc, msg, arg, channel, num):
         """[<channel>] <report num>
-        Delete a report by report number. 
+        Delete a report.
         Channel is only required when using the command outside of a channel.
         """
         hostmask = msg.prefix
@@ -918,7 +918,7 @@ class TriviaTime(callbacks.Plugin):
 
     def rmnew(self, irc, msg, arg, channel, num):
         """[<channel>] <int>
-        Remove a temp question without accepting it. 
+        Deny a new question.
         Channel is only required when using the command outside of a channel.
         """
         hostmask = msg.prefix
@@ -1020,7 +1020,7 @@ class TriviaTime(callbacks.Plugin):
 
     def restorequestion(self, irc, msg, arg, channel, questionNum):
         """[<channel>] <Question num>
-        Restore a question from being deleted.
+        Restore a deleted question.
         Channel is only required when using the command outside of a channel.
         """
         hostmask = msg.prefix
@@ -1131,7 +1131,7 @@ class TriviaTime(callbacks.Plugin):
 
     def showdelete(self, irc, msg, arg, channel, num):
         """[<channel>] [<temp question #>]
-        Show deletes awaiting approval
+        Show a deleteion request pending approval.
         Channel is only required when using the command outside of a channel.
         """
         hostmask = msg.prefix
@@ -1169,7 +1169,7 @@ class TriviaTime(callbacks.Plugin):
 
     def showquestion(self, irc, msg, arg, user, channel, num):
         """[<channel>] <num>
-        Search question database for question at line num. 
+        Search question database for question at line number.
         Channel is only necessary when editing from outside of the channel.
         """
         dbLocation = self.registryValue('admin.sqlitedb')
@@ -1186,7 +1186,7 @@ class TriviaTime(callbacks.Plugin):
 
     def showround(self, irc, msg, arg, user, channel, num):
         """[<channel>] <round num>
-        Show what question was asked during the round. 
+        Show what question was asked during gameplay.
         Channel is only necessary when editing from outside of the channel.
         """
         game = self.getGame(irc, channel)
