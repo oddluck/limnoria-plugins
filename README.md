@@ -24,6 +24,9 @@
 8. Load TriviaTime again. If you followed the instructions correctly, you won't have an error.
 9. If everything went smoothly, you have now sucessfully updated the plugin to the latest version. Use .info to verify you are on the latest version.
 
+## Question editing tools
+TriviaTime was designed to make editing, deleting, and adding questions a breeze, for both administrators and players. However, due to the amount of tools available, it can be complicated to new plaers. Instructions on these tools are available [here][].
+
 ## Setting up permissions for sqlite (website)
 If you do not plan on using the webpage you can ignore this.
 
@@ -34,3 +37,4 @@ PHP's PDO requires that the user that php is run under has write access to the f
 I would recommend either creating a new group and adding the user that runs supybot and the webservers user to it, or changing the permissions of the database so that the group who owns it is the webserver, and the user who owns it is the user who runs supybot. After doing that, changing permissions to 775 will allow the group who owns the file to write to the database.
 
   [Supybot]: http://sourceforge.net/projects/supybot/
+  [here]: http://trivialand.org/
