@@ -732,7 +732,7 @@ class TriviaTime(callbacks.Plugin):
         threadStorage = self.Storage(dbLocation)
         totalUsersEver = threadStorage.getNumUser(channel)
         numActiveThisWeek = threadStorage.getNumActiveThisWeek(channel)
-        infoText = ' TriviaTime v1.06 by Trivialand on Freenode https://github.com/tannn/TriviaTime '
+        infoText = ' TriviaTime v1.07 by Trivialand on Freenode: https://github.com/tannn/TriviaTime '
         self.reply(irc, msg, infoText, prefixNick=False)
         infoText = ' Time is %s ' % (time.asctime(time.localtime(),))
         self.reply(irc, msg, infoText, prefixNick=False)
