@@ -33,6 +33,7 @@ import random
 import time
 import os
 import re
+import commands
 
 import supybot.utils as utils
 from supybot.commands import *
