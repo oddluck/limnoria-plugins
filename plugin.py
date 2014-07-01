@@ -28,6 +28,12 @@
 
 ###
 
+# Standard modules
+import random
+import time
+import os
+import re
+
 import supybot.utils as utils
 from supybot.commands import *
 import supybot.plugins as plugins
@@ -41,11 +47,9 @@ except ImportError:
     # without the i18n module
     _ = lambda x:x
 
-# Standard modules
-import random
-import time
-import os
-import re
+# Additional supybot modules
+import supybot.ircmsgs as ircmsgs
+import supybot.conf as conf
 
 # Custom modules imported    
 try:
