@@ -221,7 +221,7 @@ class Cobe(callbacks.Plugin):
                 probability = self.registryValue('probability', channel)
 
             if self.registryValue('stripNicks'):
-                removenicks = '|'.join(item + '\W.*?\s' for item in irc.stats.channels[channel].users)
+                removenicks = '|'.join(item + '\W.*?\s' for item in irc.state.channels[channel].users)
                 text = re.sub(r'' + removenicks + '', 'MAGIC_NICK', text)
             
             self._learn(irc, channel, text, probability) # Now we can pass this to our learn function!
