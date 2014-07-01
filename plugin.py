@@ -197,10 +197,10 @@ class Cobe(callbacks.Plugin):
         channel = msg.args[0].lower()
         text = msg.args[1].strip()
         # if txt.startswith(conf.supybot.reply.whenAddressedBy.chars()):
-        if not ircmsgs.isCtcp(msg) 
+        if (not ircmsgs.isCtcp(msg) 
            or not ircmsgs.isAction(msg) 
            or irc.isChannel(channel)
-           or not re.match(self.registryValue('ignoreRegex'), text):
+           or not re.match(self.registryValue('ignoreRegex'), text)):
             # Only reacts to message in a channel, while ignoring CTCP, actions, and matching regex
 
             if self.registryValue('stripUrls'): # strip URLs 
