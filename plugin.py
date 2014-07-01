@@ -138,7 +138,7 @@ class Cobe(callbacks.Plugin):
                 brainDirectory = conf.supybot.directories.data
                 self.brainDirectories[channel] = brainDirectory.dirize(channel.lower() + "/cobe.brain")
                 
-                commands.getoutput('{0} {1}'.format(_doCommand(channel), 'init'))
+                commands.getoutput('{0} {1}'.format(self._doCommand(channel), 'init'))
                 
                 self.brains[channel] = Brain(self.brainDirectories[channel])
                 
@@ -170,7 +170,7 @@ class Cobe(callbacks.Plugin):
                 brainDirectory = conf.supybot.directories.data
                 self.brainDirectories[channel] = brainDirectory.dirize(channel.lower() + "/cobe.brain")
                 
-                commands.getoutput('{0} {1}'.format(_doCommand(channel), 'init'))
+                commands.getoutput('{0} {1}'.format(self._doCommand(channel), 'init'))
                 
                 self.brains[channel] = Brain(self.brainDirectories[channel])
                 
