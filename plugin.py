@@ -354,13 +354,12 @@ class Cobe(callbacks.Plugin):
                     # Making sure the key-value was set
                     self.brains[channel] = Brain(self.brainDirectories[channel])
                     
-				text = self._cleanText(text)
-				if text and len(text) > 1 and not text.isspace():
-			
-					response = brains[channel].reply(text).encode('utf-8')
-					irc.reply(response)
+		text = self._cleanText(text)
+		if text and len(text) > 1 and not text.isspace():
+	
+			response = brains[channel].reply(text).encode('utf-8')
+			irc.reply(response)
 
-                    
                 else:
         
                     irc.error(_("No text to reply to!"), Raise=True)
@@ -374,25 +373,23 @@ class Cobe(callbacks.Plugin):
                 commands.getoutput('{0} {1}'.format(self._doCommand(channel), 'init'))
                 self.brains[channel] = Brain(self.brainDirectories[channel]) # Setting key-value, just to make sure
                 
-				text = self._cleanText(text)
-				if text and len(text) > 1 and not text.isspace():
-			
-					response = brains[channel].reply(text).encode('utf-8')
-					irc.reply(response)
-                
+		text = self._cleanText(text)
+		if text and len(text) > 1 and not text.isspace():
+	
+			response = brains[channel].reply(text).encode('utf-8')
+			irc.reply(response)
                 
         elif os.path.exists(self.brainDirectories[channel]) and irc.isChannel(channel): 
             # We are in a channel! Does the brain file exist and is this a channel?
     
-			text = self._cleanText(text)
-			if text and len(text) > 1 and not text.isspace():
-		
-				response = brains[channel].reply(text).encode('utf-8')
-				irc.reply(response)
-        
-            else:
-        
-                irc.error(_("No text to reply to!"), Raise=True)
+		text = self._cleanText(text)
+		if text and len(text) > 1 and not text.isspace():
+	
+			response = brains[channel].reply(text).encode('utf-8')
+			irc.reply(response)
+
+	        else:
+	      		irc.error(_("No text to reply to!"), Raise=True)
                 
         else:
             irc.error(_("Improper channel given!"), Raise=True)
