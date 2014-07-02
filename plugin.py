@@ -134,7 +134,7 @@ class Cobe(callbacks.Plugin):
             
             if text and len(text) > 1 and not text.isspace():
         
-				self.log.debug("Learning: {0}".format(text))
+        self.log.debug("Learning: {0}".format(text))
                 cobeBrain = Brain(self._getBrainDirectoryForChannel(channel))
                 cobeBrain.learn(text)
                 
