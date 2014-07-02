@@ -109,10 +109,10 @@ class Cobe(callbacks.Plugin):
         text = ircutils.stripFormatting(text)       # Strip IRC formatting from the string.
         text = text.strip()                         # Strip whitespace from beginning and the end of the string.
         if len(text) < 1:
-        	# So we don't get an error if the text is too small
-        	
-        	text = text[0].upper() + text[1:]       # Capitalize first letter of the string.
-        	
+            # So we don't get an error if the text is too small
+            
+            text = text[0].upper() + text[1:]       # Capitalize first letter of the string.
+            
         text = utils.str.normalizeWhitespace(text)  # Normalize the whitespace in the string.
         
         return text
@@ -132,7 +132,7 @@ class Cobe(callbacks.Plugin):
                 
                 if text and len(text) > 1 and not text.isspace():
             
-            		cobeBrain = Brain(self.brainDirectories[channel])
+                    cobeBrain = Brain(self.brainDirectories[channel])
                     cobeBrain.learn(text)
                     
                 self._reply(irc, channel, text)
@@ -148,8 +148,8 @@ class Cobe(callbacks.Plugin):
                 
                 if text and len(text) > 1 and not text.isspace():
             
-					cobeBrain = Brain(self.brainDirectories[channel])
-					cobeBrain.learn(text)
+                    cobeBrain = Brain(self.brainDirectories[channel])
+                    cobeBrain.learn(text)
                     
                     self._reply(irc, channel, text)
                 
@@ -162,7 +162,7 @@ class Cobe(callbacks.Plugin):
                 if text and len(text) > 1 and not text.isspace():
             
                     cobeBrain = Brain(self.brainDirectories[channel])
-					cobeBrain.learn(text)
+                    cobeBrain.learn(text)
                     
                     if random.randint(0, 10000) < probability: 
                         # Precision up into the 0.01%!
@@ -181,7 +181,7 @@ class Cobe(callbacks.Plugin):
                 if text and len(text) > 1 and not text.isspace():
             
                     cobeBrain = Brain(self.brainDirectories[channel])
-					cobeBrain.learn(text)
+                    cobeBrain.learn(text)
                     
                     if random.randint(0, 10000) < probability: 
                         # Precision up into the 0.01%!
@@ -352,12 +352,12 @@ class Cobe(callbacks.Plugin):
             if os.path.exists(self.brainDirectories[channel]):
                 # Does this channel have a brain file?
                 
-		text = self._cleanText(text)
-		if text and len(text) > 1 and not text.isspace():
-	
-			cobeBrain = Brain(self.brainDirectories[channel])
-			response = cobeBrain.reply(text).encode('utf-8')
-			irc.reply(response)
+        text = self._cleanText(text)
+        if text and len(text) > 1 and not text.isspace():
+    
+            cobeBrain = Brain(self.brainDirectories[channel])
+            response = cobeBrain.reply(text).encode('utf-8')
+            irc.reply(response)
 
                 else:
         
@@ -371,25 +371,25 @@ class Cobe(callbacks.Plugin):
                 
                 commands.getoutput('{0} {1}'.format(self._doCommand(channel), 'init'))
                 
-		text = self._cleanText(text)
-		if text and len(text) > 1 and not text.isspace():
-	
-			cobeBrain = Brain(self.brainDirectories[channel])
-			response = cobeBrain.reply(text).encode('utf-8')
-			irc.reply(response)
+        text = self._cleanText(text)
+        if text and len(text) > 1 and not text.isspace():
+    
+            cobeBrain = Brain(self.brainDirectories[channel])
+            response = cobeBrain.reply(text).encode('utf-8')
+            irc.reply(response)
                 
         elif os.path.exists(self.brainDirectories[channel]) and irc.isChannel(channel): 
             # We are in a channel! Does the brain file exist and is this a channel?
     
-		text = self._cleanText(text)
-		if text and len(text) > 1 and not text.isspace():
-	
-			cobeBrain = Brain(self.brainDirectories[channel])
-			response = cobeBrain.reply(text).encode('utf-8')
-			irc.reply(response)
+        text = self._cleanText(text)
+        if text and len(text) > 1 and not text.isspace():
+    
+            cobeBrain = Brain(self.brainDirectories[channel])
+            response = cobeBrain.reply(text).encode('utf-8')
+            irc.reply(response)
 
-	        else:
-	      		irc.error(_("No text to reply to!"), Raise=True)
+            else:
+                irc.error(_("No text to reply to!"), Raise=True)
                 
         else:
             irc.error(_("Improper channel given!"), Raise=True)
