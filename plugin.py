@@ -334,7 +334,7 @@ class Cobe(callbacks.Plugin):
             
     learn = wrap(learn, [('checkCapability', 'admin'), additional('channel'), 'text'])
 
-    def reply(self, irc, msg, args, text):
+    def reply(self, irc, msg, args, channel, text):
         """[<channel>] <text>
 
         Replies to <text>. If the channel is not given, the current channel is used.
