@@ -51,6 +51,10 @@ except ImportError:
 # Additional supybot modules
 import supybot.ircmsgs as ircmsgs
 import supybot.conf as conf
+try:
+    import supybot.schedule as schedule
+except ImportError:
+    raise callbacks.Error, 'You need to have the scheduler plugin for your bot for delayed responses to work!'
 
 # Custom modules imported    
 try:
@@ -210,9 +214,9 @@ class Cobe(callbacks.Plugin):
             
             probability = self.registryValue('probability', channel)
 
-        if self.registryValue('stripNicks'):
-            removenicks = '|'.join(item + '\W.*?\s' for item in irc.state.channels[channel].users)
-            text = re.sub(r'' + removenicks + '', 'MAGIC_NICK', text)
+        #if self.registryValue('stripNicks'):
+        #    removenicks = '|'.join(item + '\W.*?\s' for item in irc.state.channels[channel].users)
+        #    text = re.sub(r'' + removenicks + '', 'MAGIC_NICK', text)
         
         self._learn(irc, channel, text, probability) # Now we can pass this to our learn function!
             
