@@ -215,7 +215,7 @@ class Cobe(callbacks.Plugin):
             self.log.debug("The method 'callbacks.addressed(irc.nick, msg)' returns {0}!".format(True == callbacks.addressed(irc.nick, msg)))
             self.log.debug("The method 'ircmsgs.isCtcp(msg)' returns {0}!".format(True == ircmsgs.isCtcp(msg)))
             self.log.debug("The method 'irc.isChannel(channel)' returns {0}!".format(False == irc.isChannel(channel)))
-            self.log.debug("The method 're.match(self.registryValue('ignoreRegex'), text)' returns {0}!".format(False == re.match(self.registryValue('ignoreRegex'), text)))
+            self.log.debug("The method 're.match(self.registryValue('ignoreRegex'), text)' returns {0}!".format(False == (None == re.match(self.registryValue('ignoreRegex'), text))))
 
             return
             
