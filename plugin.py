@@ -134,7 +134,7 @@ class Cobe(callbacks.Plugin):
             
             if text and len(text) > 1 and not text.isspace():
         
-                cobeBrain = self._getBrainDirectoryForChannel(channel)
+                cobeBrain = Brain(self._getBrainDirectoryForChannel(channel))
                 cobeBrain.learn(text)
                 
             self._reply(irc, channel, text)
