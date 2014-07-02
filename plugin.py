@@ -51,10 +51,7 @@ except ImportError:
 # Additional supybot modules
 import supybot.ircmsgs as ircmsgs
 import supybot.conf as conf
-try:
-    import supybot.schedule as schedule
-except ImportError:
-    raise callbacks.Error, 'You need to have the scheduler plugin for your bot for delayed responses to work!'
+import supybot.schedule as schedule
 
 # Custom modules imported    
 try:
