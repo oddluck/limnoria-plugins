@@ -115,7 +115,7 @@ class Cobe(callbacks.Plugin):
         text = self._decodeIRCMessage(text)         # Decode the string.
         text = ircutils.stripFormatting(text)       # Strip IRC formatting from the string.
         text = text.strip()                         # Strip whitespace from beginning and the end of the string.
-        if not len(text) <= 1:
+        if len(text) > 1:
             # So we don't get an error if the text is too small
             
             text = text[0].upper() + text[1:]       # Capitalize first letter of the string.
@@ -137,7 +137,8 @@ class Cobe(callbacks.Plugin):
                 cobeBrain = Brain(self._getBrainDirectoryForChannel(channel))
                 cobeBrain.learn(text)
                 
-            self._reply(irc, channel, text)
+                if random.randint(0, 10000) <= probability:
+                    self._reply(irc, channel, text)
                 
         else: # Nope, let's make it!
                         
@@ -151,14 +152,19 @@ class Cobe(callbacks.Plugin):
                 cobeBrain = Brain(self._getBrainDirectoryForChannel(channel))
                 cobeBrain.learn(text)
                 
-                self._reply(irc, channel, text)
+                if random.randint(0, 10000) <= probability:
+                    self._reply(irc, channel, text)
                 
     def _reply(self, irc, channel, text):
         """Send a respone to text"""
         
-        self.log.info("Attempting to respond in %s with message: %s" % channel, text)
         cobeBrain = Brain(self._getBrainDirectoryForChannel(channel))
         response = cobeBrain.reply(text).encode('utf-8')
+        
+        cobeBrain.learn(response) # Let's have the bot learn the wacky things it says
+        
+        self.log.info("Attempting to respond in %s with message: %s" % channel, response)
+        
         # delay the response here so we look real?
         if self.registryValue('responseDelay', channel):
             self.log.info("Delayed the response in %s." % channel)
