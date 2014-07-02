@@ -203,6 +203,9 @@ class Cobe(callbacks.Plugin):
             irc.queueMsg(ircmsgs.privmsg(channel, response))
             
     def doPrivmsg(self, irc, msg):
+        
+        (channel, text) = msg.args
+        
         if (callbacks.addressed(irc.nick, msg) 
            or ircmsgs.isCtcp(msg) 
            or not irc.isChannel(channel) 
@@ -211,7 +214,6 @@ class Cobe(callbacks.Plugin):
         
             return
             
-        (channel, text) = msg.args
         
         if ircmsgs.isAction(msg):
             # If the message was an action...we'll learn it anyways!
