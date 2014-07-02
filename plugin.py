@@ -77,7 +77,7 @@ class Cobe(callbacks.Plugin):
         """Internal method for retrieving the directory of a brainfile for a channel""" 
     
         directory = conf.supybot.directories.data
-        directory = dataDirectory.dirize(channel.lower() + "/cobe.brain")
+        directory = directory.dirize(channel.lower() + "/cobe.brain")
         
         return directory
         
