@@ -68,11 +68,18 @@ class Cobe(callbacks.Plugin):
     commands and "help Cobe <command>" to read their docs.
     """
     threaded = True
-    brainDirectories = {}
     
     def __init__(self, irc):
         self.__parent = super(Cobe, self)
         self.__parent.__init__(irc)
+        
+    def _getBrainDirectoryForChannel(self, channel):
+        """Internal method for retrieving the directory of a brainfile for a channel""" 
+    
+        directory = conf.supybot.directories.data
+        directory = dataDirectory.dirize(channel.lower() + "/cobe.brain")
+        
+        return directory
         
     def _doCommand(self, channel):
         """Internal method for accessing a cobe brain."""
@@ -125,74 +132,67 @@ class Cobe(callbacks.Plugin):
             channel = msg.args[0]
             
         if not irc.isChannel(channel): # Are we in a channel?
-            if self.brainDirectories.has_key(channel) and os.path.exists(self.brainDirectories[channel]):
+            if os.path.exists(self._getBrainDirectoryForChannel(channel)):
                 # Does this channel have a directory for the brain file stored and does this file exist?
                 
                 text = self._cleanText(text)
                 
                 if text and len(text) > 1 and not text.isspace():
             
-                    cobeBrain = Brain(self.brainDirectories[channel])
+                    cobeBrain = self._getBrainDirectoryForChannel(channel)
                     cobeBrain.learn(text)
                     
                 self._reply(irc, channel, text)
                     
             else: # Nope, let's make it!
-            
-                brainDirectory = conf.supybot.directories.data
-                self.brainDirectories[channel] = brainDirectory.dirize(channel.lower() + "/cobe.brain")
-                
+                            
                 commands.getoutput('{0} {1}'.format(self._doCommand(channel), 'init'))
                 
                 text = self._cleanText(text)
                 
                 if text and len(text) > 1 and not text.isspace():
             
-                    cobeBrain = Brain(self.brainDirectories[channel])
+                    cobeBrain = Brain(self._getBrainDirectoryForChannel(channel))
                     cobeBrain.learn(text)
                     
                     self._reply(irc, channel, text)
                 
-        else: # We are in a channel!
-            if self.brainDirectories.has_key(channel) and os.path.exists(self.brainDirectories[channel]):
-                # Does this channel have a directory for the brain file stored and does this file exist?
-                
-                text = self._cleanText(text)
-                
-                if text and len(text) > 1 and not text.isspace():
+        elif os.path.exists(self._getBrainDirectoryForChannel(channel)):
+            # Does this channel have a directory for the brain file stored and does this file exist?
             
-                    cobeBrain = Brain(self.brainDirectories[channel])
-                    cobeBrain.learn(text)
-                    
-                    if random.randint(0, 10000) < probability: 
-                        # Precision up into the 0.01%!
-                        
-                        self._reply(irc, channel, text)
-                    
-            else: # Nope, let's make it!
+            text = self._cleanText(text)
             
-                brainDirectory = conf.supybot.directories.data
-                self.brainDirectories[channel] = brainDirectory.dirize(channel.lower() + "/cobe.brain")
+            if text and len(text) > 1 and not text.isspace():
+        
+                cobeBrain = Brain(self._getBrainDirectoryForChannel(channel))
+                cobeBrain.learn(text)
                 
-                commands.getoutput('{0} {1}'.format(self._doCommand(channel), 'init'))
-                
-                text = self._cleanText(text)
-                
-                if text and len(text) > 1 and not text.isspace():
-            
-                    cobeBrain = Brain(self.brainDirectories[channel])
-                    cobeBrain.learn(text)
+                if random.randint(0, 10000) < probability: 
+                    # Precision up into the 0.01%!
                     
-                    if random.randint(0, 10000) < probability: 
-                        # Precision up into the 0.01%!
-                        
-                        self._reply(irc, channel, text)
+                    self._reply(irc, channel, text)
+                
+        else: # Nope, let's make it!
+        
+            commands.getoutput('{0} {1}'.format(self._doCommand(channel), 'init'))
+            
+            text = self._cleanText(text)
+            
+            if text and len(text) > 1 and not text.isspace():
+        
+                cobeBrain = Brain(self._getBrainDirectoryForChannel(channel))
+                cobeBrain.learn(text)
+                
+                if random.randint(0, 10000) < probability: 
+                    # Precision up into the 0.01%!
+                    
+                    self._reply(irc, channel, text)
             
     def _reply(self, irc, channel, text):
         """Send a respone to text"""
         
         self.log.info("Attempting to respond in %s with message: %s" % channel, text)
-        cobeBrain = Brain(self.brainDirectories[channel])
+        cobeBrain = Brain(self._getBrainDirectoryForChannel(channel))
         response = cobeBrain.reply(text).encode('utf-8')
         # delay the response here so we look real?
         if self.registryValue('responseDelay', channel):
@@ -250,7 +250,7 @@ class Cobe(callbacks.Plugin):
             channel = msg.args[0]
 
         if not irc.isChannel(channel): # Are we in a channel?
-            if os.path.exists(self.brainDirectories[channel]):
+            if os.path.exists(self._getBrainDirectoryForChannel(channel)):
                 # Does this channel have a brain file?
                 
                 size = float(os.path.getsize(self.brainDirectories[channel]))
@@ -259,9 +259,9 @@ class Cobe(callbacks.Plugin):
             else: # Nope, raise error msg!
                 irc.error(_("I am missing a brainfile in {0}!".format(channel)), Raise=True)
                 
-        elif os.path.exists(self.brainDirectories[channel]): # We are in a channel! Does the brain file exist?
+        elif os.path.exists(self._getBrainDirectoryForChannel(channel)): # We are in a channel! Does the brain file exist?
         
-            size = float(os.path.getsize(self.brainDirectories[channel]))
+            size = float(os.path.getsize(self._getBrainDirectoryForChannel(channel)))
             irc.reply("The brain file for channel {0} is {1}.".format(channel, self._makeMakePretty(size)))
             
         else:
@@ -280,19 +280,15 @@ class Cobe(callbacks.Plugin):
 
         if not irc.isChannel(msg.args[0]) and irc.isChannel(channel): 
             # Are we in a channel and is the channel supplied a channel?
-            if not self.brainDirectories.has_key(channel):
-                # If this dictionary does not have the channel, let's make it!
-                brainDirectory = conf.supybot.directories.data
-                self.brainDirectories[channel] = brainDirectory.dirize(channel.lower() + "/cobe.brain")
             
-            if os.path.exists(self.brainDirectories[channel]):
+            if os.path.exists(self._getBrainDirectoryForChannel(channel)):
                 # Does this channel have a brain file?
                
                 text = self._cleanText(text)
                 if text and len(text) > 1 and not text.isspace():
             
                     irc.reply("Learning text: {0}".format(text))
-                    cobeBrain = Brain(self.brainDirectories[channel])
+                    cobeBrain = Brain(self._getBrainDirectoryForChannel(channel))
                     cobeBrain.learn(text)
                     
                 else:
@@ -303,7 +299,7 @@ class Cobe(callbacks.Plugin):
                 # Nope, create one!
             
                 self.log.info("Non-existent brainfile in {0}!".format(channel))
-                self.log.info("Creating a brainfile now in {0}".format(self.brainDirectories[channel]))
+                self.log.info("Creating a brainfile now in {0}".format(self._getBrainDirectoryForChannel(channel)))
                 
                 commands.getoutput('{0} {1}'.format(self._doCommand(channel), 'init'))
                 
@@ -311,29 +307,29 @@ class Cobe(callbacks.Plugin):
                 if text and len(text) > 1 and not text.isspace():
             
                     irc.reply("Learning text: {0}".format(text))
-                    cobeBrain = Brain(self.brainDirectories[channel])
+                    cobeBrain = Brain(self._getBrainDirectoryForChannel(channel))
                     cobeBrain.learn(text)
                 
                 
-        elif os.path.exists(self.brainDirectories[channel]) and irc.isChannel(channel): 
-            # We are in a channel! Does the brain file exist and is this a channel?
+        elif os.path.exists(self._getBrainDirectoryForChannel(channel)) and irc.isChannel(channel): 
+            # We are in a channel! Does the brain file exist and are we supplied a channel?
     
             text = self._cleanText(text)
             if text and len(text) > 1 and not text.isspace():
         
                 irc.reply("Learning text: {0}".format(text))
-                cobeBrain = Brain(self.brainDirectories[channel])
+                cobeBrain = Brain(self._getBrainDirectoryForChannel(channel))
                 cobeBrain.learn(text)
         
             else:
         
                 irc.error(_("No text to learn!"), Raise=True)
                 
-        elif not os.path.exists(self.brainDirectories[channel]) and irc.isChannel(channel):
+        elif not os.path.exists(self._getBrainDirectoryForChannel(channel)) and irc.isChannel(channel):
             # Nope, create one!
         
             self.log.info("Non-existent brainfile in {0}!".format(channel))
-            self.log.info("Creating a brainfile now in {0}".format(self.brainDirectories[channel]))
+            self.log.info("Creating a brainfile now in {0}".format(self._getBrainDirectoryForChannel(channel)))
             
             commands.getoutput('{0} {1}'.format(self._doCommand(channel), 'init'))
             
@@ -341,7 +337,7 @@ class Cobe(callbacks.Plugin):
             if text and len(text) > 1 and not text.isspace():
         
                 irc.reply("Learning text: {0}".format(text))
-                cobeBrain = Brain(self.brainDirectories[channel])
+                cobeBrain = Brain(self._getBrainDirectoryForChannel(channel))
                 cobeBrain.learn(text)
                 
         else:
@@ -359,12 +355,8 @@ class Cobe(callbacks.Plugin):
 
         if not irc.isChannel(msg.args[0]) and irc.isChannel(channel): 
             # Are we in a channel and is the channel supplied a channel?
-            if not self.brainDirectories.has_key(channel):
-                # If this dictionary does not have the channel, let's make it!
-                brainDirectory = conf.supybot.directories.data
-                self.brainDirectories[channel] = brainDirectory.dirize(channel.lower() + "/cobe.brain")
             
-            if os.path.exists(self.brainDirectories[channel]):
+            if os.path.exists(self._getBrainDirectoryForChannel(channel)):
                 # Does this channel have a brain file?
                 
                     text = self._cleanText(text)
@@ -382,35 +374,38 @@ class Cobe(callbacks.Plugin):
                 # Nope, create one!
             
                 self.log.info("Non-existent brainfile in {0}!".format(channel))
-                self.log.info("Creating a brainfile now in {0}".format(self.brainDirectories[channel]))
+                self.log.info("Creating a brainfile now in {0}".format(self._getBrainDirectoryForChannel(channel)))
                 
                 commands.getoutput('{0} {1}'.format(self._doCommand(channel), 'init'))
                 
-            text = self._cleanText(text)
-            if text and len(text) > 1 and not text.isspace():
-        
-                cobeBrain = Brain(self.brainDirectories[channel])
-                response = cobeBrain.reply(text).encode('utf-8')
-                irc.reply(response)
+                text = self._cleanText(text)
+                if text and len(text) > 1 and not text.isspace():
+            
+                    cobeBrain = Brain(self._getBrainDirectoryForChannel(channel))
+                    response = cobeBrain.reply(text).encode('utf-8')
+                    irc.reply(response)
+                    
+                else:
+                    irc.error(_("No text to reply to!"), Raise=True)
                 
-        elif os.path.exists(self.brainDirectories[channel]) and irc.isChannel(channel): 
+        elif os.path.exists(self._getBrainDirectoryForChannel(channel)) and irc.isChannel(channel): 
             # We are in a channel! Does the brain file exist and is this a channel?
     
             text = self._cleanText(text)
             if text and len(text) > 1 and not text.isspace():
 
-                cobeBrain = Brain(self.brainDirectories[channel])
+                cobeBrain = Brain(self._getBrainDirectoryForChannel(channel))
                 response = cobeBrain.reply(text).encode('utf-8')
                 irc.reply(response)
 
             else:
                 irc.error(_("No text to reply to!"), Raise=True)
 
-        elif not os.path.exists(self.brainDirectories[channel]) and irc.isChannel(channel):
+        elif not os.path.exists(self._getBrainDirectoryForChannel(channel)) and irc.isChannel(channel):
             # Nope, create one!
         
             self.log.info("Non-existent brainfile in {0}!".format(channel))
-            self.log.info("Creating a brainfile now in {0}".format(self.brainDirectories[channel]))
+            self.log.info("Creating a brainfile now in {0}".format(self._getBrainDirectoryForChannel(channel)))
             
             commands.getoutput('{0} {1}'.format(self._doCommand(channel), 'init'))
             
@@ -418,8 +413,11 @@ class Cobe(callbacks.Plugin):
             if text and len(text) > 1 and not text.isspace():
         
                 irc.reply("Learning text: {0}".format(text))
-                cobeBrain = Brain(self.brainDirectories[channel])
+                cobeBrain = Brain(self._getBrainDirectoryForChannel(channel))
                 cobeBrain.learn(text)
+                
+            else:
+                irc.error(_("No text to reply to!"), Raise=True)
                 
         else:
             irc.error(_("Improper channel given!"), Raise=True)
