@@ -329,6 +329,21 @@ class Cobe(callbacks.Plugin):
         
                 irc.error(_("No text to learn!"), Raise=True)
                 
+        elif not os.path.exists(self.brainDirectories[channel]) and irc.isChannel(channel):
+            # Nope, create one!
+        
+            self.log.info("Non-existent brainfile in {0}!".format(channel))
+            self.log.info("Creating a brainfile now in {1}".format(self.brainDirectories[channel]))
+            
+            commands.getoutput('{0} {1}'.format(self._doCommand(channel), 'init'))
+            
+            text = self._cleanText(text)
+            if text and len(text) > 1 and not text.isspace():
+        
+                irc.reply("Learning text: {0}".format(text))
+                cobeBrain = Brain(self.brainDirectories[channel])
+                cobeBrain.learn(text)
+                
         else:
             irc.error(_("Improper channel given!"), Raise=True)
             
@@ -390,6 +405,21 @@ class Cobe(callbacks.Plugin):
 
             else:
                 irc.error(_("No text to reply to!"), Raise=True)
+
+        elif not os.path.exists(self.brainDirectories[channel]) and irc.isChannel(channel):
+            # Nope, create one!
+        
+            self.log.info("Non-existent brainfile in {0}!".format(channel))
+            self.log.info("Creating a brainfile now in {1}".format(self.brainDirectories[channel]))
+            
+            commands.getoutput('{0} {1}'.format(self._doCommand(channel), 'init'))
+            
+            text = self._cleanText(text)
+            if text and len(text) > 1 and not text.isspace():
+        
+                irc.reply("Learning text: {0}".format(text))
+                cobeBrain = Brain(self.brainDirectories[channel])
+                cobeBrain.learn(text)
                 
         else:
             irc.error(_("Improper channel given!"), Raise=True)
