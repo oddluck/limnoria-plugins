@@ -54,12 +54,12 @@ Cobe = conf.registerPlugin('Cobe')
 
 conf.registerGlobalValue(Cobe, 'ignoreRegex', registry.String('^[.@!$%]', _("""Regex to ignore when learning text. Perfect for ignoring commands!.""")))
 conf.registerGlobalValue(Cobe, 'stripUrls', registry.Boolean(True, _("""Keep the bot from learning URLs?""")))
-conf.registerGlobalValue(Cobe, 'stripNicks', registry.Boolean(True, _("""Strip all nicks, including the bots, when learning?""")))
+conf.registerGlobalValue(Cobe, 'stripNicks', registry.Boolean(False, _("""Strip all nicks, including the bots, when learning? This replaces a nick with the keyword MAGIC_NICK to use for random highlighting.""")))
 conf.registerChannelValue(Cobe, 'probability', registry.NonNegativeInteger(0, _("""Determines the percent of messages the bot will answer.""")))
 conf.registerChannelValue(Cobe, 'probabilityWhenAddressed', registry.NonNegativeInteger(10000, _("""Determines the percent of messages adressed to the bot the bot will answer, to the 0.01%. The maximum is 10000/10000""")))
 conf.registerChannelValue(Cobe, 'waitTimeBetweenSpeaking', registry.NonNegativeInteger(10, _("""Seconds to wait in a channel before speaking again.""")))
 conf.registerChannelValue(Cobe, 'ignoreWaitTimeIfAddressed', registry.Boolean(True, _("""If directly addressed, should we ignore the wait time?""")))
-conf.registerChannelValue(Cobe, 'responseDelay', registry.Boolean(True, _("""Delay responding for 2 to 4 seconds in order to seem more human?""")))
+conf.registerChannelValue(Cobe, 'responseDelay', registry.Boolean(False, _("""Delay responding for 2 to 4 seconds in order to seem more human?""")))
 
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
