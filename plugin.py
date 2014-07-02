@@ -303,7 +303,7 @@ class Cobe(callbacks.Plugin):
                 # Nope, create one!
             
                 self.log.info("Non-existent brainfile in {0}!".format(channel))
-                self.log.info("Creating a brainfile now in {1}".format(self.brainDirectories[channel]))
+                self.log.info("Creating a brainfile now in {0}".format(self.brainDirectories[channel]))
                 
                 commands.getoutput('{0} {1}'.format(self._doCommand(channel), 'init'))
                 
@@ -333,7 +333,7 @@ class Cobe(callbacks.Plugin):
             # Nope, create one!
         
             self.log.info("Non-existent brainfile in {0}!".format(channel))
-            self.log.info("Creating a brainfile now in {1}".format(self.brainDirectories[channel]))
+            self.log.info("Creating a brainfile now in {0}".format(self.brainDirectories[channel]))
             
             commands.getoutput('{0} {1}'.format(self._doCommand(channel), 'init'))
             
@@ -382,7 +382,7 @@ class Cobe(callbacks.Plugin):
                 # Nope, create one!
             
                 self.log.info("Non-existent brainfile in {0}!".format(channel))
-                self.log.info("Creating a brainfile now in {1}".format(self.brainDirectories[channel]))
+                self.log.info("Creating a brainfile now in {0}".format(self.brainDirectories[channel]))
                 
                 commands.getoutput('{0} {1}'.format(self._doCommand(channel), 'init'))
                 
@@ -410,7 +410,7 @@ class Cobe(callbacks.Plugin):
             # Nope, create one!
         
             self.log.info("Non-existent brainfile in {0}!".format(channel))
-            self.log.info("Creating a brainfile now in {1}".format(self.brainDirectories[channel]))
+            self.log.info("Creating a brainfile now in {0}".format(self.brainDirectories[channel]))
             
             commands.getoutput('{0} {1}'.format(self._doCommand(channel), 'init'))
             
