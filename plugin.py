@@ -203,8 +203,11 @@ class Cobe(callbacks.Plugin):
             irc.queueMsg(ircmsgs.privmsg(channel, response))
             
     def doPrivmsg(self, irc, msg):
-        if callbacks.addressed(irc.nick, msg) or ircmsgs.isCtcp(msg) or not irc.isChannel(channel) or not re.match(self.registryValue('ignoreRegex'), text)): 
-        # Was the message a CTCP command, a command to the bot, is this message supposed to be ignored, or are we not in a channel??
+        if (callbacks.addressed(irc.nick, msg) 
+           or ircmsgs.isCtcp(msg) 
+           or not irc.isChannel(channel) 
+           or not re.match(self.registryValue('ignoreRegex'), text)): 
+            # Was the message a CTCP command, a command to the bot, is this message supposed to be ignored, or are we not in a channel??
         
             return
             
