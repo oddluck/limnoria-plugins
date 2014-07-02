@@ -108,7 +108,7 @@ class Cobe(callbacks.Plugin):
         text = self._decodeIRCMessage(text)         # Decode the string.
         text = ircutils.stripFormatting(text)       # Strip IRC formatting from the string.
         text = text.strip()                         # Strip whitespace from beginning and the end of the string.
-        if len(text) < 1:
+        if len(text) <= 1:
             # So we don't get an error if the text is too small
             
             text = text[0].upper() + text[1:]       # Capitalize first letter of the string.
@@ -371,12 +371,12 @@ class Cobe(callbacks.Plugin):
                 
                 commands.getoutput('{0} {1}'.format(self._doCommand(channel), 'init'))
                 
-        text = self._cleanText(text)
-        if text and len(text) > 1 and not text.isspace():
-    
-            cobeBrain = Brain(self.brainDirectories[channel])
-            response = cobeBrain.reply(text).encode('utf-8')
-            irc.reply(response)
+            text = self._cleanText(text)
+            if text and len(text) > 1 and not text.isspace():
+        
+                cobeBrain = Brain(self.brainDirectories[channel])
+                response = cobeBrain.reply(text).encode('utf-8')
+                irc.reply(response)
                 
         elif os.path.exists(self.brainDirectories[channel]) and irc.isChannel(channel): 
             # We are in a channel! Does the brain file exist and is this a channel?
