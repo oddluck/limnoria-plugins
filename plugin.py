@@ -68,7 +68,6 @@ class Cobe(callbacks.Plugin):
     commands and "help Cobe <command>" to read their docs.
     """
     threaded = True
-    brains = {}
     brainDirectories = {}
     
     def __init__(self, irc):
@@ -133,7 +132,8 @@ class Cobe(callbacks.Plugin):
                 
                 if text and len(text) > 1 and not text.isspace():
             
-                    self.brains[channel].learn(text)
+            		cobeBrain = Brain(self.brainDirectories[channel])
+                    cobeBrain.learn(text)
                     
                 self._reply(irc, channel, text)
                     
@@ -144,13 +144,12 @@ class Cobe(callbacks.Plugin):
                 
                 commands.getoutput('{0} {1}'.format(self._doCommand(channel), 'init'))
                 
-                self.brains[channel] = Brain(self.brainDirectories[channel])
-                
                 text = self._cleanText(text)
                 
                 if text and len(text) > 1 and not text.isspace():
             
-                    self.brains[channel].learn(text)
+					cobeBrain = Brain(self.brainDirectories[channel])
+					cobeBrain.learn(text)
                     
                     self._reply(irc, channel, text)
                 
@@ -162,7 +161,8 @@ class Cobe(callbacks.Plugin):
                 
                 if text and len(text) > 1 and not text.isspace():
             
-                    self.brains[channel].learn(text)
+                    cobeBrain = Brain(self.brainDirectories[channel])
+					cobeBrain.learn(text)
                     
                     if random.randint(0, 10000) < probability: 
                         # Precision up into the 0.01%!
@@ -176,13 +176,12 @@ class Cobe(callbacks.Plugin):
                 
                 commands.getoutput('{0} {1}'.format(self._doCommand(channel), 'init'))
                 
-                self.brains[channel] = Brain(self.brainDirectories[channel])
-                
                 text = self._cleanText(text)
                 
                 if text and len(text) > 1 and not text.isspace():
             
-                    self.brains[channel].learn(text)
+                    cobeBrain = Brain(self.brainDirectories[channel])
+					cobeBrain.learn(text)
                     
                     if random.randint(0, 10000) < probability: 
                         # Precision up into the 0.01%!
@@ -193,7 +192,8 @@ class Cobe(callbacks.Plugin):
         """Send a respone to text"""
         
         self.log.info("Attempting to respond in %s with message: %s" % channel, text)
-        response = self.brains[channel].reply(text).encode('utf-8')
+        cobeBrain = Brain(self.brainDirectories[channel])
+        response = cobeBrain.reply(text).encode('utf-8')
         # delay the response here so we look real?
         if self.registryValue('responseDelay', channel):
             self.log.info("Delayed the response in %s." % channel)
@@ -287,16 +287,13 @@ class Cobe(callbacks.Plugin):
             
             if os.path.exists(self.brainDirectories[channel]):
                 # Does this channel have a brain file?
-                
-                if not self.brains.has_key(channel):
-                    # Making sure the key-value was set
-                    self.brains[channel] = Brain(self.brainDirectories[channel])
-                    
+               
                 text = self._cleanText(text)
                 if text and len(text) > 1 and not text.isspace():
             
                     irc.reply("Learning text: {0}".format(text))
-                    self.brains[channel].learn(text)
+                    cobeBrain = Brain(self.brainDirectories[channel])
+                    cobeBrain.learn(text)
                     
                 else:
         
@@ -309,13 +306,13 @@ class Cobe(callbacks.Plugin):
                 self.log.info("Creating a brainfile now in {1}".format(self.brainDirectories[channel]))
                 
                 commands.getoutput('{0} {1}'.format(self._doCommand(channel), 'init'))
-                self.brains[channel] = Brain(self.brainDirectories[channel]) # Setting key-value, just to make sure
                 
                 text = self._cleanText(text)
                 if text and len(text) > 1 and not text.isspace():
             
                     irc.reply("Learning text: {0}".format(text))
-                    self.brains[channel].learn(text)
+                    cobeBrain = Brain(self.brainDirectories[channel])
+                    cobeBrain.learn(text)
                 
                 
         elif os.path.exists(self.brainDirectories[channel]) and irc.isChannel(channel): 
@@ -325,7 +322,8 @@ class Cobe(callbacks.Plugin):
             if text and len(text) > 1 and not text.isspace():
         
                 irc.reply("Learning text: {0}".format(text))
-                self.brains[channel].learn(text)
+                cobeBrain = Brain(self.brainDirectories[channel])
+                cobeBrain.learn(text)
         
             else:
         
@@ -354,14 +352,11 @@ class Cobe(callbacks.Plugin):
             if os.path.exists(self.brainDirectories[channel]):
                 # Does this channel have a brain file?
                 
-                if not self.brains.has_key(channel):
-                    # Making sure the key-value was set
-                    self.brains[channel] = Brain(self.brainDirectories[channel])
-                    
 		text = self._cleanText(text)
 		if text and len(text) > 1 and not text.isspace():
 	
-			response = brains[channel].reply(text).encode('utf-8')
+			cobeBrain = Brain(self.brainDirectories[channel])
+			response = cobeBrain.reply(text).encode('utf-8')
 			irc.reply(response)
 
                 else:
@@ -375,12 +370,12 @@ class Cobe(callbacks.Plugin):
                 self.log.info("Creating a brainfile now in {1}".format(self.brainDirectories[channel]))
                 
                 commands.getoutput('{0} {1}'.format(self._doCommand(channel), 'init'))
-                self.brains[channel] = Brain(self.brainDirectories[channel]) # Setting key-value, just to make sure
                 
 		text = self._cleanText(text)
 		if text and len(text) > 1 and not text.isspace():
 	
-			response = brains[channel].reply(text).encode('utf-8')
+			cobeBrain = Brain(self.brainDirectories[channel])
+			response = cobeBrain.reply(text).encode('utf-8')
 			irc.reply(response)
                 
         elif os.path.exists(self.brainDirectories[channel]) and irc.isChannel(channel): 
@@ -389,7 +384,8 @@ class Cobe(callbacks.Plugin):
 		text = self._cleanText(text)
 		if text and len(text) > 1 and not text.isspace():
 	
-			response = brains[channel].reply(text).encode('utf-8')
+			cobeBrain = Brain(self.brainDirectories[channel])
+			response = cobeBrain.reply(text).encode('utf-8')
 			irc.reply(response)
 
 	        else:
