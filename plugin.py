@@ -161,7 +161,7 @@ class Cobe(callbacks.Plugin):
                     self._reply(irc, channel, text)
                 
     def _reply(self, irc, channel, text):
-        """Send a respone to text"""
+        """Send a response to text"""
         
         cobeBrain = Brain(self._getBrainDirectoryForChannel(channel))
         response = cobeBrain.reply(text).encode('utf-8')
@@ -174,7 +174,7 @@ class Cobe(callbacks.Plugin):
         if self.registryValue('responseDelay', channel):
             self.log.info("Delayed the response in %s." % channel)
             delayseconds = time.time() + random.randint(2, 5)
-            schedule.addEvent((irc.queueMsg(ircmsgs.privmsg(channel, response))), delayseconds)
+            schedule.addEvent(irc.queueMsg(ircmsgs.privmsg(channel, response)), delayseconds)
         else:
             irc.queueMsg(ircmsgs.privmsg(channel, response))
             
@@ -229,7 +229,7 @@ class Cobe(callbacks.Plugin):
             else:
                 return round(size/float(lim/2**10),2).__str__()+suf
             
-    def size(self, irc, msg, args, channel):
+    def brainsize(self, irc, msg, args, channel):
         """[<channel>]
         
         Prints the size of the brain on disk. If <channel> is not given, then the current channel is used.
@@ -243,7 +243,7 @@ class Cobe(callbacks.Plugin):
                 # Does this channel have a brain file?
                 
                 size = float(os.path.getsize(self.brainDirectories[channel]))
-                irc.reply("The brain file for channel {0} is {1}.".format(channel, self._makeMakePretty(size)))
+                irc.reply("The brain file for channel {0} is {1}.".format(channel, self._makeSizePretty(size)))
                 
             else: # Nope, raise error msg!
                 irc.error(_("I am missing a brainfile in {0}!".format(channel)), Raise=True)
@@ -251,15 +251,15 @@ class Cobe(callbacks.Plugin):
         elif os.path.exists(self._getBrainDirectoryForChannel(channel)): # We are in a channel! Does the brain file exist?
         
             size = float(os.path.getsize(self._getBrainDirectoryForChannel(channel)))
-            irc.reply("The brain file for channel {0} is {1}.".format(channel, self._makeMakePretty(size)))
+            irc.reply("The brain file for channel {0} is {1}.".format(channel, self._makeSizePretty(size)))
             
         else:
             
             irc.error(_("I am missing a brainfile in {0}!".format(channel)), Raise=True)
 
-    size = wrap(size, [additional('channel')])
+    brainsize = wrap(brainsize, [additional('channel')])
     
-    def learn(self, irc, msg, args, channel, text):
+    def teach(self, irc, msg, args, channel, text):
         """[<channel>] <text>
 
         Teaches the bot <text>. If the channel is not given, the current channel is used.
@@ -332,9 +332,9 @@ class Cobe(callbacks.Plugin):
         else:
             irc.error(_("Improper channel given!"), Raise=True)
             
-    learn = wrap(learn, [('checkCapability', 'admin'), additional('channel'), 'text'])
+    teach = wrap(teach, [('checkCapability', 'admin'), additional('channel'), 'text'])
 
-    def reply(self, irc, msg, args, channel, text):
+    def respond(self, irc, msg, args, channel, text):
         """[<channel>] <text>
 
         Replies to <text>. If the channel is not given, the current channel is used.
@@ -411,7 +411,7 @@ class Cobe(callbacks.Plugin):
         else:
             irc.error(_("Improper channel given!"), Raise=True)
             
-    reply = wrap(reply, [('checkCapability', 'admin'), additional('channel'), 'text'])
+    respond = respond(reply, [('checkCapability', 'admin'), additional('channel'), 'text'])
     
 Class = Cobe
 
