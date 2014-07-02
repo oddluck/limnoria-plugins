@@ -222,7 +222,7 @@ class Cobe(callbacks.Plugin):
             
     def _makeSizePretty(self, size):
         """Internal command for making the size pretty!"""
-        suffixes = [("Bytes",2**10), ("Kibibytes",2**20), ("Mebibytes",2**30), ("Gibibytes",2**40), ("Tebibytes",2**50)]
+        suffixes = [("Bytes",2**10), ("kibibytes",2**20), ("mebibytes",2**30), ("gibibytes",2**40), ("tebibytes",2**50)]
         for suf, lim in suffixes:
             if size > lim:
                 continue
@@ -243,7 +243,7 @@ class Cobe(callbacks.Plugin):
                 # Does this channel have a brain file?
                 
                 size = float(os.path.getsize(self.brainDirectories[channel]))
-                irc.reply("The brain file for channel {0} is {1}.".format(channel, self._makeSizePretty(size)))
+                irc.reply("The brain file for the channel {0} is {1}.".format(channel, self._makeSizePretty(size)))
                 
             else: # Nope, raise error msg!
                 irc.error(_("I am missing a brainfile in {0}!".format(channel)), Raise=True)
@@ -251,7 +251,7 @@ class Cobe(callbacks.Plugin):
         elif os.path.exists(self._getBrainDirectoryForChannel(channel)): # We are in a channel! Does the brain file exist?
         
             size = float(os.path.getsize(self._getBrainDirectoryForChannel(channel)))
-            irc.reply("The brain file for channel {0} is {1}.".format(channel, self._makeSizePretty(size)))
+            irc.reply("The brain file for the channel {0} is {1}.".format(channel, self._makeSizePretty(size)))
             
         else:
             
