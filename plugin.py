@@ -209,13 +209,13 @@ class Cobe(callbacks.Plugin):
         if (callbacks.addressed(irc.nick, msg) 
            or ircmsgs.isCtcp(msg) 
            or not irc.isChannel(channel) 
-           or not re.match(self.registryValue('ignoreRegex'), text)): 
+           or not (None == re.match(self.registryValue('ignoreRegex'), text))): 
             # Was the message a CTCP command, a command to the bot, is this message supposed to be ignored, or are we not in a channel??
         
-            self.log.info("The method 'callbacks.addressed(irc.nick, msg)' returns {0}!".format(True == callbacks.addressed(irc.nick, msg)))
-            self.log.info("The method 'ircmsgs.isCtcp(msg)' returns {0}!".format(True == ircmsgs.isCtcp(msg)))
-            self.log.info("The method 'irc.isChannel(channel)' returns {0}!".format(False == irc.isChannel(channel)))
-            self.log.info("The method 're.match(self.registryValue('ignoreRegex'), text)' returns {0}!".format(False == re.match(self.registryValue('ignoreRegex'), text)))
+            self.log.debug("The method 'callbacks.addressed(irc.nick, msg)' returns {0}!".format(True == callbacks.addressed(irc.nick, msg)))
+            self.log.debug("The method 'ircmsgs.isCtcp(msg)' returns {0}!".format(True == ircmsgs.isCtcp(msg)))
+            self.log.debug("The method 'irc.isChannel(channel)' returns {0}!".format(False == irc.isChannel(channel)))
+            self.log.debug("The method 're.match(self.registryValue('ignoreRegex'), text)' returns {0}!".format(False == re.match(self.registryValue('ignoreRegex'), text)))
 
             return
             
