@@ -203,33 +203,36 @@ class Cobe(callbacks.Plugin):
             irc.queueMsg(ircmsgs.privmsg(channel, response))
             
     def doPrivmsg(self, irc, msg):
-        channel = msg.args[0].lower()
-        text = msg.args[1].strip()
-        # if txt.startswith(conf.supybot.reply.whenAddressedBy.chars()):
-        if (not ircmsgs.isCtcp(msg) 
-           or not ircmsgs.isAction(msg) 
-           or irc.isChannel(channel)
-           or not re.match(self.registryValue('ignoreRegex'), text)):
-            # Only reacts to message in a channel, while ignoring CTCP, actions, and matching regex
-
-            if self.registryValue('stripUrls'): # strip URLs 
-                text = re.sub(r'(http[^\s]*)', '', text)
+        if callbacks.addressed(irc.nick, msg) or ircmsgs.isCtcp(msg) or not irc.isChannel(channel) or not re.match(self.registryValue('ignoreRegex'), text)): 
+        # Was the message a CTCP command, a command to the bot, is this message supposed to be ignored, or are we not in a channel??
+        
+            return
             
-            if re.match( irc.nick, text, re.I): 
-                # Were we addressed in the channel?
-                
-                probability = self.registryValue('probabilityWhenAddressed', channel)
-                
-            else: 
-                # Okay, we were not addressed, but what's the probability we should reply?
-                
-                probability = self.registryValue('probability', channel)
-
-            if self.registryValue('stripNicks'):
-                removenicks = '|'.join(item + '\W.*?\s' for item in irc.state.channels[channel].users)
-                text = re.sub(r'' + removenicks + '', 'MAGIC_NICK', text)
+        (channel, text) = msg.args
+        
+        if ircmsgs.isAction(msg):
+            # If the message was an action...we'll learn it anyways!
+        
+            text = ircmsgs.unAction(msg)
+                    
+        if self.registryValue('stripUrls'): # strip URLs
+            text = re.sub(r'(http[^\s]*)', '', text)
+        
+        if irc.nick.lower() in text.lower():
+            # Were we addressed in the channel?
             
-            self._learn(irc, channel, text, probability) # Now we can pass this to our learn function!
+            probability = self.registryValue('probabilityWhenAddressed', channel)
+            
+        else:
+            # Okay, we were not addressed, but what's the probability we should reply?
+            
+            probability = self.registryValue('probability', channel)
+
+        if self.registryValue('stripNicks'):
+            removenicks = '|'.join(item + '\W.*?\s' for item in irc.state.channels[channel].users)
+            text = re.sub(r'' + removenicks + '', 'MAGIC_NICK', text)
+        
+        self._learn(irc, channel, text, probability) # Now we can pass this to our learn function!
             
     def _makeSizePretty(self, size):
         """Internal command for making the size pretty!"""
