@@ -352,16 +352,16 @@ class Cobe(callbacks.Plugin):
             if os.path.exists(self.brainDirectories[channel]):
                 # Does this channel have a brain file?
                 
-        text = self._cleanText(text)
-        if text and len(text) > 1 and not text.isspace():
-    
-            cobeBrain = Brain(self.brainDirectories[channel])
-            response = cobeBrain.reply(text).encode('utf-8')
-            irc.reply(response)
+				text = self._cleanText(text)
+				if text and len(text) > 1 and not text.isspace():
+			
+					cobeBrain = Brain(self.brainDirectories[channel])
+					response = cobeBrain.reply(text).encode('utf-8')
+					irc.reply(response)
 
-                else:
-        
-                    irc.error(_("No text to reply to!"), Raise=True)
+						else:
+				
+							irc.error(_("No text to reply to!"), Raise=True)
                     
             else: 
                 # Nope, create one!
