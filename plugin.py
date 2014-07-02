@@ -249,6 +249,7 @@ class Cobe(callbacks.Plugin):
             if os.path.exists(self.brainDirectories[channel]):
                 # Does this channel have a brain file?
                 
+                size = float(os.path.getsize(self.brainDirectories[channel]))
                 irc.reply("The brain file for channel {0} is {1}.".format(channel, self._makeMakePretty(size)))
                 
             else: # Nope, raise error msg!
@@ -270,13 +271,23 @@ class Cobe(callbacks.Plugin):
 
         Teaches the bot <text>. If the channel is not given, the current channel is used.
         """
-        if not channel: # Did the user enter in a channel? If not, set the currect channel
+        if not channel: # Did the user enter in a channel? If not, set the current channel
             channel = msg.args[0]
 
-        if not irc.isChannel(channel): # Are we in a channel?
+        if not irc.isChannel(msg.args[0]) and irc.isChannel(channel): 
+            # Are we in a channel and is the channel supplied a channel?
+            if not self.brainDirectories.has_key(channel):
+                # If this dictionary does not have the channel, let's make it!
+                brainDirectory = conf.supybot.directories.data
+                self.brainDirectories[channel] = brainDirectory.dirize(channel.lower() + "/cobe.brain")
+            
             if os.path.exists(self.brainDirectories[channel]):
                 # Does this channel have a brain file?
                 
+                if not self.brains.has_key(channel):
+                    # Making sure the key-value was set
+                    self.brains[channel] = Brain(self.brainDirectories[channel])
+                    
                 text = self._cleanText(text)
                 if text and len(text) > 1 and not text.isspace():
             
@@ -287,10 +298,24 @@ class Cobe(callbacks.Plugin):
         
                     irc.error(_("No text to learn!"), Raise=True)
                     
-            else: # Nope, raise error msg!
-                irc.error(_("I am missing a brainfile in {0}!".format(channel)), Raise=True)
+            else: 
+                # Nope, create one!
             
-        elif os.path.exists(self.brainDirectories[channel]): # We are in a channel! Does the brain file exist?
+                self.log.info("Non-existent brainfile in {0}!".format(channel))
+                self.log.info("Creating a brainfile now in {1}".format(self.brainDirectories[channel]))
+                
+                commands.getoutput('{0} {1}'.format(self._doCommand(channel), 'init'))
+                self.brains[channel] = Brain(self.brainDirectories[channel]) # Setting key-value, just to make sure
+                
+                text = self._cleanText(text)
+                if text and len(text) > 1 and not text.isspace():
+            
+                    irc.reply("Learning text: {0}".format(text))
+                    self.brains[channel].learn(text)
+                
+                
+        elif os.path.exists(self.brainDirectories[channel]) and irc.isChannel(channel): 
+            # We are in a channel! Does the brain file exist and is this a channel?
     
             text = self._cleanText(text)
             if text and len(text) > 1 and not text.isspace():
@@ -301,6 +326,9 @@ class Cobe(callbacks.Plugin):
             else:
         
                 irc.error(_("No text to learn!"), Raise=True)
+                
+        else:
+            irc.error(_("Improper channel given!"), Raise=True)
             
     learn = wrap(learn, [('checkCapability', 'admin'), additional('channel'), 'text'])
 
@@ -309,37 +337,65 @@ class Cobe(callbacks.Plugin):
 
         Replies to <text>. If the channel is not given, the current channel is used.
         """
-        if not channel: # Did the user enter in a channel? If not, set the currect channel
+        if not channel: # Did the user enter in a channel? If not, set the current channel
             channel = msg.args[0]
 
-        if not irc.isChannel(channel): # Are we in a channel?
+        if not irc.isChannel(msg.args[0]) and irc.isChannel(channel): 
+            # Are we in a channel and is the channel supplied a channel?
+            if not self.brainDirectories.has_key(channel):
+                # If this dictionary does not have the channel, let's make it!
+                brainDirectory = conf.supybot.directories.data
+                self.brainDirectories[channel] = brainDirectory.dirize(channel.lower() + "/cobe.brain")
+            
             if os.path.exists(self.brainDirectories[channel]):
                 # Does this channel have a brain file?
                 
-                text = self._cleanText(text)
-                if text and len(text) > 1 and not text.isspace():
-            
-                    response = brains[channel].reply(text).encode('utf-8')
-                    irc.reply(response)
+                if not self.brains.has_key(channel):
+                    # Making sure the key-value was set
+                    self.brains[channel] = Brain(self.brainDirectories[channel])
+                    
+				text = self._cleanText(text)
+				if text and len(text) > 1 and not text.isspace():
+			
+					response = brains[channel].reply(text).encode('utf-8')
+					irc.reply(response)
+
                     
                 else:
         
-                    irc.error(_("No text to reply to!".format(channel)), Raise=True)
-                
-            else: # Nope, raise error msg!
-                irc.error(_("I am missing a brainfile in {0}!".format(channel)), Raise=True)
+                    irc.error(_("No text to reply to!"), Raise=True)
+                    
+            else: 
+                # Nope, create one!
             
-        elif os.path.exists(self.brainDirectories[channel]): # We are in a channel! Does the brain file exist?
+                self.log.info("Non-existent brainfile in {0}!".format(channel))
+                self.log.info("Creating a brainfile now in {1}".format(self.brainDirectories[channel]))
+                
+                commands.getoutput('{0} {1}'.format(self._doCommand(channel), 'init'))
+                self.brains[channel] = Brain(self.brainDirectories[channel]) # Setting key-value, just to make sure
+                
+				text = self._cleanText(text)
+				if text and len(text) > 1 and not text.isspace():
+			
+					response = brains[channel].reply(text).encode('utf-8')
+					irc.reply(response)
+                
+                
+        elif os.path.exists(self.brainDirectories[channel]) and irc.isChannel(channel): 
+            # We are in a channel! Does the brain file exist and is this a channel?
     
-            text = self._cleanText(text)
-            if text and len(text) > 1 and not text.isspace():
-        
-                response = brains[channel].reply(text).encode('utf-8')
-                irc.reply(response)
+			text = self._cleanText(text)
+			if text and len(text) > 1 and not text.isspace():
+		
+				response = brains[channel].reply(text).encode('utf-8')
+				irc.reply(response)
         
             else:
         
-                irc.error(_("No text to reply to!".format(channel)), Raise=True)
+                irc.error(_("No text to reply to!"), Raise=True)
+                
+        else:
+            irc.error(_("Improper channel given!"), Raise=True)
             
     reply = wrap(reply, [('checkCapability', 'admin'), additional('channel'), 'text'])
     
