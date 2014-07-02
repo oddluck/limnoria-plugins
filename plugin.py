@@ -127,67 +127,32 @@ class Cobe(callbacks.Plugin):
     def _learn(self, irc, channel, text, probability):
         """Internal method for learning phrases."""
         
-        if not channel: # Did the user enter in a channel? If not, set the currect channel
-        
-            channel = msg.args[0]
-            
-        if not irc.isChannel(channel): # Are we in a channel?
-            if os.path.exists(self._getBrainDirectoryForChannel(channel)):
-                # Does this channel have a directory for the brain file stored and does this file exist?
-                
-                text = self._cleanText(text)
-                
-                if text and len(text) > 1 and not text.isspace():
-            
-                    cobeBrain = self._getBrainDirectoryForChannel(channel)
-                    cobeBrain.learn(text)
-                    
-                self._reply(irc, channel, text)
-                    
-            else: # Nope, let's make it!
-                            
-                commands.getoutput('{0} {1}'.format(self._doCommand(channel), 'init'))
-                
-                text = self._cleanText(text)
-                
-                if text and len(text) > 1 and not text.isspace():
-            
-                    cobeBrain = Brain(self._getBrainDirectoryForChannel(channel))
-                    cobeBrain.learn(text)
-                    
-                    self._reply(irc, channel, text)
-                
-        elif os.path.exists(self._getBrainDirectoryForChannel(channel)):
+        if os.path.exists(self._getBrainDirectoryForChannel(channel)):
             # Does this channel have a directory for the brain file stored and does this file exist?
             
             text = self._cleanText(text)
             
             if text and len(text) > 1 and not text.isspace():
         
-                cobeBrain = Brain(self._getBrainDirectoryForChannel(channel))
+                cobeBrain = self._getBrainDirectoryForChannel(channel)
                 cobeBrain.learn(text)
                 
-                if random.randint(0, 10000) < probability: 
-                    # Precision up into the 0.01%!
-                    
-                    self._reply(irc, channel, text)
+            self._reply(irc, channel, text)
                 
         else: # Nope, let's make it!
-        
+                        
             commands.getoutput('{0} {1}'.format(self._doCommand(channel), 'init'))
             
             text = self._cleanText(text)
             
             if text and len(text) > 1 and not text.isspace():
         
+                self.log.debug("Learning: {0}".format(text))
                 cobeBrain = Brain(self._getBrainDirectoryForChannel(channel))
                 cobeBrain.learn(text)
                 
-                if random.randint(0, 10000) < probability: 
-                    # Precision up into the 0.01%!
-                    
-                    self._reply(irc, channel, text)
-            
+                self._reply(irc, channel, text)
+                
     def _reply(self, irc, channel, text):
         """Send a respone to text"""
         
@@ -212,10 +177,10 @@ class Cobe(callbacks.Plugin):
            or not (None == re.match(self.registryValue('ignoreRegex'), text))): 
             # Was the message a CTCP command, a command to the bot, is this message supposed to be ignored, or are we not in a channel??
         
-            self.log.debug("The method 'callbacks.addressed(irc.nick, msg)' returns {0}!".format(True == callbacks.addressed(irc.nick, msg)))
-            self.log.debug("The method 'ircmsgs.isCtcp(msg)' returns {0}!".format(True == ircmsgs.isCtcp(msg)))
-            self.log.debug("The method 'irc.isChannel(channel)' returns {0}!".format(False == irc.isChannel(channel)))
-            self.log.debug("The method 're.match(self.registryValue('ignoreRegex'), text)' returns {0}!".format(False == (None == re.match(self.registryValue('ignoreRegex'), text))))
+            self.log.info("The method 'callbacks.addressed(irc.nick, msg)' returns {0}!".format(True == callbacks.addressed(irc.nick, msg)))
+            self.log.info("The method 'ircmsgs.isCtcp(msg)' returns {0}!".format(True == ircmsgs.isCtcp(msg)))
+            self.log.info("The method 'irc.isChannel(channel)' returns {0}!".format(False == irc.isChannel(channel)))
+            self.log.info("The method 're.match(self.registryValue('ignoreRegex'), text)' returns {0}!".format(False == (None == re.match(self.registryValue('ignoreRegex'), text))))
 
             return
             
