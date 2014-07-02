@@ -109,7 +109,7 @@ class Cobe(callbacks.Plugin):
         text = self._decodeIRCMessage(text)         # Decode the string.
         text = ircutils.stripFormatting(text)       # Strip IRC formatting from the string.
         text = text.strip()                         # Strip whitespace from beginning and the end of the string.
-        text = text[0].upper() + text[1:]           # Capitalize first letter of the string.
+        text[0] = text[0].upper()           	    # Capitalize first letter of the string.
         text = utils.str.normalizeWhitespace(text)  # Normalize the whitespace in the string.
         
         return text
