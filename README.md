@@ -23,7 +23,7 @@
 ## Question editing tools
 TriviaTime was designed to make editing, deleting, and adding questions a breeze, for both administrators and players. However, due to the amount of tools available, it can be complicated to new players. Instructions on these tools are available [here][].
 
-##How to set up the website
+#How to set up the website
 
 ## Install PHP
 1. Install PHP and PHP-MySQL (for PDO). PHP-SQLite will also need to be installed.
