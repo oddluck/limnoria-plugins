@@ -365,9 +365,16 @@ class TriviaTime(callbacks.Plugin):
         
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
-        edit = self.storage.getEditById(num)
+        if self.registryValue('general.globalstats'):
+            edit = self.storage.getEditById(num)
+        else:
+            edit = self.storage.getEditById(num, channel)
+            
         if len(edit) < 1:
-            irc.error('Could not find that edit')
+            if self.registryValue('general.globalstats'):
+                irc.error('Unable to find edit #{0}.'.format(num))
+            else:
+                irc.error('Unable to find edit #{0} in {1}.'.format(num, channel))
         else:
             edit = edit[0]
             question = threadStorage.getQuestion(edit[1])
@@ -901,9 +908,16 @@ class TriviaTime(callbacks.Plugin):
         
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
-        edit = threadStorage.getEditById(num)
+        if self.registryValue('general.globalstats'):
+            edit = threadStorage.getEditById(num)
+        else:
+            edit = threadStorage.getEditById(num, channel)
+            
         if len(edit) < 1:
-            irc.error('Could not find that edit')
+            if self.registryValue('general.globalstats'):
+                irc.error('Unable to find edit #{0}.'.format(num))
+            else:
+                irc.error('Unable to find edit #{0} in {1}.'.format(num, channel))
         else:
             edit = edit[0]
             threadStorage.removeEdit(edit[0])
@@ -1270,7 +1284,11 @@ class TriviaTime(callbacks.Plugin):
         if num is not None:
             dbLocation = self.registryValue('admin.sqlitedb')
             threadStorage = self.Storage(dbLocation)
-            edit = threadStorage.getEditById(num)
+            if self.registryValue('general.globalstats'):
+                edit = threadStorage.getEditById(num)
+            else:
+                edit = threadStorage.getEditById(num, channel)
+                
             if len(edit) > 0:
                 edit = edit[0]
                 question = threadStorage.getQuestion(edit[1])
@@ -1282,7 +1300,10 @@ class TriviaTime(callbacks.Plugin):
                 else:
                     irc.error('Question could not be found for this edit')
             else:
-                irc.error('Edit #%d not found' % num)
+                if self.registryValue('general.globalstats'):
+                    irc.error('Unable to find edit #{0}.'.format(num))
+                else:
+                    irc.error('Unable to find edit #{0} in {1}.'.format(num, channel))
         else:
             self.listedits(irc, msg, [channel])
     showedit = wrap(showedit, ['channel', optional('int')])
@@ -2870,7 +2891,7 @@ class TriviaTime(callbacks.Plugin):
             else:
                 c.execute('''SELECT * FROM triviatemporaryquestion 
                              WHERE id=? AND channel_canonical=? 
-                             LIMIT 1''', (id, ircutils.toLower(channel))
+                             LIMIT 1''', (id, ircutils.toLower(channel)))
             data = []
             for row in c:
                 data.append(row)
