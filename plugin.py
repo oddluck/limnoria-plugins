@@ -2763,9 +2763,15 @@ class TriviaTime(callbacks.Plugin):
             rows = result.fetchone()[0]
             return rows
 
-        def getDeleteById(self, id):
+        def getDeleteById(self, id, channel=None):
             c = self.conn.cursor()
-            c.execute('SELECT * FROM triviadelete where id=? limit 1', (id,))
+            if channel is None:
+                c.execute('''SELECT * FROM triviadelete 
+                             WHERE id=? LIMIT 1''', (id,))
+            else:
+                c.execute('''SELECT * FROM triviadelete 
+                             WHERE id=? AND channel_canonical=? 
+                             LIMIT 1''', (id, ircutils.toLower(channel)))
             data = []
             for row in c:
                 data.append(row)
@@ -2795,9 +2801,15 @@ class TriviaTime(callbacks.Plugin):
             c.close()
             return data
 
-        def getReportById(self, id):
+        def getReportById(self, id, channel=None):
             c = self.conn.cursor()
-            c.execute('SELECT * FROM triviareport where id=? limit 1', (id,))
+            if channel is None:
+                c.execute('''SELECT * FROM triviareport 
+                             WHERE id=? LIMIT 1''', (id,))
+            else:
+                c.execute('''SELECT * FROM triviareport 
+                             WHERE id=? AND channel_canonical=? 
+                             LIMIT 1''', (id, ircutils.toLower(channel)))
             data = []
             for row in c:
                 data.append(row)
@@ -2850,9 +2862,15 @@ class TriviaTime(callbacks.Plugin):
             c.close()
             return data
 
-        def getTemporaryQuestionById(self, id):
+        def getTemporaryQuestionById(self, id, channel=None):
             c = self.conn.cursor()
-            c.execute('SELECT * FROM triviatemporaryquestion where id=? limit 1', (id,))
+            if channel is None:
+                c.execute('''SELECT * FROM triviatemporaryquestion 
+                             WHERE id=? LIMIT 1''', (id,))
+            else:
+                c.execute('''SELECT * FROM triviatemporaryquestion 
+                             WHERE id=? AND channel_canonical=? 
+                             LIMIT 1''', (id, ircutils.toLower(channel))
             data = []
             for row in c:
                 data.append(row)
@@ -2882,9 +2900,15 @@ class TriviaTime(callbacks.Plugin):
             c.close()
             return data
             
-        def getEditById(self, id):
+        def getEditById(self, id, channel=None):
             c = self.conn.cursor()
-            c.execute('SELECT * FROM triviaedit where id=? limit 1', (id,))
+            if channel is None:
+                c.execute('''SELECT * FROM triviaedit 
+                             WHERE id=? LIMIT 1''', (id,))
+            else:
+                c.execute('''SELECT * FROM triviaedit 
+                             WHERE id=? AND channel_canonical=? 
+                             LIMIT 1''', (id, ircutils.toLower(channel)))
             data = []
             for row in c:
                 data.append(row)
