@@ -2068,34 +2068,54 @@ class TriviaTime(callbacks.Plugin):
             for i in xrange(0, len(qs), rows):
                 yield qs[i:i+rows]
 
-        def countTemporaryQuestions(self):
+        def countTemporaryQuestions(self, channel=None):
             c = self.conn.cursor()
-            result = c.execute('''select count(*) from triviatemporaryquestion''')
+            if channel is None:
+                result = c.execute('''SELECT COUNT(*) FROM triviatemporaryquestion''')
+            else:
+                result = c.execute('''SELECT COUNT(*) FROM triviatemporaryquestion
+                                      WHERE channel_canonical = ?''',
+                                      (ircutils.toLower(channel,))
             rows = result.fetchone()[0]
             c.close()
             return rows
 
-        def countDeletes(self):
+        def countDeletes(self, channel=None):
             c = self.conn.cursor()
-            result = c.execute('''select count(*) from triviadelete''')
+            if channel is None:
+                result = c.execute('''SELECT COUNT(*) FROM triviadelete''')
+            else:
+                result = c.execute('''SELECT COUNT(*) FROM triviadelete
+                                      WHERE channel_canonical = ?''',
+                                      (ircutils.toLower(channel,))
             rows = result.fetchone()[0]
             c.close()
             return rows
 
-        def countEdits(self):
+        def countEdits(self, channel=None):
             c = self.conn.cursor()
-            result = c.execute('''select count(*) from triviaedit''')
+            if channel is None:
+                result = c.execute('''SELECT COUNT(*) FROM triviaedit''')
+            else:
+                result = c.execute('''SELECT COUNT(*) FROM triviaedit
+                                      WHERE channel_canonical = ?''',
+                                      (ircutils.toLower(channel,))
             rows = result.fetchone()[0]
             c.close()
             return rows
 
-        def countReports(self):
+        def countReports(self, channel=None):
             c = self.conn.cursor()
-            result = c.execute('''select count(*) from triviareport''')
+            if channel is None:
+                result = c.execute('''SELECT COUNT(*) FROM triviareport''')
+            else:
+                result = c.execute('''SELECT COUNT(*) FROM triviareport
+                                      WHERE channel_canonical = ?''',
+                                      (ircutils.toLower(channel),))
             rows = result.fetchone()[0]
             c.close()
             return rows
-
+        
         def deleteQuestion(self, questionId):
             c = self.conn.cursor()
             test = c.execute('''UPDATE triviaquestion set
