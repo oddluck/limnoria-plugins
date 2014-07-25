@@ -624,15 +624,24 @@ class TriviaTime(callbacks.Plugin):
             irc.reply('You must be a TriviaMod in {0} to use this command.'.format(channel))
             return
         
+        # Grab list from the database
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
-        count = threadStorage.countDeletes()
-        if page is None or page < 1:
-            page=1
-        pages = int(count/3)
-        deletes = threadStorage.getDeleteTop3(page)
+        if self.registryValue('general.globalstats'):
+            count = threadStorage.countDeletes()
+        else:
+            count = threadStorage.countDeletes(channel)
+        pages = int(count / 3)
         if count % 3 > 0:
             pages += 1
+        if page is None or page < 1:
+            page = 1
+        if self.registryValue('general.globalstats'):
+            deletes = threadStorage.getDeleteTop3(page)
+        else:
+            deletes = threadStorage.getDeleteTop3(page, channel=channel)
+            
+        # Output list
         if count < 1:
             irc.reply('No deletes found')
         else:
@@ -657,15 +666,24 @@ class TriviaTime(callbacks.Plugin):
             irc.reply('You must be a TriviaMod in {0} to use this command.'.format(channel))
             return
         
+        # Grab list from the database
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
-        count = threadStorage.countEdits()
-        if page is None or page < 1:
-            page=1
-        pages = int(count/3)
-        edits = threadStorage.getEditTop3(page)
+        if self.registryValue('general.globalstats'):
+            count = threadStorage.countEdits()
+        else:
+            count = threadStorage.countEdits(channel)
+        pages = int(count / 3)
         if count % 3 > 0:
             pages += 1
+        if page is None or page < 1:
+            page = 1
+        if self.registryValue('general.globalstats'):
+            edits = threadStorage.getEditTop3(page)
+        else:
+            edits = threadStorage.getEditTop3(page, channel=channel)
+            
+        # Output list
         if count < 1:
             irc.reply('No edits found')
         else:
@@ -680,15 +698,24 @@ class TriviaTime(callbacks.Plugin):
         List reports pending edit.
         Channel is only required when using the command outside of a channel.
         """
+        # Grab list from the database
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
-        count = threadStorage.countReports()
-        if page is None or page < 1:
-            page=1
-        pages = int(count/3)
-        reports = threadStorage.getReportTop3(page)
+        if self.registryValue('general.globalstats'):
+            count = threadStorage.countReports()
+        else:
+            count = threadStorage.countReports(channel)
+        pages = int(count / 3)
         if count % 3 > 0:
             pages += 1
+        if page is None or page < 1:
+            page = 1
+        if self.registryValue('general.globalstats'):
+            reports = threadStorage.getReportTop3(page)
+        else:
+            reports = threadStorage.getReportTop3(page, channel=channel)
+        
+        # Output list
         if count < 1:
             irc.reply('No reports found')
         else:
@@ -708,15 +735,24 @@ class TriviaTime(callbacks.Plugin):
             irc.reply('You must be a TriviaMod in {0} to use this command.'.format(channel))
             return
         
+        # Grab list from the database
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
-        count = threadStorage.countTemporaryQuestions()
-        if page is None or page < 1:
-            page=1
-        pages = int(count/3)
+        if self.registryValue('general.globalstats'):
+            count = threadStorage.countTemporaryQuestions()
+        else:
+            count = threadStorage.countTemporaryQuestions(channel)
+        pages = int(count / 3)
         if count % 3 > 0:
             pages += 1
-        q = threadStorage.getTemporaryQuestionTop3(page)
+        if page is None or page < 1:
+            page = 1
+        if self.registryValue('general.globalstats'):
+            q = threadStorage.getTemporaryQuestionTop3(page)
+        else:
+            q = threadStorage.getTemporaryQuestionTop3(page, channel=channel)
+        
+        # Output list
         if count < 1:
             irc.reply('No new questions found')
         else:
@@ -2075,7 +2111,7 @@ class TriviaTime(callbacks.Plugin):
             else:
                 result = c.execute('''SELECT COUNT(*) FROM triviatemporaryquestion
                                       WHERE channel_canonical = ?''',
-                                      (ircutils.toLower(channel,))
+                                      (ircutils.toLower(channel),))
             rows = result.fetchone()[0]
             c.close()
             return rows
@@ -2087,7 +2123,7 @@ class TriviaTime(callbacks.Plugin):
             else:
                 result = c.execute('''SELECT COUNT(*) FROM triviadelete
                                       WHERE channel_canonical = ?''',
-                                      (ircutils.toLower(channel,))
+                                      (ircutils.toLower(channel),))
             rows = result.fetchone()[0]
             c.close()
             return rows
@@ -2099,7 +2135,7 @@ class TriviaTime(callbacks.Plugin):
             else:
                 result = c.execute('''SELECT COUNT(*) FROM triviaedit
                                       WHERE channel_canonical = ?''',
-                                      (ircutils.toLower(channel,))
+                                      (ircutils.toLower(channel),))
             rows = result.fetchone()[0]
             c.close()
             return rows
@@ -2762,7 +2798,7 @@ class TriviaTime(callbacks.Plugin):
             c.close()
             return data
 
-        def getDeleteTop3(self, page=1, amount=3):
+        def getDeleteTop3(self, page=1, amount=3, channel=None):
             if page < 1:
                 page=1
             if amount < 1:
@@ -2770,7 +2806,15 @@ class TriviaTime(callbacks.Plugin):
             page -= 1
             start = page * amount
             c = self.conn.cursor()
-            c.execute('SELECT * FROM triviadelete order by id desc limit ?, ?', (start, amount))
+            if channel is None:
+                c.execute('''SELECT * FROM triviadelete 
+                             ORDER BY id DESC LIMIT ?, ?''', 
+                             (start, amount))
+            else:
+                c.execute('''SELECT * FROM triviadelete 
+                             WHERE channel_canonical = ? 
+                             ORDER BY id DESC LIMIT ?, ?''', 
+                             (ircutils.toLower(channel), start, amount))
             data = []
             for row in c:
                 data.append(row)
@@ -2786,7 +2830,7 @@ class TriviaTime(callbacks.Plugin):
             c.close()
             return data
 
-        def getReportTop3(self, page=1, amount=3):
+        def getReportTop3(self, page=1, amount=3, channel=None):
             if page < 1:
                 page=1
             if amount < 1:
@@ -2794,14 +2838,22 @@ class TriviaTime(callbacks.Plugin):
             page -= 1
             start = page * amount
             c = self.conn.cursor()
-            c.execute('SELECT * FROM triviareport order by id desc limit ?, ?', (start, amount))
+            if channel is None:
+                c.execute('''SELECT * FROM triviareport 
+                             ORDER BY id DESC LIMIT ?, ?''', 
+                             (start, amount))
+            else:
+                c.execute('''SELECT * FROM triviareport 
+                             WHERE channel_canonical = ? 
+                             ORDER BY id DESC LIMIT ?, ?''', 
+                             (ircutils.toLower(channel), start, amount))
             data = []
             for row in c:
                 data.append(row)
             c.close()
             return data
 
-        def getTemporaryQuestionTop3(self, page=1, amount=3):
+        def getTemporaryQuestionTop3(self, page=1, amount=3, channel=None):
             if page < 1:
                 page=1
             if amount < 1:
@@ -2809,7 +2861,15 @@ class TriviaTime(callbacks.Plugin):
             page -= 1
             start = page * amount
             c = self.conn.cursor()
-            c.execute('SELECT * FROM triviatemporaryquestion order by id desc limit ?, ?', (start, amount))
+            if channel is None:
+                c.execute('''SELECT * FROM triviatemporaryquestion 
+                             ORDER BY id DESC LIMIT ?, ?''', 
+                             (start, amount))
+            else:
+                c.execute('''SELECT * FROM triviatemporaryquestion 
+                             WHERE channel_canonical = ? 
+                             ORDER BY id DESC LIMIT ?, ?''', 
+                             (ircutils.toLower(channel), start, amount))
             data = []
             for row in c:
                 data.append(row)
@@ -2825,6 +2885,29 @@ class TriviaTime(callbacks.Plugin):
             c.close()
             return data
 
+        def getEditTop3(self, page=1, amount=3, channel=None):
+            if page < 1:
+                page = 1
+            if amount < 1:
+                amount = 3
+            page -= 1
+            start = page * amount
+            c = self.conn.cursor()
+            if channel is None:
+                c.execute('''SELECT * FROM triviaedit 
+                             ORDER BY id DESC LIMIT ?, ?''', 
+                             (start, amount))
+            else:
+                c.execute('''SELECT * FROM triviaedit 
+                             WHERE channel_canonical = ? 
+                             ORDER BY id DESC LIMIT ?, ?''', 
+                             (ircutils.toLower(channel), start, amount))
+            data = []
+            for row in c:
+                data.append(row)
+            c.close()
+            return data
+            
         def getEditById(self, id):
             c = self.conn.cursor()
             c.execute('SELECT * FROM triviaedit where id=? limit 1', (id,))
@@ -2859,21 +2942,6 @@ class TriviaTime(callbacks.Plugin):
             if rows > 0:
                 return True
             return False
-
-        def getEditTop3(self, page=1, amount=3):
-            if page < 1:
-                page=1
-            if amount < 1:
-                amount=3
-            page -= 1
-            start = page * amount
-            c = self.conn.cursor()
-            c.execute('SELECT * FROM triviaedit order by id desc limit ?, ?', (start, amount))
-            data = []
-            for row in c:
-                data.append(row)
-            c.close()
-            return data
 
         def loginExists(self, username):
             usernameCanonical = ircutils.toLower(username)
