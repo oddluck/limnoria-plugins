@@ -39,18 +39,18 @@ class TimeoutList:
             if t < (time.time() - self.timeout):
                 del self.dict[k]
 
-    def append(self, value):
+    def append(self, key):
         self.clearTimeout()
-        self.dict[value] = time.time()
+        self.dict[key] = time.time()
 
-    def has(self, value):
+    def has(self, key):
         self.clearTimeout()
-        if value in self.dict:
+        if key in self.dict:
             return True
         return False
 		
-    def getTimeLeft(self, value):
-        return self.timeout - (time.time() - self.dict[value])
+    def getTimeLeft(self, key):
+        return self.timeout - (time.time() - self.dict[key])
 
 class TriviaTime(callbacks.Plugin):
     """
