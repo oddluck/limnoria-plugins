@@ -1178,9 +1178,9 @@ class TriviaTime(callbacks.Plugin):
             irc.reply('You must be a TriviaMod in {0} to use this command.'.format(channel))
             return
         
-        dbLocation = self.registryValue('admin.sqlitedb')
-        threadStorage = self.Storage(dbLocation)
         if num is not None:
+            dbLocation = self.registryValue('admin.sqlitedb')
+            threadStorage = self.Storage(dbLocation)
             q = threadStorage.getDeleteById(num)
             if len(q) > 0:
                 q = q[0]
@@ -1193,17 +1193,7 @@ class TriviaTime(callbacks.Plugin):
             else:
                 irc.error('Delete #%d not found' % num)
         else:
-            q = threadStorage.getDeleteTop3()
-            if len(q) < 1:
-                irc.reply('No deletes found')
-            for ques in q:
-                question = threadStorage.getQuestion(ques[3])
-                questionText = 'Delete not found'
-                if len(question) > 0:
-                    question = question[0]
-                    questionText = question[2]
-                irc.reply('Delete #%d, by %s Question #%d: %s'%(ques[0], ques[1], ques[3], questionText))
-            irc.reply('Use the showdelete to see more information')
+            self.listdeletes(irc, msg, [channel])
     showdelete = wrap(showdelete, ['channel', optional('int')])
 
     def showquestion(self, irc, msg, arg, user, channel, num):
@@ -1246,10 +1236,10 @@ class TriviaTime(callbacks.Plugin):
         """[<channel>] [<report num>]
         Shows report information, if number is provided one record is shown, otherwise the last 3 are. 
         Channel is only necessary when editing from outside of the channel.
-        """
-        dbLocation = self.registryValue('admin.sqlitedb')
-        threadStorage = self.Storage(dbLocation)
+        """        
         if num is not None:
+            dbLocation = self.registryValue('admin.sqlitedb')
+            threadStorage = self.Storage(dbLocation)
             report = threadStorage.getReportById(num)
             if len(report) < 1:
                 irc.reply('No reports found')
@@ -1264,11 +1254,7 @@ class TriviaTime(callbacks.Plugin):
                     question = question[0]
                     irc.reply('Question #%d: %s' % (question[0], question[2]))
         else:
-            reports  = threadStorage.getReportTop3()
-            if len(reports) < 1:
-                irc.reply('No reports found')
-            for report in reports:
-                irc.reply('Report #%d \'%s\' by %s on %s Q#%d '%(report[0], report[3], report[2], report[1], report[7]))
+            self.listreports(irc, msg, [channel])
     showreport = wrap(showreport, ['user', 'channel', optional('int')])
 
     def showedit(self, irc, msg, arg, channel, num):
@@ -1281,9 +1267,9 @@ class TriviaTime(callbacks.Plugin):
             irc.reply('You must be a TriviaMod in {0} to use this command.'.format(channel))
             return
             
-        dbLocation = self.registryValue('admin.sqlitedb')
-        threadStorage = self.Storage(dbLocation)
         if num is not None:
+            dbLocation = self.registryValue('admin.sqlitedb')
+            threadStorage = self.Storage(dbLocation)
             edit = threadStorage.getEditById(num)
             if len(edit) > 0:
                 edit = edit[0]
@@ -1298,14 +1284,7 @@ class TriviaTime(callbacks.Plugin):
             else:
                 irc.error('Edit #%d not found' % num)
         else:
-            edits = threadStorage.getEditTop3()
-            if len(edits) < 1:
-                irc.reply('No edits found')
-            for edit in edits:
-                question = threadStorage.getQuestion(edit[1])
-                question = question[0]
-                irc.reply('Edit #%d, Question #%d, NEW:%s'%(edit[0], edit[1], edit[2]))
-            irc.reply('Use the showedit command to see more information')
+            self.listedits(irc, msg, [channel])
     showedit = wrap(showedit, ['channel', optional('int')])
 
     def shownew(self, irc, msg, arg, channel, num):
@@ -1317,10 +1296,10 @@ class TriviaTime(callbacks.Plugin):
         if self.isTriviaMod(hostmask, channel) == False:
             irc.reply('You must be a TriviaMod in {0} to use this command.'.format(channel))
             return
-            
-        dbLocation = self.registryValue('admin.sqlitedb')
-        threadStorage = self.Storage(dbLocation)
+                    
         if num is not None:
+            dbLocation = self.registryValue('admin.sqlitedb')
+            threadStorage = self.Storage(dbLocation)
             q = threadStorage.getTemporaryQuestionById(num)
             if len(q) > 0:
                 q = q[0]
@@ -1328,12 +1307,7 @@ class TriviaTime(callbacks.Plugin):
             else:
                 irc.error('Temp Q #%d not found' % num)
         else:
-            q = threadStorage.getTemporaryQuestionTop3()
-            if len(q) < 1:
-                irc.reply('No temp questions found')
-            for ques in q:
-                irc.reply('Temp Q #%d: %s'%(ques[0], ques[3]))
-            irc.reply('Use the shownew to see more information')
+            self.listnew(irc, msg, [channel])
     shownew = wrap(shownew, ['channel', optional('int')])
 
     def start(self, irc, msg, args, channel):
