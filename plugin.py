@@ -273,16 +273,19 @@ class TriviaTime(callbacks.Plugin):
         return None
 
     def isTriviaMod(self, hostmask, channel):
+        channel = ircutils.toLower(channel)
         cap = self.getTriviaCapability(hostmask, channel)
         return cap in ['{0},{1}'.format(channel,'triviamod'), 
                        '{0},{1}'.format(channel,'triviaadmin'), 'owner']
     
     def isTriviaAdmin(self, hostmask, channel):
+        channel = ircutils.toLower(channel)
         cap = self.getTriviaCapability(hostmask, channel)
         return cap in ['{0},{1}'.format(channel,'triviaadmin'), 'owner']
                 
     def getTriviaCapability(self, hostmask, channel):
         if ircdb.users.hasUser(hostmask):
+            channel = ircutils.toLower(channel)
             caps = list(ircdb.users.getUser(hostmask).capabilities)
             triviamod = '{0},{1}'.format(channel,'triviamod')
             triviaadmin = '{0},{1}'.format(channel,'triviaadmin')
