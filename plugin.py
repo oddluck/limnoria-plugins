@@ -336,9 +336,16 @@ class TriviaTime(callbacks.Plugin):
         
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
-        delete = self.storage.getDeleteById(num)
+        if self.registryValue('general.globalstats'):
+            delete = self.storage.getDeleteById(num)
+        else:
+            delete = self.storage.getDeleteById(num, channel)
+            
         if len(delete) < 1:
-            irc.error('Could not find that delete')
+            if self.registryValue('general.globalstats'):
+                irc.error('Unable to find delete #{0}.'.format(num))
+            else:
+                irc.error('Unable to find delete #{0} in {1}.'.format(num, channel))
         else:
             delete = delete[0]
             questionNumber = delete[3]
@@ -409,9 +416,16 @@ class TriviaTime(callbacks.Plugin):
         
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
-        q = threadStorage.getTemporaryQuestionById(num)
+        if self.registryValue('general.globalstats'):
+            q = threadStorage.getTemporaryQuestionById(num)
+        else:
+            q = threadStorage.getTemporaryQuestionById(num, channel)
+            
         if len(q) < 1:
-            irc.error('Could not find that temp question')
+            if self.registryValue('general.globalstats'):
+                irc.error('Unable to find new question #{0}.'.format(num))
+            else:
+                irc.error('Unable to find new question #{0} in {1}.'.format(num, channel))
         else:
             q = q[0]
             threadStorage.updateUser(q[1], 0, 0, 0, 0, 1)
@@ -937,9 +951,16 @@ class TriviaTime(callbacks.Plugin):
         
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
-        delete = threadStorage.getDeleteById(num)
+        if self.registryValue('general.globalstats'):
+            delete = threadStorage.getDeleteById(num)
+        else:
+            delete = threadStorage.getDeleteById(num, channel)
+            
         if len(delete) < 1:
-            irc.error('Could not find that delete')
+            if self.registryValue('general.globalstats'):
+                irc.error('Unable to find delete #{0}.'.format(num))
+            else:
+                irc.error('Unable to find delete #{0} in {1}.'.format(num, channel))
         else:
             delete = delete[0]
             threadStorage.removeDelete(num)
@@ -959,9 +980,16 @@ class TriviaTime(callbacks.Plugin):
         
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
-        report = threadStorage.getReportById(num)
+        if self.registryValue('general.globalstats'):
+            report = threadStorage.getReportById(num)
+        else:
+            report = threadStorage.getReportById(num, channel)
+            
         if len(report) < 1:
-            irc.error('Could not find that report')
+            if self.registryValue('general.globalstats'):
+                irc.error('Unable to find report #{0}.'.format(num))
+            else:
+                irc.error('Unable to find report #{0} in {1}.'.format(num, channel))
         else:
             report = report[0]
             threadStorage.removeReport(report[0])
@@ -981,9 +1009,16 @@ class TriviaTime(callbacks.Plugin):
         
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
-        q = threadStorage.getTemporaryQuestionById(num)
+        if self.registryValue('general.globalstats'):
+            q = threadStorage.getTemporaryQuestionById(num)
+        else:
+            q = threadStorage.getTemporaryQuestionById(num, channel)
+        
         if len(q) < 1:
-            irc.error('Could not find that temp question')
+            if self.registryValue('general.globalstats'):
+                irc.error('Unable to find new question #{0}.'.format(num))
+            else:
+                irc.error('Unable to find new question #{0} in {1}.'.format(num, channel))
         else:
             q = q[0]
             threadStorage.removeTemporaryQuestion(q[0])
@@ -1195,7 +1230,11 @@ class TriviaTime(callbacks.Plugin):
         if num is not None:
             dbLocation = self.registryValue('admin.sqlitedb')
             threadStorage = self.Storage(dbLocation)
-            q = threadStorage.getDeleteById(num)
+            if self.registryValue('general.globalstats'):
+                q = threadStorage.getDeleteById(num)
+            else:
+                q = threadStorage.getDeleteById(num, channel)
+                
             if len(q) > 0:
                 q = q[0]
                 question = threadStorage.getQuestion(q[3])
@@ -1205,7 +1244,10 @@ class TriviaTime(callbacks.Plugin):
                     questionText = question[2]
                 irc.reply('Delete #%d, by %s Question #%d: %s, Reason: %s'%(q[0], q[1], q[3], questionText, q[6]))
             else:
-                irc.error('Delete #%d not found' % num)
+                if self.registryValue('general.globalstats'):
+                    irc.error('Unable to find delete #{0}.'.format(num))
+                else:
+                    irc.error('Unable to find delete #{0} in {1}.'.format(num, channel))
         else:
             self.listdeletes(irc, msg, [channel])
     showdelete = wrap(showdelete, ['channel', optional('int')])
@@ -1254,13 +1296,19 @@ class TriviaTime(callbacks.Plugin):
         if num is not None:
             dbLocation = self.registryValue('admin.sqlitedb')
             threadStorage = self.Storage(dbLocation)
-            report = threadStorage.getReportById(num)
+            if self.registryValue('general.globalstats'):
+                report = threadStorage.getReportById(num)
+            else:
+                report = threadStorage.getReportById(num, channel)
+            
             if len(report) < 1:
-                irc.reply('No reports found')
+                if self.registryValue('general.globalstats'):
+                    irc.reply('Unable to find report #{0}.'.format(num))
+                else:
+                    irc.reply('Unable to find report #{0} in {1}.'.format(num, channel))
             else:
                 report = report[0]
                 irc.reply('Report #%d \'%s\' by %s on %s Q#%d '%(report[0], report[3], report[2], report[1], report[7]))
-
                 question = threadStorage.getQuestion(report[7])
                 if len(question) < 1:
                     irc.error('Question could not be found.')
@@ -1321,12 +1369,19 @@ class TriviaTime(callbacks.Plugin):
         if num is not None:
             dbLocation = self.registryValue('admin.sqlitedb')
             threadStorage = self.Storage(dbLocation)
-            q = threadStorage.getTemporaryQuestionById(num)
+            if self.registryValue('general.globalstats'):
+                q = threadStorage.getTemporaryQuestionById(num)
+            else:
+                q = threadStorage.getTemporaryQuestionById(num, channel)
+                
             if len(q) > 0:
                 q = q[0]
                 irc.reply('Temp Q #%d by %s: %s'%(q[0], q[1], q[3]))
             else:
-                irc.error('Temp Q #%d not found' % num)
+                if self.registryValue('general.globalstats'):
+                    irc.error('Unable to find new question #{0}.'.format(num))
+                else:
+                    irc.error('Unable to find new question #{0} in {1}.'.format(num, channel))
         else:
             self.listnew(irc, msg, [channel])
     shownew = wrap(shownew, ['channel', optional('int')])
