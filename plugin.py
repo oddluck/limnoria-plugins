@@ -445,13 +445,13 @@ class TriviaTime(callbacks.Plugin):
         username = msg.nick
         charMask = self.registryValue('hints.charMask', channel)
         if charMask not in question:
-            irc.error(' The question must include the separating character %s ' % (charMask))
+            irc.error('The question must include the separating character %s ' % (charMask))
             return
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
         threadStorage.updateUser(username, 0, 0, 0, 1)
         threadStorage.insertTemporaryQuestion(username, channel, question)
-        irc.reply(' Thank you for adding your question to the question database, it is awaiting approval. ')
+        irc.reply('Thank you for adding your question to the question database, it is awaiting approval. ')
         self.logger.doLog(irc, channel, "%s added new question: '%s'" % (username, question))
     add = wrap(add, ['user', 'channel', 'text'])
 
@@ -664,7 +664,10 @@ class TriviaTime(callbacks.Plugin):
             
         # Output list
         if count < 1:
-            irc.reply('No deletes found')
+            if self.registryValue('general.globalstats'):
+                irc.reply('No deletes found.')
+            else:
+                irc.reply('No deletes found in {0}.'.format(channel))
         else:
             irc.reply('Showing page %i of %i' % (page, pages))
             for delete in deletes:
@@ -706,7 +709,10 @@ class TriviaTime(callbacks.Plugin):
             
         # Output list
         if count < 1:
-            irc.reply('No edits found')
+            if self.registryValue('general.globalstats'):
+                irc.reply('No edits found.')
+            else:
+                irc.reply('No edits found in {0}.'.format(channel))
         else:
             irc.reply('Showing page %i of %i' % (page, pages))
             for edit in edits:
@@ -738,7 +744,10 @@ class TriviaTime(callbacks.Plugin):
         
         # Output list
         if count < 1:
-            irc.reply('No reports found')
+            if self.registryValue('general.globalstats'):
+                irc.reply('No reports found.')
+            else:
+                irc.reply('No reports found in {0}.'.format(channel))
         else:
             irc.reply('Showing page %i of %i' % (page, pages))
             for report in reports:
@@ -775,7 +784,10 @@ class TriviaTime(callbacks.Plugin):
         
         # Output list
         if count < 1:
-            irc.reply('No new questions found')
+            if self.registryValue('general.globalstats'):
+                irc.reply('No new questions found.')
+            else:
+                irc.reply('No new questions found in {0}.'.format(channel))
         else:
             irc.reply('Showing page %i of %i' % (page, pages))
             for ques in q:
