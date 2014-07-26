@@ -652,11 +652,7 @@ class TriviaTime(callbacks.Plugin):
             count = threadStorage.countDeletes()
         else:
             count = threadStorage.countDeletes(channel)
-        pages = int(count / 3)
-        if count % 3 > 0:
-            pages += 1
-        if page is None:
-            page = 1
+        pages = int(count / 3) + int(count % 3 > 0)
         page = max(1, min(page, pages))
         if self.registryValue('general.globalstats'):
             deletes = threadStorage.getDeleteTop3(page)
@@ -698,11 +694,7 @@ class TriviaTime(callbacks.Plugin):
             count = threadStorage.countEdits()
         else:
             count = threadStorage.countEdits(channel)
-        pages = int(count / 3)
-        if count % 3 > 0:
-            pages += 1
-        if page is None:
-            page = 1
+        pages = int(count / 3) + int(count % 3 > 0)
         page = max(1, min(page, pages))
         if self.registryValue('general.globalstats'):
             edits = threadStorage.getEditTop3(page)
@@ -734,11 +726,7 @@ class TriviaTime(callbacks.Plugin):
             count = threadStorage.countReports()
         else:
             count = threadStorage.countReports(channel)
-        pages = int(count / 3)
-        if count % 3 > 0:
-            pages += 1
-        if page is None:
-            page = 1
+        pages = int(count / 3) + int(count % 3 > 0)
         page = max(1, min(page, pages))
         if self.registryValue('general.globalstats'):
             reports = threadStorage.getReportTop3(page)
@@ -775,11 +763,7 @@ class TriviaTime(callbacks.Plugin):
             count = threadStorage.countTemporaryQuestions()
         else:
             count = threadStorage.countTemporaryQuestions(channel)
-        pages = int(count / 3)
-        if count % 3 > 0:
-            pages += 1
-        if page is None:
-            page = 1
+        pages = int(count / 3) + int(count % 3 > 0)
         page = max(1, min(page, pages))
         if self.registryValue('general.globalstats'):
             q = threadStorage.getTemporaryQuestionTop3(page)
