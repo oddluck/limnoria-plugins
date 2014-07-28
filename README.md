@@ -6,6 +6,10 @@
 4. Configure your question file and database location in config.py or with commands
 5. Use 'addquestionfile [filename]' command to load questions, the argument is optional
 
+## Setting up PHP
+1. Download PHP and PHP-MySQL (for PDO)
+2. Configure config.php to point to your TriviaTime database in the plugin/TriviaTime/Storage/db folder
+
 ## IMPORTANT: How to update
 1. Stop the game, if it is currently in progress.
 2. Backup your entire Supybot directory. The most important file needed is the database in /storage/, but it's best to be safe.
@@ -21,16 +25,10 @@
 9. If everything went smoothly, you have now sucessfully updated the plugin to the latest version. Use .info to verify you are on the latest version.
 
 ## Question editing tools
-TriviaTime was designed to make editing, deleting, and adding questions a breeze, for both administrators and players. However, due to the amount of tools available, it can be complicated to new players. Instructions on these tools are available [here][].
+TriviaTime was designed to make editing, deleting, and adding questions a breeze, for both administrators and players. However, due to the amount of tools available, it can be complicated to new plaers. Instructions on these tools are available [here][].
 
-##How to set up the website
-
-## Install PHP
-1. Install PHP and PHP-MySQL (for PDO). PHP-SQLite will also need to be installed.
-2. Configure config.php to point to your TriviaTime database in the plugin/TriviaTime/Storage/db folder
-3. mod_rewrite should be enabled
-
-## Setting up permissions for sqlite
+## Setting up permissions for sqlite (website)
+If you do not plan on using the webpage you can ignore this.
 
 In order to use the website to delete/accept edits, reports, new questions, and deletes, you will need to set the proper permissions for the sqlite db, called 'trivia.db' by default. The default location for the database is inside of the supybot's directory, with the .conf file, inside of plugins/TriviaTime/storage/db.
 
