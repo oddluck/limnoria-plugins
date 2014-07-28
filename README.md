@@ -25,16 +25,16 @@ TriviaTime was designed to make editing, deleting, and adding questions a breeze
 
 #How to set up the website
 
-## Install PHP
-1. Install PHP and PHP-MySQL (for PDO). PHP-SQLite will also need to be installed.
+## Download and Install
+1. Install PHP (for PDO) and PHP-SQLite.
 2. Configure config.php to point to your TriviaTime database in the plugin/TriviaTime/Storage/db folder
-3. mod_rewrite should be enabled
+3. mod_rewrite should be enabled for Apache servers (nginx servers may be a bit different)
 
-## Setting up permissions for sqlite
+## Setting up permissions for SQLite
 
-In order to use the website to delete/accept edits, reports, new questions, and deletes, you will need to set the proper permissions for the sqlite db, called 'trivia.db' by default. The default location for the database is inside of the supybot's directory, with the .conf file, inside of plugins/TriviaTime/storage/db.
+In order to use the website to delete/accept edits, reports, new questions, and deletes, you will need to set the proper permissions for the SQLite db, called 'trivia.db' by default. The default location for the database is inside of the supybot's directory, with the .conf file, inside of plugins/TriviaTime/storage/db.
 
-PHP's PDO requires that the user that php is run under has write access to the folder that the db is stored in. For this reason I would suggest moving the database to its own folder, which the webservers user has write access.
+PHP's PDO requires that the user that PHP is run under has write access to the folder that the db is stored in. For this reason I would suggest moving the database to its own folder, which the webservers user has write access.
 
 I would recommend either creating a new group and adding the user that runs supybot and the webservers user to it, or changing the permissions of the database so that the group who owns it is the webserver, and the user who owns it is the user who runs supybot. After doing that, changing permissions to 775 will allow the group who owns the file to write to the database.
 
