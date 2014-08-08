@@ -1836,6 +1836,8 @@ class TriviaTime(callbacks.Plugin):
                     self.sendMessage(self.getOtherHintString())
 
         def getRemainingKAOS(self):
+            if self.questionOver:
+                return
             if len(self.answers) > 1:
                 if self.shownHint == False:
                     self.shownHint = True
