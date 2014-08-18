@@ -604,7 +604,7 @@ class TriviaTime(callbacks.Plugin):
                 for part in questionParts[1:]:
                     question += '*'
                     question += part
-            threadStorage.insertEdit(num, question, username, msg.args[0])
+            threadStorage.insertEdit(num, question, username, channel)
             threadStorage.updateUser(username, 1, 0)
             irc.reply('Success! Submitted edit for further review.')
             irc.sendMsg(ircmsgs.notice(msg.nick, 'NEW: %s' % (question)))
@@ -2149,50 +2149,46 @@ class TriviaTime(callbacks.Plugin):
         def countTemporaryQuestions(self, channel=None):
             c = self.conn.cursor()
             if channel is None:
-                result = c.execute('''SELECT COUNT(*) FROM triviatemporaryquestion''')
+                c.execute('''SELECT COUNT(*) FROM triviatemporaryquestion''')
             else:
-                result = c.execute('''SELECT COUNT(*) FROM triviatemporaryquestion
-                                      WHERE channel_canonical = ?''',
-                                      (ircutils.toLower(channel),))
-            rows = result.fetchone()[0]
+                c.execute('''SELECT COUNT(*) FROM triviatemporaryquestion
+                             WHERE channel_canonical = ?''', (ircutils.toLower(channel),))
+            row = c.fetchone()
             c.close()
-            return rows
+            return row[0]
 
         def countDeletes(self, channel=None):
             c = self.conn.cursor()
             if channel is None:
-                result = c.execute('''SELECT COUNT(*) FROM triviadelete''')
+                c.execute('''SELECT COUNT(*) FROM triviadelete''')
             else:
-                result = c.execute('''SELECT COUNT(*) FROM triviadelete
-                                      WHERE channel_canonical = ?''',
-                                      (ircutils.toLower(channel),))
-            rows = result.fetchone()[0]
+                c.execute('''SELECT COUNT(*) FROM triviadelete
+                             WHERE channel_canonical = ?''', (ircutils.toLower(channel),))
+            row = c.fetchone()
             c.close()
-            return rows
+            return row[0]
 
         def countEdits(self, channel=None):
             c = self.conn.cursor()
             if channel is None:
-                result = c.execute('''SELECT COUNT(*) FROM triviaedit''')
+                c.execute('''SELECT COUNT(*) FROM triviaedit''')
             else:
-                result = c.execute('''SELECT COUNT(*) FROM triviaedit
-                                      WHERE channel_canonical = ?''',
-                                      (ircutils.toLower(channel),))
-            rows = result.fetchone()[0]
+                c.execute('''SELECT COUNT(*) FROM triviaedit
+                             WHERE channel_canonical = ?''', (ircutils.toLower(channel),))
+            row = c.fetchone()
             c.close()
-            return rows
+            return row[0]
 
         def countReports(self, channel=None):
             c = self.conn.cursor()
             if channel is None:
-                result = c.execute('''SELECT COUNT(*) FROM triviareport''')
+                c.execute('''SELECT COUNT(*) FROM triviareport''')
             else:
-                result = c.execute('''SELECT COUNT(*) FROM triviareport
-                                      WHERE channel_canonical = ?''',
-                                      (ircutils.toLower(channel),))
-            rows = result.fetchone()[0]
+                c.execute('''SELECT COUNT(*) FROM triviareport
+                             WHERE channel_canonical = ?''', (ircutils.toLower(channel),))
+            row = c.fetchone()
             c.close()
-            return rows
+            return row[0]
         
         def deleteQuestion(self, questionId):
             c = self.conn.cursor()
@@ -2295,9 +2291,11 @@ class TriviaTime(callbacks.Plugin):
         def getRandomQuestionNotAsked(self, channel, roundStart):
             c = self.conn.cursor()
             c.execute('''SELECT * FROM triviaquestion
-                            WHERE deleted=0 AND id NOT IN (SELECT tl.line_num FROM triviagameslog tl WHERE tl.channel_canonical=? AND tl.asked_at>=?)
-                            ORDER BY random() LIMIT 1
-                        ''', (ircutils.toLower(channel),roundStart))
+                         WHERE deleted=0 AND id NOT IN 
+                            (SELECT tl.line_num FROM triviagameslog tl 
+                             WHERE tl.channel_canonical=? AND tl.asked_at>=?)
+                         ORDER BY random() LIMIT 1''', 
+                         (ircutils.toLower(channel),roundStart))
             data = []
             for row in c:
                 data.append(row)
@@ -2314,24 +2312,23 @@ class TriviaTime(callbacks.Plugin):
         def getQuestionByRound(self, roundNumber, channel):
             channel=ircutils.toLower(channel)
             c = self.conn.cursor()
-            c.execute('''SELECT * FROM triviaquestion WHERE id=(SELECT tgl.line_num
-                                                                FROM triviagameslog tgl
-                                                                WHERE tgl.round_num=?
-                                                                AND tgl.channel_canonical=?
-                                                                ORDER BY id DESC
-                                                                LIMIT 1)''', (roundNumber,channel))
+            c.execute('''SELECT * FROM triviaquestion 
+                         WHERE id=(SELECT tgl.line_num FROM triviagameslog tgl
+                                   WHERE tgl.round_num=? AND tgl.channel_canonical=?
+                                   ORDER BY id DESC LIMIT 1)''', (roundNumber,channel))
             row = c.fetchone()
             c.close()
             return row
 
         def getNumQuestionsNotAsked(self, channel, roundStart):
             c = self.conn.cursor()
-            result = c.execute('''SELECT count(id) FROM triviaquestion
-                            WHERE deleted=0 AND id NOT IN (SELECT tl.line_num FROM triviagameslog tl WHERE tl.channel=? AND tl.asked_at>=?)''',
-                                    (channel,roundStart))
-            rows = result.fetchone()[0]
+            c.execute('''SELECT count(id) FROM triviaquestion
+                         WHERE deleted=0 AND id NOT IN 
+                            (SELECT tl.line_num FROM triviagameslog tl 
+                             WHERE tl.channel=? AND tl.asked_at>=?)''', (channel,roundStart))
+            row = c.fetchone()
             c.close()
-            return rows
+            return row[0]
 
         def getUserRank(self, username, channel):
             usernameCanonical = ircutils.toLower(username)
@@ -2784,24 +2781,27 @@ class TriviaTime(callbacks.Plugin):
         def getNumUser(self, channel):
             channelCanonical = ircutils.toLower(channel)
             c = self.conn.cursor()
-            result = c.execute('select count(distinct(username_canonical)) from triviauserlog where channel_canonical=?', (channelCanonical,))
-            result = result.fetchone()[0]
+            c.execute('''SELECT COUNT(DISTINCT(username_canonical)) FROM triviauserlog 
+                         WHERE channel_canonical=?''', (channelCanonical,))
+            row = c.fetchone()
             c.close()
-            return result
+            return row[0]
 
         def getNumQuestions(self):
             c = self.conn.cursor()
-            result = c.execute('select count(*) from triviaquestion where deleted=0')
-            result = result.fetchone()[0]
+            c.execute('''SELECT COUNT(*) FROM triviaquestion 
+                         WHERE deleted=0''')
+            row = c.fetchone()
             c.close()
-            return result
+            return row[0]
 
         def getNumKAOS(self):
             c = self.conn.cursor()
-            result = c.execute('select count(*) from triviaquestion where lower(substr(question,1,4))=?',('kaos',))
-            result = result.fetchone()[0]
+            c.execute('''SELECT COUNT(*) FROM triviaquestion 
+                         WHERE lower(substr(question,1,4))=?''',('kaos',))
+            row = c.fetchone()
             c.close()
-            return result
+            return row[0]
 
         def getNumActiveThisWeek(self, channel):
             channelCanonical = ircutils.toLower(channel)
@@ -2979,33 +2979,32 @@ class TriviaTime(callbacks.Plugin):
             month = dateObject.month
             year  = dateObject.year
             c = self.conn.cursor()
-            result = c.execute('''select count(*) from triviauserlog
-                        where day=? and month=? and year=?
-                        and channel_canonical=?
-                        and last_updated>?''', (day, month, year, channelCanonical, (epoch-timeSeconds)))
-            rows = result.fetchone()[0]
+            c.execute('''SELECT COUNT(*) FROM triviauserlog
+                         WHERE day=? AND month=? AND year=?
+                               AND channel_canonical=?
+                               AND last_updated>?''', 
+                         (day, month, year, channelCanonical, (epoch-timeSeconds)))
+            row = c.fetchone()
             c.close()
-            return rows
+            return row[0]
 
         def gameExists(self, channel):
             channel = ircutils.toLower(channel)
             c = self.conn.cursor()
-            result = c.execute('select count(id) from triviagames where channel_canonical=?', (channel,))
-            rows = result.fetchone()[0]
+            c.execute('''SELECT COUNT(id) FROM triviagames 
+                         WHERE channel_canonical=?''', (channel,))
+            row = c.fetchone()
             c.close()
-            if rows > 0:
-                return True
-            return False
+            return row[0] > 0
 
         def loginExists(self, username):
             usernameCanonical = ircutils.toLower(username)
             c = self.conn.cursor()
-            result = c.execute('select count(id) from trivialogin where username_canonical=?', (usernameCanonical,))
-            rows = result.fetchone()[0]
+            c.execute('''SELECT COUNT(id) FROM trivialogin 
+                         WHERE username_canonical=?''', (usernameCanonical,))
+            rows = c.fetchone()
             c.close()
-            if rows > 0:
-                return True
-            return False
+            return row[0] > 0
 
         def insertActivity(self, aType, activity, channel, network, timestamp=None):
             if timestamp is None:
@@ -3127,8 +3126,8 @@ class TriviaTime(callbacks.Plugin):
             usernameCanonical = ircutils.toLower(username)
             if createdAt is None:
                 createdAt = int(time.mktime(time.localtime()))
-            c.execute('insert into triviaedit values (NULL, ?, ?, NULL, ?, ?, ?, ?, ?)',
-                                        (questionId,questionText,username,channel,createdAt, usernameCanonical, channelCanonical))
+            c.execute('''INSERT INTO triviaedit VALUES (NULL, ?, ?, NULL, ?, ?, ?, ?, ?)''',
+                            (questionId,questionText,username,channel,createdAt, usernameCanonical, channelCanonical))
             self.conn.commit()
             c.close()
 
@@ -3136,30 +3135,26 @@ class TriviaTime(callbacks.Plugin):
             c = self.conn.cursor()
             channelCanonical = ircutils.toLower(channel)
             usernameCanonical = ircutils.toLower(username)
-            c.execute('insert into triviatemporaryquestion values (NULL, ?, ?, ?, ?, ?)',
-                                        (username,channel,question,usernameCanonical,channelCanonical))
+            c.execute('''INSERT INTO triviatemporaryquestion VALUES (NULL, ?, ?, ?, ?, ?)''',
+                            (username,channel,question,usernameCanonical,channelCanonical))
             self.conn.commit()
             c.close()
 
         def isQuestionDeleted(self, id):
             c = self.conn.cursor()
-            result = c.execute('''select count(*) from triviaquestion
-                        where deleted=1 and id=?''', (id,))
-            rows = result.fetchone()[0]
+            c.execute('''SELECT COUNT(*) FROM triviaquestion
+                         WHERE deleted=1 AND id=?''', (id,))
+            row = c.fetchone()
             c.close()
-            if rows > 0:
-                return True
-            return False
+            return row[0] > 0
 
         def isQuestionPendingDeletion(self, id):
             c = self.conn.cursor()
-            result = c.execute('''select count(*) from triviadelete
-                        where line_num=?''', (id,))
-            rows = result.fetchone()[0]
+            c.execute('''SELECT COUNT(*) FROM triviadelete
+                         WHERE line_num=?''', (id,))
+            row = c.fetchone())
             c.close()
-            if rows > 0:
-                return True
-            return False
+            return row[0] > 0
 
         def makeActivityTable(self):
             c = self.conn.cursor()
@@ -3371,21 +3366,20 @@ class TriviaTime(callbacks.Plugin):
 
         def questionExists(self, question):
             c = self.conn.cursor()
-            result = c.execute('select count(id) from triviaquestion where question=? or question_canonical=?', (question,question))
-            rows = result.fetchone()[0]
+            c.execute('''SELECT COUNT(id) FROM triviaquestion 
+                         WHERE question=? OR question_canonical=?''', 
+                         (question,question))
+            row = c.fetchone()
             c.close()
-            if rows > 0:
-                return True
-            return False
+            return row[0] > 0
 
         def questionIdExists(self, id):
             c = self.conn.cursor()
-            result = c.execute('select count(id) from triviaquestion where id=?', (id,))
-            rows = result.fetchone()[0]
+            c.execute('''SELECT COUNT(id) FROM triviaquestion 
+                         WHERE id=?''', (id,))
+            row = c.fetchone()
             c.close()
-            if rows > 0:
-                return True
-            return False
+            return row[0] > 0
 
         def removeOldActivity(self,count=100):
             c = self.conn.cursor()
@@ -3558,22 +3552,21 @@ class TriviaTime(callbacks.Plugin):
         def userLogExists(self, username, channel, day, month, year):
             c = self.conn.cursor()
             args = (ircutils.toLower(username),ircutils.toLower(channel),day,month,year)
-            result = c.execute('select count(id) from triviauserlog where username_canonical=? and channel_canonical=? and day=? and month=? and year=?', args)
-            rows = result.fetchone()[0]
+            c.execute('''SELECT COUNT(id) FROM triviauserlog 
+                         WHERE username_canonical=? AND channel_canonical=? 
+                               AND day=? AND month=? and year=?''', args)
+            row = c.fetchone()
             c.close()
-            if rows > 0:
-                return True
-            return False
+            return row[0] > 0
 
         def userExists(self, username):
             c = self.conn.cursor()
             usr = (ircutils.toLower(username),)
-            result = c.execute('select count(id) from triviausers where username_canonical=?', usr)
-            rows = result.fetchone()[0]
+            c.execute('''SELECT COUNT(id) FROM triviausers 
+                         WHERE username_canonical=?''', usr)
+            row = c.fetchone()
             c.close()
-            if rows > 0:
-                return True
-            return False
+            return row[0] > 0
 
         def updateLogin(self, username, salt, isHashed, password, capability):
             if not self.loginExists(username):
