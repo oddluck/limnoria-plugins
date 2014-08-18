@@ -3153,7 +3153,7 @@ class TriviaTime(callbacks.Plugin):
             c = self.conn.cursor()
             c.execute('''SELECT COUNT(*) FROM triviadelete
                          WHERE line_num=?''', (id,))
-            row = c.fetchone())
+            row = c.fetchone()
             c.close()
             return row[0] > 0
 
@@ -3733,7 +3733,7 @@ class TriviaTime(callbacks.Plugin):
 
             query = '''SELECT id, username,
                               SUM(points_made) AS points,
-                              SUM(num_answered) AS num,
+                              SUM(num_answered) AS num
                        FROM triviauserlog
                        WHERE day=? AND month=? AND year=?'''
             arguments = [day, month, year]
