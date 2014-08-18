@@ -1835,10 +1835,10 @@ class TriviaTime(callbacks.Plugin):
         def loadGameState(self):
             gameInfo = self.storage.getGame(self.channel)
             if gameInfo is not None:
-                self.numAsked = gameInfo[2]
-                self.roundStartedAt = gameInfo[3]
-                self.lastWinner = gameInfo[4]
-                self.streak = int(gameInfo[5])
+                self.numAsked = gameInfo['num_asked']
+                self.roundStartedAt = gameInfo['round_started']
+                self.lastWinner = gameInfo['last_winner']
+                self.streak = int(gameInfo['streak'])
 
         def loopEvent(self):
             """
@@ -2082,8 +2082,7 @@ class TriviaTime(callbacks.Plugin):
 
         def retrieveQuestionFromSql(self):
             question = self.storage.getRandomQuestionNotAsked(self.channel, self.roundStartedAt)
-            question = question[0]
-            return (question[0], question[2], question[4], question[5])
+            return (question['id'], question['question'], question['num_answered'], question['num_missed'])
 
         def sendMessage(self, msg, color=None, bgcolor=None):
             """ <msg>, [<color>], [<bgcolor>]
@@ -2296,11 +2295,9 @@ class TriviaTime(callbacks.Plugin):
                              WHERE tl.channel_canonical=? AND tl.asked_at>=?)
                          ORDER BY random() LIMIT 1''', 
                          (ircutils.toLower(channel),roundStart))
-            data = []
-            for row in c:
-                data.append(row)
+            row = c.fetchone()
             c.close()
-            return data
+            return row
 
         def getQuestionById(self, id):
             c = self.conn.cursor()
@@ -2769,14 +2766,10 @@ class TriviaTime(callbacks.Plugin):
             channel = ircutils.toLower(channel)
             c = self.conn.cursor()
             c.execute('''SELECT * FROM triviagames
-                        where channel_canonical=?
-                        limit 1''', (channel,))
-            data = None
-            for row in c:
-                data = row
-                break
+                         WHERE channel_canonical=? LIMIT 1''', (channel,))
+            row = c.fetchone()
             c.close()
-            return data
+            return row
 
         def getNumUser(self, channel):
             channelCanonical = ircutils.toLower(channel)
@@ -2823,9 +2816,10 @@ class TriviaTime(callbacks.Plugin):
                         where channel_canonical=? and ('''
             weekSql += weekSqlString
             weekSql += ''')'''
-            result = c.execute(weekSql, (channelCanonical,))
-            rows = result.fetchone()[0]
-            return rows
+            c.execute(weekSql, (channelCanonical,))
+            row = c.fetchone()
+            c.close()
+            return row[0]
 
         def getDeleteById(self, id, channel=None):
             c = self.conn.cursor()
@@ -2857,9 +2851,7 @@ class TriviaTime(callbacks.Plugin):
                              WHERE channel_canonical = ? 
                              ORDER BY id DESC LIMIT ?, ?''', 
                              (ircutils.toLower(channel), start, amount))
-            rows = []
-            for row in c:
-                rows.append(row)
+            rows = c.fetchall()
             c.close()
             return rows
 
@@ -2893,9 +2885,7 @@ class TriviaTime(callbacks.Plugin):
                              WHERE channel_canonical = ? 
                              ORDER BY id DESC LIMIT ?, ?''', 
                              (ircutils.toLower(channel), start, amount))
-            rows = []
-            for row in c:
-                rows.append(row)
+            rows = c.fetchall()
             c.close()
             return rows
 
@@ -2916,9 +2906,7 @@ class TriviaTime(callbacks.Plugin):
                              WHERE channel_canonical = ? 
                              ORDER BY id DESC LIMIT ?, ?''', 
                              (ircutils.toLower(channel), start, amount))
-            rows = []
-            for row in c:
-                rows.append(row)
+            rows = c.fetchall()
             c.close()
             return rows
 
@@ -2952,9 +2940,7 @@ class TriviaTime(callbacks.Plugin):
                              WHERE channel_canonical = ? 
                              ORDER BY id DESC LIMIT ?, ?''', 
                              (ircutils.toLower(channel), start, amount))
-            rows = []
-            for row in c:
-                rows.append(row)
+            rows = c.fetchall()
             c.close()
             return rows
             
@@ -3751,11 +3737,9 @@ class TriviaTime(callbacks.Plugin):
 
             c = self.conn.cursor()
             c.execute(query, tuple(arguments))
-            data = []
-            for row in c:
-                data.append(row)
+            rows = c.fetchall()
             c.close()
-            return data
+            return rows
 
         def viewAllTimeTop10(self, channel, numUpTo=10):
             numUpTo -= 10
@@ -3779,12 +3763,9 @@ class TriviaTime(callbacks.Plugin):
 
             c = self.conn.cursor()
             c.execute(query, tuple(arguments))
-
-            data = []
-            for row in c:
-                data.append(row)
+            rows = c.fetchall()
             c.close()
-            return data
+            return rows
 
         def viewMonthTop10(self, channel, numUpTo=10, year=None, month=None):
             numUpTo -= 10
@@ -3813,12 +3794,9 @@ class TriviaTime(callbacks.Plugin):
 
             c = self.conn.cursor()
             c.execute(query, tuple(arguments))
-
-            data = []
-            for row in c:
-                data.append(row)
+            rows = c.fetchall()
             c.close()
-            return data
+            return rows
 
         def viewYearTop10(self, channel, numUpTo=10, year=None):
             numUpTo -= 10
@@ -3845,12 +3823,9 @@ class TriviaTime(callbacks.Plugin):
 
             c = self.conn.cursor()
             c.execute(query, tuple(arguments))
-
-            data = []
-            for row in c:
-                data.append(row)
+            rows = c.fetchall()
             c.close()
-            return data
+            return rows
 
         def viewWeekTop10(self, channel, numUpTo=10):
             numUpTo -= 10
@@ -3886,12 +3861,9 @@ class TriviaTime(callbacks.Plugin):
 
             c = self.conn.cursor()
             c.execute(query, tuple(arguments))
-
-            data = []
-            for row in c:
-                data.append(row)
+            rows = c.fetchall()
             c.close()
-            return data
+            return rows
 
         def wasUserActiveIn(self, username, channel, timeSeconds):
             usernameCanonical = ircutils.toLower(username)
@@ -3902,16 +3874,14 @@ class TriviaTime(callbacks.Plugin):
             month = dateObject.month
             year  = dateObject.year
             c = self.conn.cursor()
-            result = c.execute('''select count(*) from triviauserlog
-                        where day=? and month=? and year=?
-                        and username_canonical=?
-                        and channel_canonical=?
-                        and last_updated>?''', (day, month, year, usernameCanonical, channelCanonical, (epoch-timeSeconds)))
-            rows = result.fetchone()[0]
+            c.execute('''SELECT count(*) FROM triviauserlog
+                         WHERE day=? AND month=? AND year=? 
+                               AND username_canonical=? AND channel_canonical=?
+                               AND last_updated>?''', 
+                         (day, month, year, usernameCanonical, channelCanonical, (epoch-timeSeconds)))
+            row = c.fetchone()
             c.close()
-            if rows > 0:
-                return True
-            return False
+            return row[0] > 0
 
         def getVersion(self):
             c = self.conn.cursor();
