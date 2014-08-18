@@ -385,7 +385,7 @@ class TriviaTime(callbacks.Plugin):
             if username == edit['username']:
                 irc.reply('You cannot accept your own edit. Please allow another TriviaMod to review it.')
             else:
-                question = threadStorage.getQuestion(edit['question_id'])
+                question = threadStorage.getQuestionById(edit['question_id'])
                 questionOld = question['question'] if question else ''
                 threadStorage.updateQuestion(edit['question_id'], edit['question'])
                 threadStorage.updateUser(edit['username'], 0, 1)
@@ -591,7 +591,7 @@ class TriviaTime(callbacks.Plugin):
         username = self.getUsername(msg.nick, msg.prefix)
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
-        q = threadStorage.getQuestion(num)
+        q = threadStorage.getQuestionById(num)
         if q:
             questionParts = question.split('*')
             if len(questionParts) < 2:
@@ -674,7 +674,7 @@ class TriviaTime(callbacks.Plugin):
         else:
             irc.reply('Showing page %i of %i' % (page, pages))
             for delete in deletes:
-                question = threadStorage.getQuestion(delete['line_num'])
+                question = threadStorage.getQuestionById(delete['line_num'])
                 questionText = question['question'] if question else 'Question not found'
                 irc.reply('Delete #%d, by %s Question #%d: %s, Reason:%s'%(delete['id'], delete['username'], delete['line_num'], questionText, delete['reason']))
             irc.reply('Use the showdelete command to see more information')
@@ -1235,7 +1235,7 @@ class TriviaTime(callbacks.Plugin):
                 delete = threadStorage.getDeleteById(num, channel)
                 
             if delete:
-                question = threadStorage.getQuestion(delete['line_num'])
+                question = threadStorage.getQuestionById(delete['line_num'])
                 questionText = question['question'] if question else 'Question not found'
                 irc.reply('Delete #%d, by %s Question #%d: %s, Reason: %s'%(delete['id'], delete['username'], delete['line_num'], questionText, delete['reason']))
             else:
@@ -1254,7 +1254,7 @@ class TriviaTime(callbacks.Plugin):
         """
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
-        question = threadStorage.getQuestion(num)
+        question = threadStorage.getQuestionById(num)
         if question:
             if question['deleted'] == 1:
                 irc.reply('Info: This question is currently deleted.')
@@ -1297,7 +1297,7 @@ class TriviaTime(callbacks.Plugin):
             
             if report:
                 irc.reply('Report #%d \'%s\' by %s on %s Q#%d '%(report['id'], report['report_text'], report['username'], report['channel'], report['question_num']))
-                question = threadStorage.getQuestion(report['question_num'])
+                question = threadStorage.getQuestionById(report['question_num'])
                 if question:
                     irc.error('Question could not be found.')
                 else:
@@ -1330,7 +1330,7 @@ class TriviaTime(callbacks.Plugin):
                 edit = threadStorage.getEditById(num, channel)
                 
             if edit:
-                question = threadStorage.getQuestion(edit['question_id'])
+                question = threadStorage.getQuestionById(edit['question_id'])
                 irc.reply('Edit #%d by %s, Question #%d'%(edit['id'], edit['username'], edit['question_id']))
                 irc.reply('NEW:%s' %(edit['question']))
                 if question:
@@ -2304,6 +2304,13 @@ class TriviaTime(callbacks.Plugin):
             c.close()
             return data
 
+        def getQuestionById(self, id):
+            c = self.conn.cursor()
+            c.execute('''SELECT * FROM triviaquestion WHERE id=? LIMIT 1''', (id,))
+            row = c.fetchone()
+            c.close()
+            return row
+
         def getQuestionByRound(self, roundNumber, channel):
             channel=ircutils.toLower(channel)
             c = self.conn.cursor()
@@ -2797,13 +2804,6 @@ class TriviaTime(callbacks.Plugin):
             result = result.fetchone()[0]
             c.close()
             return result
-
-        def getQuestion(self, id):
-            c = self.conn.cursor()
-            c.execute('SELECT * FROM triviaquestion WHERE id=? LIMIT 1', (id,))
-            row = c.fetchone()
-            c.close()
-            return row
 
         def getNumActiveThisWeek(self, channel):
             channelCanonical = ircutils.toLower(channel)
