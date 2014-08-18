@@ -560,27 +560,30 @@ class TriviaTime(callbacks.Plugin):
         by round number (r), or question number (q) (default round).
         Channel is only required when using the command outside of a channel.
         """
-        username = msg.nick
+        hostmask = msg.prefix
+        username = self.getUsername(msg.nick, hostmask)
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
+        
+        # Search for question ID if deletion is by 'round'
         if t is None or str.lower(t) == "round":
             q = threadStorage.getQuestionByRound(id, channel)
-            if len(q) < 1:
-                irc.error('Could not find that round.')
+            if q:
+                id = q['id']
+            else:
+                irc.error('Could not find that round #{0}.'.format(id))
                 return
-            id = q[0][0]
+            
         if not threadStorage.questionIdExists(id):
             irc.error('That question does not exist.')
-            return
-        if threadStorage.isQuestionDeleted(id):
+        elif threadStorage.isQuestionDeleted(id):
             irc.error('That question is already deleted.')
-            return
-        if threadStorage.isQuestionPendingDeletion(id):
+        elif threadStorage.isQuestionPendingDeletion(id):
             irc.error('That question is already pending deletion.')
-            return
-        threadStorage.insertDelete(username, channel, id, reason)
-        irc.reply('Question %d marked for deletion and pending review.' % id)
-        self.logger.doLog(irc, channel, "%s marked question #%i for deletion" % (username, id))
+        else:
+            threadStorage.insertDelete(username, channel, id, reason)
+            irc.reply('Question %d marked for deletion and pending review.' % id)
+            self.logger.doLog(irc, channel, "%s marked question #%i for deletion" % (username, id))
     delete = wrap(delete, ['user', 'channel', optional(('literal',("question", "QUESTION", "ROUND", "round"))),'int', optional('text')])
 
     def edit(self, irc, msg, arg, user, channel, num, question):
@@ -1066,41 +1069,39 @@ class TriviaTime(callbacks.Plugin):
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
         question = threadStorage.getQuestionByRound(roundNum, channel)
-        if len(question) > 0:
-            question = question[0]
-            if inp[:2] == 's/':
+        if question:
+            if inp[:2] == 's/': # Regex
                 regex = inp[2:].split('/')
                 if len(regex) > 1:
                     threadStorage.updateUser(username, 1, 0)
                     newOne = regex[1]
                     oldOne = regex[0]
-                    newQuestionText = question[2].replace(oldOne, newOne)
-                    threadStorage.insertEdit(question[0], newQuestionText, username, channel)
+                    newQuestionText = question['question'].replace(oldOne, newOne)
+                    threadStorage.insertEdit(question['id'], newQuestionText, username, channel)
                     irc.reply('Regex detected: Question edited!')
                     irc.sendMsg(ircmsgs.notice(username, 'NEW: %s' % (newQuestionText)))
-                    irc.sendMsg(ircmsgs.notice(username, 'OLD: %s' % (question[2])))
-                    self.logger.doLog(irc, channel, "%s edited question #%i, NEW: '%s', OLD: '%s'" % (msg.nick, question[0], newQuestionText, question[2]))
-                    return
-            elif str.lower(utils.str.normalizeWhitespace(inp))[:6] == 'delete':
-                if not threadStorage.questionIdExists(question[0]):
+                    irc.sendMsg(ircmsgs.notice(username, 'OLD: %s' % (question['question'])))
+                    self.logger.doLog(irc, channel, "%s edited question #%i, NEW: '%s', OLD: '%s'" % (msg.nick, question['id'], newQuestionText, question['question']))
+                else:
+                    irc.error('Unable to process regex. Try again.')
+            elif str.lower(utils.str.normalizeWhitespace(inp))[:6] == 'delete': # Delete
+                if not threadStorage.questionIdExists(question['id']):
                     irc.error('That question does not exist.')
-                    return
-                if threadStorage.isQuestionDeleted(question[0]):
+                elif threadStorage.isQuestionDeleted(question['id']):
                     irc.error('That question is already deleted.')
-                    return
-                if threadStorage.isQuestionPendingDeletion(question[0]):
+                elif threadStorage.isQuestionPendingDeletion(question['id']):
                     irc.error('That question is already pending deletion.')
-                    return
-                reason = utils.str.normalizeWhitespace(inp)[6:]
-                reason = utils.str.normalizeWhitespace(reason)
-                irc.reply('Marked question for deletion.')
-                self.logger.doLog(irc, channel, "%s marked question #%i for deletion" % (msg.nick, question[0]))
-                threadStorage.insertDelete(username, channel, question[0], reason)
-                return
-            threadStorage.updateUser(username, 0, 0, 1)
-            threadStorage.insertReport(channel, username, text, question[0])
-            self.logger.doLog(irc, channel, "%s reported question #%i, Text: '%s'" % (msg.nick, question[0], text))
-            irc.reply('Your report has been submitted!')
+                else:
+                    reason = utils.str.normalizeWhitespace(inp)[6:]
+                    reason = utils.str.normalizeWhitespace(reason)
+                    irc.reply('Marked question for deletion.')
+                    self.logger.doLog(irc, channel, "%s marked question #%i for deletion" % (msg.nick, question['id']))
+                    threadStorage.insertDelete(username, channel, question['id'], reason)
+            else: # Regular report
+                threadStorage.updateUser(username, 0, 0, 1)
+                threadStorage.insertReport(channel, username, text, question['id'])
+                self.logger.doLog(irc, channel, "%s reported question #%i, Text: '%s'" % (msg.nick, question['id'], text))
+                irc.reply('Your report has been submitted!')
         else:
             irc.error('Sorry, round %d could not be found in the database' % (roundNum))
     report = wrap(report, ['user', 'channel', 'int', 'text'])
@@ -1275,11 +1276,10 @@ class TriviaTime(callbacks.Plugin):
             dbLocation = self.registryValue('admin.sqlitedb')
             threadStorage = self.Storage(dbLocation)
             question = threadStorage.getQuestionByRound(num, channel)
-            if len(question) < 1:
-                irc.error('Round not found')
+            if question:
+                irc.reply('Round %d: Question #%d: %s' % (num, question['id'], question['question']))
             else:
-                question = question[0]
-                irc.reply('Round %d: Question #%d: %s' % (num, question[0], question[2]))
+                irc.error('Round not found')
     showround = wrap(showround, ['user', 'channel', 'int'])
 
     def showreport(self, irc, msg, arg, user, channel, num):
@@ -2320,11 +2320,9 @@ class TriviaTime(callbacks.Plugin):
                                                                 AND tgl.channel_canonical=?
                                                                 ORDER BY id DESC
                                                                 LIMIT 1)''', (roundNumber,channel))
-            data = []
-            for row in c:
-                data.append(row)
+            row = c.fetchone()
             c.close()
-            return data
+            return row
 
         def getNumQuestionsNotAsked(self, channel, roundStart):
             c = self.conn.cursor()
