@@ -330,6 +330,7 @@ class TriviaTime(callbacks.Plugin):
         Channel is only required when using the command outside of a channel.
         """
         hostmask = msg.prefix
+        username = self.getUsername(msg.nick, hostmask)
         if self.isTriviaMod(hostmask, channel) == False:
             irc.reply('You must be a TriviaMod in {0} to use this command.'.format(channel))
             return
@@ -342,16 +343,19 @@ class TriviaTime(callbacks.Plugin):
             delete = self.storage.getDeleteById(num, channel)
             
         if delete:
-            questionNumber = delete['line_num']
-            irc.reply('Question #%d deleted!' % questionNumber)
-            threadStorage.removeReportByQuestionNumber(questionNumber)
-            threadStorage.removeEditByQuestionNumber(questionNumber)
-            threadStorage.deleteQuestion(questionNumber)
-            threadStorage.removeDelete(num)
-            threadStorage.removeDeleteByQuestionNumber(questionNumber)
-            self.logger.doLog(irc, channel, "%s accepted delete# %i, question #%i deleted" % (msg.nick, num, questionNumber))
-            activityText = '%s deleted a question, approved by %s' % (delete['username'], msg.nick)
-            self.addActivity('delete', activityText, channel, irc, threadStorage)
+            if username == delete['username']:
+                irc.reply('You cannot accept your own delete request. Please allow another TriviaMod to review it.')
+            else:
+                questionNumber = delete['line_num']
+                irc.reply('Question #%d deleted!' % questionNumber)
+                threadStorage.removeReportByQuestionNumber(questionNumber)
+                threadStorage.removeEditByQuestionNumber(questionNumber)
+                threadStorage.deleteQuestion(questionNumber)
+                threadStorage.removeDelete(num)
+                threadStorage.removeDeleteByQuestionNumber(questionNumber)
+                self.logger.doLog(irc, channel, "%s accepted delete# %i, question #%i deleted" % (msg.nick, num, questionNumber))
+                activityText = '%s deleted a question, approved by %s' % (delete['username'], msg.nick)
+                self.addActivity('delete', activityText, channel, irc, threadStorage)
         else:
             if self.registryValue('general.globalstats'):
                 irc.error('Unable to find delete #{0}.'.format(num))
@@ -365,6 +369,7 @@ class TriviaTime(callbacks.Plugin):
         Channel is only required when using the command outside of a channel.
         """
         hostmask = msg.prefix
+        username = self.getUsername(msg.nick, hostmask)
         if self.isTriviaMod(hostmask, channel) == False:
             irc.reply('You must be a TriviaMod in {0} to use this command.'.format(channel))
             return
@@ -377,22 +382,25 @@ class TriviaTime(callbacks.Plugin):
             edit = self.storage.getEditById(num, channel)
             
         if edit:
-            question = threadStorage.getQuestion(edit['question_id'])
-            questionOld = question['question'] if question else ''
-            threadStorage.updateQuestion(edit['question_id'], edit['question'])
-            threadStorage.updateUser(edit['username'], 0, 1)
-            threadStorage.removeEdit(edit['id'])
-            threadStorage.removeReportByQuestionNumber(edit['question_id'])
-            
-            irc.reply('Question #%d updated!' % edit['question_id'])
-            self.logger.doLog(irc, channel, "%s accepted edit# %i, question #%i edited NEW: '%s' OLD '%s'" % (msg.nick, num, edit['question_id'], edit['question'], questionOld))
-            activityText = '%s edited a question, approved by %s' % (edit['username'], msg.nick)
-            self.addActivity('edit', activityText, channel, irc, threadStorage)
-            irc.sendMsg(ircmsgs.notice(msg.nick, 'NEW: %s' % (edit['question'])))
-            if questionOld != '':
-                irc.sendMsg(ircmsgs.notice(msg.nick, 'OLD: %s' % (questionOld)))
+            if username == edit['username']:
+                irc.reply('You cannot accept your own edit. Please allow another TriviaMod to review it.')
             else:
-                irc.error('Question could not be found for this edit')
+                question = threadStorage.getQuestion(edit['question_id'])
+                questionOld = question['question'] if question else ''
+                threadStorage.updateQuestion(edit['question_id'], edit['question'])
+                threadStorage.updateUser(edit['username'], 0, 1)
+                threadStorage.removeEdit(edit['id'])
+                threadStorage.removeReportByQuestionNumber(edit['question_id'])
+                
+                irc.reply('Question #%d updated!' % edit['question_id'])
+                self.logger.doLog(irc, channel, "%s accepted edit# %i, question #%i edited NEW: '%s' OLD '%s'" % (msg.nick, num, edit['question_id'], edit['question'], questionOld))
+                activityText = '%s edited a question, approved by %s' % (edit['username'], msg.nick)
+                self.addActivity('edit', activityText, channel, irc, threadStorage)
+                irc.sendMsg(ircmsgs.notice(msg.nick, 'NEW: %s' % (edit['question'])))
+                if questionOld != '':
+                    irc.sendMsg(ircmsgs.notice(msg.nick, 'OLD: %s' % (questionOld)))
+                else:
+                    irc.error('Question could not be found for this edit')
         else:
             if self.registryValue('general.globalstats'):
                 irc.error('Unable to find edit #{0}.'.format(num))
@@ -406,6 +414,7 @@ class TriviaTime(callbacks.Plugin):
         Channel is only required when using the command outside of a channel.
         """
         hostmask = msg.prefix
+        username = self.getUsername(msg.nick, hostmask)
         if self.isTriviaMod(hostmask, channel) == False:
             irc.reply('You must be a TriviaMod in {0} to use this command.'.format(channel))
             return
@@ -418,13 +427,16 @@ class TriviaTime(callbacks.Plugin):
             q = threadStorage.getTemporaryQuestionById(num, channel)
             
         if q:
-            threadStorage.updateUser(q['username'], 0, 0, 0, 0, 1)
-            threadStorage.insertQuestionsBulk([(q['question'], q['question'])])
-            threadStorage.removeTemporaryQuestion(q['id'])
-            irc.reply('Question accepted!')
-            self.logger.doLog(irc, channel, "%s accepted new question #%i, '%s'" % (msg.nick, num, q['question']))
-            activityText = '%s added a new question, approved by %s' % (q['username'], msg.nick)
-            self.addActivity('new', activityText, channel, irc, threadStorage)
+            if username == q['username']:
+                irc.reply('You cannot accept your own new question. Please allow another TriviaMod to review it.')
+            else:
+                threadStorage.updateUser(q['username'], 0, 0, 0, 0, 1)
+                threadStorage.insertQuestionsBulk([(q['question'], q['question'])])
+                threadStorage.removeTemporaryQuestion(q['id'])
+                irc.reply('Question accepted!')
+                self.logger.doLog(irc, channel, "%s accepted new question #%i, '%s'" % (msg.nick, num, q['question']))
+                activityText = '%s added a new question, approved by %s' % (q['username'], msg.nick)
+                self.addActivity('new', activityText, channel, irc, threadStorage)
         else:
             if self.registryValue('general.globalstats'):
                 irc.error('Unable to find new question #{0}.'.format(num))
