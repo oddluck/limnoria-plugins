@@ -344,7 +344,7 @@ class TriviaTime(callbacks.Plugin):
             
         if delete:
             if username == delete['username']:
-                irc.reply('You cannot accept your own delete request. Please allow another TriviaMod to review it.')
+                irc.reply('You cannot accept your own deletion request.')
             else:
                 questionNumber = delete['line_num']
                 irc.reply('Question #%d deleted!' % questionNumber)
@@ -383,7 +383,7 @@ class TriviaTime(callbacks.Plugin):
             
         if edit:
             if username == edit['username']:
-                irc.reply('You cannot accept your own edit. Please allow another TriviaMod to review it.')
+                irc.reply('You cannot accept your own edit.')
             else:
                 question = threadStorage.getQuestionById(edit['question_id'])
                 questionOld = question['question'] if question else ''
@@ -428,7 +428,7 @@ class TriviaTime(callbacks.Plugin):
             
         if q:
             if username == q['username']:
-                irc.reply('You cannot accept your own new question. Please allow another TriviaMod to review it.')
+                irc.reply('You cannot accept your own new question.')
             else:
                 threadStorage.updateUser(q['username'], 0, 0, 0, 0, 1)
                 threadStorage.insertQuestionsBulk([(q['question'], q['question'])])
@@ -654,7 +654,7 @@ class TriviaTime(callbacks.Plugin):
         """
         hostmask = msg.prefix
         if self.isTriviaMod(hostmask, channel) == False:
-            irc.reply('You must be a TriviaMod in {0} to use this command.'.format(channel))
+            irc.reply('You must be at least a TriviaMod in {0} to use this command.'.format(channel))
             return
         
         # Grab list from the database
@@ -693,7 +693,7 @@ class TriviaTime(callbacks.Plugin):
         """
         hostmask = msg.prefix
         if self.isTriviaMod(hostmask, channel) == False:
-            irc.reply('You must be a TriviaMod in {0} to use this command.'.format(channel))
+            irc.reply('You must be at least a TriviaMod in {0} to use this command.'.format(channel))
             return
         
         # Grab list from the database
@@ -762,7 +762,7 @@ class TriviaTime(callbacks.Plugin):
         """
         hostmask = msg.prefix
         if self.isTriviaMod(hostmask, channel) == False:
-            irc.reply('You must be a TriviaMod in {0} to use this command.'.format(channel))
+            irc.reply('You must be at least a TriviaMod in {0} to use this command.'.format(channel))
             return
         
         # Grab list from the database
@@ -930,7 +930,7 @@ class TriviaTime(callbacks.Plugin):
         """
         hostmask = msg.prefix
         if self.isTriviaMod(hostmask, channel) == False:
-            irc.reply('You must be a TriviaMod in {0} to use this command.'.format(channel))
+            irc.reply('You must be at least a TriviaMod in {0} to use this command.'.format(channel))
             return
         
         dbLocation = self.registryValue('admin.sqlitedb')
@@ -958,7 +958,7 @@ class TriviaTime(callbacks.Plugin):
         """
         hostmask = msg.prefix
         if self.isTriviaMod(hostmask, channel) == False:
-            irc.reply('You must be a TriviaMod in {0} to use this command.'.format(channel))
+            irc.reply('You must be at least a TriviaMod in {0} to use this command.'.format(channel))
             return
         
         dbLocation = self.registryValue('admin.sqlitedb')
@@ -986,7 +986,7 @@ class TriviaTime(callbacks.Plugin):
         """
         hostmask = msg.prefix
         if self.isTriviaMod(hostmask, channel) == False:
-            irc.reply('You must be a TriviaMod in {0} to use this command.'.format(channel))
+            irc.reply('You must be at least a TriviaMod in {0} to use this command.'.format(channel))
             return
         
         dbLocation = self.registryValue('admin.sqlitedb')
@@ -1014,7 +1014,7 @@ class TriviaTime(callbacks.Plugin):
         """
         hostmask = msg.prefix
         if self.isTriviaMod(hostmask, channel) == False:
-            irc.reply('You must be a TriviaMod in {0} to use this command.'.format(channel))
+            irc.reply('You must be at least a TriviaMod in {0} to use this command.'.format(channel))
             return
         
         dbLocation = self.registryValue('admin.sqlitedb')
@@ -1120,7 +1120,7 @@ class TriviaTime(callbacks.Plugin):
         """
         hostmask = msg.prefix
         if self.isTriviaMod(hostmask, channel) == False:
-            irc.reply('You must be a TriviaMod in {0} to use this command.'.format(channel))
+            irc.reply('You must be at least a TriviaMod in {0} to use this command.'.format(channel))
             return
         
         username = msg.nick
@@ -1231,7 +1231,7 @@ class TriviaTime(callbacks.Plugin):
         """
         hostmask = msg.prefix
         if self.isTriviaMod(hostmask, channel) == False:
-            irc.reply('You must be a TriviaMod in {0} to use this command.'.format(channel))
+            irc.reply('You must be at least a TriviaMod in {0} to use this command.'.format(channel))
             return
         
         if num is not None:
@@ -1325,7 +1325,7 @@ class TriviaTime(callbacks.Plugin):
         """
         hostmask = msg.prefix
         if self.isTriviaMod(hostmask, channel) == False:
-            irc.reply('You must be a TriviaMod in {0} to use this command.'.format(channel))
+            irc.reply('You must be at least a TriviaMod in {0} to use this command.'.format(channel))
             return
             
         if num is not None:
@@ -1360,7 +1360,7 @@ class TriviaTime(callbacks.Plugin):
         """
         hostmask = msg.prefix
         if self.isTriviaMod(hostmask, channel) == False:
-            irc.reply('You must be a TriviaMod in {0} to use this command.'.format(channel))
+            irc.reply('You must be at least a TriviaMod in {0} to use this command.'.format(channel))
             return
                     
         if num is not None:
