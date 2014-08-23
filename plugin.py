@@ -1062,14 +1062,13 @@ class TriviaTime(callbacks.Plugin):
         Provide a report for a bad question. Be sure to include the round number and the problem(s). 
         Channel is a optional parameter which is only needed when reporting outside of the channel
         """
-        inp = text.strip()
         username = self.getUsername(msg.nick, msg.prefix)
         channelCanonical = ircutils.toLower(channel)
         game = self.getGame(irc, channel)
         if game is not None:
             numAsked = game.numAsked
             questionOver = game.questionOver
-            if inp[:2] == 's/':
+            if text[:2] == 's/':
                 if numAsked == roundNum and questionOver == False:
                     irc.reply('Sorry, you must wait until the current question is over to report it.')
                     return
@@ -1077,21 +1076,26 @@ class TriviaTime(callbacks.Plugin):
         threadStorage = self.Storage(dbLocation)
         question = threadStorage.getQuestionByRound(roundNum, channel)
         if question:
-            if inp[:2] == 's/': # Regex
-                regex = inp[2:].split('/')
+            if text[:2] == 's/': # Regex substitution
+                regex = text[2:].split('/')
                 if len(regex) > 1:
                     threadStorage.updateUser(username, 1, 0)
-                    newOne = regex[1]
-                    oldOne = regex[0]
-                    newQuestionText = question['question'].replace(oldOne, newOne)
-                    threadStorage.insertEdit(question['id'], newQuestionText, username, channel)
-                    irc.reply('Regex detected: Question edited!')
-                    irc.sendMsg(ircmsgs.notice(username, 'NEW: %s' % (newQuestionText)))
-                    irc.sendMsg(ircmsgs.notice(username, 'OLD: %s' % (question['question'])))
-                    self.logger.doLog(irc, channel, "%s edited question #%i, NEW: '%s', OLD: '%s'" % (msg.nick, question['id'], newQuestionText, question['question']))
-                else:
-                    irc.error('Unable to process regex. Try again.')
-            elif str.lower(utils.str.normalizeWhitespace(inp))[:6] == 'delete': # Delete
+                    pattern = regex[0]
+                    repl = regex[1]
+                    if pattern == '^':
+                        repl += ' '
+                    newQuestionText = re.sub(pattern, repl, question['question'])
+                    if newQuestionText == question['question']: # Ignore if no substitutions made
+                        irc.error('The pattern \'{0}\' was not found. Please try again.'.format(pattern))
+                    else:
+                        threadStorage.insertEdit(question['id'], newQuestionText, username, channel)
+                        irc.reply('Regex detected: Question edited!')
+                        irc.sendMsg(ircmsgs.notice(username, 'NEW: %s' % (newQuestionText)))
+                        irc.sendMsg(ircmsgs.notice(username, 'OLD: %s' % (question['question'])))
+                        self.logger.doLog(irc, channel, "%s edited question #%i, NEW: '%s', OLD: '%s'" % (msg.nick, question['id'], newQuestionText, question['question']))
+                else: # Incomplete expression
+                    irc.error('Incomplete regex substitution expression. Please try again.')
+            elif str.lower(utils.str.normalizeWhitespace(text))[:6] == 'delete': # Delete
                 if not threadStorage.questionIdExists(question['id']):
                     irc.error('That question does not exist.')
                 elif threadStorage.isQuestionDeleted(question['id']):
@@ -1099,7 +1103,7 @@ class TriviaTime(callbacks.Plugin):
                 elif threadStorage.isQuestionPendingDeletion(question['id']):
                     irc.error('That question is already pending deletion.')
                 else:
-                    reason = utils.str.normalizeWhitespace(inp)[6:]
+                    reason = utils.str.normalizeWhitespace(text)[6:]
                     reason = utils.str.normalizeWhitespace(reason)
                     irc.reply('Marked question for deletion.')
                     self.logger.doLog(irc, channel, "%s marked question #%i for deletion" % (msg.nick, question['id']))
