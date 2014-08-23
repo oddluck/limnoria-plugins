@@ -607,12 +607,15 @@ class TriviaTime(callbacks.Plugin):
                 for part in questionParts[1:]:
                     question += '*'
                     question += part
-            threadStorage.insertEdit(num, question, username, channel)
-            threadStorage.updateUser(username, 1, 0)
-            irc.reply('Success! Submitted edit for further review.')
-            irc.sendMsg(ircmsgs.notice(msg.nick, 'NEW: %s' % (question)))
-            irc.sendMsg(ircmsgs.notice(msg.nick, 'OLD: %s' % (q['question'])))
-            self.logger.doLog(irc, channel, "%s edited question #%i: OLD: '%s' NEW: '%s'" % (username, num, q['question'], question))
+            if question == q['question']:
+                irc.error('Your edit does not change the original question.')
+            else:
+                threadStorage.insertEdit(num, question, username, channel)
+                threadStorage.updateUser(username, 1, 0)
+                irc.reply('Success! Submitted edit for further review.')
+                irc.sendMsg(ircmsgs.notice(msg.nick, 'NEW: %s' % (question)))
+                irc.sendMsg(ircmsgs.notice(msg.nick, 'OLD: %s' % (q['question'])))
+                self.logger.doLog(irc, channel, "%s edited question #%i: OLD: '%s' NEW: '%s'" % (username, num, q['question'], question))
         else:
             irc.error('Question does not exist')
     edit = wrap(edit, ['user', 'channel', 'int', 'text'])
@@ -1086,15 +1089,15 @@ class TriviaTime(callbacks.Plugin):
                         repl += ' '
                     newQuestionText = re.sub(pattern, repl, question['question'])
                     if newQuestionText == question['question']: # Ignore if no substitutions made
-                        irc.error('The pattern \'{0}\' was not found. Please try again.'.format(pattern))
+                        irc.error('This regex substitution expression does not change the original question.')
                     else:
                         threadStorage.insertEdit(question['id'], newQuestionText, username, channel)
-                        irc.reply('Regex detected: Question edited!')
+                        irc.reply('Regex substitution detected: Question edited!')
                         irc.sendMsg(ircmsgs.notice(username, 'NEW: %s' % (newQuestionText)))
                         irc.sendMsg(ircmsgs.notice(username, 'OLD: %s' % (question['question'])))
                         self.logger.doLog(irc, channel, "%s edited question #%i, NEW: '%s', OLD: '%s'" % (msg.nick, question['id'], newQuestionText, question['question']))
                 else: # Incomplete expression
-                    irc.error('Incomplete regex substitution expression. Please try again.')
+                    irc.error('Incomplete regex substitution expression.')
             elif str.lower(utils.str.normalizeWhitespace(text))[:6] == 'delete': # Delete
                 if not threadStorage.questionIdExists(question['id']):
                     irc.error('That question does not exist.')
