@@ -1310,9 +1310,9 @@ class TriviaTime(callbacks.Plugin):
                 irc.reply('Report #%d \'%s\' by %s on %s Q#%d '%(report['id'], report['report_text'], report['username'], report['channel'], report['question_num']))
                 question = threadStorage.getQuestionById(report['question_num'])
                 if question:
-                    irc.error('Question could not be found.')
-                else:
                     irc.reply('Question #%d: %s' % (question['id'], question['question']))
+                else:
+                    irc.error('Question could not be found.')
             else:
                 if self.registryValue('general.globalstats'):
                     irc.reply('Unable to find report #{0}.'.format(num))
