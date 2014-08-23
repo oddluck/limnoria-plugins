@@ -1085,8 +1085,6 @@ class TriviaTime(callbacks.Plugin):
                     threadStorage.updateUser(username, 1, 0)
                     pattern = regex[0]
                     repl = regex[1]
-                    if pattern == '^':
-                        repl += ' '
                     newQuestionText = re.sub(pattern, repl, question['question'])
                     if newQuestionText == question['question']: # Ignore if no substitutions made
                         irc.error('This regex substitution expression does not change the original question.')
