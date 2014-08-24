@@ -3008,7 +3008,7 @@ class TriviaTime(callbacks.Plugin):
             c = self.conn.cursor()
             c.execute('''SELECT COUNT(id) FROM trivialogin 
                          WHERE username_canonical=?''', (usernameCanonical,))
-            rows = c.fetchone()
+            row = c.fetchone()
             c.close()
             return row[0] > 0
 
