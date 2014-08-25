@@ -537,8 +537,8 @@ class TriviaTime(callbacks.Plugin):
             Parameter is optional, display up to that number. (eg 20 - display 11-20)
             Channel is only required when using the command outside of a channel.
         """
-        if num is None or num < 10:
-            num=10
+        num = max(num, 10)
+        offset = num-9
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
         if self.registryValue('general.globalStats'):
@@ -546,15 +546,14 @@ class TriviaTime(callbacks.Plugin):
         else:
             tops = threadStorage.viewDayTop10(channel, num)
         
+        topsList = ['Today\'s Top {0}-{1} Players: '.format(offset, num)]
         if tops:
-            offset = num-9
-            topsList = ['Today\'s Top Players: ']
             for i in range(len(tops)):
                 topsList.append('\x02 #%d:\x02 %s %d ' % ((i+offset) , self.addZeroWidthSpace(tops[i]['username']), tops[i]['points']))
-            topsText = ''.join(topsList)
-            self.reply(irc, msg, topsText, prefixNick=False)
         else:
-            self.reply(irc, msg, 'No players have played today.', prefixNick=False)
+            topsList.append('No players')
+        topsText = ''.join(topsList)
+        self.reply(irc, msg, topsText, prefixNick=False)
     day = wrap(day, ['channel', optional('int')])
 
     def delete(self, irc, msg, arg, user, channel, t, id, reason):
@@ -878,8 +877,8 @@ class TriviaTime(callbacks.Plugin):
             Parameter is optional, display up to that number. (eg 20 - display 11-20)
             Channel is only required when using the command outside of a channel.
         """
-        if num is None or num < 10:
-            num=10
+        num = max(num, 10)
+        offset = num-9
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
         if self.registryValue('general.globalStats'):
@@ -887,15 +886,14 @@ class TriviaTime(callbacks.Plugin):
         else:
             tops = threadStorage.viewMonthTop10(channel, num)
         
+        topsList = ['This Month\'s Top {0}-{1} Players: '.format(offset, num)]
         if tops:
-            topsList = ['This Month\'s Top Players: ']
-            offset = num-9
             for i in range(len(tops)):
                 topsList.append('\x02 #%d:\x02 %s %d ' % ((i+offset) , self.addZeroWidthSpace(tops[i]['username']), tops[i]['points']))
-            topsText = ''.join(topsList)
-            self.reply(irc, msg, topsText, prefixNick=False)
         else:
-            self.reply(irc, msg, 'No players have played this month.', prefixNick=False)
+            topsList.append('No players')
+        topsText = ''.join(topsList)
+        self.reply(irc, msg, topsText, prefixNick=False)
     month = wrap(month, ['channel', optional('int')])
 
     def next(self, irc, msg, arg, channel):
@@ -1471,8 +1469,8 @@ class TriviaTime(callbacks.Plugin):
         Parameter is optional, display up to that number. (eg 20 - display 11-20)
         Channel is only required when using the command outside of a channel.
         """
-        if num is None or num < 10:
-            num=10
+        num = max(num, 10)
+        offset = num-9
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
         if self.registryValue('general.globalStats'):
@@ -1480,15 +1478,14 @@ class TriviaTime(callbacks.Plugin):
         else:
             tops = threadStorage.viewWeekTop10(channel, num)
         
+        topsList = ['This Week\'s Top {0}-{1} Players: '.format(offset, num)]
         if tops:
-            topsList = ['This Week\'s Top Players: ']
-            offset = num-9
             for i in range(len(tops)):
                 topsList.append('\x02 #%d:\x02 %s %d ' % ((i+offset) , self.addZeroWidthSpace(tops[i]['username']), tops[i]['points']))
-            topsText = ''.join(topsList)
-            self.reply(irc, msg, topsText, prefixNick=False)
         else:
-            self.reply(irc, msg, 'No players have played this week.', prefixNick=False)
+            topsList.append('No players')
+        topsText = ''.join(topsList)
+        self.reply(irc, msg, topsText, prefixNick=False)
     week = wrap(week, ['channel', optional('int')])
 
     def year(self, irc, msg, arg, channel, num):
@@ -1497,24 +1494,23 @@ class TriviaTime(callbacks.Plugin):
             Parameter is optional, display up to that number. (eg 20 - display 11-20)
             Channel is only required when using the command outside of a channel.
         """
-        if num is None or num < 10:
-            num=10
+        num = max(num, 10)
+        offset = num-9
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = self.Storage(dbLocation)
         if self.registryValue('general.globalStats'):
             tops = threadStorage.viewYearTop10(None, num)
         else:
             tops = threadStorage.viewYearTop10(channel, num)
-        
+            
+        topsList = ['This Year\'s Top {0}-{1} Players: '.format(offset, num)]
         if tops:
-            topsList = ['This Year\'s Top Players: ']
-            offset = num-9
             for i in range(len(tops)):
                 topsList.append('\x02 #%d:\x02 %s %d ' % ((i+offset) , self.addZeroWidthSpace(tops[i]['username']), tops[i]['points']))
-            topsText = ''.join(topsList)
-            self.reply(irc, msg, topsText, prefixNick=False)
         else:
-            self.reply(irc, msg, 'No players have played this year.', prefixNick=False)
+            topsList.append('No players')
+        topsText = ''.join(topsList)
+        self.reply(irc, msg, topsText, prefixNick=False)
     year = wrap(year, ['channel', optional('int')])
 
     #Game instance
