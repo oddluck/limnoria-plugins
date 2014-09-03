@@ -189,13 +189,13 @@ class Tweety(callbacks.Plugin):
         d = datetime.utcnow() - datetime(*ddate, tzinfo=None)
         # now parse and return.
         if d.days:
-            rel_time = "%sd ago" % d.days
+            rel_time = "%sd ago" % abs(d.days)
         elif d.seconds > 3600:
-            rel_time = "%sh ago" % (d.seconds / 3600)
+            rel_time = "%sh ago" % (abs(d.seconds) / 3600)
         elif 60 <= d.seconds < 3600:
-            rel_time = "%sm ago" % (d.seconds / 60)
+            rel_time = "%sm ago" % (abs(d.seconds) / 60)
         else:
-            rel_time = "%ss ago" % (d.seconds)
+            rel_time = "%ss ago" % (abs(d.seconds))
         return rel_time
 
     def _outputTweet(self, irc, msg, nick, name, text, time, tweetid):
