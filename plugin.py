@@ -13,10 +13,13 @@ import supybot.callbacks as callbacks
 import os, errno
 import supybot.registry as registry
 import supybot.ircdb as ircdb
-import gzip
-from urlparse import urlparse
+import gzip 
 
-import pygeoip
+try:
+    import pygeoip
+except ImportError:
+    raise ImportError("The Geo plugin requires pygeoip be installed.  Load aborted.")
+    
 
 class Geo(callbacks.Plugin):
     threaded=True
@@ -59,41 +62,48 @@ class Geo(callbacks.Plugin):
 
         if not utils.net.isIP(stuff):
             try:
-                x_hostname=urlparse(stuff).hostname # get hostname from url
+                x_hostname=utils.web.getDomain(stuff) # get hostname from url
                 if not x_hostname: x_hostname= stuff # already hostname?
                 info=gic.record_by_name(x_hostname)
-                if 'city' in info.keys():
+                if 'city' in info.keys() and str(info['city']) != 'None':
                     x_city=info['city'] + ', '
                 else:
                     x_city=''
-                if 'region_name' in info.keys():
+                if 'region_code' in info.keys() and str(info['region_code']) != 'None' and str(info['region_code']) != '00':
+                    x_region_code=info['region_code'] + ', '
+                else:
+                    x_region_code=''
+                if 'region_name' in info.keys() and str(info['region_name']) != 'None':
                     x_region_name=info['region_name'] + ', '
                 else:
                     x_region_name=''
-                if 'country_name' in info.keys():
+                if 'country_name' in info.keys() and str(info['country_name']) != 'None':
                     x_country_name=info['country_name']
                 else:
                     x_country_name=''
-                irc.reply('%s%s%s' % (x_city,x_region_name,x_country_name))
+                irc.reply('%s%s%s%s' % (x_city,x_region_code,x_region_name,x_country_name))
             except:
                 irc.reply('Not a valid ip or name.')
                 return
         else:
             info=gic.record_by_addr(stuff)
-            
-            if 'city' in info.keys():
+            if 'city' in info.keys() and str(info['city']) != 'None':
                 x_city=info['city'] + ', '
             else:
                 x_city=''
-            if 'region_name' in info.keys():
+            if 'region_code' in info.keys() and str(info['region_code']) != 'None' and str(info['region_code']) != '00':
+                 x_region_code=info['region_code'] + ', '
+            else:
+                 x_region_code=''
+            if 'region_name' in info.keys() and str(info['region_name']) != 'None':
                 x_region_name=info['region_name'] + ', '
             else:
                 x_region_name=''
-            if 'country_name' in info.keys():
+            if 'country_name' in info.keys() and str(info['country_name']) != 'None':
                 x_country_name=info['country_name']
             else:
                 x_country_name=''
-            irc.reply('%s%s%s' % (x_city,x_region_name,x_country_name))
+            irc.reply('%s%s%s%s' % (x_city,x_region_code,x_region_name,x_country_name))
     geo = wrap(geo, ['text'])
 
     def update(self):
