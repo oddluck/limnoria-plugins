@@ -26,8 +26,7 @@ def configure(advanced):
 
 WorldTime = conf.registerPlugin('WorldTime')
 # This is where your configuration variables (if any) should go.  For example:
-# conf.registerGlobalValue(WorldTime, 'someConfigVariableName',
-#     registry.Boolean(False, _("""Help for someConfigVariableName.""")))
+conf.registerChannelValue(WorldTime, 'disableANSI', registry.Boolean(False, _("""Disable color/bolding for WorldTime output in channel.""")))
 
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
