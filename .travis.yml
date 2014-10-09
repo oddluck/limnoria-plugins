@@ -1,0 +1,26 @@
+language: python
+python:
+  - "2.7"
+  - "pypy"
+# command to install dependencies, e.g. pip install -r requirements.txt --use-mirrors
+install:
+    - pip install -vr https://raw.githubusercontent.com/ProgVal/Limnoria/testing/requirements.txt
+    - pip install -v git+https://github.com/ProgVal/Limnoria.git@testing
+    - pip install -vr requirements.txt||true
+# command to run tests, e.g. python setup.py test
+script:
+  - echo $TRAVIS_PYTHON_VERSION
+  - export PYTHON_MAJOR_VERSION=$(python -c "import sys;print(sys.version_info[0])")
+  - echo $PYTHON_MAJOR_VERSION
+#  - if [ "$PYTHON_MAJOR_VERSION" = "3" ]; then export DISABLED_PLUGINS="--exclude=./NoLatin1 --exclude ./Twitter --exclude ./TwitterStream --exclude ./MegaHAL --exclude GUI"; else export DISABLED_PLUGINS=""; fi
+  - supybot-test --plugins-dir=. --no-network $DISABLED_PLUGINS
+notifications:
+    email: false
+    irc:
+      channels:
+        - "irc.efnet.net#supybot"
+#     template:
+#       - "%{repository} (%{commit}) : %{message} %{foo} "
+#       - "Build details: %{build_url}"
+matrix:
+    fast_finish: true
