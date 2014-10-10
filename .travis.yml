@@ -1,13 +1,14 @@
 language: python
 python:
   - "2.7"
+  - pypy
 # command to install dependencies, 
 install:
     - pip install -vr requirements.txt||true
 # command to run tests, e.g. python setup.py test
 script:
   - echo $TRAVIS_PYTHON_VERSION
-  - cd .. && supybot-test WorldTime
+  - cd .. && supybot-test Supybot-WorldTime
 notifications:
     email: false
     irc:
