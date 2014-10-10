@@ -8,7 +8,7 @@ install:
 # command to run tests, e.g. python setup.py test
 script:
   - echo $TRAVIS_PYTHON_VERSION
-  - cd .. && supybot-test Supybot-WorldTime
+  - cd .. && supybot-test WorldTime
 notifications:
     email: false
     irc:
