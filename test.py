@@ -23,4 +23,7 @@ class TweetyTestCase(PluginTestCase):
     def testTweety(self):
         self.assertSnarfResponse('reload Tweety', 'The operation succeeded.')
         self.assertRegexp('trends', 'Top 10 Twitter Trends')
+        self.assertRegexp('twitter --info CNN', 'CNN')
+        self.assertRegexp('twitter CNN', 'CNN')
+        
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
