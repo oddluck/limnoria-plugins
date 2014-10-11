@@ -12,7 +12,7 @@ class UrbanDictionaryTestCase(PluginTestCase):
 
     def testUrbanDictionary(self):
         conf.supybot.plugins.UrbanDictionary.disableANSI.setValue('True')
-        self.assertRegexp('urbandictionary hello', 'hello :: what you say when your talking casually with friends and your mom walks in the room')
-
+        self.assertRegexp('urbandictionary hello', 'hello ::')
+        self.assertRegexp('urbandictionary spline', 'spline ::')
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
