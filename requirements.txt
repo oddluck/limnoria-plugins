@@ -1,2 +1,2 @@
-limnoria==2014.10.09
+git+https://github.com/ProgVal/Limnoria.git
 pytz==2014.7
