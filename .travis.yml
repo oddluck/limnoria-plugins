@@ -12,10 +12,12 @@ script:
 notifications:
     email: false
     irc:
+      on_success: change
+      on_failure: always
       channels:
         - "irc.efnet.net#supybot"
-    template:
-      - "%{repository}/#%{build_number}/%{branch} (%{author}): %{message} %{build_url}"
+      template:
+        - "%{repository}/#%{build_number}/%{branch} (%{author}): %{message} %{build_url}"
 matrix:
     fast_finish: true
 
