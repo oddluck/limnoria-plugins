@@ -1,104 +1,111 @@
-Supybot-Tweety
-======
+[![Build Status](https://travis-ci.org/reticulatingspline/Tweety.svg?branch=master)](https://travis-ci.org/reticulatingspline/Tweety)
 
-# Twitter client for Supybot
+# Limnoria plugin for Twitter.
 
-Description
------------
+## Introduction
 
-This is a Supybot plugin to work with Twitter. It allows a user to search for Tweets,
-display specific tweets and timelines from a user's account, and display Trends.
+This began with [Hoaas](https://github.com/Hoaas) making a slimmed down version of
+ProgVal's [Twitter plugin](https://github.com/ProgVal/Supybot-Plugins/Twitter). He
+was just interested in reading Tweets and showing information about the account, not
+having any write cabaility. I started adding features to it and had to do an entire
+rewrite after Twitter introduced the v1.1 API.
 
-It has been updated to work with the oAuth requirement in v1.1 API along with their
-updated endpoints.
+This plugin is able to display information on accounts, display specific tweets, search for tweets, and display trends.
 
-For working v1.1 API clients, I am aware of only this and ProgVal's Twitter client.
-This is a much watered down version of ProgVal's Twitter client. It only includes
-read-only features (no risk of accidental Tweeting) that most folks use:
-tweet display, tweet searching and trends.
+If you are looking for anything outside of this, I suggest you do not run this plugin and instead install
+ProgVal's version that I linked to above.
 
-If you need to do any type of Twittering via the bot such as posting tweets,
-responding, announcing of timelines, you will want ProgVals.
 
-This will never contain more than what is above.
+## Install
 
-Instructions
-------------
-1.) On an up-to-date Python 2.7+ system, one dependency is needed.
-    You can go the pip route or install via source, depending on your setup. You will need:
-    1. Install oauth2: pip install oauth2
+You will need a working Limnoria bot on Python 2.7 for this to work.
 
-2.) You need some keys from Twitter. See http://dev.twitter.com. Steps are:
-    1. If you plan to use a dedicated Twitter account, create a new twitter account.
-    2. Go to dev.twitter.com and log in.
-    3. Click create an application.
-    4. Fill out the information. Name does not matter.
-    5. default is read-only. Since we're not tweeting from this bot/code, you're fine here.
-    6. Your 4 magic strings (2 tokens and 2 secrets) are shown.
-    7. Once you /msg <bot> load Tweety, you need to set these keys:
-        * /msg <bot> config plugins.Tweety.consumerKey xxxxx
-        * /msg <bot> config plugins.Tweety.consumerSecret xxxxx
-        * /msg <bot> config plugins.Tweety.accessKey xxxxx
-        * /msg <bot> config plugins.Tweety.accessSecret xxxxx
-    8. /msg <bot> reload Tweety - THIS IS REQUIRED. YOU MUST RELOAD BEFORE USING.
+Go into your Limnoria plugin dir, usually ~/supybot/plugins and run:
 
-    Next, I suggest you /msg <bot> config search Tweety. There are a lot of options here.
+```
+git clone https://github.com/reticulatingspline/Tweety
+```
 
-    Things should work fine from here providing your keys are right.
+To install additional requirements, run:
 
-3.) EXTRAS: Want the bot to function like others do parsing out Twitter links and displaying?
+```
+pip install -r requirements.txt 
+```
 
-    IE:
+Next, load the plugin:
 
-    <@snackle> https://twitter.com/JSportsnet/status/348114324004413440
-    <@milo> @JSportsnet (John Shannon): Am told that Tippett's new deal is for 5 years, and he's "committed to the franchise where ever it ends up". (44m ago)
+```
+/msg bot load Tweety
+```
 
-    OR:
+[Fetch the API keys for Twitter](http://dev.twitter.com) by signing up (free).
+Create an application. Fill out the requested information. Name does not matter
+but the name of the application must be unique. Default is read-only, which is fine.
+Once complete, they'll issue you 4 different "strings" that you need to input
+into the bot, matching up with the config variable names.
 
-    <@Hoaas> Should work on links to profiles aswell: https://twitter.com/EricFrancis
-    <@Bunisher> @EricFrancis (Eric Francis): HNIC-turned-Sportsnet analyst, Calgary Sun columnist, JACK FM morning host, author, FAN 960,
-    job collector, KidSport Ambassador, Ticats kicker, Dad, rum lover [513 friends, 3903 tweets, 20646 followers, signup: 1561d ago Location: Calgary]
+```
+/msg <bot> config plugins.Tweety.consumerKey xxxxx
+/msg <bot> config plugins.Tweety.consumerSecret xxxxx
+/msg <bot> config plugins.Tweety.accessKey xxxxx
+/msg <bot> config plugins.Tweety.accessSecret xxxxx
+```
 
-    Load the messageparser plugin: (Thanks to Hoaas for this!)
+Now, reload the bot and you should be good to go:
 
-    /msg <bot> load MessageParser
-    /msg <bot> messageparser add global "https?://twitter\.com/([^ \t/]+)(?:$|[ \t])" "Tweety twitter --info $1"
-    /msg <bot> messageparser add global "https?://twitter\.com/([A-Za-z0-9_]+)/status/([0-9]+)" "Tweety twitter --id $2"
+```
+/msg bot reload Tweety
+```
 
-Examples
---------
+Optional: There are some config variables that can be set for the bot. They mainly control output stuff.
 
-    - Twitter Trends
-    <me> trends
-    <bot> Top 10 Twitter Trends in United States :: #BeforeIDieIWantTo | #ThingsIMissAboutMyChildhood | Happy Memorial Day | #RG13 | #USA | #america | BBQ | WWII | God Bless | Facebook
+```
+/msg bot config search Tweety
+```
 
-    - Searching Twitter
-    <me> tsearch news
-    <bot> @ray_gallego (Ray Gallego): http://t.co/ftNbDEzXaR (Researchers say Western IQs dropped 14 points over last century) (14s ago)
-    <bot> @surfing93 (emilyhenderson): @MariaaEveline Hay here is the Crestillion Interview. http://t.co/CEiDpboeMX (15s ago)
+## Example Usage
 
-    - Getting tweets from someones' timeline.
-    <me> twitter --num 3 @ESPNStatsInfo
-    <bot> @ESPNStatsInfo (ESPN Stats & Info): In 1st-round win vs Daniel Brands, Rafael Nadal lost 19 games. He lost a total of 19 games in the 1st 4 rounds at last year's French Open. (30m ago)
-    <bot> @ESPNStatsInfo (ESPN Stats & Info): Key stats from Miami's win yesterday. Haslem's jump shot, LeBron's post-up and more: http://t.co/a4CcUnKJMi (53m ago)
-    <bot> @ESPNStatsInfo (ESPN Stats & Info): Heat avoid losing consecutive games. They haven't lost 2 straight in more than 5 months (January 8-10) (1h ago)
+```
+<me> trends
+<bot> Top 10 Twitter Trends in United States :: #BeforeIDieIWantTo | #ThingsIMissAboutMyChildhood | Happy Memorial Day | #RG13 | #USA | #america | BBQ | WWII | God Bless | Facebook
 
-Background
-----------
-Hoaas, on GitHub, started this plugin with basics for Twitter and I started to submit
-ideas and code. After a bit, the plugin was mature but Twitter, in 2012, put out the
-notice that everything was changing with their move to v1.1 of the API. The client had
-no oAuth code, was independent of any Python library, so it needed a major rewrite. I
-decided to take this part on, using chunks of code from an oAuth/Twitter wrapper and
-later rewriting/refactoring many of the existing functions with the massive structural
-changes.
+<me> tsearch news
+<bot> @ray_gallego (Ray Gallego): http://t.co/ftNbDEzXaR (Researchers say Western IQs dropped 14 points over last century) (14s ago)
+<bot> @surfing93 (emilyhenderson): @MariaaEveline Hay here is the Crestillion Interview. http://t.co/CEiDpboeMX (15s ago)
 
-So, as I take over, I must acknowledge the work done by Hoaas:
-http://github.com/Hoaas/
-Much/almost all of the oAuth code came from:
-https://github.com/jpittman/OAuth-Python-Twitter
+<me> twitter --num 3 @ESPNStatsInfo
+<bot> @ESPNStatsInfo (ESPN Stats & Info): In 1st-round win vs Daniel Brands, Rafael Nadal lost 19 games. He lost a total of 19 games in the 1st 4 rounds at last year's French Open. (30m ago)
+<bot> @ESPNStatsInfo (ESPN Stats & Info): Key stats from Miami's win yesterday. Haslem's jump shot, LeBron's post-up and more: http://t.co/a4CcUnKJMi (53m ago)
+<bot> @ESPNStatsInfo (ESPN Stats & Info): Heat avoid losing consecutive games. They haven't lost 2 straight in more than 5 months (January 8-10) (1h ago)
+```
 
-Documentation
--------------
+## Extras
 
-* https://dev.twitter.com/docs/api/1.1
+Want the bot to function like others do parsing out Twitter links and displaying? (Thanks to Hoaas)
+
+```
+<@snackle> https://twitter.com/JSportsnet/status/348114324004413440
+<@milo> @JSportsnet (John Shannon): Am told that Tippett's new deal is for 5 years, and he's "committed to the franchise where ever it ends up". (44m ago)
+```
+
+```
+<@Hoaas> Should work on links to profiles aswell: https://twitter.com/EricFrancis
+<@Bunisher> @EricFrancis (Eric Francis): HNIC-turned-Sportsnet analyst, Calgary Sun columnist...
+```
+
+Load the messageparser plugin:
+
+```
+/msg <bot> load MessageParser
+/msg <bot> messageparser add global "https?://twitter\.com/([^ \t/]+)(?:$|[ \t])" "Tweety twitter --info $1"
+/msg <bot> messageparser add global "https?://twitter\.com/([A-Za-z0-9_]+)/status/([0-9]+)" "Tweety twitter --id $2"
+```
+
+## About
+
+All of my plugins are free and open source. When I first started out, one of the main reasons I was
+able to learn was due to other code out there. If you find a bug or would like an improvement, feel
+free to give me a message on IRC or fork and submit a pull request. Many hours do go into each plugin,
+so, if you're feeling generous, I do accept donations via Amazon or browse my [wish list](http://amzn.com/w/380JKXY7P5IKE).
+
+I'm always looking for work, so if you are in need of a custom feature, plugin or something bigger, contact me via GitHub or IRC.
