@@ -16,7 +16,7 @@ notifications:
         - "irc.efnet.net#supybot"
       template:
         - "Build #%{build_number}: %{repository} %{branch} (%{commit}) %{author} - %{message}"
-        - "Build details: %{build_url}"
+        - "Build details: \x03 %{build_url}"
 matrix:
     fast_finish: true
 
