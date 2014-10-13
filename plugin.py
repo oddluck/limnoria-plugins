@@ -6,7 +6,6 @@
 ###
 
 # my libs
-import urllib
 import json
 import time
 import pytz
@@ -34,6 +33,18 @@ class WorldTime(callbacks.Plugin):
     # TIME FUNCTIONS #
     ##################
     
+    def _qp(self, url):
+        """quote_plus."""
+        
+        import sys
+        if sys.version_info[0] == 2:
+            from urllib import quote_plus 
+        else:
+            from urllib.parse import quote_plus
+        # now do quote plus.
+        url = quote_plus(url)
+        return url
+
     def _utcnow(self):
         """Calculate Unix timestamp from GMT. Code from calendar.timegm()"""
     
@@ -80,7 +91,7 @@ class WorldTime(callbacks.Plugin):
             return None
 
     def _getlatlng(self, location):
-        location = urllib.quote_plus(location)
+        location = self._qp(location)
         url = 'http://maps.googleapis.com/maps/api/geocode/json?address=%s&sensor=false' % location
         
         # try and fetch url
