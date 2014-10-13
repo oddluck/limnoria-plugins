@@ -117,7 +117,7 @@ class WorldTime(callbacks.Plugin):
             return None
     
     def _gettime(self, latlng):
-        latlng = urllib.quote_plus(latlng)
+        latlng = self.qp(latlng)
         url = 'https://maps.googleapis.com/maps/api/timezone/json?location=%s&sensor=false&timestamp=%s' % (latlng, time.time())
 
         # try and fetch url
