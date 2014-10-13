@@ -171,7 +171,10 @@ class WorldTime(callbacks.Plugin):
                 else:
                     irc.reply("{0} :: Current local time is: {1} ({2})".format(gc['place'], lt, ll['timeZoneName']))
             else:
-                irc.reply("{0} :: Current local time is: {1} ({2})".format(ircutils.bold(gc['place'].encode('utf-8')), lt, ll['timeZoneName'].encode('utf-8')))
+                if sys.version_info[0] == 2:
+                    irc.reply("{0} :: Current local time is: {1} ({2})".format(ircutils.bold(gc['place'].encode('utf-8')), lt, ll['timeZoneName'].encode('utf-8')))
+                else:
+                    irc.reply("{0} :: Current local time is: {1} ({2})".format(ircutils.bold(gc['place']), lt, ll['timeZoneName']))
         else:
             irc.reply("ERROR: Something went wrong during conversion to timezone. Check logs.")
 
