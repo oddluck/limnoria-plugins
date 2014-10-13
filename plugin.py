@@ -6,6 +6,7 @@
 ###
 
 # my libs
+import sys
 import json
 import time
 import pytz
@@ -36,7 +37,6 @@ class WorldTime(callbacks.Plugin):
     def _qp(self, url):
         """quote_plus."""
         
-        import sys
         if sys.version_info[0] == 2:
             from urllib import quote_plus 
         else:
@@ -166,7 +166,10 @@ class WorldTime(callbacks.Plugin):
         lt = self._converttz(utcnow, ll['timeZoneId'])
         if lt:  # make sure we get it back.
             if self.registryValue('disableANSI', msg.args[0]):  # disable ANSI.
-                irc.reply("{0} :: Current local time is: {1} ({2})".format(gc['place'].encode('utf-8'), lt, ll['timeZoneName'].encode('utf-8')))
+                if sys.version_info[0] == 2:
+                    irc.reply("{0} :: Current local time is: {1} ({2})".format(gc['place'].encode('utf-8'), lt, ll['timeZoneName'].encode('utf-8')))
+                else:
+                    irc.reply("{0} :: Current local time is: {1} ({2})".format(gc['place'], lt, ll['timeZoneName']))
             else:
                 irc.reply("{0} :: Current local time is: {1} ({2})".format(ircutils.bold(gc['place'].encode('utf-8')), lt, ll['timeZoneName'].encode('utf-8')))
         else:
