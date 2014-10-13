@@ -56,7 +56,7 @@ class WorldTime(callbacks.Plugin):
             outstrf = '%a, %H:%M'  # Day, HH:MM
             local_dt = dtobj.astimezone(pytz.timezone(outputTZ))
             return local_dt.strftime(outstrf)
-        except Exception, e:
+        except Exception as e:
             self.log.info("ERROR: _converttz: {0}".format(e))
             return None
 
@@ -97,7 +97,7 @@ class WorldTime(callbacks.Plugin):
             else:
                 self.log.info("ERROR: _gettime: status result NOT ok. Result: {0}".format(result))
                 return None
-        except Exception, e:
+        except Exception as e:
             self.log.info("ERROR: _gettime: {0}".format(e))
             return None
     
