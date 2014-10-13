@@ -7,7 +7,6 @@
 
 # my libs
 import urllib
-import urllib2
 import json
 import time
 import pytz
@@ -63,13 +62,35 @@ class WorldTime(callbacks.Plugin):
     ##############
     # GAPI STUFF #
     ##############
+    
+    def _fetch(self, url, headers=None):
+        """
+        General HTTP resource fetcher.
+        """
+        
+        try:
+            if headers:
+                result = utils.web.getUrl(url, headers=headers)
+            else:
+                result = utils.web.getUrl(url)
+            # return
+            return result
+        except Exception as e:
+            self.log.info("_fetch :: I could not open {0} error: {1}".format(url, e))
+            return None
 
     def _getlatlng(self, location):
         location = urllib.quote_plus(location)
         url = 'http://maps.googleapis.com/maps/api/geocode/json?address=%s&sensor=false' % location
+        
+        # try and fetch url
+        response = self._fetch(url)
+        if not response:
+            irc.reply("ERROR: I could not fetch: {0}".format(url))
+            return None
+        
         # wrap in a big try/except
         try:
-            response = urllib2.urlopen(url).read()
             result = json.loads(response.decode('utf-8'))
             if result['status'] == 'OK':
                lat = str(result['results'][0]['geometry']['location']['lat'])
@@ -87,9 +108,15 @@ class WorldTime(callbacks.Plugin):
     def _gettime(self, latlng):
         latlng = urllib.quote_plus(latlng)
         url = 'https://maps.googleapis.com/maps/api/timezone/json?location=%s&sensor=false&timestamp=%s' % (latlng, time.time())
+
+        # try and fetch url
+        response = self._fetch(url)
+        if not response:
+            irc.reply("ERROR: I could not fetch: {0}".format(url))
+            return None
+        
         # wrap in a big try/except
         try:
-            response = urllib2.urlopen(url).read()
             result = json.loads(response.decode('utf-8'))
             if result['status'] == 'OK':
                 # {u'status': u'OK', u'dstOffset': 0, u'rawOffset': -18000, u'timeZoneName': u'Eastern Standard Time', u'timeZoneId': u'America/New_York'}
