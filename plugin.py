@@ -80,7 +80,7 @@ class WorldTime(callbacks.Plugin):
             else:
                 self.log.info("ERROR: _getlatlng: status result NOT ok. Result: {0}".format(result))
                 return None
-        except Exception, e:
+        except Exception as e:
             self.log.info("ERROR: _getlatlng: {0}".format(e))
             return None
     
