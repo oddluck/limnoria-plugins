@@ -23,6 +23,12 @@ To install additional requirements, run:
 pip install -r requirements.txt 
 ```
 
+or if you don't have or don't want to use root,
+
+```
+pip install -r requirements.txt --user
+```
+
 Next, load the plugin:
 
 ```
