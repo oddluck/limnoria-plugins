@@ -5,6 +5,7 @@
 #
 #
 ###
+from __future__ import unicode_literals
 # my libs
 import json
 import re
@@ -111,7 +112,7 @@ class UrbanDictionary(callbacks.Plugin):
         try:
             jsondata = self._repairjson(html.decode('utf-8'))  # decode utf-8. fix \r\n that ud puts in below.
             jsondata = json.loads(jsondata)  # odds chars in UD.
-        except Exception, e:
+        except Exception as e:
             self.log.error("Error parsing JSON from UD: {0}".format(e))
             irc.reply("ERROR: Failed to parse json data. Check logs for error")
             return
@@ -122,15 +123,15 @@ class UrbanDictionary(callbacks.Plugin):
         if results == "exact":  # we did not find anything.
             outdefs = []
             for i in definitions[0:args['numberOfDefinitions']]:  # iterate through each def.
-                outputstring = "{0}".format(i['definition'].encode('utf-8').strip())  # default string.
+                outputstring = "{0}".format(i['definition'].strip())  # default string.
                 if args['showExamples']:  # show examples?
-                    outputstring += " {0} {1} {2}".format(self._bu("[ex:]"), i['example'].encode('utf-8').strip(), self._bu("[/ex]"))
+                    outputstring += " {0} {1} {2}".format(self._bu("[ex:]"), i['example'].strip(), self._bu("[/ex]"))
                 if args['showVotes']:  # show votes?
                     outputstring += " (+{0}/-{1})".format(i['thumbs_up'], i['thumbs_down'])
                 outdefs.append(outputstring)  # add to our list.
             output = " | ".join([item for item in outdefs])  # create string with everything.
         elif results == "fulltext":  # not direct. yields related terms.
-            output = " | ".join(sorted(set([item['word'].encode('utf-8') for item in definitions])))  # sorted, unique words.
+            output = " | ".join(sorted(set([item['word'] for item in definitions])))  # sorted, unique words.
         # output time.
         if results == "no_results" or len(definitions) == 0:  # NOTHING FOUND.
             irc.reply("ERROR: '{0}' not defined on UrbanDictionary.".format(optterm))
