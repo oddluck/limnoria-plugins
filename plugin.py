@@ -97,7 +97,7 @@ class WorldTime(callbacks.Plugin):
         # try and fetch url
         response = self._fetch(url)
         if not response:
-            irc.reply("ERROR: I could not fetch: {0}".format(url))
+            irc.error("I could not fetch: {0}".format(url), Raise=True)
             return None
         
         # wrap in a big try/except
@@ -123,7 +123,7 @@ class WorldTime(callbacks.Plugin):
         # try and fetch url
         response = self._fetch(url)
         if not response:
-            irc.reply("ERROR: I could not fetch: {0}".format(url))
+            irc.error("I could not fetch: {0}".format(url), Raise=True)
             return None
         
         # wrap in a big try/except
@@ -152,13 +152,11 @@ class WorldTime(callbacks.Plugin):
         # first, grab lat and long for user location    
         gc = self._getlatlng(optinput)
         if not gc:
-            irc.reply("ERROR: I could not find lat/long for: {0}. Bad location? Spelled wrong?".format(optinput))
-            return
+            irc.error("I could not find lat/long for: {0}. Bad location? Spelled wrong?".format(optinput), Raise=True)
         # next, lets grab the localtime for that location w/lat+long.
         ll = self._gettime(gc['ll'])
         if not ll:
-            irc.reply("ERROR: I could not find local timezone for: {0}. Bad location? Spelled wrong?".format(optinput))
-            return
+            irc.error("I could not find local timezone for: {0}. Bad location? Spelled wrong?".format(optinput), Raise=True)
         # if we're here, we have localtime zone.
         utcnow = self._utcnow()  # grab UTC now.
         # localtm = utcnow+ll['rawOffset']  # grab raw offset from 
@@ -176,7 +174,7 @@ class WorldTime(callbacks.Plugin):
                 else:
                     irc.reply("{0} :: Current local time is: {1} ({2})".format(ircutils.bold(gc['place']), lt, ll['timeZoneName']))
         else:
-            irc.reply("ERROR: Something went wrong during conversion to timezone. Check logs.")
+            irc.error("Something went wrong during conversion to timezone. Check logs.", Raise=True)
 
     worldtime = wrap(worldtime, [('text')])
 
