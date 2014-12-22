@@ -97,7 +97,7 @@ class WorldTime(callbacks.Plugin):
         # try and fetch url
         response = self._fetch(url)
         if not response:
-            irc.error("I could not fetch: {0}".format(url), Raise=True)
+            irc.error("I could not fetch: {0}".format(url))
             return None
         
         # wrap in a big try/except
@@ -123,7 +123,7 @@ class WorldTime(callbacks.Plugin):
         # try and fetch url
         response = self._fetch(url)
         if not response:
-            irc.error("I could not fetch: {0}".format(url), Raise=True)
+            irc.error("I could not fetch: {0}".format(url))
             return None
         
         # wrap in a big try/except
