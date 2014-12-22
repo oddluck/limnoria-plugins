@@ -15,12 +15,16 @@ if sys.version_info[0] <= 2:
     from urllib import quote_plus
 else:
     from urllib.parse import quote_plus
+import pickle
+
 # supybot libs
 import supybot.utils as utils
 from supybot.commands import *
 import supybot.plugins as plugins
 import supybot.ircutils as ircutils
 import supybot.callbacks as callbacks
+import supybot.world as world
+import supybot.conf as conf
 try:
     from supybot.i18n import PluginInternationalization
     _ = PluginInternationalization('WorldTime')
@@ -29,10 +33,46 @@ except ImportError:
     # without the i18n module
     _ = lambda x:x
 
+filename = conf.supybot.directories.data.dirize('WorldTime.db')
+
 class WorldTime(callbacks.Plugin):
     """Add the help for "@plugin help WorldTime" here
     This should describe *how* to use this plugin."""
     threaded = True
+
+    ###############################
+    # DATABASE HANDLING FUNCTIONS #
+    ###############################
+
+    def __init__(self, irc):
+        self.__parent = super(WorldTime, self)
+        self.__parent.__init__(irc)
+        self.db = {}
+        self._loadDb()
+        world.flushers.append(self._flushDb)
+
+    def _loadDb(self):
+       """Loads the (flatfile) database mapping ident@hosts to timezones."""
+
+       try:
+           with open(filename, 'rb') as f:
+               self.db = pickle.load(f)
+       except Exception as e:
+           self.log.debug('WorldTime: Unable to load pickled database: %s', e)
+
+    def _flushDb(self):
+       """Flushes the (flatfile) database mapping ident@hosts to timezones."""
+
+       with open(filename, 'wb') as f:
+           try:
+               self.db = pickle.dump(self.db, f)
+           except Exception as e:
+               self.log.warning('WorldTime: Unable to write pickled database: %s', e)
+
+    def die(self):
+       self._flushDb()
+       world.flushers.remove(self._flushDb)
+       self.__parent.die()
 
     ##################
     # TIME FUNCTIONS #
@@ -137,11 +177,21 @@ class WorldTime(callbacks.Plugin):
     ###################
     
     def worldtime(self, irc, msg, args, optinput):
-        """<location>
+        """[<location>]
         
-        Query GAPIs for <location> and attempt to figure out local time.
+        Query GAPIs for <location> and attempt to figure out local time. [<location>]
+        is only required if you have not yet set a location for yourself using the 'set'
+        command.
         """
-    
+
+        if not optinput:
+            try:
+                ih = msg.prefix.split('!')[1]
+                optinput = self.db[ih]
+            except KeyError:
+                irc.error("No location for %s is set. Use the 'set' command "
+                    "to set a location for your current hostmask, or call 'worldtime' "
+                    "with <location> as an argument." % ircutils.bold('*!'+ih), Raise=True)
         # first, grab lat and long for user location    
         gc = self._getlatlng(optinput)
         if not gc:
@@ -169,7 +219,27 @@ class WorldTime(callbacks.Plugin):
         else:
             irc.error("Something went wrong during conversion to timezone. Check logs.", Raise=True)
 
-    worldtime = wrap(worldtime, [('text')])
+    worldtime = wrap(worldtime, [additional('text')])
+
+    def set(self, irc, msg, args, timezone):
+        """<location>
+
+        Sets the location for your current ident@host to <location>."""
+        ih = msg.prefix.split('!')[1]
+        self.db[ih] = timezone
+        irc.replySuccess()
+    set = wrap(set, ['text'])
+
+    def unset(self, irc, msg, args):
+        """takes no arguments.
+
+        Unsets the location for your current ident@host."""
+        ih = msg.prefix.split('!')[1]
+        try:
+            del self.db[ih]
+            irc.replySuccess()
+        except KeyError:
+            irc.error("No entry for %s exists." % ircutils.bold('*!'+ih), Raise=True)
 
 Class = WorldTime
 
