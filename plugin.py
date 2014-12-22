@@ -63,10 +63,10 @@ class WorldTime(callbacks.Plugin):
     def _flushDb(self):
        """Flushes the (flatfile) database mapping ident@hosts to timezones."""
 
-       with open(filename, 'wb') as f:
-           try:
-               self.db = pickle.dump(self.db, f)
-           except Exception as e:
+       try:
+           with open(filename, 'w') as f:
+               self.db = pickle.dumps(self.db, f)
+       except Exception as e:
                self.log.warning('WorldTime: Unable to write pickled database: %s', e)
 
     def die(self):
