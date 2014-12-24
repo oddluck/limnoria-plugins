@@ -78,18 +78,6 @@ class WorldTime(callbacks.Plugin):
     # TIME FUNCTIONS #
     ##################
 
-    def _utcnow(self):
-        """Calculate Unix timestamp from GMT. Code from calendar.timegm()"""
-
-        ttuple = datetime.datetime.utcnow().utctimetuple()
-        _EPOCH_ORD = datetime.date(1970, 1, 1).toordinal()
-        year, month, day, hour, minute, second = ttuple[:6]
-        days = datetime.date(year, month, 1).toordinal() - _EPOCH_ORD + day - 1
-        hours = days*24 + hour
-        minutes = hours*60 + minute
-        seconds = minutes*60 + second
-        return seconds
-
     def _converttz(self, s, outputTZ):
         """Convert epoch seconds to a HH:MM readable string."""
 
@@ -197,7 +185,7 @@ class WorldTime(callbacks.Plugin):
         if not ll:
             irc.error("I could not find the local timezone for: {0}. Bad location? Spelled wrong?".format(location), Raise=True)
         # if we're here, we have localtime zone.
-        utcnow = self._utcnow()  # grab UTC now.
+        utcnow = int(time.time()) # grab UTC now.
         # localtm = utcnow+ll['rawOffset']  # grab raw offset from
         # now lets use pytz to convert into the localtime in the place.
         lt = self._converttz(utcnow, ll['timeZoneId'])
