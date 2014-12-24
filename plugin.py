@@ -100,8 +100,7 @@ class WorldTime(callbacks.Plugin):
             local_dt = dtobj.astimezone(pytz.timezone(outputTZ))
             return local_dt.strftime(outstrf)
         except Exception as e:
-            self.log.info("ERROR: _converttz: {0}".format(e))
-            return None
+            self.log.info("WorldTime: ERROR: _converttz: {0}".format(e))
 
     ##############
     # GAPI STUFF #
@@ -121,7 +120,6 @@ class WorldTime(callbacks.Plugin):
             return result
         except Exception as e:
             self.log.info("_fetch :: I could not open {0} error: {1}".format(url, e))
-            return None
 
     def _getlatlng(self, location):
         location = quote_plus(location)
@@ -131,7 +129,6 @@ class WorldTime(callbacks.Plugin):
         response = self._fetch(url)
         if not response:
             irc.error("I could not fetch: {0}".format(url), Raise=True)
-            return None
 
         # wrap in a big try/except
         try:
@@ -144,10 +141,8 @@ class WorldTime(callbacks.Plugin):
                return {'place':place, 'll':ll}
             else:
                 self.log.info("ERROR: _getlatlng: status result NOT ok. Result: {0}".format(result))
-                return None
         except Exception as e:
             self.log.info("ERROR: _getlatlng: {0}".format(e))
-            return None
 
     def _gettime(self, latlng):
         latlng = quote_plus(latlng)
@@ -157,7 +152,6 @@ class WorldTime(callbacks.Plugin):
         response = self._fetch(url)
         if not response:
             irc.error("I could not fetch: {0}".format(url), Raise=True)
-            return None
 
         # wrap in a big try/except
         try:
@@ -167,10 +161,8 @@ class WorldTime(callbacks.Plugin):
                 return result
             else:
                 self.log.info("WorldTime: _gettime: status result NOT ok. Result: {0}".format(result))
-                return None
         except Exception as e:
             self.log.info("WorldTime: _gettime: {0}".format(e))
-            return None
 
     ###################
     # PUBLIC FUNCTION #
@@ -216,6 +208,7 @@ class WorldTime(callbacks.Plugin):
                 s ="{0} :: Current local time is: {1} ({2})".format(ircutils.bold(gc['place']), lt, ll['timeZoneName'])
             if self.registryValue('disableANSI', msg.args[0]):
                 s = ircutils.stripFormatting(s)
+            irc.reply(s)
         else:
             irc.error("Something went wrong during conversion to timezone. Check the logs.", Raise=True)
 
