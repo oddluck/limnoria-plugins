@@ -94,29 +94,15 @@ class WorldTime(callbacks.Plugin):
     # GAPI STUFF #
     ##############
 
-    def _fetch(self, url, headers=None):
-        """
-        General HTTP resource fetcher.
-        """
-
-        try:
-            if headers:
-                result = utils.web.getUrl(url, headers=headers)
-            else:
-                result = utils.web.getUrl(url)
-            # return
-            return result
-        except Exception as e:
-            self.log.info("_fetch :: I could not open {0} error: {1}".format(url, e))
-
     def _getlatlng(self, location):
         location = quote_plus(location)
         url = 'http://maps.googleapis.com/maps/api/geocode/json?address=%s&sensor=false' % location
 
         # try and fetch url
-        response = self._fetch(url)
-        if not response:
-            irc.error("I could not fetch: {0}".format(url), Raise=True)
+        try:
+            response = utils.web.getUrl(url)
+        except utils.web.Error:
+            irc.error(str(e), Raise=True)
 
         # wrap in a big try/except
         try:
@@ -137,15 +123,15 @@ class WorldTime(callbacks.Plugin):
         url = 'https://maps.googleapis.com/maps/api/timezone/json?location=%s&sensor=false&timestamp=%s' % (latlng, time.time())
 
         # try and fetch url
-        response = self._fetch(url)
-        if not response:
-            irc.error("I could not fetch: {0}".format(url), Raise=True)
+        try:
+            response = utils.web.getUrl(url)
+        except utils.web.Error:
+            irc.error(str(e), Raise=True)
 
         # wrap in a big try/except
         try:
             result = json.loads(response.decode('utf-8'))
             if result['status'] == 'OK':
-                # {u'status': u'OK', u'dstOffset': 0, u'rawOffset': -18000, u'timeZoneName': u'Eastern Standard Time', u'timeZoneId': u'America/New_York'}
                 return result
             else:
                 self.log.info("WorldTime: _gettime: status result NOT ok. Result: {0}".format(result))
