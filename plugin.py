@@ -78,13 +78,13 @@ class WorldTime(callbacks.Plugin):
     # TIME FUNCTIONS #
     ##################
 
-    def _converttz(self, s, outputTZ):
+    def _converttz(self, msg, s, outputTZ):
         """Convert epoch seconds to a HH:MM readable string."""
 
         # now do some timezone math.
         try:
             dtobj = datetime.datetime.fromtimestamp(s, tz=pytz.timezone(outputTZ)) # convert epoch into aware dtobj.
-            outstrf = '%a, %H:%M'  # Day, HH:MM
+            outstrf = self.registryValue("format", msg.args[0])
             local_dt = dtobj.astimezone(pytz.timezone(outputTZ))
             return local_dt.strftime(outstrf)
         except Exception as e:
@@ -174,7 +174,7 @@ class WorldTime(callbacks.Plugin):
         utcnow = int(time.time()) # grab UTC now.
         # localtm = utcnow+ll['rawOffset']  # grab raw offset from
         # now lets use pytz to convert into the localtime in the place.
-        lt = self._converttz(utcnow, ll['timeZoneId'])
+        lt = self._converttz(msg, utcnow, ll['timeZoneId'])
         if lt:  # make sure we get it back.
             if sys.version_info[0] <= 2:
                 s = "{0} :: Current local time is: {1} ({2})".format(ircutils.bold(gc['place'].encode('utf-8')), lt, ll['timeZoneName'].encode('utf-8'))
