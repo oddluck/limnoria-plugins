@@ -14,8 +14,9 @@
 5. Copy over the changed files.
 	* Version v1.03 to v1.07 files changed: **README.md, plugin.py, __init__.py, config.py, samplequestions** (the changes to config only involded descriptions; no changes to database).
     * Version v1.05, v1.06 to v1.07 files changed: **README.md, plugin.py, __init__.py, samplequestions**
+    * Version v1.1 files changed: **README.md, plugin.py, __init__.py, config.py** (changes to config only adds new value)
 6. If there were any changes to the database, they should be updated automatically. Otherwise, further instructions for updating that version will appear here.
-7. If config.py was changed, you will need to manually add your desired values again. You can compare the previous file (the backup) to the new file.
+7. If config.py was changed, you will need to manually add your desired values again. You can compare the previous file (the backup) to the new file. (v1.1)
 8. Load TriviaTime again. If you followed the instructions correctly, you won't have an error.
 9. If everything went smoothly, you have now sucessfully updated the plugin to the latest version. Use .info to verify you are on the latest version.
 
