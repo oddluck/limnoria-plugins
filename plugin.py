@@ -188,7 +188,43 @@ class TriviaTime(callbacks.Plugin):
         usernameCanonical = ircutils.toLower(username)
         irc.queueMsg(ircmsgs.voice(channel, nick))
         self.voiceTimeouts.append(usernameCanonical)
+        
+    #The following functions are not ready and still in testing. Actually, they haven't even been tested yet. Use at your own risk.
+    """
+    def checkLevel(self, irc, nick, username, channel):
+        usernameCanonical = ircutils.toLower(username)
+        #RETRIEVE # questions answers
+        if USERLEVEL == NONE:
+            changeLevel(noob)
+        elif QUESTIONS_ANSWERED > 6000000:
+            changeLevel(Trivia God)
+        elif QUESTIONS_ANSWERED > 4500000:
+            changeLevel(All Is KAOS)
+        elif QUESTIONS_ANSWERED > 4000000:
+            changeLevel(Elite)
+        elif QUESTIONS_ANSWERED > 3000000:
+            changelevel(Addicted)
+        elif QUESTIONS_ANSWERED > 2500000:
+            changelevel(Distinguished)
+        elif QUESTIONS_ANSWERED > 2000000:
+            changelevel(Genius)
+        elif QUESTIONS_ANSWERED > 1500000:
+            changelevel(Master)
+        elif QUESTIONS_ANSWERED > 1000000:
+            changelevel(Player)
+        elif QUESTIONS_ANSWERED > 500000:
+            changelevel(Student)
+        elif QUESTIONS_ANSWERED > 100000:
+            changelevel(Guesser)
+        elif QUESTIONS_ANSWERED > 1:
+            changelLevel(noob)
+        
+    def changeLevel(self, irc, nick, username, channel):
+        usernameCanonical - ircutils.toLower(username)
+        USERLEVEL = NEWUSERLEVEL
+        irc.sendMsg(ircmsgs.privmsg(channel, 'Congratulations %s, you\'ve answered %q questions and leveled up to %l!' % (username, questions, newlevel)))
 
+        """
     def handleVoice(self, irc, nick, username, channel):
         if not self.registryValue('voice.enableVoice'):
             return
@@ -803,7 +839,7 @@ class TriviaTime(callbacks.Plugin):
         threadStorage = self.Storage(dbLocation)
         totalUsersEver = threadStorage.getNumUser(channel)
         numActiveThisWeek = threadStorage.getNumActiveThisWeek(channel)
-        infoText = ' TriviaTime v1.07 by Trivialand on Freenode: https://github.com/tannn/TriviaTime '
+        infoText = ' TriviaTime v1.1 by Trivialand on Freenode: https://github.com/tannn/TriviaTime '
         self.reply(irc, msg, infoText, prefixNick=False)
         infoText = ' Time is %s ' % (time.asctime(time.localtime(),))
         self.reply(irc, msg, infoText, prefixNick=False)
@@ -1618,8 +1654,13 @@ class TriviaTime(callbacks.Plugin):
                 else:
                     # Normal question solved
                     streakBonus = 0
+                    minStreak = self.registryValue('general.minBreakStreak', channel)
                     # update streak info
                     if ircutils.toLower(self.lastWinner) != ircutils.toLower(username):
+                        #streakbreak
+                        if self.streak > minStreak:
+                            streakBonus = pointsAdded * .05
+                            self.sendMessage('\x02%s\x02 broke \x02%s\x02\'s streak!' % (username, self.lastWinner,)) 
                         self.lastWinner = ircutils.toLower(username)
                         self.streak = 1
                     else:

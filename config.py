@@ -165,5 +165,10 @@ conf.registerChannelValue(TriviaTime.general, 'nextMinStreak',
         registry.Integer(5, 
                 """The streak needed to use the Next command""")
         )
+        
+conf.registerChannelValue(TriviaTime.general, 'minBreakStreak', 
+        registry.Integer(4, 
+                """The streak needed to award breaking the streak""")
+        )
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
