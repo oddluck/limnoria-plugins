@@ -2151,7 +2151,7 @@ class TriviaTime(callbacks.Plugin):
             helper for game instance to send messages to channel
             """
             # no color
-            self.irc.sendMsg(ircmsgs.privmsg(self.channel, ' %s ' % msg))
+            self.irc.sendMsg(ircmsgs.privmsg(self.channel, '%s' % msg))
 
         def sendQuestion(self):
             question = self.question.rstrip()
