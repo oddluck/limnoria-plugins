@@ -1230,7 +1230,7 @@ class TriviaTime(callbacks.Plugin):
             game.removeEvent()
             game.nextQuestion()
     skip = wrap(skip, ['onlyInChannel'])
-            
+
     def stats(self, irc, msg, arg, channel, username):
         """ [<channel>] <username> 
             Show a player's rank, score & questions asked for day, month, and year.
