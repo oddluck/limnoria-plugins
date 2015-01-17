@@ -1660,7 +1660,7 @@ class TriviaTime(callbacks.Plugin):
                         #streakbreak
                         if self.streak > minStreak:
                             streakBonus = pointsAdded * .05
-                            self.reply(irc, msg, '%d broke %d\'s streak!' % (game.lastWinner, username) , prefixNick=False) 
+                            self.sendMessage('%d broke %d\'s streak!' % (game.lastWinner, username) , prefixNick=False) 
                         self.lastWinner = ircutils.toLower(username)
                         self.streak = 1
                     else:
