@@ -1230,7 +1230,7 @@ class TriviaTime(callbacks.Plugin):
             game.removeEvent()
             game.nextQuestion()
     skip = wrap(skip, ['onlyInChannel'])
-
+            
     def stats(self, irc, msg, arg, channel, username):
         """ [<channel>] <username> 
             Show a player's rank, score & questions asked for day, month, and year.
@@ -1654,9 +1654,14 @@ class TriviaTime(callbacks.Plugin):
                 else:
                     # Normal question solved
                     streakBonus = 0
+                    minStreak = self.registryValue('general.minBreakStreak', channel)
                     # update streak info
                     if ircutils.toLower(self.lastWinner) != ircutils.toLower(username):
                         self.lastWinner = ircutils.toLower(username)
+                        #streakbreak
+                        if self.streak > minStreak:
+                            streakBonus = pointsAdded * .05
+                            self.reply(irc, msg, '%d broke %d\'s streak! (%d)' % (game.lastWinner, username) , prefixNick=False) 
                         self.streak = 1
                     else:
                         self.streak += 1
