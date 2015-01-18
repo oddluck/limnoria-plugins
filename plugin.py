@@ -194,39 +194,45 @@ class TriviaTime(callbacks.Plugin):
     #The following functions are not ready and still in testing. Actually, they haven't even been tested yet. Use at your own risk.
     """
     def checkLevel(self, irc, nick, username, channel):
+        levels = {0:"noob", 1:"Guesser", 2:"Student", 3:"Player", 4:"Master", 5:"Genius", 6:"Distinguished", 7:"Addicted", 8:"Elite", 9:"KAOTIC", 10:"Trivia God"
         usernameCanonical = ircutils.toLower(username)
         #RETRIEVE # questions answers
         if USERLEVEL == NONE:
-            changeLevel("noob")
-        elif QUESTIONS_ANSWERED > 6000000:
-            changeLevel("Trivia God")
-        elif QUESTIONS_ANSWERED > 4500000:
-            changeLevel("All Is KAOS")
-        elif QUESTIONS_ANSWERED > 4000000:
-            changeLevel("Elite")
-        elif QUESTIONS_ANSWERED > 3000000:
-            changelevel("Addicted")
-        elif QUESTIONS_ANSWERED > 2500000:
-            changelevel("Distinguished")
-        elif QUESTIONS_ANSWERED > 2000000:
-            changelevel("Genius")
-        elif QUESTIONS_ANSWERED > 1500000:
-            changelevel("Master")
-        elif QUESTIONS_ANSWERED > 1000000:
-            changelevel("Player")
-        elif QUESTIONS_ANSWERED > 500000:
-            changelevel("Student")
-        elif QUESTIONS_ANSWERED > 100000:
-            changelevel("Guesser")
+            changeLevel(0)
+        elif QUESTIONS_ANSWERED > 50000:
+            changeLevel(10)
+        elif QUESTIONS_ANSWERED > 38000:
+            changeLevel(9)
+        elif QUESTIONS_ANSWERED > 30000:
+            changeLevel(8)
+        elif QUESTIONS_ANSWERED > 2400:
+            changelevel(7)
+        elif QUESTIONS_ANSWERED > 1800:
+            changelevel(6)
+        elif QUESTIONS_ANSWERED > 1200:
+            changelevel(5)
+        elif QUESTIONS_ANSWERED > 700:
+            changelevel(4)
+        elif QUESTIONS_ANSWERED > 300:
+            changelevel(3)
+        elif QUESTIONS_ANSWERED > 100:
+            changelevel(2)
+        elif QUESTIONS_ANSWERED > 20:
+            changelevel(1)
         elif QUESTIONS_ANSWERED > 1:
-            changelLevel("noob")
-            but we must use integers...
+            changelLevel(0)
         
+        Storage.getUserStat()
     def changeLevel(self, irc, nick, username, channel):
         usernameCanonical - ircutils.toLower(username)
         USERLEVEL = NEWUSERLEVEL
         irc.sendMsg(ircmsgs.privmsg(channel, 'Congratulations %s, you\'ve answered %d questions and leveled up to %s!' % (username, questions, newlevel)))
 
+        if self.registryValue('general.globalStats'):
+            stat = threadStorage.getUserStat(username, None)
+        else:
+            stat = threadStorage.getUserStat(username, channel)
+        
         """
     def handleVoice(self, irc, nick, username, channel):
         if not self.registryValue('voice.enableVoice'):
