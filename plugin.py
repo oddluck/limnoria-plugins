@@ -220,6 +220,7 @@ class TriviaTime(callbacks.Plugin):
             changelevel("Guesser")
         elif QUESTIONS_ANSWERED > 1:
             changelLevel("noob")
+            but we must use integers...
         
     def changeLevel(self, irc, nick, username, channel):
         usernameCanonical - ircutils.toLower(username)
@@ -3954,11 +3955,11 @@ class TriviaTime(callbacks.Plugin):
                     )''')
             except:
                 pass
-                
-        def makeLevelTable(self)
+
+        def makeLevelTable(self):
             c = self.conn.cursor()
             try:
-                c.execute('''create table trivialevel {
+                c.execute('''create table trivialevel (
                     level integer
                     )''')
             except:
