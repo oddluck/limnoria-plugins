@@ -109,7 +109,7 @@ class TriviaTime(callbacks.Plugin):
         #self.storage.dropDeleteTable()
         self.storage.makeDeleteTable()
         self.storage.makeInfoTable()
-        self.storage.makeLevelTable()
+        #self.storage.makeLevelTable()
         #self.stroage.dropLevelTalle()
         #triviainfo table check
         #if self.storage.isTriviaVersionSet():
@@ -1856,7 +1856,7 @@ class TriviaTime(callbacks.Plugin):
                 return
             ans = self.answers[0]
 
-            hints = 'Hint: \x02\x0312'
+            hints = ' Extra Hint: \x02\x0312'
 
             divider = 0
 
@@ -2167,7 +2167,7 @@ class TriviaTime(callbacks.Plugin):
             if len(self.answers) > 1:
                 questionText += ' %d possible answers' % (len(self.answers))
 
-            questionMessageString = '%s: %s' % (self.numAsked, questionText)
+            questionMessageString = ' %s: %s' % (self.numAsked, questionText)
             maxLength = 400
             questionMesagePieces = [questionMessageString[i:i+maxLength] for i in range(0, len(questionMessageString), maxLength)]
             multipleMessages=False
@@ -2176,7 +2176,7 @@ class TriviaTime(callbacks.Plugin):
                 if multipleMessages:
                     msgPiece = '\x02\x0303%s' % (msgPiece)
                 multipleMessages = True
-                self.sendMessage( msgPiece, 1, 9)
+                self.sendMessage(msgPiece, 1, 9)
             
         def stop(self):
             """
@@ -3951,6 +3951,15 @@ class TriviaTime(callbacks.Plugin):
             try:
                 c.execute('''create table triviainfo (
                     version integer
+                    )''')
+            except:
+                pass
+                
+        def makeLevelTable(self)
+            c = self.conn.cursor()
+            try:
+                c.execute('''create table trivialevel {
+                    level integer
                     )''')
             except:
                 pass
