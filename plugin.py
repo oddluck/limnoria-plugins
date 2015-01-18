@@ -109,6 +109,8 @@ class TriviaTime(callbacks.Plugin):
         #self.storage.dropDeleteTable()
         self.storage.makeDeleteTable()
         self.storage.makeInfoTable()
+        self.storage.makeLevelTable()
+        #self.stroage.dropLevelTalle()
         #triviainfo table check
         #if self.storage.isTriviaVersionSet():
         if self.storage.getVersion() != None and self.storage.getVersion() != self.currentDBVersion:
@@ -195,34 +197,34 @@ class TriviaTime(callbacks.Plugin):
         usernameCanonical = ircutils.toLower(username)
         #RETRIEVE # questions answers
         if USERLEVEL == NONE:
-            changeLevel(noob)
+            changeLevel("noob")
         elif QUESTIONS_ANSWERED > 6000000:
-            changeLevel(Trivia God)
+            changeLevel("Trivia God")
         elif QUESTIONS_ANSWERED > 4500000:
-            changeLevel(All Is KAOS)
+            changeLevel("All Is KAOS")
         elif QUESTIONS_ANSWERED > 4000000:
-            changeLevel(Elite)
+            changeLevel("Elite")
         elif QUESTIONS_ANSWERED > 3000000:
-            changelevel(Addicted)
+            changelevel("Addicted")
         elif QUESTIONS_ANSWERED > 2500000:
-            changelevel(Distinguished)
+            changelevel("Distinguished")
         elif QUESTIONS_ANSWERED > 2000000:
-            changelevel(Genius)
+            changelevel("Genius")
         elif QUESTIONS_ANSWERED > 1500000:
-            changelevel(Master)
+            changelevel("Master")
         elif QUESTIONS_ANSWERED > 1000000:
-            changelevel(Player)
+            changelevel("Player")
         elif QUESTIONS_ANSWERED > 500000:
-            changelevel(Student)
+            changelevel("Student")
         elif QUESTIONS_ANSWERED > 100000:
-            changelevel(Guesser)
+            changelevel("Guesser")
         elif QUESTIONS_ANSWERED > 1:
-            changelLevel(noob)
+            changelLevel("noob")
         
     def changeLevel(self, irc, nick, username, channel):
         usernameCanonical - ircutils.toLower(username)
         USERLEVEL = NEWUSERLEVEL
-        irc.sendMsg(ircmsgs.privmsg(channel, 'Congratulations %s, you\'ve answered %q questions and leveled up to %l!' % (username, questions, newlevel)))
+        irc.sendMsg(ircmsgs.privmsg(channel, 'Congratulations %s, you\'ve answered %d questions and leveled up to %s!' % (username, questions, newlevel)))
 
         """
     def handleVoice(self, irc, nick, username, channel):
@@ -839,7 +841,7 @@ class TriviaTime(callbacks.Plugin):
         threadStorage = self.Storage(dbLocation)
         totalUsersEver = threadStorage.getNumUser(channel)
         numActiveThisWeek = threadStorage.getNumActiveThisWeek(channel)
-        infoText = ' TriviaTime v1.1 by Trivialand on Freenode: https://github.com/tannn/TriviaTime '
+        infoText = ' TriviaTime v1.2 by Trivialand on Freenode: https://github.com/tannn/TriviaTime '
         self.reply(irc, msg, infoText, prefixNick=False)
         infoText = ' Time is %s ' % (time.asctime(time.localtime(),))
         self.reply(irc, msg, infoText, prefixNick=False)
@@ -1884,7 +1886,7 @@ class TriviaTime(callbacks.Plugin):
             if self.shownHint == False:
                 self.shownHint = True
                 if len(self.answers) == 1:
-                    self.sendMessage(self.getOtherHintString())
+                    self.sendMessage( self.getOtherHintString())
 
         def getRemainingKAOS(self):
             if self.questionOver:
@@ -1923,13 +1925,13 @@ class TriviaTime(callbacks.Plugin):
                         answer += ']'
                 # Give failure message
                 if len(self.answers) > 1:
-                    self.sendMessage("""Time's up! No one got \x02%s\x02""" % answer)
+                    self.sendMessage( """Time's up! No one got \x02%s\x02""" % answer)
 
                     self.sendMessage("""Correctly Answered: \x02%d of %d\x02 Total Awarded: \x02%d Points to %d Players\x02"""
                                     % (len(self.guessedAnswers), len(self.answers), int(self.totalAmountWon), len(self.correctPlayers))
                                     )
                 else:
-                    self.sendMessage("""Time's up! The answer was \x02%s\x02.""" % answer)
+                    self.sendMessage( """Time's up! The answer was \x02%s\x02.""" % answer)
 
                 self.storage.updateQuestionStats(self.lineNumber, 0, 1)
 
@@ -1961,7 +1963,7 @@ class TriviaTime(callbacks.Plugin):
             hints = self.getHintString(self.hintsCounter)
             #increment hints counter
             self.hintsCounter += 1
-            self.sendMessage('Hint %s: \x02\x0312%s' % (self.hintsCounter, hints), 1, 9)
+            self.sendMessage(' Hint %s: \x02\x0312%s' % (self.hintsCounter, hints), 1, 9)
             #reset hint shown
             self.shownHint = False
 
@@ -2174,7 +2176,7 @@ class TriviaTime(callbacks.Plugin):
                 if multipleMessages:
                     msgPiece = '\x02\x0303%s' % (msgPiece)
                 multipleMessages = True
-                self.sendMessage(msgPiece, 1, 9)
+                self.sendMessage( msgPiece, 1, 9)
             
         def stop(self):
             """
