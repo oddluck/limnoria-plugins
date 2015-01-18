@@ -2832,7 +2832,19 @@ class TriviaTime(callbacks.Plugin):
 
             c.close()
             return data
-
+        
+        def getUserLevel(self, username, channel):
+            usernameCanonical = ircutils.toLower(username)
+            channelCanonical = ircutils.toLower(channel)
+            
+            c = self.conn.cursor()
+            c.execute('''SELECT level FROM trivialevel
+                         WHERE username_canonical=?, channel_canonical=?''', 
+                         (username_canonical, channel_canonical))
+            row = c.fetchone()
+            c.close()
+            return row[0]
+            
         def getGame(self, channel):
             channel = ircutils.toLower(channel)
             c = self.conn.cursor()
@@ -3133,6 +3145,19 @@ class TriviaTime(callbacks.Plugin):
                     )
             self.conn.commit()
             c.close()
+        
+        def insertUserLevel(self, username, channel, level):
+            if self.userLevelExists(username, channel):
+                return self.updateUserLevel(username, channel, level)
+                
+            usernameCanonical = ircutils.toLower(username)
+            channelCanonical = ircutils.toLower(channel)
+            
+            c = self.conn.cursor()
+            c.execute('''INSERT INTO trivialevel VALUES (?, ?, ?, ?, ?)''',
+                         (username, usernameCanonical, channel, channelCanonical, level))
+            self.conn.commit()
+            c.close()
 
         def insertGame(self, channel, numAsked=0, epoch=None):
             channelCanonical = ircutils.toLower(channel)
@@ -3246,6 +3271,20 @@ class TriviaTime(callbacks.Plugin):
                 pass
             self.conn.commit()
             c.close()
+        
+        def makeLevelTable(self):
+            c = self.conn.cursor()
+            try:
+                c.execute('''CREATE TABLE trivialevel (
+                                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                                username TEXT,
+                                username_canonical TEXT,
+                                channel TEXT,
+                                channel_canonical TEXT,
+                                level INTEGER
+                            )''')
+            except:
+                pass
 
         def makeLoginTable(self):
             c = self.conn.cursor()
@@ -3346,6 +3385,15 @@ class TriviaTime(callbacks.Plugin):
                 pass
             self.conn.commit()
             c.close()
+            
+        def makeInfoTable(self):
+            c = self.conn.cursor()
+            try:
+                c.execute('''create table triviainfo (
+                    version integer
+                    )''')
+            except:
+                pass
 
         def makeReportTable(self):
             c = self.conn.cursor()
@@ -3625,6 +3673,18 @@ class TriviaTime(callbacks.Plugin):
             c.close()
             return row[0] > 0
 
+        def userLevelExists(self, username, channel):
+            usernameCanonical = ircutils.toLower(username)
+            channelCanonical = ircutils.toLower(username)
+            
+            c = self.conn.cursor()
+            c.execute('''SELECT COUNT(id) FROM trivialevel
+                         WHERE username_canonical=?, channel_canonical=?''',
+                         (usernameCanonical, channelCanonical))
+            row = c.fetchone()
+            c.close()
+            return row[0] > 0
+            
         def updateLogin(self, username, salt, isHashed, password, capability):
             if not self.loginExists(username):
                 return self.insertLogin(username, salt, isHashed, password, capability)
@@ -3713,7 +3773,21 @@ class TriviaTime(callbacks.Plugin):
                             )
             self.conn.commit()
             c.close()
-
+        
+        def updateUserLevel(self, username, channel, level):
+            if not self.userLevelExists(username, channel)
+                return self.insertUserLevel(username, channel, level)
+                
+            usernameCanonical = ircutils.toLower(username)
+            channelCanonical = ircutils.toLower(channel)
+            
+            c = self.conn.cursor()
+            c.execute('''UPDATE trivialevel SET level=?
+                         WHERE username_canonical=?, channel_canonical=?''',
+                         (level, usernameCanonical, channelCanonical))
+            self.conn.commit()
+            c.close()
+            
         def updateGame(self, channel, numAsked):
             if not self.gameExists(channel):
                 return self.insertGame(channel, numAsked)
@@ -3952,24 +4026,7 @@ class TriviaTime(callbacks.Plugin):
                 return c.fetchone()
             except:
                 pass
-
-        def makeInfoTable(self):
-            c = self.conn.cursor()
-            try:
-                c.execute('''create table triviainfo (
-                    version integer
-                    )''')
-            except:
-                pass
-
-        def makeLevelTable(self):
-            c = self.conn.cursor()
-            try:
-                c.execute('''create table trivialevel (
-                    level integer
-                    )''')
-            except:
-                pass
+        
 
     #A log wrapper, ripoff of ChannelLogger
     class Logger:
