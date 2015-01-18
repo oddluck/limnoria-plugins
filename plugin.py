@@ -1663,7 +1663,7 @@ class TriviaTime(callbacks.Plugin):
                         #streakbreak
                         if self.streak > minStreak:
                             streakBonus = pointsAdded * .05
-                            self.sendMessage('\x02%s\x02 broke \x02%s\x02\'s streak!' % (username, self.lastWinner,)) 
+                            self.sendMessage('\x02%s\x02 broke \x02%s\x02\'s streak of \x02%d\x02!' % (username, self.lastWinner, self.streak)) 
                         self.lastWinner = ircutils.toLower(username)
                         self.streak = 1
                     else:
@@ -1729,7 +1729,7 @@ class TriviaTime(callbacks.Plugin):
 
                         # give a special message if it was KAOS
                         self.sendMessage('All KAOS answered! %s' % bonusPointsText)
-                        self.sendMessage('Total Awarded: \x02%d Points to %d Players\x02' % (int(self.totalAmountWon), len(self.correctPlayers)))
+                        self.sendMessage('Total Awarded: \x02%d\x02 Points to %d\x02 Players\x02' % (int(self.totalAmountWon), len(self.correctPlayers)))
 
                     self.removeEvent()
 
@@ -1928,7 +1928,7 @@ class TriviaTime(callbacks.Plugin):
                 if len(self.answers) > 1:
                     self.sendMessage( """Time's up! No one got \x02%s\x02""" % answer)
 
-                    self.sendMessage("""Correctly Answered: \x02%d of %d\x02 Total Awarded: \x02%d Points to %d Players\x02"""
+                    self.sendMessage("""Correctly Answered: \x02%d\x02 of \x02%d\x02 Total Awarded: \x02%d\x02 Points to \x02%d Players\x02"""
                                     % (len(self.guessedAnswers), len(self.answers), int(self.totalAmountWon), len(self.correctPlayers))
                                     )
                 else:
