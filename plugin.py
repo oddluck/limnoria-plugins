@@ -3775,7 +3775,7 @@ class TriviaTime(callbacks.Plugin):
             c.close()
         
         def updateUserLevel(self, username, channel, level):
-            if not self.userLevelExists(username, channel)
+            if not self.userLevelExists(username, channel):
                 return self.insertUserLevel(username, channel, level)
                 
             usernameCanonical = ircutils.toLower(username)
