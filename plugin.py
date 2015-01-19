@@ -194,40 +194,48 @@ class TriviaTime(callbacks.Plugin):
     #The following functions are not ready and still in testing. Actually, they haven't even been tested yet. Use at your own risk.
     """
     def checkLevel(self, irc, nick, username, channel):
-        levels = {0:"noob", 1:"Guesser", 2:"Student", 3:"Player", 4:"Master", 5:"Genius", 6:"Distinguished", 7:"Addicted", 8:"Elite", 9:"KAOTIC", 10:"Trivia God"
+        levels = {0:"noob", 1:"Guesser", 2:"Student", 3:"Player", 4:"Master", 5:"Genius", 6:"Distinguished", 7:"Addicted", 8:"Elite", 9:"KAOTIC", 10:"Trivia God"}
+        levelMinQuestions = {0:1, 1:50, 2:137, 3:301, 4:500, 5:789, 6:1002, 7:1519, 8:1899, 9:2133, 10:2544}
         usernameCanonical = ircutils.toLower(username)
-        #RETRIEVE # questions answers
-        if USERLEVEL == NONE:
-            changeLevel(0)
-        elif QUESTIONS_ANSWERED > 50000:
-            changeLevel(10)
-        elif QUESTIONS_ANSWERED > 38000:
-            changeLevel(9)
-        elif QUESTIONS_ANSWERED > 30000:
-            changeLevel(8)
-        elif QUESTIONS_ANSWERED > 2400:
-            changelevel(7)
-        elif QUESTIONS_ANSWERED > 1800:
-            changelevel(6)
-        elif QUESTIONS_ANSWERED > 1200:
-            changelevel(5)
-        elif QUESTIONS_ANSWERED > 700:
-            changelevel(4)
-        elif QUESTIONS_ANSWERED > 300:
-            changelevel(3)
-        elif QUESTIONS_ANSWERED > 100:
-            changelevel(2)
-        elif QUESTIONS_ANSWERED > 20:
-            changelevel(1)
-        elif QUESTIONS_ANSWERED > 1:
-            changelLevel(0)
+        if userLevelExists(usernameCanonical):
+            currentLevel = getUserLevel(username)
+            nextLevel = currentLevel + 1
+            if questionsAnswered(usernameCanonical) >= nextLevel(questionCount):
+                changeLevel(nextLevel)
+        else:
+            levelUp()
         
-        Storage.getUserStat()
-    def changeLevel(self, irc, nick, username, channel):
-        usernameCanonical - ircutils.toLower(username)
-        USERLEVEL = NEWUSERLEVEL
-        irc.sendMsg(ircmsgs.privmsg(channel, 'Congratulations %s, you\'ve answered %d questions and leveled up to %s!' % (username, questions, newlevel)))
+        def levelUp():
+        if questionsAnswered(usernameCanonical) > levelMinQuestions[10]:
+            changeLevel(10)
+        elif questionsAnswered(usernameCanonical) > levelMinQuestions[9]:
+            changeLevel(9)
+        elif questionsAnswered(usernameCanonical) > levelMinQuestions[8]:
+            changeLevel(8)
+        elif questionsAnswered(usernameCanonical) > levelMinQuestions[7]:
+            changelevel(7)
+        elif questionsAnswered(usernameCanonical) > levelMinQuestions[6]:
+            changelevel(6)
+        elif questionsAnswered(usernameCanonical) > levelMinQuestions[5]:
+            changelevel(5)
+        elif questionsAnswered(usernameCanonical) > levelMinQuestions[4]
+            changelevel(4)
+        elif questionsAnswered(usernameCanonical) > levelMinQuestions[3]:
+            changelevel(3)
+        elif questionsAnswered(usernameCanonical) > levelMinQuestions[2]:
+            changelevel(2)
+        elif questionsAnswered(usernameCanonical) > levelMinQuestions[1]:
+            changelevel(1)
+        elif questionsAnswered(usernameCanonical) > levelMinQuestions[0]:
+            changelLevel(0)
 
+        Storage.getUserStat()
+
+    def changeLevel(self, irc, nick, username, channel):
+        usernameCanonical = ircutils.toLower(username)
+        USERLEVEL = NEWUSERLEVEL
+        irc.sendMsg(ircmsgs.privmsg(channel, 'Congratulations %s, you\'ve answered %d questions and leveled up to %s!' % (username, questionsAnswered(usernameCanonical), levels[newlevel])))
+         #reward points levelMinQuestions[level] * 5
         if self.registryValue('general.globalStats'):
             stat = threadStorage.getUserStat(username, None)
         else:
