@@ -3360,7 +3360,7 @@ class TriviaTime(callbacks.Plugin):
                                 channel_canonical TEXT,
                                 UNIQUE(username_canonical, channel_canonical, 
                                        day, month, year) ON CONFLICT REPLACE
-                        )''')
+                            )''')
             except:
                 pass
             self.conn.commit()
@@ -3596,9 +3596,9 @@ class TriviaTime(callbacks.Plugin):
 
         def restoreQuestion(self, id):
             c = self.conn.cursor()
-            test = c.execute('''update triviaquestion set
-                                deleted=0
-                                where id=?''', (id,))
+            test = c.execute('''UPDATE triviaquestion 
+                                SET deleted=0
+                                WHERE id=?''', (id,))
             self.conn.commit()
             c.close()
 
@@ -3653,23 +3653,20 @@ class TriviaTime(callbacks.Plugin):
                   channelCanonical, userToCanonical,
                   channelCanonical, userFromCanonical))
 
-            c.execute('''
-                    update triviauserlog
-                    set username=?,
-                    username_canonical=?
-                    where username_canonical=?
-                    and channel_canonical=?
-                    and not exists (
-                            select 1
-                            from triviauserlog tl
-                            where tl.day=triviauserlog.day
-                            and tl.month=triviauserlog.month
-                            and tl.year=triviauserlog.year
-                            and tl.channel_canonical=?
-                            and tl.username_canonical=?
-                    )
-            ''', (userTo, userToCanonical, userFromCanonical, 
-                  channelCanonical, channelCanonical, userToCanonical))
+            c.execute('''UPDATE triviauserlog SET 
+                            username=?,
+                            username_canonical=?
+                         WHERE username_canonical=? AND channel_canonical=?
+                               AND NOT EXISTS (
+                                    SELECT 1
+                                    FROM triviauserlog tl
+                                    WHERE tl.day=triviauserlog.day AND 
+                                          tl.month=triviauserlog.month AND 
+                                          tl.year=triviauserlog.year AND 
+                                          tl.channel_canonical=? AND 
+                                          tl.username_canonical=?)''', 
+                      (userTo, userToCanonical, userFromCanonical, channelCanonical, 
+                       channelCanonical, userToCanonical))
             self.conn.commit()
 
             self.removeUserLogs(userFrom, channel)
@@ -3687,7 +3684,8 @@ class TriviaTime(callbacks.Plugin):
         def userExists(self, username):
             c = self.conn.cursor()
             usr = (ircutils.toLower(username),)
-            c.execute('''SELECT COUNT(id) FROM triviausers 
+            c.execute('''SELECT COUNT(id) 
+                         FROM triviausers 
                          WHERE username_canonical=?''', usr)
             row = c.fetchone()
             c.close()
@@ -3698,9 +3696,11 @@ class TriviaTime(callbacks.Plugin):
             channelCanonical = ircutils.toLower(username)
             
             c = self.conn.cursor()
-            c.execute('''SELECT COUNT(id) FROM trivialevel
-                         WHERE username_canonical=?, channel_canonical=?''',
-                         (usernameCanonical, channelCanonical))
+            c.execute('''SELECT COUNT(id) 
+                         FROM trivialevel
+                         WHERE username_canonical=? AND 
+                               channel_canonical=?''',
+                        (usernameCanonical, channelCanonical))
             row = c.fetchone()
             c.close()
             return row[0] > 0
@@ -3714,14 +3714,14 @@ class TriviaTime(callbacks.Plugin):
             else:
                 isHashed = 1
             c = self.conn.cursor()
-            c.execute('''update trivialogin set
-                            username=?,
-                            salt=?,
-                            is_hashed=?,
-                            password=?,
-                            capability=?
-                            where username_canonical=?''', (username, salt, isHashed, password, capability, usernameCanonical)
-                            )
+            c.execute('''UPDATE trivialogin 
+                         SET username=?, 
+                             salt=?, 
+                             is_hashed=?, 
+                             password=?, 
+                             capability=?
+                         WHERE username_canonical=?''', 
+                        (username, salt, isHashed, password, capability, usernameCanonical))
             self.conn.commit()
             c.close()
 
@@ -3740,18 +3740,22 @@ class TriviaTime(callbacks.Plugin):
             c = self.conn.cursor()
             usernameCanonical = ircutils.toLower(username)
             channelCanonical = ircutils.toLower(channel)
-            test = c.execute('''update triviauserlog set
-                                username=?,
-                                points_made = points_made+?,
-                                average_time=( average_time * (1.0*num_answered/(num_answered+?)) + ? * (1.0*?/(num_answered+?)) ),
-                                average_score=( average_score * (1.0*num_answered/(num_answered+?)) + ? * (1.0*?/(num_answered+?)) ),
-                                num_answered = num_answered+?,
-                                last_updated = ?
-                                where username_canonical=?
-                                and channel_canonical=?
-                                and day=?
-                                and month=?
-                                and year=?''', (username,score,numAnswered,timeTaken,numAnswered,numAnswered,numAnswered,score,numAnswered,numAnswered,numAnswered,epoch,usernameCanonical,channelCanonical,day,month,year))
+            test = c.execute('''UPDATE triviauserlog 
+                                SET username=?,
+                                    points_made=points_made+?,
+                                    average_time=(average_time*(1.0*num_answered/(num_answered+?))+?*(1.0*?/(num_answered+?))),
+                                    average_score=(average_score*(1.0*num_answered/(num_answered+?))+?*(1.0*?/(num_answered+?))),
+                                    num_answered=num_answered+?,
+                                    last_updated=?
+                                WHERE username_canonical=? AND 
+                                      channel_canonical=? AND 
+                                      day=? AND 
+                                      month=? AND 
+                                      year=?''', 
+                                (username, score, numAnswered, timeTaken, numAnswered, 
+                                 numAnswered, numAnswered, score, numAnswered, numAnswered, 
+                                 numAnswered, epoch, usernameCanonical, channelCanonical, 
+                                 day, month, year))
             self.conn.commit()
             c.close()
 
@@ -3760,24 +3764,16 @@ class TriviaTime(callbacks.Plugin):
                 return self.insertUser(username, numEditted, numEdittedAccepted, numReported, numQuestionsAdded, numQuestionsAccepted)
             usernameCanonical = ircutils.toLower(username)
             c = self.conn.cursor()
-            c.execute('''update triviausers set
-                                username=?,
-                                num_editted=num_editted+?,
-                                num_editted_accepted=num_editted_accepted+?,
-                                num_reported=num_reported+?,
-                                num_questions_added=num_questions_added+?,
-                                num_questions_accepted=num_questions_accepted+?
-                                where username_canonical=?''', 
-                                        (
-                                                username, 
-                                                numEditted, 
-                                                numEdittedAccepted, 
-                                                numReported,
-                                                numQuestionsAdded, 
-                                                numQuestionsAccepted, 
-                                                usernameCanonical
-                                        )
-                                )
+            c.execute('''UPDATE triviausers 
+                         SET username=?, 
+                             num_editted=num_editted+?, 
+                             num_editted_accepted=num_editted_accepted+?, 
+                             num_reported=num_reported+?, 
+                             num_questions_added=num_questions_added+?, 
+                             num_questions_accepted=num_questions_accepted+?
+                         WHERE username_canonical=?''', 
+                        (username, numEditted, numEdittedAccepted, numReported,
+                         numQuestionsAdded, numQuestionsAccepted, usernameCanonical))
             self.conn.commit()
             c.close()
 
@@ -3786,11 +3782,11 @@ class TriviaTime(callbacks.Plugin):
                 return self.insertUser(username)
             usernameCanonical = ircutils.toLower(username)
             c = self.conn.cursor()
-            c.execute('''update triviausers set
-                            highest_streak=?
-                            where highest_streak < ?
-                            and username_canonical=?''', (streak, streak, usernameCanonical)
-                            )
+            c.execute('''UPDATE triviausers 
+                         SET highest_streak=?
+                         WHERE highest_streak<? AND 
+                               username_canonical=?''', 
+                        (streak, streak, usernameCanonical))
             self.conn.commit()
             c.close()
         
@@ -3802,9 +3798,11 @@ class TriviaTime(callbacks.Plugin):
             channelCanonical = ircutils.toLower(channel)
             
             c = self.conn.cursor()
-            c.execute('''UPDATE trivialevel SET level=?
-                         WHERE username_canonical=?, channel_canonical=?''',
-                         (level, usernameCanonical, channelCanonical))
+            c.execute('''UPDATE trivialevel 
+                         SET level=?
+                         WHERE username_canonical=? AND 
+                               channel_canonical=?''',
+                        (level, usernameCanonical, channelCanonical))
             self.conn.commit()
             c.close()
             
@@ -3813,10 +3811,11 @@ class TriviaTime(callbacks.Plugin):
                 return self.insertGame(channel, numAsked)
             c = self.conn.cursor()
             channelCanonical = ircutils.toLower(channel)
-            test = c.execute('''update triviagames set
-                                channel=?,
-                                num_asked=?
-                                where channel_canonical=?''', (channel, numAsked, channelCanonical))
+            test = c.execute('''UPDATE triviagames 
+                                SET channel=?,
+                                    num_asked=?
+                                WHERE channel_canonical=?''', 
+                                (channel, numAsked, channelCanonical))
             self.conn.commit()
             c.close()
 
@@ -3824,12 +3823,14 @@ class TriviaTime(callbacks.Plugin):
             c = self.conn.cursor()
             channelCanonical = ircutils.toLower(channel)
             lastWinnerCanonical  = ircutils.toLower(lastWinner)
-            test = c.execute('''update triviagames set
-                                longest_streak=?,
-                                longest_streak_holder=?,
-                                longest_streak_holder_canonical=?
-                                where channel_canonical=?
-                                and longest_streak<?''', (streak, lastWinner, lastWinnerCanonical, channelCanonical, streak))
+            test = c.execute('''UPDATE triviagames 
+                                SET longest_streak=?,
+                                    longest_streak_holder=?,
+                                    longest_streak_holder_canonical=?
+                                WHERE channel_canonical=? AND 
+                                      longest_streak<?''', 
+                                (streak, lastWinner, lastWinnerCanonical, 
+                                 channelCanonical, streak))
             self.conn.commit()
             c.close()
 
@@ -3839,10 +3840,11 @@ class TriviaTime(callbacks.Plugin):
             c = self.conn.cursor()
             channelCanonical = ircutils.toLower(channel)
             lastWinner  = ircutils.toLower(lastWinner)
-            test = c.execute('''update triviagames set
-                                last_winner=?,
-                                streak=?
-                                where channel_canonical=?''', (lastWinner, streak, channelCanonical))
+            test = c.execute('''UPDATE triviagames 
+                                SET last_winner=?,
+                                    streak=?
+                                WHERE channel_canonical=?''', 
+                                (lastWinner, streak, channelCanonical))
             self.conn.commit()
             c.close()
 
@@ -3851,26 +3853,29 @@ class TriviaTime(callbacks.Plugin):
                 return self.insertGame(channel, numAsked)
             channelCanonical = ircutils.toLower(channel)
             c = self.conn.cursor()
-            test = c.execute('''update triviagames set
-                                round_started=?
-                                where channel_canonical=?''', (lastRoundStarted, channelCanonical))
+            test = c.execute('''UPDATE triviagames 
+                                SET round_started=?
+                                WHERE channel_canonical=?''', 
+                                (lastRoundStarted, channelCanonical))
             self.conn.commit()
             c.close()
 
         def updateQuestion(self, id, newQuestion):
             c = self.conn.cursor()
-            test = c.execute('''update triviaquestion set
-                                question=?
-                                where id=?''', (newQuestion, id))
+            test = c.execute('''UPDATE triviaquestion 
+                                SET question=?
+                                WHERE id=?''', 
+                                (newQuestion, id))
             self.conn.commit()
             c.close()
 
         def updateQuestionStats(self, id, timesAnswered, timesMissed):
             c = self.conn.cursor()
-            test = c.execute('''update triviaquestion set
-                                num_answered=num_answered+?,
-                                num_missed=num_missed+?
-                                where id=?''', (timesAnswered, timesMissed, id))
+            test = c.execute('''UPDATE triviaquestion 
+                                SET num_answered=num_answered+?,
+                                    num_missed=num_missed+?
+                                WHERE id=?''', 
+                                (timesAnswered, timesMissed, id))
             self.conn.commit()
             c.close()
 
@@ -4030,10 +4035,14 @@ class TriviaTime(callbacks.Plugin):
             month = dateObject.month
             year  = dateObject.year
             c = self.conn.cursor()
-            c.execute('''SELECT count(*) FROM triviauserlog
-                         WHERE day=? AND month=? AND year=? 
-                               AND username_canonical=? AND channel_canonical=?
-                               AND last_updated>?''', 
+            c.execute('''SELECT count(*) 
+                         FROM triviauserlog
+                         WHERE day=? AND 
+                               month=? AND 
+                               year=? AND 
+                               username_canonical=? AND 
+                               channel_canonical=? AND 
+                               last_updated>?''', 
                          (day, month, year, usernameCanonical, channelCanonical, (epoch-timeSeconds)))
             row = c.fetchone()
             c.close()
