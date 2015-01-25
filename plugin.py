@@ -3506,26 +3506,29 @@ class TriviaTime(callbacks.Plugin):
 
         def removeOldActivity(self,count=100):
             c = self.conn.cursor()
-            c.execute('''delete from triviaactivity
-                        where id not in (
-                            select id
-                            from triviaactivity
-                            order by id desc
-                            limit ?
-                        )''', (count,))
+            c.execute('''DELETE FROM triviaactivity
+                         WHERE id NOT IN (
+                            SELECT id
+                            FROM triviaactivity
+                            ORDER BY id DESC
+                            LIMIT ?)''', (count,))
             self.conn.commit()
             c.close()
 
         def removeDelete(self, deleteId):
             c = self.conn.cursor()
-            c.execute('''delete from triviadelete
-                        where id=?''', (deleteId,))
+            c.execute('''DELETE FROM triviadelete
+                         WHERE id=?''', (deleteId,))
             self.conn.commit()
             c.close()
 
         def removeDuplicateQuestions(self):
             c = self.conn.cursor()
-            c.execute('''delete from triviaquestion where id not in (select min(id) from triviaquestion GROUP BY question_canonical)''')
+            c.execute('''DELETE FROM triviaquestion 
+                         WHERE id NOT IN (
+                            SELECT MIN(id) 
+                            FROM triviaquestion 
+                            GROUP BY question_canonical)''')
             num = c.rowcount
             self.conn.commit()
             c.close()
@@ -3533,51 +3536,51 @@ class TriviaTime(callbacks.Plugin):
 
         def removeEdit(self, editId):
             c = self.conn.cursor()
-            c.execute('''delete from triviaedit
-                        where id=?''', (editId,))
+            c.execute('''DELETE FROM triviaedit
+                         WHERE id=?''', (editId,))
             self.conn.commit()
             c.close()
 
         def removeLogin(self, username):
             usernameCanonical = ircutils.toLower(username)
             c = self.conn.cursor()
-            c.execute('''delete from trivialogin
-                        where username_canonical=?''', (usernameCanonical,))
+            c.execute('''DELETE FROM trivialogin
+                         WHERE username_canonical=?''', (usernameCanonical,))
             self.conn.commit()
             c.close()
 
         def removeReport(self, repId):
             c = self.conn.cursor()
-            c.execute('''delete from triviareport
-                        where id=?''', (repId,))
+            c.execute('''DELETE FROM triviareport
+                         WHERE id=?''', (repId,))
             self.conn.commit()
             c.close()
 
         def removeReportByQuestionNumber(self, id):
             c = self.conn.cursor()
-            c.execute('''delete from triviareport
-                        where question_num=?''', (id,))
+            c.execute('''DELETE FROM triviareport
+                         WHERE question_num=?''', (id,))
             self.conn.commit()
             c.close()
 
         def removeEditByQuestionNumber(self, id):
             c = self.conn.cursor()
-            c.execute('''delete from triviaedit
-                        where question_id=?''', (id,))
+            c.execute('''DELETE FROM triviaedit
+                         WHERE question_id=?''', (id,))
             self.conn.commit()
             c.close()
 
         def removeDeleteByQuestionNumber(self, id):
             c = self.conn.cursor()
-            c.execute('''delete from triviadelete
-                        where line_num=?''', (id,))
+            c.execute('''DELETE FROM triviadelete
+                         WHERE line_num=?''', (id,))
             self.conn.commit()
             c.close()
 
         def removeTemporaryQuestion(self, id):
             c = self.conn.cursor()
-            c.execute('''delete from triviatemporaryquestion
-                        where id=?''', (id,))
+            c.execute('''DELETE FROM triviatemporaryquestion
+                         WHERE id=?''', (id,))
             self.conn.commit()
             c.close()
 
@@ -3585,9 +3588,8 @@ class TriviaTime(callbacks.Plugin):
             usernameCanonical = ircutils.toLower(username)
             channelCanonical = ircutils.toLower(channel)
             c = self.conn.cursor()
-            c.execute('''delete from triviauserlog
-                        where username_canonical=?
-                        and channel_canonical=?''', 
+            c.execute('''DELETE FROM triviauserlog
+                         WHERE username_canonical=? AND channel_canonical=?''', 
                         (usernameCanonical, channelCanonical))
             self.conn.commit()
             c.close()
