@@ -110,7 +110,7 @@ class TriviaTime(callbacks.Plugin):
         self.storage.makeDeleteTable()
         self.storage.makeInfoTable()
         #self.storage.makeLevelTable()
-        #self.stroage.dropLevelTalle()
+        #self.storage.dropLevelTable()
         #triviainfo table check
         #if self.storage.isTriviaVersionSet():
         if self.storage.getVersion() != None and self.storage.getVersion() != self.currentDBVersion:
@@ -3088,16 +3088,18 @@ class TriviaTime(callbacks.Plugin):
                 timestamp = int(time.mktime(time.localtime()))
             channelCanonical = ircutils.toLower(channel)
             c = self.conn.cursor()
-            c.execute('insert into triviaactivity values (NULL, ?, ?, ?, ?, ?, ?)',
-                                    (aType, activity, channel, channelCanonical, network, timestamp))
+            c.execute('''INSERT INTO triviaactivity VALUES (NULL, ?, ?, ?, ?, ?, ?)''',
+                            (aType, activity, channel, channelCanonical, 
+                             network, timestamp))
             self.conn.commit()
 
         def insertDelete(self, username, channel, lineNumber, reason):
             usernameCanonical = ircutils.toLower(username)
             channelCanonical = ircutils.toLower(channel)
             c = self.conn.cursor()
-            c.execute('insert into triviadelete values (NULL, ?, ?, ?, ?, ?, ?)',
-                                    (username, usernameCanonical, lineNumber, channel, channelCanonical, reason))
+            c.execute('''INSERT INTO triviadelete VALUES (NULL, ?, ?, ?, ?, ?, ?)''',
+                            (username, usernameCanonical, lineNumber, channel, 
+                             channelCanonical, reason))
             self.conn.commit()
 
         def insertLogin(self, username, salt, isHashed, password, capability):
@@ -3109,8 +3111,8 @@ class TriviaTime(callbacks.Plugin):
             else:
                 isHashed = 1
             c = self.conn.cursor()
-            c.execute('insert into trivialogin values (NULL, ?, ?, ?, ?, ?, ?)',
-                                    (username, usernameCanonical, salt, isHashed, password, capability))
+            c.execute('''INSERT INTO trivialogin VALUES (NULL, ?, ?, ?, ?, ?, ?)''',
+                            (username, usernameCanonical, salt, isHashed, password, capability))
             self.conn.commit()
 
         def insertUserLog(self, username, channel, score, numAnswered, timeTaken, day=None, month=None, year=None, epoch=None):
@@ -3130,8 +3132,10 @@ class TriviaTime(callbacks.Plugin):
             scoreAvg = 'NULL'
             if numAnswered >= 1:
                 scoreAvg = score / numAnswered
-            c.execute('insert into triviauserlog values (NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-                                    (username, score, numAnswered, day, month, year, epoch, timeTaken, scoreAvg, usernameCanonical, channel, channelCanonical))
+            c.execute('''INSERT INTO triviauserlog VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+                            (username, score, numAnswered, day, month, year, 
+                             epoch, timeTaken, scoreAvg, usernameCanonical, 
+                             channel, channelCanonical))
             self.conn.commit()
             c.close()
 
@@ -3140,17 +3144,10 @@ class TriviaTime(callbacks.Plugin):
             if self.userExists(username):
                 return self.updateUser(username, numEditted, numEdittedAccepted, numReported, numQuestionsAdded, numQuestionsAccepted)
             c = self.conn.cursor()
-            c.execute('insert into triviausers values (NULL, ?, ?, ?, ?, ?, ?, ?, 0)', 
-                            (
-                                    username,
-                                    numEditted,
-                                    numEdittedAccepted,
-                                    usernameCanonical,
-                                    numReported,
-                                    numQuestionsAdded,
-                                    numQuestionsAccepted
-                            )
-                    )
+            c.execute('''INSERT INTO triviausers VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, 0)''', 
+                            (username, numEditted, numEdittedAccepted, 
+                             usernameCanonical, numReported, 
+                             numQuestionsAdded, numQuestionsAccepted))
             self.conn.commit()
             c.close()
         
@@ -3163,7 +3160,8 @@ class TriviaTime(callbacks.Plugin):
             
             c = self.conn.cursor()
             c.execute('''INSERT INTO trivialevel VALUES (?, ?, ?, ?, ?)''',
-                         (username, usernameCanonical, channel, channelCanonical, level))
+                            (username, usernameCanonical, channel, 
+                             channelCanonical, level))
             self.conn.commit()
             c.close()
 
@@ -3174,7 +3172,8 @@ class TriviaTime(callbacks.Plugin):
             if epoch is None:
                 epoch = int(time.mktime(time.localtime()))
             c = self.conn.cursor()
-            c.execute('insert into triviagames values (NULL, ?, ?, ?, 0, 0, ?, 0, "", "")', (channel,numAsked,epoch,channelCanonical))
+            c.execute('''INSERT INTO triviagames VALUES (NULL, ?, ?, ?, 0, 0, ?, 0, "", "")''', 
+                            (channel, numAsked, epoch, channelCanonical))
             self.conn.commit()
             c.close()
 
@@ -3183,7 +3182,9 @@ class TriviaTime(callbacks.Plugin):
             if askedAt is None:
                 askedAt = int(time.mktime(time.localtime()))
             c = self.conn.cursor()
-            c.execute('insert into triviagameslog values (NULL, ?, ?, ?, ?, ?, ?)', (channel,roundNumber,lineNumber,questionText,askedAt,channelCanonical))
+            c.execute('''INSERT INTO triviagameslog VALUES (NULL, ?, ?, ?, ?, ?, ?)''', 
+                            (channel, roundNumber, lineNumber, questionText, 
+                             askedAt, channelCanonical))
             self.conn.commit()
             c.close()
 
@@ -3193,8 +3194,9 @@ class TriviaTime(callbacks.Plugin):
             if reportedAt is None:
                 reportedAt = int(time.mktime(time.localtime()))
             c = self.conn.cursor()
-            c.execute('insert into triviareport values (NULL, ?, ?, ?, ?, NULL, NULL, ?, ?, ?)',
-                                        (channel,username,reportText,reportedAt,questionNum,usernameCanonical,channelCanonical))
+            c.execute('''INSERT INTO triviareport VALUES (NULL, ?, ?, ?, ?, NULL, NULL, ?, ?, ?)''',
+                            (channel, username, reportText, reportedAt, 
+                             questionNum, usernameCanonical, channelCanonical))
             self.conn.commit()
             c.close()
 
@@ -3203,8 +3205,7 @@ class TriviaTime(callbacks.Plugin):
             #skipped=0
             divData = self.chunk(questions) # divide into 10000 rows each
             for chunk in divData:
-                c.executemany('''insert into triviaquestion values (NULL, ?, ?, 0, 0, 0)''',
-                                            chunk)
+                c.executemany('''INSERT INTO triviaquestion VALUES (NULL, ?, ?, 0, 0, 0)''', chunk)
             self.conn.commit()
             skipped = self.removeDuplicateQuestions()
             c.close()
@@ -3217,7 +3218,8 @@ class TriviaTime(callbacks.Plugin):
             if createdAt is None:
                 createdAt = int(time.mktime(time.localtime()))
             c.execute('''INSERT INTO triviaedit VALUES (NULL, ?, ?, NULL, ?, ?, ?, ?, ?)''',
-                            (questionId,questionText,username,channel,createdAt, usernameCanonical, channelCanonical))
+                            (questionId, questionText, username, channel, 
+                             createdAt, usernameCanonical, channelCanonical))
             self.conn.commit()
             c.close()
 
@@ -3226,7 +3228,8 @@ class TriviaTime(callbacks.Plugin):
             channelCanonical = ircutils.toLower(channel)
             usernameCanonical = ircutils.toLower(username)
             c.execute('''INSERT INTO triviatemporaryquestion VALUES (NULL, ?, ?, ?, ?, ?)''',
-                            (username,channel,question,usernameCanonical,channelCanonical))
+                            (username, channel, question, usernameCanonical, 
+                             channelCanonical))
             self.conn.commit()
             c.close()
 
