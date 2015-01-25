@@ -3064,6 +3064,14 @@ class TriviaTime(callbacks.Plugin):
             row = c.fetchone()
             c.close()
             return row[0]
+        
+        def getVersion(self):
+            c = self.conn.cursor();
+            try:
+                c.execute('''SELECT version FROM triviainfo''')
+                return c.fetchone()
+            except:
+                pass
 
         def gameExists(self, channel):
             channel = ircutils.toLower(channel)
@@ -3252,15 +3260,15 @@ class TriviaTime(callbacks.Plugin):
         def makeActivityTable(self):
             c = self.conn.cursor()
             try:
-                c.execute('''create table triviaactivity (
-                        id integer primary key autoincrement,
-                        type text,
-                        activity text,
-                        channel text,
-                        channel_canonical text,
-                        network text,
-                        timestamp integer
-                        )''')
+                c.execute('''CREATE TABLE triviaactivity (
+                                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                                type TEXT,
+                                activity TEXT,
+                                channel TEXT,
+                                channel_canonical TEXT,
+                                network TEXT,
+                                timestamp INTEGER
+                            )''')
             except:
                 pass
             self.conn.commit()
@@ -3269,15 +3277,15 @@ class TriviaTime(callbacks.Plugin):
         def makeDeleteTable(self):
             c = self.conn.cursor()
             try:
-                c.execute('''create table triviadelete (
-                        id integer primary key autoincrement,
-                        username text,
-                        username_canonical text,
-                        line_num integer,
-                        channel text,
-                        channel_canonical text,
-                        reason text
-                        )''')
+                c.execute('''CREATE TABLE triviadelete (
+                                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                                username TEXT,
+                                username_canonical TEXT,
+                                line_num INTEGER,
+                                channel TEXT,
+                                channel_canonical TEXT,
+                                reason TEXT
+                            )''')
             except:
                 pass
             self.conn.commit()
@@ -3300,15 +3308,15 @@ class TriviaTime(callbacks.Plugin):
         def makeLoginTable(self):
             c = self.conn.cursor()
             try:
-                c.execute('''create table trivialogin (
-                        id integer primary key autoincrement,
-                        username text,
-                        username_canonical text not null unique,
-                        salt text,
-                        is_hashed  integer not null default 1,
-                        password text,
-                        capability text
-                        )''')
+                c.execute('''CREATE TABLE trivialogin (
+                                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                                username TEXT,
+                                username_canonical TEXT NOT NULL UNIQUE,
+                                salt TEXT,
+                                is_hashed INTEGER NOT NULL DEFAULT 1,
+                                password TEXT,
+                                capability TEXT
+                            )''')
             except:
                 pass
             self.conn.commit()
@@ -3317,17 +3325,17 @@ class TriviaTime(callbacks.Plugin):
         def makeUserTable(self):
             c = self.conn.cursor()
             try:
-                c.execute('''create table triviausers (
-                        id integer primary key autoincrement,
-                        username text,
-                        num_editted integer,
-                        num_editted_accepted integer,
-                        username_canonical text not null unique,
-                        num_reported integer,
-                        num_questions_added integer,
-                        num_questions_accepted integer,
-                        highest_streak integer
-                        )''')
+                c.execute('''CREATE TABLE triviausers (
+                                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                                username TEXT,
+                                num_editted INTEGER,
+                                num_editted_accepted INTEGER,
+                                username_canonical TEXT NOT NULL UNIQUE,
+                                num_reported INTEGER,
+                                num_questions_added INTEGER,
+                                num_questions_accepted INTEGER,
+                                highest_streak INTEGER
+                            )''')
             except:
                 pass
             self.conn.commit()
@@ -3336,21 +3344,22 @@ class TriviaTime(callbacks.Plugin):
         def makeUserLogTable(self):
             c = self.conn.cursor()
             try:
-                c.execute('''create table triviauserlog (
-                        id integer primary key autoincrement,
-                        username text,
-                        points_made integer,
-                        num_answered integer,
-                        day integer,
-                        month integer,
-                        year integer,
-                        last_updated integer,
-                        average_time integer,
-                        average_score integer,
-                        username_canonical text,
-                        channel text,
-                        channel_canonical text,
-                        unique(username_canonical,channel_canonical, day, month, year) on conflict replace
+                c.execute('''CREATE TABLE triviauserlog (
+                                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                                username TEXT,
+                                points_made INTEGER,
+                                num_answered INTEGER,
+                                day INTEGER,
+                                month INTEGER,
+                                year INTEGER,
+                                last_updated INTEGER,
+                                average_time INTEGER,
+                                average_score INTEGER,
+                                username_canonical TEXT,
+                                channel TEXT,
+                                channel_canonical TEXT,
+                                UNIQUE(username_canonical, channel_canonical, 
+                                       day, month, year) ON CONFLICT REPLACE
                         )''')
             except:
                 pass
@@ -3360,17 +3369,17 @@ class TriviaTime(callbacks.Plugin):
         def makeGameTable(self):
             c = self.conn.cursor()
             try:
-                c.execute('''create table triviagames (
-                        id integer primary key autoincrement,
-                        channel text,
-                        num_asked integer,
-                        round_started integer,
-                        last_winner text,
-                        streak integer,
-                        channel_canonical text not null unique,
-                        longest_streak integer,
-                        longest_streak_holder text,
-                        longest_streak_holder_canonical text
+                c.execute('''CREATE TABLE triviagames (
+                                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                                channel TEXT,
+                                num_asked INTEGER,
+                                round_started INTEGER,
+                                last_winner TEXT,
+                                streak INTEGER,
+                                channel_canonical TEXT NOT NULL UNIQUE,
+                                longest_streak INTEGER,
+                                longest_streak_holder TEXT,
+                                longest_streak_holder_canonical TEXT
                         )''')
             except:
                 pass
@@ -3380,18 +3389,17 @@ class TriviaTime(callbacks.Plugin):
         def makeGameLogTable(self):
             c = self.conn.cursor()
             try:
-                c.execute('''create table triviagameslog (
-                        id integer primary key autoincrement,
-                        channel text,
-                        round_num integer,
-                        line_num integer,
-                        question text,
-                        asked_at integer,
-                        channel_canonical text
-                        )''')
-                c.execute('''create index gamelograndomindex
-                            on triviagameslog (channel, line_num, asked_at)
+                c.execute('''CREATE TABLE triviagameslog (
+                                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                                channel TEXT,
+                                round_num INTEGER,
+                                line_num INTEGER,
+                                question TEXT,
+                                asked_at INTEGER,
+                                channel_canonical TEXT
                             )''')
+                c.execute('''CREATE INDEX gamelograndomindex
+                             ON triviagameslog (channel, line_num, asked_at))''')
             except:
                 pass
             self.conn.commit()
@@ -3400,27 +3408,27 @@ class TriviaTime(callbacks.Plugin):
         def makeInfoTable(self):
             c = self.conn.cursor()
             try:
-                c.execute('''create table triviainfo (
-                    version integer
-                    )''')
+                c.execute('''CREATE TABLE triviainfo (
+                                version INTEGER
+                            )''')
             except:
                 pass
 
         def makeReportTable(self):
             c = self.conn.cursor()
             try:
-                c.execute('''create table triviareport (
-                        id integer primary key autoincrement,
-                        channel text,
-                        username text,
-                        report_text text,
-                        reported_at integer,
-                        fixed_at integer,
-                        fixed_by text,
-                        question_num integer,
-                        username_canonical text,
-                        channel_canonical text
-                        )''')
+                c.execute('''CREATE TABLE triviareport (
+                                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                                channel TEXT,
+                                username TEXT,
+                                report_text TEXT,
+                                reported_at INTEGER,
+                                fixed_at INTEGER,
+                                fixed_by TEXT,
+                                question_num INTEGER,
+                                username_canonical TEXT,
+                                channel_canonical TEXT
+                            )''')
             except:
                 pass
             self.conn.commit()
@@ -3429,14 +3437,14 @@ class TriviaTime(callbacks.Plugin):
         def makeTemporaryQuestionTable(self):
             c = self.conn.cursor()
             try:
-                c.execute('''create table triviatemporaryquestion (
-                        id integer primary key autoincrement,
-                        username text,
-                        channel text,
-                        question text,
-                        username_canonical text,
-                        channel_canonical text
-                        )''')
+                c.execute('''CREATE TABLE triviatemporaryquestion (
+                                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                                username TEXT,
+                                channel TEXT,
+                                question TEXT,
+                                username_canonical TEXT,
+                                channel_canonical TEXT
+                            )''')
             except:
                 pass
             self.conn.commit()
@@ -3445,17 +3453,16 @@ class TriviaTime(callbacks.Plugin):
         def makeQuestionTable(self):
             c = self.conn.cursor()
             try:
-                c.execute('''create table triviaquestion (
-                        id integer primary key autoincrement,
-                        question_canonical text,
-                        question text,
-                        deleted integer not null default 0,
-                        num_answered integer,
-                        num_missed integer
-                        )''')
-                c.execute('''create index questionrandomindex
-                            on triviagameslog (id, deleted)
+                c.execute('''CREATE TABLE triviaquestion (
+                                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                                question_canonical TEXT,
+                                question TEXT,
+                                deleted INTEGER NOT NULL DEFAULT 0,
+                                num_answered INTEGER,
+                                num_missed INTEGER
                             )''')
+                c.execute('''CREATE INDEX questionrandomindex
+                             ON triviagameslog (id, deleted))''')
             except:
                 pass
             self.conn.commit()
@@ -3464,17 +3471,17 @@ class TriviaTime(callbacks.Plugin):
         def makeEditTable(self):
             c = self.conn.cursor()
             try:
-                c.execute('''create table triviaedit (
-                        id integer primary key autoincrement,
-                        question_id integer,
-                        question text,
-                        status text,
-                        username text,
-                        channel text,
-                        created_at text,
-                        username_canonical text,
-                        channel_canonical
-                        )''')
+                c.execute('''CREATE TABLE triviaedit (
+                                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                                question_id INTEGER,
+                                question TEXT,
+                                status TEXT,
+                                username TEXT,
+                                channel TEXT,
+                                created_at TEXT,
+                                username_canonical TEXT,
+                                channel_canonical TEXT
+                            )''')
             except:
                 pass
             self.conn.commit()
@@ -4029,14 +4036,6 @@ class TriviaTime(callbacks.Plugin):
             row = c.fetchone()
             c.close()
             return row[0] > 0
-
-        def getVersion(self):
-            c = self.conn.cursor();
-            try:
-                c.execute('''select version from triviainfo''')
-                return c.fetchone()
-            except:
-                pass
         
 
     #A log wrapper, ripoff of ChannelLogger
