@@ -46,11 +46,6 @@ conf.registerChannelValue(TriviaTime.commands, 'extraHint',
                 """The command to show alternative hints""")
         )
 
-conf.registerChannelValue(TriviaTime.commands, 'showHintCommandKAOS', 
-        registry.NormalizedString(""",""", 
-                """The command for showing the remaining KAOS""")
-        )
-
 conf.registerChannelValue(TriviaTime.general, 'logGames',
         registry.Boolean(True,
                 """Log changes to questions and games""")

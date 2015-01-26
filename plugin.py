@@ -142,21 +142,16 @@ class TriviaTime(callbacks.Plugin):
             return
         channelCanonical = ircutils.toLower(channel)
 
-        kaosRemainingCommand= self.registryValue('commands.showHintCommandKAOS', channel)
         otherHintCommand  = self.registryValue('commands.extraHint', channel)
 
         game = self.getGame(irc, channel)
 
         if game is not None:
             # Look for command to list remaining KAOS
-            if msg.args[1] == kaosRemainingCommand and game.question.find("KAOS:") == 0:
-                irc.sendMsg(ircmsgs.notice(msg.nick, "'{0}' now also works for KAOS hints, check it out!".format(otherHintCommand)))
+            if msg.args[1] == otherHintCommand and game.question.find("KAOS:") == 0:
                 game.getRemainingKAOS()
-            elif msg.args[1] == otherHintCommand:
-                if game.question.find("KAOS:") == 0:
-                    game.getRemainingKAOS()
                 else:
-                    game.getOtherHint()
+                game.getOtherHint()
             else:
                 # check the answer
                 game.checkAnswer(msg)
