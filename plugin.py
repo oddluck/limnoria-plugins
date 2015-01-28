@@ -134,6 +134,7 @@ class TriviaTime(callbacks.Plugin):
             Catches all PRIVMSG, including channels communication
         """
         username = self.getUsername(msg.nick, msg.prefix)
+        usernameCanonical = ircutils.toLower(username)
         channel = msg.args[0]
         # Make sure that it is starting inside of a channel, not in pm
         if not irc.isChannel(channel):
@@ -143,15 +144,22 @@ class TriviaTime(callbacks.Plugin):
         channelCanonical = ircutils.toLower(channel)
 
         otherHintCommand  = self.registryValue('commands.extraHint', channel)
-
+        extraHintTime = self.registryValue('hints.extraHintTime', channel)
         game = self.getGame(irc, channel)
 
         if game is not None:
-            # Look for command to list remaining KAOS
-            if msg.args[1] == otherHintCommand and game.question.find("KAOS:") == 0:
-                game.getRemainingKAOS()
+            # Check for extra hint command
+            if msg.args[1] == otherHintCommand:
+                if game.question.find("KAOS:") == 0:
+                    game.getRemainingKAOS()
                 else:
-                game.getOtherHint()
+                    game.hintTimeoutList.setTimeout(extraHintTime)
+                    if not game.questionOver:
+                        if game.hintTimeoutList.has(usernameCanonical):
+                            self.reply(irc, msg, 'You must wait %d seconds to be able to use the extra hints command.' % (game.hintTimeoutList.getTimeLeft(usernameCanonical)))
+                        else:
+                            game.hintTimeoutList.append(usernameCanonical)
+                            game.getOtherHint()
             else:
                 # check the answer
                 game.checkAnswer(msg)
@@ -1582,6 +1590,7 @@ class TriviaTime(callbacks.Plugin):
 
             # reset stats
             self.skips = TimeoutList(self.registryValue('skip.skipTime', channel))
+            self.hintTimeoutList = TimeoutList(self.registryValue('hints.extraHintTime', channel))
             self.stopPending = False
             self.shownHint = False
             self.questionRepeated = False
