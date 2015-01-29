@@ -156,7 +156,7 @@ class TriviaTime(callbacks.Plugin):
                     game.hintTimeoutList.setTimeout(extraHintTime)
                     if not game.questionOver:
                         if game.hintTimeoutList.has(usernameCanonical):
-                            self.reply(irc, msg, 'You must wait %d seconds to be able to use the extra hints command.' % (game.hintTimeoutList.getTimeLeft(usernameCanonical)))
+                            self.reply(irc, msg, 'You must wait %d seconds to be able to use the extra hint command.' % (game.hintTimeoutList.getTimeLeft(usernameCanonical)), notice=True)
                         else:
                             game.hintTimeoutList.append(usernameCanonical)
                             game.getOtherHint()
@@ -368,16 +368,21 @@ class TriviaTime(callbacks.Plugin):
             pass
         return username    
         
-    def reply(self, irc, msg, outstr, prefixNick=True):
-        if ircutils.isChannel(msg.args[0]):
+    def reply(self, irc, msg, outstr, notice=False, prefixNick=True):
+        if ircutils.isChannel(msg.args[0]) and not notice:
             target = msg.args[0]
         else:
             target = msg.nick
         
-        if prefixNick == False or ircutils.isNick(target):
-            irc.sendMsg(ircmsgs.privmsg(target, outstr))
+        if notice:
+            output = ircmsgs.notice
         else:
-            irc.sendMsg(ircmsgs.privmsg(target, '%s: %s' % (msg.nick, outstr)))
+            output = ircmsgs.privmsg
+        
+        if prefixNick == False or ircutils.isNick(target):
+            irc.sendMsg(output(target, outstr))
+        else:
+            irc.sendMsg(output(target, '%s: %s' % (msg.nick, outstr)))
         irc.noReply()
     
     def acceptdelete(self, irc, msg, arg, channel, num):
@@ -1235,7 +1240,7 @@ class TriviaTime(callbacks.Plugin):
         skipSeconds = self.registryValue('skip.skipTime', channel)
         game.skips.setTimeout(skipSeconds)
         if game.skips.has(usernameCanonical):
-            self.reply(irc, msg, 'You must wait %d seconds to be able to skip again.' % (game.skips.getTimeLeft(usernameCanonical)))
+            self.reply(irc, msg, 'You must wait %d seconds to be able to skip again.' % (game.skips.getTimeLeft(usernameCanonical)), notice=True)
             return
 
         # Update skip count
