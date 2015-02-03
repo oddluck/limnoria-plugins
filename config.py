@@ -46,11 +46,6 @@ conf.registerChannelValue(TriviaTime.commands, 'extraHint',
                 """The command to show alternative hints""")
         )
 
-conf.registerChannelValue(TriviaTime.commands, 'showHintCommandKAOS', 
-        registry.NormalizedString(""",""", 
-                """The command for showing the remaining KAOS""")
-        )
-
 conf.registerChannelValue(TriviaTime.general, 'logGames',
         registry.Boolean(True,
                 """Log changes to questions and games""")
@@ -61,6 +56,11 @@ conf.registerChannelValue(TriviaTime.general, 'globalStats',
                 """Stats are global across all channels""")
         )
 
+conf.registerChannelValue(TriviaTime.hints, 'extraHintTime',
+        registry.Integer(90, 
+                """Number of seconds a user must wait between uses of the extra hint command.""")
+        )
+        
 conf.registerChannelValue(TriviaTime.hints, 'vowelsHint',
         registry.Boolean(True,
                 """Show all vowels on the third hint. If false, random letters will be shown instead""")
