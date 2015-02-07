@@ -2387,6 +2387,14 @@ class TriviaTime(callbacks.Plugin):
             except:
                 pass
             c.close()
+            
+        def dropLevelTable(self):
+            c = self.conn.cursor()
+            try:
+                c.execute('''DROP TABLE trivialevel''')
+            except:
+                pass
+            c.close()
 
         def getRandomQuestionNotAsked(self, channel, roundStart):
             c = self.conn.cursor()
