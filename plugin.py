@@ -127,7 +127,7 @@ class Game:
                 correctAnswer = ans
 
         if correctAnswerFound:
-            dbLocation = self.registryValue('admin.sqlitedb')
+            dbLocation = self.registryValue('admin.db')
             threadStorage = Storage(dbLocation)
             # time stats
             timeElapsed = float(time.time() - self.askedAt)
@@ -2716,7 +2716,7 @@ class TriviaTime(callbacks.Plugin):
         self.logger = Logger(self)
 
         # connections
-        dbLocation = self.registryValue('admin.sqlitedb')
+        dbLocation = self.registryValue('admin.db')
         # tuple head, tail ('example/example/', 'filename.txt')
         dbFolder = os.path.split(dbLocation)
         # take folder from split
@@ -2892,7 +2892,7 @@ class TriviaTime(callbacks.Plugin):
         timeoutVoice = self.registryValue('voice.timeoutVoice')
         self.voiceTimeouts.setTimeout(timeoutVoice)
         usernameCanonical = ircutils.toLower(username)
-        dbLocation = self.registryValue('admin.sqlitedb')
+        dbLocation = self.registryValue('admin.db')
         threadStorage = Storage(dbLocation)
         if self.registryValue('general.globalStats'):
             stat = threadStorage.getUserStat(username, None)
@@ -2938,7 +2938,7 @@ class TriviaTime(callbacks.Plugin):
 
     def addActivity(self, activityType, activityText, channel, irc, storage=None):
         if storage is None:
-            dbLocation = self.registryValue('admin.sqlitedb')
+            dbLocation = self.registryValue('admin.db')
             threadStorage = Storage(dbLocation)
         else:
             threadStorage = storage
@@ -3036,7 +3036,7 @@ class TriviaTime(callbacks.Plugin):
             irc.reply('You must be a TriviaMod in {0} to use this command.'.format(channel))
             return
         
-        dbLocation = self.registryValue('admin.sqlitedb')
+        dbLocation = self.registryValue('admin.db')
         threadStorage = Storage(dbLocation)
         if self.registryValue('general.globalstats'):
             delete = threadStorage.getDeleteById(num)
@@ -3075,7 +3075,7 @@ class TriviaTime(callbacks.Plugin):
             irc.reply('You must be a TriviaMod in {0} to use this command.'.format(channel))
             return
         
-        dbLocation = self.registryValue('admin.sqlitedb')
+        dbLocation = self.registryValue('admin.db')
         threadStorage = Storage(dbLocation)
         if self.registryValue('general.globalstats'):
             edit = threadStorage.getEditById(num)
@@ -3120,7 +3120,7 @@ class TriviaTime(callbacks.Plugin):
             irc.reply('You must be a TriviaMod in {0} to use this command.'.format(channel))
             return
         
-        dbLocation = self.registryValue('admin.sqlitedb')
+        dbLocation = self.registryValue('admin.db')
         threadStorage = Storage(dbLocation)
         if self.registryValue('general.globalstats'):
             q = threadStorage.getTemporaryQuestionById(num)
@@ -3155,7 +3155,7 @@ class TriviaTime(callbacks.Plugin):
         if charMask not in question:
             irc.error('The question must include the separating character %s ' % (charMask))
             return
-        dbLocation = self.registryValue('admin.sqlitedb')
+        dbLocation = self.registryValue('admin.db')
         threadStorage = Storage(dbLocation)
         threadStorage.updateUser(username, 0, 0, 0, 1)
         threadStorage.insertTemporaryQuestion(username, channel, question)
@@ -3169,7 +3169,7 @@ class TriviaTime(callbacks.Plugin):
         filename defaults to configured question file.
         """
         if filename is None:
-            filename = self.registryValue('admin.quizfile')
+            filename = self.registryValue('admin.file')
         try:
             filesLines = open(filename).readlines()
         except:
@@ -3180,7 +3180,7 @@ class TriviaTime(callbacks.Plugin):
         channel = msg.args[0]
         for line in filesLines:
             insertList.append((str(line).strip(),str(line).strip()))
-        dbLocation = self.registryValue('admin.sqlitedb')
+        dbLocation = self.registryValue('admin.db')
         threadStorage = Storage(dbLocation)
         info = threadStorage.insertQuestionsBulk(insertList)
         irc.reply('Successfully added %d questions, skipped %d' % (info[0], info[1]))
@@ -3208,7 +3208,7 @@ class TriviaTime(callbacks.Plugin):
         else:
             password = user.password
 
-        dbLocation = self.registryValue('admin.sqlitedb')
+        dbLocation = self.registryValue('admin.db')
         threadStorage = Storage(dbLocation)
         info = threadStorage.insertLogin(user.name, salt, isHashed, password, capability)
         irc.reply('Success, updated your web access login.')
@@ -3225,7 +3225,7 @@ class TriviaTime(callbacks.Plugin):
             irc.reply('You must be a TriviaAdmin in {0} to use this command.'.format(channel))
             return
             
-        dbLocation = self.registryValue('admin.sqlitedb')
+        dbLocation = self.registryValue('admin.db')
         threadStorage = Storage(dbLocation)
         threadStorage.removeUserLogs(username, channel)
         irc.reply('Removed all points from {0} in {1}.'.format(username, channel))
@@ -3240,7 +3240,7 @@ class TriviaTime(callbacks.Plugin):
         """
         num = max(num, 10)
         offset = num-9
-        dbLocation = self.registryValue('admin.sqlitedb')
+        dbLocation = self.registryValue('admin.db')
         threadStorage = Storage(dbLocation)
         if self.registryValue('general.globalStats'):
             tops = threadStorage.viewDayTop10(None, num)
@@ -3265,7 +3265,7 @@ class TriviaTime(callbacks.Plugin):
         """
         hostmask = msg.prefix
         username = self.getUsername(msg.nick, hostmask)
-        dbLocation = self.registryValue('admin.sqlitedb')
+        dbLocation = self.registryValue('admin.db')
         threadStorage = Storage(dbLocation)
         
         # Search for question ID if deletion is by 'round'
@@ -3295,7 +3295,7 @@ class TriviaTime(callbacks.Plugin):
         Channel is only required when using the command outside of a channel.
         """
         username = self.getUsername(msg.nick, msg.prefix)
-        dbLocation = self.registryValue('admin.sqlitedb')
+        dbLocation = self.registryValue('admin.db')
         threadStorage = Storage(dbLocation)
         q = threadStorage.getQuestionById(num)
         if q:
@@ -3343,7 +3343,7 @@ class TriviaTime(callbacks.Plugin):
             day = d.day
             month = d.month
             year = d.year
-        dbLocation = self.registryValue('admin.sqlitedb')
+        dbLocation = self.registryValue('admin.db')
         threadStorage = Storage(dbLocation)
         threadStorage.updateUserLog(username, channel, points, 0, 0, day, month, year)
         irc.reply('Added {0} points to {1} in {2}.'.format(points, username, channel))
@@ -3361,7 +3361,7 @@ class TriviaTime(callbacks.Plugin):
             return
         
         # Grab list from the database
-        dbLocation = self.registryValue('admin.sqlitedb')
+        dbLocation = self.registryValue('admin.db')
         threadStorage = Storage(dbLocation)
         if self.registryValue('general.globalstats'):
             count = threadStorage.countDeletes()
@@ -3400,7 +3400,7 @@ class TriviaTime(callbacks.Plugin):
             return
         
         # Grab list from the database
-        dbLocation = self.registryValue('admin.sqlitedb')
+        dbLocation = self.registryValue('admin.db')
         threadStorage = Storage(dbLocation)
         if self.registryValue('general.globalstats'):
             count = threadStorage.countEdits()
@@ -3432,7 +3432,7 @@ class TriviaTime(callbacks.Plugin):
         Channel is only required when using the command outside of a channel.
         """
         # Grab list from the database
-        dbLocation = self.registryValue('admin.sqlitedb')
+        dbLocation = self.registryValue('admin.db')
         threadStorage = Storage(dbLocation)
         if self.registryValue('general.globalstats'):
             count = threadStorage.countReports()
@@ -3469,7 +3469,7 @@ class TriviaTime(callbacks.Plugin):
             return
         
         # Grab list from the database
-        dbLocation = self.registryValue('admin.sqlitedb')
+        dbLocation = self.registryValue('admin.db')
         threadStorage = Storage(dbLocation)
         if self.registryValue('general.globalstats'):
             count = threadStorage.countTemporaryQuestions()
@@ -3500,7 +3500,7 @@ class TriviaTime(callbacks.Plugin):
         Get TriviaTime information, how many questions/users in database, time, etc.
         Channel is only required when using the command outside of a channel.
         """
-        dbLocation = self.registryValue('admin.sqlitedb')
+        dbLocation = self.registryValue('admin.db')
         threadStorage = Storage(dbLocation)
         totalUsersEver = threadStorage.getNumUser(channel)
         numActiveThisWeek = threadStorage.getNumActiveThisWeek(channel)
@@ -3531,7 +3531,7 @@ class TriviaTime(callbacks.Plugin):
         """
         username = self.getUsername(msg.nick, msg.prefix)
         identified = ircdb.users.hasUser(msg.prefix)
-        dbLocation = self.registryValue('admin.sqlitedb')
+        dbLocation = self.registryValue('admin.db')
         threadStorage = Storage(dbLocation)
         
         if self.registryValue('general.globalStats'):
@@ -3578,7 +3578,7 @@ class TriviaTime(callbacks.Plugin):
         """
         num = max(num, 10)
         offset = num-9
-        dbLocation = self.registryValue('admin.sqlitedb')
+        dbLocation = self.registryValue('admin.db')
         threadStorage = Storage(dbLocation)
         if self.registryValue('general.globalStats'):
             tops = threadStorage.viewMonthTop10(None, num)
@@ -3633,7 +3633,7 @@ class TriviaTime(callbacks.Plugin):
             irc.reply('You must be at least a TriviaMod in {0} to use this command.'.format(channel))
             return
         
-        dbLocation = self.registryValue('admin.sqlitedb')
+        dbLocation = self.registryValue('admin.db')
         threadStorage = Storage(dbLocation)
         if self.registryValue('general.globalstats'):
             edit = threadStorage.getEditById(num)
@@ -3661,7 +3661,7 @@ class TriviaTime(callbacks.Plugin):
             irc.reply('You must be at least a TriviaMod in {0} to use this command.'.format(channel))
             return
         
-        dbLocation = self.registryValue('admin.sqlitedb')
+        dbLocation = self.registryValue('admin.db')
         threadStorage = Storage(dbLocation)
         if self.registryValue('general.globalstats'):
             delete = threadStorage.getDeleteById(num)
@@ -3689,7 +3689,7 @@ class TriviaTime(callbacks.Plugin):
             irc.reply('You must be at least a TriviaMod in {0} to use this command.'.format(channel))
             return
         
-        dbLocation = self.registryValue('admin.sqlitedb')
+        dbLocation = self.registryValue('admin.db')
         threadStorage = Storage(dbLocation)
         if self.registryValue('general.globalstats'):
             report = threadStorage.getReportById(num)
@@ -3717,7 +3717,7 @@ class TriviaTime(callbacks.Plugin):
             irc.reply('You must be at least a TriviaMod in {0} to use this command.'.format(channel))
             return
         
-        dbLocation = self.registryValue('admin.sqlitedb')
+        dbLocation = self.registryValue('admin.db')
         threadStorage = Storage(dbLocation)
         if self.registryValue('general.globalstats'):
             q = threadStorage.getTemporaryQuestionById(num)
@@ -3772,7 +3772,7 @@ class TriviaTime(callbacks.Plugin):
                 if numAsked == roundNum and questionOver == False:
                     irc.reply('Sorry, you must wait until the current question is over to report it.')
                     return
-        dbLocation = self.registryValue('admin.sqlitedb')
+        dbLocation = self.registryValue('admin.db')
         threadStorage = Storage(dbLocation)
         question = threadStorage.getQuestionByRound(roundNum, channel)
         if question:
@@ -3831,7 +3831,7 @@ class TriviaTime(callbacks.Plugin):
             return
         
         username = msg.nick
-        dbLocation = self.registryValue('admin.sqlitedb')
+        dbLocation = self.registryValue('admin.db')
         threadStorage = Storage(dbLocation)
         if not threadStorage.questionIdExists(questionNum):
             irc.error('That question does not exist.')
@@ -3851,7 +3851,7 @@ class TriviaTime(callbacks.Plugin):
         username = self.getUsername(msg.nick, msg.prefix)
         usernameCanonical = ircutils.toLower(username)
 
-        dbLocation = self.registryValue('admin.sqlitedb')
+        dbLocation = self.registryValue('admin.db')
         threadStorage = Storage(dbLocation)
         timeSeconds = self.registryValue('skip.skipActiveTime', channel)
         totalActive = threadStorage.getNumUserActiveIn(channel, timeSeconds)
@@ -3899,7 +3899,7 @@ class TriviaTime(callbacks.Plugin):
             Show a player's rank, score & questions asked for day, month, and year.
             Channel is only required when using the command outside of a channel.
         """
-        dbLocation = self.registryValue('admin.sqlitedb')
+        dbLocation = self.registryValue('admin.db')
         threadStorage = Storage(dbLocation)
         if self.registryValue('general.globalStats'):
             stat = threadStorage.getUserStat(username, None)
@@ -3942,7 +3942,7 @@ class TriviaTime(callbacks.Plugin):
             return
         
         if num is not None:
-            dbLocation = self.registryValue('admin.sqlitedb')
+            dbLocation = self.registryValue('admin.db')
             threadStorage = Storage(dbLocation)
             if self.registryValue('general.globalstats'):
                 delete = threadStorage.getDeleteById(num)
@@ -3967,7 +3967,7 @@ class TriviaTime(callbacks.Plugin):
         Search question database for question at line number.
         Channel is only necessary when editing from outside of the channel.
         """
-        dbLocation = self.registryValue('admin.sqlitedb')
+        dbLocation = self.registryValue('admin.db')
         threadStorage = Storage(dbLocation)
         question = threadStorage.getQuestionById(num)
         if question:
@@ -3987,7 +3987,7 @@ class TriviaTime(callbacks.Plugin):
         if game is not None and num == game.numAsked and not game.questionOver:
             irc.error('The current question can\'t be displayed until it is over.')
         else:
-            dbLocation = self.registryValue('admin.sqlitedb')
+            dbLocation = self.registryValue('admin.db')
             threadStorage = Storage(dbLocation)
             question = threadStorage.getQuestionByRound(num, channel)
             if question:
@@ -4002,7 +4002,7 @@ class TriviaTime(callbacks.Plugin):
         Channel is only necessary when editing from outside of the channel.
         """        
         if num is not None:
-            dbLocation = self.registryValue('admin.sqlitedb')
+            dbLocation = self.registryValue('admin.db')
             threadStorage = Storage(dbLocation)
             if self.registryValue('general.globalstats'):
                 report = threadStorage.getReportById(num)
@@ -4036,7 +4036,7 @@ class TriviaTime(callbacks.Plugin):
             return
             
         if num is not None:
-            dbLocation = self.registryValue('admin.sqlitedb')
+            dbLocation = self.registryValue('admin.db')
             threadStorage = Storage(dbLocation)
             if self.registryValue('general.globalstats'):
                 edit = threadStorage.getEditById(num)
@@ -4071,7 +4071,7 @@ class TriviaTime(callbacks.Plugin):
             return
                     
         if num is not None:
-            dbLocation = self.registryValue('admin.sqlitedb')
+            dbLocation = self.registryValue('admin.db')
             threadStorage = Storage(dbLocation)
             if self.registryValue('general.globalstats'):
                 q = threadStorage.getTemporaryQuestionById(num)
@@ -4155,7 +4155,7 @@ class TriviaTime(callbacks.Plugin):
         
         userfrom = userfrom
         userto = userto
-        dbLocation = self.registryValue('admin.sqlitedb')
+        dbLocation = self.registryValue('admin.db')
         threadStorage = Storage(dbLocation)
         threadStorage.transferUserLogs(userfrom, userto, channel)
         irc.reply('Transferred all records from {0} to {1} in {2}.'.format(userfrom, userto, channel))
@@ -4170,7 +4170,7 @@ class TriviaTime(callbacks.Plugin):
         """
         num = max(num, 10)
         offset = num-9
-        dbLocation = self.registryValue('admin.sqlitedb')
+        dbLocation = self.registryValue('admin.db')
         threadStorage = Storage(dbLocation)
         if self.registryValue('general.globalStats'):
             tops = threadStorage.viewWeekTop10(None, num)
@@ -4195,7 +4195,7 @@ class TriviaTime(callbacks.Plugin):
         """
         num = max(num, 10)
         offset = num-9
-        dbLocation = self.registryValue('admin.sqlitedb')
+        dbLocation = self.registryValue('admin.db')
         threadStorage = Storage(dbLocation)
         if self.registryValue('general.globalStats'):
             tops = threadStorage.viewYearTop10(None, num)

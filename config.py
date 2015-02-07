@@ -30,13 +30,13 @@ conf.registerGroup(TriviaTime, 'hints')
 
 # CONFIGURATION
 # file locations for database and question
-conf.registerChannelValue(TriviaTime.admin, 'sqlitedb', 
+conf.registerChannelValue(TriviaTime.admin, 'db', 
         registry.NormalizedString("""plugins/TriviaTime/storage/db/trivia.db""", 
                 """Location of sqlite database file""")
         )
 
-conf.registerChannelValue(TriviaTime.admin, 'quizfile', 
-        registry.NormalizedString("""plugins/TriviaTime/storage/samplequestions""", 
+conf.registerChannelValue(TriviaTime.admin, 'file', 
+        registry.NormalizedString("""plugins/TriviaTime/storage/questions""", 
                 """Location of question file. Reload the plugin if changed.""")
         )
 
