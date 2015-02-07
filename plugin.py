@@ -3506,8 +3506,6 @@ class TriviaTime(callbacks.Plugin):
         numActiveThisWeek = threadStorage.getNumActiveThisWeek(channel)
         infoText = ' TriviaTime v1.3 by Trivialand on Freenode: https://github.com/tannn/TriviaTime '
         self.reply(irc, msg, infoText, prefixNick=False)
-        infoText = ' Time is %s ' % (time.asctime(time.localtime(),))
-        self.reply(irc, msg, infoText, prefixNick=False)
         infoText = '\x02 %d Users\x02 on scoreboard with \x02%d Active This Week\x02' % (totalUsersEver, numActiveThisWeek)
         self.reply(irc, msg, infoText, prefixNick=False)
         numKaos = threadStorage.getNumKAOS()
