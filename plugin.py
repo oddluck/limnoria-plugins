@@ -27,6 +27,9 @@ import hashlib
 
 #A list with items that are removed when timeout is reached, values must be unique
 class TimeoutList:
+    """
+    A dict wrapper used to store timeout values for unique usernames.
+    """
     def __init__(self, timeout):
         self.timeout = timeout
         self.dict = {}
@@ -109,22 +112,16 @@ class Game:
         correctAnswerFound = False
         correctAnswer = ''
 
-        attempt = str.lower(msg.args[1])
-        attempt = self.removeAccents(attempt)
-        attempt = self.removeExtraSpaces(attempt)
+        attempt = self.normalizeString(msg.args[1])
 
         # was a correct answer guessed?
         for ans in self.alternativeAnswers:
-            normalizedAns = self.removeAccents(ans)
-            normalizedAns = self.removeExtraSpaces(normalizedAns)
-            normalizedAns = str.lower(normalizedAns)
+            normalizedAns = self.normalizeString(ans)
             if normalizedAns == attempt and normalizedAns not in self.guessedAnswers:
                 correctAnswerFound = True
                 correctAnswer = ans
         for ans in self.answers:
-            normalizedAns = self.removeAccents(ans)
-            normalizedAns = self.removeExtraSpaces(normalizedAns)
-            normalizedAns = str.lower(normalizedAns)
+            normalizedAns = self.normalizeString(ans)
             if normalizedAns == attempt and normalizedAns not in self.guessedAnswers:
                 correctAnswerFound = True
                 correctAnswer = ans
@@ -548,6 +545,9 @@ class Game:
         self.queueEvent(0, self.loopEvent)
         self.askedAt = time.time()
 
+    def normalizeString(self, s):
+        return str.lower(self.removeExtraSpaces(self.removeAccents(s)))
+        
     def queueEvent(self, hintTime, func):
         """
             Create a new timer event for loopEvent call
@@ -3039,9 +3039,9 @@ class TriviaTime(callbacks.Plugin):
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = Storage(dbLocation)
         if self.registryValue('general.globalstats'):
-            delete = self.storage.getDeleteById(num)
+            delete = threadStorage.getDeleteById(num)
         else:
-            delete = self.storage.getDeleteById(num, channel)
+            delete = threadStorage.getDeleteById(num, channel)
             
         if delete:
             if username == delete['username']:
@@ -3078,9 +3078,9 @@ class TriviaTime(callbacks.Plugin):
         dbLocation = self.registryValue('admin.sqlitedb')
         threadStorage = Storage(dbLocation)
         if self.registryValue('general.globalstats'):
-            edit = self.storage.getEditById(num)
+            edit = threadStorage.getEditById(num)
         else:
-            edit = self.storage.getEditById(num, channel)
+            edit = threadStorage.getEditById(num, channel)
             
         if edit:
             if username == edit['username']:
