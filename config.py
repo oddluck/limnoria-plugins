@@ -106,7 +106,7 @@ conf.registerChannelValue(TriviaTime.voice, 'enableVoice',
                 """Voice top players for week, month, and year""")
         )
         
-conf.registerChannelValue(TriviaTime.hint, 'enableExtraHints',
+conf.registerChannelValue(TriviaTime.hints, 'enableExtraHints',
         registry.Boolean(True,
                 """Shows extra hint using command. Rate-limited by default""")
         )

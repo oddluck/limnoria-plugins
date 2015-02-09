@@ -2793,7 +2793,7 @@ class TriviaTime(callbacks.Plugin):
                 if game.question.find("KAOS:") == 0:
                     game.getRemainingKAOS()
                 else:
-                    if self.registryValue('general.enableExtraHints', channel):
+                    if self.registryValue('hints.enableExtraHints', channel):
                         game.hintTimeoutList.setTimeout(extraHintTime)
                         if not game.questionOver:
                             if game.hintTimeoutList.has(usernameCanonical):
