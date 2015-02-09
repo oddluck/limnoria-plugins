@@ -63,7 +63,7 @@ class Game:
     """
     def __init__(self, irc, channel, base):
         # constants
-        self.unmaskedChars = " -'\"_=+&%$#@!~`[]{}?.,<>|\\/:;"
+        self.unmaskedChars = " -'\"_=+&%$#@!~`()[]{}?.,<>|\\/:;"
         
         # get utilities from base plugin
         self.base = base
@@ -109,141 +109,150 @@ class Game:
         channel = msg.args[0]
         # is it a user?
         username = self.base.getUsername(msg.nick, msg.prefix)
+        usernameCanonical = ircutils.toLower(username)
         correctAnswerFound = False
         correctAnswer = ''
 
         attempt = self.normalizeString(msg.args[1])
 
-        # was a correct answer guessed?
-        for ans in self.alternativeAnswers:
-            normalizedAns = self.normalizeString(ans)
-            if normalizedAns == attempt and normalizedAns not in self.guessedAnswers:
-                correctAnswerFound = True
-                correctAnswer = ans
+        # Check for a correct answer that hasn't already been guessed
         for ans in self.answers:
             normalizedAns = self.normalizeString(ans)
             if normalizedAns == attempt and normalizedAns not in self.guessedAnswers:
                 correctAnswerFound = True
                 correctAnswer = ans
 
-        if correctAnswerFound:
-            dbLocation = self.registryValue('admin.db')
-            threadStorage = Storage(dbLocation)
-            # time stats
-            timeElapsed = float(time.time() - self.askedAt)
-            pointsAdded = self.points
+        # Immediately return if not a correct answer
+        if not correctAnswerFound:
+            return
+        
+        dbLocation = self.registryValue('admin.db')
+        threadStorage = Storage(dbLocation)
+        
+        timeElapsed = float(time.time() - self.askedAt)
+        points = self.questionPoints
 
-            # Past first hint? deduct points
-            if self.hintsCounter > 1:
-                pointsAdded /= 2 * (self.hintsCounter - 1)
+        # Add answer to list so we can cross it out
+        if self.guessedAnswers.count(attempt) == 0:
+            self.guessedAnswers.append(attempt)
+        
+        # Past first hint? deduct points
+        if self.hintsCounter > 1:
+            points /= 2 * (self.hintsCounter - 1)
 
-            if len(self.answers) > 1:
-                if ircutils.toLower(username) not in self.correctPlayers:
-                    self.correctPlayers[ircutils.toLower(username)] = 1
-                self.correctPlayers[ircutils.toLower(username)] += 1
-                # KAOS? divide points
-                pointsAdded /= (len(self.answers) + 1)
-
-                # Convert score to int
-                pointsAdded = int(pointsAdded)
-
-                self.totalAmountWon += pointsAdded
-                # report the correct guess for kaos item
-                threadStorage.updateUserLog(username, self.channel, pointsAdded,0, 0)
-                self.lastAnswer = time.time()
-                self.sendMessage('\x02%s\x02 gets \x02%d\x02 points for: \x02%s\x02' % (username, pointsAdded, correctAnswer))
-            else:
-                # Normal question solved
-                streakBonus = 0
-                minStreak = self.registryValue('general.minBreakStreak', channel)
-                # update streak info
-                if ircutils.toLower(self.lastWinner) != ircutils.toLower(username):
-                    #streakbreak
-                    if self.streak > minStreak:
-                        streakBonus = pointsAdded * .05
-                        self.sendMessage('\x02%s\x02 broke \x02%s\x02\'s streak of \x02%d\x02!' % (username, self.lastWinner, self.streak)) 
-                    self.lastWinner = ircutils.toLower(username)
-                    self.streak = 1
-                else:
-                    self.streak += 1
-                    streakBonus = pointsAdded * .01 * (self.streak-1)
-                    if streakBonus > pointsAdded * .5:
-                        streakBonus = pointsAdded * .5
-                threadStorage.updateGameStreak(self.channel, self.lastWinner, self.streak)
-                threadStorage.updateUserHighestStreak(self.lastWinner, self.streak)
-                threadStorage.updateGameLongestStreak(self.channel, username, self.streak)
-                # Convert score to int
-                pointsAdded = int(pointsAdded)
-
-                # report correct guess, and show players streak
-                threadStorage.updateUserLog(username, self.channel, (pointsAdded+streakBonus), 1, timeElapsed)
-                self.lastAnswer = time.time()
-                self.sendMessage('DING DING DING, \x02%s\x02 got the correct answer, \x02%s\x02, in \x02%0.4f\x02 seconds for \x02%d(+%d)\x02 points!' % (username, correctAnswer, timeElapsed, pointsAdded, streakBonus))
-
-                if self.registryValue('general.showStats', self.channel):
-                    if self.registryValue('general.globalStats'):
-                        stat = threadStorage.getUserStat(username, None)
-                    else:
-                        stat = threadStorage.getUserStat(username, self.channel)
-                    
-                    if stat:
-                        todaysScore = stat['points_day']
-                        weekScore = stat['points_week']
-                        monthScore = stat['points_month']
-                        recapMessageList = ['\x02%s\x02 has won \x02%d\x02 in a row!' % (username, self.streak)]
-                        recapMessageList.append(' Total Points')
-                        recapMessageList.append(' TODAY: \x02%d\x02' % (todaysScore))
-                        if weekScore > pointsAdded:
-                            recapMessageList.append(' this WEEK \x02%d\x02' % (weekScore))
-                        if weekScore > pointsAdded or todaysScore > pointsAdded:
-                            if monthScore > pointsAdded:
-                                recapMessageList.append(' &')
-                        if monthScore > pointsAdded:
-                            recapMessageList.append(' this MONTH: \x02%d\x02' % (monthScore))
-                        recapMessage = ''.join(recapMessageList)
-                        self.sendMessage(recapMessage)
-
-            # add guessed word to list so we can cross it out
-            if self.guessedAnswers.count(attempt) == 0:
-                self.guessedAnswers.append(attempt)
+        # Handle a correct answer for a KAOS question
+        if self.questionType = 'kaos':
+            if usernameCanonical not in self.correctPlayers:
+                self.correctPlayers[usernameCanonical] = 0
+            self.correctPlayers[usernameCanonical] += 1
+            # KAOS? divide points and convert score to int
+            points = int(points / (len(self.answers) + 1))
+            self.totalAmountWon += points
+            
+            # Update database with the correct guess for KAOS item
+            threadStorage.updateUserLog(username, self.channel, points, 0, 0)
+            self.lastAnswer = time.time()
+            self.sendMessage('\x02%s\x02 gets \x02%d\x02 points for: \x02%s\x02' % (username, points, correctAnswer))
+        
             # can show more hints now
             self.shownHint = False
-
-            # Have all of the answers been found?
+        
+            # Check if all answers have been answered
             if len(self.guessedAnswers) == len(self.answers):
-                # question is over
                 self.questionOver = True
-                if len(self.guessedAnswers) > 1:
-                    bonusPoints = 0
-                    if len(self.correctPlayers) >= 2:
-                        if len(self.answers) >= 9:
-                            bonusPoints = self.registryValue('kaos.payoutKAOS', self.channel)
-
-                    bonusPointsText = ''
+                
+                # Check if question qualifies for bonus points
+                if len(self.correctPlayers) >= 2 and len(self.answers) >= 9:
+                    bonusPoints = self.registryValue('kaos.payoutKAOS', self.channel)
                     if bonusPoints > 0:
                         for nick in self.correctPlayers:
                             threadStorage.updateUserLog(nick, self.channel, bonusPoints, 0, 0)
                         bonusPointsText = 'Everyone gets a %d Point Bonus!!' % int(bonusPoints)
 
-                    # give a special message if it was KAOS
-                    self.sendMessage('All KAOS answered! %s' % bonusPointsText)
-                    self.sendMessage('Total Awarded: \x02%d\x02 Points to \x02%d\x02 Players' % (int(self.totalAmountWon), len(self.correctPlayers)))
+                # Give a special KAOS message 
+                self.sendMessage('All KAOS answered! %s' % bonusPointsText)
+                self.sendMessage('Total Awarded: \x02%d\x02 Points to \x02%d\x02 Players' % (int(self.totalAmountWon), len(self.correctPlayers)))
 
+                threadStorage.updateQuestionStats(self.questionID, 1, 0)
                 self.removeEvent()
-
-                threadStorage.updateQuestionStats(self.lineNumber, 1, 0)
-
+                
                 if self.stopPending == True:
                     self.stop()
                     return
-
-                waitTime = self.registryValue('general.waitTime',self.channel)
+            
+                # Queue next question
+                waitTime = self.registryValue('general.waitTime', self.channel)
                 if waitTime < 2:
                     waitTime = 2
                     log.error('waitTime was set too low (<2 seconds). Setting to 2 seconds')
                 waitTime = time.time() + waitTime
                 self.queueEvent(waitTime, self.nextQuestion)
-            #self.base.handleVoice(self.irc, username, channel)
+                
+        # Handle a correct answer for a regular question
+        else:
+            self.questionOver = True
+            streakBonus = 0
+            minStreak = self.registryValue('general.minBreakStreak', channel)
+            # update streak info
+            if ircutils.toLower(self.lastWinner) != usernameCanonical:
+                #streakbreak
+                if self.streak > minStreak:
+                    streakBonus = points * .05
+                    self.sendMessage('\x02%s\x02 broke \x02%s\x02\'s streak of \x02%d\x02!' % (username, self.lastWinner, self.streak)) 
+                self.lastWinner = username
+                self.streak = 1
+            else:
+                self.streak += 1
+                streakBonus = points * .01 * (self.streak-1)
+                streakBonus = min(steakBonus, points * .5)
+
+            # Update database
+            threadStorage.updateGameStreak(self.channel, self.lastWinner, self.streak)
+            threadStorage.updateUserHighestStreak(self.lastWinner, self.streak)
+            threadStorage.updateGameLongestStreak(self.channel, username, self.streak)
+            threadStorage.updateUserLog(username, self.channel, int(points + streakBonus), 1, timeElapsed)
+            threadStorage.updateQuestionStats(self.questionID, 1, 0)
+            
+            # Show congratulatory message
+            self.lastAnswer = time.time()
+            self.sendMessage('DING DING DING, \x02%s\x02 got the correct answer, \x02%s\x02, in \x02%0.4f\x02 seconds for \x02%d(+%d)\x02 points!' % (username, correctAnswer, timeElapsed, points, streakBonus))
+
+            if self.registryValue('general.showStats', self.channel):
+                if self.registryValue('general.globalStats'):
+                    stat = threadStorage.getUserStat(username, None)
+                else:
+                    stat = threadStorage.getUserStat(username, self.channel)
+                
+                if stat:
+                    todaysScore = stat['points_day']
+                    weekScore = stat['points_week']
+                    monthScore = stat['points_month']
+                    recapMessageList = ['\x02%s\x02 has won \x02%d\x02 in a row!' % (username, self.streak)]
+                    recapMessageList.append(' Total Points')
+                    recapMessageList.append(' TODAY: \x02%d\x02' % (todaysScore))
+                    if weekScore > points:
+                        recapMessageList.append(' this WEEK \x02%d\x02' % (weekScore))
+                    if weekScore > points or todaysScore > points:
+                        if monthScore > points:
+                            recapMessageList.append(' &')
+                    if monthScore > points:
+                        recapMessageList.append(' this MONTH: \x02%d\x02' % (monthScore))
+                    recapMessage = ''.join(recapMessageList)
+                    self.sendMessage(recapMessage)
+            
+            self.removeEvent()
+            
+            if self.stopPending == True:
+                self.stop()
+                return
+            
+            # Queue next question
+            waitTime = self.registryValue('general.waitTime',self.channel)
+            if waitTime < 2:
+                waitTime = 2
+                log.error('waitTime was set too low (<2 seconds). Setting to 2 seconds')
+            waitTime = time.time() + waitTime
+            self.queueEvent(waitTime, self.nextQuestion)
 
     def getHintString(self, hintNum=None):
         if hintNum == None:
@@ -485,8 +494,8 @@ class Game:
         """
         inactivityTime = self.registryValue('general.timeout')
         if self.lastAnswer < time.time() - inactivityTime:
-            self.stop()
             self.sendMessage('Stopping due to inactivity')
+            self.stop()
             return
         elif self.stopPending == True:
             self.stop()
@@ -497,17 +506,13 @@ class Game:
         self.questionRepeated = False
         self.shownHint = False
         self.skipVoteCount = {}
-        self.question = ''
-        self.answers = []
-        self.alternativeAnswers = []
         self.guessedAnswers = []
         self.totalAmountWon = 0
-        self.lineNumber = -1
         self.correctPlayers = {}
         self.hintsCounter = 0
         self.numAsked += 1
 
-        # grab the next q
+        # grab the next question
         numQuestion = self.storage.getNumQuestions()
         if numQuestion == 0:
             self.sendMessage('There are no questions. Stopping. If you are an admin, use the addfile command to add questions to the database.')
@@ -522,24 +527,16 @@ class Game:
             self.sendMessage('All of the questions have been asked, shuffling and starting over')
 
         self.storage.updateGame(self.channel, self.numAsked) #increment q's asked
+        
         retrievedQuestion = self.retrieveQuestion()
-
-        self.points = self.registryValue('questions.defaultPoints', self.channel)
-        for x in retrievedQuestion:
-            if 'q' == x:
-               self.question = retrievedQuestion['q']
-            if 'a' == x:
-                self.answers = retrievedQuestion['a']
-            if 'aa' == x:
-                self.alternativeAnswers = retrievedQuestion['aa']
-            if 'p' == x:
-                self.points = retrievedQuestion['p']
-            if '#' == x:
-                self.lineNumber = retrievedQuestion['#']
+        self.questionID = retrievedQuestion['id']
+        self.questionType = retrievedQuestion['type']
+        self.question = retrievedQuestion['question']
+        self.answers = retrievedQuestion['answers']
+        self.questionPoints = retrievedQuestion['points']
 
         # store the question number so it can be reported
-        self.storage.insertGameLog(self.channel, self.numAsked,
-                            self.lineNumber, self.question)
+        self.storage.insertGameLog(self.channel, self.numAsked, self.questionID, self.question)
 
         self.sendQuestion()
         self.queueEvent(0, self.loopEvent)
@@ -585,70 +582,60 @@ class Game:
             pass
 
     def retrieveQuestion(self):
-        # temporary function to get data
-        lineNumber, question, timesAnswered, timesMissed = self.retrieveQuestionFromSql()
-        answer = question.split('*', 1)
-        if len(answer) > 1:
-            question = answer[0].strip()
-            answers = answer[1].split('*')
-            answer = []
-            alternativeAnswers = []
+        # Parse and store question data retrieved from database
+        rawData = self.storage.getRandomQuestionNotAsked(self.channel, self.roundStartedAt)
+        rawQuestion = rawData['question']
+        netTimesAnswered = rawData['num_answered'] - rawData['num_missed']
+        questionParts = rawQuestion.split('*')
+        
+        if len(questionParts) > 1:
+            question = questionParts[0].strip()
+            answers = []
+            # Parse question and answers
             if ircutils.toLower(question[:4]) == 'kaos':
-                for ans in answers:
-                    if answer.count(ans) == 0:
-                        answer.append(str(ans).strip())
+                questionType = 'kaos'
+                for ans in questionParts[1:]:
+                    if answers.count(ans) == 0: # Filter out duplicate answers
+                        answers.append(str(ans).strip())
             elif ircutils.toLower(question[:5]) == 'uword':
-                for ans in answers:
-                    answer.append(str(ans).strip())
-                    question = 'Unscramble the letters: '
-                    shuffledLetters = list(unicode(ans.decode('utf-8')))
-                    random.shuffle(shuffledLetters)
-                    for letter in shuffledLetters:
-                        question += letter
-                        question += ' '
-                    question = question.encode('utf-8')
-                    break
+                questionType = 'uword'
+                ans = questionParts[1]
+                answers.append(str(ans).strip())
+                shuffledLetters = list(unicode(ans.decode('utf-8')))
+                random.shuffle(shuffledLetters)
+                question = 'Unscramble the letters: {0}'.format(' '.join(shuffledLetters)).encode('utf-8')
             else:
-                for ans in answers:
-                    if answer == []:
-                        answer.append(str(ans).strip())
-                    else:
-                        alternativeAnswers.append(str(ans).strip())
+                questionType = 'regular'
+                for ans in questionParts[1:]:
+                    answers.append(str(ans).strip())
 
-            points = self.registryValue('questions.defaultPoints', self.channel)
-            if len(answer) > 1:
+            if questionType == 'kaos':
                 points = self.registryValue('kaos.defaultKAOS', self.channel) * len(answers)
+            else:
+                points = self.registryValue('questions.defaultPoints', self.channel)
 
-            additionalPoints = 0
-            additionalPoints += timesAnswered * -5
-            additionalPoints += timesMissed * 5
-            if additionalPoints > 200:
-                additionalPoints = 200
-            if additionalPoints < -200:
-                additionalPoints = -200
-            points += additionalPoints
-            return {'p':points,
-                    'q':question,
-                    'a':answer,
-                    'aa':alternativeAnswers,
-                    '#':lineNumber
+            # Calculate additional points
+            addPoints = -5 * netTimesAnswered
+            addPoints = min(addPoints, 200)
+            addPoints = max(addPoints, -200)
+
+            return {'id': rawData['id'],
+                    'type': questionType,
+                    'points': points + addPoints,
+                    'question': question,
+                    'answers': answers
                     }
         else:
-            log.info('Bad question found on line#%d' % lineNumber)
+            log.info('Question #%d is invalid.' % rawData['id'])
             # TODO report bad question
 
         # default question, everything went wrong with grabbing question
-        return {'#':lineNumber,
-                'p':10050,
-                'q':'KAOS: The 10 Worst U.S. Presidents (Last Name Only)? (This is a panic question, if you see this report this question. it is malformed.)',
-                'a':['Bush', 'Nixon', 'Hoover', 'Grant', 'Johnson',
-                        'Ford', 'Reagan', 'Coolidge', 'Pierce'],
-                'aa':['Obama']
+        return {'id': rawData['id'],
+                'type': 'kaos',
+                'points': 10050,
+                'question': 'KAOS: The 10 Worst U.S. Presidents (Last Name Only)? (This is a panic question, if you see this report this question. it is malformed.)',
+                'answers': ['Bush', 'Nixon', 'Hoover', 'Grant', 'Johnson', 'Ford', 'Reagan', 'Coolidge', 'Pierce']
                 }
-
-    def retrieveQuestionFromSql(self):
-        question = self.storage.getRandomQuestionNotAsked(self.channel, self.roundStartedAt)
-        return (question['id'], question['question'], question['num_answered'], question['num_missed'])
 
     def sendMessage(self, msg, color=None, bgcolor=None):
         """ <msg>, [<color>], [<bgcolor>]
@@ -658,7 +645,7 @@ class Game:
         self.irc.sendMsg(ircmsgs.privmsg(self.channel, '%s' % msg))
 
     def sendQuestion(self):
-        question = self.question.rstrip()
+        question = self.question
         if question[-1:] != '?':
             question += '?'
 
