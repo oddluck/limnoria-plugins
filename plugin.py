@@ -176,17 +176,16 @@ class Game:
                 threadStorage.updateQuestionStats(self.questionID, 1, 0)
                 self.removeEvent()
                 
+                # Check for any pending stops, otherwise queue next question
                 if self.stopPending == True:
                     self.stop()
-                    return
-            
-                # Queue next question
-                waitTime = self.registryValue('general.waitTime', self.channel)
-                if waitTime < 2:
-                    waitTime = 2
-                    log.error('waitTime was set too low (<2 seconds). Setting to 2 seconds')
-                waitTime = time.time() + waitTime
-                self.queueEvent(waitTime, self.nextQuestion)
+                else:
+                    waitTime = self.registryValue('general.waitTime', self.channel)
+                    if waitTime < 2:
+                        waitTime = 2
+                        log.error('waitTime was set too low (<2 seconds). Setting to 2 seconds')
+                    waitTime = time.time() + waitTime
+                    self.queueEvent(waitTime, self.nextQuestion)
                 
         # Handle a correct answer for a regular question
         else:
@@ -242,17 +241,16 @@ class Game:
             
             self.removeEvent()
             
+            # Check for any pending stops, otherwise queue next question
             if self.stopPending == True:
                 self.stop()
-                return
-            
-            # Queue next question
-            waitTime = self.registryValue('general.waitTime',self.channel)
-            if waitTime < 2:
-                waitTime = 2
-                log.error('waitTime was set too low (<2 seconds). Setting to 2 seconds')
-            waitTime = time.time() + waitTime
-            self.queueEvent(waitTime, self.nextQuestion)
+            else:
+                waitTime = self.registryValue('general.waitTime',self.channel)
+                if waitTime < 2:
+                    waitTime = 2
+                    log.error('waitTime was set too low (<2 seconds). Setting to 2 seconds')
+                waitTime = time.time() + waitTime
+                self.queueEvent(waitTime, self.nextQuestion)
 
     def getHintString(self, hintNum=None):
         if hintNum == None:
@@ -394,7 +392,7 @@ class Game:
         if self.shownHint == False:
             self.shownHint = True
             if len(self.answers) == 1:
-                self.sendMessage( self.getOtherHintString())
+                self.sendMessage(self.getOtherHintString())
 
     def getRemainingKAOS(self):
         if self.questionOver:
@@ -418,48 +416,33 @@ class Game:
         """
         # out of hints to give?
         if self.hintsCounter >= 3:
-            answer = ''
-            # create a string to show answers missed
-            for ans in self.answers:
-                # dont show guessed values at loss
-                if ircutils.toLower(ans) in self.guessedAnswers:
-                    continue
-                if answer != '':
-                    answer += ' '
-                if len(self.answers) > 1:
-                    answer += '['
-                answer += ans
-                if len(self.answers) > 1:
-                    answer += ']'
-            # Give failure message
-            if len(self.answers) > 1:
-                self.sendMessage( """Time's up! No one got \x02%s\x02""" % answer)
-
+            self.questionOver = True
+            
+            if self.questionType == 'kaos':
+                # Create a string to show answers missed
+                missedAnswers = ''
+                for ans in self.answers:
+                    if ircutils.toLower(ans) not in self.guessedAnswers:
+                        missedAnswers += ' [{0}]'.format(ans)
+                self.sendMessage( """Time's up! No one got \x02%s\x02""" % missedAnswers.strip())
                 self.sendMessage("""Correctly Answered: \x02%d\x02 of \x02%d\x02 Total Awarded: \x02%d\x02 Points to \x02%d\x02 Players"""
                                 % (len(self.guessedAnswers), len(self.answers), int(self.totalAmountWon), len(self.correctPlayers))
                                 )
             else:
-                self.sendMessage( """Time's up! The answer was \x02%s\x02.""" % answer)
+                self.sendMessage( """Time's up! The answer was \x02%s\x02.""" % self.answers[0])
 
-            self.storage.updateQuestionStats(self.lineNumber, 0, 1)
+            self.storage.updateQuestionStats(self.questionID, 0, 1)
 
-            #reset stuff
-            self.answers = []
-            self.alternativeAnswers = []
-            self.question = ''
-            self.questionOver = True
-
+            # Check for any pending stops, otherwise queue next question
             if self.stopPending == True:
                 self.stop()
-                return
-
-            # provide next question
-            waitTime = self.registryValue('general.waitTime',self.channel)
-            if waitTime < 2:
-                waitTime = 2
-                log.error('waitTime was set too low (<2 seconds). Setting to 2 seconds')
-            waitTime = time.time() + waitTime
-            self.queueEvent(waitTime, self.nextQuestion)
+            else
+                waitTime = self.registryValue('general.waitTime',self.channel)
+                if waitTime < 2:
+                    waitTime = 2
+                    log.error('waitTime was set too low (<2 seconds). Setting to 2 seconds')
+                waitTime = time.time() + waitTime
+                self.queueEvent(waitTime, self.nextQuestion)
         else:
             # give out more hints
             self.nextHint()
@@ -476,7 +459,7 @@ class Game:
         self.shownHint = False
 
         hintTime = 2
-        if len(self.answers) > 1:
+        if self.questionType == 'kaos':
             hintTime = self.registryValue('kaos.hintKAOS', self.channel)
         else:
             hintTime = self.registryValue('questions.hintTime', self.channel)
@@ -519,6 +502,7 @@ class Game:
             self.stop()
             return
 
+        # Check if we've asked all questions
         numQuestionsLeftInRound = self.storage.getNumQuestionsNotAsked(self.channel, self.roundStartedAt)
         if numQuestionsLeftInRound == 0:
             self.numAsked = 1
@@ -526,7 +510,8 @@ class Game:
             self.storage.updateGameRoundStarted(self.channel, self.roundStartedAt)
             self.sendMessage('All of the questions have been asked, shuffling and starting over')
 
-        self.storage.updateGame(self.channel, self.numAsked) #increment q's asked
+        # Increment questions asked (ie. round number)
+        self.storage.updateGame(self.channel, self.numAsked) 
         
         retrievedQuestion = self.retrieveQuestion()
         self.questionID = retrievedQuestion['id']
@@ -582,7 +567,7 @@ class Game:
             pass
 
     def retrieveQuestion(self):
-        # Parse and store question data retrieved from database
+        # Retrieve and parse question data from database
         rawData = self.storage.getRandomQuestionNotAsked(self.channel, self.roundStartedAt)
         rawQuestion = rawData['question']
         netTimesAnswered = rawData['num_answered'] - rawData['num_missed']
@@ -653,7 +638,7 @@ class Game:
         questionText = '\x02\x0303%s' % (question)
 
         # KAOS? report # of answers
-        if len(self.answers) > 1:
+        if self.questionType == 'kaos':
             questionText += ' %d possible answers' % (len(self.answers))
 
         questionMessageString = ' %s: %s' % (self.numAsked, questionText)
