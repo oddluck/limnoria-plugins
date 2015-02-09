@@ -2793,13 +2793,14 @@ class TriviaTime(callbacks.Plugin):
                 if game.question.find("KAOS:") == 0:
                     game.getRemainingKAOS()
                 else:
-                    game.hintTimeoutList.setTimeout(extraHintTime)
-                    if not game.questionOver:
-                        if game.hintTimeoutList.has(usernameCanonical):
-                            self.reply(irc, msg, 'You must wait %d seconds to be able to use the extra hint command.' % (game.hintTimeoutList.getTimeLeft(usernameCanonical)), notice=True)
-                        else:
-                            game.hintTimeoutList.append(usernameCanonical)
-                            game.getOtherHint()
+                    if self.registryValue('general.enableExtraHints', channel):
+                        game.hintTimeoutList.setTimeout(extraHintTime)
+                        if not game.questionOver:
+                            if game.hintTimeoutList.has(usernameCanonical):
+                                self.reply(irc, msg, 'You must wait %d seconds to be able to use the extra hint command.' % (game.hintTimeoutList.getTimeLeft(usernameCanonical)), notice=True)
+                            else:
+                                game.hintTimeoutList.append(usernameCanonical)
+                                game.getOtherHint()
             else:
                 # check the answer
                 game.checkAnswer(msg)
