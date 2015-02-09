@@ -328,12 +328,11 @@ class Game:
         hintsList = ['']
         unmasked = 0
         lettersInARow = sizeOfUnmasked
-        for i in range(len(letters)):
-            masked = letters[i]
-            if masked in self.unmaskedChars:
-                hintsList.append(masked)
-            elif str.lower(self.removeAccents(masked.encode('utf-8'))) in 'aeiou' and unmasked < (len(letters)-1) and lettersInARow < 3:
-                hintsList.append(masked)
+        for char in letters:
+            if char in self.unmaskedChars:
+                hintsList.append(char)
+            elif str.lower(self.removeAccents(char.encode('utf-8'))) in 'aeiou' and unmasked < (len(letters)-1) and lettersInARow < 3:
+                hintsList.append(char)
                 lettersInARow += 1
                 unmasked += 1
             else:
@@ -347,23 +346,22 @@ class Game:
         hintRatio = self.registryValue('hints.hintRatio') # % to show each hint
         hints = ''
         unmasked = 0
-        maskedInARow=0
-        lettersInARow=sizeOfUnmasked
-        for i in range(len(letters)):
-            masked = letters[i]
-            if masked in self.unmaskedChars:
-                hints += masked
+        maskedInARow = 0
+        lettersInARow = sizeOfUnmasked
+        for char in letters:
+            if char in self.unmaskedChars:
+                hints += char
                 unmasked += 1
             elif maskedInARow > 2 and unmasked < (len(letters)-1):
                 lettersInARow += 1
                 unmasked += 1
                 maskedInARow = 0
-                hints += letters[i]
+                hints += char
             elif lettersInARow < 3 and unmasked < (len(letters)-1) and random.randint(0,100) < hintRatio:
                 lettersInARow += 1
                 unmasked += 1
                 maskedInARow = 0
-                hints += letters[i]
+                hints += char
             else:
                 maskedInARow += 1
                 lettersInARow=0
@@ -478,8 +476,8 @@ class Game:
             hintTime = self.registryValue('questions.hintTime', self.channel)
 
         if hintTime < 2:
-            timout = 2
-            log.error('hintTime was set too low(<2 seconds). setting to 2 seconds')
+            hintTime = 2
+            log.error('hintTime was set too low (<2 seconds). Setting to 2 seconds.')
 
         hintTime += time.time()
         self.queueEvent(hintTime, self.loopEvent)
@@ -502,6 +500,7 @@ class Game:
         self.questionRepeated = False
         self.shownHint = False
         self.skipVoteCount = {}
+        self.question = ''
         self.guessedAnswers = []
         self.totalAmountWon = 0
         self.correctPlayers = {}
