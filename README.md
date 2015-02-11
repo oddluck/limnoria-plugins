@@ -12,7 +12,8 @@
 3. Unload TriviaTime. Since you are unloading the plugin, you will not have to restart or kill your bot.
 4. Do not delete any files in TriviaTime/storage during this process (aside from samplequestions, if you wish).
 5. Copy over the changed files.
-    * Version v1.2 files changed **README.md, plugin.py, config.py, __init__.py** (changes to config adds new value, removes another)
+    * Version v1.1 to v1.3 files changed **README.md, plugin.py, config.py, __init__.py, samplequestions -> questions** (changes to config adds new value, removes another, improves others)
+    * Version v1.2 to v1.3 files changed **README.md, plugin.py, config.py, __init__.py, samplequestions -> questions** (changes to config adds new value, improves others)
 6. If there were any changes to the database, they should be updated automatically. Otherwise, further instructions for updating that version will appear here.
 7. If config.py was changed, you will need to manually add your desired values again. You can compare the previous file (the backup) to the new file. (v1.1)
 8. Load TriviaTime again. If you followed the instructions correctly, you won't have an error.
