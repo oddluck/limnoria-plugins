@@ -30,20 +30,20 @@ conf.registerGroup(TriviaTime, 'hints')
 
 # CONFIGURATION
 # file locations for database and question
-conf.registerChannelValue(TriviaTime.admin, 'sqlitedb', 
+conf.registerChannelValue(TriviaTime.admin, 'db', 
         registry.NormalizedString("""plugins/TriviaTime/storage/db/trivia.db""", 
                 """Location of sqlite database file""")
         )
 
-conf.registerChannelValue(TriviaTime.admin, 'quizfile', 
-        registry.NormalizedString("""plugins/TriviaTime/storage/samplequestions""", 
+conf.registerChannelValue(TriviaTime.admin, 'file', 
+        registry.NormalizedString("""plugins/TriviaTime/storage/questions""", 
                 """Location of question file. Reload the plugin if changed.""")
         )
 
 # timeout, number of hints, values
 conf.registerChannelValue(TriviaTime.commands, 'extraHint', 
         registry.NormalizedString(""".""", 
-                """The command to show alternative hints""")
+                """The command to show extra hints and remaining KAOS""")
         )
 
 conf.registerChannelValue(TriviaTime.general, 'logGames',
@@ -77,7 +77,7 @@ conf.registerChannelValue(TriviaTime.skip, 'skipThreshold',
         )
 
 conf.registerChannelValue(TriviaTime.skip, 'skipActiveTime', 
-        registry.Integer((10*60), #10 minutes
+        registry.Integer((10*60),
                 """Amount of seconds a user is considered active after answering a question""")
         )
 
@@ -104,6 +104,11 @@ conf.registerChannelValue(TriviaTime.general, 'waitTime',
 conf.registerChannelValue(TriviaTime.voice, 'enableVoice',
         registry.Boolean(True,
                 """Voice top players for week, month, and year""")
+        )
+        
+conf.registerChannelValue(TriviaTime.hints, 'enableExtraHints',
+        registry.Boolean(True,
+                """Shows extra hint using command. Rate-limited by default""")
         )
 
 conf.registerChannelValue(TriviaTime.voice, 'timeoutVoice',
