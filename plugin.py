@@ -2360,7 +2360,7 @@ class Storage:
     def updateGameLongestStreak(self, channel, lastWinner, streak):
         c = self.conn.cursor()
         channelCanonical = ircutils.toLower(channel)
-        lastWinnerCanonical  = ircutils.toLower(lastWinner)
+        lastWinnerCanonical = ircutils.toLower(lastWinner)
         test = c.execute('''UPDATE triviagames 
                             SET longest_streak=?,
                                 longest_streak_holder=?,
@@ -2377,7 +2377,6 @@ class Storage:
             return self.insertGame(channel, 0, None)
         c = self.conn.cursor()
         channelCanonical = ircutils.toLower(channel)
-        lastWinner  = ircutils.toLower(lastWinner)
         test = c.execute('''UPDATE triviagames 
                             SET last_winner=?,
                                 streak=?
@@ -3598,7 +3597,7 @@ class TriviaTime(callbacks.Plugin):
             self.reply(irc, msg, 'Trivia is not currently running.')
         elif game.questionOver == False:
             self.reply(irc, msg, 'You must wait until the current question is over.')
-        elif game.lastWinner != ircutils.toLower(username):
+        elif ircutils.toLower(game.lastWinner) != ircutils.toLower(username):
             self.reply(irc, msg, 'You are not currently the streak holder.')
         elif game.streak < minStreak:
             self.reply(irc, msg, 'You do not have a large enough streak yet (%i of %i).' % (game.streak, minStreak))
