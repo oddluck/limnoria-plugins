@@ -229,7 +229,7 @@ class Game:
         
         if self.questionOver:
             self.removeEvent()
-            
+        
             # Check for any pending stops, otherwise queue next question
             if self.stopPending == True:
                 self.stop()
@@ -238,7 +238,7 @@ class Game:
                 if waitTime < 2:
                     waitTime = 2
                     log.error('waitTime was set too low (<2 seconds). Setting to 2 seconds')
-                waitTime = time.time() + waitTime
+                waitTime += time.time()
                 self.queueEvent(waitTime, self.nextQuestion)
 
     def getHintString(self, hintNum=None):
@@ -369,13 +369,12 @@ class Game:
         return hints
 
     def getExtraHintString(self):
-        charMask = self.registryValue('hints.charMask', self.channel)
         if self.questionType == 'kaos':
             return
+        
+        charMask = self.registryValue('hints.charMask', self.channel)
         ans = self.answers[0]
-
         hints = ' Extra Hint: \x02\x0312'
-
         divider = 0
 
         if len(ans) < 2:
@@ -383,13 +382,10 @@ class Game:
         elif self.hintsCounter == 1:
             divider = 1
         elif self.hintsCounter == 2:
-            divider = int((len(ans) * .25) + 1)
-            if divider > 4:
-                divider = 4
+            divider = min(int((len(ans) * .25) + 1), 4)
         elif self.hintsCounter == 3:
-            divider = int((len(ans) * .5) + 1)
-            if divider > 6:
-                divider = 6
+            divider = min(int((len(ans) * .5) + 1), 6)
+            
         if divider == len(ans):
             divider -= 1
 
@@ -452,7 +448,7 @@ class Game:
                 if waitTime < 2:
                     waitTime = 2
                     log.error('waitTime was set too low (<2 seconds). Setting to 2 seconds')
-                waitTime = time.time() + waitTime
+                waitTime += time.time()
                 self.queueEvent(waitTime, self.nextQuestion)
         else:
             # give out more hints
@@ -469,7 +465,6 @@ class Game:
         #reset hint shown
         self.shownHint = False
 
-        hintTime = 2
         if self.questionType == 'kaos':
             hintTime = self.registryValue('kaos.hintKAOS', self.channel)
         else:
@@ -542,15 +537,13 @@ class Game:
     def normalizeString(self, s):
         return str.lower(self.removeExtraSpaces(self.removeAccents(s)))
         
-    def queueEvent(self, hintTime, func):
+    def queueEvent(self, time, event):
         """
-            Create a new timer event for loopEvent call
+            Schedules a new event.
         """
-        # create a new thread for event next step to happen for [hintTime] seconds
-        def event():
-            func()
+        # Schedule a new event to happen at the specified time
         if self.active:
-            schedule.addEvent(event, hintTime, '%s.trivia' % self.channel)
+            schedule.addEvent(event, time, '%s.trivia' % self.channel)
 
     def removeAccents(self, text):
         text = unicode(text.decode('utf-8'))
@@ -563,16 +556,13 @@ class Game:
 
     def repeatQuestion(self):
         self.questionRepeated = True
-        try:
-            self.sendQuestion()
-        except AttributeError:
-            pass
+        self.sendQuestion()
 
     def removeEvent(self):
         """
-            Remove/cancel timer event
+            Remove/cancel trivia timer event
         """
-        # try and remove the current timer and thread, if we fail don't just carry on
+        # try and remove the current timer and thread, if we fail just carry on
         try:
             schedule.removeEvent('%s.trivia' % self.channel)
         except KeyError:
