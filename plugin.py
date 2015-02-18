@@ -3846,7 +3846,7 @@ class TriviaTime(callbacks.Plugin):
                 return
 
             # Update skip count
-            game.skipList.append = usernameCanonical
+            game.skipList.append(usernameCanonical)
             game.skipTimeoutList.append(usernameCanonical)
             self.reply(irc, msg, '%s voted to skip this question.' % username, prefixNick=False)
             skipPercent = len(game.skipList)/(totalActive*1.0)
