@@ -75,12 +75,12 @@ class Game:
         self.network = irc.network
 
         # reset stats
-        self.skips = TimeoutList(self.registryValue('skip.skipTime', channel))
+        self.skipTimeoutList = TimeoutList(self.registryValue('skip.skipTime', channel))
         self.hintTimeoutList = TimeoutList(self.registryValue('hints.extraHintTime', channel))
         self.stopPending = False
         self.shownHint = False
         self.questionRepeated = False
-        self.skipVoteCount = {}
+        self.skippers = []
         self.streak = 0
         self.lastWinner = ''
         self.hintsCounter = 0
@@ -160,6 +160,7 @@ class Game:
             # Check if all answers have been answered
             if len(self.guessedAnswers) == len(self.answers):
                 self.questionOver = True
+                self.removeEvent()
                 
                 # Check if question qualifies for bonus points
                 if len(self.correctPlayers) >= 2 and len(self.answers) >= 9:
@@ -178,6 +179,7 @@ class Game:
         # Handle a correct answer for a regular question
         else:
             self.questionOver = True
+            self.removeEvent()
             streakBonus = 0
             minStreak = self.registryValue('general.minBreakStreak', channel)
             # update streak info
@@ -228,8 +230,6 @@ class Game:
                     self.sendMessage(recapMessage)
         
         if self.questionOver:
-            self.removeEvent()
-        
             # Check for any pending stops, otherwise queue next question
             if self.stopPending == True:
                 self.stop()
@@ -444,7 +444,7 @@ class Game:
             if self.stopPending == True:
                 self.stop()
             else:
-                waitTime = self.registryValue('general.waitTime',self.channel)
+                waitTime = self.registryValue('general.waitTime', self.channel)
                 if waitTime < 2:
                     waitTime = 2
                     log.error('waitTime was set too low (<2 seconds). Setting to 2 seconds')
@@ -452,30 +452,27 @@ class Game:
                 self.queueEvent(waitTime, self.nextQuestion)
         else:
             # give out more hints
-            self.nextHint()
+            self.showHint()
+            if self.questionType == 'kaos':
+                hintTime = self.registryValue('kaos.hintKAOS', self.channel)
+            else:
+                hintTime = self.registryValue('questions.hintTime', self.channel)
 
-    def nextHint(self):
+            if hintTime < 2:
+                hintTime = 2
+                log.error('hintTime was set too low (<2 seconds). Setting to 2 seconds.')
+
+            hintTime += time.time()
+            self.queueEvent(hintTime, self.loopEvent)
+            
+    def showHint(self):
         """
             Max hints have not been reached, and no answer is found, need more hints
         """
         hints = self.getHintString(self.hintsCounter)
-        #increment hints counter
-        self.hintsCounter += 1
-        self.sendMessage(' Hint %s: \x02\x0312%s' % (self.hintsCounter, hints), 1, 9)
-        #reset hint shown
-        self.shownHint = False
-
-        if self.questionType == 'kaos':
-            hintTime = self.registryValue('kaos.hintKAOS', self.channel)
-        else:
-            hintTime = self.registryValue('questions.hintTime', self.channel)
-
-        if hintTime < 2:
-            hintTime = 2
-            log.error('hintTime was set too low (<2 seconds). Setting to 2 seconds.')
-
-        hintTime += time.time()
-        self.queueEvent(hintTime, self.loopEvent)
+        self.hintsCounter += 1 #increment hints counter
+        self.shownHint = False #reset hint shown
+        self.sendMessage(' Hint %s: \x02\x0312%s' % (self.hintsCounter, hints), 1, 9)        
 
     def nextQuestion(self):
         """
@@ -494,8 +491,7 @@ class Game:
         self.questionOver = False
         self.questionRepeated = False
         self.shownHint = False
-        self.skipVoteCount = {}
-        self.question = ''
+        self.skipList = []
         self.guessedAnswers = []
         self.totalAmountWon = 0
         self.correctPlayers = {}
@@ -3592,8 +3588,8 @@ class TriviaTime(callbacks.Plugin):
         elif game.streak < minStreak:
             self.reply(irc, msg, 'You do not have a large enough streak yet (%i of %i).' % (game.streak, minStreak))
         else:
-            self.reply(irc, msg, 'Onto the next question!', prefixNick=False)
             game.removeEvent()
+            self.reply(irc, msg, 'Onto the next question!', prefixNick=False)
             game.nextQuestion()
     next = wrap(next, ['onlyInChannel'])
 
@@ -3724,7 +3720,7 @@ class TriviaTime(callbacks.Plugin):
             self.reply(irc, msg, 'Trivia is not currently running.')
         elif game.questionOver == True:
             self.reply(irc, msg, 'No question is currently being asked.')
-        elif game.questionRepeated == False and game.question != '':
+        elif game.questionRepeated == False:
             game.repeatQuestion()
             irc.noReply()
         else:
@@ -3835,37 +3831,31 @@ class TriviaTime(callbacks.Plugin):
         # Sanity checks
         if game is None or game.active == False:
             self.reply(irc, msg, 'Trivia is not currently running.')
-            return
         elif game.questionOver == True:
             self.reply(irc, msg, 'No question is currently being asked.')
-            return
         elif not threadStorage.wasUserActiveIn(username, channel, timeSeconds):
             self.reply(irc, msg, 'Only users who have answered a question in the last %s seconds can vote to skip.' % (timeSeconds))
-            return
-        elif usernameCanonical in game.skipVoteCount:
+        elif usernameCanonical in game.skipList:
             self.reply(irc, msg, 'You can only vote to skip once.')
-            return
-        elif totalActive < 1:
-            return
+        else:
+            # Ensure the game's skip timeout is set? and then check the user
+            skipSeconds = self.registryValue('skip.skipTime', channel)
+            game.skipTimeoutList.setTimeout(skipSeconds)
+            if game.skipTimeoutList.has(usernameCanonical):
+                self.reply(irc, msg, 'You must wait %d seconds to be able to skip again.' % (game.skipTimeoutList.getTimeLeft(usernameCanonical)), notice=True)
+                return
 
-        # Ensure the game's skip timeout is set? and then check the user
-        skipSeconds = self.registryValue('skip.skipTime', channel)
-        game.skips.setTimeout(skipSeconds)
-        if game.skips.has(usernameCanonical):
-            self.reply(irc, msg, 'You must wait %d seconds to be able to skip again.' % (game.skips.getTimeLeft(usernameCanonical)), notice=True)
-            return
+            # Update skip count
+            game.skipList.append = usernameCanonical
+            game.skipTimeoutList.append(usernameCanonical)
+            self.reply(irc, msg, '%s voted to skip this question.' % username, prefixNick=False)
+            skipPercent = len(game.skipList)/(totalActive*1.0)
 
-        # Update skip count
-        game.skipVoteCount[usernameCanonical] = 1
-        game.skips.append(usernameCanonical)
-        self.reply(irc, msg, '%s voted to skip this question.' % username, prefixNick=False)
-        percentAnswered = ((1.0*len(game.skipVoteCount))/(totalActive*1.0))
-
-        # Check if skip threshold has been reached
-        if percentAnswered >= self.registryValue('skip.skipThreshold', channel):        
-            self.reply(irc, msg, 'Skipped question! (%d of %d voted)' % (len(game.skipVoteCount), totalActive), prefixNick=False)
-            game.removeEvent()
-            game.nextQuestion()
+            # Check if skip threshold has been reached
+            if skipPercent >= self.registryValue('skip.skipThreshold', channel):
+                game.removeEvent()
+                self.reply(irc, msg, 'Skipped question! (%d of %d voted)' % (len(game.skipList), totalActive), prefixNick=False)
+                game.nextQuestion()
     skip = wrap(skip, ['onlyInChannel'])
 
     def stats(self, irc, msg, arg, channel, username):
