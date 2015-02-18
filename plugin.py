@@ -91,7 +91,7 @@ class Game:
         self.loadGameState()
         
         # activate
-        self.questionOver = True
+        self.state = 'no-question'
         self.active = True
 
         # stop any old game and start a new one
@@ -103,7 +103,7 @@ class Game:
         Check users input to see if answer was given.
         """
         # Already done? get out of here
-        if self.questionOver:
+        if self.state != 'in-question':
             return
         
         channel = msg.args[0]
@@ -159,7 +159,7 @@ class Game:
         
             # Check if all answers have been answered
             if len(self.guessedAnswers) == len(self.answers):
-                self.questionOver = True
+                self.state = 'post-question'
                 self.removeEvent()
                 
                 # Check if question qualifies for bonus points
@@ -178,7 +178,7 @@ class Game:
                 
         # Handle a correct answer for a regular question
         else:
-            self.questionOver = True
+            self.state = 'post-question'
             self.removeEvent()
             streakBonus = 0
             minStreak = self.registryValue('general.minBreakStreak', channel)
@@ -229,7 +229,7 @@ class Game:
                     recapMessage = ''.join(recapMessageList)
                     self.sendMessage(recapMessage)
         
-        if self.questionOver:
+        if self.state == 'post-question':
             # Check for any pending stops, otherwise queue next question
             if self.stopPending == True:
                 self.stop()
@@ -240,6 +240,7 @@ class Game:
                     log.error('waitTime was set too low (<2 seconds). Setting to 2 seconds')
                 waitTime += time.time()
                 self.queueEvent(waitTime, self.nextQuestion)
+                self.state = 'no-question'
 
     def getHintString(self, hintNum=None):
         if hintNum == None:
@@ -395,19 +396,17 @@ class Game:
         return hints
 
     def getExtraHint(self):
-        if self.questionOver:
-            return
-        if self.shownHint == False:
-            self.shownHint = True
-            self.sendMessage(self.getExtraHintString())
-
-    def getRemainingKAOS(self):
-        if self.questionOver:
-            return
-        if self.questionType == 'kaos':
+        if self.state == 'in-question':
             if self.shownHint == False:
                 self.shownHint = True
-                self.sendMessage('\x02\x0312%s' % (self.getHintString(self.hintsCounter-1)))
+                self.sendMessage(self.getExtraHintString())
+
+    def getRemainingKAOS(self):
+        if self.state == 'in-question':
+            if self.questionType == 'kaos':
+                if self.shownHint == False:
+                    self.shownHint = True
+                    self.sendMessage('\x02\x0312%s' % (self.getHintString(self.hintsCounter-1)))
 
     def loadGameState(self):
         gameInfo = self.storage.getGame(self.channel)
@@ -423,7 +422,7 @@ class Game:
         """
         # out of hints to give?
         if self.hintsCounter >= 3:
-            self.questionOver = True
+            self.state = 'post-question'
             
             if self.questionType == 'kaos':
                 # Create a string to show answers missed
@@ -450,8 +449,9 @@ class Game:
                     log.error('waitTime was set too low (<2 seconds). Setting to 2 seconds')
                 waitTime += time.time()
                 self.queueEvent(waitTime, self.nextQuestion)
+                self.state = 'no-question'
         else:
-            # give out more hints
+            # Give out next hint and queue this event again
             self.showHint()
             if self.questionType == 'kaos':
                 hintTime = self.registryValue('kaos.hintKAOS', self.channel)
@@ -487,10 +487,7 @@ class Game:
             self.stop()
             return
 
-        # reset and increment
-        self.questionOver = False
-        self.questionRepeated = False
-        self.shownHint = False
+        # Reset and increment question properties
         self.skipList = []
         self.guessedAnswers = []
         self.totalAmountWon = 0
@@ -513,9 +510,10 @@ class Game:
             self.storage.updateGameRoundStarted(self.channel, self.roundStartedAt)
             self.sendMessage('All of the questions have been asked, shuffling and starting over')
 
-        # Increment questions asked (ie. round number)
+        # Update DB with new round number
         self.storage.updateGame(self.channel, self.numAsked) 
         
+        # Retrieve new question from DB
         retrievedQuestion = self.retrieveQuestion()
         self.questionID = retrievedQuestion['id']
         self.questionType = retrievedQuestion['type']
@@ -523,12 +521,20 @@ class Game:
         self.answers = retrievedQuestion['answers']
         self.questionPoints = retrievedQuestion['points']
 
-        # store the question number so it can be reported
+        # Store the question and round number so it can be reported
         self.storage.insertGameLog(self.channel, self.numAsked, self.questionID, self.question)
-
+        
+        # Send question to channel
         self.sendQuestion()
-        self.queueEvent(0, self.loopEvent)
+        
+        # Reset state variables only after question has been sent
+        self.state = 'in-question'
+        self.questionRepeated = False
+        self.shownHint = False
         self.askedAt = time.time()
+        
+        self.loopEvent()
+        
 
     def normalizeString(self, s):
         return str.lower(self.removeExtraSpaces(self.removeAccents(s)))
@@ -551,8 +557,9 @@ class Game:
         return utils.str.normalizeWhitespace(text)
 
     def repeatQuestion(self):
-        self.questionRepeated = True
-        self.sendQuestion()
+        if self.questionRepeated == False:
+            self.questionRepeated = True
+            self.sendQuestion()
 
     def removeEvent(self):
         """
@@ -2764,7 +2771,7 @@ class TriviaTime(callbacks.Plugin):
                 else:
                     if self.registryValue('hints.enableExtraHints', channel):
                         game.hintTimeoutList.setTimeout(extraHintTime)
-                        if not game.questionOver:
+                        if game.state == 'in-question':
                             if game.hintTimeoutList.has(usernameCanonical):
                                 self.reply(irc, msg, 'You must wait %d seconds to be able to use the extra hint command.' % (game.hintTimeoutList.getTimeLeft(usernameCanonical)), notice=True)
                             else:
@@ -3581,7 +3588,7 @@ class TriviaTime(callbacks.Plugin):
         # 4. Is streak high enough?
         if game is None or game.active == False:
             self.reply(irc, msg, 'Trivia is not currently running.')
-        elif game.questionOver == False:
+        elif game.state != 'no-question':
             self.reply(irc, msg, 'You must wait until the current question is over.')
         elif ircutils.toLower(game.lastWinner) != ircutils.toLower(username):
             self.reply(irc, msg, 'You are not currently the streak holder.')
@@ -3714,16 +3721,12 @@ class TriviaTime(callbacks.Plugin):
         # Sanity checks
         # 1. Is trivia running?
         # 2. Is a question being asked?
-        # 3. Has the question already been repeated?
-        # 4. Is the question currently blank?
         if game is None or game.active == False:
             self.reply(irc, msg, 'Trivia is not currently running.')
-        elif game.questionOver == True:
+        elif game.state != 'in-question':
             self.reply(irc, msg, 'No question is currently being asked.')
-        elif game.questionRepeated == False:
-            game.repeatQuestion()
-            irc.noReply()
         else:
+            game.repeatQuestion()
             irc.noReply()
     repeat = wrap(repeat, ['onlyInChannel'])
 
@@ -3737,9 +3740,8 @@ class TriviaTime(callbacks.Plugin):
         game = self.getGame(irc, channel)
         if game is not None:
             numAsked = game.numAsked
-            questionOver = game.questionOver
             if text[:2] == 's/':
-                if numAsked == roundNum and questionOver == False:
+                if numAsked == roundNum and game.state == 'in-question':
                     irc.reply('Sorry, you must wait until the current question is over to report it.')
                     return
         dbLocation = self.registryValue('admin.db')
@@ -3831,7 +3833,7 @@ class TriviaTime(callbacks.Plugin):
         # Sanity checks
         if game is None or game.active == False:
             self.reply(irc, msg, 'Trivia is not currently running.')
-        elif game.questionOver == True:
+        elif game.state != 'in-question':
             self.reply(irc, msg, 'No question is currently being asked.')
         elif not threadStorage.wasUserActiveIn(username, channel, timeSeconds):
             self.reply(irc, msg, 'Only users who have answered a question in the last %s seconds can vote to skip.' % (timeSeconds))
@@ -3948,7 +3950,7 @@ class TriviaTime(callbacks.Plugin):
         Channel is only necessary when editing from outside of the channel.
         """
         game = self.getGame(irc, channel)
-        if game is not None and num == game.numAsked and not game.questionOver:
+        if game is not None and num == game.numAsked and game.state == 'in-question':
             irc.error('The current question can\'t be displayed until it is over.')
         else:
             dbLocation = self.registryValue('admin.db')
@@ -4088,7 +4090,7 @@ class TriviaTime(callbacks.Plugin):
         # 2.1 Is a stop pending?
         if game is None or game.active == False:
             self.reply(irc, msg, 'Game is already stopped.')
-        elif game.questionOver == False:
+        elif game.state != 'no-question':
             if game.stopPending == True:
                 self.reply(irc, msg, 'Trivia is already pending stop.')
             else:
