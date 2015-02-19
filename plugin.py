@@ -163,6 +163,7 @@ class Game:
                 self.removeEvent()
                 
                 # Check if question qualifies for bonus points
+                bonusPointsText = ''
                 if len(self.correctPlayers) >= 2 and len(self.answers) >= 9:
                     bonusPoints = self.registryValue('kaos.payoutKAOS', self.channel)
                     if bonusPoints > 0:
