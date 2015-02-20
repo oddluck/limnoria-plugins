@@ -489,6 +489,7 @@ class Game:
             return
 
         # Reset and increment question properties
+        self.state = 'pre-question'
         self.skipList = []
         self.guessedAnswers = []
         self.totalAmountWon = 0
@@ -528,7 +529,7 @@ class Game:
         # Send question to channel
         self.sendQuestion()
         
-        # Reset state variables only after question has been sent
+        # Set state variables after question has been sent
         self.state = 'in-question'
         self.questionRepeated = False
         self.shownHint = False
@@ -546,7 +547,10 @@ class Game:
         """
         # Schedule a new event to happen at the specified time
         if self.active:
-            schedule.addEvent(event, time, '%s.trivia' % self.channel)
+            try:
+                schedule.addEvent(event, time, '%s.trivia' % self.channel)
+            except AssertionError as e:
+                log.error('Unable to queue {0} because another event is already scheduled.'.format(event.func_name))
 
     def removeAccents(self, text):
         text = unicode(text.decode('utf-8'))
