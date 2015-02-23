@@ -74,13 +74,25 @@ class Game:
         self.irc = irc
         self.network = irc.network
 
-        # reset stats
+        # Initialize timeout lists
         self.skipTimeoutList = TimeoutList(self.registryValue('skip.skipTime', channel))
         self.hintTimeoutList = TimeoutList(self.registryValue('hints.extraHintTime', channel))
+        
+        # Initialize state variables
+        self.state = 'no-question'
         self.stopPending = False
         self.shownHint = False
         self.questionRepeated = False
-        self.skippers = []
+        
+        # Initialize game properties
+        self.questionID = -1
+        self.questionType = ''
+        self.question = ''
+        self.answers = []
+        self.questionPoints = -1
+        self.correctPlayers = {}
+        self.guessedAnswers = []
+        self.skipList = []
         self.streak = 0
         self.lastWinner = ''
         self.hintsCounter = 0
@@ -88,13 +100,11 @@ class Game:
         self.lastAnswer = time.time()
         self.roundStartedAt = time.mktime(time.localtime())
 
-        self.loadGameState()
-        
         # activate
-        self.state = 'no-question'
+        self.loadGameState()
         self.active = True
 
-        # stop any old game and start a new one
+        # Remove any old event and start the next question
         self.removeEvent()
         self.nextQuestion()
 
@@ -169,6 +179,7 @@ class Game:
                     if bonusPoints > 0:
                         for nick in self.correctPlayers:
                             threadStorage.updateUserLog(nick, self.channel, bonusPoints, 0, 0)
+                            self.totalAmountWon += bonusPoints
                         bonusPointsText = 'Everyone gets a %d Point Bonus!!' % int(bonusPoints)
 
                 # Give a special KAOS message 
@@ -404,10 +415,9 @@ class Game:
 
     def getRemainingKAOS(self):
         if self.state == 'in-question':
-            if self.questionType == 'kaos':
-                if self.shownHint == False:
-                    self.shownHint = True
-                    self.sendMessage('\x02\x0312%s' % (self.getHintString(self.hintsCounter-1)))
+            if self.shownHint == False:
+                self.shownHint = True
+                self.sendMessage('\x02\x0312%s' % (self.getHintString(self.hintsCounter-1)))
 
     def loadGameState(self):
         gameInfo = self.storage.getGame(self.channel)
@@ -490,10 +500,10 @@ class Game:
 
         # Reset and increment question properties
         self.state = 'pre-question'
-        self.skipList = []
-        self.guessedAnswers = []
+        del self.skipList[:]
+        del self.guessedAnswers[:]
         self.totalAmountWon = 0
-        self.correctPlayers = {}
+        self.correctPlayers.clear()
         self.hintsCounter = 0
         self.numAsked += 1
 
@@ -535,8 +545,8 @@ class Game:
         self.shownHint = False
         self.askedAt = time.time()
         
+        # Start hint loop
         self.loopEvent()
-        
 
     def normalizeString(self, s):
         return str.lower(self.removeExtraSpaces(self.removeAccents(s)))
@@ -2771,7 +2781,7 @@ class TriviaTime(callbacks.Plugin):
         if game is not None:
             # Check for extra hint command
             if msg.args[1] == extraHintCommand:
-                if game.question.find("KAOS:") == 0:
+                if game.questionType == 'kaos':
                     game.getRemainingKAOS()
                 else:
                     if self.registryValue('hints.enableExtraHints', channel):
