@@ -2230,7 +2230,7 @@ class Storage:
 
     def userLevelExists(self, username, channel):
         usernameCanonical = ircutils.toLower(username)
-        channelCanonical = ircutils.toLower(username)
+        channelCanonical = ircutils.toLower(channel)
         
         c = self.conn.cursor()
         c.execute('''SELECT COUNT(id) 
