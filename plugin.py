@@ -37,35 +37,15 @@ class UrbanDictionary(callbacks.Plugin):
         """bold and underline string."""
         return ircutils.bold(ircutils.underline(string))
 
-    def _repairjson(self, original):
-        original = original.replace(r'\r','').replace(r'\n','')
-        original = original.replace('\\x', '\\u00')
-        regex = re.compile(r'\\(?![/u"])')
-        fixed = regex.sub(r"\\\\", original)
-        return fixed
+    def cleanjson(self, s):
+        """clean up json and return."""
 
-    def _rj(self, v):
-        """repair broken JSON. (Stolen from google visualzation api)"""
-
-        ESCAPE_FOR_JSON = {
-            u'\\': u'\\\\',
-            u'\'': u'\\\'',
-            u'"': u'\\"',
-            u'\b': u'\\b',
-            u'\f': u'\\f',
-            u'\n': u'\\n',
-            u'\r': u'\\r',
-            u'\t': u'\\t',
-        }
-
-        JSON_QUOTE_CHAR = '"'
-
-        if isinstance(v, unicode):
-            v_unicode = v
-        else:
-            v_unicode = str(v).decode('utf-8')
+        s = s.replace('\n', '')
+        s = s.replace('\r', '')
+        s = s.replace('\t', '')
+        s = s.strip()
         # return
-        return u'%s%s%s' % (JSON_QUOTE_CHAR, u''.join(ESCAPE_FOR_JSON.get(char, char) for char in v_unicode), JSON_QUOTE_CHAR)
+        return s
 
     ####################
     # PUBLIC FUNCTIONS #
@@ -109,8 +89,10 @@ class UrbanDictionary(callbacks.Plugin):
             irc.reply("ERROR: could not open {0} message: {1}".format(url, e))
             return
         # try parsing json.
+        #irc.reply("{0}".format(self._repairjson(html.decode('utf-8'))))
         try:
-            jsondata = self._repairjson(html.decode('utf-8'))  # decode utf-8. fix \r\n that ud puts in below.
+            #jsondata = self._repairjson(html.decode('utf-8'))  # decode utf-8. fix \r\n that ud puts in below.
+            jsondata = html.decode('utf-8')
             jsondata = json.loads(jsondata)  # odds chars in UD.
         except Exception as e:
             self.log.error("Error parsing JSON from UD: {0}".format(e))
@@ -123,9 +105,13 @@ class UrbanDictionary(callbacks.Plugin):
         if results == "exact":  # we did not find anything.
             outdefs = []
             for i in definitions[0:args['numberOfDefinitions']]:  # iterate through each def.
-                outputstring = "{0}".format(i['definition'].strip())  # default string.
+                # clean these up.
+                definition = self.cleanjson(''.join(i['definition'])) #.encode('utf-8')
+                example = self.cleanjson(''.join(['example']))
+                # now add
+                outputstring = "{0}".format(definition)  # default string.
                 if args['showExamples']:  # show examples?
-                    outputstring += " {0} {1} {2}".format(self._bu("[ex:]"), i['example'].strip(), self._bu("[/ex]"))
+                    outputstring += " {0} {1} {2}".format(self._bu("[ex:]"), example, self._bu("[/ex]"))
                 if args['showVotes']:  # show votes?
                     outputstring += " (+{0}/-{1})".format(i['thumbs_up'], i['thumbs_down'])
                 outdefs.append(outputstring)  # add to our list.
