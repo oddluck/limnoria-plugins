@@ -3309,8 +3309,8 @@ class TriviaTime(callbacks.Plugin):
         if self.isTriviaAdmin(hostmask, channel) == False:
             irc.reply('You must be a TriviaAdmin in {0} to use this command.'.format(channel))
             return
-        elif points < 1:
-            irc.error("You cannot give less than 1 point.")
+        elif points == 0:
+            irc.error("You cannot give 0 points.")
             return
         
         username = self.getUsername(username, username)
