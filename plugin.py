@@ -1427,13 +1427,13 @@ class Storage:
         if channel is None:
             c.execute('''SELECT * 
                          FROM triviadelete 
-                         ORDER BY id DESC LIMIT ?, ?''', 
+                         ORDER BY id ASC LIMIT ?, ?''', 
                          (start, amount))
         else:
             c.execute('''SELECT * 
                          FROM triviadelete 
                          WHERE channel_canonical=? 
-                         ORDER BY id DESC LIMIT ?, ?''', 
+                         ORDER BY id ASC LIMIT ?, ?''', 
                          (ircutils.toLower(channel), start, amount))
         rows = c.fetchall()
         c.close()
@@ -1468,13 +1468,13 @@ class Storage:
         if channel is None:
             c.execute('''SELECT * 
                          FROM triviareport 
-                         ORDER BY id DESC LIMIT ?, ?''', 
+                         ORDER BY id ASC LIMIT ?, ?''', 
                          (start, amount))
         else:
             c.execute('''SELECT * 
                          FROM triviareport 
                          WHERE channel_canonical=? 
-                         ORDER BY id DESC LIMIT ?, ?''', 
+                         ORDER BY id ASC LIMIT ?, ?''', 
                          (ircutils.toLower(channel), start, amount))
         rows = c.fetchall()
         c.close()
@@ -1491,13 +1491,13 @@ class Storage:
         if channel is None:
             c.execute('''SELECT * 
                          FROM triviatemporaryquestion 
-                         ORDER BY id DESC LIMIT ?, ?''', 
+                         ORDER BY id ASC LIMIT ?, ?''', 
                          (start, amount))
         else:
             c.execute('''SELECT * 
                          FROM triviatemporaryquestion 
                          WHERE channel_canonical=? 
-                         ORDER BY id DESC LIMIT ?, ?''', 
+                         ORDER BY id ASC LIMIT ?, ?''', 
                          (ircutils.toLower(channel), start, amount))
         rows = c.fetchall()
         c.close()
@@ -1533,13 +1533,13 @@ class Storage:
         if channel is None:
             c.execute('''SELECT * 
                          FROM triviaedit 
-                         ORDER BY id DESC LIMIT ?, ?''', 
+                         ORDER BY id ASC LIMIT ?, ?''', 
                          (start, amount))
         else:
             c.execute('''SELECT * 
                          FROM triviaedit 
                          WHERE channel_canonical=? 
-                         ORDER BY id DESC LIMIT ?, ?''', 
+                         ORDER BY id ASC LIMIT ?, ?''', 
                          (ircutils.toLower(channel), start, amount))
         rows = c.fetchall()
         c.close()
