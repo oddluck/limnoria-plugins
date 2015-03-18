@@ -136,7 +136,7 @@ class Cobe(callbacks.Plugin):
         
         return text
         
-    def _learn(self, irc, channel, text, probability):
+    def _learn(self, irc, msg, channel, text, probability):
         """Internal method for learning phrases."""
         
         if os.path.exists(self._getBrainDirectoryForChannel(channel)):
@@ -151,7 +151,7 @@ class Cobe(callbacks.Plugin):
                 cobeBrain.learn(text)
                 
                 if random.randint(0, 10000) <= probability:
-                    self._reply(irc, channel, text)
+                    self._reply(irc, msg, channel, text)
                 
         else: # Nope, let's make it!
                         
@@ -166,19 +166,22 @@ class Cobe(callbacks.Plugin):
                 cobeBrain.learn(text)
                 
                 if random.randint(0, 10000) <= probability:
-                    self._reply(irc, channel, text)
+                    self._reply(irc, msg, channel, text)
                 
-    def _reply(self, irc, channel, text):
+    def _reply(self, irc, msg, channel, text):
         """Send a response to text"""
         
         cobeBrain = Brain(self._getBrainDirectoryForChannel(channel))
         response = cobeBrain.reply(text).encode('utf-8')
         response = self._strip_nick(irc, msg, response)
         
-        for i in range(repsonse.lower().count(self.magicnick.lower())):
+        for i in range(response.lower().count(self.magicnick.lower())):
             # If first word is nick, switch with the callers nick.
-            if self.magicnick in repsonse:
-                repsonse = repsonse.replace(self.magicnick, random.sample(set(irc.state.channels[msg.args[0]].users)), 1)
+            if self.magicnick in response:
+                response = response.replace(self.magicnick, random.choice(list(irc.state.channels[msg.args[0]].users)))
+            if self.magicnick.lower() in response:
+                response = response.replace(self.magicnick.lower(), random.choice(list(irc.state.channels[msg.args[0]].users)))
+
         
         cobeBrain.learn(response) # Let's have the bot learn the wacky things it says
         
@@ -232,7 +235,7 @@ class Cobe(callbacks.Plugin):
         #    removenicks = '|'.join(item + '\W.*?\s' for item in irc.state.channels[channel].users)
         #    text = re.sub(r'' + removenicks + '', 'MAGIC_NICK', text)
         
-        self._learn(irc, channel, text, probability) # Now we can pass this to our learn function!
+        self._learn(irc, msg, channel, text, probability) # Now we can pass this to our learn function!
             
     def _makeSizePretty(self, size):
         """Internal command for making the size pretty!"""
