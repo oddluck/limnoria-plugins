@@ -69,10 +69,21 @@ class Cobe(callbacks.Plugin):
     commands and "help Cobe <command>" to read their docs.
     """
     threaded = True
+    magicnick = 'PLZREPLACEMENICKUNKNOWNWORDSHAHAH'
     
     def __init__(self, irc):
         self.__parent = super(Cobe, self)
         self.__parent.__init__(irc)
+        
+    def _strip_nick(self, irc, msg, text):
+        for user in irc.state.channels[msg.args[0]].users:
+            if len(user) <= 4: # Do not replace short nicks, as they might very
+                # well be part of a word
+                continue
+            text = text.replace(user, self.magicnick)
+            text = text.replace(user.lower(), self.magicnick)
+            text = text.replace(user.capitalize(), self.magicnick)
+        return text
         
     def _getBrainDirectoryForChannel(self, channel):
         """Internal method for retrieving the directory of a brainfile for a channel""" 
@@ -162,6 +173,12 @@ class Cobe(callbacks.Plugin):
         
         cobeBrain = Brain(self._getBrainDirectoryForChannel(channel))
         response = cobeBrain.reply(text).encode('utf-8')
+        response = _strip_nick(irc, msg, response)
+        
+        for i in range(repsonse.lower().count(self.magicnick.lower())):
+            # If first word is nick, switch with the callers nick.
+            if self.magicnick in repsonse:
+                repsonse = repsonse.replace(self.magicnick, random.sample(set(irc.state.channels[msg.args[0]].users)), 1)
         
         cobeBrain.learn(response) # Let's have the bot learn the wacky things it says
         
