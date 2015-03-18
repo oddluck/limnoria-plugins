@@ -173,7 +173,7 @@ class Cobe(callbacks.Plugin):
         
         cobeBrain = Brain(self._getBrainDirectoryForChannel(channel))
         response = cobeBrain.reply(text).encode('utf-8')
-        response = _strip_nick(irc, msg, response)
+        response = self._strip_nick(irc, msg, response)
         
         for i in range(repsonse.lower().count(self.magicnick.lower())):
             # If first word is nick, switch with the callers nick.
