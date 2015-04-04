@@ -74,13 +74,25 @@ class Game:
         self.irc = irc
         self.network = irc.network
 
-        # reset stats
+        # Initialize timeout lists
         self.skipTimeoutList = TimeoutList(self.registryValue('skip.skipTime', channel))
         self.hintTimeoutList = TimeoutList(self.registryValue('hints.extraHintTime', channel))
+        
+        # Initialize state variables
+        self.state = 'no-question'
         self.stopPending = False
         self.shownHint = False
         self.questionRepeated = False
-        self.skippers = []
+        
+        # Initialize game properties
+        self.questionID = -1
+        self.questionType = ''
+        self.question = ''
+        self.answers = []
+        self.questionPoints = -1
+        self.correctPlayers = {}
+        self.guessedAnswers = []
+        self.skipList = []
         self.streak = 0
         self.lastWinner = ''
         self.hintsCounter = 0
@@ -88,13 +100,11 @@ class Game:
         self.lastAnswer = time.time()
         self.roundStartedAt = time.mktime(time.localtime())
 
-        self.loadGameState()
-        
         # activate
-        self.state = 'no-question'
+        self.loadGameState()
         self.active = True
 
-        # stop any old game and start a new one
+        # Remove any old event and start the next question
         self.removeEvent()
         self.nextQuestion()
 
@@ -102,10 +112,6 @@ class Game:
         """
         Check users input to see if answer was given.
         """
-        # Already done? get out of here
-        if self.state != 'in-question':
-            return
-        
         channel = msg.args[0]
         # is it a user?
         username = self.base.getUsername(msg.nick, msg.prefix)
@@ -169,6 +175,7 @@ class Game:
                     if bonusPoints > 0:
                         for nick in self.correctPlayers:
                             threadStorage.updateUserLog(nick, self.channel, bonusPoints, 0, 0)
+                            self.totalAmountWon += bonusPoints
                         bonusPointsText = 'Everyone gets a %d Point Bonus!!' % int(bonusPoints)
 
                 # Give a special KAOS message 
@@ -371,9 +378,6 @@ class Game:
         return hints
 
     def getExtraHintString(self):
-        if self.questionType == 'kaos':
-            return
-        
         charMask = self.registryValue('hints.charMask', self.channel)
         ans = self.answers[0]
         hints = ' Extra Hint: \x02\x0312'
@@ -397,17 +401,14 @@ class Game:
         return hints
 
     def getExtraHint(self):
-        if self.state == 'in-question':
-            if self.shownHint == False:
-                self.shownHint = True
-                self.sendMessage(self.getExtraHintString())
+        if self.shownHint == False:
+            self.shownHint = True
+            self.sendMessage(self.getExtraHintString())
 
     def getRemainingKAOS(self):
-        if self.state == 'in-question':
-            if self.questionType == 'kaos':
-                if self.shownHint == False:
-                    self.shownHint = True
-                    self.sendMessage('\x02\x0312%s' % (self.getHintString(self.hintsCounter-1)))
+        if self.shownHint == False:
+            self.shownHint = True
+            self.sendMessage('\x02\x0312%s' % (self.getHintString(self.hintsCounter-1)))
 
     def loadGameState(self):
         gameInfo = self.storage.getGame(self.channel)
@@ -489,10 +490,11 @@ class Game:
             return
 
         # Reset and increment question properties
-        self.skipList = []
-        self.guessedAnswers = []
+        self.state = 'pre-question'
+        del self.skipList[:]
+        del self.guessedAnswers[:]
         self.totalAmountWon = 0
-        self.correctPlayers = {}
+        self.correctPlayers.clear()
         self.hintsCounter = 0
         self.numAsked += 1
 
@@ -528,14 +530,14 @@ class Game:
         # Send question to channel
         self.sendQuestion()
         
-        # Reset state variables only after question has been sent
+        # Set state variables after question has been sent
         self.state = 'in-question'
         self.questionRepeated = False
         self.shownHint = False
         self.askedAt = time.time()
         
+        # Start hint loop
         self.loopEvent()
-        
 
     def normalizeString(self, s):
         return str.lower(self.removeExtraSpaces(self.removeAccents(s)))
@@ -546,7 +548,10 @@ class Game:
         """
         # Schedule a new event to happen at the specified time
         if self.active:
-            schedule.addEvent(event, time, '%s.trivia' % self.channel)
+            try:
+                schedule.addEvent(event, time, '%s.trivia' % self.channel)
+            except AssertionError as e:
+                log.error('Unable to queue {0} because another event is already scheduled.'.format(event.func_name))
 
     def removeAccents(self, text):
         text = unicode(text.decode('utf-8'))
@@ -1422,13 +1427,13 @@ class Storage:
         if channel is None:
             c.execute('''SELECT * 
                          FROM triviadelete 
-                         ORDER BY id DESC LIMIT ?, ?''', 
+                         ORDER BY id ASC LIMIT ?, ?''', 
                          (start, amount))
         else:
             c.execute('''SELECT * 
                          FROM triviadelete 
                          WHERE channel_canonical=? 
-                         ORDER BY id DESC LIMIT ?, ?''', 
+                         ORDER BY id ASC LIMIT ?, ?''', 
                          (ircutils.toLower(channel), start, amount))
         rows = c.fetchall()
         c.close()
@@ -1463,13 +1468,13 @@ class Storage:
         if channel is None:
             c.execute('''SELECT * 
                          FROM triviareport 
-                         ORDER BY id DESC LIMIT ?, ?''', 
+                         ORDER BY id ASC LIMIT ?, ?''', 
                          (start, amount))
         else:
             c.execute('''SELECT * 
                          FROM triviareport 
                          WHERE channel_canonical=? 
-                         ORDER BY id DESC LIMIT ?, ?''', 
+                         ORDER BY id ASC LIMIT ?, ?''', 
                          (ircutils.toLower(channel), start, amount))
         rows = c.fetchall()
         c.close()
@@ -1486,13 +1491,13 @@ class Storage:
         if channel is None:
             c.execute('''SELECT * 
                          FROM triviatemporaryquestion 
-                         ORDER BY id DESC LIMIT ?, ?''', 
+                         ORDER BY id ASC LIMIT ?, ?''', 
                          (start, amount))
         else:
             c.execute('''SELECT * 
                          FROM triviatemporaryquestion 
                          WHERE channel_canonical=? 
-                         ORDER BY id DESC LIMIT ?, ?''', 
+                         ORDER BY id ASC LIMIT ?, ?''', 
                          (ircutils.toLower(channel), start, amount))
         rows = c.fetchall()
         c.close()
@@ -1528,13 +1533,13 @@ class Storage:
         if channel is None:
             c.execute('''SELECT * 
                          FROM triviaedit 
-                         ORDER BY id DESC LIMIT ?, ?''', 
+                         ORDER BY id ASC LIMIT ?, ?''', 
                          (start, amount))
         else:
             c.execute('''SELECT * 
                          FROM triviaedit 
                          WHERE channel_canonical=? 
-                         ORDER BY id DESC LIMIT ?, ?''', 
+                         ORDER BY id ASC LIMIT ?, ?''', 
                          (ircutils.toLower(channel), start, amount))
         rows = c.fetchall()
         c.close()
@@ -2225,7 +2230,7 @@ class Storage:
 
     def userLevelExists(self, username, channel):
         usernameCanonical = ircutils.toLower(username)
-        channelCanonical = ircutils.toLower(username)
+        channelCanonical = ircutils.toLower(channel)
         
         c = self.conn.cursor()
         c.execute('''SELECT COUNT(id) 
@@ -2764,22 +2769,19 @@ class TriviaTime(callbacks.Plugin):
         extraHintTime = self.registryValue('hints.extraHintTime', channel)
         game = self.getGame(irc, channel)
 
-        if game is not None:
-            # Check for extra hint command
-            if msg.args[1] == extraHintCommand:
-                if game.question.find("KAOS:") == 0:
+        if game and game.state == 'in-question':
+            if msg.args[1] == extraHintCommand: # Check for extra hint command
+                if game.questionType == 'kaos':
                     game.getRemainingKAOS()
                 else:
                     if self.registryValue('hints.enableExtraHints', channel):
                         game.hintTimeoutList.setTimeout(extraHintTime)
-                        if game.state == 'in-question':
-                            if game.hintTimeoutList.has(usernameCanonical):
-                                self.reply(irc, msg, 'You must wait %d seconds to be able to use the extra hint command.' % (game.hintTimeoutList.getTimeLeft(usernameCanonical)), notice=True)
-                            else:
-                                game.hintTimeoutList.append(usernameCanonical)
-                                game.getExtraHint()
-            else:
-                # check the answer
+                        if game.hintTimeoutList.has(usernameCanonical):
+                            self.reply(irc, msg, 'You must wait %d seconds to be able to use the extra hint command.' % (game.hintTimeoutList.getTimeLeft(usernameCanonical)), notice=True)
+                        else:
+                            game.hintTimeoutList.append(usernameCanonical)
+                            game.getExtraHint()
+            else: # Check the answer
                 game.checkAnswer(msg)
 
     def doJoin(self, irc, msg):
@@ -3307,8 +3309,8 @@ class TriviaTime(callbacks.Plugin):
         if self.isTriviaAdmin(hostmask, channel) == False:
             irc.reply('You must be a TriviaAdmin in {0} to use this command.'.format(channel))
             return
-        elif points < 1:
-            irc.error("You cannot give less than 1 point.")
+        elif points == 0:
+            irc.error("You cannot give 0 points.")
             return
         
         username = self.getUsername(username, username)
@@ -3482,7 +3484,7 @@ class TriviaTime(callbacks.Plugin):
         threadStorage = Storage(dbLocation)
         totalUsersEver = threadStorage.getNumUser(channel)
         numActiveThisWeek = threadStorage.getNumActiveThisWeek(channel)
-        infoText = ' TriviaTime v1.3.1 by Trivialand on Freenode: https://github.com/tannn/TriviaTime '
+        infoText = ' TriviaTime v1.3.2 by Trivialand on Freenode: https://github.com/tannn/TriviaTime '
         self.reply(irc, msg, infoText, prefixNick=False)
         infoText = '\x02 %d Users\x02 on scoreboard with \x02%d Active This Week\x02' % (totalUsersEver, numActiveThisWeek)
         self.reply(irc, msg, infoText, prefixNick=False)
@@ -3731,23 +3733,24 @@ class TriviaTime(callbacks.Plugin):
             irc.noReply()
     repeat = wrap(repeat, ['onlyInChannel'])
 
-    def report(self, irc, msg, arg, user, channel, roundNum, text):
-        """[channel] <round number> <report text>
+    def report(self, irc, msg, arg, user, channel, round, text):
+        """[channel] <round> <report text>
         Provide a report for a bad question. Be sure to include the round number and the problem(s). 
+        To edit the question, input a regex substitution for the report text. To delete the 
+        question, input 'delete' for the report text. Any other report text will be treated as a 
+        regular report.
         Channel is a optional parameter which is only needed when reporting outside of the channel
         """
         username = self.getUsername(msg.nick, msg.prefix)
         channelCanonical = ircutils.toLower(channel)
         game = self.getGame(irc, channel)
-        if game is not None:
-            numAsked = game.numAsked
-            if text[:2] == 's/':
-                if numAsked == roundNum and game.state == 'in-question':
-                    irc.reply('Sorry, you must wait until the current question is over to report it.')
-                    return
+        if game and text[:2] == 's/' and game.numAsked == round and game.state != 'no-question':
+            irc.reply('Sorry, you must wait until the current question is over to make a regex report.')
+            return
+            
         dbLocation = self.registryValue('admin.db')
         threadStorage = Storage(dbLocation)
-        question = threadStorage.getQuestionByRound(roundNum, channel)
+        question = threadStorage.getQuestionByRound(round, channel)
         if question:
             if text[:2] == 's/': # Regex substitution
                 regex = text[2:].split('/')
@@ -3790,7 +3793,7 @@ class TriviaTime(callbacks.Plugin):
                 self.logger.doLog(irc, channel, "%s reported question #%i, Text: '%s'" % (msg.nick, question['id'], text))
                 irc.reply('Your report has been submitted!')
         else:
-            irc.error('Sorry, round %d could not be found in the database' % (roundNum))
+            irc.error('Sorry, round %d could not be found in the database.' % (round))
     report = wrap(report, ['user', 'channel', 'int', 'text'])
 
     def restorequestion(self, irc, msg, arg, channel, questionNum):
@@ -3945,20 +3948,20 @@ class TriviaTime(callbacks.Plugin):
             irc.error('Question not found')
     showquestion = wrap(showquestion, ['user', 'channel', 'int'])
 
-    def showround(self, irc, msg, arg, user, channel, num):
-        """[<channel>] <round num>
+    def showround(self, irc, msg, arg, user, channel, round):
+        """[<channel>] <round>
         Show what question was asked during gameplay.
         Channel is only necessary when editing from outside of the channel.
         """
         game = self.getGame(irc, channel)
-        if game is not None and num == game.numAsked and game.state == 'in-question':
+        if game and round == game.numAsked and game.state != 'no-question':
             irc.error('The current question can\'t be displayed until it is over.')
         else:
             dbLocation = self.registryValue('admin.db')
             threadStorage = Storage(dbLocation)
-            question = threadStorage.getQuestionByRound(num, channel)
+            question = threadStorage.getQuestionByRound(round, channel)
             if question:
-                irc.reply('Round %d: Question #%d: %s' % (num, question['id'], question['question']))
+                irc.reply('Round %d: Question #%d: %s' % (round, question['id'], question['question']))
             else:
                 irc.error('Round not found')
     showround = wrap(showround, ['user', 'channel', 'int'])
