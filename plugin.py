@@ -95,6 +95,7 @@ class SpiffyTitles(callbacks.Plugin):
         self.log.info("SpiffyTitles: calling youtube handler for %s" % (url))
         video_id = self.get_video_id_from_url(url, domain, irc)
         template = self.registryValue("youtubeTitleTemplate")
+        title = ""
         
         if video_id:
             api_url = "https://gdata.youtube.com/feeds/api/videos/%s?v=2&alt=jsonc" % (video_id)
@@ -114,11 +115,11 @@ class SpiffyTitles(callbacks.Plugin):
                 if response:
                     try:
                         data = response["data"]
-                        title = data['title']
+                        tmp_title = data['title']
                         rating = round(data['rating'], 2)
                         view_count = '{:,}'.format(int(data['viewCount']))
                         
-                        return template % (title, view_count, rating)
+                        title = template % (tmp_title, view_count, rating)
                     
                     except IndexError:
                         self.log.error("SpiffyTitles: IndexError parsing Youtube API JSON response")
@@ -126,7 +127,13 @@ class SpiffyTitles(callbacks.Plugin):
                     self.log.error("SpiffyTitles: Error parsing Youtube API JSON response")
             else:
                 self.log.error("SpiffyTitles: Youtube API HTTP %s: %s" % (request.status_code,
-                                                                          request.text))
+                                                                         request.text))
+        
+        # If we found a title, return that. otherwise, use default handler
+        if title:
+            return title
+        else:            
+            return self.handler_default(url, domain, irc)
     
     def handler_default(self, url, domain, irc):
         self.log.info("SpiffyTitles: calling default handler for %s" % (url))
