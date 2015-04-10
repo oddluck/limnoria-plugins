@@ -7,6 +7,9 @@ are logged.
 
 - The ability to customize features that could conceivably need to change (within reason)
 
+## Using SpiffyTitles ##
+- You should disable the Web plugin and any other plugins that show link titles for best results
+
 ## Available Options ##
 
 `defaultTitleTemplate` - This is the template used when showing the title of a link. 
