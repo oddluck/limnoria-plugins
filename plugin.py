@@ -33,7 +33,7 @@ class SpiffyTitles(callbacks.Plugin):
     """Displays link titles when posted in a channel"""
     threaded = True
     callBefore = ['Web']
-
+    
     def doPrivmsg(self, irc, msg):
         channel = msg.args[0]
         is_channel = irc.isChannel(channel)
@@ -65,7 +65,7 @@ class SpiffyTitles(callbacks.Plugin):
                     title = self.handler_default(url, irc)
                 
                 if title is not None:
-                    formatted_title = self.get_title(title)
+                    formatted_title = self.get_formatted_title(title)
                     
                     self.log.info("SpiffyTitles: title found: %s" % (formatted_title))
                     
@@ -127,26 +127,24 @@ class SpiffyTitles(callbacks.Plugin):
             else:
                 self.log.error("SpiffyTitles: Youtube API HTTP %s: %s" % (request.status_code,
                                                                           request.text))
-        
+    
     def handler_default(self, url, domain, irc):
         self.log.info("SpiffyTitles: calling default handler for %s" % (url))
-        
+        template = self.registryValue("defaultTitleTemplate")
         html = self.get_source_by_url(url)
         
         if html:
             title = self.get_title_from_html(html)
+            title_template = template % (title)
             
-            return title
-        
-    def get_title(self, title):
-        template = self.registryValue("defaultTitleTemplate")
+            return title_template
+    
+    def get_formatted_title(self, title):
         useBold = self.registryValue("useBold")
         
         title = title.replace("\n", "")
         title = title.replace("\t", "")
         title = title.strip()
-        
-        title = template % (title)
         
         if useBold:
             title = ircutils.bold(title)
