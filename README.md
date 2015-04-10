@@ -1,6 +1,11 @@
 # SpiffyTitles #
 
-Displays link titles when posted in a channel.
+Displays link titles when posted in a channel. This plugin has the following goals:
+
+- Extreme reliability and in the case of failure, robust error reporting to ease debugging. Errors
+are logged.
+
+- The ability to customize features that could conceivably need to change (within reason)
 
 ## Available Options ##
 
@@ -25,12 +30,15 @@ Default:
 ### FAQ ###
 
 Q: Why not use the [Web](https://github.com/ProgVal/Limnoria/tree/master/plugins/Web) plugin?
+
 A: My experience was that it didn't work very well and lacked the ability to customize its options
 
 Q: What about [Supybot-Titler](https://github.com/reticulatingspline/Supybot-Titler) ?
+
 A: I couldn't get this to work on my system and it has a lot of features I didn't want
 
 Q: It doesn't work for me. What can I do?
+
 A: [Open an issue](https://github.com/prgmrbill/limnoria-plugins/issues/new) and include at minimum the following:
 
 - Brief description of the problem
