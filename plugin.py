@@ -48,6 +48,11 @@ class SpiffyTitles(callbacks.Plugin):
                 
                 if info:
                     domain = info.netloc
+                    is_ignored = self.is_ignored_domain(domain)
+                    
+                    if is_ignored:
+                        self.log.info("SpiffyTitles: ignoring url due to pattern match: %s" % (url))
+                        return
                     
                     handlers = {
                         "youtube.com": self.handler_youtube,
@@ -71,6 +76,18 @@ class SpiffyTitles(callbacks.Plugin):
                     
                     irc.reply(formatted_title)
     
+    def is_ignored_domain(self, domain):
+        ignored_patterns = self.registryValue("ignoredDomainPatterns")
+        
+        if ignored_patterns:
+            for pattern in ignored_patterns:
+                pattern_search_result = re.search(pattern, domain)
+                
+                if pattern_search_result is not None:
+                    match = pattern_search_result.group()
+                    
+                    return match
+    
     def get_video_id_from_url(self, url, info, irc):
         try:
             path = info.path
@@ -82,7 +99,7 @@ class SpiffyTitles(callbacks.Plugin):
             else:
                 parsed = cgi.parse_qsl(info.query)
                 video_id = dict(parsed)["v"]
-                
+            
             if video_id:
                 return video_id
             else:
@@ -132,7 +149,9 @@ class SpiffyTitles(callbacks.Plugin):
         # If we found a title, return that. otherwise, use default handler
         if title:
             return title
-        else:            
+        else:
+            self.log.info("SpiffyTitles: falling back to default handler")
+            
             return self.handler_default(url, domain, irc)
     
     def handler_default(self, url, domain, irc):

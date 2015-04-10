@@ -26,6 +26,21 @@ Default:
 
 `useBold` - Whether to bold the title. Defaults to `False`
 
+`ignoredDomainPatterns` - a comma separated list of strings that are regular expressions to match
+against URLs posted in channels.
+
+Examples
+
+Ignore all domains matching *.tk
+
+    r"(.*)\.tk"
+
+   
+Ignore all domains matching *.net
+
+    r"(.*)\.net"
+
+
 `userAgents` - A comma separated list of strings of user agents randomly chosen when requesting. 
 
 `urlRegularExpression` - A regular expression used to match URLs. You shouldn't need to change this.

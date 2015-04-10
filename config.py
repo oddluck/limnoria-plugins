@@ -50,3 +50,25 @@ conf.registerGlobalValue(SpiffyTitles, 'userAgents',
 # Mime Types
 conf.registerGlobalValue(SpiffyTitles, 'mimeTypes',
                         registry.CommaSeparatedListOfStrings(["text/html"], _("""Acceptable mime types for displaying titles""")))
+
+# Ignored domain patterns
+conf.registerGlobalValue(SpiffyTitles, 'ignoredDomainPatterns',
+                        registry.CommaSeparatedListOfStrings([], _("""Domains matching these patterns will be ignored""")))
+
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
+                        
