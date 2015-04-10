@@ -17,6 +17,8 @@ import requests
 from urlparse import urlparse
 from bs4 import BeautifulSoup
 import random
+import json
+import cgi
 
 try:
     from supybot.i18n import PluginInternationalization
@@ -42,19 +44,22 @@ class SpiffyTitles(callbacks.Plugin):
             url = self.get_url_from_message(message)
             
             if url:
-                domain = self.get_domain_from_url(url)
+                info = urlparse(url)
                 
-                if domain:
+                if info:
+                    domain = info.netloc
+                    
                     handlers = {
                         "youtube.com": self.handler_youtube,
+                        "www.youtube.com": self.handler_youtube,
                         "youtu.be": self.handler_youtube
                     }
                     
                     try:
                         handler = handlers[domain]                        
-                        title = handler(url, irc)                            
+                        title = handler(url, info, irc)                            
                     except KeyError:
-                        title = self.handler_default(url, irc)
+                        title = self.handler_default(url, info, irc)
                 else:
                     self.log.error("SpiffyTitles: unable to determine domain from url %s" % (url))
                     title = self.handler_default(url, irc)
@@ -65,14 +70,68 @@ class SpiffyTitles(callbacks.Plugin):
                     self.log.info("SpiffyTitles: title found: %s" % (formatted_title))
                     
                     irc.reply(formatted_title)
-
-    def handler_youtube(self, url, irc):
-        self.log.info("SpiffyTitles: calling youtube handler for %s" % (url))
     
-    def handler_default(self, url, irc):
+    def get_video_id_from_url(self, url, info, irc):
+        try:
+            path = info.path
+            domain = info.netloc
+            video_id = ""
+            
+            if domain == "youtu.be":
+                video_id = path.split("/")[1]
+            else:
+                parsed = cgi.parse_qsl(info.query)
+                video_id = dict(parsed)["v"]
+                
+            if video_id:
+                return video_id
+            else:
+                self.log.error("SpiffyTitles: error getting video id from %s" % (url))
+        
+        except IndexError, e:
+            self.log.error("SpiffyTitles: error getting video id from %s (%s)" % (url, str(e)))
+    
+    def handler_youtube(self, url, domain, irc):
+        self.log.info("SpiffyTitles: calling youtube handler for %s" % (url))
+        video_id = self.get_video_id_from_url(url, domain, irc)
+        template = self.registryValue("youtubeTitleTemplate")
+        
+        if video_id:
+            api_url = "https://gdata.youtube.com/feeds/api/videos/%s?v=2&alt=jsonc" % (video_id)
+            agent = self.get_user_agent()
+            headers = {
+                "User-Agent": agent
+            }
+            
+            self.log.info("SpiffyTitles: requesting %s" % (api_url))
+            
+            request = requests.get(api_url, headers=headers)            
+            ok = request.status_code == requests.codes.ok
+            
+            if ok:
+                response = json.loads(request.text)
+                
+                if response:
+                    try:
+                        data = response["data"]
+                        title = data['title']
+                        rating = round(data['rating'], 2)
+                        view_count = '{:,}'.format(int(data['viewCount']))
+                        
+                        return template % (title, view_count, rating)
+                    
+                    except IndexError:
+                        self.log.error("SpiffyTitles: IndexError parsing Youtube API JSON response")
+                else:
+                    self.log.error("SpiffyTitles: Error parsing Youtube API JSON response")
+            else:
+                self.log.error("SpiffyTitles: Youtube API HTTP %s: %s" % (request.status_code,
+                                                                          request.text))
+        
+    def handler_default(self, url, domain, irc):
         self.log.info("SpiffyTitles: calling default handler for %s" % (url))
         
-        html = self.get_html_by_url(url)
+        html = self.get_source_by_url(url)
         
         if html:
             title = self.get_title_from_html(html)
@@ -99,9 +158,9 @@ class SpiffyTitles(callbacks.Plugin):
         title = soup.find("head").find("title")
         
         if title:
-            return title.get_text().strip()
+            return title.get_text()
     
-    def get_html_by_url(self, url):
+    def get_source_by_url(self, url):
         try:
             agent = self.get_user_agent()
             headers = {
@@ -132,15 +191,6 @@ class SpiffyTitles(callbacks.Plugin):
         agents = self.registryValue("userAgents")
         
         return random.choice(agents)
-    
-    def get_domain_from_url(self, url):
-        try:        
-            parsed = urlparse(url)
-            
-            if parsed:
-                return parsed.netloc
-        except:
-            pass
     
     def get_url_from_message(self, input):
         url_re = self.registryValue("urlRegularExpression")
