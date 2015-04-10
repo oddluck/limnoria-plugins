@@ -163,10 +163,12 @@ class SpiffyTitles(callbacks.Plugin):
     
     def get_title_from_html(self, html):
         soup = BeautifulSoup(html)
-        title = soup.find("head").find("title")
         
-        if title:
-            return title.get_text().strip()
+        if soup:
+            title = soup.find("head").find("title")
+            
+            if title:
+                return title.get_text().strip()
     
     def get_source_by_url(self, url):
         try:
@@ -179,9 +181,19 @@ class SpiffyTitles(callbacks.Plugin):
             ok = request.status_code == requests.codes.ok
             
             if ok:
-                text = request.content
+                # Check the content type which comes in the format: text/html; charset=UTF-8
+                content_type = request.headers.get("content-type").split(";")[0].strip()
+                acceptable_types = self.registryValue("mimeTypes")
+                mime_type_acceptable = content_type in acceptable_types
                 
-                return text
+                self.log.info("SpiffyTitles: content type %s" % (content_type))
+                
+                if mime_type_acceptable:
+                    text = request.content
+                    
+                    return text
+                else:
+                    self.log.debug("SpiffyTitles: unacceptable mime type %s for url %s" % (content_type, url))
             else:
                 self.log.error("SpiffyTitles HTTP response code %s - %s" % (request.status_code, 
                                                                             request.content))
