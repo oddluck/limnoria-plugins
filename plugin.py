@@ -149,12 +149,15 @@ class SpiffyTitles(callbacks.Plugin):
     def get_formatted_title(self, title):
         useBold = self.registryValue("useBold")
         
+        # Replace anywhere in string
         title = title.replace("\n", "")
         title = title.replace("\t", "")
-        title = title.strip()
         
         if useBold:
             title = ircutils.bold(title)
+        
+        # Strip whitespace on either side
+        title = title.strip()
         
         return title
     
@@ -163,7 +166,7 @@ class SpiffyTitles(callbacks.Plugin):
         title = soup.find("head").find("title")
         
         if title:
-            return title.get_text()
+            return title.get_text().strip()
     
     def get_source_by_url(self, url):
         try:
