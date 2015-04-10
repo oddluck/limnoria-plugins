@@ -169,12 +169,12 @@ class SpiffyTitles(callbacks.Plugin):
             ok = request.status_code == requests.codes.ok
             
             if ok:
-                text = request.text
+                text = request.content
                 
                 return text
             else:
                 self.log.error("SpiffyTitles HTTP response code %s - %s" % (request.status_code, 
-                                                                            request.text))
+                                                                            request.content))
         
         except requests.exceptions.Timeout, e:
             self.log.error("SpiffyTitles Timeout: %s" % (str(e)))
