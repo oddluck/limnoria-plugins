@@ -1,4 +1,6 @@
-Displays link titles when posted in a channel
+# SpiffyTitles #
+
+Displays link titles when posted in a channel.
 
 ## Available Options ##
 
