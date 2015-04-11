@@ -67,16 +67,20 @@ titles will be shown in all channels. Default value: `""`
 
 `ignoredDomainPattern` - ignore domains matching this pattern. Default value: `(i\.imgur\.com)`
 
-    Tip
-    
-    You can ignore domains that you know aren't websites, like `i.imgur.com`. This prevents a request
-    from being made at all.
-    
-    Examples
+### Tip ###
 
-    Ignore *.tk and i.imgur.com
+You can ignore domains that you know aren't websites, like `i.imgur.com`. This prevents a request
+from being made at all.
 
-        !config supybot.plugins.SpiffyTitles.ignoredDomainPattern (\.tk|i\.imgur\.com)
+### Examples ###
+
+Ignore all links with the domain `i.imgur.com`
+
+    !config supybot.plugins.SpiffyTitles.ignoredDomainPattern (i\.imgur\.com)
+
+Ignore `*.tk` and `i.imgur.com`
+
+    !config supybot.plugins.SpiffyTitles.ignoredDomainPattern (\.tk|i\.imgur\.com)
 
 `userAgents` - A comma separated list of strings of user agents randomly chosen when requesting. 
 
