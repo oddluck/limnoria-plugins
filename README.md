@@ -8,8 +8,16 @@ are logged.
 - The ability to customize features that could conceivably need to change (within reason)
 
 ## Using SpiffyTitles ##
-- You should disable the Web plugin and any other plugins that show link titles for best results
+- You should `unload` the Web plugin and any other plugins that show link titles for best results
 
+To unload the Web plugin:
+
+    !unload Web
+
+Load SpiffyTitles:
+    
+    !load SpiffyTitles
+    
 ## Available Options ##
 
 `defaultTitleTemplate` - This is the template used when showing the title of a link. 
@@ -28,13 +36,13 @@ Example output:
 
     ^ Snoop Dogg - Pump Pump feat. Lil Malik :: Views: 188,681 :: Rating: 4.82
 
-`useBold` - Whether to bold the title. Defaults to `False`
+`useBold` - Whether to bold the title. Default value: `False`
 
-`channelWhitelist` - a comma separated list of channels in which titles should be displayed. If empty,
-titles will be shown in all channels.
+`channelWhitelist` - a comma separated list of channels in which titles should be displayed. If `False`,
+titles will be shown in all channels. Default value: `[]`
 
 `ignoredDomainPatterns` - a comma separated list of strings that are regular expressions to match
-against URLs posted in channels.
+against URLs posted in channels. Default value: `[]`
 
     Examples
 
