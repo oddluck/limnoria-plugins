@@ -14,15 +14,19 @@ are logged.
 
 `defaultTitleTemplate` - This is the template used when showing the title of a link. 
 
-Default:
+Default value: `^ %s`
+
+Example output:
 
     ^ Google.com
 
 `youtubeTitleTemplate` - This is the template used when showing the title of a YouTube video
 
-Default:
+Default value: `^ %s :: Views: %s :: Rating: %s`
 
-    ^ Example Video Title :: Views: 3,1337 :: Rating: 5.0
+Example output:
+
+    ^ Snoop Dogg - Pump Pump feat. Lil Malik :: Views: 188,681 :: Rating: 4.82
 
 `useBold` - Whether to bold the title. Defaults to `False`
 
