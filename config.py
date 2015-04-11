@@ -51,9 +51,9 @@ conf.registerGlobalValue(SpiffyTitles, 'userAgents',
 conf.registerGlobalValue(SpiffyTitles, 'mimeTypes',
                         registry.CommaSeparatedListOfStrings(["text/html"], _("""Acceptable mime types for displaying titles""")))
 
-# Ignored domain patterns
-conf.registerGlobalValue(SpiffyTitles, 'ignoredDomainPatterns',
-                        registry.CommaSeparatedListOfStrings([], _("""Domains matching these patterns will be ignored""")))
+# Ignored domain pattern
+conf.registerGlobalValue(SpiffyTitles, 'ignoredDomainPattern',
+                        registry.Regexp(r"(i\.imgur\.com)", _("""Domains matching this patterns will be ignored""")))
 
 # Channel whitelist
 conf.registerGlobalValue(SpiffyTitles, 'channelWhitelist',

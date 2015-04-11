@@ -63,15 +63,19 @@ titles will be shown in all channels. Default value: `""`
     Remove channel whitelist
     
     !config supybot.plugins.SpiffyTitles.channelWhitelist ""
-    
-`ignoredDomainPatterns` - a comma separated list of strings that are regular expressions to match
-against URLs posted in channels. Default value: `[]`
 
+`ignoredDomainPattern` - ignore domains matching this pattern. Default value: `(i\.imgur\.com)`
+
+    Tip
+    
+    You can ignore domains that you know aren't websites, like `i.imgur.com`. This prevents a request
+    from being made at all.
+    
     Examples
 
-    Ignore all domains matching *.tk
+    Ignore *.tk and i.imgur.com
 
-        !config supybot.plugins.SpiffyTitles.ignoredDomainPatterns r"(.*)\.tk"
+        !config supybot.plugins.SpiffyTitles.ignoredDomainPattern (\.tk|i\.imgur\.com)
 
 `userAgents` - A comma separated list of strings of user agents randomly chosen when requesting. 
 
