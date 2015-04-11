@@ -50,7 +50,8 @@ against URLs posted in channels.
 
 Q: Why not use the [Web](https://github.com/ProgVal/Limnoria/tree/master/plugins/Web) plugin?
 
-A: My experience was that it didn't work very well and lacked the ability to customize its options
+A: My experience was that it didn't work very well and lacked the ability to customize the options
+I wanted to change.
 
 Q: What about [Supybot-Titler](https://github.com/reticulatingspline/Supybot-Titler) ?
 
