@@ -38,8 +38,8 @@ Example output:
 
 `useBold` - Whether to bold the title. Default value: `False`
 
-`channelWhitelist` - a comma separated list of channels in which titles should be displayed. If `False`,
-titles will be shown in all channels. Default value: `[]`
+`channelWhitelist` - a comma separated list of channels in which titles should be displayed. If `""`,
+titles will be shown in all channels. Default value: `""`
 
 `ignoredDomainPatterns` - a comma separated list of strings that are regular expressions to match
 against URLs posted in channels. Default value: `[]`
@@ -48,11 +48,7 @@ against URLs posted in channels. Default value: `[]`
 
     Ignore all domains matching *.tk
 
-        (.*)\.tk
-
-    Ignore all domains matching *.net
-
-        (.*)\.net
+        !config supybot.plugins.SpiffyTitles.ignoredDomainPatterns r"(.*)\.tk"
 
 `userAgents` - A comma separated list of strings of user agents randomly chosen when requesting. 
 
