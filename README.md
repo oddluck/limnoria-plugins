@@ -29,17 +29,15 @@ Default:
 `ignoredDomainPatterns` - a comma separated list of strings that are regular expressions to match
 against URLs posted in channels.
 
-Examples
+    Examples
 
-Ignore all domains matching *.tk
+    Ignore all domains matching *.tk
 
-    r"(.*)\.tk"
+        (.*)\.tk
 
-   
-Ignore all domains matching *.net
+    Ignore all domains matching *.net
 
-    r"(.*)\.net"
-
+        (.*)\.net
 
 `userAgents` - A comma separated list of strings of user agents randomly chosen when requesting. 
 

@@ -78,15 +78,21 @@ class SpiffyTitles(callbacks.Plugin):
     
     def is_ignored_domain(self, domain):
         ignored_patterns = self.registryValue("ignoredDomainPatterns")
+        num_patterns = len(ignored_patterns)
         
-        if ignored_patterns:
+        if num_patterns:
+            self.log.debug("SpiffyTitles: matching %s against %s" % (num_patterns, str(ignored_patterns)))
+            
             for pattern in ignored_patterns:
-                pattern_search_result = re.search(pattern, domain)
-                
-                if pattern_search_result is not None:
-                    match = pattern_search_result.group()
+                try:
+                    pattern_search_result = re.search(pattern, domain)
                     
-                    return match
+                    if pattern_search_result is not None:
+                        match = pattern_search_result.group()
+                        
+                        return match
+                except re.Error:
+                    self.log.error("SpiffyTitles: invalid regular expression: %s" % (pattern))
     
     def get_video_id_from_url(self, url, info, irc):
         try:
