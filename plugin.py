@@ -209,9 +209,11 @@ class SpiffyTitles(callbacks.Plugin):
         
         if html:
             title = self.get_title_from_html(html)
-            title_template = template % (title)
             
-            return title_template
+            if title is not None:
+                title_template = template % (title)
+                
+                return title_template
     
     def get_formatted_title(self, title):
         useBold = self.registryValue("useBold")
@@ -231,11 +233,16 @@ class SpiffyTitles(callbacks.Plugin):
     def get_title_from_html(self, html):
         soup = BeautifulSoup(html)
         
-        if soup:
+        if soup is not None:
             title = soup.find("head").find("title")
             
-            if title:
-                return title.get_text().strip()
+            if title is not None:
+                title_text = title.get_text()
+                
+                if len(title_template):
+                    stripped_title = title_text.strip()
+                    
+                    return stripped_title
     
     def get_source_by_url(self, url):
         try:
