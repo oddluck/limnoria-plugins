@@ -177,8 +177,14 @@ class SpiffyTitles(callbacks.Plugin):
                         tmp_title = data['title']
                         rating = round(data['rating'], 2)
                         view_count = '{:,}'.format(int(data['viewCount']))
+                        duration_seconds = int(data['duration'])
                         
-                        title = template % (tmp_title, view_count, rating)
+                        if duration_seconds:
+                            m, s = divmod(duration_seconds, 60)
+                            h, m = divmod(m, 60)
+                            duration = "%02d:%02d:%02d" % (h, m, s)
+                        
+                        title = template % (tmp_title, duration, view_count, rating)
                     
                     except IndexError:
                         self.log.error("SpiffyTitles: IndexError parsing Youtube API JSON response")
