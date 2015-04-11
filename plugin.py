@@ -239,7 +239,7 @@ class SpiffyTitles(callbacks.Plugin):
             if title is not None:
                 title_text = title.get_text()
                 
-                if len(title_template):
+                if len(title_text):
                     stripped_title = title_text.strip()
                     
                     return stripped_title
