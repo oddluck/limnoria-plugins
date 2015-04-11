@@ -74,7 +74,7 @@ from being made at all.
 
 ### Examples ###
 
-Ignore all links with the domain `i.imgur.com`
+Ignore all links with the domain `i.imgur.com` (default behavior)
 
     !config supybot.plugins.SpiffyTitles.ignoredDomainPattern (i\.imgur\.com)
 
