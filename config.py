@@ -59,6 +59,10 @@ conf.registerGlobalValue(SpiffyTitles, 'ignoredDomainPatterns',
 conf.registerGlobalValue(SpiffyTitles, 'channelWhitelist',
                         registry.CommaSeparatedListOfStrings([], _("""Only show titles on these channels, or all if empty""")))
 
+# Channel blacklist
+conf.registerGlobalValue(SpiffyTitles, 'channelBlacklist',
+                        registry.CommaSeparatedListOfStrings([], _("""Never show titles on these channels""")))
+
                         
                         
                         

@@ -41,15 +41,13 @@ class SpiffyTitles(callbacks.Plugin):
         message = msg.args[1]
         
         if is_channel and not is_ctcp:
-            channel_whitelist = self.get_channel_whitelist()
-            
+            channel_is_allowed = self.is_channel_allowed(channel)            
             url = self.get_url_from_message(message)
             
-            if url:                
-                # If there is a channel whitelist and the origin channel is
-                # not in the whitelist, bail out.
-                if len(channel_whitelist) and channel not in channel_whitelist:
-                    self.log.info("SpiffyTitles: ignoring link in %s due to whitelist %s" % (channel, str(channel_whitelist)))
+            if url:
+                # Check if channel is allowed based on white/black list restrictions
+                if not channel_is_allowed:
+                    self.log.info("SpiffyTitles: not responding to link in %s due to black/white list restrictions" % (channel))
                     return
                 
                 info = urlparse(url)
@@ -84,25 +82,43 @@ class SpiffyTitles(callbacks.Plugin):
                     
                     irc.reply(formatted_title)
     
-    def get_channel_whitelist(self):
-        white_list = self.registryValue("channelWhitelist")
-        channels = []
+    def is_channel_allowed(self, channel):
+        """
+        Checks channel whitelist and blacklist to determine if the current
+        channel is allowed to display titles.
+        """
+        channel = channel.lower()
+        is_allowed = False
+        white_list = self.filter_empty(self.registryValue("channelWhitelist"))
+        black_list = self.filter_empty(self.registryValue("channelBlacklist"))
+        white_list_empty = len(white_list) == 0
+        black_list_empty = len(black_list) == 0
         
-        if len(white_list):
-            for channel in white_list:
-                if channel:
-                    normalized_channel = channel.strip().lower()
-                    
-                    channels.append(normalized_channel)
-
-        return channels
+        # Most basic case, which is that both white and blacklist are empty. Any channel is allowed.
+        if white_list_empty and black_list_empty:
+            is_allowed = True
         
+        # If there is a white list, blacklist is ignored.
+        if white_list:
+            is_allowed = channel in white_list
+        
+        # Finally, check blacklist
+        if not white_list and black_list:
+            is_allowed = channel not in black_list
+        
+        return is_allowed
+    
+    def filter_empty(self, input):
+        """
+        Remove all empty strings from a list
+        """
+        return set([channel for channel in input if len(channel.strip())])
+    
     def is_ignored_domain(self, domain):
         ignored_patterns = self.registryValue("ignoredDomainPatterns")
-        num_patterns = len(ignored_patterns)
         
-        if num_patterns:
-            self.log.debug("SpiffyTitles: matching %s against %s" % (num_patterns, str(ignored_patterns)))
+        if len(ignored_patterns):
+            self.log.debug("SpiffyTitles: matching %s against %s" % (domain, str(ignored_patterns)))
             
             for pattern in ignored_patterns:
                 try:
@@ -263,7 +279,7 @@ class SpiffyTitles(callbacks.Plugin):
         match = re.search(url_re, input)
         
         if match:
-            return match.group(0)
+            return match.group(0).strip()
     
 Class = SpiffyTitles
 

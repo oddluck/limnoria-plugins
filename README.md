@@ -41,6 +41,29 @@ Example output:
 `channelWhitelist` - a comma separated list of channels in which titles should be displayed. If `""`,
 titles will be shown in all channels. Default value: `""`
 
+`channelBlacklist` - a comma separated list of channels in which titles should never be displayed. If `""`,
+titles will be shown in all channels. Default value: `""`
+
+    About white/black lists
+    
+    - If `channelWhitelist` and `channelBlacklist` are empty, then titles will be displayed in every channel
+    - If `channelBlacklist` has #foo, then titles will be displayed in every channel except #foo
+    - If `channelWhitelist` has #foo then `channelBlacklist` will be ignored
+
+    Examples
+    
+    Show titles in every channel except #foo
+    
+    !config supybot.plugins.SpiffyTitles.channelBlacklist #foo
+    
+    Only show titles in #bar
+    
+    !config supybot.plugins.SpiffyTitles.channelWhitelist #bar
+
+    Remove channel whitelist
+    
+    !config supybot.plugins.SpiffyTitles.channelWhitelist ""
+    
 `ignoredDomainPatterns` - a comma separated list of strings that are regular expressions to match
 against URLs posted in channels. Default value: `[]`
 
