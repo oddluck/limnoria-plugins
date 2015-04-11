@@ -35,15 +35,23 @@ class SpiffyTitles(callbacks.Plugin):
     callBefore = ['Web']
     
     def doPrivmsg(self, irc, msg):
-        channel = msg.args[0]
+        channel = msg.args[0].lower()
         is_channel = irc.isChannel(channel)
         is_ctcp = ircmsgs.isCtcp(msg)        
         message = msg.args[1]
         
         if is_channel and not is_ctcp:
+            channel_whitelist = self.get_channel_whitelist()
+            
             url = self.get_url_from_message(message)
             
-            if url:
+            if url:                
+                # If there is a channel whitelist and the origin channel is
+                # not in the whitelist, bail out.
+                if len(channel_whitelist) and channel not in channel_whitelist:
+                    self.log.info("SpiffyTitles: ignoring link in %s due to whitelist %s" % (channel, str(channel_whitelist)))
+                    return
+                
                 info = urlparse(url)
                 
                 if info:
@@ -76,6 +84,19 @@ class SpiffyTitles(callbacks.Plugin):
                     
                     irc.reply(formatted_title)
     
+    def get_channel_whitelist(self):
+        white_list = self.registryValue("channelWhitelist")
+        channels = []
+        
+        if len(white_list):
+            for channel in white_list:
+                if channel:
+                    normalized_channel = channel.strip().lower()
+                    
+                    channels.append(normalized_channel)
+
+        return channels
+        
     def is_ignored_domain(self, domain):
         ignored_patterns = self.registryValue("ignoredDomainPatterns")
         num_patterns = len(ignored_patterns)

@@ -26,6 +26,9 @@ Default:
 
 `useBold` - Whether to bold the title. Defaults to `False`
 
+`channelWhitelist` - a comma separated list of channels in which titls should be displayed. If empty,
+titles will be shown in all channels.
+
 `ignoredDomainPatterns` - a comma separated list of strings that are regular expressions to match
 against URLs posted in channels.
 
