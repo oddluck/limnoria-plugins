@@ -115,6 +115,9 @@ class SpiffyTitles(callbacks.Plugin):
         return set([channel for channel in input if len(channel.strip())])
     
     def is_ignored_domain(self, domain):
+        """
+        Checks domain against a regular expression
+        """
         pattern = self.registryValue("ignoredDomainPattern")
         
         if pattern:
@@ -131,6 +134,9 @@ class SpiffyTitles(callbacks.Plugin):
                 self.log.error("SpiffyTitles: invalid regular expression: %s" % (pattern))
     
     def get_video_id_from_url(self, url, info, irc):
+        """
+        Get YouTube video ID from URL
+        """
         try:
             path = info.path
             domain = info.netloc
@@ -151,7 +157,11 @@ class SpiffyTitles(callbacks.Plugin):
             self.log.error("SpiffyTitles: error getting video id from %s (%s)" % (url, str(e)))
     
     def handler_youtube(self, url, domain, irc):
-        self.log.info("SpiffyTitles: calling youtube handler for %s" % (url))
+        """
+        Uses the Youtube API to provide additional meta data about
+        Youtube Video links posted.
+        """
+        self.log.info("SpiffyTitles: calling Youtube handler for %s" % (url))
         video_id = self.get_video_id_from_url(url, domain, irc)
         template = self.registryValue("youtubeTitleTemplate")
         title = ""
@@ -175,16 +185,22 @@ class SpiffyTitles(callbacks.Plugin):
                     try:
                         data = response["data"]
                         tmp_title = data['title']
-                        rating = round(data['rating'], 2)
+                        rating = str(round(data['rating'], 2))
                         view_count = '{:,}'.format(int(data['viewCount']))
                         duration_seconds = int(data['duration'])
                         
                         if duration_seconds:
                             m, s = divmod(duration_seconds, 60)
                             h, m = divmod(m, 60)
-                            duration = "%02d:%02d:%02d" % (h, m, s)
+                            duration = "%02d:%02d:%02d" % (h, m, s)                            
+                            template = template.replace("$duration", duration)
                         
-                        title = template % (tmp_title, duration, view_count, rating)
+                        # Replace variables
+                        template = template.replace("$title", tmp_title)
+                        template = template.replace("$rating", rating)
+                        template = template.replace("$view_count", view_count)
+                        
+                        title = template
                     
                     except IndexError:
                         self.log.error("SpiffyTitles: IndexError parsing Youtube API JSON response")
@@ -203,6 +219,9 @@ class SpiffyTitles(callbacks.Plugin):
             return self.handler_default(url, domain, irc)
     
     def handler_default(self, url, domain, irc):
+        """
+        Default handler for websites
+        """
         self.log.info("SpiffyTitles: calling default handler for %s" % (url))
         template = self.registryValue("defaultTitleTemplate")
         html = self.get_source_by_url(url)
@@ -211,11 +230,14 @@ class SpiffyTitles(callbacks.Plugin):
             title = self.get_title_from_html(html)
             
             if title is not None:
-                title_template = template % (title)
+                title_template = template.replace("$title", title)
                 
                 return title_template
     
     def get_formatted_title(self, title):
+        """
+        Remove cruft from title and apply bold if applicable
+        """
         useBold = self.registryValue("useBold")
         
         # Replace anywhere in string
@@ -231,6 +253,9 @@ class SpiffyTitles(callbacks.Plugin):
         return title
     
     def get_title_from_html(self, html):
+        """
+        Retrieves value of <title> tag from HTML using BeautifulSoup
+        """
         soup = BeautifulSoup(html)
         
         if soup is not None:
@@ -245,6 +270,9 @@ class SpiffyTitles(callbacks.Plugin):
                     return stripped_title
     
     def get_source_by_url(self, url):
+        """
+        Get the HTML of a website based on a URL
+        """
         try:
             agent = self.get_user_agent()
             headers = {
@@ -255,7 +283,7 @@ class SpiffyTitles(callbacks.Plugin):
             ok = request.status_code == requests.codes.ok
             
             if ok:
-                # Check the content type which comes in the format: text/html; charset=UTF-8
+                # Check the content type which comes in the format: "text/html; charset=UTF-8"
                 content_type = request.headers.get("content-type").split(";")[0].strip()
                 acceptable_types = self.registryValue("mimeTypes")
                 mime_type_acceptable = content_type in acceptable_types

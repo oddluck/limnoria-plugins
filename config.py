@@ -37,11 +37,11 @@ conf.registerGlobalValue(SpiffyTitles, 'useBold',
 
 # Title template
 conf.registerGlobalValue(SpiffyTitles, 'defaultTitleTemplate',
-     registry.String("^ %s", _("""Template used for default title responses""")))
+     registry.String("^ $title", _("""Template used for default title responses""")))
 
 # YouTube template
 conf.registerGlobalValue(SpiffyTitles, 'youtubeTitleTemplate',
-     registry.String("^ %s :: Duration: %s :: Views: %s :: Rating: %s", _("""Template used for YouTube title responses""")))
+     registry.String("^ $title :: Duration: $duration :: Views: $view_count :: Rating: $rating", _("""Template used for YouTube title responses""")))
 
 # User agents
 conf.registerGlobalValue(SpiffyTitles, 'userAgents',
