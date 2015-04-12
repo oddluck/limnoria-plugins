@@ -192,7 +192,13 @@ class SpiffyTitles(callbacks.Plugin):
                         if duration_seconds:
                             m, s = divmod(duration_seconds, 60)
                             h, m = divmod(m, 60)
-                            duration = "%02d:%02d:%02d" % (h, m, s)                            
+                            
+                            duration = "%02d:%02d" % (m, s)
+                            
+                            # Only include hour if the video is at least 1 hour long
+                            if h > 0:
+                                duration = "%02d:%s" % (h, duration)
+                            
                             template = template.replace("$duration", duration)
                         
                         # Replace variables
