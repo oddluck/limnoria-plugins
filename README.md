@@ -17,12 +17,12 @@ To unload the Web plugin:
 Load SpiffyTitles:
     
     !load SpiffyTitles
-    
+
 ## Available Options ##
 
 `defaultTitleTemplate` - This is the template used when showing the title of a link. 
 
-Default value: `^ %s`
+Default value: `^ $title`
 
 Example output:
 
@@ -30,11 +30,11 @@ Example output:
 
 `youtubeTitleTemplate` - This is the template used when showing the title of a YouTube video
 
-Default value: `^ %s :: Views: %s :: Rating: %s`
+Default value: `^ $title :: Duration: $duration :: Views: $view_count :: Rating: $rating`
 
 Example output:
 
-    ^ Snoop Dogg - Pump Pump feat. Lil Malik :: Views: 188,681 :: Rating: 4.82
+    ^ Snoop Dogg - Pump Pump feat. Lil Malik :: Duration: 00:04:41 :: Views: 189,120 :: Rating: 4.82
 
 `useBold` - Whether to bold the title. Default value: `False`
 
