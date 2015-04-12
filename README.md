@@ -54,12 +54,16 @@ titles will be shown in all channels. Default value: `""`
 
 
 ### Show titles in every channel except #foo ###
-    
+
     !config supybot.plugins.SpiffyTitles.channelBlacklist #foo
-    
+
 ### Only show titles in #bar ###
-    
+
     !config supybot.plugins.SpiffyTitles.channelWhitelist #bar
+
+### Only show titles in #baz and #bar ###
+
+    !config supybot.plugins.SpiffyTitles.channelWhitelist #baz,#bar
 
 ### Remove channel whitelist ###
     
