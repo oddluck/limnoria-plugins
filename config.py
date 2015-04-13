@@ -63,6 +63,10 @@ conf.registerGlobalValue(SpiffyTitles, 'channelWhitelist',
 conf.registerGlobalValue(SpiffyTitles, 'channelBlacklist',
                         registry.CommaSeparatedListOfStrings([], _("""Never show titles on these channels""")))
 
+# Cooldown
+conf.registerGlobalValue(SpiffyTitles, 'cooldownInSeconds',
+                        registry.Integer(5, _("""Only show titles from each url every X seconds""")))
+
                         
                         
                         

@@ -19,6 +19,7 @@ from bs4 import BeautifulSoup
 import random
 import json
 import cgi
+import datetime
 
 try:
     from supybot.i18n import PluginInternationalization
@@ -28,18 +29,28 @@ except ImportError:
     # without the i18n module
     _ = lambda x: x
 
-
 class SpiffyTitles(callbacks.Plugin):
     """Displays link titles when posted in a channel"""
     threaded = True
     callBefore = ['Web']
+    linkCache = {}
+    
+    def __init__(self, irc):
+        self.__parent = super(SpiffyTitles, self)
+        self.__parent.__init__(irc)
+        
+        self.link_throttle_in_seconds = self.registryValue('cooldownInSeconds')
     
     def doPrivmsg(self, irc, msg):
+        """
+        Observe each channel message and look for links
+        """
         channel = msg.args[0].lower()
         is_channel = irc.isChannel(channel)
         is_ctcp = ircmsgs.isCtcp(msg)        
         message = msg.args[1]
-        
+        now = datetime.datetime.now()
+
         if is_channel and not is_ctcp:
             channel_is_allowed = self.is_channel_allowed(channel)            
             url = self.get_url_from_message(message)
@@ -59,6 +70,22 @@ class SpiffyTitles(callbacks.Plugin):
                     if is_ignored:
                         self.log.info("SpiffyTitles: ignoring url due to pattern match: %s" % (url))
                         return
+                    
+                    # Check if we've seen this link lately
+                    if url in self.linkCache:
+                        link_timestamp = self.linkCache[url]
+                        
+                        seconds = (now - link_timestamp).total_seconds()
+                        throttled = seconds < self.link_throttle_in_seconds
+                    else:
+                        throttled = False
+                    
+                    if throttled:
+                        self.log.info("SpiffyTitles: %s ignored; throttle: it has been %s seconds since last post" % (url, seconds))
+                        return
+                    
+                    # Update link cache now that we know it's not an ignored link
+                    self.linkCache[url] = now
                     
                     handlers = {
                         "youtube.com": self.handler_youtube,
