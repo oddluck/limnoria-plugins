@@ -33,7 +33,7 @@ class SpiffyTitles(callbacks.Plugin):
     """Displays link titles when posted in a channel"""
     threaded = True
     callBefore = ['Web']
-    linkCache = {}
+    link_cache = {}
     
     def __init__(self, irc):
         self.__parent = super(SpiffyTitles, self)
@@ -72,8 +72,8 @@ class SpiffyTitles(callbacks.Plugin):
                         return
                     
                     # Check if we've seen this link lately
-                    if url in self.linkCache:
-                        link_timestamp = self.linkCache[url]
+                    if url in self.link_cache:
+                        link_timestamp = self.link_cache[url]
                         
                         seconds = (now - link_timestamp).total_seconds()
                         throttled = seconds < self.link_throttle_in_seconds
@@ -85,7 +85,7 @@ class SpiffyTitles(callbacks.Plugin):
                         return
                     
                     # Update link cache now that we know it's not an ignored link
-                    self.linkCache[url] = now
+                    self.link_cache[url] = now
                     
                     handlers = {
                         "youtube.com": self.handler_youtube,
