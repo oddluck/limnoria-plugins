@@ -90,7 +90,8 @@ class SpiffyTitles(callbacks.Plugin):
                     handlers = {
                         "youtube.com": self.handler_youtube,
                         "www.youtube.com": self.handler_youtube,
-                        "youtu.be": self.handler_youtube
+                        "youtu.be": self.handler_youtube,
+                        "m.youtube.com": self.handler_youtube
                     }
                     
                     try:
