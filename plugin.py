@@ -216,7 +216,10 @@ class SpiffyTitles(callbacks.Plugin):
                         view_count = '{:,}'.format(int(data['viewCount']))
                         duration_seconds = int(data['duration'])
                         
-                        if duration_seconds:
+                        """
+                        #23 - If duration is zero, then it's a LIVE video
+                        """
+                        if duration_seconds > 0:
                             m, s = divmod(duration_seconds, 60)
                             h, m = divmod(m, 60)
                             
@@ -227,6 +230,8 @@ class SpiffyTitles(callbacks.Plugin):
                                 duration = "%02d:%s" % (h, duration)
                             
                             template = template.replace("$duration", duration)
+                        else:
+                            template = template.replace("$duration", "LIVE")
                         
                         # Replace variables
                         template = template.replace("$title", tmp_title)
