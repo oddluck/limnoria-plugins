@@ -183,7 +183,7 @@ class SpiffyTitles(callbacks.Plugin):
         
         except IndexError, e:
             self.log.error("SpiffyTitles: error getting video id from %s (%s)" % (url, str(e)))
-    
+
     def handler_youtube(self, url, domain, irc):
         """
         Uses the Youtube API to provide additional meta data about
@@ -272,7 +272,7 @@ class SpiffyTitles(callbacks.Plugin):
                 title_template = template.replace("$title", title)
                 
                 return title_template
-    
+ 
     def get_formatted_title(self, title):
         """
         Remove cruft from title and apply bold if applicable
@@ -293,20 +293,24 @@ class SpiffyTitles(callbacks.Plugin):
     
     def get_title_from_html(self, html):
         """
-        Retrieves value of <title> tag from HTML using BeautifulSoup
+        Retrieves value of <title> tag from HTML
         """
         soup = BeautifulSoup(html)
         
         if soup is not None:
-            title = soup.find("head").find("title")
+            head = soup.find("head")
             
-            if title is not None:
-                title_text = title.get_text()
+            if head:
+                # TODO: What should happen if there is more than one <title> tag?
+                title = head.find("title")
                 
-                if len(title_text):
-                    stripped_title = title_text.strip()
+                if title is not None:
+                    title_text = title.get_text()
                     
-                    return stripped_title
+                    if len(title_text):
+                        stripped_title = title_text.strip()
+                        
+                        return stripped_title
     
     def get_source_by_url(self, url):
         """
