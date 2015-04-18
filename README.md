@@ -8,6 +8,7 @@ are logged.
 - The ability to customize features that could conceivably need to change (within reason)
 
 ## Using SpiffyTitles ##
+- Install the requirements: `pip install -r SpiffyTitles/requirements.txt --user --upgrade`
 - You should `unload` the Web plugin and any other plugins that show link titles for best results
 
 To unload the Web plugin:
@@ -17,6 +18,8 @@ To unload the Web plugin:
 Load SpiffyTitles:
     
     !load SpiffyTitles
+
+Tip: Observe the logs when loading the plugin and afterwards to see what's going on under the hood.
 
 ## Available Options ##
 
