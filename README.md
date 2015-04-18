@@ -40,6 +40,10 @@ Example output:
 
 Default value: `^ $title :: $type $widthx$height $file_size :: $view_count views :: $nsfw`
 
+Example output:
+
+    ^ You know what time it is? :: image/jpeg 500x667 63.3KiB :: 82,892 views :: safe for work
+
 Notes on the imgur handler: 
 
 - You'll need a [register an application with imgur](https://api.imgur.com/oauth2/addclient)
