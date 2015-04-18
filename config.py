@@ -66,8 +66,16 @@ conf.registerGlobalValue(SpiffyTitles, 'channelBlacklist',
 # Cooldown
 conf.registerGlobalValue(SpiffyTitles, 'cooldownInSeconds',
                         registry.Integer(5, _("""Only show titles from each url every X seconds""")))
-                 
-                        
+
+# imgur API
+conf.registerGlobalValue(SpiffyTitles, 'imgurClientID',
+                        registry.String("", _("""imgur client ID""")))
+
+conf.registerGlobalValue(SpiffyTitles, 'imgurClientSecret',
+                        registry.String("", _("""imgur client secret""")))
+
+conf.registerGlobalValue(SpiffyTitles, 'imgurTemplate',
+                        registry.String("^ $title :: $type $widthx$height $file_size :: $view_count views :: $nsfw", _("""imgur template""")))
                         
                         
                         

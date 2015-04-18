@@ -34,12 +34,40 @@ class SpiffyTitles(callbacks.Plugin):
     threaded = True
     callBefore = ['Web']
     link_cache = {}
+    handlers = {}
     
     def __init__(self, irc):
         self.__parent = super(SpiffyTitles, self)
         self.__parent.__init__(irc)
         
         self.link_throttle_in_seconds = self.registryValue('cooldownInSeconds')
+        
+        """
+        Check if imgur client id or secret are set, and if so initialize
+        imgur API client
+        """
+        imgur_client_id = self.registryValue("imgurClientID")
+        imgur_client_secret = self.registryValue("imgurClientSecret")
+        
+        if imgur_client_id and imgur_client_secret:
+            # Set handler
+            self.handlers["i.imgur.com"] = self.handler_imgur
+            
+            # Initialize API client
+            try:
+                from imgurpython import ImgurClient
+                
+                try:
+                    self.imgur_client = client = ImgurClient(imgur_client_id, imgur_client_secret)                    
+                except ImgurClientError as e:
+                    self.log.error("SpiffyTitles: imgur client error: %s" % (e.error_message))                    
+            except ImportError, e:
+                self.log.error("SpiffyTitles ImportError: %s" % str(e))
+        
+        self.handlers["youtube.com"] = self.handler_youtube
+        self.handlers["www.youtube.com"] = self.handler_youtube
+        self.handlers["youtu.be"] = self.handler_youtube
+        self.handlers["m.youtube.com"] = self.handler_youtube
     
     def doPrivmsg(self, irc, msg):
         """
@@ -87,15 +115,8 @@ class SpiffyTitles(callbacks.Plugin):
                     # Update link cache now that we know it's not an ignored link
                     self.link_cache[url] = now
                     
-                    handlers = {
-                        "youtube.com": self.handler_youtube,
-                        "www.youtube.com": self.handler_youtube,
-                        "youtu.be": self.handler_youtube,
-                        "m.youtube.com": self.handler_youtube
-                    }
-                    
                     try:
-                        handler = handlers[domain]                        
+                        handler = self.handlers[domain]                        
                         title = handler(url, info, irc)                            
                     except KeyError:
                         title = self.handler_default(url, info, irc)
@@ -272,7 +293,87 @@ class SpiffyTitles(callbacks.Plugin):
                 title_template = template.replace("$title", title)
                 
                 return title_template
- 
+    
+    def handler_imgur(self, url, info, irc):
+        """
+        Queries imgur API for additional information about imgur links
+        """
+        
+        """
+        The path comes in this form: /image_id.extension so strip off the left
+        forward slash and then split by period to get the image id
+        """
+        from imgurpython.helpers.error import ImgurClientRateLimitError
+        from imgurpython.helpers.error import ImgurClientError
+        
+        path = info.path.lstrip("/")
+        image_id = path.split(".")[0]
+        
+        self.log.info("SpiffyTitles: image id found: %s" % (image_id))
+        
+        if image_id:
+            try:
+                image = self.imgur_client.get_image(image_id)
+                
+                if image:
+                    template = self.registryValue("imgurTemplate")
+                    
+                    if image.title:
+                        template = template.replace("$title", image.title)
+                    else:
+                        template = template.replace("$title", "")
+                    
+                    template = template.replace("$type", image.type)
+                    template = template.replace("$width", str(image.width))
+                    template = template.replace("$height", str(image.height))
+                    template = template.replace("$view_count", '{:,}'.format(image.views))
+                    
+                    # todo: template this
+                    if image.nsfw is True:
+                        nsfw_indicator = "not safe for work"
+                    elif image.nsfw is False:
+                        nsfw_indicator = "safe for work"
+                    else:
+                        nsfw_indicator = "not sure if safe for work"
+                    
+                    template = template.replace("$nsfw", nsfw_indicator)
+                    
+                    self.log.info("SpiffyTitles: file size %s" % (str(image.size)))
+                    
+                    readable_file_size = self.get_readable_file_size(image.size)
+                    template = template.replace("$file_size", readable_file_size)
+                    
+                    return template
+                else:
+                    self.log.error("SpiffyTitles: imgur API returned unexpected results!")
+                    
+                    # Fall back to default handler
+                    self.handler_default(url, info, irc)     
+            
+            except ImgurClientRateLimitError as e:
+                self.log.error("SpiffyTitles: imgur rate limit error: %s" % (e.error_message))
+                
+                # Fall back to default handler
+                self.handler_default(url, info, irc)     
+            
+            except ImgurClientError as e:
+                self.log.error("SpiffyTitles: imgur client error: %s" % (e.error_message))
+                
+                # Fall back to default handler
+                self.handler_default(url, info, irc)          
+        else:
+            self.log.error("SpiffyTitles: error retrieving image id for %s" % (url))
+    
+    def get_readable_file_size(self, num, suffix='B'):
+        """
+        Returns human readable file size
+        """
+        for unit in ['','Ki','Mi','Gi','Ti','Pi','Ei','Zi']:
+            if abs(num) < 1024.0:
+                return "%3.1f%s%s" % (num, unit, suffix)
+            num /= 1024.0
+        return "%.1f%s%s" % (num, 'Yi', suffix)
+    
     def get_formatted_title(self, title):
         """
         Remove cruft from title and apply bold if applicable
