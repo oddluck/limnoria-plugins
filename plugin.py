@@ -20,6 +20,7 @@ import random
 import json
 import cgi
 import datetime
+from jinja2 import Template
 
 try:
     from supybot.i18n import PluginInternationalization
@@ -212,7 +213,7 @@ class SpiffyTitles(callbacks.Plugin):
         """
         self.log.info("SpiffyTitles: calling Youtube handler for %s" % (url))
         video_id = self.get_video_id_from_url(url, domain, irc)
-        template = self.registryValue("youtubeTitleTemplate")
+        yt_template = Template(self.registryValue("youtubeTitleTemplate"))
         title = ""
         
         if video_id:
@@ -233,7 +234,7 @@ class SpiffyTitles(callbacks.Plugin):
                 if response:
                     try:
                         data = response["data"]
-                        tmp_title = data['title']
+                        title = data['title']
                         rating = str(round(data['rating'], 2))
                         view_count = '{:,}'.format(int(data['viewCount']))
                         duration_seconds = int(data['duration'])
@@ -250,17 +251,17 @@ class SpiffyTitles(callbacks.Plugin):
                             # Only include hour if the video is at least 1 hour long
                             if h > 0:
                                 duration = "%02d:%s" % (h, duration)
-                            
-                            template = template.replace("$duration", duration)
                         else:
-                            template = template.replace("$duration", "LIVE")
+                            duration = "LIVE"
                         
-                        # Replace variables
-                        template = template.replace("$title", tmp_title)
-                        template = template.replace("$rating", rating)
-                        template = template.replace("$view_count", view_count)
+                        compiled_template = yt_template.render({
+                            "title": title,
+                            "rating": rating,
+                            "duration": duration,
+                            "view_count": view_count
+                        })
                         
-                        title = template
+                        title = compiled_template
                     
                     except IndexError:
                         self.log.error("SpiffyTitles: IndexError parsing Youtube API JSON response")
@@ -283,14 +284,14 @@ class SpiffyTitles(callbacks.Plugin):
         Default handler for websites
         """
         self.log.info("SpiffyTitles: calling default handler for %s" % (url))
-        template = self.registryValue("defaultTitleTemplate")
+        default_template = Template(self.registryValue("defaultTitleTemplate"))
         html = self.get_source_by_url(url)
         
         if html:
             title = self.get_title_from_html(html)
             
             if title is not None:
-                title_template = template.replace("$title", title)
+                title_template = default_template.render(title=title)
                 
                 return title_template
     
@@ -316,34 +317,19 @@ class SpiffyTitles(callbacks.Plugin):
                 image = self.imgur_client.get_image(image_id)
                 
                 if image:
-                    template = self.registryValue("imgurTemplate")
-                    
-                    if image.title:
-                        template = template.replace("$title", image.title)
-                    else:
-                        template = template.replace("$title", "")
-                    
-                    template = template.replace("$type", image.type)
-                    template = template.replace("$width", str(image.width))
-                    template = template.replace("$height", str(image.height))
-                    template = template.replace("$view_count", '{:,}'.format(image.views))
-                    
-                    # todo: template this
-                    if image.nsfw is True:
-                        nsfw_indicator = "not safe for work"
-                    elif image.nsfw is False:
-                        nsfw_indicator = "safe for work"
-                    else:
-                        nsfw_indicator = "not sure if safe for work"
-                    
-                    template = template.replace("$nsfw", nsfw_indicator)
-                    
-                    self.log.info("SpiffyTitles: file size %s" % (str(image.size)))
-                    
+                    imgur_template = Template(self.registryValue("imgurTemplate"))
                     readable_file_size = self.get_readable_file_size(image.size)
-                    template = template.replace("$file_size", readable_file_size)
+                    compiled_template = imgur_template.render({
+                        "title": image.title,
+                        "type": image.type,
+                        "nsfw": image.nsfw,
+                        "width": image.width,
+                        "height": image.height,
+                        "view_count": '{:,}'.format(image.views),
+                        "file_size": readable_file_size
+                    })
                     
-                    return template
+                    return compiled_template
                 else:
                     self.log.error("SpiffyTitles: imgur API returned unexpected results!")
                     

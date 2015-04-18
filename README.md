@@ -22,7 +22,7 @@ Load SpiffyTitles:
 
 `defaultTitleTemplate` - This is the template used when showing the title of a link. 
 
-Default value: `^ $title`
+Default value: `^ {{title}}`
 
 Example output:
 
@@ -30,7 +30,7 @@ Example output:
 
 `youtubeTitleTemplate` - This is the template used when showing the title of a YouTube video
 
-Default value: `^ $title :: Duration: $duration :: Views: $view_count :: Rating: $rating`
+Default value: `^ {{title}} :: Duration: {{duration}} :: Views: {{view_count}} :: Rating: {{rating}}`
 
 Example output:
 
@@ -38,7 +38,7 @@ Example output:
 
 `imgurTemplate` - This is the template used when showing information about an [imgur](https://imgur.com) link.
 
-Default value: `^ $title :: $type $widthx$height $file_size :: $view_count views :: $nsfw`
+Default value: `^ {%if title %}{{title}} :: {% endif %}{{type}} {{width}}x{{height}} {{file_size}} :: {{view_count}} views :: {%if nsfw == None %}not sure{% elif nsfw == True %}NSFW{% else %}safe for work {% endif %}`
 
 Example output:
 
@@ -48,8 +48,8 @@ Notes on the imgur handler:
 
 - You'll need a [register an application with imgur](https://api.imgur.com/oauth2/addclient)
 - Select "OAuth 2 authorization without a callback URL"
-- Not all images have titles
 - If there is a problem reaching the API the default handler will be used as a fallback. See logs for details.
+- The API seems to report information on the originally uploaded image and not other formats
 
 `useBold` - Whether to bold the title. Default value: `False`
 

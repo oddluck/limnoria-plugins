@@ -37,11 +37,11 @@ conf.registerGlobalValue(SpiffyTitles, 'useBold',
 
 # Title template
 conf.registerGlobalValue(SpiffyTitles, 'defaultTitleTemplate',
-     registry.String("^ $title", _("""Template used for default title responses""")))
+     registry.String("^ {{title}}", _("""Template used for default title responses""")))
 
 # YouTube template
 conf.registerGlobalValue(SpiffyTitles, 'youtubeTitleTemplate',
-     registry.String("^ $title :: Duration: $duration :: Views: $view_count :: Rating: $rating", _("""Template used for YouTube title responses""")))
+     registry.String("^ {{title}} :: Duration: {{duration}} :: Views: {{view_count}} :: Rating: {{rating}}", _("""Template used for YouTube title responses""")))
 
 # User agents
 conf.registerGlobalValue(SpiffyTitles, 'userAgents',
@@ -75,9 +75,8 @@ conf.registerGlobalValue(SpiffyTitles, 'imgurClientSecret',
                         registry.String("", _("""imgur client secret""")))
 
 conf.registerGlobalValue(SpiffyTitles, 'imgurTemplate',
-                        registry.String("^ $title :: $type $widthx$height $file_size :: $view_count views :: $nsfw", _("""imgur template""")))
-                        
-                        
+                        registry.String("^ {%if title %}{{title}} :: {% endif %}{{type}} {{width}}x{{height}} {{file_size}} :: {{view_count}} views :: {%if nsfw == None %}not sure if safe for work{% elif nsfw == True %}not safe for work!{% else %}safe for work{% endif %}", _("""imgur template""")))
+
                         
                         
                         
