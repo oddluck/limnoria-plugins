@@ -126,9 +126,9 @@ class SpiffyTitles(callbacks.Plugin):
                     title = self.handler_default(url, irc)
                 
                 if title is not None:
-                    formatted_title = self.get_formatted_title(title)
+                    self.log.info("SpiffyTitles: title found: %s" % (title))
                     
-                    self.log.info("SpiffyTitles: title found: %s" % (formatted_title))
+                    formatted_title = self.get_formatted_title(title)
                     
                     irc.reply(formatted_title)
     
