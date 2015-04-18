@@ -36,6 +36,17 @@ Example output:
 
     ^ Snoop Dogg - Pump Pump feat. Lil Malik :: Duration: 00:04:41 :: Views: 189,120 :: Rating: 4.82
 
+`imgurTemplate` - This is the template used when showing information about an [imgur](https://imgur.com) link.
+
+Default value: `^ $title :: $type $widthx$height $file_size :: $view_count views :: $nsfw`
+
+Notes on the imgur handler: 
+
+- You'll need a [register an application with imgur](https://api.imgur.com/oauth2/addclient)
+- Select "OAuth 2 authorization without a callback URL"
+- Not all images have titles
+- If there is a problem reaching the API the default handler will be used as a fallback. See logs for details.
+
 `useBold` - Whether to bold the title. Default value: `False`
 
 `cooldownInSeconds` - Only show the title of the same URL every X seconds. This setting prevents the
