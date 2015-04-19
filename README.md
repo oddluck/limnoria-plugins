@@ -41,7 +41,7 @@ Example output:
 
 `imgurTemplate` - This is the template used when showing information about an [imgur](https://imgur.com) link.
 
-Default value: `^ {%if section %}[{{section}}] {%endif %}{%if title %}{{title}} :: {% endif %}{{type}} {{width}}x{{height}} {{file_size}} :: {{view_count}} views :: {%if nsfw == None %}not sure if safe for work{% elif nsfw == True %}not safe for work!{% else %}safe for work{% endif %}`
+Default value: `^{%if section %} [{{section}}] {%endif %}{%if title %}{{title}} :: {% endif %}{{type}} {{width}}x{{height}} {{file_size}} :: {{view_count}} views :: {%if nsfw == None %}not sure if safe for work{% elif nsfw == True %}not safe for work!{% else %}safe for work{% endif %}`
 
 Example output:
 
