@@ -432,6 +432,7 @@ class SpiffyTitles(callbacks.Plugin):
         # Replace anywhere in string
         title = title.replace("\n", "")
         title = title.replace("\t", "")
+        title = re.sub(" +", " ", title)
         
         if useBold:
             title = ircutils.bold(title)
