@@ -41,11 +41,11 @@ Example output:
 
 `imgurTemplate` - This is the template used when showing information about an [imgur](https://imgur.com) link.
 
-Default value: `^ {%if title %}{{title}} :: {% endif %}{{type}} {{width}}x{{height}} {{file_size}} :: {{view_count}} views :: {%if nsfw == None %}not sure{% elif nsfw == True %}NSFW{% else %}safe for work {% endif %}`
+Default value: `^ {%if section %}[{{section}}] {%endif %}{%if title %}{{title}} :: {% endif %}{{type}} {{width}}x{{height}} {{file_size}} :: {{view_count}} views :: {%if nsfw == None %}not sure if safe for work{% elif nsfw == True %}not safe for work!{% else %}safe for work{% endif %}`
 
 Example output:
 
-    ^ You know what time it is? :: image/jpeg 500x667 63.3KiB :: 82,892 views :: safe for work
+    ^ [pics] He really knows nothing... :: image/jpeg 700x1575 178.8KiB :: 809 views :: safe for work
 
 Notes on the imgur handler: 
 
@@ -53,6 +53,8 @@ Notes on the imgur handler:
 - Select "OAuth 2 authorization without a callback URL"
 - If there is a problem reaching the API the default handler will be used as a fallback. See logs for details.
 - The API seems to report information on the originally uploaded image and not other formats
+- If you see something from [the imgur api](https://api.imgur.com/models/image) that you want and is not available
+in the above example, [please open an issue!](https://github.com/prgmrbill/limnoria-plugins/issues/new)
 
 `useBold` - Whether to bold the title. Default value: `False`
 

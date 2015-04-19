@@ -326,7 +326,8 @@ class SpiffyTitles(callbacks.Plugin):
                         "width": image.width,
                         "height": image.height,
                         "view_count": '{:,}'.format(image.views),
-                        "file_size": readable_file_size
+                        "file_size": readable_file_size,
+                        "section": image.section
                     })
                     
                     return compiled_template
