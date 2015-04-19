@@ -1,11 +1,18 @@
 # SpiffyTitles #
 
-Displays link titles when posted in a channel. This plugin has the following goals:
+Displays link titles when posted in a channel. 
 
-- Extreme reliability and in the case of failure, robust error reporting to ease debugging. Errors
-are logged.
+## Notable features ##
 
-- The ability to customize features that could conceivably need to change (within reason)
+- Configurable template so you can decide how titles are displayed and what they say
+- Additional information about [Youtube](https://youtube.com) videos
+- Additional information about [imgur](https://imgur.com) links
+- Rate limiting to mitigate abuse
+- Configurable white/black list to control where titles are disabled
+- Configurable list of user agents
+- Ability to ignore domains using a regular expression
+
+Check out the [available options](#available-options)
 
 ## Using SpiffyTitles ##
 - Install the requirements: `pip install -r SpiffyTitles/requirements.txt --user --upgrade`
