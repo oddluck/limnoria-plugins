@@ -41,11 +41,19 @@ Example output:
 
 `imgurTemplate` - This is the template used when showing information about an [imgur](https://imgur.com) link.
 
-Default value: `^{%if section %} [{{section}}] {%endif %}{%if title %}{{title}} :: {% endif %}{{type}} {{width}}x{{height}} {{file_size}} :: {{view_count}} views :: {%if nsfw == None %}not sure if safe for work{% elif nsfw == True %}not safe for work!{% else %}safe for work{% endif %}`
+Default value: `^{%if section %} [{{section}}] {% endif -%}{%- if title -%} {{title}} :: {% endif %}{{type}} {{width}}x{{height}} {{file_size}} :: {{view_count}} views :: {%if nsfw == None %}not sure if safe for work{% elif nsfw == True %}not safe for work!{% else %}safe for work{% endif %}`
 
 Example output:
 
     ^ [pics] He really knows nothing... :: image/jpeg 700x1575 178.8KiB :: 809 views :: safe for work
+
+`imgurAlbumTemplate` - This is the template used when showing information about an imgur album link.
+
+Default value: `^{%if section %} [{{section}}] {% endif -%}{%- if title -%} {{title}} :: {% endif %}{{image_count}} images :: {{view_count}} views :: {%if nsfw == None %}not sure if safe for work{% elif nsfw == True %}not safe for work!{% else %}safe for work{% endif %}`
+
+Example output:
+    
+    ^ [compsci] Regex Fractals :: 33 images :: 21,453 views :: safe for work
 
 Notes on the imgur handler: 
 

@@ -75,9 +75,12 @@ conf.registerGlobalValue(SpiffyTitles, 'imgurClientSecret',
                         registry.String("", _("""imgur client secret""")))
 
 conf.registerGlobalValue(SpiffyTitles, 'imgurTemplate',
-                        registry.String("^ {%if section %}[{{section}}] {%endif %}{%if title %}{{title}} :: {% endif %}{{type}} {{width}}x{{height}} {{file_size}} :: {{view_count}} views :: {%if nsfw == None %}not sure if safe for work{% elif nsfw == True %}not safe for work!{% else %}safe for work{% endif %}", _("""imgur template""")))
+                        registry.String("^{%if section %} [{{section}}] {% endif -%}{%- if title -%} {{title}} :: {% endif %}{{type}} {{width}}x{{height}} {{file_size}} :: {{view_count}} views :: {%if nsfw == None %}not sure if safe for work{% elif nsfw == True %}not safe for work!{% else %}safe for work{% endif %}", _("""imgur template""")))
 
-                        
+conf.registerGlobalValue(SpiffyTitles, 'imgurAlbumTemplate',
+                        registry.String("^{%if section %} [{{section}}] {% endif -%}{%- if title -%} {{title}} :: {% endif %}{{image_count}} images :: {{view_count}} views :: {%if nsfw == None %}not sure if safe for work{% elif nsfw == True %}not safe for work!{% else %}safe for work{% endif %}", _("""imgur template""")))
+
+                      
                         
                         
                         

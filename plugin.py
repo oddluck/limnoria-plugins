@@ -24,7 +24,7 @@ from jinja2 import Template
 
 try:
     from supybot.i18n import PluginInternationalization
-    _ = PluginInternationalization('SpiffyTitles')
+    _ = PluginInternationalization("SpiffyTitles")
 except ImportError:
     # Placeholder that allows to run the plugin on a bot
     # without the i18n module
@@ -33,7 +33,7 @@ except ImportError:
 class SpiffyTitles(callbacks.Plugin):
     """Displays link titles when posted in a channel"""
     threaded = True
-    callBefore = ['Web']
+    callBefore = ["Web"]
     link_cache = {}
     handlers = {}
     
@@ -41,7 +41,7 @@ class SpiffyTitles(callbacks.Plugin):
         self.__parent = super(SpiffyTitles, self)
         self.__parent.__init__(irc)
         
-        self.link_throttle_in_seconds = self.registryValue('cooldownInSeconds')
+        self.link_throttle_in_seconds = self.registryValue("cooldownInSeconds")
         
         """
         Check if imgur client id or secret are set, and if so initialize
@@ -51,8 +51,11 @@ class SpiffyTitles(callbacks.Plugin):
         imgur_client_secret = self.registryValue("imgurClientSecret")
         
         if imgur_client_id and imgur_client_secret:
-            # Set handler
-            self.handlers["i.imgur.com"] = self.handler_imgur
+            # Images mostly
+            self.handlers["i.imgur.com"] = self.handler_imgur_image
+            
+            # Albums, galleries, etc
+            self.handlers["imgur.com"] = self.handler_imgur
             
             # Initialize API client
             try:
@@ -65,10 +68,7 @@ class SpiffyTitles(callbacks.Plugin):
             except ImportError, e:
                 self.log.error("SpiffyTitles ImportError: %s" % str(e))
         
-        self.handlers["youtube.com"] = self.handler_youtube
-        self.handlers["www.youtube.com"] = self.handler_youtube
-        self.handlers["youtu.be"] = self.handler_youtube
-        self.handlers["m.youtube.com"] = self.handler_youtube
+        self.add_youtube_handlers()
     
     def doPrivmsg(self, irc, msg):
         """
@@ -92,45 +92,53 @@ class SpiffyTitles(callbacks.Plugin):
                 
                 info = urlparse(url)
                 
-                if info:
-                    domain = info.netloc
-                    is_ignored = self.is_ignored_domain(domain)
-                    
-                    if is_ignored:
-                        self.log.info("SpiffyTitles: ignoring url due to pattern match: %s" % (url))
-                        return
-                    
-                    # Check if we've seen this link lately
-                    if url in self.link_cache:
-                        link_timestamp = self.link_cache[url]
-                        
-                        seconds = (now - link_timestamp).total_seconds()
-                        throttled = seconds < self.link_throttle_in_seconds
-                    else:
-                        throttled = False
-                    
-                    if throttled:
-                        self.log.info("SpiffyTitles: %s ignored; throttle: it has been %s seconds since last post" % (url, seconds))
-                        return
-                    
-                    # Update link cache now that we know it's not an ignored link
-                    self.link_cache[url] = now
-                    
-                    try:
-                        handler = self.handlers[domain]                        
-                        title = handler(url, info, irc)                            
-                    except KeyError:
-                        title = self.handler_default(url, info, irc)
-                else:
-                    self.log.error("SpiffyTitles: unable to determine domain from url %s" % (url))
-                    title = self.handler_default(url, irc)
+                domain = info.netloc
+                is_ignored = self.is_ignored_domain(domain)
                 
-                if title is not None:
+                if is_ignored:
+                    self.log.info("SpiffyTitles: ignoring url due to pattern match: %s" % (url))
+                    return
+                
+                # Check if we"ve seen this link lately
+                if url in self.link_cache:
+                    link_timestamp = self.link_cache[url]
+                    
+                    seconds = (now - link_timestamp).total_seconds()
+                    throttled = seconds < self.link_throttle_in_seconds
+                else:
+                    throttled = False
+                
+                if throttled:
+                    self.log.info("SpiffyTitles: %s ignored; throttle: it has been %s seconds since last post" % (url, seconds))
+                    return
+                
+                # Update link cache now that we know it"s not an ignored link
+                self.link_cache[url] = now
+                
+                if domain in self.handlers:
+                    handler = self.handlers[domain]                        
+                    title = handler(url, info)
+                else:
+                    title = self.handler_default(url, info)
+                
+                if title is not None and title:
                     self.log.info("SpiffyTitles: title found: %s" % (title))
                     
                     formatted_title = self.get_formatted_title(title)
                     
                     irc.reply(formatted_title)
+                else:
+                    self.log.error("SpiffyTitles: could not get a title for %s" % (url))
+    
+    def add_youtube_handlers(self):
+        """
+        Adds handlers for Youtube videos. The handler is matched based on the
+        domain used in the URL.
+        """
+        self.handlers["youtube.com"] = self.handler_youtube
+        self.handlers["www.youtube.com"] = self.handler_youtube
+        self.handlers["youtu.be"] = self.handler_youtube
+        self.handlers["m.youtube.com"] = self.handler_youtube
     
     def is_channel_allowed(self, channel):
         """
@@ -183,7 +191,7 @@ class SpiffyTitles(callbacks.Plugin):
             except re.Error:
                 self.log.error("SpiffyTitles: invalid regular expression: %s" % (pattern))
     
-    def get_video_id_from_url(self, url, info, irc):
+    def get_video_id_from_url(self, url, info):
         """
         Get YouTube video ID from URL
         """
@@ -206,13 +214,13 @@ class SpiffyTitles(callbacks.Plugin):
         except IndexError, e:
             self.log.error("SpiffyTitles: error getting video id from %s (%s)" % (url, str(e)))
 
-    def handler_youtube(self, url, domain, irc):
+    def handler_youtube(self, url, domain):
         """
         Uses the Youtube API to provide additional meta data about
         Youtube Video links posted.
         """
         self.log.info("SpiffyTitles: calling Youtube handler for %s" % (url))
-        video_id = self.get_video_id_from_url(url, domain, irc)
+        video_id = self.get_video_id_from_url(url, domain)
         yt_template = Template(self.registryValue("youtubeTitleTemplate"))
         title = ""
         
@@ -234,13 +242,13 @@ class SpiffyTitles(callbacks.Plugin):
                 if response:
                     try:
                         data = response["data"]
-                        title = data['title']
-                        rating = str(round(data['rating'], 2))
-                        view_count = '{:,}'.format(int(data['viewCount']))
-                        duration_seconds = int(data['duration'])
+                        title = data["title"]
+                        rating = str(round(data["rating"], 2))
+                        view_count = "{:,}".format(int(data["viewCount"]))
+                        duration_seconds = int(data["duration"])
                         
                         """
-                        #23 - If duration is zero, then it's a LIVE video
+                        #23 - If duration is zero, then it"s a LIVE video
                         """
                         if duration_seconds > 0:
                             m, s = divmod(duration_seconds, 60)
@@ -277,9 +285,9 @@ class SpiffyTitles(callbacks.Plugin):
         else:
             self.log.info("SpiffyTitles: falling back to default handler")
             
-            return self.handler_default(url, domain, irc)
+            return self.handler_default(url, domain)
     
-    def handler_default(self, url, domain, irc):
+    def handler_default(self, url, domain):
         """
         Default handler for websites
         """
@@ -295,22 +303,82 @@ class SpiffyTitles(callbacks.Plugin):
                 
                 return title_template
     
-    def handler_imgur(self, url, info, irc):
+    def handler_imgur(self, url, info):
         """
-        Queries imgur API for additional information about imgur links
+        Queries imgur API for additional information about imgur links.
+
+        This handler is for any imgur.com domain.
         """
+        is_album = info.path.startswith("/a/")
+        is_gallery = info.path.startswith("/gallery/")
+        result = None
         
+        if is_album:
+            result = self.handler_imgur_album(url, info)
+        else:
+            result = self.handler_default(url, info)
+        
+        return result
+    
+    def handler_imgur_album(self, url, info):
         """
+        Handles retrieving information about albums from the imgur API.
+        
+        imgur provides the following information about albums: https://api.imgur.com/models/album
+        """
+        from imgurpython.helpers.error import ImgurClientRateLimitError
+        from imgurpython.helpers.error import ImgurClientError
+        
+        album_id = info.path.split("/a/")[1]
+        
+        """ If there is a query string appended, remove it """
+        if "?" in album_id:
+            album_id = album_id.split("?")[0]
+        
+        if album_id:
+            self.log.info("SpiffyTitles: found imgur album id %s" % (album_id))
+            
+            try:
+                album = self.imgur_client.get_album(album_id)
+                
+                if album:
+                    imgur_album_template = Template(self.registryValue("imgurAlbumTemplate"))
+                    compiled_template = imgur_album_template.render({
+                        "title": album.title,
+                        "section": album.section,
+                        "view_count": "{:,}".format(album.views),
+                        "image_count": "{:,}".format(album.images_count),
+                        "nsfw": album.nsfw
+                    })
+                    
+                    return compiled_template
+                else:
+                    self.log.error("SpiffyTitles: imgur album API returned unexpected results!")
+
+            except ImgurClientRateLimitError as e:
+                self.log.error("SpiffyTitles: imgur rate limit error: %s" % (e.error_message))
+            except ImgurClientError as e:
+                self.log.error("SpiffyTitles: imgur client error: %s" % (e.error_message))
+        else:
+            self.log.info("SpiffyTitles: unable to determine album id for %s" % (url))
+    
+    def handler_imgur_image(self, url, info):
+        """
+        Handles retrieving information about images from the imgur API.
+        
+        This handler is only run when the domain is i.imgur.com which is usually
+        just images, except in the case of gifv - which is a HTML file which has
+        a title. The latter case is why there are fallbacks here.
+        
         The path comes in this form: /image_id.extension so strip off the left
-        forward slash and then split by period to get the image id
+        forward slash and then split by period to get the image id.
         """
         from imgurpython.helpers.error import ImgurClientRateLimitError
         from imgurpython.helpers.error import ImgurClientError
         
         path = info.path.lstrip("/")
         image_id = path.split(".")[0]
-        
-        self.log.info("SpiffyTitles: image id found: %s" % (image_id))
+        title = None
         
         if image_id:
             try:
@@ -325,41 +393,35 @@ class SpiffyTitles(callbacks.Plugin):
                         "nsfw": image.nsfw,
                         "width": image.width,
                         "height": image.height,
-                        "view_count": '{:,}'.format(image.views),
+                        "view_count": "{:,}".format(image.views),
                         "file_size": readable_file_size,
                         "section": image.section
                     })
                     
-                    return compiled_template
+                    title = compiled_template
                 else:
                     self.log.error("SpiffyTitles: imgur API returned unexpected results!")
-                    
-                    # Fall back to default handler
-                    self.handler_default(url, info, irc)     
-            
             except ImgurClientRateLimitError as e:
                 self.log.error("SpiffyTitles: imgur rate limit error: %s" % (e.error_message))
-                
-                # Fall back to default handler
-                self.handler_default(url, info, irc)     
-            
             except ImgurClientError as e:
                 self.log.error("SpiffyTitles: imgur client error: %s" % (e.error_message))
-                
-                # Fall back to default handler
-                self.handler_default(url, info, irc)          
         else:
             self.log.error("SpiffyTitles: error retrieving image id for %s" % (url))
+        
+        if title is not None:
+            return title
+        else:
+            return self.handler_default(url, info)
     
-    def get_readable_file_size(self, num, suffix='B'):
+    def get_readable_file_size(self, num, suffix="B"):
         """
         Returns human readable file size
         """
-        for unit in ['','Ki','Mi','Gi','Ti','Pi','Ei','Zi']:
+        for unit in ["","Ki","Mi","Gi","Ti","Pi","Ei","Zi"]:
             if abs(num) < 1024.0:
                 return "%3.1f%s%s" % (num, unit, suffix)
             num /= 1024.0
-        return "%.1f%s%s" % (num, 'Yi', suffix)
+        return "%.1f%s%s" % (num, "Yi", suffix)
     
     def get_formatted_title(self, title):
         """
@@ -411,9 +473,9 @@ class SpiffyTitles(callbacks.Plugin):
             }
             request = requests.get(url, headers=headers)
             
-            ok = request.status_code == requests.codes.ok
+            self.log.info("SpiffyTitles: requesting %s" % (url))
             
-            if ok:
+            if request.status_code == requests.codes.ok:
                 # Check the content type which comes in the format: "text/html; charset=UTF-8"
                 content_type = request.headers.get("content-type").split(";")[0].strip()
                 acceptable_types = self.registryValue("mimeTypes")
@@ -424,7 +486,11 @@ class SpiffyTitles(callbacks.Plugin):
                 if mime_type_acceptable:
                     text = request.content
                     
-                    return text
+                    if text:
+                        return text
+                    else:
+                        self.log.info("SpiffyTitles: empty content from %s" % (url))                        
+
                 else:
                     self.log.debug("SpiffyTitles: unacceptable mime type %s for url %s" % (content_type, url))
             else:
@@ -441,11 +507,17 @@ class SpiffyTitles(callbacks.Plugin):
             self.log.error("SpiffyTitles InvalidURL: %s" % (str(e)))
     
     def get_user_agent(self):
+        """
+        Returns a random user agent from the ones available
+        """
         agents = self.registryValue("userAgents")
         
         return random.choice(agents)
     
     def get_url_from_message(self, input):
+        """
+        Find the first string that looks like a URL from the message
+        """
         url_re = self.registryValue("urlRegularExpression")
         match = re.search(url_re, input)
         
@@ -453,6 +525,5 @@ class SpiffyTitles(callbacks.Plugin):
             return match.group(0).strip()
     
 Class = SpiffyTitles
-
 
 # vim:set shiftwidth=4 softtabstop=4 expandtab textwidth=79:
