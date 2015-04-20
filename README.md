@@ -48,7 +48,7 @@ Example output:
 
     ^ Snoop Dogg - Pump Pump feat. Lil Malik :: Duration: 00:04:41 :: Views: 189,120 :: Rating: 4.82
 
-### Youtube handler ###
+### imgur handler ###
 
 `imgurTemplate` - This is the template used when showing information about an [imgur](https://imgur.com) link.
 
@@ -74,11 +74,13 @@ Example output:
 
 - You'll need to [register an application with imgur](https://api.imgur.com/oauth2/addclient)
 - Select "OAuth 2 authorization without a callback URL"
-- Once registered, set your client id and client secret and reload SpiffyTitles:
+- Once registered, set your client id and client secret and reload SpiffyTitles
 
-    !config set supybot.plugins.SpiffyTitles.imgurClientID
-    !config set supybot.plugins.SpiffyTitles.imgurClientSecret
-    !reload SpiffyTitles
+    `!config set supybot.plugins.SpiffyTitles.imgurClientID`
+    
+    `!config set supybot.plugins.SpiffyTitles.imgurClientSecret`
+    
+    `!reload SpiffyTitles`
 
 ### Notes on the imgur handler ###
 
