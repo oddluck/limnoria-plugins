@@ -53,7 +53,7 @@ Default value: `^ {{title}} :: Duration: {{duration}} :: Views: {{view_count}}`
 
 Example output:
 
-    ^ Snoop Dogg - Pump Pump feat. Lil Malik :: Duration: 00:04:41 :: Views: 189,120 :: Rating: 4.82
+    ^ Snoop Dogg - Pump Pump feat. Lil Malik :: Duration: 00:04:41 :: Views: 189,120
 
 ### imgur handler ###
 
