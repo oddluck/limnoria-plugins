@@ -46,6 +46,13 @@ class SpiffyTitles(callbacks.Plugin):
         self.link_throttle_in_seconds = self.registryValue("cooldownInSeconds")
         self.youtube_developer_key = self.registryValue("youtubeDeveloperKey")        
         
+        imdb_akas_enabled = self.registryValue("imdbAkasEnabled")
+        
+        if imdb_akas_enabled in (True, "True"):
+            self.log.info("SpiffyTitles: enabling imdb handler")
+            
+            self.handlers["www.imdb.com"] = self.handler_imdb
+        
         """
         Check if imgur client id or secret are set, and if so initialize
         imgur API client
@@ -54,6 +61,8 @@ class SpiffyTitles(callbacks.Plugin):
         imgur_client_secret = self.registryValue("imgurClientSecret")
         
         if imgur_client_id and imgur_client_secret:
+            self.log.info("SpiffyTitles: enabling imgur handler")
+            
             # Images mostly
             self.handlers["i.imgur.com"] = self.handler_imgur_image
             
@@ -72,6 +81,8 @@ class SpiffyTitles(callbacks.Plugin):
                 self.log.error("SpiffyTitles ImportError: %s" % str(e))
         
         if self.youtube_developer_key:
+            self.log.info("SpiffyTitles: enabling youtube handler")
+            
             self.add_youtube_handlers()
     
     def doPrivmsg(self, irc, msg):
@@ -123,7 +134,7 @@ class SpiffyTitles(callbacks.Plugin):
                     handler = self.handlers[domain]                        
                     title = handler(url, info)
                 else:
-                    title = self.handler_default(url, info)
+                    title = self.handler_default(url)
                 
                 if title is not None and title:
                     self.log.info("SpiffyTitles: title found: %s" % (title))
@@ -296,7 +307,7 @@ class SpiffyTitles(callbacks.Plugin):
         else:
             self.log.info("SpiffyTitles: falling back to default handler")
             
-            return self.handler_default(url, domain)
+            return self.handler_default(url)
     
     def get_total_seconds_from_duration(self, input):
         """
@@ -313,7 +324,7 @@ class SpiffyTitles(callbacks.Plugin):
         
         return delta.total_seconds()
         
-    def handler_default(self, url, domain):
+    def handler_default(self, url):
         """
         Default handler for websites
         """
@@ -328,6 +339,21 @@ class SpiffyTitles(callbacks.Plugin):
                 title_template = default_template.render(title=title)
                 
                 return title_template
+    
+    def handler_imdb(self, url, info):
+        """
+        Handles imdb.com links, replacing the URL        
+        """
+        enabled = self.registryValue("imdbAkasEnabled")
+        amended_url = url
+        
+        self.log.info("SpiffyTitles: enabled is %s (%s)" % (type(enabled), enabled))
+        
+        if enabled:
+            amended_url = url.replace("www.imdb.com", "akas.imdb.com")
+            self.log.info("SpiffyTitles: amended imdb URL %s to %s" % (url, amended_url))
+        
+        return self.handler_default(amended_url)
     
     def is_valid_imgur_id(self, input):
         """
@@ -354,7 +380,7 @@ class SpiffyTitles(callbacks.Plugin):
         elif is_image_page:
             result = self.handler_imgur_image(url, info)
         else:
-            result = self.handler_default(url, info)
+            result = self.handler_default(url)
         
         return result
     
@@ -454,7 +480,7 @@ class SpiffyTitles(callbacks.Plugin):
         if title is not None:
             return title
         else:
-            return self.handler_default(url, info)
+            return self.handler_default(url)
     
     def get_readable_file_size(self, num, suffix="B"):
         """
