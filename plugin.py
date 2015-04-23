@@ -21,6 +21,8 @@ import json
 import cgi
 import datetime
 from jinja2 import Template
+from urllib import urlencode
+from datetime import timedelta
 
 try:
     from supybot.i18n import PluginInternationalization
@@ -42,6 +44,7 @@ class SpiffyTitles(callbacks.Plugin):
         self.__parent.__init__(irc)
         
         self.link_throttle_in_seconds = self.registryValue("cooldownInSeconds")
+        self.youtube_developer_key = self.registryValue("youtubeDeveloperKey")
         
         """
         Check if imgur client id or secret are set, and if so initialize
@@ -55,7 +58,7 @@ class SpiffyTitles(callbacks.Plugin):
             self.handlers["i.imgur.com"] = self.handler_imgur_image
             
             # Albums, galleries, etc
-            self.handlers["imgur.com"] = self.handler_imgur
+            #self.handlers["imgur.com"] = self.handler_imgur
             
             # Initialize API client
             try:
@@ -68,7 +71,8 @@ class SpiffyTitles(callbacks.Plugin):
             except ImportError, e:
                 self.log.error("SpiffyTitles ImportError: %s" % str(e))
         
-        self.add_youtube_handlers()
+        if self.youtube_developer_key:
+            self.add_youtube_handlers()
     
     def doPrivmsg(self, irc, msg):
         """
@@ -79,7 +83,7 @@ class SpiffyTitles(callbacks.Plugin):
         is_ctcp = ircmsgs.isCtcp(msg)        
         message = msg.args[1]
         now = datetime.datetime.now()
-
+        
         if is_channel and not is_ctcp:
             channel_is_allowed = self.is_channel_allowed(channel)            
             url = self.get_url_from_message(message)
@@ -225,7 +229,14 @@ class SpiffyTitles(callbacks.Plugin):
         title = ""
         
         if video_id:
-            api_url = "https://gdata.youtube.com/feeds/api/videos/%s?v=2&alt=jsonc" % (video_id)
+            options = {
+                "part": "snippet,statistics,contentDetails",
+                "maxResults": 1,
+                "key": self.youtube_developer_key,
+                "id": video_id
+            }
+            encoded_options = urlencode(options)
+            api_url = "https://www.googleapis.com/youtube/v3/videos?%s" % (encoded_options)
             agent = self.get_user_agent()
             headers = {
                 "User-Agent": agent
@@ -241,11 +252,12 @@ class SpiffyTitles(callbacks.Plugin):
                 
                 if response:
                     try:
-                        data = response["data"]
-                        title = data["title"]
-                        rating = str(round(data["rating"], 2))
-                        view_count = "{:,}".format(int(data["viewCount"]))
-                        duration_seconds = int(data["duration"])
+                        items = response["items"]
+                        video = items[0]
+                        title = video["snippet"]["title"]
+                        statistics = video["statistics"]
+                        view_count = "{:,}".format(int(statistics["viewCount"]))
+                        duration_seconds = self.get_total_seconds_from_duration(video["contentDetails"]["duration"])
                         
                         """
                         #23 - If duration is zero, then it"s a LIVE video
@@ -264,15 +276,14 @@ class SpiffyTitles(callbacks.Plugin):
                         
                         compiled_template = yt_template.render({
                             "title": title,
-                            "rating": rating,
                             "duration": duration,
                             "view_count": view_count
                         })
                         
                         title = compiled_template
                     
-                    except IndexError:
-                        self.log.error("SpiffyTitles: IndexError parsing Youtube API JSON response")
+                    except IndexError, e:
+                        self.log.error("SpiffyTitles: IndexError parsing Youtube API JSON response: %s" % (str(e)))
                 else:
                     self.log.error("SpiffyTitles: Error parsing Youtube API JSON response")
             else:
@@ -287,6 +298,21 @@ class SpiffyTitles(callbacks.Plugin):
             
             return self.handler_default(url, domain)
     
+    def get_total_seconds_from_duration(self, input):
+        """
+        Duration comes in a format like this: PT4M41S which translates to
+        4 minutes and 41 seconds. This method returns the total seconds
+        so that the duration can be parsed as usual.
+        """
+        pattern = regex  = re.compile('(?P<sign>-?)P(?:(?P<years>\d+)Y)?(?:(?P<months>\d+)M)?(?:(?P<days>\d+)D)?(?:T(?:(?P<hours>\d+)H)?(?:(?P<minutes>\d+)M)?(?:(?P<seconds>\d+)S)?)?')
+        duration = regex.match(input).groupdict(0)
+        
+        delta = timedelta(hours=int(duration['hours']),
+                          minutes=int(duration['minutes']),
+                          seconds=int(duration['seconds']))
+        
+        return delta.total_seconds()
+        
     def handler_default(self, url, domain):
         """
         Default handler for websites
@@ -303,6 +329,15 @@ class SpiffyTitles(callbacks.Plugin):
                 
                 return title_template
     
+    def is_valid_imgur_id(self, input):
+        """
+        Tests if input matches the typical imgur id, which seems to be alphanumeric. Images, galleries,
+        and albums all share their format in their identifier.
+        """
+        match = re.match(r"[a-z0-9]+", input, re.IGNORECASE)
+        
+        return match is not None
+    
     def handler_imgur(self, url, info):
         """
         Queries imgur API for additional information about imgur links.
@@ -311,10 +346,13 @@ class SpiffyTitles(callbacks.Plugin):
         """
         is_album = info.path.startswith("/a/")
         is_gallery = info.path.startswith("/gallery/")
+        is_image_page = not is_album and not is_gallery and re.match(r"^\/[a-zA-Z0-9]+", info.path)
         result = None
         
         if is_album:
             result = self.handler_imgur_album(url, info)
+        elif is_image_page:
+            result = self.handler_imgur_image(url, info)
         else:
             result = self.handler_default(url, info)
         
@@ -335,7 +373,7 @@ class SpiffyTitles(callbacks.Plugin):
         if "?" in album_id:
             album_id = album_id.split("?")[0]
         
-        if album_id:
+        if self.is_valid_imgur_id(album_id):
             self.log.info("SpiffyTitles: found imgur album id %s" % (album_id))
             
             try:
@@ -366,21 +404,26 @@ class SpiffyTitles(callbacks.Plugin):
         """
         Handles retrieving information about images from the imgur API.
         
-        This handler is only run when the domain is i.imgur.com which is usually
-        just images, except in the case of gifv - which is a HTML file which has
-        a title. The latter case is why there are fallbacks here.
-        
-        The path comes in this form: /image_id.extension so strip off the left
-        forward slash and then split by period to get the image id.
+        Used for both direct images and imgur.com/some_image_id_here type links, as
+        they're both single images.
         """
         from imgurpython.helpers.error import ImgurClientRateLimitError
         from imgurpython.helpers.error import ImgurClientError
-        
-        path = info.path.lstrip("/")
-        image_id = path.split(".")[0]
         title = None
         
-        if image_id:
+        """ 
+        If there is a period in the path, it's a direct link to an image. If not, then
+        it's a imgur.com/some_image_id_here type link
+        """
+        if "." in info.path:
+            path = info.path.lstrip("/")
+            image_id = path.split(".")[0]
+        else:
+            image_id = info.path.lstrip("/")
+        
+        if self.is_valid_imgur_id(image_id):
+            self.log.info("SpiffyTitles: found image id %s" % (image_id))
+            
             try:
                 image = self.imgur_client.get_image(image_id)
                 

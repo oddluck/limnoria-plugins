@@ -41,7 +41,7 @@ conf.registerGlobalValue(SpiffyTitles, 'defaultTitleTemplate',
 
 # YouTube template
 conf.registerGlobalValue(SpiffyTitles, 'youtubeTitleTemplate',
-     registry.String("^ {{title}} :: Duration: {{duration}} :: Views: {{view_count}} :: Rating: {{rating}}", _("""Template used for YouTube title responses""")))
+     registry.String("^ {{title}} :: Duration: {{duration}} :: Views: {{view_count}}", _("""Template used for YouTube title responses""")))
 
 # User agents
 conf.registerGlobalValue(SpiffyTitles, 'userAgents',
@@ -80,7 +80,9 @@ conf.registerGlobalValue(SpiffyTitles, 'imgurTemplate',
 conf.registerGlobalValue(SpiffyTitles, 'imgurAlbumTemplate',
                         registry.String("^{%if section %} [{{section}}] {% endif -%}{%- if title -%} {{title}} :: {% endif %}{{image_count}} images :: {{view_count}} views :: {%if nsfw == None %}not sure if safe for work{% elif nsfw == True %}not safe for work!{% else %}safe for work{% endif %}", _("""imgur template""")))
 
-                      
+# Youtube API
+conf.registerGlobalValue(SpiffyTitles, 'youtubeDeveloperKey',
+                        registry.String("", _("""Youtube developer key - required for Youtube handler.""")))                      
                         
                         
                         

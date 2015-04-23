@@ -40,9 +40,16 @@ Example output:
 
 ### Youtube handler ###
 
+Note: as of April 20 2015 version 2 of the Youtube API was deprecated. As a result, this feature now
+requires a [developer key](https://code.google.com/apis/youtube/dashboard/gwt/index.html#settings).
+
+- Obtain a [developer key](https://code.google.com/apis/youtube/dashboard/gwt/index.html#settings)
+- Set the key: `!config supybot.plugins.SpiffyTitles.youtubeDeveloperKey your_developer_key_here`
+- Reload: `!reload SpiffyTitles`
+
 `youtubeTitleTemplate` - This is the template used when showing the title of a YouTube video
 
-Default value: `^ {{title}} :: Duration: {{duration}} :: Views: {{view_count}} :: Rating: {{rating}}`
+Default value: `^ {{title}} :: Duration: {{duration}} :: Views: {{view_count}}`
 
 Example output:
 
