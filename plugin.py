@@ -44,7 +44,7 @@ class SpiffyTitles(callbacks.Plugin):
         self.__parent.__init__(irc)
         
         self.link_throttle_in_seconds = self.registryValue("cooldownInSeconds")
-        self.youtube_developer_key = self.registryValue("youtubeDeveloperKey")
+        self.youtube_developer_key = self.registryValue("youtubeDeveloperKey")        
         
         """
         Check if imgur client id or secret are set, and if so initialize
@@ -512,8 +512,11 @@ class SpiffyTitles(callbacks.Plugin):
         """
         try:
             agent = self.get_user_agent()
+            self.accept_language = self.registryValue("language")
+            
             headers = {
-                "User-Agent": agent
+                "User-Agent": agent,
+                "Accept-Language": ";".join((self.accept_language, "q=1.0"))
             }
             request = requests.get(url, headers=headers)
             

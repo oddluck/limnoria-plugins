@@ -27,6 +27,10 @@ def configure(advanced):
 
 SpiffyTitles = conf.registerPlugin('SpiffyTitles')
 
+# Language
+conf.registerGlobalValue(SpiffyTitles, 'language',
+     registry.String("en-US", _("""Language code""")))
+
 # URL regex
 conf.registerGlobalValue(SpiffyTitles, 'urlRegularExpression',
      registry.String(r"(https?:\/\/(?:www\.|(?!www))[^\s\.]+\.[^\s]{2,}|www\.[^\s]+\.[^\s]{2,})", _("""This regular expression will be used to match URLs""")))
