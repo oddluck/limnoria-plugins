@@ -23,6 +23,7 @@ import datetime
 from jinja2 import Template
 from urllib import urlencode
 from datetime import timedelta
+import timeout_decorator
 
 try:
     from supybot.i18n import PluginInternationalization
@@ -332,7 +333,7 @@ class SpiffyTitles(callbacks.Plugin):
         default_template = Template(self.registryValue("defaultTitleTemplate"))
         html = self.get_source_by_url(url)
         
-        if html:
+        if html is not None and html:
             title = self.get_title_from_html(html)
             
             if title is not None:
@@ -532,6 +533,7 @@ class SpiffyTitles(callbacks.Plugin):
                         
                         return stripped_title
     
+    @timeout_decorator.timeout(5)
     def get_source_by_url(self, url):
         """
         Get the HTML of a website based on a URL
@@ -542,34 +544,37 @@ class SpiffyTitles(callbacks.Plugin):
             
             headers = {
                 "User-Agent": agent,
-                "Accept-Language": ";".join((self.accept_language, "q=1.0"))
+                "Accept-Language": ";".join((self.accept_language, "q=1.0")),
+                "Accept": "text/html;q=1.0"
             }
-            request = requests.get(url, headers=headers)
             
             self.log.info("SpiffyTitles: requesting %s" % (url))
+            
+            request = requests.get(url, headers=headers, timeout=3, allow_redirects=True)
             
             if request.status_code == requests.codes.ok:
                 # Check the content type which comes in the format: "text/html; charset=UTF-8"
                 content_type = request.headers.get("content-type").split(";")[0].strip()
                 acceptable_types = self.registryValue("mimeTypes")
-                mime_type_acceptable = content_type in acceptable_types
                 
                 self.log.info("SpiffyTitles: content type %s" % (content_type))
                 
-                if mime_type_acceptable:
+                if content_type in acceptable_types:
                     text = request.content
                     
                     if text:
                         return text
                     else:
                         self.log.info("SpiffyTitles: empty content from %s" % (url))                        
-
+                
                 else:
                     self.log.debug("SpiffyTitles: unacceptable mime type %s for url %s" % (content_type, url))
             else:
                 self.log.error("SpiffyTitles HTTP response code %s - %s" % (request.status_code, 
                                                                             request.content))
         
+        except timeout_decorator.TimeoutError:
+            self.log.error("SpiffyTitles: timeout!")
         except requests.exceptions.Timeout, e:
             self.log.error("SpiffyTitles Timeout: %s" % (str(e)))
         except requests.exceptions.ConnectionError, e:

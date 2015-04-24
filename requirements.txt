@@ -2,3 +2,4 @@ beautifulsoup
 jinja2
 imgurpython
 requests
+timeout-decorator
