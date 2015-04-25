@@ -347,9 +347,7 @@ class SpiffyTitles(callbacks.Plugin):
         """
         enabled = self.registryValue("imdbAkasEnabled")
         amended_url = url
-        
-        self.log.info("SpiffyTitles: enabled is %s (%s)" % (type(enabled), enabled))
-        
+
         if enabled:
             amended_url = url.replace("www.imdb.com", "akas.imdb.com")
             self.log.info("SpiffyTitles: amended imdb URL %s to %s" % (url, amended_url))
