@@ -518,7 +518,7 @@ class SpiffyTitles(callbacks.Plugin):
         
         if soup is not None:
             # TODO: What should happen if there is more than one <title> tag?
-            title = head.find("title")
+            title = soup.find("title")
             
             if title is not None:
                 title_text = title.get_text()
@@ -539,8 +539,7 @@ class SpiffyTitles(callbacks.Plugin):
             
             headers = {
                 "User-Agent": agent,
-                "Accept-Language": ";".join((self.accept_language, "q=1.0")),
-                "Accept": "text/html;q=1.0"
+                "Accept-Language": ";".join((self.accept_language, "q=1.0"))
             }
             
             self.log.info("SpiffyTitles: requesting %s" % (url))
