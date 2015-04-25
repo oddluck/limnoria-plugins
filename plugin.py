@@ -68,7 +68,7 @@ class SpiffyTitles(callbacks.Plugin):
             self.handlers["i.imgur.com"] = self.handler_imgur_image
             
             # Albums, galleries, etc
-            #self.handlers["imgur.com"] = self.handler_imgur
+            self.handlers["imgur.com"] = self.handler_imgur
             
             # Initialize API client
             try:
@@ -376,8 +376,8 @@ class SpiffyTitles(callbacks.Plugin):
         
         if is_album:
             result = self.handler_imgur_album(url, info)
-        elif is_image_page:
-            result = self.handler_imgur_image(url, info)
+        #elif is_image_page:
+        #    result = self.handler_imgur_image(url, info)
         else:
             result = self.handler_default(url)
         
