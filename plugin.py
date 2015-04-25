@@ -221,7 +221,7 @@ class SpiffyTitles(callbacks.Plugin):
             else:
                 parsed = cgi.parse_qsl(info.query)
                 video_id = dict(parsed)["v"]
-            
+
             if video_id:
                 return video_id
             else:
@@ -517,19 +517,16 @@ class SpiffyTitles(callbacks.Plugin):
         soup = BeautifulSoup(html)
         
         if soup is not None:
-            head = soup.find("head")
+            # TODO: What should happen if there is more than one <title> tag?
+            title = head.find("title")
             
-            if head:
-                # TODO: What should happen if there is more than one <title> tag?
-                title = head.find("title")
+            if title is not None:
+                title_text = title.get_text()
                 
-                if title is not None:
-                    title_text = title.get_text()
+                if len(title_text):
+                    stripped_title = title_text.strip()
                     
-                    if len(title_text):
-                        stripped_title = title_text.strip()
-                        
-                        return stripped_title
+                    return stripped_title
     
     @timeout_decorator.timeout(5)
     def get_source_by_url(self, url):
