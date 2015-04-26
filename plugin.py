@@ -607,7 +607,11 @@ class SpiffyTitles(callbacks.Plugin):
                                                                             request.content))
         
         except timeout_decorator.TimeoutError:
-            self.log.error("SpiffyTitles: timeout!")
+            self.log.error("SpiffyTitles: wall timeout!")
+        except requests.exceptions.MissingSchema, e:
+            urlWithSchema = "http://%s" % (url)
+            self.log.error("SpiffyTitles missing schema. Retrying with %s" % (urlWithSchema))
+            return self.get_source_by_url(urlWithSchema)
         except requests.exceptions.Timeout, e:
             self.log.error("SpiffyTitles Timeout: %s" % (str(e)))
         except requests.exceptions.ConnectionError, e:
