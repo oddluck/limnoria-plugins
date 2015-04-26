@@ -37,7 +37,7 @@ class SpiffyTitles(callbacks.Plugin):
     """Displays link titles when posted in a channel"""
     threaded = True
     callBefore = ["Web"]
-    link_cache = {}
+    link_cache = []
     handlers = {}
     
     def __init__(self, irc):
@@ -95,7 +95,7 @@ class SpiffyTitles(callbacks.Plugin):
         is_ctcp = ircmsgs.isCtcp(msg)        
         message = msg.args[1]
         now = datetime.datetime.now()
-        
+
         if is_channel and not is_ctcp:
             channel_is_allowed = self.is_channel_allowed(channel)            
             url = self.get_url_from_message(message)
@@ -106,8 +106,7 @@ class SpiffyTitles(callbacks.Plugin):
                     self.log.info("SpiffyTitles: not responding to link in %s due to black/white list restrictions" % (channel))
                     return
                 
-                info = urlparse(url)
-                
+                info = urlparse(url)                
                 domain = info.netloc
                 is_ignored = self.is_ignored_domain(domain)
                 
@@ -115,36 +114,77 @@ class SpiffyTitles(callbacks.Plugin):
                     self.log.info("SpiffyTitles: ignoring url due to pattern match: %s" % (url))
                     return
                 
-                # Check if we"ve seen this link lately
-                if url in self.link_cache:
-                    link_timestamp = self.link_cache[url]
-                    
-                    seconds = (now - link_timestamp).total_seconds()
-                    throttled = seconds < self.link_throttle_in_seconds
+                """
+                Check if we have this link cached according to the cache lifetime. If so, serve
+                link from the cache instead of calling handlers.
+                """
+                cached_link = self.get_link_from_cache(url)
+                
+                if cached_link is not None:                    
+                    title = cached_link["title"]
                 else:
-                    throttled = False
-                
-                if throttled:
-                    self.log.info("SpiffyTitles: %s ignored; throttle: it has been %s seconds since last post" % (url, seconds))
-                    return
-                
-                # Update link cache now that we know it"s not an ignored link
-                self.link_cache[url] = now
-                
-                if domain in self.handlers:
-                    handler = self.handlers[domain]                        
-                    title = handler(url, info)
-                else:
-                    title = self.handler_default(url)
+                    if domain in self.handlers:
+                        handler = self.handlers[domain]                        
+                        title = handler(url, info)
+                    else:
+                        title = self.handler_default(url)
                 
                 if title is not None and title:
                     self.log.info("SpiffyTitles: title found: %s" % (title))
                     
                     formatted_title = self.get_formatted_title(title)
                     
+                    # Update link cache
+                    if cached_link is None:
+                        self.log.info("SpiffyTitles: caching %s" % (url))
+                        
+                        self.link_cache.append({
+                            "url": url,
+                            "timestamp": now,
+                            "title": title
+                        })
+                    
                     irc.reply(formatted_title)
                 else:
                     self.log.error("SpiffyTitles: could not get a title for %s" % (url))
+    
+    def get_link_from_cache(self, url):
+        """
+        Looks for a URL in the link cache and returns info about if it's not stale
+        according to the configured cache lifetime, or None.
+        
+        If linkCacheLifetimeInSeconds is 0, then cache is disabled and we can 
+        immediately return
+        """
+        cache_lifetime_in_seconds = int(self.registryValue("linkCacheLifetimeInSeconds"))
+        
+        if cache_lifetime_in_seconds == 0:
+            return
+        
+        # No cache yet
+        if len(self.link_cache) == 0:
+            return
+        
+        cached_link = None
+        now = datetime.datetime.now()        
+        stale = False
+        seconds = 0
+        
+        for link in self.link_cache:
+            if link["url"] == url:
+                cached_link = link
+                break
+        
+        # Found link, check timestamp
+        if cached_link:
+            seconds = (now - cached_link["timestamp"]).total_seconds()
+            stale = seconds >= cache_lifetime_in_seconds
+        
+        if stale:
+            self.log.info("SpiffyTitles: %s was sent %s seconds ago" % (url, seconds))
+        else:
+            self.log.info("SpiffyTitles: serving link from cache: %s" % (url))
+            return cached_link
     
     def add_youtube_handlers(self):
         """
@@ -505,7 +545,6 @@ class SpiffyTitles(callbacks.Plugin):
         if useBold:
             title = ircutils.bold(title)
         
-        # Strip whitespace on either side
         title = title.strip()
         
         return title

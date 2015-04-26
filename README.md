@@ -98,8 +98,10 @@ in the above example, [please open an issue!](https://github.com/prgmrbill/limno
 
 `useBold` - Whether to bold the title. Default value: `False`
 
-`cooldownInSeconds` - Only show the title of the same URL every X seconds. This setting prevents the
-bot from spamming the channel if the same link is posted multiple times quickly. Default value: `5`
+`linkCacheLifetimeInSeconds` - Caches the title of links. This is useful for reducing API usage and 
+improving performance. Default value: `60`
+
+`cooldownInSeconds` - This setting was replaced by `linkCacheLifetimeInSeconds`
 
 `channelWhitelist` - a comma separated list of channels in which titles should be displayed. If `""`,
 titles will be shown in all channels. Default value: `""`

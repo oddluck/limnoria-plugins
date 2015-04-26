@@ -71,10 +71,6 @@ conf.registerGlobalValue(SpiffyTitles, 'channelWhitelist',
 conf.registerGlobalValue(SpiffyTitles, 'channelBlacklist',
                         registry.CommaSeparatedListOfStrings([], _("""Never show titles on these channels""")))
 
-# Cooldown
-conf.registerGlobalValue(SpiffyTitles, 'cooldownInSeconds',
-                        registry.Integer(5, _("""Only show titles from each url every X seconds""")))
-
 # imgur API
 conf.registerGlobalValue(SpiffyTitles, 'imgurClientID',
                         registry.String("", _("""imgur client ID""")))
@@ -90,7 +86,11 @@ conf.registerGlobalValue(SpiffyTitles, 'imgurAlbumTemplate',
 
 # Youtube API
 conf.registerGlobalValue(SpiffyTitles, 'youtubeDeveloperKey',
-                        registry.String("", _("""Youtube developer key - required for Youtube handler.""")))                      
+                        registry.String("", _("""Youtube developer key - required for Youtube handler.""")))
+
+# Link cache lifetime
+conf.registerGlobalValue(SpiffyTitles, 'linkCacheLifetimeInSeconds',
+                        registry.Integer(60, _("""Link cache lifetime in seconds""")))                           
                         
                         
                         
