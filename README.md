@@ -1,6 +1,6 @@
 # SpiffyTitles #
 
-Displays link titles when posted in a channel. 
+The ONLY gluten-free plugin for displaying link titles.
 
 ## Notable features ##
 
