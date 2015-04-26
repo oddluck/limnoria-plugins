@@ -139,13 +139,13 @@ You can ignore domains that you know aren't websites. This prevents a request fr
 
 ### Examples ###
 
-Ignore all links with the domain `i.imgur.com`
+Ignore all links with the domain `buzzfeed.com`
 
-    !config supybot.plugins.SpiffyTitles.ignoredDomainPattern (i\.imgur\.com)
+    !config supybot.plugins.SpiffyTitles.ignoredDomainPattern (buzzfeed\.com)
 
-Ignore `*.tk` and `i.imgur.com`
+Ignore `*.tk` and `buzzfeed.com`
 
-    !config supybot.plugins.SpiffyTitles.ignoredDomainPattern (\.tk|i\.imgur\.com)
+    !config supybot.plugins.SpiffyTitles.ignoredDomainPattern (\.tk|buzzfeed\.com)
 
 `userAgents` - A comma separated list of strings of user agents randomly chosen when requesting. 
 
