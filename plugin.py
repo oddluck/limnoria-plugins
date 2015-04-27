@@ -262,8 +262,11 @@ class SpiffyTitles(callbacks.Plugin):
                 video_id = path.split("/")[1]
             else:
                 parsed = cgi.parse_qsl(info.query)
-                video_id = dict(parsed)["v"]
-
+                params = dict(parsed)
+                
+                if "v" in params:
+                    video_id = params["v"]
+            
             if video_id:
                 return video_id
             else:
