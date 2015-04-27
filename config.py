@@ -31,9 +31,9 @@ SpiffyTitles = conf.registerPlugin('SpiffyTitles')
 conf.registerGlobalValue(SpiffyTitles, 'language',
      registry.String("en-US", _("""Language code""")))
 
-# imdb fix
-conf.registerGlobalValue(SpiffyTitles, 'imdbAkasEnabled',
-     registry.Boolean(True, _("""Use akas.imdb.com for imdb.com URLs""")))
+# imdb
+conf.registerGlobalValue(SpiffyTitles, 'imdbTemplate',
+     registry.String("^ {{Title}} ({{Year}}, {{Country}}) - Rating: {{imdbRating}} ::  {{Plot}}", _("""Uses http://www.omdbapi.com to provide additional information about IMDB links""")))
 
 # URL regex
 conf.registerGlobalValue(SpiffyTitles, 'urlRegularExpression',

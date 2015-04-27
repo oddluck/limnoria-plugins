@@ -46,14 +46,7 @@ class SpiffyTitles(callbacks.Plugin):
         
         self.link_throttle_in_seconds = self.registryValue("cooldownInSeconds")
         self.youtube_developer_key = self.registryValue("youtubeDeveloperKey")        
-        
-        imdb_akas_enabled = self.registryValue("imdbAkasEnabled")
-        
-        if imdb_akas_enabled in (True, "True"):
-            self.log.info("SpiffyTitles: enabling imdb handler")
-            
-            self.handlers["www.imdb.com"] = self.handler_imdb
-        
+
         """
         Check if imgur client id or secret are set, and if so initialize
         imgur API client
@@ -85,6 +78,8 @@ class SpiffyTitles(callbacks.Plugin):
             self.log.info("SpiffyTitles: enabling youtube handler")
             
             self.add_youtube_handlers()
+        
+        self.add_imdb_handlers()
     
     def doPrivmsg(self, irc, msg):
         """
@@ -185,6 +180,13 @@ class SpiffyTitles(callbacks.Plugin):
         else:
             self.log.info("SpiffyTitles: serving link from cache: %s" % (url))
             return cached_link
+    
+    def add_imdb_handlers(self):
+        """
+        Enables meta info about IMDB links through the OMDB API
+        """
+        self.handlers["www.imdb.com"] = self.handler_imdb
+        self.handlers["imdb.com"] = self.handler_imdb
     
     def add_youtube_handlers(self):
         """
@@ -383,16 +385,51 @@ class SpiffyTitles(callbacks.Plugin):
     
     def handler_imdb(self, url, info):
         """
-        Handles imdb.com links, replacing the URL        
-        """
-        enabled = self.registryValue("imdbAkasEnabled")
-        amended_url = url
-
-        if enabled:
-            amended_url = url.replace("www.imdb.com", "akas.imdb.com")
-            self.log.info("SpiffyTitles: amended imdb URL %s to %s" % (url, amended_url))
+        Handles imdb.com links, querying the OMDB API for additional info
         
-        return self.handler_default(amended_url)
+        Typical IMDB URL: http://www.imdb.com/title/tt2467372/
+        """
+        headers = self.get_headers()
+        
+        # Don't care about query strings
+        if "?" in url:
+            url = url.split("?")[0]
+        
+        # We can only accommodate a specific format of URL here
+        if "/title/" in url:
+            imdb_id = url.split("/title/")[1].rstrip("/")
+            omdb_url = "http://www.omdbapi.com/?i=%s&plot=short&r=json" % (imdb_id)
+            
+            try:
+                request = requests.get(omdb_url, timeout=10, headers=headers)
+                
+                if request.status_code == requests.codes.ok:
+                    response = json.loads(request.text)
+                    result = None
+                    imdb_template = Template(self.registryValue("imdbTemplate"))
+                    not_found = "Error" in response
+                    unknown_error = response["Response"] != "True"
+                    
+                    if not_found or unknown_error:
+                        self.log.info("SpiffyTitles: OMDB error for %s" % (omdb_url))
+                    else:
+                        result = imdb_template.render(response)
+                else:
+                    self.log.error("SpiffyTitles OMDB API %s - %s" % (request.status_code, request.text)) 
+            
+            except requests.exceptions.Timeout, e:
+                self.log.error("SpiffyTitles imdb Timeout: %s" % (str(e)))
+            except requests.exceptions.ConnectionError, e:
+                self.log.error("SpiffyTitles imdb ConnectionError: %s" % (str(e)))
+            except requests.exceptions.HTTPError, e:
+                self.log.error("SpiffyTitles imdb HTTPError: %s" % (str(e)))
+        
+        if result is not None:
+            return result
+        else:
+            self.log.info("SpiffyTitles: IMDB handler failed. calling default handler")
+            
+            return self.handler_default(url)
     
     def is_valid_imgur_id(self, input):
         """
@@ -573,13 +610,7 @@ class SpiffyTitles(callbacks.Plugin):
         Get the HTML of a website based on a URL
         """
         try:
-            agent = self.get_user_agent()
-            self.accept_language = self.registryValue("language")
-            
-            headers = {
-                "User-Agent": agent,
-                "Accept-Language": ";".join((self.accept_language, "q=1.0"))
-            }
+            headers = self.get_headers()
             
             self.log.info("SpiffyTitles: requesting %s" % (url))
             
@@ -620,6 +651,17 @@ class SpiffyTitles(callbacks.Plugin):
             self.log.error("SpiffyTitles HTTPError: %s" % (str(e)))
         except requests.exceptions.InvalidURL, e:
             self.log.error("SpiffyTitles InvalidURL: %s" % (str(e)))
+    
+    def get_headers(self):
+        agent = self.get_user_agent()
+        self.accept_language = self.registryValue("language")
+        
+        headers = {
+            "User-Agent": agent,
+            "Accept-Language": ";".join((self.accept_language, "q=1.0"))
+        }
+        
+        return headers
     
     def get_user_agent(self):
         """

@@ -55,6 +55,13 @@ Example output:
 
     ^ Snoop Dogg - Pump Pump feat. Lil Malik :: Duration: 00:04:41 :: Views: 189,120
 
+### imdb handler ###
+Queries the [OMDB API](http://www.omdbapi.com) to get additional information about [IMDB](http://imdb.com) links
+
+`imdbTemplate` - This is the template used for [IMDB](http://imdb.com) links
+
+Default value: `^ {{Title}} ({{Year}}, {{Country}}) - Rating: {{imdbRating}} ::  {{Plot}}`
+
 ### imgur handler ###
 
 `imgurTemplate` - This is the template used when showing information about an [imgur](https://imgur.com) link.
