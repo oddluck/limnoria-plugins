@@ -46,7 +46,8 @@ class SpiffyTitles(callbacks.Plugin):
         
         self.link_throttle_in_seconds = self.registryValue("cooldownInSeconds")
         self.youtube_developer_key = self.registryValue("youtubeDeveloperKey")        
-
+        self.wall_clock_timeout = self.registryValue("wallClockTimeoutInSeconds")
+        
         """
         Check if imgur client id or secret are set, and if so initialize
         imgur API client
@@ -607,7 +608,7 @@ class SpiffyTitles(callbacks.Plugin):
                     
                     return stripped_title
     
-    @timeout_decorator.timeout(5)
+    @timeout_decorator.timeout(self.wall_clock_timeout)
     def get_source_by_url(self, url):
         """
         Get the HTML of a website based on a URL
