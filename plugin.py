@@ -608,7 +608,7 @@ class SpiffyTitles(callbacks.Plugin):
                     
                     return stripped_title
     
-    @timeout_decorator.timeout(self.wall_clock_timeout)
+    @timeout_decorator.timeout(8)
     def get_source_by_url(self, url):
         """
         Get the HTML of a website based on a URL
