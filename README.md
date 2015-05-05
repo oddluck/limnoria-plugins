@@ -111,7 +111,7 @@ improving performance. Default value: `60`
 `cooldownInSeconds` - This setting was replaced by `linkCacheLifetimeInSeconds`
 
 `wallClockTimeoutInSeconds` - Timeout for total elapsed time when retrieving a title. If you set this value too 
-high, the bot may time out. Default value: `8` (seconds). You must `!reload` for this setting to take effect.
+high, the bot may time out. Default value: `8` (seconds). You must `!reload SpiffyTitles` for this setting to take effect.
 
 `channelWhitelist` - a comma separated list of channels in which titles should be displayed. If `""`,
 titles will be shown in all channels. Default value: `""`
