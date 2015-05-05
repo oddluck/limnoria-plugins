@@ -39,6 +39,7 @@ class SpiffyTitles(callbacks.Plugin):
     callBefore = ["Web"]
     link_cache = []
     handlers = {}
+    wall_clock_timeout = 8
     
     def __init__(self, irc):
         self.__parent = super(SpiffyTitles, self)
@@ -394,6 +395,7 @@ class SpiffyTitles(callbacks.Plugin):
         Typical IMDB URL: http://www.imdb.com/title/tt2467372/
         """
         headers = self.get_headers()
+        result = None
         
         # Don't care about query strings
         if "?" in url:
@@ -608,7 +610,7 @@ class SpiffyTitles(callbacks.Plugin):
                     
                     return stripped_title
     
-    @timeout_decorator.timeout(8)
+    @timeout_decorator.timeout(wall_clock_timeout)
     def get_source_by_url(self, url):
         """
         Get the HTML of a website based on a URL
