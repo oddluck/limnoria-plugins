@@ -172,7 +172,7 @@ class SpiffyTitles(callbacks.Plugin):
                 break
         
         # Found link, check timestamp
-        if cached_link:
+        if cached_link is not None:
             seconds = (now - cached_link["timestamp"]).total_seconds()
             stale = seconds >= cache_lifetime_in_seconds
         
