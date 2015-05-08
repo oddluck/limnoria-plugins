@@ -2,6 +2,10 @@
 
 The ONLY gluten-free plugin for displaying link titles.
 
+## Requirements ##
+
+This plugin requires Python 2.7. It might work in other versions, though.
+
 ## Notable features ##
 
 - Configurable template so you can decide how titles are displayed and what they say
