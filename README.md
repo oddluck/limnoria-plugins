@@ -44,8 +44,10 @@ Note: as of April 20 2015 version 2 of the Youtube API was deprecated. As a resu
 requires a [developer key](https://code.google.com/apis/youtube/dashboard/gwt/index.html#settings).
 
 - Obtain a [developer key](https://code.google.com/apis/youtube/dashboard/gwt/index.html#settings)
+- Make sure the YouTube API is enabled in [the developer console](https://console.developers.google.com).
 - Set the key: `!config supybot.plugins.SpiffyTitles.youtubeDeveloperKey your_developer_key_here`
 - Reload: `!reload SpiffyTitles`
+- Observe the logs to check for errors
 
 `youtubeTitleTemplate` - This is the template used when showing the title of a YouTube video
 
