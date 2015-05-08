@@ -45,7 +45,6 @@ class SpiffyTitles(callbacks.Plugin):
         self.__parent = super(SpiffyTitles, self)
         self.__parent.__init__(irc)
         
-        self.link_throttle_in_seconds = self.registryValue("cooldownInSeconds")
         self.youtube_developer_key = self.registryValue("youtubeDeveloperKey")        
         self.wall_clock_timeout = self.registryValue("wallClockTimeoutInSeconds")
         
