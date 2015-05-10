@@ -4,7 +4,8 @@ The ONLY gluten-free plugin for displaying link titles.
 
 ## Requirements ##
 
-This plugin requires Python 2.7. It might work in other versions, though.
+- This plugin requires Python 2.7. It might work in other versions, though.
+- If you need to install `certifi` you may have to restart the bot afterwards
 
 ## Notable features ##
 
