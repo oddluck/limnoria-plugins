@@ -73,13 +73,13 @@ class SpiffyTitles(callbacks.Plugin):
             # Initialize API client
             try:
                 from imgurpython import ImgurClient
-                from imgurpython import ImgurClientError
+                from imgurpython.helpers.error import ImgurClientError
                 
                 try:
                     self.imgur_client = client = ImgurClient(imgur_client_id, imgur_client_secret)                    
                 except ImgurClientError as e:
                     self.log.error("SpiffyTitles: imgur client error: %s" % (e.error_message))                    
-            except ImportError, e:
+            except ImportError as e:
                 self.log.error("SpiffyTitles ImportError: %s" % str(e))
         
         if youtube_handler_enabled and self.youtube_developer_key:
