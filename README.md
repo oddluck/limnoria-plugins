@@ -106,9 +106,9 @@ Example output:
 - Select "OAuth 2 authorization without a callback URL"
 - Once registered, set your client id and client secret and reload SpiffyTitles
 
-    `!config set supybot.plugins.SpiffyTitles.imgurClientID`
+    `!config supybot.plugins.SpiffyTitles.imgurClientID`
     
-    `!config set supybot.plugins.SpiffyTitles.imgurClientSecret`
+    `!config supybot.plugins.SpiffyTitles.imgurClientSecret`
     
     `!reload SpiffyTitles`
 
