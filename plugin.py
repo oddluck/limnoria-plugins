@@ -315,7 +315,7 @@ class SpiffyTitles(callbacks.Plugin):
             
             self.log.info("SpiffyTitles: requesting %s" % (api_url))
             
-            request = requests.get(api_url, headers=headers)            
+            request = requests.get(api_url, headers=headers, verify=False)            
             ok = request.status_code == requests.codes.ok
             
             if ok:
@@ -424,7 +424,7 @@ class SpiffyTitles(callbacks.Plugin):
             omdb_url = "http://www.omdbapi.com/?i=%s&plot=short&r=json" % (imdb_id)
             
             try:
-                request = requests.get(omdb_url, timeout=10, headers=headers)
+                request = requests.get(omdb_url, timeout=10, headers=headers, verify=False)
                 
                 if request.status_code == requests.codes.ok:
                     response = json.loads(request.text)
