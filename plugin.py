@@ -48,6 +48,12 @@ class SpiffyTitles(callbacks.Plugin):
         self.youtube_developer_key = self.registryValue("youtubeDeveloperKey")        
         self.wall_clock_timeout = self.registryValue("wallClockTimeoutInSeconds")
         
+        youtube_handler_enabled = self.registryValue("youtubeHandlerEnabled")
+        imgur_handler_enabled = self.registryValue("imgurHandlerEnabled")
+        imdb_handler_enabled = self.registryValue("imdbHandlerEnabled")
+        
+        self.default_handler_enabled = self.registryValue("defaultHandlerEnabled")
+        
         """
         Check if imgur client id or secret are set, and if so initialize
         imgur API client
@@ -55,7 +61,7 @@ class SpiffyTitles(callbacks.Plugin):
         imgur_client_id = self.registryValue("imgurClientID")
         imgur_client_secret = self.registryValue("imgurClientSecret")
         
-        if imgur_client_id and imgur_client_secret:
+        if imgur_handler_enabled and imgur_client_id and imgur_client_secret:
             self.log.info("SpiffyTitles: enabling imgur handler")
             
             # Images mostly
@@ -75,12 +81,13 @@ class SpiffyTitles(callbacks.Plugin):
             except ImportError, e:
                 self.log.error("SpiffyTitles ImportError: %s" % str(e))
         
-        if self.youtube_developer_key:
+        if youtube_handler_enabled and self.youtube_developer_key:
             self.log.info("SpiffyTitles: enabling youtube handler")
             
             self.add_youtube_handlers()
         
-        self.add_imdb_handlers()
+        if imdb_handler_enabled:
+            self.add_imdb_handlers()
     
     def doPrivmsg(self, irc, msg):
         """
@@ -91,7 +98,8 @@ class SpiffyTitles(callbacks.Plugin):
         is_ctcp = ircmsgs.isCtcp(msg)        
         message = msg.args[1]
         now = datetime.datetime.now()
-
+        title = None
+        
         if is_channel and not is_ctcp:
             channel_is_allowed = self.is_channel_allowed(channel)            
             url = self.get_url_from_message(message)
@@ -123,7 +131,8 @@ class SpiffyTitles(callbacks.Plugin):
                         handler = self.handlers[domain]                        
                         title = handler(url, info)
                     else:
-                        title = self.handler_default(url)
+                        if self.default_handler_enabled:
+                            title = self.handler_default(url)
                 
                 if title is not None and title:
                     self.log.info("SpiffyTitles: title found: %s" % (title))
@@ -142,7 +151,10 @@ class SpiffyTitles(callbacks.Plugin):
                     
                     irc.reply(formatted_title)
                 else:
-                    self.log.error("SpiffyTitles: could not get a title for %s" % (url))
+                    if self.default_handler_enabled:
+                        self.log.error("SpiffyTitles: could not get a title for %s" % (url))
+                    else:                        
+                        self.log.error("SpiffyTitles: could not get a title for %s but default handler is disabled" % (url))
     
     def get_link_from_cache(self, url):
         """
@@ -375,17 +387,22 @@ class SpiffyTitles(callbacks.Plugin):
         """
         Default handler for websites
         """
-        self.log.info("SpiffyTitles: calling default handler for %s" % (url))
-        default_template = Template(self.registryValue("defaultTitleTemplate"))
-        html = self.get_source_by_url(url)
+        default_handler_enabled = self.registryValue("defaultHandlerEnabled")
         
-        if html is not None and html:
-            title = self.get_title_from_html(html)
+        if default_handler_enabled:
+            self.log.info("SpiffyTitles: calling default handler for %s" % (url))
+            default_template = Template(self.registryValue("defaultTitleTemplate"))
+            html = self.get_source_by_url(url)
             
-            if title is not None:
-                title_template = default_template.render(title=title)
+            if html is not None and html:
+                title = self.get_title_from_html(html)
                 
-                return title_template
+                if title is not None:
+                    title_template = default_template.render(title=title)
+                    
+                    return title_template
+        else:
+            self.log.info("SpiffyTitles: default handler fired but doing nothing because disabled")
     
     def handler_imdb(self, url, info):
         """

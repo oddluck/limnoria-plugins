@@ -34,6 +34,12 @@ Tip: Observe the logs when loading the plugin and afterwards to see what's going
 
 ## Available Options ##
 
+### Default handler ###
+
+`defaultHandlerEnabled` - Whether to show additional information about links that aren't handled elsewhere. You'd really only 
+want to disable this if all of the other handlers were enabled. In this scenario, the bot would only show information for
+websites with custom handlers, like Youtube, IMDB, and imgur.
+
 `defaultTitleTemplate` - This is the template used when showing the title of a link. 
 
 Default value: `^ {{title}}`
@@ -53,6 +59,8 @@ requires a [developer key](https://code.google.com/apis/youtube/dashboard/gwt/in
 - Reload: `!reload SpiffyTitles`
 - Observe the logs to check for errors
 
+`youtubeHandlerEnabled` - Whether to show additional information about Youtube links
+
 `youtubeTitleTemplate` - This is the template used when showing the title of a YouTube video
 
 Default value: `^ {{title}} :: Duration: {{duration}} :: Views: {{view_count}}`
@@ -63,6 +71,8 @@ Example output:
 
 ### imdb handler ###
 Queries the [OMDB API](http://www.omdbapi.com) to get additional information about [IMDB](http://imdb.com) links
+
+`imdbHandlerEnabled` - Whether to show additional information about [IMDB](http://imdb.com) links
 
 `imdbTemplate` - This is the template used for [IMDB](http://imdb.com) links
 
@@ -113,8 +123,6 @@ in the above example, [please open an issue!](https://github.com/prgmrbill/limno
 
 `linkCacheLifetimeInSeconds` - Caches the title of links. This is useful for reducing API usage and 
 improving performance. Default value: `60`
-
-`cooldownInSeconds` - This setting was replaced by `linkCacheLifetimeInSeconds`
 
 `wallClockTimeoutInSeconds` - Timeout for total elapsed time when retrieving a title. If you set this value too 
 high, the bot may time out. Default value: `8` (seconds). You must `!reload SpiffyTitles` for this setting to take effect.
@@ -170,6 +178,10 @@ Ignore `*.tk` and `buzzfeed.com`
 `urlRegularExpression` - A regular expression used to match URLs. You shouldn't need to change this.
 
 ### FAQ ###
+
+Q: How can I only show information about certain links?
+
+A: You can use the settings `defaultHandlerEnabled`, `youtubeHandlerEnabled`, `imgurHandlerEnabled`, and `imdbHandlerEnabled` to choose which links you want to show information about. You must also `!reload SpiffyTitles` after changing these settings.
 
 Q: Why not use the [Web](https://github.com/ProgVal/Limnoria/tree/master/plugins/Web) plugin?
 

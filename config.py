@@ -34,9 +34,22 @@ conf.registerGlobalValue(SpiffyTitles, 'wallClockTimeoutInSeconds',
 conf.registerGlobalValue(SpiffyTitles, 'language',
      registry.String("en-US", _("""Language code""")))
 
-# imdb
+# imdb template
 conf.registerGlobalValue(SpiffyTitles, 'imdbTemplate',
      registry.String("^ {{Title}} ({{Year}}, {{Country}}) - Rating: {{imdbRating}} ::  {{Plot}}", _("""Uses http://www.omdbapi.com to provide additional information about IMDB links""")))
+
+# enable/disable toggles
+conf.registerGlobalValue(SpiffyTitles, 'defaultHandlerEnabled',
+     registry.Boolean(True, _("""Whether to add additional information about regular links""")))
+
+conf.registerGlobalValue(SpiffyTitles, 'youtubeHandlerEnabled',
+     registry.Boolean(True, _("""Whether to add additional information about YouTube videos""")))
+
+conf.registerGlobalValue(SpiffyTitles, 'imgurHandlerEnabled',
+     registry.Boolean(True, _("""Whether to add additional information about imgur links""")))
+
+conf.registerGlobalValue(SpiffyTitles, 'imdbHandlerEnabled',
+     registry.Boolean(True, _("""Whether to add additional information about IMDB links""")))
 
 # URL regex
 conf.registerGlobalValue(SpiffyTitles, 'urlRegularExpression',
