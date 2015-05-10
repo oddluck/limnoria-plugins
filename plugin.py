@@ -73,6 +73,7 @@ class SpiffyTitles(callbacks.Plugin):
             # Initialize API client
             try:
                 from imgurpython import ImgurClient
+                from imgurpython import ImgurClientError
                 
                 try:
                     self.imgur_client = client = ImgurClient(imgur_client_id, imgur_client_secret)                    

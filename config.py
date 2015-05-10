@@ -79,6 +79,10 @@ conf.registerGlobalValue(SpiffyTitles, 'mimeTypes',
 conf.registerGlobalValue(SpiffyTitles, 'ignoredDomainPattern',
                         registry.Regexp("", _("""Domains matching this patterns will be ignored""")))
 
+# Whitelist domain pattern
+conf.registerGlobalValue(SpiffyTitles, 'whitelistDomainPattern',
+                        registry.Regexp("", _("""Domains not matching this patterns will be ignored""")))
+
 # Channel whitelist
 conf.registerGlobalValue(SpiffyTitles, 'channelWhitelist',
                         registry.CommaSeparatedListOfStrings([], _("""Only show titles on these channels, or all if empty""")))
