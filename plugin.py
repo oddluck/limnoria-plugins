@@ -637,7 +637,7 @@ class SpiffyTitles(callbacks.Plugin):
             
             self.log.info("SpiffyTitles: requesting %s" % (url))
             
-            request = requests.get(url, headers=headers, timeout=5, allow_redirects=True)
+            request = requests.get(url, headers=headers, timeout=10, allow_redirects=True)
             
             if request.status_code == requests.codes.ok:
                 # Check the content type which comes in the format: "text/html; charset=UTF-8"
