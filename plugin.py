@@ -437,8 +437,8 @@ class Tweety(callbacks.Plugin):
             return
         else:  # we found something.
             for result in results[0:int(tsearchArgs['count'])]:  # iterate over each.
-                nick = result['user'].get('screen_name').encode('utf-8')
-                name = result["user"].get('name').encode('utf-8')
+                nick = self._unescape(result['user'].get('screen_name').encode('utf-8'))
+                name = self._unescape(result["user"].get('name').encode('utf-8'))
                 text = self._unescape(result.get('text')).encode('utf-8')
                 date = self._time_created_at(result.get('created_at'))
                 tweetid = result.get('id_str')
@@ -540,8 +540,8 @@ class Tweety(callbacks.Plugin):
         # no errors, so we process data conditionally.
         if args['id']:  # If --id was given for a single tweet.
             text = self._unescape(data.get('text')).encode('utf-8')
-            nick = data["user"].get('screen_name').encode('utf-8')
-            name = data["user"].get('name').encode('utf-8')
+            nick = self._unescape(data["user"].get('screen_name').encode('utf-8'))
+            name = self._unescape(data["user"].get('name').encode('utf-8'))
             relativeTime = self._time_created_at(data.get('created_at'))
             tweetid = data.get('id')
             # prepare string to output and send to irc.
@@ -552,12 +552,12 @@ class Tweety(callbacks.Plugin):
             location = data.get('location')
             followers = data.get('followers_count')
             friends = data.get('friends_count')
-            description = data.get('description')
-            screen_name = data.get('screen_name')
+            description = self._unescape(data.get('description'))
+            screen_name = self._unescape(data.get('screen_name'))
             created_at = data.get('created_at')
             statuses_count = data.get('statuses_count')
             protected = data.get('protected')
-            name = data.get('name')
+            name = self._unescape(data.get('name'))
             url = data.get('url')
             # build output string conditionally. build string conditionally.
             ret = self._bu("@{0}".format(screen_name.encode('utf-8')))
@@ -587,8 +587,8 @@ class Tweety(callbacks.Plugin):
                 return
             for tweet in data:  # n+1 tweets found. iterate through each tweet.
                 text = self._unescape(tweet.get('text')).encode('utf-8')
-                nick = tweet["user"].get('screen_name').encode('utf-8')
-                name = tweet["user"].get('name').encode('utf-8')
+                nick = self._unescape(tweet["user"].get('screen_name').encode('utf-8'))
+                name = self._unescape(tweet["user"].get('name').encode('utf-8'))
                 tweetid = tweet.get('id')
                 relativeTime = self._time_created_at(tweet.get('created_at'))
                 # prepare string to output and send to irc.
