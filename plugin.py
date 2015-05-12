@@ -325,10 +325,16 @@ class SpiffyTitles(callbacks.Plugin):
                     try:
                         items = response["items"]
                         video = items[0]
-                        title = video["snippet"]["title"]
+                        snippet = video["snippet"]
+                        title = snippet["title"]
                         statistics = video["statistics"]
                         view_count = "{:,}".format(int(statistics["viewCount"]))
                         duration_seconds = self.get_total_seconds_from_duration(video["contentDetails"]["duration"])
+                        like_count = "{:,}".format(int(statistics["likeCount"]))
+                        dislike_count = "{:,}".format(int(statistics["dislikeCount"]))
+                        favorite_count = "{:,}".format(int(statistics["favoriteCount"]))
+                        comment_count = "{:,}".format(int(statistics["commentCount"]))
+                        channel_title = snippet["channelTitle"]
                         
                         """
                         #23 - If duration is zero, then it"s a LIVE video
@@ -348,7 +354,12 @@ class SpiffyTitles(callbacks.Plugin):
                         compiled_template = yt_template.render({
                             "title": title,
                             "duration": duration,
-                            "view_count": view_count
+                            "view_count": view_count,
+                            "like_count": like_count,
+                            "dislike_count": dislike_count,
+                            "comment_count": comment_count,
+                            "favorite_count": favorite_count,
+                            "channel_title": channel_title
                         })
                         
                         title = compiled_template

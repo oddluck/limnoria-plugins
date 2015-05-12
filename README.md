@@ -66,11 +66,13 @@ requires a [developer key](https://code.google.com/apis/youtube/dashboard/gwt/in
 
 `youtubeTitleTemplate` - This is the template used when showing the title of a YouTube video
 
-Default value: `^ {{title}} :: Duration: {{duration}} :: Views: {{view_count}}`
+Default value: `^ {{title}} uploaded by {{channel_title}} :: Duration: {{duration}} :: {{view_count}} views :: {{like_count}} likes :: {{dislike_count}} dislikes :: {{favorite_count}} favorites :: {{comment_count}} comments`
 
 Example output:
 
-    ^ Snoop Dogg - Pump Pump feat. Lil Malik :: Duration: 00:04:41 :: Views: 189,120
+    ^ Snoop Dogg - Pump Pump feat. Lil Malik uploaded by GeorgeRDR3218 :: Duration: 04:41 :: 203,218 views :: 933 likes :: 40 dislikes :: 0 favorites :: 112 comments
+
+Tip: after changing a template, you must `!reload SpiffyTitles`
 
 ### imdb handler ###
 Queries the [OMDB API](http://www.omdbapi.com) to get additional information about [IMDB](http://imdb.com) links
