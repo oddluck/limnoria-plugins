@@ -116,7 +116,13 @@ class SpiffyTitles(callbacks.Plugin):
                 is_ignored = self.is_ignored_domain(domain)
                 
                 if is_ignored:
-                    self.log.info("SpiffyTitles: ignoring url due to pattern match: %s" % (url))
+                    self.log.info("SpiffyTitles: URL ignored due to domain blacklist match: %s" % url)
+                    return
+                
+                is_whitelisted_domain = self.is_whitelisted_domain(domain)
+                
+                if self.registryValue("whitelistDomainPattern") and not is_whitelisted_domain:
+                    self.log.info("SpiffyTitles: URL ignored due to domain whitelist mismatch: %s" % url)
                     return
                 
                 """
@@ -249,6 +255,25 @@ class SpiffyTitles(callbacks.Plugin):
         Checks domain against a regular expression
         """
         pattern = self.registryValue("ignoredDomainPattern")
+        
+        if pattern:
+            self.log.debug("SpiffyTitles: matching %s against %s" % (domain, str(pattern)))
+            
+            try:
+                pattern_search_result = re.search(pattern, domain)
+                
+                if pattern_search_result is not None:
+                    match = pattern_search_result.group()
+                    
+                    return match
+            except re.Error:
+                self.log.error("SpiffyTitles: invalid regular expression: %s" % (pattern))
+    
+    def is_whitelisted_domain(self, domain):
+        """
+        Checks domain against a regular expression
+        """
+        pattern = self.registryValue("whitelistDomainPattern")
         
         if pattern:
             self.log.debug("SpiffyTitles: matching %s against %s" % (domain, str(pattern)))

@@ -110,7 +110,7 @@ conf.registerGlobalValue(SpiffyTitles, 'youtubeDeveloperKey',
 
 # Link cache lifetime
 conf.registerGlobalValue(SpiffyTitles, 'linkCacheLifetimeInSeconds',
-                        registry.Integer(60, _("""Link cache lifetime in seconds""")))                           
+                        registry.Integer(60, _("""Link cache lifetime in seconds""")))                    
                         
                         
                         

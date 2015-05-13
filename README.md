@@ -164,6 +164,8 @@ titles will be shown in all channels. Default value: `""`
 
 `ignoredDomainPattern` - ignore domains matching this pattern. Default value: `""`
 
+`whitelistDomainPattern` - ignore any link without a domain matching this pattern. Default value: `""`
+
 ### Tip ###
 
 You can ignore domains that you know aren't websites. This prevents a request from being made at all.
@@ -177,6 +179,10 @@ Ignore all links with the domain `buzzfeed.com`
 Ignore `*.tk` and `buzzfeed.com`
 
     !config supybot.plugins.SpiffyTitles.ignoredDomainPattern (\.tk|buzzfeed\.com)
+
+Ignore all links except youtube, imgur, and reddit
+
+    !config supybot.plugins.SpiffyTitles.whitelistDomainPattern /(reddit\.com|youtube\.com|youtu\.be|imgur\.com)/
 
 `userAgents` - A comma separated list of strings of user agents randomly chosen when requesting. 
 
