@@ -200,7 +200,7 @@ class SpiffyTitles(callbacks.Plugin):
         else:
             self.log.info("SpiffyTitles: serving link from cache: %s" % (url))
             return cached_link
-    
+
     def add_imdb_handlers(self):
         """
         Enables meta info about IMDB links through the OMDB API
@@ -652,11 +652,13 @@ class SpiffyTitles(callbacks.Plugin):
         soup = BeautifulSoup(html)
         
         if soup is not None:
-            # TODO: What should happen if there is more than one <title> tag?
-            title = soup.find("title")
+            """
+            Some websites have more than one title tag, so get all of them and take the last value
+            """
+            titles = soup.find_all("title")
             
-            if title is not None:
-                title_text = title.get_text()
+            if titles is not None and len(titles):                
+                title_text = titles[-1].get_text()
                 
                 if len(title_text):
                     stripped_title = title_text.strip()
