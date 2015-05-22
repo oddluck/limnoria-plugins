@@ -40,6 +40,7 @@ class SpiffyTitles(callbacks.Plugin):
     link_cache = []
     handlers = {}
     wall_clock_timeout = 8
+    max_request_retries = 3
     
     def __init__(self, irc):
         self.__parent = super(SpiffyTitles, self)
@@ -666,10 +667,22 @@ class SpiffyTitles(callbacks.Plugin):
                     return stripped_title
     
     @timeout_decorator.timeout(wall_clock_timeout)
-    def get_source_by_url(self, url):
+    def get_source_by_url(self, url, retries=1):
         """
         Get the HTML of a website based on a URL
         """
+        max_retries = self.registryValue("maxRetries")
+        
+        if retries is None:
+            retries = 1
+        
+        if retries >= max_retries:
+            self.log.info("SpiffyTitles: hit maximum retries for %s" % url)
+            
+            return None
+        
+        self.log.info("SpiffyTitles: attempt #%s for %s" % (retries, url))
+        
         try:
             headers = self.get_headers()
             
@@ -700,14 +713,20 @@ class SpiffyTitles(callbacks.Plugin):
         
         except timeout_decorator.TimeoutError:
             self.log.error("SpiffyTitles: wall timeout!")
+            
+            self.get_source_by_url(url, retries+1)        
         except requests.exceptions.MissingSchema, e:
             urlWithSchema = "http://%s" % (url)
             self.log.error("SpiffyTitles missing schema. Retrying with %s" % (urlWithSchema))
             return self.get_source_by_url(urlWithSchema)
         except requests.exceptions.Timeout, e:
             self.log.error("SpiffyTitles Timeout: %s" % (str(e)))
+            
+            self.get_source_by_url(url, retries+1)            
         except requests.exceptions.ConnectionError, e:
             self.log.error("SpiffyTitles ConnectionError: %s" % (str(e)))
+            
+            self.get_source_by_url(url, retries+1)            
         except requests.exceptions.HTTPError, e:
             self.log.error("SpiffyTitles HTTPError: %s" % (str(e)))
         except requests.exceptions.InvalidURL, e:
