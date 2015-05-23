@@ -14,14 +14,17 @@ import supybot.ircutils as ircutils
 import supybot.callbacks as callbacks
 import re
 import requests
-from urlparse import urlparse
+try:
+    from urlparse import urlparse
+    from urllib import urlencode
+except ImportError:
+    from urllib.parse import urlencode, urlparse
 from bs4 import BeautifulSoup
 import random
 import json
 import cgi
 import datetime
 from jinja2 import Template
-from urllib import urlencode
 from datetime import timedelta
 import timeout_decorator
 
@@ -312,7 +315,7 @@ class SpiffyTitles(callbacks.Plugin):
             else:
                 self.log.error("SpiffyTitles: error getting video id from %s" % (url))
         
-        except IndexError, e:
+        except IndexError as e:
             self.log.error("SpiffyTitles: error getting video id from %s (%s)" % (url, str(e)))
 
     def handler_youtube(self, url, domain):
@@ -390,7 +393,7 @@ class SpiffyTitles(callbacks.Plugin):
                         
                         title = compiled_template
                     
-                    except IndexError, e:
+                    except IndexError as e:
                         self.log.error("SpiffyTitles: IndexError parsing Youtube API JSON response: %s" % (str(e)))
                 else:
                     self.log.error("SpiffyTitles: Error parsing Youtube API JSON response")
@@ -477,11 +480,11 @@ class SpiffyTitles(callbacks.Plugin):
                 else:
                     self.log.error("SpiffyTitles OMDB API %s - %s" % (request.status_code, request.text)) 
             
-            except requests.exceptions.Timeout, e:
+            except requests.exceptions.Timeout as e:
                 self.log.error("SpiffyTitles imdb Timeout: %s" % (str(e)))
-            except requests.exceptions.ConnectionError, e:
+            except requests.exceptions.ConnectionError as e:
                 self.log.error("SpiffyTitles imdb ConnectionError: %s" % (str(e)))
-            except requests.exceptions.HTTPError, e:
+            except requests.exceptions.HTTPError as e:
                 self.log.error("SpiffyTitles imdb HTTPError: %s" % (str(e)))
         
         if result is not None:
@@ -715,21 +718,21 @@ class SpiffyTitles(callbacks.Plugin):
             self.log.error("SpiffyTitles: wall timeout!")
             
             self.get_source_by_url(url, retries+1)        
-        except requests.exceptions.MissingSchema, e:
+        except requests.exceptions.MissingSchema as e:
             urlWithSchema = "http://%s" % (url)
             self.log.error("SpiffyTitles missing schema. Retrying with %s" % (urlWithSchema))
             return self.get_source_by_url(urlWithSchema)
-        except requests.exceptions.Timeout, e:
+        except requests.exceptions.Timeout as e:
             self.log.error("SpiffyTitles Timeout: %s" % (str(e)))
             
             self.get_source_by_url(url, retries+1)            
-        except requests.exceptions.ConnectionError, e:
+        except requests.exceptions.ConnectionError as e:
             self.log.error("SpiffyTitles ConnectionError: %s" % (str(e)))
             
             self.get_source_by_url(url, retries+1)            
-        except requests.exceptions.HTTPError, e:
+        except requests.exceptions.HTTPError as e:
             self.log.error("SpiffyTitles HTTPError: %s" % (str(e)))
-        except requests.exceptions.InvalidURL, e:
+        except requests.exceptions.InvalidURL as e:
             self.log.error("SpiffyTitles InvalidURL: %s" % (str(e)))
     
     def get_headers(self):
