@@ -20,7 +20,9 @@ The ONLY gluten-free plugin for displaying link titles.
 Check out the [available options](#available-options)
 
 ## Using SpiffyTitles ##
-- Install the requirements: `pip install -r SpiffyTitles/requirements.txt --user --upgrade`
+- `git clone https://github.com/prgmrbill/limnoria-plugins.git`
+- `cd limnoria-plugins/SpiffyTitles`
+- Install the requirements: `pip install -r requirements.txt --user --upgrade`
 - You should `unload` the Web plugin and any other plugins that show link titles for best results
 
 To unload the Web plugin:
@@ -49,18 +51,23 @@ Example output:
 
     ^ Google.com
 
-### Youtube handler ###
+### Youtube handler
 
 Note: as of April 20 2015 version 2 of the Youtube API was deprecated. As a result, this feature now
 requires a [developer key](https://code.google.com/apis/youtube/dashboard/gwt/index.html#settings).
 
 - Obtain a [developer key](https://code.google.com/apis/youtube/dashboard/gwt/index.html#settings)
-- Go to the `Credentials` area, choose `Public API access` and `Create new Key`
+- Go to the `Credentials` area, choose `Public API access` and `Create new Key` as shown in the screenshot below
+
+![Google Developer Console Screenshot](https://i.imgur.com/IUfk3VB.jpg "Google Developer Console Screenshot")
+
 - You may specify allowed IPs but be aware that this setting seems to cache. It is easier to test using the URL listed in the console to verify requests from that machine are working.
 - Make sure the YouTube API is enabled in [the developer console](https://developers.google.com/console/help/#activatingapis).
 - Set the key: `!config supybot.plugins.SpiffyTitles.youtubeDeveloperKey your_developer_key_here`
 - Reload: `!reload SpiffyTitles`
 - Observe the logs to check for errors
+
+### Youtube handler options
 
 `youtubeHandlerEnabled` - Whether to show additional information about Youtube links
 
