@@ -160,7 +160,7 @@ class SpiffyTitles(callbacks.Plugin):
                             "title": title
                         })
                     
-                    irc.reply(formatted_title)
+                    irc.sendMsg(ircmsgs.privmsg(channel, formatted_title))
                 else:
                     if self.default_handler_enabled:
                         self.log.error("SpiffyTitles: could not get a title for %s" % (url))
