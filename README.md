@@ -64,7 +64,6 @@ requires a [developer key](https://code.google.com/apis/youtube/dashboard/gwt/in
 - You may specify allowed IPs but be aware that this setting seems to cache. It is easier to test using the URL listed in the console to verify requests from that machine are working.
 - Make sure the YouTube API is enabled in [the developer console](https://developers.google.com/console/help/#activatingapis).
 - Set the key: `!config supybot.plugins.SpiffyTitles.youtubeDeveloperKey your_developer_key_here`
-- Reload: `!reload SpiffyTitles`
 - Observe the logs to check for errors
 
 ### Youtube handler options
@@ -116,13 +115,11 @@ Example output:
 
 - You'll need to [register an application with imgur](https://api.imgur.com/oauth2/addclient)
 - Select "OAuth 2 authorization without a callback URL"
-- Once registered, set your client id and client secret and reload SpiffyTitles
+- Once registered, set your client id and client secret
 
     `!config supybot.plugins.SpiffyTitles.imgurClientID`
     
     `!config supybot.plugins.SpiffyTitles.imgurClientSecret`
-    
-    `!reload SpiffyTitles`
 
 ### Notes on the imgur handler ###
 
@@ -199,7 +196,7 @@ Ignore all links except youtube, imgur, and reddit
 
 Q: How can I only show information about certain links?
 
-A: You can use the settings `defaultHandlerEnabled`, `youtubeHandlerEnabled`, `imgurHandlerEnabled`, and `imdbHandlerEnabled` to choose which links you want to show information about. You must also `!reload SpiffyTitles` after changing these settings.
+A: You can use the settings `defaultHandlerEnabled`, `youtubeHandlerEnabled`, `imgurHandlerEnabled`, and `imdbHandlerEnabled` to choose which links you want to show information about.
 
 Q: Why not use the [Web](https://github.com/ProgVal/Limnoria/tree/master/plugins/Web) plugin?
 

@@ -44,55 +44,56 @@ class SpiffyTitles(callbacks.Plugin):
     handlers = {}
     wall_clock_timeout = 8
     max_request_retries = 3
+    imgur_client = None
     
     def __init__(self, irc):
         self.__parent = super(SpiffyTitles, self)
         self.__parent.__init__(irc)
-        
-        self.youtube_developer_key = self.registryValue("youtubeDeveloperKey")        
+            
         self.wall_clock_timeout = self.registryValue("wallClockTimeoutInSeconds")
-        
-        youtube_handler_enabled = self.registryValue("youtubeHandlerEnabled")
-        imgur_handler_enabled = self.registryValue("imgurHandlerEnabled")
-        imdb_handler_enabled = self.registryValue("imdbHandlerEnabled")
-        
         self.default_handler_enabled = self.registryValue("defaultHandlerEnabled")
         
+        self.add_handlers()
+    
+    def add_handlers(self):
+        """
+        Adds all handlers
+        """
+        self.add_youtube_handlers()
+        self.add_imdb_handlers()
+        self.add_imgur_handlers()
+    
+    def add_imgur_handlers(self):
+        # Images mostly
+        self.handlers["i.imgur.com"] = self.handler_imgur_image
+        
+        # Albums, galleries, etc
+        self.handlers["imgur.com"] = self.handler_imgur
+    
+    def initialize_imgur_client(self):
         """
         Check if imgur client id or secret are set, and if so initialize
         imgur API client
         """
-        imgur_client_id = self.registryValue("imgurClientID")
-        imgur_client_secret = self.registryValue("imgurClientSecret")
-        
-        if imgur_handler_enabled and imgur_client_id and imgur_client_secret:
-            self.log.info("SpiffyTitles: enabling imgur handler")
+        if self.imgur_client is None:
+            imgur_client_id = self.registryValue("imgurClientID")
+            imgur_client_secret = self.registryValue("imgurClientSecret")
+            imgur_handler_enabled = self.registryValue("imgurHandlerEnabled")
             
-            # Images mostly
-            self.handlers["i.imgur.com"] = self.handler_imgur_image
-            
-            # Albums, galleries, etc
-            self.handlers["imgur.com"] = self.handler_imgur
-            
-            # Initialize API client
-            try:
-                from imgurpython import ImgurClient
-                from imgurpython.helpers.error import ImgurClientError
-                
+            if imgur_handler_enabled and imgur_client_id and imgur_client_secret:
+                self.log.info("SpiffyTitles: enabling imgur handler")
+
+                # Initialize API client
                 try:
-                    self.imgur_client = client = ImgurClient(imgur_client_id, imgur_client_secret)                    
-                except ImgurClientError as e:
-                    self.log.error("SpiffyTitles: imgur client error: %s" % (e.error_message))                    
-            except ImportError as e:
-                self.log.error("SpiffyTitles ImportError: %s" % str(e))
-        
-        if youtube_handler_enabled and self.youtube_developer_key:
-            self.log.info("SpiffyTitles: enabling youtube handler")
-            
-            self.add_youtube_handlers()
-        
-        if imdb_handler_enabled:
-            self.add_imdb_handlers()
+                    from imgurpython import ImgurClient
+                    from imgurpython.helpers.error import ImgurClientError
+                    
+                    try:
+                        self.imgur_client = ImgurClient(imgur_client_id, imgur_client_secret)                    
+                    except ImgurClientError as e:
+                        self.log.error("SpiffyTitles: imgur client error: %s" % (e.error_message))                    
+                except ImportError as e:
+                    self.log.error("SpiffyTitles ImportError: %s" % str(e))
     
     def doPrivmsg(self, irc, msg):
         """
@@ -323,6 +324,16 @@ class SpiffyTitles(callbacks.Plugin):
         Uses the Youtube API to provide additional meta data about
         Youtube Video links posted.
         """
+        youtube_handler_enabled = self.registryValue("youtubeHandlerEnabled")
+        developer_key = self.registryValue("youtubeDeveloperKey")
+        
+        if not youtube_handler_enabled:
+            return None
+        
+        if not developer_key:
+            self.log.info("SpiffyTitles: no Youtube developer key set! Check the documentation for instructions.")
+            return None
+        
         self.log.info("SpiffyTitles: calling Youtube handler for %s" % (url))
         video_id = self.get_video_id_from_url(url, domain)
         yt_template = Template(self.registryValue("youtubeTitleTemplate"))
@@ -332,7 +343,7 @@ class SpiffyTitles(callbacks.Plugin):
             options = {
                 "part": "snippet,statistics,contentDetails",
                 "maxResults": 1,
-                "key": self.youtube_developer_key,
+                "key": developer_key,
                 "id": video_id
             }
             encoded_options = urlencode(options)
@@ -454,6 +465,11 @@ class SpiffyTitles(callbacks.Plugin):
         headers = self.get_headers()
         result = None
         
+        if not self.registryValue("imdbHandlerEnabled"):
+            self.log.info("SpiffyTitles: IMDB handler disabled. Falling back to default handler.")
+            
+            return self.handler_default(url)
+        
         # Don't care about query strings
         if "?" in url:
             url = url.split("?")[0]
@@ -509,6 +525,8 @@ class SpiffyTitles(callbacks.Plugin):
 
         This handler is for any imgur.com domain.
         """
+        self.initialize_imgur_client()
+        
         is_album = info.path.startswith("/a/")
         is_gallery = info.path.startswith("/gallery/")
         is_image_page = not is_album and not is_gallery and re.match(r"^\/[a-zA-Z0-9]+", info.path)
@@ -531,39 +549,43 @@ class SpiffyTitles(callbacks.Plugin):
         """
         from imgurpython.helpers.error import ImgurClientRateLimitError
         from imgurpython.helpers.error import ImgurClientError
+        self.initialize_imgur_client()
         
-        album_id = info.path.split("/a/")[1]
-        
-        """ If there is a query string appended, remove it """
-        if "?" in album_id:
-            album_id = album_id.split("?")[0]
-        
-        if self.is_valid_imgur_id(album_id):
-            self.log.info("SpiffyTitles: found imgur album id %s" % (album_id))
+        if self.imgur_client:
+            album_id = info.path.split("/a/")[1]
             
-            try:
-                album = self.imgur_client.get_album(album_id)
+            """ If there is a query string appended, remove it """
+            if "?" in album_id:
+                album_id = album_id.split("?")[0]
+            
+            if self.is_valid_imgur_id(album_id):
+                self.log.info("SpiffyTitles: found imgur album id %s" % (album_id))
                 
-                if album:
-                    imgur_album_template = Template(self.registryValue("imgurAlbumTemplate"))
-                    compiled_template = imgur_album_template.render({
-                        "title": album.title,
-                        "section": album.section,
-                        "view_count": "{:,}".format(album.views),
-                        "image_count": "{:,}".format(album.images_count),
-                        "nsfw": album.nsfw
-                    })
+                try:
+                    album = self.imgur_client.get_album(album_id)
                     
-                    return compiled_template
-                else:
-                    self.log.error("SpiffyTitles: imgur album API returned unexpected results!")
+                    if album:
+                        imgur_album_template = Template(self.registryValue("imgurAlbumTemplate"))
+                        compiled_template = imgur_album_template.render({
+                            "title": album.title,
+                            "section": album.section,
+                            "view_count": "{:,}".format(album.views),
+                            "image_count": "{:,}".format(album.images_count),
+                            "nsfw": album.nsfw
+                        })
+                        
+                        return compiled_template
+                    else:
+                        self.log.error("SpiffyTitles: imgur album API returned unexpected results!")
 
-            except ImgurClientRateLimitError as e:
-                self.log.error("SpiffyTitles: imgur rate limit error: %s" % (e.error_message))
-            except ImgurClientError as e:
-                self.log.error("SpiffyTitles: imgur client error: %s" % (e.error_message))
+                except ImgurClientRateLimitError as e:
+                    self.log.error("SpiffyTitles: imgur rate limit error: %s" % (e.error_message))
+                except ImgurClientError as e:
+                    self.log.error("SpiffyTitles: imgur client error: %s" % (e.error_message))
+            else:
+                self.log.info("SpiffyTitles: unable to determine album id for %s" % (url))
         else:
-            self.log.info("SpiffyTitles: unable to determine album id for %s" % (url))
+            return self.handler_default(url)
     
     def handler_imgur_image(self, url, info):
         """
@@ -572,49 +594,52 @@ class SpiffyTitles(callbacks.Plugin):
         Used for both direct images and imgur.com/some_image_id_here type links, as
         they're both single images.
         """
+        self.initialize_imgur_client()
+        
         from imgurpython.helpers.error import ImgurClientRateLimitError
         from imgurpython.helpers.error import ImgurClientError
         title = None
         
-        """ 
-        If there is a period in the path, it's a direct link to an image. If not, then
-        it's a imgur.com/some_image_id_here type link
-        """
-        if "." in info.path:
-            path = info.path.lstrip("/")
-            image_id = path.split(".")[0]
-        else:
-            image_id = info.path.lstrip("/")
-        
-        if self.is_valid_imgur_id(image_id):
-            self.log.info("SpiffyTitles: found image id %s" % (image_id))
+        if self.imgur_client:
+            """ 
+            If there is a period in the path, it's a direct link to an image. If not, then
+            it's a imgur.com/some_image_id_here type link
+            """
+            if "." in info.path:
+                path = info.path.lstrip("/")
+                image_id = path.split(".")[0]
+            else:
+                image_id = info.path.lstrip("/")
             
-            try:
-                image = self.imgur_client.get_image(image_id)
+            if self.is_valid_imgur_id(image_id):
+                self.log.info("SpiffyTitles: found image id %s" % (image_id))
                 
-                if image:
-                    imgur_template = Template(self.registryValue("imgurTemplate"))
-                    readable_file_size = self.get_readable_file_size(image.size)
-                    compiled_template = imgur_template.render({
-                        "title": image.title,
-                        "type": image.type,
-                        "nsfw": image.nsfw,
-                        "width": image.width,
-                        "height": image.height,
-                        "view_count": "{:,}".format(image.views),
-                        "file_size": readable_file_size,
-                        "section": image.section
-                    })
+                try:
+                    image = self.imgur_client.get_image(image_id)
                     
-                    title = compiled_template
-                else:
-                    self.log.error("SpiffyTitles: imgur API returned unexpected results!")
-            except ImgurClientRateLimitError as e:
-                self.log.error("SpiffyTitles: imgur rate limit error: %s" % (e.error_message))
-            except ImgurClientError as e:
-                self.log.error("SpiffyTitles: imgur client error: %s" % (e.error_message))
-        else:
-            self.log.error("SpiffyTitles: error retrieving image id for %s" % (url))
+                    if image:
+                        imgur_template = Template(self.registryValue("imgurTemplate"))
+                        readable_file_size = self.get_readable_file_size(image.size)
+                        compiled_template = imgur_template.render({
+                            "title": image.title,
+                            "type": image.type,
+                            "nsfw": image.nsfw,
+                            "width": image.width,
+                            "height": image.height,
+                            "view_count": "{:,}".format(image.views),
+                            "file_size": readable_file_size,
+                            "section": image.section
+                        })
+                        
+                        title = compiled_template
+                    else:
+                        self.log.error("SpiffyTitles: imgur API returned unexpected results!")
+                except ImgurClientRateLimitError as e:
+                    self.log.error("SpiffyTitles: imgur rate limit error: %s" % (e.error_message))
+                except ImgurClientError as e:
+                    self.log.error("SpiffyTitles: imgur client error: %s" % (e.error_message))
+            else:
+                self.log.error("SpiffyTitles: error retrieving image id for %s" % (url))
         
         if title is not None:
             return title

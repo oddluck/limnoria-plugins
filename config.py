@@ -72,23 +72,23 @@ conf.registerGlobalValue(SpiffyTitles, 'youtubeTitleTemplate',
 
 # User agents
 conf.registerGlobalValue(SpiffyTitles, 'userAgents',
-                        registry.CommaSeparatedListOfStrings(["Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.60 Safari/537.36", "Mozilla/5.0 (Windows NT 6.3; rv:36.0) Gecko/20100101 Firefox/36.0", "Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; AS; rv:11.0) like Gecko"], _("""Reported user agent when fetching links""")))
+                         registry.CommaSeparatedListOfStrings(["Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.60 Safari/537.36", "Mozilla/5.0 (Windows NT 6.3; rv:36.0) Gecko/20100101 Firefox/36.0", "Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; AS; rv:11.0) like Gecko"], _("""Reported user agent when fetching links""")))
 
 # Mime Types
 conf.registerGlobalValue(SpiffyTitles, 'mimeTypes',
-                        registry.CommaSeparatedListOfStrings(["text/html"], _("""Acceptable mime types for displaying titles""")))
+                         registry.CommaSeparatedListOfStrings(["text/html"], _("""Acceptable mime types for displaying titles""")))
 
 # Ignored domain pattern
 conf.registerGlobalValue(SpiffyTitles, 'ignoredDomainPattern',
-                        registry.Regexp("", _("""Domains matching this patterns will be ignored""")))
+                         registry.Regexp("", _("""Domains matching this patterns will be ignored""")))
 
 # Whitelist domain pattern
 conf.registerGlobalValue(SpiffyTitles, 'whitelistDomainPattern',
-                        registry.Regexp("", _("""Domains not matching this patterns will be ignored""")))
+                         registry.Regexp("", _("""Domains not matching this patterns will be ignored""")))
 
 # Channel whitelist
 conf.registerGlobalValue(SpiffyTitles, 'channelWhitelist',
-                        registry.CommaSeparatedListOfStrings([], _("""Only show titles on these channels, or all if empty""")))
+                         registry.CommaSeparatedListOfStrings([], _("""Only show titles on these channels, or all if empty""")))
 
 # Channel blacklist
 conf.registerGlobalValue(SpiffyTitles, 'channelBlacklist',
