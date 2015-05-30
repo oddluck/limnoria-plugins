@@ -22,13 +22,13 @@ Check out the [available options](#available-options)!
 - `pip install -r requirements.txt --user --upgrade`
 - If you need to install `certifi` you may have to restart the bot afterwards
 
-You should `!unload Web` the Web plugin and any other plugins that show link titles for best results
+You should `!unload Web` and any other plugins that show link titles for best results
 
 Load SpiffyTitles:
     
     !load SpiffyTitles
 
-Pro Tip: Observe the logs when loading the plugin and afterwards to see what's going on under the hood.
+Pro Tip: Observe the logs when loading the plugin and afterwards to see if there are any errors.
 
 ## Available Options
 
