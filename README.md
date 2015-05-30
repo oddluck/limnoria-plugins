@@ -2,12 +2,7 @@
 
 The ONLY gluten-free plugin for displaying link titles.
 
-## Requirements ##
-
-- This plugin requires Python 2.7. It might work in other versions, though.
-- If you need to install `certifi` you may have to restart the bot afterwards
-
-## Notable features ##
+## Notable features
 
 - Configurable template so you can decide how titles are displayed and what they say
 - Additional information about [Youtube](https://youtube.com) videos
@@ -17,27 +12,27 @@ The ONLY gluten-free plugin for displaying link titles.
 - Configurable list of user agents
 - Ability to ignore domains using a regular expression
 
-Check out the [available options](#available-options)
+Check out the [available options](#available-options)!
 
-## Using SpiffyTitles ##
+## Install SpiffyTitles
 - `git clone https://github.com/prgmrbill/limnoria-plugins.git`
 - `cd limnoria-plugins/SpiffyTitles`
-- Install the requirements: `pip install -r requirements.txt --user --upgrade`
-- You should `unload` the Web plugin and any other plugins that show link titles for best results
+- `cp -r SpiffyTitles ~/your_bot_directory/plugins`
+- `cd ~/your_bot_directory/plugins/SpiffyTitles`
+- `pip install -r requirements.txt --user --upgrade`
+- If you need to install `certifi` you may have to restart the bot afterwards
 
-To unload the Web plugin:
-
-    !unload Web
+You should `!unload Web` the Web plugin and any other plugins that show link titles for best results
 
 Load SpiffyTitles:
     
     !load SpiffyTitles
 
-Tip: Observe the logs when loading the plugin and afterwards to see what's going on under the hood.
+Pro Tip: Observe the logs when loading the plugin and afterwards to see what's going on under the hood.
 
-## Available Options ##
+## Available Options
 
-### Default handler ###
+### Default handler
 
 `defaultHandlerEnabled` - Whether to show additional information about links that aren't handled elsewhere. You'd really only 
 want to disable this if all of the other handlers were enabled. In this scenario, the bot would only show information for
@@ -80,7 +75,7 @@ Example output:
 
 Tip: after changing a template, you must `!reload SpiffyTitles`
 
-### imdb handler ###
+### imdb handler
 Queries the [OMDB API](http://www.omdbapi.com) to get additional information about [IMDB](http://imdb.com) links
 
 `imdbHandlerEnabled` - Whether to show additional information about [IMDB](http://imdb.com) links
@@ -89,7 +84,7 @@ Queries the [OMDB API](http://www.omdbapi.com) to get additional information abo
 
 Default value: `^ {{Title}} ({{Year}}, {{Country}}) - Rating: {{imdbRating}} ::  {{Plot}}`
 
-### imgur handler ###
+### imgur handler
 
 `imgurTemplate` - This is the template used when showing information about an [imgur](https://imgur.com) link.
 
@@ -111,7 +106,7 @@ Example output:
     
     ^ [compsci] Regex Fractals :: 33 images :: 21,453 views :: safe for work
 
-### Using the imgur handler ###
+### Using the imgur handler
 
 - You'll need to [register an application with imgur](https://api.imgur.com/oauth2/addclient)
 - Select "OAuth 2 authorization without a callback URL"
@@ -121,7 +116,7 @@ Example output:
     
     `!config supybot.plugins.SpiffyTitles.imgurClientSecret`
 
-### Notes on the imgur handler ###
+### Notes on the imgur handler
 
 - If there is a problem reaching the API the default handler will be used as a fallback. See logs for details.
 - The API seems to report information on the originally uploaded image and not other formats
@@ -142,39 +137,39 @@ titles will be shown in all channels. Default value: `""`
 `channelBlacklist` - a comma separated list of channels in which titles should never be displayed. If `""`,
 titles will be shown in all channels. Default value: `""`
 
-### About white/black lists ###
+### About white/black lists
 
 - If `channelWhitelist` and `channelBlacklist` are empty, then titles will be displayed in every channel
 - If `channelBlacklist` has #foo, then titles will be displayed in every channel except #foo
 - If `channelWhitelist` has #foo then `channelBlacklist` will be ignored
 
-### Examples ###
+### Examples
 
-### Show titles in every channel except #foo ###
+### Show titles in every channel except #foo
 
     !config supybot.plugins.SpiffyTitles.channelBlacklist #foo
 
-### Only show titles in #bar ###
+### Only show titles in #bar
 
     !config supybot.plugins.SpiffyTitles.channelWhitelist #bar
 
-### Only show titles in #baz and #bar ###
+### Only show titles in #baz and #bar
 
     !config supybot.plugins.SpiffyTitles.channelWhitelist #baz,#bar
 
-### Remove channel whitelist ###
-    
+### Remove channel whitelist
+
     !config supybot.plugins.SpiffyTitles.channelWhitelist ""
 
 `ignoredDomainPattern` - ignore domains matching this pattern. Default value: `""`
 
 `whitelistDomainPattern` - ignore any link without a domain matching this pattern. Default value: `""`
 
-### Tip ###
+### Pro Tip
 
 You can ignore domains that you know aren't websites. This prevents a request from being made at all.
 
-### Examples ###
+### Examples
 
 Ignore all links with the domain `buzzfeed.com`
 
@@ -192,7 +187,11 @@ Ignore all links except youtube, imgur, and reddit
 
 `urlRegularExpression` - A regular expression used to match URLs. You shouldn't need to change this.
 
-### FAQ ###
+### FAQ
+
+Q: I have a question. Where can I get help?
+
+A: Join #limnoria on chat.freenode.net
 
 Q: How can I only show information about certain links?
 
