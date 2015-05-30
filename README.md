@@ -16,7 +16,7 @@ Check out the [available options](#available-options)!
 
 ## Install SpiffyTitles
 - `git clone https://github.com/prgmrbill/limnoria-plugins.git`
-- `cd limnoria-plugins/SpiffyTitles`
+- `cd limnoria-plugins`
 - `cp -r SpiffyTitles ~/your_bot_directory/plugins`
 - `cd ~/your_bot_directory/plugins/SpiffyTitles`
 - `pip install -r requirements.txt --user --upgrade`
