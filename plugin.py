@@ -71,11 +71,12 @@ class SpiffyTitles(callbacks.Plugin):
         """
         Handles coub.com links
         """
+        coub_handler_enabled = self.registryValue("coubHandlerEnabled")
         self.log.info("SpiffyTitles: calling coub handler for %s" % url)
         title = None
         
         """ Get video ID """
-        if "/view/" in url:
+        if coub_handler_enabled and "/view/" in url:
             video_id = url.split("/view/")[1]
             
             """ Remove any query strings """
@@ -108,7 +109,9 @@ class SpiffyTitles(callbacks.Plugin):
                 self.log.error("SpiffyTitles: coub handler returned %s: %s" % (request.status_code, request.text[:200]))
         
         if title is None:
-            self.log.info("SpiffyTitles: %s does not appear to be a video link!" % url)
+            if coub_handler_enabled:
+                self.log.info("SpiffyTitles: %s does not appear to be a video link!" % url)
+            
             return self.handler_default(url)
         else:
             return title

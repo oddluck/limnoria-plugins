@@ -123,6 +123,16 @@ Example output:
 - If you see something from [the imgur api](https://api.imgur.com/models/image) that you want and is not available
 in the above example, [please open an issue!](https://github.com/prgmrbill/limnoria-plugins/issues/new)
 
+### coub handler
+
+`coubTemplate` - Template for [coub](http://coub.com) links.
+
+Default value: `^ {%if not_safe_for_work %}NSFW{% endif %} [{{channel.title}}] {{title}} :: {{views_count}} views :: {{likes_count}} likes :: {{recoubs_count}} recoubs`
+
+`coubHandlerEnabled` - Whether to enable additional information about coub videos.
+
+## Other options
+
 `useBold` - Whether to bold the title. Default value: `False`
 
 `linkCacheLifetimeInSeconds` - Caches the title of links. This is useful for reducing API usage and 
