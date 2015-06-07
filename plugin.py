@@ -62,6 +62,56 @@ class SpiffyTitles(callbacks.Plugin):
         self.add_youtube_handlers()
         self.add_imdb_handlers()
         self.add_imgur_handlers()
+        self.add_coub_handlers()
+    
+    def add_coub_handlers(self):
+        self.handlers["coub.com"] = self.handler_coub
+    
+    def handler_coub(self, url, domain):
+        """
+        Handles coub.com links
+        """
+        self.log.info("SpiffyTitles: calling coub handler for %s" % url)
+        title = None
+        
+        """ Get video ID """
+        if "/view/" in url:
+            video_id = url.split("/view/")[1]
+            
+            """ Remove any query strings """
+            if "?" in video_id:
+                video_id = video_id.split("?")[0]
+                
+            api_url = "http://coub.com/api/v2/coubs/%s" % video_id
+            agent = self.get_user_agent()
+            headers = {
+                "User-Agent": agent
+            }
+            
+            request = requests.get(api_url, headers=headers)
+            
+            ok = request.status_code == requests.codes.ok
+            
+            if ok:
+                response = json.loads(request.text)
+                
+                if response:
+                    video = response
+                    coub_template = Template(self.registryValue("coubTemplate"))
+                    
+                    video["likes_count"] = "{:,}".format(int(video["likes_count"]))
+                    video["recoubs_count"] = "{:,}".format(int(video["recoubs_count"]))
+                    video["views_count"] = "{:,}".format(int(video["views_count"]))
+                    
+                    title = coub_template.render(video)
+            else:
+                self.log.error("SpiffyTitles: coub handler returned %s: %s" % (request.status_code, request.text[:200]))
+        
+        if title is None:
+            self.log.info("SpiffyTitles: %s does not appear to be a video link!" % url)
+            return self.handler_default(url)
+        else:
+            return title
     
     def add_imgur_handlers(self):
         # Images mostly
