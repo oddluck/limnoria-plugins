@@ -444,6 +444,13 @@ class SpiffyTitles(callbacks.Plugin):
                         else:
                             duration = "LIVE"
                         
+                        colored_letters = [
+                            "%s" % ircutils.mircColor("You", fg="red", bg="white"),
+                            "%s" % ircutils.mircColor("Tube", fg="white", bg="red")
+                        ]
+                        
+                        yt_logo = "".join(colored_letters)
+                        
                         compiled_template = yt_template.render({
                             "title": title,
                             "duration": duration,
@@ -452,7 +459,8 @@ class SpiffyTitles(callbacks.Plugin):
                             "dislike_count": dislike_count,
                             "comment_count": comment_count,
                             "favorite_count": favorite_count,
-                            "channel_title": channel_title
+                            "channel_title": channel_title,
+                            "yt_logo": yt_logo
                         })
                         
                         title = compiled_template

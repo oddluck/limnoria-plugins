@@ -67,7 +67,7 @@ requires a [developer key](https://code.google.com/apis/youtube/dashboard/gwt/in
 
 `youtubeTitleTemplate` - This is the template used when showing the title of a YouTube video
 
-Default value: `^ {{title}} uploaded by {{channel_title}} :: Duration: {{duration}} :: {{view_count}} views :: {{like_count}} likes :: {{dislike_count}} dislikes :: {{favorite_count}} favorites :: {{comment_count}} comments`
+Default value: `^ {{yt_logo}} {{title}} uploaded by {{channel_title}} :: Duration: {{duration}} :: {{view_count}} views :: {{like_count}} likes :: {{dislike_count}} dislikes :: {{favorite_count}} favorites :: {{comment_count}} comments`
 
 Example output:
 
