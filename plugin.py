@@ -155,13 +155,17 @@ class SpiffyTitles(callbacks.Plugin):
         channel = msg.args[0].lower()
         is_channel = irc.isChannel(channel)
         is_ctcp = ircmsgs.isCtcp(msg)        
-        message = msg.args[1]
-        now = datetime.datetime.now()
+        message = msg.args[1]        
         title = None
         
         if is_channel and not is_ctcp:
             channel_is_allowed = self.is_channel_allowed(channel)            
             url = self.get_url_from_message(message)
+            ignore_match = self.message_matches_ignore_pattern(message)
+            
+            if ignore_match:
+                self.log.info("SpiffyTitles: ignoring message due to linkMessagePattern match")
+                return
             
             if url:
                 # Check if channel is allowed based on white/black list restrictions
@@ -169,7 +173,7 @@ class SpiffyTitles(callbacks.Plugin):
                     self.log.info("SpiffyTitles: not responding to link in %s due to black/white list restrictions" % (channel))
                     return
                 
-                info = urlparse(url)                
+                info = urlparse(url)
                 domain = info.netloc
                 is_ignored = self.is_ignored_domain(domain)
                 
@@ -183,43 +187,75 @@ class SpiffyTitles(callbacks.Plugin):
                     self.log.info("SpiffyTitles: URL ignored due to domain whitelist mismatch: %s" % url)
                     return
                 
-                """
-                Check if we have this link cached according to the cache lifetime. If so, serve
-                link from the cache instead of calling handlers.
-                """
-                cached_link = self.get_link_from_cache(url)
-                
-                if cached_link is not None:                    
-                    title = cached_link["title"]
-                else:
-                    if domain in self.handlers:
-                        handler = self.handlers[domain]                        
-                        title = handler(url, info)
-                    else:
-                        if self.default_handler_enabled:
-                            title = self.handler_default(url)
+                title = self.get_title_by_url(url)
                 
                 if title is not None and title:
                     self.log.info("SpiffyTitles: title found: %s" % (title))
                     
-                    formatted_title = self.get_formatted_title(title)
-                    
-                    # Update link cache
-                    if cached_link is None:
-                        self.log.info("SpiffyTitles: caching %s" % (url))
-                        
-                        self.link_cache.append({
-                            "url": url,
-                            "timestamp": now,
-                            "title": title
-                        })
-                    
-                    irc.sendMsg(ircmsgs.privmsg(channel, formatted_title))
+                    irc.sendMsg(ircmsgs.privmsg(channel, title))
                 else:
                     if self.default_handler_enabled:
                         self.log.error("SpiffyTitles: could not get a title for %s" % (url))
                     else:                        
                         self.log.error("SpiffyTitles: could not get a title for %s but default handler is disabled" % (url))
+    
+    def get_title_by_url(self, url):
+        """
+        Retrieves the title of a website based on the URL provided
+        """
+        info = urlparse(url)
+        domain = info.netloc
+        title = None
+        
+        """
+        Check if we have this link cached according to the cache lifetime. If so, serve
+        link from the cache instead of calling handlers.
+        """
+        cached_link = self.get_link_from_cache(url)
+        
+        if cached_link is not None:                    
+            title = cached_link["title"]
+        else:
+            if domain in self.handlers:
+                handler = self.handlers[domain]                        
+                title = handler(url, info)
+            else:
+                if self.default_handler_enabled:
+                    title = self.handler_default(url)
+        
+        if title is not None:
+            title = self.get_formatted_title(title)
+            
+            # Update link cache
+            self.log.info("SpiffyTitles: caching %s" % (url))
+            now = datetime.datetime.now()
+            self.link_cache.append({
+                "url": url,
+                "timestamp": now,
+                "title": title
+            })
+        
+        return title
+    
+    def t(self, irc, msg, args, query):
+        """
+        Retrieves title for a URL on demand
+        """
+        message = msg.args[1]
+        channel = msg.args[0]
+        url = self.get_url_from_message(message)
+        title = None
+        error_message = self.registryValue("onDemandTitleError")
+        
+        if url:
+            title = self.get_title_by_url(query)
+        
+        if title is not None and title:
+            irc.sendMsg(ircmsgs.privmsg(channel, title))
+        else:
+            irc.sendMsg(ircmsgs.privmsg(channel, error_message))
+    
+    t = wrap(t, ['text'])
     
     def get_link_from_cache(self, url):
         """
@@ -444,12 +480,7 @@ class SpiffyTitles(callbacks.Plugin):
                         else:
                             duration = "LIVE"
                         
-                        colored_letters = [
-                            "%s" % ircutils.mircColor("You", fg="red", bg="white"),
-                            "%s" % ircutils.mircColor("Tube", fg="white", bg="red")
-                        ]
-                        
-                        yt_logo = "".join(colored_letters)
+                        yt_logo = self.get_youtube_logo()
                         
                         compiled_template = yt_template.render({
                             "title": title,
@@ -481,6 +512,16 @@ class SpiffyTitles(callbacks.Plugin):
             
             return self.handler_default(url)
     
+    def get_youtube_logo(self):
+        colored_letters = [
+            "%s" % ircutils.mircColor("You", fg="red", bg="white"),
+            "%s" % ircutils.mircColor("Tube", fg="white", bg="red")
+        ]
+                        
+        yt_logo = "".join(colored_letters)
+        
+        return yt_logo
+      
     def get_total_seconds_from_duration(self, input):
         """
         Duration comes in a format like this: PT4M41S which translates to
@@ -839,6 +880,19 @@ class SpiffyTitles(callbacks.Plugin):
         agents = self.registryValue("userAgents")
         
         return random.choice(agents)
+    
+    def message_matches_ignore_pattern(self, input):
+        """
+        Checks message against linkMessageIgnorePattern to determine
+        whether the message should be ignored.
+        """
+        match = False
+        pattern = self.registryValue("linkMessageIgnorePattern")
+        
+        if pattern:
+            match = re.search(pattern, input)
+        
+        return match
     
     def get_url_from_message(self, input):
         """

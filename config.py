@@ -74,7 +74,7 @@ conf.registerGlobalValue(SpiffyTitles, 'defaultTitleTemplate',
 
 # YouTube template
 conf.registerGlobalValue(SpiffyTitles, 'youtubeTitleTemplate',
-     registry.String("^ {{title}} :: Duration: {{duration}} :: Views: {{view_count}} uploaded by {{channel_title}} :: {{like_count}} likes :: {{dislike_count}} dislikes :: {{favorite_count}} favorites", _("""Template used for YouTube title responses""")))
+     registry.String("^ {{yt_logo}} :: {{title}} :: Duration: {{duration}} :: Views: {{view_count}} uploaded by {{channel_title}} :: {{like_count}} likes :: {{dislike_count}} dislikes :: {{favorite_count}} favorites", _("""Template used for YouTube title responses""")))
 
 # User agents
 conf.registerGlobalValue(SpiffyTitles, 'userAgents',
@@ -119,7 +119,14 @@ conf.registerGlobalValue(SpiffyTitles, 'youtubeDeveloperKey',
 
 # Link cache lifetime
 conf.registerGlobalValue(SpiffyTitles, 'linkCacheLifetimeInSeconds',
-                        registry.Integer(60, _("""Link cache lifetime in seconds""")))                    
+                        registry.Integer(60, _("""Link cache lifetime in seconds""")))
+
+conf.registerGlobalValue(SpiffyTitles, 'onDemandTitleError',
+                        registry.String("Error retrieving title.", _("""This error message is used when there is a problem getting an on-demand title""")))
+                        
+conf.registerGlobalValue(SpiffyTitles, 'linkMessageIgnorePattern',
+                        registry.Regexp("", _("""Messages matching this pattern will be ignored.""")))
+                        
                         
                         
                         

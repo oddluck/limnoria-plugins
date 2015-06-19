@@ -197,6 +197,13 @@ Ignore all links except youtube, imgur, and reddit
 
 `urlRegularExpression` - A regular expression used to match URLs. You shouldn't need to change this.
 
+`linkMessageIgnorePattern` - If a message matches this pattern, it will be ignored. This differs from `ignoredDomainPattern` 
+in that it compares against the entire message rather than just the domain.
+
+Example: `!config supybot.plugins.SpiffyTitles.linkMessageIgnorePattern "/\[tw\]/"`
+
+This would ignore any message that contains "[tw]".
+
 ### FAQ
 
 Q: I have a question. Where can I get help?
