@@ -157,8 +157,11 @@ class SpiffyTitles(callbacks.Plugin):
         is_ctcp = ircmsgs.isCtcp(msg)        
         message = msg.args[1]        
         title = None
+        bot_nick = irc.nick
+        origin_nick = msg.nick
+        is_message_from_self = origin_nick.lower() == bot_nick.lower()
         
-        if is_channel and not is_ctcp:
+        if is_channel and not is_ctcp and not is_message_from_self:
             channel_is_allowed = self.is_channel_allowed(channel)            
             url = self.get_url_from_message(message)
             ignore_match = self.message_matches_ignore_pattern(message)
@@ -236,7 +239,7 @@ class SpiffyTitles(callbacks.Plugin):
             })
         
         return title
-    
+
     def t(self, irc, msg, args, query):
         """
         Retrieves title for a URL on demand
@@ -247,8 +250,11 @@ class SpiffyTitles(callbacks.Plugin):
         title = None
         error_message = self.registryValue("onDemandTitleError")
         
-        if url:
-            title = self.get_title_by_url(query)
+        try:
+            if url:
+                title = self.get_title_by_url(query)
+        except:
+            pass
         
         if title is not None and title:
             irc.sendMsg(ircmsgs.privmsg(channel, title))
