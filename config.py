@@ -76,6 +76,13 @@ conf.registerGlobalValue(SpiffyTitles, 'defaultTitleTemplate',
 conf.registerGlobalValue(SpiffyTitles, 'youtubeTitleTemplate',
      registry.String("^ {{yt_logo}} :: {{title}} :: Duration: {{duration}} :: Views: {{view_count}} uploaded by {{channel_title}} :: {{like_count}} likes :: {{dislike_count}} dislikes :: {{favorite_count}} favorites", _("""Template used for YouTube title responses""")))
 
+# Vimeo template
+conf.registerGlobalValue(SpiffyTitles, 'vimeoTitleTemplate',
+     registry.String("^ {{title}} :: Duration: {{duration}} :: {{stats_number_of_plays}} plays :: {{stats_number_of_comments}} comments", _("""Template used for Vimeo title responses""")))
+
+conf.registerGlobalValue(SpiffyTitles, 'vimeoHandlerEnabled',
+     registry.Boolean(True, _("""Enable additional information about Vimeo videos""")))
+
 # User agents
 conf.registerGlobalValue(SpiffyTitles, 'userAgents',
                          registry.CommaSeparatedListOfStrings(["Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.60 Safari/537.36", "Mozilla/5.0 (Windows NT 6.3; rv:36.0) Gecko/20100101 Firefox/36.0", "Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; AS; rv:11.0) like Gecko"], _("""Reported user agent when fetching links""")))

@@ -135,6 +135,14 @@ Default value: `^ {%if not_safe_for_work %}NSFW{% endif %} [{{channel.title}}] {
 
 `coubHandlerEnabled` - Whether to enable additional information about coub videos.
 
+### vimeo handler
+
+`vimeoTitleTemplate` - Template for [vimeo](https://vimeo.com) links.
+
+Default value: `^ {{title}} :: Duration: {{duration}} :: {{stats_number_of_plays}} plays :: {{stats_number_of_comments}} comments`
+
+`vimeoHandlerEnabled` - Whether to enable additional information about vimeo videos.
+
 ## Other options
 
 `useBold` - Whether to bold the title. Default value: `False`

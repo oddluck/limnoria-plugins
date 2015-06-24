@@ -63,9 +63,76 @@ class SpiffyTitles(callbacks.Plugin):
         self.add_imdb_handlers()
         self.add_imgur_handlers()
         self.add_coub_handlers()
+        self.add_vimeo_handlers()
+    
+    def add_vimeo_handlers(self):
+        self.handlers["vimeo.com"] = self.handler_vimeo
     
     def add_coub_handlers(self):
         self.handlers["coub.com"] = self.handler_coub
+    
+    def handler_vimeo(self, url, domain):
+        """
+        Handles Vimeo links
+        """
+        vimeo_handler_enabled = self.registryValue("vimeoHandlerEnabled")
+        self.log.info("SpiffyTitles: calling vimeo handler for %s" % url)
+        title = None
+        video_id = None
+        
+        """ Get video ID """
+        if vimeo_handler_enabled:
+            result = re.search(r'^(http(s)://)?(www\.)?(vimeo\.com/)?(\d+)', url)
+            
+            if result is not None:
+                video_id = result.group(5)
+            
+            if video_id is not None:
+                api_url = "https://vimeo.com/api/v2/video/%s.json" % video_id
+                self.log.info("SpiffyTitles: looking up vimeo info: %s", api_url)
+                agent = self.get_user_agent()
+                headers = {
+                    "User-Agent": agent
+                }
+                
+                request = requests.get(api_url, headers=headers)
+                
+                ok = request.status_code == requests.codes.ok
+                
+                if ok:
+                    response = json.loads(request.text)
+                    
+                    if response is not None and "title" in response[0]:
+                        video = response[0]
+                        vimeo_template = Template(self.registryValue("vimeoTitleTemplate"))
+                        
+                        """ 
+                        Some videos do not have this information available
+                        """
+                        if "stats_number_of_plays" in video:
+                            video["stats_number_of_plays"] = "{:,}".format(int(video["stats_number_of_plays"]))
+                        else:
+                            video["stats_number_of_plays"] = 0
+                        
+                        if "stats_number_of_comments" in video:
+                            video["stats_number_of_comments"] = "{:,}".format(int(video["stats_number_of_comments"]))
+                        else:
+                            video["stats_number_of_comments"] = 0
+                        
+                        video["duration"] = self.get_duration_from_seconds(video["duration"])
+                        
+                        title = vimeo_template.render(video)
+                    else:
+                        self.log.info("SpiffyTitles: received unexpected payload from video: %s" % api_url)
+                else:
+                    self.log.error("SpiffyTitles: vimeo handler returned %s: %s" % (request.status_code, request.text[:200]))
+        
+        if title is None:
+            self.log.info("SpiffyTitles: could not get vimeo info for %s" % url)
+            
+            return self.handler_default(url)
+        else:
+            return title
     
     def handler_coub(self, url, domain):
         """
@@ -475,14 +542,7 @@ class SpiffyTitles(callbacks.Plugin):
                         #23 - If duration is zero, then it"s a LIVE video
                         """
                         if duration_seconds > 0:
-                            m, s = divmod(duration_seconds, 60)
-                            h, m = divmod(m, 60)
-                            
-                            duration = "%02d:%02d" % (m, s)
-                            
-                            # Only include hour if the video is at least 1 hour long
-                            if h > 0:
-                                duration = "%02d:%s" % (h, duration)
+                            duration = self.get_duration_from_seconds(duration_seconds)
                         else:
                             duration = "LIVE"
                         
@@ -517,6 +577,18 @@ class SpiffyTitles(callbacks.Plugin):
             self.log.info("SpiffyTitles: falling back to default handler")
             
             return self.handler_default(url)
+    
+    def get_duration_from_seconds(self, duration_seconds):
+        m, s = divmod(duration_seconds, 60)
+        h, m = divmod(m, 60)
+        
+        duration = "%02d:%02d" % (m, s)
+        
+        """ Only include hour if the video is at least 1 hour long """
+        if h > 0:
+            duration = "%02d:%s" % (h, duration)
+        
+        return duration
     
     def get_youtube_logo(self):
         colored_letters = [
