@@ -64,12 +64,66 @@ class SpiffyTitles(callbacks.Plugin):
         self.add_imgur_handlers()
         self.add_coub_handlers()
         self.add_vimeo_handlers()
+        self.add_dailymotion_handlers()
+    
+    def add_dailymotion_handlers(self):
+        self.handlers["www.dailymotion.com"] = self.handler_dailymotion
     
     def add_vimeo_handlers(self):
         self.handlers["vimeo.com"] = self.handler_vimeo
     
     def add_coub_handlers(self):
         self.handlers["coub.com"] = self.handler_coub
+    
+    def handler_dailymotion(self, url, info):
+        """
+        Handles dailymotion links
+        """
+        dailymotion_handler_enabled = self.registryValue("dailymotionHandlerEnabled")
+        self.log.info("SpiffyTitles: calling dailymotion handler for %s" % url)
+        title = None
+        video_id = None
+        
+        """ Get video ID """
+        if dailymotion_handler_enabled and "/video/" in info.path:
+            video_id = info.path.lstrip("/video/").split("_")[0]
+            
+            self.log.info("SpiffyTitles: %s" % str(info))
+            
+            if video_id is not None:
+                api_url = "https://api.dailymotion.com/video/%s?fields=id,title,owner.screenname,duration,views_total" % video_id
+                self.log.info("SpiffyTitles: looking up dailymotion info: %s", api_url)
+                agent = self.get_user_agent()
+                headers = {
+                    "User-Agent": agent
+                }
+                
+                request = requests.get(api_url, headers=headers)
+                
+                ok = request.status_code == requests.codes.ok
+                
+                if ok:
+                    response = json.loads(request.text)
+                    
+                    if response is not None and "title" in response:
+                        video = response
+                        dailymotion_template = Template(self.registryValue("dailymotionVideoTitleTemplate"))
+                        video["views_total"] = "{:,}".format(int(video["views_total"]))
+                        video["duration"] = self.get_duration_from_seconds(video["duration"])
+                        video["ownerscreenname"] = video["owner.screenname"]
+                        
+                        title = dailymotion_template.render(video)
+                    else:
+                        self.log.info("SpiffyTitles: received unexpected payload from video: %s" % api_url)
+                else:
+                    self.log.error("SpiffyTitles: dailymotion handler returned %s: %s" % (request.status_code, request.text[:200]))
+        
+        if title is None:
+            self.log.info("SpiffyTitles: could not get dailymotion info for %s" % url)
+            
+            return self.handler_default(url)
+        else:
+            return title
     
     def handler_vimeo(self, url, domain):
         """

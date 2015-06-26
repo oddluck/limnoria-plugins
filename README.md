@@ -143,6 +143,14 @@ Default value: `^ {{title}} :: Duration: {{duration}} :: {{stats_number_of_plays
 
 `vimeoHandlerEnabled` - Whether to enable additional information about vimeo videos.
 
+### dailymotion handler
+
+`dailymotionVideoTitleTemplate` - Template for [dailymotion](https://www.dailymotion.com) links.
+
+Default value: `^ [{{ownerscreenname}}] {{title}} :: Duration: {{duration}} :: {{views_total}} views`
+
+`dailymotionHandlerEnabled` - Whether to enable additional information about dailymotion videos.
+
 ## Other options
 
 `useBold` - Whether to bold the title. Default value: `False`
