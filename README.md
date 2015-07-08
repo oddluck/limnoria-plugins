@@ -56,7 +56,10 @@ Note: as of April 20 2015 version 2 of the Youtube API was deprecated. As a resu
 requires a [developer key](https://code.google.com/apis/youtube/dashboard/gwt/index.html#settings).
 
 - Obtain a [developer key](https://code.google.com/apis/youtube/dashboard/gwt/index.html#settings)
-- Go to the `Credentials` area, choose `Public API access` and `Create new Key` as shown in the screenshot below
+- Click the link on the left to go to the `Credentials` area under `APIs and auth`
+- Click `Create new Key` under `Public API access`
+- Choose `Server key`
+- Click `Create` as shown in the screenshot below
 
 ![Google Developer Console Screenshot](https://i.imgur.com/IUfk3VB.jpg "Google Developer Console Screenshot")
 
