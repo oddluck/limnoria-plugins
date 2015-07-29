@@ -918,7 +918,8 @@ class SpiffyTitles(callbacks.Plugin):
             """
             Some websites have more than one title tag, so get all of them and take the last value
             """
-            titles = soup.find_all("title")
+            head = soup.find("head")
+            titles = head.find_all("title")
             
             if titles is not None and len(titles):                
                 title_text = titles[-1].get_text()
