@@ -296,8 +296,6 @@ class SpiffyTitles(callbacks.Plugin):
             url = self.get_url_from_message(message)
             ignore_match = self.message_matches_ignore_pattern(message)
             
-            self.log.info("SpiffyTitles: URL=%s" % url)
-
             if ignore_match:
                 self.log.info("SpiffyTitles: ignoring message due to linkMessagePattern match")
                 return
@@ -923,7 +921,7 @@ class SpiffyTitles(callbacks.Plugin):
         """
         Retrieves value of <title> tag from HTML
         """
-        soup = BeautifulSoup(html)
+        soup = BeautifulSoup(html, "lxml")
         
         if soup is not None:
             """
