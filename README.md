@@ -15,7 +15,7 @@ The ONLY gluten-free plugin for displaying link titles.
 Check out the [available options](#available-options)!
 
 ## Install SpiffyTitles
-- `git clone https://github.com/prgmrbill/limnoria-plugins.git`
+- `git clone https://github.com/butterscotchstallion/limnoria-plugins.git`
 - `cd limnoria-plugins`
 - `cp -r SpiffyTitles ~/your_bot_directory/plugins`
 - `cd ~/your_bot_directory/plugins/SpiffyTitles`
@@ -128,7 +128,7 @@ Example output:
 - If there is a problem reaching the API the default handler will be used as a fallback. See logs for details.
 - The API seems to report information on the originally uploaded image and not other formats
 - If you see something from [the imgur api](https://api.imgur.com/models/image) that you want and is not available
-in the above example, [please open an issue!](https://github.com/prgmrbill/limnoria-plugins/issues/new)
+in the above example, [please open an issue!](https://github.com/butterscotchstallion/limnoria-plugins/issues/new)
 
 ### coub handler
 
@@ -227,6 +227,8 @@ Example: `!config supybot.plugins.SpiffyTitles.linkMessageIgnorePattern "/\[tw\]
 
 This would ignore any message that contains "[tw]".
 
+`ignoreActionLinks` (Boolean) - By default SpiffyTitles will ignore links that appear in an action, like `/me`.
+
 ### FAQ
 
 Q: I have a question. Where can I get help?
@@ -248,7 +250,7 @@ A: I couldn't get this to work on my system and it has a lot of features I didn'
 
 Q: It doesn't work for me. What can I do?
 
-A: [Open an issue](https://github.com/prgmrbill/limnoria-plugins/issues/new) and include at minimum the following:
+A: [Open an issue](https://github.com/butterscotchstallion/limnoria-plugins/issues/new) and include at minimum the following:
 
 - Brief description of the problem
 - Any errors that were logged (Look for the ones prefixed "SpiffyTitles")

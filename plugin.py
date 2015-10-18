@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 ###
-# Copyright (c) 2015, PrgmrBill
+# Copyright (c) 2015, butterscotchstallion
 # All rights reserved.
 #
 #
@@ -27,6 +27,7 @@ import datetime
 from jinja2 import Template
 from datetime import timedelta
 import timeout_decorator
+import unicodedata
 
 try:
     from supybot.i18n import PluginInternationalization
@@ -273,6 +274,7 @@ class SpiffyTitles(callbacks.Plugin):
         """
         Observe each channel message and look for links
         """
+        ignore_actions = self.registryValue("ignoreActionLinks")
         channel = msg.args[0].lower()
         is_channel = irc.isChannel(channel)
         is_ctcp = ircmsgs.isCtcp(msg)        
@@ -282,11 +284,20 @@ class SpiffyTitles(callbacks.Plugin):
         origin_nick = msg.nick
         is_message_from_self = origin_nick.lower() == bot_nick.lower()
         
-        if is_channel and not is_ctcp and not is_message_from_self:
+        """
+        Configuration option determines whether we should
+        ignore links that appear within an action
+        """
+        if is_ctcp and ignore_actions:
+            return
+
+        if is_channel and not is_message_from_self:
             channel_is_allowed = self.is_channel_allowed(channel)            
             url = self.get_url_from_message(message)
             ignore_match = self.message_matches_ignore_pattern(message)
             
+            self.log.info("SpiffyTitles: URL=%s" % url)
+
             if ignore_match:
                 self.log.info("SpiffyTitles: ignoring message due to linkMessagePattern match")
                 return
@@ -1035,8 +1046,14 @@ class SpiffyTitles(callbacks.Plugin):
         match = re.search(url_re, input)
         
         if match:
-            return match.group(0).strip()
+            raw_url = match.group(0).strip()
+            url = self.remove_control_characters(unicode(raw_url))
+
+            return url
     
+    def remove_control_characters(self, s):
+        return "".join(ch for ch in s if unicodedata.category(ch)[0]!="C")
+
 Class = SpiffyTitles
 
 # vim:set shiftwidth=4 softtabstop=4 expandtab textwidth=79:

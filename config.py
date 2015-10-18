@@ -1,5 +1,5 @@
 ###
-# Copyright (c) 2015, PrgmrBill
+# Copyright (c) 2015, butterscotchstallion
 # All rights reserved.
 #
 #
@@ -141,7 +141,8 @@ conf.registerGlobalValue(SpiffyTitles, 'onDemandTitleError',
 conf.registerGlobalValue(SpiffyTitles, 'linkMessageIgnorePattern',
                         registry.Regexp("", _("""Messages matching this pattern will be ignored.""")))
                         
-                        
+conf.registerGlobalValue(SpiffyTitles, 'ignoreActionLinks',
+     registry.Boolean(True, _("""Ignores URLs that appear in an action such as /me""")))
                         
                         
                         
