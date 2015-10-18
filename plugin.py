@@ -330,9 +330,9 @@ class SpiffyTitles(callbacks.Plugin):
                     irc.sendMsg(ircmsgs.privmsg(channel, title))
                 else:
                     if self.default_handler_enabled:
-                        self.log.error("SpiffyTitles: could not get a title for %s" % (url))
-                    else:                        
-                        self.log.error("SpiffyTitles: could not get a title for %s but default handler is disabled" % (url))
+                        self.log.debug("SpiffyTitles: could not get a title for %s" % (url))
+                    else:             
+                        self.log.debug("SpiffyTitles: could not get a title for %s but default handler is disabled" % (url))
     
     def get_title_by_url(self, url):
         """
