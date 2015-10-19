@@ -116,10 +116,10 @@ conf.registerGlobalValue(SpiffyTitles, 'channelBlacklist',
 
 # imgur API
 conf.registerGlobalValue(SpiffyTitles, 'imgurClientID',
-                        registry.String("", _("""imgur client ID""")))
+                        registry.String("", _("""imgur client ID"""), private=True))
 
 conf.registerGlobalValue(SpiffyTitles, 'imgurClientSecret',
-                        registry.String("", _("""imgur client secret""")))
+                        registry.String("", _("""imgur client secret"""), private=True))
 
 conf.registerGlobalValue(SpiffyTitles, 'imgurTemplate',
                         registry.String("^{%if section %} [{{section}}] {% endif -%}{%- if title -%} {{title}} :: {% endif %}{{type}} {{width}}x{{height}} {{file_size}} :: {{view_count}} views :: {%if nsfw == None %}not sure if safe for work{% elif nsfw == True %}not safe for work!{% else %}safe for work{% endif %}", _("""imgur template""")))
@@ -129,7 +129,7 @@ conf.registerGlobalValue(SpiffyTitles, 'imgurAlbumTemplate',
 
 # Youtube API
 conf.registerGlobalValue(SpiffyTitles, 'youtubeDeveloperKey',
-                        registry.String("", _("""Youtube developer key - required for Youtube handler.""")))
+                        registry.String("", _("""Youtube developer key - required for Youtube handler."""), private=True))
 
 # Link cache lifetime
 conf.registerGlobalValue(SpiffyTitles, 'linkCacheLifetimeInSeconds',
