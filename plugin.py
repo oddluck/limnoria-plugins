@@ -593,14 +593,30 @@ class SpiffyTitles(callbacks.Plugin):
                         snippet = video["snippet"]
                         title = snippet["title"]
                         statistics = video["statistics"]
-                        view_count = "{:,}".format(int(statistics["viewCount"]))
-                        duration_seconds = self.get_total_seconds_from_duration(video["contentDetails"]["duration"])
-                        like_count = "{:,}".format(int(statistics["likeCount"]))
-                        dislike_count = "{:,}".format(int(statistics["dislikeCount"]))
-                        favorite_count = "{:,}".format(int(statistics["favoriteCount"]))
-                        comment_count = "{:,}".format(int(statistics["commentCount"]))
-                        channel_title = snippet["channelTitle"]
+                        view_count = 0
+                        like_count = 0
+                        dislike_count = 0
+                        comment_count = 0
+                        favorite_count = 0
+
+                        if "viewCount" in statistics:
+                            view_count = "{:,}".format(int(statistics["viewCount"]))
                         
+                        if "likeCount" in statistics:
+                            like_count = "{:,}".format(int(statistics["likeCount"]))
+
+                        if "dislikeCount" in statistics:
+                            dislike_count = "{:,}".format(int(statistics["dislikeCount"]))
+
+                        if "favoriteCount" in statistics:
+                            favorite_count = "{:,}".format(int(statistics["favoriteCount"]))
+
+                        if "commentCount" in statistics:
+                            comment_count = "{:,}".format(int(statistics["commentCount"]))
+                        
+                        channel_title = snippet["channelTitle"]
+                        duration_seconds = self.get_total_seconds_from_duration(video["contentDetails"]["duration"])
+
                         """
                         #23 - If duration is zero, then it"s a LIVE video
                         """
