@@ -152,3 +152,7 @@ conf.registerGlobalValue(SpiffyTitles, 'ignoreActionLinks',
                         
                         
                         
+
+conf.registerGlobalValue(SpiffyTitles, 'ignoredTitlePattern',
+                        registry.Regexp("", _("""Titles matching this pattern will be ignored.""")))
+
