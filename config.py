@@ -41,6 +41,9 @@ conf.registerGlobalValue(SpiffyTitles, 'language',
 conf.registerGlobalValue(SpiffyTitles, 'imdbTemplate',
      registry.String("^ {{Title}} ({{Year}}, {{Country}}) - Rating: {{imdbRating}} ::  {{Plot}}", _("""Uses http://www.omdbapi.com to provide additional information about IMDB links""")))
 
+# alternative template:
+#                     ^ {{Title}} ({{Year}} - {{Director}}) :: [i:{{imdbRating}} r:{{tomatoMeter}} m:{{Metascore}}] {{Plot}}
+
 conf.registerGlobalValue(SpiffyTitles, 'coubTemplate',
      registry.String("^ {%if not_safe_for_work %}NSFW{% endif %} [{{channel.title}}] {{title}} :: {{views_count}} views :: {{likes_count}} likes :: {{recoubs_count}} recoubs", _("""Uses Coub API to get additional information about coub.com links""")))
 
