@@ -30,6 +30,9 @@ IMDB = conf.registerPlugin('IMDB')
 conf.registerGlobalValue(IMDB, 'template',
      registry.String("$title ($year, $country) - Rating: $imdbRating :: $plot :: http://imdb.com/title/$imdbID", _("""Template for the output of a search query.""")))
 
+# alternative template:
+#                     $title ($year - $director) :: [i:$imdbRating r:$tomatoMeter m:$metascore] $plot :: http://imdb.com/title/$imdbID
+
 conf.registerGlobalValue(IMDB, 'noResultsMessage',
      registry.String("No results for that query.", _("""This message is sent when there are no results""")))
      
