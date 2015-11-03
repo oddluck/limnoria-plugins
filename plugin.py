@@ -339,7 +339,13 @@ class SpiffyTitles(callbacks.Plugin):
                 if title is not None and title:
                     self.log.info("SpiffyTitles: title found: %s" % (title))
                     
-                    irc.sendMsg(ircmsgs.privmsg(channel, title))
+                    ignore_match = self.title_matches_ignore_pattern(title)
+                
+                    if ignore_match:
+                        self.log.info("SpiffyTitles: ignoring title due to ignoredTitlePattern match")
+                        return
+                    else:
+                        irc.sendMsg(ircmsgs.privmsg(channel, title))
                 else:
                     if self.default_handler_enabled:
                         self.log.debug("SpiffyTitles: could not get a title for %s" % (url))
@@ -753,7 +759,7 @@ class SpiffyTitles(callbacks.Plugin):
         # We can only accommodate a specific format of URL here
         if "/title/" in url:
             imdb_id = url.split("/title/")[1].rstrip("/")
-            omdb_url = "http://www.omdbapi.com/?i=%s&plot=short&r=json" % (imdb_id)
+            omdb_url = "http://www.omdbapi.com/?i=%s&plot=short&r=json&tomatoes=true" % (imdb_id)
             
             try:
                 request = requests.get(omdb_url, timeout=10, headers=headers)
@@ -1063,6 +1069,19 @@ class SpiffyTitles(callbacks.Plugin):
         """
         match = False
         pattern = self.registryValue("linkMessageIgnorePattern")
+        
+        if pattern:
+            match = re.search(pattern, input)
+        
+        return match
+    
+    def title_matches_ignore_pattern(self, input):
+        """
+        Checks message against ignoredTitlePattern to determine
+        whether the title should be ignored.
+        """
+        match = False
+        pattern = self.registryValue("ignoredTitlePattern")
         
         if pattern:
             match = re.search(pattern, input)
