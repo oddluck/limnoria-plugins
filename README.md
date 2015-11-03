@@ -229,6 +229,8 @@ This would ignore any message that contains "[tw]".
 
 `ignoreActionLinks` (Boolean) - By default SpiffyTitles will ignore links that appear in an action, like `/me`.
 
+`requireCapability` (String) - If defined, SpiffyTitles will only acknowledge links from users with this capability. Useful for hostile environments. [Refer to Limnoria's documentation on capabilities for more information](http://doc.supybot.aperio.fr/en/latest/use/capabilities.html)
+
 ### FAQ
 
 Q: I have a question. Where can I get help?

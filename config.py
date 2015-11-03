@@ -143,7 +143,9 @@ conf.registerGlobalValue(SpiffyTitles, 'linkMessageIgnorePattern',
                         
 conf.registerGlobalValue(SpiffyTitles, 'ignoreActionLinks',
      registry.Boolean(True, _("""Ignores URLs that appear in an action such as /me""")))
-                        
+
+conf.registerGlobalValue(SpiffyTitles, 'requireCapability',
+     registry.String("", _("""If defined, SpiffyTitles will only acknowledge links from users with this capability. Useful for hostile environments.""")))
                         
                         
                         

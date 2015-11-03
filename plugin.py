@@ -28,6 +28,7 @@ from jinja2 import Template
 from datetime import timedelta
 import timeout_decorator
 import unicodedata
+import supybot.ircdb as ircdb
 
 try:
     from supybot.i18n import PluginInternationalization
@@ -283,7 +284,20 @@ class SpiffyTitles(callbacks.Plugin):
         bot_nick = irc.nick
         origin_nick = msg.nick
         is_message_from_self = origin_nick.lower() == bot_nick.lower()
-        
+        requires_capability = len(str(self.registryValue("requireCapability"))) > 0
+
+        if is_message_from_self:
+            return
+
+        """
+        Check if we require a capability to acknowledge this link
+        """
+        if requires_capability:
+            user_has_capability = self.user_has_capability(msg)
+
+            if not user_has_capability:
+                return
+
         """
         Configuration option determines whether we should
         ignore links that appear within an action
@@ -291,7 +305,7 @@ class SpiffyTitles(callbacks.Plugin):
         if is_ctcp and ignore_actions:
             return
 
-        if is_channel and not is_message_from_self:
+        if is_channel:
             channel_is_allowed = self.is_channel_allowed(channel)            
             url = self.get_url_from_message(message)
             ignore_match = self.message_matches_ignore_pattern(message)
@@ -588,59 +602,62 @@ class SpiffyTitles(callbacks.Plugin):
                 
                 if response:
                     try:
-                        items = response["items"]
-                        video = items[0]
-                        snippet = video["snippet"]
-                        title = snippet["title"]
-                        statistics = video["statistics"]
-                        view_count = 0
-                        like_count = 0
-                        dislike_count = 0
-                        comment_count = 0
-                        favorite_count = 0
+                        if response["pageInfo"]["totalResults"] > 0:
+                            items = response["items"]
+                            video = items[0]
+                            snippet = video["snippet"]
+                            title = snippet["title"]
+                            statistics = video["statistics"]
+                            view_count = 0
+                            like_count = 0
+                            dislike_count = 0
+                            comment_count = 0
+                            favorite_count = 0
 
-                        if "viewCount" in statistics:
-                            view_count = "{:,}".format(int(statistics["viewCount"]))
-                        
-                        if "likeCount" in statistics:
-                            like_count = "{:,}".format(int(statistics["likeCount"]))
+                            if "viewCount" in statistics:
+                                view_count = "{:,}".format(int(statistics["viewCount"]))
+                            
+                            if "likeCount" in statistics:
+                                like_count = "{:,}".format(int(statistics["likeCount"]))
 
-                        if "dislikeCount" in statistics:
-                            dislike_count = "{:,}".format(int(statistics["dislikeCount"]))
+                            if "dislikeCount" in statistics:
+                                dislike_count = "{:,}".format(int(statistics["dislikeCount"]))
 
-                        if "favoriteCount" in statistics:
-                            favorite_count = "{:,}".format(int(statistics["favoriteCount"]))
+                            if "favoriteCount" in statistics:
+                                favorite_count = "{:,}".format(int(statistics["favoriteCount"]))
 
-                        if "commentCount" in statistics:
-                            comment_count = "{:,}".format(int(statistics["commentCount"]))
-                        
-                        channel_title = snippet["channelTitle"]
-                        duration_seconds = self.get_total_seconds_from_duration(video["contentDetails"]["duration"])
+                            if "commentCount" in statistics:
+                                comment_count = "{:,}".format(int(statistics["commentCount"]))
+                            
+                            channel_title = snippet["channelTitle"]
+                            duration_seconds = self.get_total_seconds_from_duration(video["contentDetails"]["duration"])
 
-                        """
-                        #23 - If duration is zero, then it"s a LIVE video
-                        """
-                        if duration_seconds > 0:
-                            duration = self.get_duration_from_seconds(duration_seconds)
+                            """
+                            #23 - If duration is zero, then it"s a LIVE video
+                            """
+                            if duration_seconds > 0:
+                                duration = self.get_duration_from_seconds(duration_seconds)
+                            else:
+                                duration = "LIVE"
+                            
+                            yt_logo = self.get_youtube_logo()
+                            
+                            compiled_template = yt_template.render({
+                                "title": title,
+                                "duration": duration,
+                                "view_count": view_count,
+                                "like_count": like_count,
+                                "dislike_count": dislike_count,
+                                "comment_count": comment_count,
+                                "favorite_count": favorite_count,
+                                "channel_title": channel_title,
+                                "yt_logo": yt_logo
+                            })
+                            
+                            title = compiled_template
                         else:
-                            duration = "LIVE"
+                            self.log.debug("SpiffyTitles: video appears to be private; no results!")
                         
-                        yt_logo = self.get_youtube_logo()
-                        
-                        compiled_template = yt_template.render({
-                            "title": title,
-                            "duration": duration,
-                            "view_count": view_count,
-                            "like_count": like_count,
-                            "dislike_count": dislike_count,
-                            "comment_count": comment_count,
-                            "favorite_count": favorite_count,
-                            "channel_title": channel_title,
-                            "yt_logo": yt_logo
-                        })
-                        
-                        title = compiled_template
-                    
                     except IndexError as e:
                         self.log.error("SpiffyTitles: IndexError parsing Youtube API JSON response: %s" % (str(e)))
                 else:
@@ -1067,6 +1084,19 @@ class SpiffyTitles(callbacks.Plugin):
     
     def remove_control_characters(self, s):
         return "".join(ch for ch in s if unicodedata.category(ch)[0]!="C")
+
+    def user_has_capability(self, msg):
+        channel = msg.args[0]
+        mask = msg.prefix
+        cap = ircdb.makeChannelCapability(channel, "voice")
+        has_cap = ircdb.checkCapability(mask, cap, ignoreDefaultAllow=True)
+
+        if has_cap:
+            self.log.info("SpiffyTitles: %s has voice" % mask)
+        else:
+            self.log.info("SpiffyTitles: %s does NOT have voice" % mask)
+
+        return has_cap
 
 Class = SpiffyTitles
 
