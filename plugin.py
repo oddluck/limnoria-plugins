@@ -646,11 +646,13 @@ class SpiffyTitles(callbacks.Plugin):
                             else:
                                 duration = "LIVE"
                             
+                            timestamp = self.get_timestamp_from_youtube_url(url)
                             yt_logo = self.get_youtube_logo()
                             
                             compiled_template = yt_template.render({
                                 "title": title,
                                 "duration": duration,
+                                "timestamp": timestamp,
                                 "view_count": view_count,
                                 "like_count": like_count,
                                 "dislike_count": dislike_count,
@@ -708,7 +710,17 @@ class SpiffyTitles(callbacks.Plugin):
         4 minutes and 41 seconds. This method returns the total seconds
         so that the duration can be parsed as usual.
         """
-        pattern = regex  = re.compile('(?P<sign>-?)P(?:(?P<years>\d+)Y)?(?:(?P<months>\d+)M)?(?:(?P<days>\d+)D)?(?:T(?:(?P<hours>\d+)H)?(?:(?P<minutes>\d+)M)?(?:(?P<seconds>\d+)S)?)?')
+        pattern = regex  = re.compile("""
+                   (?P<sign>    -?) P
+                (?:(?P<years>  \d+) Y)?
+                (?:(?P<months> \d+) M)?
+                (?:(?P<days>   \d+) D)?
+            (?:                     T
+                (?:(?P<hours>  \d+) H)?
+                (?:(?P<minutes>\d+) M)?
+                (?:(?P<seconds>\d+) S)?
+            )?
+            """, re.VERBOSE)
         duration = regex.match(input).groupdict(0)
         
         delta = timedelta(hours=int(duration['hours']),
@@ -716,6 +728,25 @@ class SpiffyTitles(callbacks.Plugin):
                           seconds=int(duration['seconds']))
         
         return delta.total_seconds()
+
+    def get_timestamp_from_youtube_url(self, url):
+        """
+        Get YouTube timestamp
+        """
+        pattern = r"[?&]t=([^&]+)"
+        match = re.search(pattern, url)
+
+        if match:
+            timestamp = match.group(1).upper()
+            if timestamp.find('S') > -1:
+                seconds = self.get_total_seconds_from_duration("PT" + timestamp)
+            else:
+                seconds = float(timestamp)
+
+            if seconds > 0:
+                return self.get_duration_from_seconds(seconds)
+        else:
+            return ""        
         
     def handler_default(self, url):
         """
