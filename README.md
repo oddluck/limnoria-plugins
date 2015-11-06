@@ -74,13 +74,28 @@ requires a [developer key](https://code.google.com/apis/youtube/dashboard/gwt/in
 
 `youtubeTitleTemplate` - This is the template used when showing the title of a YouTube video
 
-Default value: `^ {{yt_logo}} {{title}} uploaded by {{channel_title}} :: Duration: {{duration}} :: {{view_count}} views :: {{like_count}} likes :: {{dislike_count}} dislikes :: {{favorite_count}} favorites :: {{comment_count}} comments`
+Default value: `^ {{yt_logo}} :: {{title}} {%if timestamp%} @ {{timestamp}}{% endif %} :: Duration: {{duration}} :: Views: {{view_count}} uploaded by {{channel_title}} :: {{like_count}} likes :: {{dislike_count}} dislikes :: {{favorite_count}} favorites`
 
 Example output:
 
-    ^ Snoop Dogg - Pump Pump feat. Lil Malik uploaded by GeorgeRDR3218 :: Duration: 04:41 :: 203,218 views :: 933 likes :: 40 dislikes :: 0 favorites :: 112 comments
+    ^ Snoop Dogg - Pump Pump feat. Lil Malik uploaded by GeorgeRDR3218 @ 00:45:: Duration: 04:41 :: 203,218 views :: 933 likes :: 40 dislikes :: 0 favorites :: 112 comments
 
-Tip: after changing a template, you must `!reload SpiffyTitles`
+### Available variable for the Youtube template ###
+
+Variable       | Description
+---------------|------------
+yt_logo        | Colored YouTube logo
+title          | Video title
+channel_title  | Channel title
+duration       | Duration
+view_count     | Number of views
+like_count     | Number of likes
+dislike_count  | Number of dislikes
+favorite_count | Number of favorites
+comment_count  | Number of comments
+timestamp      | If specified, the start time of the video
+
+Tip: You can use irc colors colors in your templates, but be sure to quote the value
 
 ### imdb handler
 Queries the [OMDB API](http://www.omdbapi.com) to get additional information about [IMDB](http://imdb.com) links

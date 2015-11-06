@@ -77,7 +77,7 @@ conf.registerGlobalValue(SpiffyTitles, 'defaultTitleTemplate',
 
 # YouTube template
 conf.registerGlobalValue(SpiffyTitles, 'youtubeTitleTemplate',
-     registry.String("^ {{yt_logo}} :: {{title}} :: Duration: {{duration}} :: Views: {{view_count}} uploaded by {{channel_title}} :: {{like_count}} likes :: {{dislike_count}} dislikes :: {{favorite_count}} favorites", _("""Template used for YouTube title responses""")))
+     registry.String("^ {{yt_logo}} :: {{title}} {%if timestamp%} @ {{timestamp}}{% endif %} :: Duration: {{duration}} :: Views: {{view_count}} uploaded by {{channel_title}} :: {{like_count}} likes :: {{dislike_count}} dislikes :: {{favorite_count}} favorites", _("""Template used for YouTube title responses""")))
 
 # Vimeo template
 conf.registerGlobalValue(SpiffyTitles, 'vimeoTitleTemplate',
@@ -149,15 +149,6 @@ conf.registerGlobalValue(SpiffyTitles, 'ignoreActionLinks',
 
 conf.registerGlobalValue(SpiffyTitles, 'requireCapability',
      registry.String("", _("""If defined, SpiffyTitles will only acknowledge links from users with this capability. Useful for hostile environments.""")))
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
 
 conf.registerGlobalValue(SpiffyTitles, 'ignoredTitlePattern',
                         registry.Regexp("", _("""Titles matching this pattern will be ignored.""")))
-
