@@ -337,8 +337,6 @@ class SpiffyTitles(callbacks.Plugin):
                 title = self.get_title_by_url(url)
                 
                 if title is not None and title:
-                    self.log.info("SpiffyTitles: title found: %s" % (title))
-                    
                     ignore_match = self.title_matches_ignore_pattern(title, channel)
                     
                     if ignore_match:
@@ -379,7 +377,7 @@ class SpiffyTitles(callbacks.Plugin):
             title = self.get_formatted_title(title)
             
             # Update link cache
-            self.log.info("SpiffyTitles: caching %s" % (url))
+            self.log.debug("SpiffyTitles: caching %s" % (url))
             now = datetime.datetime.now()
             self.link_cache.append({
                 "url": url,
