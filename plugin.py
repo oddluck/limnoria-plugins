@@ -77,7 +77,7 @@ class SpiffyTitles(callbacks.Plugin):
     def add_coub_handlers(self):
         self.handlers["coub.com"] = self.handler_coub
     
-    def handler_dailymotion(self, url, info):
+    def handler_dailymotion(self, url, info, channel):
         """
         Handles dailymotion links
         """
@@ -123,11 +123,11 @@ class SpiffyTitles(callbacks.Plugin):
         if title is None:
             self.log.info("SpiffyTitles: could not get dailymotion info for %s" % url)
             
-            return self.handler_default(url)
+            return self.handler_default(url, channel)
         else:
             return title
     
-    def handler_vimeo(self, url, domain):
+    def handler_vimeo(self, url, domain, channel):
         """
         Handles Vimeo links
         """
@@ -186,11 +186,11 @@ class SpiffyTitles(callbacks.Plugin):
         if title is None:
             self.log.info("SpiffyTitles: could not get vimeo info for %s" % url)
             
-            return self.handler_default(url)
+            return self.handler_default(url, channel)
         else:
             return title
     
-    def handler_coub(self, url, domain):
+    def handler_coub(self, url, domain, channel):
         """
         Handles coub.com links
         """
@@ -235,7 +235,7 @@ class SpiffyTitles(callbacks.Plugin):
             if coub_handler_enabled:
                 self.log.info("SpiffyTitles: %s does not appear to be a video link!" % url)
             
-            return self.handler_default(url)
+            return self.handler_default(url, channel)
         else:
             return title
     
@@ -334,7 +334,7 @@ class SpiffyTitles(callbacks.Plugin):
                     self.log.info("SpiffyTitles: URL ignored due to domain whitelist mismatch: %s" % url)
                     return
                 
-                title = self.get_title_by_url(url)
+                title = self.get_title_by_url(url, channel)
                 
                 if title is not None and title:
                     ignore_match = self.title_matches_ignore_pattern(title, channel)
@@ -349,7 +349,7 @@ class SpiffyTitles(callbacks.Plugin):
                     else:             
                         self.log.debug("SpiffyTitles: could not get a title for %s but default handler is disabled" % (url))
     
-    def get_title_by_url(self, url):
+    def get_title_by_url(self, url, channel):
         """
         Retrieves the title of a website based on the URL provided
         """
@@ -368,10 +368,10 @@ class SpiffyTitles(callbacks.Plugin):
         else:
             if domain in self.handlers:
                 handler = self.handlers[domain]                        
-                title = handler(url, info)
+                title = handler(url, info, channel)
             else:
                 if self.default_handler_enabled:
-                    title = self.handler_default(url)
+                    title = self.handler_default(url, channel)
         
         if title is not None:
             title = self.get_formatted_title(title)
@@ -399,7 +399,7 @@ class SpiffyTitles(callbacks.Plugin):
         
         try:
             if url:
-                title = self.get_title_by_url(query)
+                title = self.get_title_by_url(query, channel)
         except:
             pass
         
@@ -561,7 +561,7 @@ class SpiffyTitles(callbacks.Plugin):
         except IndexError as e:
             self.log.error("SpiffyTitles: error getting video id from %s (%s)" % (url, str(e)))
 
-    def handler_youtube(self, url, domain):
+    def handler_youtube(self, url, domain, channel):
         """
         Uses the Youtube API to provide additional meta data about
         Youtube Video links posted.
@@ -677,7 +677,7 @@ class SpiffyTitles(callbacks.Plugin):
         else:
             self.log.info("SpiffyTitles: falling back to default handler")
             
-            return self.handler_default(url)
+            return self.handler_default(url, channel)
     
     def get_duration_from_seconds(self, duration_seconds):
         m, s = divmod(duration_seconds, 60)
@@ -745,7 +745,7 @@ class SpiffyTitles(callbacks.Plugin):
         else:
             return ""        
         
-    def handler_default(self, url):
+    def handler_default(self, url, channel):
         """
         Default handler for websites
         """
@@ -753,7 +753,7 @@ class SpiffyTitles(callbacks.Plugin):
         
         if default_handler_enabled:
             self.log.info("SpiffyTitles: calling default handler for %s" % (url))
-            default_template = Template(self.registryValue("defaultTitleTemplate"))
+            default_template = Template(self.registryValue("defaultTitleTemplate", channel=channel))
             html = self.get_source_by_url(url)
             
             if html is not None and html:
@@ -766,7 +766,7 @@ class SpiffyTitles(callbacks.Plugin):
         else:
             self.log.info("SpiffyTitles: default handler fired but doing nothing because disabled")
     
-    def handler_imdb(self, url, info):
+    def handler_imdb(self, url, info, channel):
         """
         Handles imdb.com links, querying the OMDB API for additional info
         
@@ -778,7 +778,7 @@ class SpiffyTitles(callbacks.Plugin):
         if not self.registryValue("imdbHandlerEnabled"):
             self.log.info("SpiffyTitles: IMDB handler disabled. Falling back to default handler.")
             
-            return self.handler_default(url)
+            return self.handler_default(url, channel)
         
         # Don't care about query strings
         if "?" in url:
@@ -818,7 +818,7 @@ class SpiffyTitles(callbacks.Plugin):
         else:
             self.log.info("SpiffyTitles: IMDB handler failed. calling default handler")
             
-            return self.handler_default(url)
+            return self.handler_default(url, channel)
     
     def is_valid_imgur_id(self, input):
         """
@@ -829,7 +829,7 @@ class SpiffyTitles(callbacks.Plugin):
         
         return match is not None
     
-    def handler_imgur(self, url, info):
+    def handler_imgur(self, url, info, channel):
         """
         Queries imgur API for additional information about imgur links.
 
@@ -847,11 +847,11 @@ class SpiffyTitles(callbacks.Plugin):
         #elif is_image_page:
         #    result = self.handler_imgur_image(url, info)
         else:
-            result = self.handler_default(url)
+            result = self.handler_default(url, channel)
         
         return result
     
-    def handler_imgur_album(self, url, info):
+    def handler_imgur_album(self, url, info, channel):
         """
         Handles retrieving information about albums from the imgur API.
         
@@ -895,9 +895,9 @@ class SpiffyTitles(callbacks.Plugin):
             else:
                 self.log.info("SpiffyTitles: unable to determine album id for %s" % (url))
         else:
-            return self.handler_default(url)
+            return self.handler_default(url, channel)
     
-    def handler_imgur_image(self, url, info):
+    def handler_imgur_image(self, url, info, channel):
         """
         Handles retrieving information about images from the imgur API.
         
@@ -954,7 +954,7 @@ class SpiffyTitles(callbacks.Plugin):
         if title is not None:
             return title
         else:
-            return self.handler_default(url)
+            return self.handler_default(url, channel)
     
     def get_readable_file_size(self, num, suffix="B"):
         """
@@ -973,8 +973,8 @@ class SpiffyTitles(callbacks.Plugin):
         useBold = self.registryValue("useBold")
         
         # Replace anywhere in string
-        title = title.replace("\n", "")
-        title = title.replace("\t", "")
+        title = title.replace("\n", " ")
+        title = title.replace("\t", " ")
         title = re.sub(" +", " ", title)
         
         if useBold:
@@ -992,7 +992,8 @@ class SpiffyTitles(callbacks.Plugin):
         
         if soup is not None:
             """
-            Some websites have more than one title tag, so get all of them and take the last value
+            Some websites have more than one title tag, so get all of them 
+            and take the last value.
             """
             head = soup.find("head")
             titles = head.find_all("title")

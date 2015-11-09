@@ -72,7 +72,7 @@ conf.registerGlobalValue(SpiffyTitles, 'useBold',
      registry.Boolean(False, _("""Use bold in titles""")))
 
 # Title template
-conf.registerGlobalValue(SpiffyTitles, 'defaultTitleTemplate',
+conf.registerChannelValue(SpiffyTitles, 'defaultTitleTemplate',
      registry.String("^ {{title}}", _("""Template used for default title responses""")))
 
 # YouTube template

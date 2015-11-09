@@ -42,7 +42,7 @@ will be sent instead of the link title.
 want to disable this if all of the other handlers were enabled. In this scenario, the bot would only show information for
 websites with custom handlers, like Youtube, IMDB, and imgur.
 
-`defaultTitleTemplate` - This is the template used when showing the title of a link. 
+`defaultTitleTemplate` - This is the template used when showing the title of a link. This value can be changed on a per-channel basis.
 
 Default value: `^ {{title}}`
 
