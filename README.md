@@ -246,11 +246,22 @@ This would ignore any message that contains "[tw]".
 
 `requireCapability` (String) - If defined, SpiffyTitles will only acknowledge links from users with this capability. Useful for hostile environments. [Refer to Limnoria's documentation on capabilities for more information](http://doc.supybot.aperio.fr/en/latest/use/capabilities.html)
 
+`ignoredTitlePattern` (Regexp) - If the parsed title matches this regular expression, it will be ignored.
+
+Example: `!config channel #example supybot.plugins.SpiffyTitles.ignoredTitlePattern m/^\^ Google$|- Google Search$|^\^ Google Maps$|^\^ Imgur: The most awesome images on the Internet$|^\^ Pastebin \| IRCCloud|^\^ Instagram|^\^ Urban Dictionary:|– Wikipedia$|- Wikipedia, the free encyclopedia$|- Wiktionary$|^\^ Urban Dictionary:| - RationalWiki$|^\^ Meet Google Drive|- Wikia$|^\^ Imgur$\|^\^ Google Trends/`
+
+This line would ignore any link which results in a title matching the above pattern.
+
 ### FAQ
 
 Q: I have a question. Where can I get help?
 
 A: Join #limnoria on chat.freenode.net
+
+Q: I'm getting the error `Error: That configuration variable is not a channel-specific configuration variable.`
+when I try to change a configuration value.
+
+A: Some configuration values were previously global. Simply restart your bot to fix this error.
 
 Q: How can I only show information about certain links?
 

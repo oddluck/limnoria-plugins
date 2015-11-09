@@ -150,5 +150,5 @@ conf.registerGlobalValue(SpiffyTitles, 'ignoreActionLinks',
 conf.registerGlobalValue(SpiffyTitles, 'requireCapability',
      registry.String("", _("""If defined, SpiffyTitles will only acknowledge links from users with this capability. Useful for hostile environments.""")))
 
-conf.registerGlobalValue(SpiffyTitles, 'ignoredTitlePattern',
+conf.registerChannelValue(SpiffyTitles, 'ignoredTitlePattern',
                         registry.Regexp("", _("""Titles matching this pattern will be ignored.""")))

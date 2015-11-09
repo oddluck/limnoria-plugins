@@ -339,10 +339,9 @@ class SpiffyTitles(callbacks.Plugin):
                 if title is not None and title:
                     self.log.info("SpiffyTitles: title found: %s" % (title))
                     
-                    ignore_match = self.title_matches_ignore_pattern(title)
-                
+                    ignore_match = self.title_matches_ignore_pattern(title, channel)
+                    
                     if ignore_match:
-                        self.log.info("SpiffyTitles: ignoring title due to ignoredTitlePattern match")
                         return
                     else:
                         irc.sendMsg(ircmsgs.privmsg(channel, title))
@@ -1106,16 +1105,19 @@ class SpiffyTitles(callbacks.Plugin):
         
         return match
     
-    def title_matches_ignore_pattern(self, input):
+    def title_matches_ignore_pattern(self, input, channel):
         """
         Checks message against ignoredTitlePattern to determine
         whether the title should be ignored.
         """
         match = False
-        pattern = self.registryValue("ignoredTitlePattern")
+        pattern = self.registryValue("ignoredTitlePattern", channel=channel)
         
         if pattern:
             match = re.search(pattern, input)
+
+            if match:
+                self.log.info("SpiffyTitles: title %s matches ignoredTitlePattern for %s" % (input, channel))
         
         return match
     
@@ -1138,13 +1140,14 @@ class SpiffyTitles(callbacks.Plugin):
     def user_has_capability(self, msg):
         channel = msg.args[0]
         mask = msg.prefix
-        cap = ircdb.makeChannelCapability(channel, "voice")
+        required_capability = self.registryValue("requireCapability")
+        cap = ircdb.makeChannelCapability(channel, required_capability)
         has_cap = ircdb.checkCapability(mask, cap, ignoreDefaultAllow=True)
 
         if has_cap:
-            self.log.info("SpiffyTitles: %s has voice" % mask)
+            self.log.debug("SpiffyTitles: %s has required capability '%s'" % (mask, required_capability))
         else:
-            self.log.info("SpiffyTitles: %s does NOT have voice" % mask)
+            self.log.debug("SpiffyTitles: %s does NOT have required capability '%s'" % (mask, required_capability))
 
         return has_cap
 
