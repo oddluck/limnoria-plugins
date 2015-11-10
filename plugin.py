@@ -737,7 +737,10 @@ class SpiffyTitles(callbacks.Plugin):
 
         if match:
             timestamp = match.group(1).upper()
-            if timestamp.find('S') > -1:
+            has_seconds = timestamp.find("S") > -1
+            has_minutes = timestamp.find("M") > -1
+
+            if has_minutes or has_seconds:
                 seconds = self.get_total_seconds_from_duration("PT" + timestamp)
             else:
                 seconds = float(timestamp)
