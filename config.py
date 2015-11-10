@@ -48,19 +48,19 @@ conf.registerGlobalValue(SpiffyTitles, 'coubTemplate',
      registry.String("^ {%if not_safe_for_work %}NSFW{% endif %} [{{channel.title}}] {{title}} :: {{views_count}} views :: {{likes_count}} likes :: {{recoubs_count}} recoubs", _("""Uses Coub API to get additional information about coub.com links""")))
 
 # enable/disable toggles
-conf.registerGlobalValue(SpiffyTitles, 'coubHandlerEnabled',
+conf.registerChannelValue(SpiffyTitles, 'coubHandlerEnabled',
      registry.Boolean(True, _("""Whether to add additional information about coub links""")))
 
-conf.registerGlobalValue(SpiffyTitles, 'defaultHandlerEnabled',
+conf.registerChannelValue(SpiffyTitles, 'defaultHandlerEnabled',
      registry.Boolean(True, _("""Whether to add additional information about regular links""")))
 
-conf.registerGlobalValue(SpiffyTitles, 'youtubeHandlerEnabled',
+conf.registerChannelValue(SpiffyTitles, 'youtubeHandlerEnabled',
      registry.Boolean(True, _("""Whether to add additional information about YouTube videos""")))
 
-conf.registerGlobalValue(SpiffyTitles, 'imgurHandlerEnabled',
+conf.registerChannelValue(SpiffyTitles, 'imgurHandlerEnabled',
      registry.Boolean(True, _("""Whether to add additional information about imgur links""")))
 
-conf.registerGlobalValue(SpiffyTitles, 'imdbHandlerEnabled',
+conf.registerChannelValue(SpiffyTitles, 'imdbHandlerEnabled',
      registry.Boolean(True, _("""Whether to add additional information about IMDB links""")))
 
 # URL regex
@@ -68,7 +68,7 @@ conf.registerGlobalValue(SpiffyTitles, 'urlRegularExpression',
      registry.String(r"(https?:\/\/(?:www\.|(?!www))[^\s\.]+\.[^\s]{2,}|www\.[^\s]+\.[^\s]{2,})", _("""This regular expression will be used to match URLs""")))
 
 # Bold
-conf.registerGlobalValue(SpiffyTitles, 'useBold',
+conf.registerChannelValue(SpiffyTitles, 'useBold',
      registry.Boolean(False, _("""Use bold in titles""")))
 
 # Title template
@@ -76,21 +76,21 @@ conf.registerChannelValue(SpiffyTitles, 'defaultTitleTemplate',
      registry.String("^ {{title}}", _("""Template used for default title responses""")))
 
 # YouTube template
-conf.registerGlobalValue(SpiffyTitles, 'youtubeTitleTemplate',
+conf.registerChannelValue(SpiffyTitles, 'youtubeTitleTemplate',
      registry.String("^ {{yt_logo}} :: {{title}} {%if timestamp%} @ {{timestamp}}{% endif %} :: Duration: {{duration}} :: Views: {{view_count}} uploaded by {{channel_title}} :: {{like_count}} likes :: {{dislike_count}} dislikes :: {{favorite_count}} favorites", _("""Template used for YouTube title responses""")))
 
 # Vimeo template
-conf.registerGlobalValue(SpiffyTitles, 'vimeoTitleTemplate',
+conf.registerChannelValue(SpiffyTitles, 'vimeoTitleTemplate',
      registry.String("^ {{title}} :: Duration: {{duration}} :: {{stats_number_of_plays}} plays :: {{stats_number_of_comments}} comments", _("""Template used for Vimeo title responses""")))
 
-conf.registerGlobalValue(SpiffyTitles, 'vimeoHandlerEnabled',
+conf.registerChannelValue(SpiffyTitles, 'vimeoHandlerEnabled',
      registry.Boolean(True, _("""Enable additional information about Vimeo videos""")))
 
 # dailymotion template
-conf.registerGlobalValue(SpiffyTitles, 'dailymotionVideoTitleTemplate',
+conf.registerChannelValue(SpiffyTitles, 'dailymotionVideoTitleTemplate',
      registry.String("^ [{{ownerscreenname}}] {{title}} :: Duration: {{duration}} :: {{views_total}} views", _("""Template used for Vimeo title responses""")))
 
-conf.registerGlobalValue(SpiffyTitles, 'dailymotionHandlerEnabled',
+conf.registerChannelValue(SpiffyTitles, 'dailymotionHandlerEnabled',
      registry.Boolean(True, _("""Enable additional information about dailymotion videos""")))
 
 # User agents
@@ -124,10 +124,10 @@ conf.registerGlobalValue(SpiffyTitles, 'imgurClientID',
 conf.registerGlobalValue(SpiffyTitles, 'imgurClientSecret',
                         registry.String("", _("""imgur client secret"""), private=True))
 
-conf.registerGlobalValue(SpiffyTitles, 'imgurTemplate',
+conf.registerChannelValue(SpiffyTitles, 'imgurTemplate',
                         registry.String("^{%if section %} [{{section}}] {% endif -%}{%- if title -%} {{title}} :: {% endif %}{{type}} {{width}}x{{height}} {{file_size}} :: {{view_count}} views :: {%if nsfw == None %}not sure if safe for work{% elif nsfw == True %}not safe for work!{% else %}safe for work{% endif %}", _("""imgur template""")))
 
-conf.registerGlobalValue(SpiffyTitles, 'imgurAlbumTemplate',
+conf.registerChannelValue(SpiffyTitles, 'imgurAlbumTemplate',
                         registry.String("^{%if section %} [{{section}}] {% endif -%}{%- if title -%} {{title}} :: {% endif %}{{image_count}} images :: {{view_count}} views :: {%if nsfw == None %}not sure if safe for work{% elif nsfw == True %}not safe for work!{% else %}safe for work{% endif %}", _("""imgur template""")))
 
 # Youtube API
@@ -138,16 +138,16 @@ conf.registerGlobalValue(SpiffyTitles, 'youtubeDeveloperKey',
 conf.registerGlobalValue(SpiffyTitles, 'linkCacheLifetimeInSeconds',
                         registry.Integer(60, _("""Link cache lifetime in seconds""")))
 
-conf.registerGlobalValue(SpiffyTitles, 'onDemandTitleError',
+conf.registerChannelValue(SpiffyTitles, 'onDemandTitleError',
                         registry.String("Error retrieving title.", _("""This error message is used when there is a problem getting an on-demand title""")))
                         
 conf.registerGlobalValue(SpiffyTitles, 'linkMessageIgnorePattern',
                         registry.Regexp("", _("""Messages matching this pattern will be ignored.""")))
                         
-conf.registerGlobalValue(SpiffyTitles, 'ignoreActionLinks',
+conf.registerChannelValue(SpiffyTitles, 'ignoreActionLinks',
      registry.Boolean(True, _("""Ignores URLs that appear in an action such as /me""")))
 
-conf.registerGlobalValue(SpiffyTitles, 'requireCapability',
+conf.registerChannelValue(SpiffyTitles, 'requireCapability',
      registry.String("", _("""If defined, SpiffyTitles will only acknowledge links from users with this capability. Useful for hostile environments.""")))
 
 conf.registerChannelValue(SpiffyTitles, 'ignoredTitlePattern',

@@ -36,13 +36,22 @@ will be sent instead of the link title.
 
 ## Available Options
 
+### Note
+Almost all of the below options can be customized per-channel.
+
+Example:
+
+`!config channel ##example-channel-one supybot.plugins.SpiffyTitles.defaultTitleTemplate "^ $title"`
+
+`!config channel ##example-channel-two supybot.plugins.SpiffyTitles.defaultTitleTemplate ":: $title"`
+
+This means that you can change whether a handler is enabled, or what the template looks like for any channel.
+
 ### Default handler
 
-`defaultHandlerEnabled` - Whether to show additional information about links that aren't handled elsewhere. You'd really only 
-want to disable this if all of the other handlers were enabled. In this scenario, the bot would only show information for
-websites with custom handlers, like Youtube, IMDB, and imgur.
+`defaultHandlerEnabled` - Whether to show additional information about links that aren't handled elsewhere. You'd really only want to disable this if all of the other handlers were enabled. In this scenario, the bot would only show information for websites with custom handlers, like Youtube, IMDB, and imgur.
 
-`defaultTitleTemplate` - This is the template used when showing the title of a link. This value can be changed on a per-channel basis.
+`defaultTitleTemplate` - This is the template used when showing the title of a link.
 
 Default value: `^ {{title}}`
 
@@ -235,8 +244,7 @@ Ignore all links except youtube, imgur, and reddit
 
 `urlRegularExpression` - A regular expression used to match URLs. You shouldn't need to change this.
 
-`linkMessageIgnorePattern` - If a message matches this pattern, it will be ignored. This differs from `ignoredDomainPattern` 
-in that it compares against the entire message rather than just the domain.
+`linkMessageIgnorePattern` - If a message matches this pattern, it will be ignored. This differs from `ignoredDomainPattern` in that it compares against the entire message rather than just the domain.
 
 Example: `!config supybot.plugins.SpiffyTitles.linkMessageIgnorePattern "/\[tw\]/"`
 
@@ -248,7 +256,7 @@ This would ignore any message that contains "[tw]".
 
 `ignoredTitlePattern` (Regexp) - If the parsed title matches this regular expression, it will be ignored.
 
-Example: `!config channel #example supybot.plugins.SpiffyTitles.ignoredTitlePattern m/^\^ Google$|- Google Search$|^\^ Google Maps$|^\^ Imgur: The most awesome images on the Internet$|^\^ Pastebin \| IRCCloud|^\^ Instagram|^\^ Urban Dictionary:|– Wikipedia$|- Wikipedia, the free encyclopedia$|- Wiktionary$|^\^ Urban Dictionary:| - RationalWiki$|^\^ Meet Google Drive|- Wikia$|^\^ Imgur$\|^\^ Google Trends/`
+Example: `!config channel #example supybot.plugins.SpiffyTitles.ignoredTitlePattern m/^\^ Google$|- Google Search$|^\^ Google Maps$|^\^ Imgur: The most awesome images on the Internet$|^\^ Pastebin \| IRCCloud|^\^ Instagram|^\^ Urban Dictionary:|– Wikipedia$|- Wikipedia, the free encyclopedia$|- Wiktionary$| - RationalWiki$|^\^ Meet Google Drive|- Wikia$|^\^ Imgur$\|^\^ Google Trends/`
 
 This line would ignore any link which results in a title matching the above pattern.
 

@@ -81,7 +81,7 @@ class SpiffyTitles(callbacks.Plugin):
         """
         Handles dailymotion links
         """
-        dailymotion_handler_enabled = self.registryValue("dailymotionHandlerEnabled")
+        dailymotion_handler_enabled = self.registryValue("dailymotionHandlerEnabled", channel=channel)
         self.log.info("SpiffyTitles: calling dailymotion handler for %s" % url)
         title = None
         video_id = None
@@ -109,7 +109,7 @@ class SpiffyTitles(callbacks.Plugin):
                     
                     if response is not None and "title" in response:
                         video = response
-                        dailymotion_template = Template(self.registryValue("dailymotionVideoTitleTemplate"))
+                        dailymotion_template = Template(self.registryValue("dailymotionVideoTitleTemplate", channel=channel))
                         video["views_total"] = "{:,}".format(int(video["views_total"]))
                         video["duration"] = self.get_duration_from_seconds(video["duration"])
                         video["ownerscreenname"] = video["owner.screenname"]
@@ -131,7 +131,7 @@ class SpiffyTitles(callbacks.Plugin):
         """
         Handles Vimeo links
         """
-        vimeo_handler_enabled = self.registryValue("vimeoHandlerEnabled")
+        vimeo_handler_enabled = self.registryValue("vimeoHandlerEnabled", channel=channel)
         self.log.info("SpiffyTitles: calling vimeo handler for %s" % url)
         title = None
         video_id = None
@@ -160,7 +160,7 @@ class SpiffyTitles(callbacks.Plugin):
                     
                     if response is not None and "title" in response[0]:
                         video = response[0]
-                        vimeo_template = Template(self.registryValue("vimeoTitleTemplate"))
+                        vimeo_template = Template(self.registryValue("vimeoTitleTemplate", channel=channel))
                         
                         """ 
                         Some videos do not have this information available
@@ -194,7 +194,7 @@ class SpiffyTitles(callbacks.Plugin):
         """
         Handles coub.com links
         """
-        coub_handler_enabled = self.registryValue("coubHandlerEnabled")
+        coub_handler_enabled = self.registryValue("coubHandlerEnabled", channel=channel)
         self.log.info("SpiffyTitles: calling coub handler for %s" % url)
         title = None
         
@@ -246,7 +246,7 @@ class SpiffyTitles(callbacks.Plugin):
         # Albums, galleries, etc
         self.handlers["imgur.com"] = self.handler_imgur
     
-    def initialize_imgur_client(self):
+    def initialize_imgur_client(self, channel):
         """
         Check if imgur client id or secret are set, and if so initialize
         imgur API client
@@ -254,7 +254,7 @@ class SpiffyTitles(callbacks.Plugin):
         if self.imgur_client is None:
             imgur_client_id = self.registryValue("imgurClientID")
             imgur_client_secret = self.registryValue("imgurClientSecret")
-            imgur_handler_enabled = self.registryValue("imgurHandlerEnabled")
+            imgur_handler_enabled = self.registryValue("imgurHandlerEnabled", channel=channel)
             
             if imgur_handler_enabled and imgur_client_id and imgur_client_secret:
                 self.log.info("SpiffyTitles: enabling imgur handler")
@@ -270,21 +270,23 @@ class SpiffyTitles(callbacks.Plugin):
                         self.log.error("SpiffyTitles: imgur client error: %s" % (e.error_message))                    
                 except ImportError as e:
                     self.log.error("SpiffyTitles ImportError: %s" % str(e))
+            else:
+                self.log.debug("SpiffyTitles: imgur handler disabled or empty client id/secret")
     
     def doPrivmsg(self, irc, msg):
         """
         Observe each channel message and look for links
         """
-        ignore_actions = self.registryValue("ignoreActionLinks")
-        channel = msg.args[0].lower()
+        channel = msg.args[0]
+        ignore_actions = self.registryValue("ignoreActionLinks", channel=msg.args[0])
         is_channel = irc.isChannel(channel)
         is_ctcp = ircmsgs.isCtcp(msg)        
-        message = msg.args[1]        
+        message = msg.args[1]
         title = None
         bot_nick = irc.nick
         origin_nick = msg.nick
         is_message_from_self = origin_nick.lower() == bot_nick.lower()
-        requires_capability = len(str(self.registryValue("requireCapability"))) > 0
+        requires_capability = len(str(self.registryValue("requireCapability", channel=msg.args[0]))) > 0
 
         if is_message_from_self:
             return
@@ -374,7 +376,7 @@ class SpiffyTitles(callbacks.Plugin):
                     title = self.handler_default(url, channel)
         
         if title is not None:
-            title = self.get_formatted_title(title)
+            title = self.get_formatted_title(title, channel)
             
             # Update link cache
             self.log.debug("SpiffyTitles: caching %s" % (url))
@@ -395,7 +397,7 @@ class SpiffyTitles(callbacks.Plugin):
         channel = msg.args[0]
         url = self.get_url_from_message(message)
         title = None
-        error_message = self.registryValue("onDemandTitleError")
+        error_message = self.registryValue("onDemandTitleError", channel=channel)
         
         try:
             if url:
@@ -566,7 +568,7 @@ class SpiffyTitles(callbacks.Plugin):
         Uses the Youtube API to provide additional meta data about
         Youtube Video links posted.
         """
-        youtube_handler_enabled = self.registryValue("youtubeHandlerEnabled")
+        youtube_handler_enabled = self.registryValue("youtubeHandlerEnabled", channel=channel)
         developer_key = self.registryValue("youtubeDeveloperKey")
         
         if not youtube_handler_enabled:
@@ -578,7 +580,7 @@ class SpiffyTitles(callbacks.Plugin):
         
         self.log.info("SpiffyTitles: calling Youtube handler for %s" % (url))
         video_id = self.get_video_id_from_url(url, domain)
-        yt_template = Template(self.registryValue("youtubeTitleTemplate"))
+        yt_template = Template(self.registryValue("youtubeTitleTemplate", channel=channel))
         title = ""
         
         if video_id:
@@ -749,7 +751,7 @@ class SpiffyTitles(callbacks.Plugin):
         """
         Default handler for websites
         """
-        default_handler_enabled = self.registryValue("defaultHandlerEnabled")
+        default_handler_enabled = self.registryValue("defaultHandlerEnabled", channel=channel)
         
         if default_handler_enabled:
             self.log.info("SpiffyTitles: calling default handler for %s" % (url))
@@ -775,7 +777,7 @@ class SpiffyTitles(callbacks.Plugin):
         headers = self.get_headers()
         result = None
         
-        if not self.registryValue("imdbHandlerEnabled"):
+        if not self.registryValue("imdbHandlerEnabled", channel=channel):
             self.log.info("SpiffyTitles: IMDB handler disabled. Falling back to default handler.")
             
             return self.handler_default(url, channel)
@@ -835,7 +837,7 @@ class SpiffyTitles(callbacks.Plugin):
 
         This handler is for any imgur.com domain.
         """
-        self.initialize_imgur_client()
+        self.initialize_imgur_client(channel)
         
         is_album = info.path.startswith("/a/")
         is_gallery = info.path.startswith("/gallery/")
@@ -843,7 +845,7 @@ class SpiffyTitles(callbacks.Plugin):
         result = None
         
         if is_album:
-            result = self.handler_imgur_album(url, info)
+            result = self.handler_imgur_album(url, info, channel)
         #elif is_image_page:
         #    result = self.handler_imgur_image(url, info)
         else:
@@ -859,7 +861,7 @@ class SpiffyTitles(callbacks.Plugin):
         """
         from imgurpython.helpers.error import ImgurClientRateLimitError
         from imgurpython.helpers.error import ImgurClientError
-        self.initialize_imgur_client()
+        self.initialize_imgur_client(channel)
         
         if self.imgur_client:
             album_id = info.path.split("/a/")[1]
@@ -869,13 +871,13 @@ class SpiffyTitles(callbacks.Plugin):
                 album_id = album_id.split("?")[0]
             
             if self.is_valid_imgur_id(album_id):
-                self.log.info("SpiffyTitles: found imgur album id %s" % (album_id))
+                self.debug.info("SpiffyTitles: found imgur album id %s" % (album_id))
                 
                 try:
                     album = self.imgur_client.get_album(album_id)
                     
                     if album:
-                        imgur_album_template = Template(self.registryValue("imgurAlbumTemplate"))
+                        imgur_album_template = Template(self.registryValue("imgurAlbumTemplate", channel=channel))
                         compiled_template = imgur_album_template.render({
                             "title": album.title,
                             "section": album.section,
@@ -904,7 +906,7 @@ class SpiffyTitles(callbacks.Plugin):
         Used for both direct images and imgur.com/some_image_id_here type links, as
         they're both single images.
         """
-        self.initialize_imgur_client()
+        self.initialize_imgur_client(channel)
         
         from imgurpython.helpers.error import ImgurClientRateLimitError
         from imgurpython.helpers.error import ImgurClientError
@@ -922,13 +924,13 @@ class SpiffyTitles(callbacks.Plugin):
                 image_id = info.path.lstrip("/")
             
             if self.is_valid_imgur_id(image_id):
-                self.log.info("SpiffyTitles: found image id %s" % (image_id))
+                self.log.debug("SpiffyTitles: found image id %s" % (image_id))
                 
                 try:
                     image = self.imgur_client.get_image(image_id)
                     
                     if image:
-                        imgur_template = Template(self.registryValue("imgurTemplate"))
+                        imgur_template = Template(self.registryValue("imgurTemplate", channel=channel))
                         readable_file_size = self.get_readable_file_size(image.size)
                         compiled_template = imgur_template.render({
                             "title": image.title,
@@ -966,11 +968,11 @@ class SpiffyTitles(callbacks.Plugin):
             num /= 1024.0
         return "%.1f%s%s" % (num, "Yi", suffix)
     
-    def get_formatted_title(self, title):
+    def get_formatted_title(self, title, channel):
         """
         Remove cruft from title and apply bold if applicable
         """
-        useBold = self.registryValue("useBold")
+        useBold = self.registryValue("useBold", channel=channel)
         
         # Replace anywhere in string
         title = title.replace("\n", " ")
