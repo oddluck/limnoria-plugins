@@ -41,9 +41,9 @@ Almost all of the below options can be customized per-channel.
 
 Example:
 
-`!config channel ##example-channel-one supybot.plugins.SpiffyTitles.defaultTitleTemplate "^ $title"`
+`!config channel ##example-channel-one supybot.plugins.SpiffyTitles.defaultTitleTemplate "^ {{title}}"`
 
-`!config channel ##example-channel-two supybot.plugins.SpiffyTitles.defaultTitleTemplate ":: $title"`
+`!config channel ##example-channel-two supybot.plugins.SpiffyTitles.defaultTitleTemplate ":: {{title}}"`
 
 This means that you can change whether a handler is enabled, or what the template looks like for any channel.
 
