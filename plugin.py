@@ -15,10 +15,10 @@ import supybot.callbacks as callbacks
 import re
 import requests
 try:
-    from urlparse import urlparse
     from urllib import urlencode
+    from urlparse import urlparse, parse_qsl
 except ImportError:
-    from urllib.parse import urlencode, urlparse
+    from urllib.parse import urlencode, urlparse, parse_qsl
 from bs4 import BeautifulSoup
 import random
 import json
@@ -68,6 +68,7 @@ class SpiffyTitles(callbacks.Plugin):
         self.add_coub_handlers()
         self.add_vimeo_handlers()
         self.add_dailymotion_handlers()
+        self.add_wikipedia_handlers()
     
     def add_dailymotion_handlers(self):
         self.handlers["www.dailymotion.com"] = self.handler_dailymotion
@@ -78,6 +79,9 @@ class SpiffyTitles(callbacks.Plugin):
     def add_coub_handlers(self):
         self.handlers["coub.com"] = self.handler_coub
     
+    def add_wikipedia_handlers(self):
+        self.handlers["en.wikipedia.org"] = self.handler_wikipedia
+
     def handler_dailymotion(self, url, info, channel):
         """
         Handles dailymotion links
@@ -821,6 +825,85 @@ class SpiffyTitles(callbacks.Plugin):
             
             return self.handler_default(url, channel)
     
+    def handler_wikipedia(self, url, domain, channel):
+        """
+        Queries wikipedia API for article extracts.
+        """
+        wikipedia_handler_enabled = self.registryValue("wikipedia.enabled", channel=channel)
+        if not wikipedia_handler_enabled:
+            return self.handler_default(url, channel)
+
+        self.log.debug("SpiffyTitles: calling Wikipedia handler for %s" % (url))
+
+        pattern = r"/(?:w(?:iki))/(?P<page>[^/]+)$"
+        info = urlparse(url)
+        match = re.search(pattern, info.path)
+        if not match:
+            self.log.debug("SpiffyTitles: no title found.")
+            return self.handler_default(url, channel)
+        elif info.fragment and self.registryValue("wikipedia.ignoreSectionLinks", channel=channel):
+            self.log.debug("SpiffyTitles: ignoring section link.")
+            return self.handler_default(url, channel)
+        else:
+            page_title = match.groupdict()['page']
+
+        default_api_params = {
+            "format":      "json",
+            "action":      "query",
+            "prop":        "extracts",
+            "exsentences": "2",
+            "exlimit":     "1",
+            "exintro":     "",
+            "explaintext": ""
+        }
+        extra_params = dict(parse_qsl('&'.join(self.registryValue("wikipedia.apiParams", channel=channel))))
+        title_param  = { self.registryValue("wikipedia.titleParam", channel=channel): page_title }
+
+        # merge dicts
+        api_params = default_api_params.copy()
+        api_params.update(extra_params)
+        api_params.update(title_param)
+        api_url = "https://en.wikipedia.org/w/api.php?%s" % ('&'.join("%s=%s" % (key, val) for (key,val) in api_params.iteritems()))
+
+        agent = self.get_user_agent()
+        headers = {
+            "User-Agent": agent
+        }
+        extract = ""
+
+        self.log.debug("SpiffyTitles: requesting %s" % (api_url))
+
+        request = requests.get(api_url, headers=headers)            
+        ok = request.status_code == requests.codes.ok
+        
+        if ok:
+            response = json.loads(request.text)
+            
+            if response:
+                try:
+                    extract = response['query']['pages'].values()[0]['extract']
+                except KeyError as e:
+                    self.log.error("SpiffyTitles: KeyError parsing Wikipedia API JSON response: %s" % (str(e)))
+            else:
+                self.log.error("SpiffyTitles: Error parsing Wikipedia API JSON response")
+        else:
+            self.log.error("SpiffyTitles: Wikipedia API HTTP %s: %s" % (request.status_code, request.text))
+
+        if extract:
+            if (self.registryValue("wikipedia.removeParentheses")):
+                extract = re.sub(r' ?\([^)]*\)', '', extract)
+            max_chars = self.registryValue("wikipedia.maxChars", channel=channel)
+            if len(extract) > max_chars:
+                extract = extract[:max_chars - 3].rsplit(' ', 1)[0].rstrip(',.') + '...'
+
+            wikipedia_template = Template(self.registryValue("wikipedia.extractTemplate", channel=channel))
+            return wikipedia_template.render({"extract": extract})
+        else:
+            self.log.debug("SpiffyTitles: falling back to default handler")
+            
+            return self.handler_default(url, channel)
+
+
     def is_valid_imgur_id(self, input):
         """
         Tests if input matches the typical imgur id, which seems to be alphanumeric. Images, galleries,

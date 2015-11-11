@@ -7,6 +7,7 @@ The ONLY gluten-free plugin for displaying link titles.
 - Configurable template so you can decide how titles are displayed and what they say
 - Additional information about [Youtube](https://youtube.com) videos
 - Additional information about [imgur](https://imgur.com) links
+- Article extracts from [Wikipedia](https://en.wikipedia.org) links
 - Rate limiting to mitigate abuse
 - Configurable white/black list to control where titles are disabled
 - Configurable list of user agents
@@ -95,7 +96,7 @@ Example output:
 
     ^ Snoop Dogg - Pump Pump feat. Lil Malik uploaded by GeorgeRDR3218 @ 00:45:: Duration: 04:41 :: 203,218 views :: 933 likes :: 40 dislikes :: 0 favorites :: 112 comments
 
-### Available variable for the Youtube template ###
+### Available variables for the Youtube template ###
 
 Variable       | Description
 ---------------|------------
@@ -183,6 +184,27 @@ Default value: `^ {{title}} :: Duration: {{duration}} :: {{stats_number_of_plays
 Default value: `^ [{{ownerscreenname}}] {{title}} :: Duration: {{duration}} :: {{views_total}} views`
 
 `dailymotionHandlerEnabled` - Whether to enable additional information about dailymotion videos.
+
+### wikipedia handler
+
+`wikipedia.enabled` - Whether to fetch extracts for Wikipedia articles.
+
+`wikipedia.extractTemplate` - Wikipedia template.
+
+Default value: "^ {{extract}}"
+
+`wikipedia.maxChars` - Extract will be cut to this length (including '...').
+
+Default value: 240
+
+`wikipedia.removeParentheses` - Whether to remove parenthesized text from output.
+
+`wikipedia.ignoreSectionLinks` - Whether to ignore links to specific article sections.
+
+`wikipedia.apiParams` - Add or override API query parameters with a space-separated list of key=value pairs.
+
+`wikipedia.titleParam` - The query parameter that will hold the page title from the URL.
+
 
 ## Other options
 
