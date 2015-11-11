@@ -82,7 +82,7 @@ class SpiffyTitles(callbacks.Plugin):
         Handles dailymotion links
         """
         dailymotion_handler_enabled = self.registryValue("dailymotionHandlerEnabled", channel=channel)
-        self.log.info("SpiffyTitles: calling dailymotion handler for %s" % url)
+        self.log.debug("SpiffyTitles: calling dailymotion handler for %s" % url)
         title = None
         video_id = None
         
@@ -90,11 +90,9 @@ class SpiffyTitles(callbacks.Plugin):
         if dailymotion_handler_enabled and "/video/" in info.path:
             video_id = info.path.lstrip("/video/").split("_")[0]
             
-            self.log.info("SpiffyTitles: %s" % str(info))
-            
             if video_id is not None:
                 api_url = "https://api.dailymotion.com/video/%s?fields=id,title,owner.screenname,duration,views_total" % video_id
-                self.log.info("SpiffyTitles: looking up dailymotion info: %s", api_url)
+                self.log.debug("SpiffyTitles: looking up dailymotion info: %s", api_url)
                 agent = self.get_user_agent()
                 headers = {
                     "User-Agent": agent
@@ -116,12 +114,12 @@ class SpiffyTitles(callbacks.Plugin):
                         
                         title = dailymotion_template.render(video)
                     else:
-                        self.log.info("SpiffyTitles: received unexpected payload from video: %s" % api_url)
+                        self.log.debug("SpiffyTitles: received unexpected payload from video: %s" % api_url)
                 else:
                     self.log.error("SpiffyTitles: dailymotion handler returned %s: %s" % (request.status_code, request.text[:200]))
         
         if title is None:
-            self.log.info("SpiffyTitles: could not get dailymotion info for %s" % url)
+            self.log.debug("SpiffyTitles: could not get dailymotion info for %s" % url)
             
             return self.handler_default(url, channel)
         else:
@@ -132,7 +130,7 @@ class SpiffyTitles(callbacks.Plugin):
         Handles Vimeo links
         """
         vimeo_handler_enabled = self.registryValue("vimeoHandlerEnabled", channel=channel)
-        self.log.info("SpiffyTitles: calling vimeo handler for %s" % url)
+        self.log.debug("SpiffyTitles: calling vimeo handler for %s" % url)
         title = None
         video_id = None
         
@@ -145,7 +143,7 @@ class SpiffyTitles(callbacks.Plugin):
             
             if video_id is not None:
                 api_url = "https://vimeo.com/api/v2/video/%s.json" % video_id
-                self.log.info("SpiffyTitles: looking up vimeo info: %s", api_url)
+                self.log.debug("SpiffyTitles: looking up vimeo info: %s", api_url)
                 agent = self.get_user_agent()
                 headers = {
                     "User-Agent": agent
@@ -179,12 +177,12 @@ class SpiffyTitles(callbacks.Plugin):
                         
                         title = vimeo_template.render(video)
                     else:
-                        self.log.info("SpiffyTitles: received unexpected payload from video: %s" % api_url)
+                        self.log.debug("SpiffyTitles: received unexpected payload from video: %s" % api_url)
                 else:
                     self.log.error("SpiffyTitles: vimeo handler returned %s: %s" % (request.status_code, request.text[:200]))
         
         if title is None:
-            self.log.info("SpiffyTitles: could not get vimeo info for %s" % url)
+            self.log.debug("SpiffyTitles: could not get vimeo info for %s" % url)
             
             return self.handler_default(url, channel)
         else:
@@ -195,7 +193,7 @@ class SpiffyTitles(callbacks.Plugin):
         Handles coub.com links
         """
         coub_handler_enabled = self.registryValue("coubHandlerEnabled", channel=channel)
-        self.log.info("SpiffyTitles: calling coub handler for %s" % url)
+        self.log.debug("SpiffyTitles: calling coub handler for %s" % url)
         title = None
         
         """ Get video ID """
@@ -233,7 +231,7 @@ class SpiffyTitles(callbacks.Plugin):
         
         if title is None:
             if coub_handler_enabled:
-                self.log.info("SpiffyTitles: %s does not appear to be a video link!" % url)
+                self.log.debug("SpiffyTitles: %s does not appear to be a video link!" % url)
             
             return self.handler_default(url, channel)
         else:
@@ -257,7 +255,7 @@ class SpiffyTitles(callbacks.Plugin):
             imgur_handler_enabled = self.registryValue("imgurHandlerEnabled", channel=channel)
             
             if imgur_handler_enabled and imgur_client_id and imgur_client_secret:
-                self.log.info("SpiffyTitles: enabling imgur handler")
+                self.log.debug("SpiffyTitles: enabling imgur handler")
 
                 # Initialize API client
                 try:
@@ -313,13 +311,13 @@ class SpiffyTitles(callbacks.Plugin):
             ignore_match = self.message_matches_ignore_pattern(message)
             
             if ignore_match:
-                self.log.info("SpiffyTitles: ignoring message due to linkMessagePattern match")
+                self.log.debug("SpiffyTitles: ignoring message due to linkMessagePattern match")
                 return
             
             if url:
                 # Check if channel is allowed based on white/black list restrictions
                 if not channel_is_allowed:
-                    self.log.info("SpiffyTitles: not responding to link in %s due to black/white list restrictions" % (channel))
+                    self.log.debug("SpiffyTitles: not responding to link in %s due to black/white list restrictions" % (channel))
                     return
                 
                 info = urlparse(url)
@@ -327,13 +325,13 @@ class SpiffyTitles(callbacks.Plugin):
                 is_ignored = self.is_ignored_domain(domain)
                 
                 if is_ignored:
-                    self.log.info("SpiffyTitles: URL ignored due to domain blacklist match: %s" % url)
+                    self.log.debug("SpiffyTitles: URL ignored due to domain blacklist match: %s" % url)
                     return
                 
                 is_whitelisted_domain = self.is_whitelisted_domain(domain)
                 
                 if self.registryValue("whitelistDomainPattern") and not is_whitelisted_domain:
-                    self.log.info("SpiffyTitles: URL ignored due to domain whitelist mismatch: %s" % url)
+                    self.log.debug("SpiffyTitles: URL ignored due to domain whitelist mismatch: %s" % url)
                     return
                 
                 title = self.get_title_by_url(url, channel)
@@ -348,7 +346,7 @@ class SpiffyTitles(callbacks.Plugin):
                 else:
                     if self.default_handler_enabled:
                         self.log.debug("SpiffyTitles: could not get a title for %s" % (url))
-                    else:             
+                    else:   
                         self.log.debug("SpiffyTitles: could not get a title for %s but default handler is disabled" % (url))
     
     def get_title_by_url(self, url, channel):
@@ -445,9 +443,9 @@ class SpiffyTitles(callbacks.Plugin):
             stale = seconds >= cache_lifetime_in_seconds
         
         if stale:
-            self.log.info("SpiffyTitles: %s was sent %s seconds ago" % (url, seconds))
+            self.log.debug("SpiffyTitles: %s was sent %s seconds ago" % (url, seconds))
         else:
-            self.log.info("SpiffyTitles: serving link from cache: %s" % (url))
+            self.log.debug("SpiffyTitles: serving link from cache: %s" % (url))
             return cached_link
 
     def add_imdb_handlers(self):
@@ -578,7 +576,7 @@ class SpiffyTitles(callbacks.Plugin):
             self.log.info("SpiffyTitles: no Youtube developer key set! Check the documentation for instructions.")
             return None
         
-        self.log.info("SpiffyTitles: calling Youtube handler for %s" % (url))
+        self.log.debug("SpiffyTitles: calling Youtube handler for %s" % (url))
         video_id = self.get_video_id_from_url(url, domain)
         yt_template = Template(self.registryValue("youtubeTitleTemplate", channel=channel))
         title = ""
@@ -597,7 +595,7 @@ class SpiffyTitles(callbacks.Plugin):
                 "User-Agent": agent
             }
             
-            self.log.info("SpiffyTitles: requesting %s" % (api_url))
+            self.log.debug("SpiffyTitles: requesting %s" % (api_url))
             
             request = requests.get(api_url, headers=headers)            
             ok = request.status_code == requests.codes.ok
@@ -677,7 +675,7 @@ class SpiffyTitles(callbacks.Plugin):
         if title:
             return title
         else:
-            self.log.info("SpiffyTitles: falling back to default handler")
+            self.log.debug("SpiffyTitles: falling back to default handler")
             
             return self.handler_default(url, channel)
     
@@ -754,7 +752,7 @@ class SpiffyTitles(callbacks.Plugin):
         default_handler_enabled = self.registryValue("defaultHandlerEnabled", channel=channel)
         
         if default_handler_enabled:
-            self.log.info("SpiffyTitles: calling default handler for %s" % (url))
+            self.log.debug("SpiffyTitles: calling default handler for %s" % (url))
             default_template = Template(self.registryValue("defaultTitleTemplate", channel=channel))
             html = self.get_source_by_url(url)
             
@@ -766,7 +764,7 @@ class SpiffyTitles(callbacks.Plugin):
                     
                     return title_template
         else:
-            self.log.info("SpiffyTitles: default handler fired but doing nothing because disabled")
+            self.log.debug("SpiffyTitles: default handler fired but doing nothing because disabled")
     
     def handler_imdb(self, url, info, channel):
         """
@@ -778,7 +776,7 @@ class SpiffyTitles(callbacks.Plugin):
         result = None
         
         if not self.registryValue("imdbHandlerEnabled", channel=channel):
-            self.log.info("SpiffyTitles: IMDB handler disabled. Falling back to default handler.")
+            self.log.debug("SpiffyTitles: IMDB handler disabled. Falling back to default handler.")
             
             return self.handler_default(url, channel)
         
@@ -802,7 +800,7 @@ class SpiffyTitles(callbacks.Plugin):
                     unknown_error = response["Response"] != "True"
                     
                     if not_found or unknown_error:
-                        self.log.info("SpiffyTitles: OMDB error for %s" % (omdb_url))
+                        self.log.debug("SpiffyTitles: OMDB error for %s" % (omdb_url))
                     else:
                         result = imdb_template.render(response)
                 else:
@@ -818,7 +816,7 @@ class SpiffyTitles(callbacks.Plugin):
         if result is not None:
             return result
         else:
-            self.log.info("SpiffyTitles: IMDB handler failed. calling default handler")
+            self.log.debug("SpiffyTitles: IMDB handler failed. calling default handler")
             
             return self.handler_default(url, channel)
     
@@ -895,7 +893,7 @@ class SpiffyTitles(callbacks.Plugin):
                 except ImgurClientError as e:
                     self.log.error("SpiffyTitles: imgur client error: %s" % (e.error_message))
             else:
-                self.log.info("SpiffyTitles: unable to determine album id for %s" % (url))
+                self.log.debug("SpiffyTitles: unable to determine album id for %s" % (url))
         else:
             return self.handler_default(url, channel)
     
@@ -1019,16 +1017,16 @@ class SpiffyTitles(callbacks.Plugin):
             retries = 1
         
         if retries >= max_retries:
-            self.log.info("SpiffyTitles: hit maximum retries for %s" % url)
+            self.log.debug("SpiffyTitles: hit maximum retries for %s" % url)
             
             return None
         
-        self.log.info("SpiffyTitles: attempt #%s for %s" % (retries, url))
+        self.log.debug("SpiffyTitles: attempt #%s for %s" % (retries, url))
         
         try:
             headers = self.get_headers()
             
-            self.log.info("SpiffyTitles: requesting %s" % (url))
+            self.log.debug("SpiffyTitles: requesting %s" % (url))
             
             request = requests.get(url, headers=headers, timeout=10, allow_redirects=True)
             
@@ -1037,7 +1035,7 @@ class SpiffyTitles(callbacks.Plugin):
                 content_type = request.headers.get("content-type").split(";")[0].strip()
                 acceptable_types = self.registryValue("mimeTypes")
                 
-                self.log.info("SpiffyTitles: content type %s" % (content_type))
+                self.log.debug("SpiffyTitles: content type %s" % (content_type))
                 
                 if content_type in acceptable_types:
                     text = request.content
@@ -1045,7 +1043,7 @@ class SpiffyTitles(callbacks.Plugin):
                     if text:
                         return text
                     else:
-                        self.log.info("SpiffyTitles: empty content from %s" % (url))                        
+                        self.log.debug("SpiffyTitles: empty content from %s" % (url))                        
                 
                 else:
                     self.log.debug("SpiffyTitles: unacceptable mime type %s for url %s" % (content_type, url))
@@ -1118,7 +1116,7 @@ class SpiffyTitles(callbacks.Plugin):
             match = re.search(pattern, input)
 
             if match:
-                self.log.info("SpiffyTitles: title %s matches ignoredTitlePattern for %s" % (input, channel))
+                self.log.debug("SpiffyTitles: title %s matches ignoredTitlePattern for %s" % (input, channel))
         
         return match
     

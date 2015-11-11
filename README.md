@@ -30,6 +30,12 @@ Load SpiffyTitles:
 
 Pro Tip: Observe the logs when loading the plugin and afterwards to see if there are any errors.
 
+You can increase the verbosity of the logging in SpiffyTitles by issuing the following command:
+
+
+`!config supybot.log.level DEBUG`
+
+
 ## On-Demand Titles
 You can retrieve titles on demand using the `t` command. If something goes wrong, `onDemandTitleError`
 will be sent instead of the link title.
