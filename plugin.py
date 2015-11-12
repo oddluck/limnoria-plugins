@@ -869,7 +869,7 @@ class SpiffyTitles(callbacks.Plugin):
                 album_id = album_id.split("?")[0]
             
             if self.is_valid_imgur_id(album_id):
-                self.debug.info("SpiffyTitles: found imgur album id %s" % (album_id))
+                self.log.debug("SpiffyTitles: found imgur album id %s" % (album_id))
                 
                 try:
                     album = self.imgur_client.get_album(album_id)
