@@ -262,7 +262,7 @@ This would ignore any message that contains "[tw]".
 
 `ignoredTitlePattern` (Regexp) - If the parsed title matches this regular expression, it will be ignored.
 
-Example: `!config channel #example supybot.plugins.SpiffyTitles.ignoredTitlePattern m/^\^ Google$|- Google Search$|^\^ Google Maps$|^\^ Imgur: The most awesome images on the Internet$|^\^ Pastebin \| IRCCloud|^\^ Instagram|^\^ Urban Dictionary:|– Wikipedia$|- Wikipedia, the free encyclopedia$|- Wiktionary$| - RationalWiki$|^\^ Meet Google Drive|- Wikia$|^\^ Imgur$\|^\^ Google Trends/`
+Example: `!config channel #example supybot.plugins.SpiffyTitles.ignoredTitlePattern m/^\^ Google$|- Google Search$|^\^ Google Maps$|^\^ Imgur: The most awesome images on the Internet$|^\^ Pastebin \| IRCCloud|^\^ Instagram|^\^ Urban Dictionary:|– Wikipedia$|- Wikipedia, the free encyclopedia$|- Wiktionary$| - RationalWiki$|^\^ Meet Google Drive|- Wikia$|^\^ Imgur$|^\^ Google Trends|^\^ reactiongifs/`
 
 This line would ignore any link which results in a title matching the above pattern.
 
