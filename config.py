@@ -71,9 +71,9 @@ conf.registerGlobalValue(SpiffyTitles, 'urlRegularExpression',
 conf.registerChannelValue(SpiffyTitles, 'useBold',
      registry.Boolean(False, _("""Use bold in titles""")))
 
-# Title template
+# Title template - show a warning if redirects to a different domain
 conf.registerChannelValue(SpiffyTitles, 'defaultTitleTemplate',
-     registry.String("^ {{title}}", _("""Template used for default title responses""")))
+     registry.String("{% if redirect %}(REDIRECT) {% endif %}^ {{title}}", _("""Template used for default title responses""")))
 
 # YouTube template
 conf.registerChannelValue(SpiffyTitles, 'youtubeTitleTemplate',

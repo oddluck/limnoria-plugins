@@ -759,13 +759,13 @@ class SpiffyTitles(callbacks.Plugin):
         if default_handler_enabled:
             log.debug("SpiffyTitles: calling default handler for %s" % (url))
             default_template = Template(self.registryValue("defaultTitleTemplate", channel=channel))
-            html = self.get_source_by_url(url)
+            (html, is_redirect) = self.get_source_by_url(url)
             
             if html is not None and html:
                 title = self.get_title_from_html(html)
                 
                 if title is not None:
-                    title_template = default_template.render(title=title)
+                    title_template = default_template.render(title=title, redirect=is_redirect)
                     
                     return title_template
         else:
@@ -1113,6 +1113,19 @@ class SpiffyTitles(callbacks.Plugin):
             log.debug("SpiffyTitles: requesting %s" % (url))
             
             request = requests.get(url, headers=headers, timeout=10, allow_redirects=True)
+
+            is_redirect = False
+            if request.history:
+                # check the top two domain levels
+                base_domain = lambda url: '.'.join(urlparse(url).netloc.rsplit('.', 2)[-2:])
+                link_domain = base_domain(request.history[0].url)
+                real_domain = base_domain(request.url)
+                if link_domain != real_domain:
+                    is_redirect = True
+
+                for redir in request.history:
+                    log.debug("SpiffyTitles: Redirect %s from %s" % (redir.status_code, redir.url))
+                log.debug("SpiffyTitles: Final url %s" % (request.url))
             
             if request.status_code == requests.codes.ok:
                 # Check the content type which comes in the format: "text/html; charset=UTF-8"
@@ -1125,7 +1138,7 @@ class SpiffyTitles(callbacks.Plugin):
                     text = request.content
                     
                     if text:
-                        return text
+                        return (text, is_redirect)
                     else:
                         log.debug("SpiffyTitles: empty content from %s" % (url))                        
                 
