@@ -327,15 +327,15 @@ class SpiffyTitles(callbacks.Plugin):
                 
                 info = urlparse(url)
                 domain = info.netloc
-                is_ignored = self.is_ignored_domain(domain)
+                is_ignored = self.is_ignored_domain(domain, channel)
                 
                 if is_ignored:
                     log.debug("SpiffyTitles: URL ignored due to domain blacklist match: %s" % url)
                     return
                 
-                is_whitelisted_domain = self.is_whitelisted_domain(domain)
+                is_whitelisted_domain = self.is_whitelisted_domain(domain, channel)
                 
-                if self.registryValue("whitelistDomainPattern") and not is_whitelisted_domain:
+                if self.registryValue("whitelistDomainPattern", channel=channel) and not is_whitelisted_domain:
                     log.debug("SpiffyTitles: URL ignored due to domain whitelist mismatch: %s" % url)
                     return
                 
@@ -502,11 +502,11 @@ class SpiffyTitles(callbacks.Plugin):
         """
         return set([channel for channel in input if len(channel.strip())])
     
-    def is_ignored_domain(self, domain):
+    def is_ignored_domain(self, domain, channel):
         """
         Checks domain against a regular expression
         """
-        pattern = self.registryValue("ignoredDomainPattern")
+        pattern = self.registryValue("ignoredDomainPattern", channel=channel)
         
         if pattern:
             log.debug("SpiffyTitles: matching %s against %s" % (domain, str(pattern)))
@@ -521,11 +521,11 @@ class SpiffyTitles(callbacks.Plugin):
             except re.Error:
                 log.error("SpiffyTitles: invalid regular expression: %s" % (pattern))
     
-    def is_whitelisted_domain(self, domain):
+    def is_whitelisted_domain(self, domain, channel):
         """
         Checks domain against a regular expression
         """
-        pattern = self.registryValue("whitelistDomainPattern")
+        pattern = self.registryValue("whitelistDomainPattern", channel=channel)
         
         if pattern:
             log.debug("SpiffyTitles: matching %s against %s" % (domain, str(pattern)))
