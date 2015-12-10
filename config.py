@@ -178,3 +178,24 @@ conf.registerChannelValue(SpiffyTitles.wikipedia, 'removeParentheses',
 
 conf.registerChannelValue(SpiffyTitles.wikipedia, 'extractTemplate',
                         registry.String("^ {{extract}}", _("""Wikipedia template.""")))
+
+
+conf.registerGroup(SpiffyTitles, 'reddit')
+
+conf.registerChannelValue(SpiffyTitles.reddit, 'enabled',
+                        registry.Boolean(True, _("""Whether to add additional info about Reddit links.""")))
+
+conf.registerChannelValue(SpiffyTitles.reddit, 'linkThreadTemplate',
+     registry.String(u"/r/{{subreddit}}{% if title %} :: {{title}}{% endif %} :: {{score}} points ({{percent}}) :: {{comments}} comments :: Posted by {{author}} {{age}} ago{% if url %} :: {{url}} ({{domain}}){% endif %}", _("""Template used for Reddit title responses""")))
+
+conf.registerChannelValue(SpiffyTitles.reddit, 'textThreadTemplate',
+     registry.String(u"/r/{{subreddit}}{% if extract %} :: {{extract}}{% endif %} :: {{score}} points ({{percent}}) :: {{comments}} comments :: Posted by {{author}} {{age}} ago", _("""Template used for Reddit title responses""")))
+
+conf.registerChannelValue(SpiffyTitles.reddit, 'commentTemplate',
+     registry.String(u"/r/{{subreddit}}{% if extract %} :: {{extract}}{% endif %} :: {{score}} points :: Posted by {{author}} {{age}} ago", _("""Template used for Reddit title responses""")))
+
+conf.registerChannelValue(SpiffyTitles.reddit, 'userTemplate',
+     registry.String(u"/u/{{user}}{% if gold %} :: (GOLD{% if mod %}, MOD{% endif %}){% endif %} :: Joined: {{created}} :: Link karma: {{link_karma}} :: Comment karma: {{comment_karma}}", _("""Template used for Reddit title responses""")))
+
+conf.registerChannelValue(SpiffyTitles.reddit, 'maxChars',
+                        registry.Integer(400, _("""Length of response (title/extract will be cut to fit).""")))

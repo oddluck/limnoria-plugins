@@ -30,6 +30,7 @@ import timeout_decorator
 import unicodedata
 import supybot.ircdb as ircdb
 import supybot.log as log
+import pytz
 
 try:
     from supybot.i18n import PluginInternationalization
@@ -69,6 +70,7 @@ class SpiffyTitles(callbacks.Plugin):
         self.add_vimeo_handlers()
         self.add_dailymotion_handlers()
         self.add_wikipedia_handlers()
+        self.add_reddit_handlers()
     
     def add_dailymotion_handlers(self):
         self.handlers["www.dailymotion.com"] = self.handler_dailymotion
@@ -81,6 +83,10 @@ class SpiffyTitles(callbacks.Plugin):
     
     def add_wikipedia_handlers(self):
         self.handlers["wikipedia.org"] = self.handler_wikipedia
+
+    def add_reddit_handlers(self):
+        self.handlers["reddit.com"] = self.handler_reddit
+        self.handlers["www.reddit.com"] = self.handler_reddit
 
     def handler_dailymotion(self, url, info, channel):
         """
@@ -903,6 +909,118 @@ class SpiffyTitles(callbacks.Plugin):
         else:
             self.log.debug("SpiffyTitles: falling back to default handler")
             
+            return self.handler_default(url, channel)
+
+    
+    def handler_reddit(self, url, domain, channel):
+        """
+        Queries wikipedia API for article extracts.
+        """
+        reddit_handler_enabled = self.registryValue("reddit.enabled", channel=channel)
+        if not reddit_handler_enabled:
+            return self.handler_default(url, channel)
+
+        self.log.debug("SpiffyTitles: calling reddit handler for %s" % (url))
+
+        patterns = {
+            "thread":  {
+                "pattern": r"^/r/(?P<subreddit>[^/]+)/comments/(?P<thread>[^/]+)(?:/[^/]+/?)?$",
+                "url":     "https://www.reddit.com/r/{subreddit}/comments/{thread}.json"
+            },
+            "comment": {
+                "pattern": r"^/r/(?P<subreddit>[^/]+)/comments/(?P<thread>[^/]+)/[^/]+/(?P<comment>\w+)$",
+                "url":     "https://www.reddit.com/r/{subreddit}/comments/{thread}/x/{comment}.json"
+            },
+            "user":    {
+                "pattern": r"^/u(?:ser)?/(?P<user>[^/]+)/?$",
+                "url":     "https://www.reddit.com/user/{user}/about.json"
+            }
+        }
+        info = urlparse(url)
+        for name in patterns:
+            match = re.search(patterns[name]['pattern'], info.path)
+            if match:
+                link_type = name
+                link_info = match.groupdict()
+                data_url  = patterns[name]['url'].format(**link_info)
+                break
+        if not match:
+            self.log.debug("SpiffyTitles: no title found.")
+            return self.handler_default(url, channel)
+
+        agent = self.get_user_agent()
+        headers = {
+            "User-Agent": agent
+        }
+
+        self.log.debug("SpiffyTitles: requesting %s" % (data_url))
+
+        request = requests.get(data_url, headers=headers)            
+        ok = request.status_code == requests.codes.ok
+        data = {}
+        extract = ''
+        
+        if ok:
+            response = json.loads(request.text)
+            
+            if response:
+                try:
+                    if link_type == "thread":  data = response[0]['data']['children'][0]['data']
+                    if link_type == "comment": data = response[1]['data']['children'][0]['data']
+                    if link_type == "user":    data = response['data']
+                except KeyError as e:
+                    self.log.error("SpiffyTitles: KeyError parsing Reddit JSON response: %s" % (str(e)))
+            else:
+                self.log.error("SpiffyTitles: Error parsing Reddit JSON response")
+        else:
+            self.log.error("SpiffyTitles: Reddit HTTP %s: %s" % (request.status_code, request.text))
+
+        if data:
+            today   = datetime.datetime.now(pytz.UTC).date()
+            created = datetime.datetime.fromtimestamp(data['created_utc'], pytz.UTC).date()
+            age_days = (today - created).days
+            age = '{}d'.format(age_days % 365)
+            if age_days > 365:
+                age = '{}y, '.format(age_days / 365) + age
+            if link_type == "thread":
+                link_type = "linkThread"
+                if data['is_self']:
+                    link_type = "textThread"
+                    data['url'] = ""
+                    extract = data.get('selftext', '')
+            if link_type == "comment":
+                extract = data.get('body', '')
+            reddit_template = Template(self.registryValue("reddit." + link_type + "Template", channel=channel))
+            template_vars = {
+                "id":            data.get('id', ''),
+                "user":          data.get('name', ''),
+                "gold":          (data.get('is_gold', False) == True),
+                "mod":           (data.get('is_mod', False) == True),
+                "author":        data.get('author', ''),
+                "subreddit":     data.get('subreddit', ''),
+                "url":           data.get('url', ''),
+                "title":         data.get('title', ''),
+                "domain":        data.get('domain', ''),
+                "score":         data.get('score', 0),
+                "percent":       '{}%'.format(int(data.get('upvote_ratio', 0) * 100)),
+                "comments":      '{:,}'.format(data.get('num_comments', 0)),
+                "created":       created.strftime('%Y-%m-%d'),
+                "age":           age,
+                "link_karma":    '{:,}'.format(data.get('link_karma', 0)),
+                "comment_karma": '{:,}'.format(data.get('comment_karma', 0)),
+                "extract":       "%%extract%%"
+            }
+            reply = reddit_template.render(template_vars)
+            if extract:
+                max_chars = self.registryValue("reddit.maxChars", channel=channel)
+                max_extract_chars = max_chars + len('%%extract%%') - len(reply)
+                if len(extract) > max_extract_chars:
+                    extract = extract[:max_extract_chars - 3].rsplit(' ', 1)[0].rstrip(',.') + '...'
+            template_vars['extract'] = extract
+            reply = reddit_template.render(template_vars)
+            return reply
+        else:
+            self.log.debug("SpiffyTitles: falling back to default handler")
             return self.handler_default(url, channel)
 
 
