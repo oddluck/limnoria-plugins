@@ -80,7 +80,7 @@ class SpiffyTitles(callbacks.Plugin):
         self.handlers["coub.com"] = self.handler_coub
     
     def add_wikipedia_handlers(self):
-        self.handlers["en.wikipedia.org"] = self.handler_wikipedia
+        self.handlers["wikipedia.org"] = self.handler_wikipedia
 
     def handler_dailymotion(self, url, info, channel):
         """
@@ -375,8 +375,13 @@ class SpiffyTitles(callbacks.Plugin):
                 handler = self.handlers[domain]                        
                 title = handler(url, info, channel)
             else:
-                if self.default_handler_enabled:
-                    title = self.handler_default(url, channel)
+                base_domain = self.get_base_domain('http://' + domain)
+                if base_domain in self.handlers:
+                    handler = self.handlers[base_domain]                        
+                    title = handler(url, info, channel)
+                else:
+                    if self.default_handler_enabled:
+                        title = self.handler_default(url, channel)
         
         if title is not None:
             title = self.get_formatted_title(title, channel)
@@ -457,7 +462,6 @@ class SpiffyTitles(callbacks.Plugin):
         """
         Enables meta info about IMDB links through the OMDB API
         """
-        self.handlers["www.imdb.com"] = self.handler_imdb
         self.handlers["imdb.com"] = self.handler_imdb
     
     def add_youtube_handlers(self):
@@ -466,9 +470,7 @@ class SpiffyTitles(callbacks.Plugin):
         domain used in the URL.
         """
         self.handlers["youtube.com"] = self.handler_youtube
-        self.handlers["www.youtube.com"] = self.handler_youtube
         self.handlers["youtu.be"] = self.handler_youtube
-        self.handlers["m.youtube.com"] = self.handler_youtube
     
     def is_channel_allowed(self, channel):
         """
@@ -863,7 +865,7 @@ class SpiffyTitles(callbacks.Plugin):
         api_params = default_api_params.copy()
         api_params.update(extra_params)
         api_params.update(title_param)
-        api_url = "https://en.wikipedia.org/w/api.php?%s" % ('&'.join("%s=%s" % (key, val) for (key,val) in api_params.iteritems()))
+        api_url = "https://%s/w/api.php?%s" % (info.netloc, '&'.join("%s=%s" % (key, val) for (key,val) in api_params.iteritems()))
 
         agent = self.get_user_agent()
         headers = {
@@ -1117,9 +1119,8 @@ class SpiffyTitles(callbacks.Plugin):
             is_redirect = False
             if request.history:
                 # check the top two domain levels
-                base_domain = lambda url: '.'.join(urlparse(url).netloc.rsplit('.', 2)[-2:])
-                link_domain = base_domain(request.history[0].url)
-                real_domain = base_domain(request.url)
+                link_domain = self.get_base_domain(request.history[0].url)
+                real_domain = self.get_base_domain(request.url)
                 if link_domain != real_domain:
                     is_redirect = True
 
@@ -1168,6 +1169,12 @@ class SpiffyTitles(callbacks.Plugin):
             log.error("SpiffyTitles HTTPError: %s" % (str(e)))
         except requests.exceptions.InvalidURL as e:
             log.error("SpiffyTitles InvalidURL: %s" % (str(e)))
+
+    def get_base_domain(self, url):
+        """
+        Returns the FQDN comprising the top two domain levels
+        """
+        return '.'.join(urlparse(url).netloc.rsplit('.', 2)[-2:])
     
     def get_headers(self):
         agent = self.get_user_agent()
