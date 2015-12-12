@@ -1221,7 +1221,7 @@ class SpiffyTitles(callbacks.Plugin):
         if retries >= max_retries:
             log.debug("SpiffyTitles: hit maximum retries for %s" % url)
             
-            return None
+            return (None, False)
         
         log.debug("SpiffyTitles: attempt #%s for %s" % (retries, url))
         
@@ -1257,7 +1257,7 @@ class SpiffyTitles(callbacks.Plugin):
                     if text:
                         return (text, is_redirect)
                     else:
-                        log.debug("SpiffyTitles: empty content from %s" % (url))                        
+                        log.debug("SpiffyTitles: empty content from %s" % (url))
                 
                 else:
                     log.debug("SpiffyTitles: unacceptable mime type %s for url %s" % (content_type, url))
@@ -1285,6 +1285,9 @@ class SpiffyTitles(callbacks.Plugin):
             log.error("SpiffyTitles HTTPError: %s" % (str(e)))
         except requests.exceptions.InvalidURL as e:
             log.error("SpiffyTitles InvalidURL: %s" % (str(e)))
+
+        return (None, False)
+
 
     def get_base_domain(self, url):
         """
