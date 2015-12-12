@@ -1202,13 +1202,11 @@ class SpiffyTitles(callbacks.Plugin):
             head = soup.find("head")
             titles = head.find_all("title")
             
-            if titles is not None and len(titles):                
-                title_text = titles[-1].get_text()
-                
-                if len(title_text):
-                    stripped_title = title_text.strip()
-                    
-                    return stripped_title
+            if titles is not None and len(titles):
+                for t in titles[::-1]:
+                    title = t.get_text().strip()
+                    if len(title):
+                        return title
     
     @timeout_decorator.timeout(wall_clock_timeout)
     def get_source_by_url(self, url, retries=1):
