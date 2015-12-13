@@ -966,7 +966,9 @@ class SpiffyTitles(callbacks.Plugin):
             if response:
                 try:
                     if link_type == "thread":  data = response[0]['data']['children'][0]['data']
-                    if link_type == "comment": data = response[1]['data']['children'][0]['data']
+                    if link_type == "comment":
+                        data = response[1]['data']['children'][0]['data']
+                        data['title'] = response[0]['data']['children'][0]['data']['title']
                     if link_type == "user":    data = response['data']
                 except KeyError as e:
                     self.log.error("SpiffyTitles: KeyError parsing Reddit JSON response: %s" % (str(e)))
@@ -979,9 +981,13 @@ class SpiffyTitles(callbacks.Plugin):
             today   = datetime.datetime.now(pytz.UTC).date()
             created = datetime.datetime.fromtimestamp(data['created_utc'], pytz.UTC).date()
             age_days = (today - created).days
-            age = '{}d'.format(age_days % 365)
-            if age_days > 365:
-                age = '{}y, '.format(age_days / 365) + age
+            if   age_days == 0: age = "today"
+            elif age_days == 1: age = "yesterday"
+            else:
+                age = '{}d'.format(age_days % 365)
+                if age_days > 365:
+                    age = '{}y, '.format(age_days / 365) + age
+                age = age + " ago"
             if link_type == "thread":
                 link_type = "linkThread"
                 if data['is_self']:
