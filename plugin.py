@@ -100,8 +100,12 @@ class SpiffyTitles(callbacks.Plugin):
         video_id = None
 
         """ Get video ID """
-        if dailymotion_handler_enabled and "/video/" in info.path:
-            video_id = info.path.lstrip("/video/").split("_")[0]
+        if dailymotion_handler_enabled:
+            if "/video/" in info.path:
+                video_id = info.path.lstrip("/video/").split("_")[0]
+
+            if info.netloc == "dai.ly":
+                video_id = info.path.lstrip("/")
 
             if video_id is not None:
                 fields = "id,title,owner.screenname,duration,views_total"
