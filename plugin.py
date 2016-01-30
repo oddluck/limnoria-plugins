@@ -73,6 +73,7 @@ class SpiffyTitles(callbacks.Plugin):
 
     def add_dailymotion_handlers(self):
         self.handlers["www.dailymotion.com"] = self.handler_dailymotion
+        self.handlers["dailymotion.com"] = self.handler_dailymotion
         self.handlers["dai.ly"] = self.handler_dailymotion
 
     def add_vimeo_handlers(self):
