@@ -373,7 +373,7 @@ class SpiffyTitles(callbacks.Plugin):
                     if ignore_match:
                         return
                     else:
-                        irc.sendMsg(ircmsgs.privmsg(channel, title))
+                        irc.queueMsg(ircmsgs.privmsg(channel, title))
                 else:
                     if self.default_handler_enabled:
                         log.debug("SpiffyTitles: could not get a title for %s" % (url))
@@ -441,9 +441,9 @@ class SpiffyTitles(callbacks.Plugin):
             pass
 
         if title is not None and title:
-            irc.sendMsg(ircmsgs.privmsg(channel, title))
+            irc.queueMsg(ircmsgs.privmsg(channel, title))
         else:
-            irc.sendMsg(ircmsgs.privmsg(channel, error_message))
+            irc.queueMsg(ircmsgs.privmsg(channel, error_message))
 
     t = wrap(t, ['text'])
 
