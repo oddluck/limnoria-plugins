@@ -107,7 +107,7 @@ class UrbanDictionary(callbacks.Plugin):
             for i in definitions[0:args['numberOfDefinitions']]:  # iterate through each def.
                 # clean these up.
                 definition = self.cleanjson(''.join(i['definition'])) #.encode('utf-8')
-                example = self.cleanjson(''.join(['example']))
+                example = self.cleanjson(''.join(i['example']))
                 # now add
                 outputstring = "{0}".format(definition)  # default string.
                 if args['showExamples']:  # show examples?
