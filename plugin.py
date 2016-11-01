@@ -737,6 +737,42 @@ class Storage:
         c.close()
         return row[0]
 
+    def countNotMyEdits(self, username, channel=None):
+        c = self.conn.cursor()
+        if channel is None:
+            c.execute('''SELECT COUNT(*) 
+                         FROM triviaedit
+                         WHERE username<>?''',
+                         (username,))
+        else:
+            c.execute('''SELECT COUNT(*) 
+                         FROM triviaedit
+                         WHERE username<>?
+                         AND channel_canonical=?''', 
+                         (username,
+                         ircutils.toLower(channel),))
+        row = c.fetchone()
+        c.close()
+        return row[0]
+
+    def countMyEdits(self, username, channel=None):
+        c = self.conn.cursor()
+        if channel is None:
+            c.execute('''SELECT COUNT(*) 
+                         FROM triviaedit
+                         WHERE username=?''',
+                         (username,))
+        else:
+            c.execute('''SELECT COUNT(*) 
+                         FROM triviaedit
+                         WHERE username=?
+                         AND channel_canonical=?''', 
+                         (username,
+                         ircutils.toLower(channel),))
+        row = c.fetchone()
+        c.close()
+        return row[0]
+
     def countReports(self, channel=None):
         c = self.conn.cursor()
         if channel is None:
@@ -1541,6 +1577,56 @@ class Storage:
                          WHERE channel_canonical=? 
                          ORDER BY id ASC LIMIT ?, ?''', 
                          (ircutils.toLower(channel), start, amount))
+        rows = c.fetchall()
+        c.close()
+        return rows
+        
+    def getNotMyEditTop3(self, username, page=1, amount=3, channel=None):
+        if page < 1:
+            page = 1
+        if amount < 1:
+            amount = 3
+        page -= 1
+        start = page * amount
+        c = self.conn.cursor()
+        if channel is None:
+            c.execute('''SELECT * 
+                         FROM triviaedit
+                         WHERE username<>?
+                         ORDER BY id ASC LIMIT ?, ?''',
+                         (username, start, amount))
+        else:
+            c.execute('''SELECT * 
+                         FROM triviaedit 
+                         WHERE username<>?
+                         AND channel_canonical=? 
+                         ORDER BY id ASC LIMIT ?, ?''', 
+                         (username, ircutils.toLower(channel), start, amount))
+        rows = c.fetchall()
+        c.close()
+        return rows
+        
+    def getMyEditTop3(self, username, page=1, amount=3, channel=None):
+        if page < 1:
+            page = 1
+        if amount < 1:
+            amount = 3
+        page -= 1
+        start = page * amount
+        c = self.conn.cursor()
+        if channel is None:
+            c.execute('''SELECT * 
+                         FROM triviaedit
+                         WHERE username=?
+                         ORDER BY id ASC LIMIT ?, ?''',
+                         (username, start, amount))
+        else:
+            c.execute('''SELECT * 
+                         FROM triviaedit 
+                         WHERE username=?
+                         AND channel_canonical=? 
+                         ORDER BY id ASC LIMIT ?, ?''', 
+                         (username, ircutils.toLower(channel), start, amount))
         rows = c.fetchall()
         c.close()
         return rows
@@ -3369,9 +3455,9 @@ class TriviaTime(callbacks.Plugin):
             irc.reply('Use the showdelete command to see more information')
     listdeletes = wrap(listdeletes, ['channel', optional('int')])
 
-    def listedits(self, irc, msg, arg, channel, page):
+    def listalledits(self, irc, msg, arg, channel, page):
         """[<channel>] [<page>]
-        List edits pending approval.
+        List all edits pending approval (even your own).
         Channel is only required when using the command outside of a channel.
         """
         hostmask = msg.prefix
@@ -3392,6 +3478,82 @@ class TriviaTime(callbacks.Plugin):
             edits = threadStorage.getEditTop3(page)
         else:
             edits = threadStorage.getEditTop3(page, channel=channel)
+            
+        # Output list
+        if count < 1:
+            if self.registryValue('general.globalstats'):
+                irc.reply('No edits found.')
+            else:
+                irc.reply('No edits found in {0}.'.format(channel))
+        else:
+            irc.reply('Showing page %i of %i' % (page, pages))
+            for edit in edits:
+                irc.reply('Edit #%d, Question #%d, NEW:%s'%(edit['id'], edit['question_id'], edit['question']))
+            irc.reply('Use the showedit command to see more information')
+    listalledits = wrap(listalledits, ['channel', optional('int')])
+
+    def listmyedits(self, irc, msg, arg, channel, page):
+        """[<channel>] [<page>]
+        List only your own edits pending approval.
+        Channel is only required when using the command outside of a channel.
+        """
+        hostmask = msg.prefix
+        if self.isTriviaMod(hostmask, channel) == False:
+            irc.reply('You must be at least a TriviaMod in {0} to use this command.'.format(channel))
+            return
+        
+        # Grab list from the database
+        dbLocation = self.registryValue('admin.db')
+        threadStorage = Storage(dbLocation)
+        username = self.getUsername(msg.nick, msg.prefix)
+        if self.registryValue('general.globalstats'):
+            count = threadStorage.countMyEdits(username)
+        else:
+            count = threadStorage.countMyEdits(username, channel)
+        pages = int(count / 3) + int(count % 3 > 0)
+        page = max(1, min(page, pages))
+        if self.registryValue('general.globalstats'):
+            edits = threadStorage.getMyEditTop3(username, page)
+        else:
+            edits = threadStorage.getMyEditTop3(username, page, channel=channel)
+            
+        # Output list
+        if count < 1:
+            if self.registryValue('general.globalstats'):
+                irc.reply('No edits found.')
+            else:
+                irc.reply('No edits found in {0}.'.format(channel))
+        else:
+            irc.reply('Showing page %i of %i' % (page, pages))
+            for edit in edits:
+                irc.reply('Edit #%d, Question #%d, NEW:%s'%(edit['id'], edit['question_id'], edit['question']))
+            irc.reply('Use the showedit command to see more information')
+    listmyedits = wrap(listmyedits, ['channel', optional('int')])
+
+    def listedits(self, irc, msg, arg, channel, page):
+        """[<channel>] [<page>]
+        List edits pending approval (by default does not include your own edits)
+        Channel is only required when using the command outside of a channel.
+        """
+        hostmask = msg.prefix
+        if self.isTriviaMod(hostmask, channel) == False:
+            irc.reply('You must be at least a TriviaMod in {0} to use this command.'.format(channel))
+            return
+        
+        # Grab list from the database
+        dbLocation = self.registryValue('admin.db')
+        threadStorage = Storage(dbLocation)
+        username = self.getUsername(msg.nick, msg.prefix)
+        if self.registryValue('general.globalstats'):
+            count = threadStorage.countNotMyEdits(username)
+        else:
+            count = threadStorage.countNotMyEdits(username, channel)
+        pages = int(count / 3) + int(count % 3 > 0)
+        page = max(1, min(page, pages))
+        if self.registryValue('general.globalstats'):
+            edits = threadStorage.getNotMyEditTop3(username, page)
+        else:
+            edits = threadStorage.getNotMyEditTop3(username, page, channel=channel)
             
         # Output list
         if count < 1:
