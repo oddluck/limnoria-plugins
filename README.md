@@ -223,7 +223,7 @@ titles will be shown in all channels. Default value: `""`
 titles will be shown in all channels. Default value: `""`
 
 ### About white/black lists
-
+- Channel names must be in lowercase
 - If `channelWhitelist` and `channelBlacklist` are empty, then titles will be displayed in every channel
 - If `channelBlacklist` has #foo, then titles will be displayed in every channel except #foo
 - If `channelWhitelist` has #foo then `channelBlacklist` will be ignored
