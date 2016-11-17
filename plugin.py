@@ -1400,7 +1400,7 @@ class SpiffyTitles(callbacks.Plugin):
 
         if match:
             raw_url = match.group(0).strip()
-            url = self.remove_control_characters(unicode(raw_url))
+            url = self.remove_control_characters(unicodedata.normalize('NFC', raw_url))
 
             return url
 
