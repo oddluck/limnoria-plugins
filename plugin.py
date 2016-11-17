@@ -13,8 +13,8 @@ import supybot.callbacks as callbacks
 import re
 import requests
 try:
-    from urllib import urlencode
-    from urlparse import urlparse, parse_qsl
+    from urllib.parse import urlencode
+    from urllib.parse import urlparse, parse_qsl
 except ImportError:
     from urllib.parse import urlencode, urlparse, parse_qsl
 from bs4 import BeautifulSoup
@@ -901,7 +901,7 @@ class SpiffyTitles(callbacks.Plugin):
         api_params = default_api_params.copy()
         api_params.update(extra_params)
         api_params.update(title_param)
-        param_string = "&".join("%s=%s" % (key, val) for (key, val) in api_params.iteritems())
+        param_string = "&".join("%s=%s" % (key, val) for (key, val) in api_params.items())
         api_url = "https://%s/w/api.php?%s" % (info.netloc, param_string)
 
         agent = self.get_user_agent()
@@ -920,7 +920,7 @@ class SpiffyTitles(callbacks.Plugin):
 
             if response:
                 try:
-                    extract = response['query']['pages'].values()[0]['extract']
+                    extract = list(response['query']['pages'].values())[0]['extract']
                 except KeyError as e:
                     self.log.error("SpiffyTitles: KeyError parsing Wikipedia API JSON response: \
                                     %s" % (str(e)))
