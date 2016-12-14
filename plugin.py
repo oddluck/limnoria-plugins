@@ -57,35 +57,51 @@ class NBA(callbacks.Plugin):
         self._today_scores_last_modified_time = None
         self._today_scores_last_modified_data = None
 
-    def nba(self, irc, msg, args, optional_date):
-        """[<date>]
-        Get games for a given date. If none is specified, return games
-        scheduled for today."""
-        try:
-            date = self._checkDateInput(optional_date)
-        except ValueError as e:
-            irc.reply('ERROR: {0!s}'.format(e))
-            return
+    def nba(self, irc, msg, args, optional_team, optional_date):
+        """[<team>] [<date>]
+        Get games for a given date (YYYY-MM-DD). If none is specified, return games
+        scheduled for today. Optionally add team abbreviation to filter
+        for a specific team."""
+
+        # Check to see if there's optional input and if there is check if it's
+        # a date or a team, or both.
+        if optional_team is None:
+            team = "all"
+            try:
+                date = self._checkDateInput(optional_date)
+            except ValueError as e:
+                irc.reply('ERROR: {0!s}'.format(e))
+                return
+        else:
+            date = self._checkDateInput(optional_team)
+            if date:
+                team = "all"
+            else:
+                team = optional_team.upper()
+                try:
+                    date = self._checkDateInput(optional_date)
+                except ValueError as e:
+                    irc.reply('ERROR: {0!s}'.format(e))
+                    return
 
         if date is None:
-            irc.reply(self._getTodayGames())
+            irc.reply(self._getTodayGames(team))
         else:
-            irc.reply(self._getGamesForDate(date))
+            irc.reply(self._getGamesForDate(team, date))                                                                                                        
+    nba = wrap(nba, [optional('somethingWithoutSpaces'), optional('somethingWithoutSpaces')])
 
-    nba = wrap(nba, [optional('somethingWithoutSpaces')])
-
-    def _getTodayGames(self):
-        games = self._getGames(self._getTodayDate())
+    def _getTodayGames(self, team):
+        games = self._getGames(team, self._getTodayDate())
         return self._resultAsString(games)
 
-    def _getGamesForDate(self, date):
-        games = self._getGames(date)
+    def _getGamesForDate(self, team, date):
+        games = self._getGames(team, date)
         return self._resultAsString(games)
 
 ############################
 # Content-getting helpers
 ############################
-    def _getGames(self, date):
+    def _getGames(self, team, date):
         """Given a date, populate the url with it and try to download its
         content. If successful, parse the JSON data and extract the relevant
         fields for each game. Returns a list of games."""
@@ -96,7 +112,7 @@ class NBA(callbacks.Plugin):
         response = self._getURL(url, use_cache)
 
         json = self._extractJSON(response)
-        games = self._parseGames(json)
+        games = self._parseGames(json, team)
         return games
 
     def _getEndpointURL(self, date):
@@ -141,7 +157,7 @@ class NBA(callbacks.Plugin):
     def _extractJSON(self, body):
         return json.loads(body.decode('utf-8'))
 
-    def _parseGames(self, json):
+def _parseGames(self, json, team):
         """Extract all relevant fields from NBA.com's scoreboard.json
         and return a list of games."""
         games = []
@@ -152,7 +168,7 @@ class NBA(callbacks.Plugin):
             game_info = {'home_team': g['hTeam']['triCode'],
                          'away_team': g['vTeam']['triCode'],
                          'home_score': g['hTeam']['score'],
-                         'away_score': g['vTeam']['score'],
+                         'away_score': g['vTeam']['score'],  
                           'starting_time': starting_time,
                           'starting_time_TBD': g['isStartTimeTBD'],
                           'clock': g['clock'],
@@ -160,7 +176,13 @@ class NBA(callbacks.Plugin):
                           'buzzer_beater': g['isBuzzerBeater'],
                           'ended': (g['statusNum'] == 3)
                         }
-            games.append(game_info)
+            if team == "all":
+                games.append(game_info)
+            else:
+                if team in game_info['home_team'] or team in game_info['away_team']:
+                    games.append(game_info)
+                else:
+                    pass
         return games
 
 ############################
@@ -224,7 +246,7 @@ class NBA(callbacks.Plugin):
                                                                 game['ended']))
         # Highlighting 'buzzer-beaters':
         if game['buzzer_beater'] and not game['ended']:
-            game_string = ircutils.mircColor(game_string, 'red')
+            game_string = ircutils.mircColor(game_string, 'yellow')
 
         return game_string
 
@@ -238,23 +260,23 @@ class NBA(callbacks.Plugin):
 
         # Halftime
         if period['isHalftime']:
-            return 'Halftime'
+            return ircutils.mircColor('Halftime', 'orange')
 
         period_string = self._periodToString(period_number)
 
         # Game finished:
         if game_ended:
             if period_number == 4:
-                return ircutils.mircColor('F', 'green')
+                return ircutils.mircColor('F', 'red')
             else:
-                return ircutils.mircColor("F {}".format(period_string), 'green')
+                return ircutils.mircColor("F {}".format(period_string), 'red')
 
         # Game in progress:
         if period['isEndOfPeriod']:
-            return "E{}".format(period_string)
+            return ircutils.mircColor("E{}".format(period_string), 'yellow')
         else:
             # Period in progress, show clock:
-            return "{} {}".format(clock, period_string)
+            return "{} {}".format(clock, ircutils.mircColor(period_string, 'green'))
 
     def _periodToString(self, period):
         """Get a string describing the current period in the game.
