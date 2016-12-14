@@ -319,7 +319,7 @@ def _parseGames(self, json, team):
         for the listing of games)."""
         date = dateutil.parser.parse(iso)
         date_eastern = date.astimezone(pytz.timezone('US/Eastern'))
-        eastern_time = date_eastern.strftime('%I:%M %p')
+        eastern_time = date_eastern.strftime('%-I:%M %p')
         return "{} ET".format(eastern_time) # Strip the seconds
 
     def _stripDateSeparators(self, date_string):
