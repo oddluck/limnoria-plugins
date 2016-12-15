@@ -210,8 +210,11 @@ def _parseGames(self, json, team):
         if len(games) == 0:
             return "No games found"
         else:
-            games_strings = [self._gameToString(g) for g in games]
-            return ' | '.join(games_strings)
+            sorted_games = sorted(games, key=lambda k: k['ended']) # sort games list and put F(inal) games at end
+            b = []
+            for g in sorted_games:
+                b.append(self._gameToString(g))
+            return ' | '.join(b)
 
     def _gameToString(self, game):
         """ Given a game, format the information into a string according to the
