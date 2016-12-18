@@ -43,8 +43,8 @@ class NBA(callbacks.Plugin):
         self.__parent.__init__(irc)
 
         self._SCOREBOARD_ENDPOINT = ("http://data.nba.net/" +
-                                    "data/10s/prod/v1/{}/" +
-                                    "scoreboard.json")
+                                     "data/10s/prod/v1/{}/" +
+                                     "scoreboard.json")
 
         self._FUZZY_DAYS = ['yesterday', 'tonight', 'today', 'tomorrow']
 
@@ -87,7 +87,8 @@ class NBA(callbacks.Plugin):
         if date is None:
             irc.reply(self._getTodayGames(team))
         else:
-            irc.reply(self._getGamesForDate(team, date))                                                                                                        
+            irc.reply(self._getGamesForDate(team, date))
+
     nba = wrap(nba, [optional('somethingWithoutSpaces'), optional('somethingWithoutSpaces')])
 
     def _getTodayGames(self, team):
@@ -157,7 +158,7 @@ class NBA(callbacks.Plugin):
     def _extractJSON(self, body):
         return json.loads(body.decode('utf-8'))
 
-def _parseGames(self, json, team):
+    def _parseGames(self, json, team):
         """Extract all relevant fields from NBA.com's scoreboard.json
         and return a list of games."""
         games = []
@@ -168,21 +169,19 @@ def _parseGames(self, json, team):
             game_info = {'home_team': g['hTeam']['triCode'],
                          'away_team': g['vTeam']['triCode'],
                          'home_score': g['hTeam']['score'],
-                         'away_score': g['vTeam']['score'],  
-                          'starting_time': starting_time,
-                          'starting_time_TBD': g['isStartTimeTBD'],
-                          'clock': g['clock'],
-                          'period': g['period'],
-                          'buzzer_beater': g['isBuzzerBeater'],
-                          'ended': (g['statusNum'] == 3)
+                         'away_score': g['vTeam']['score'],
+                         'starting_time': starting_time,
+                         'starting_time_TBD': g['isStartTimeTBD'],
+                         'clock': g['clock'],
+                         'period': g['period'],
+                         'buzzer_beater': g['isBuzzerBeater'],
+                         'ended': (g['statusNum'] == 3)
                         }
-            if team == "all":
+
+            if (team == "all") or (team == game_info['home_team']) or \
+               (team == game_info['away_team']):
                 games.append(game_info)
-            else:
-                if team in game_info['home_team'] or team in game_info['away_team']:
-                    games.append(game_info)
-                else:
-                    pass
+
         return games
 
 ############################
@@ -193,7 +192,7 @@ def _parseGames(self, json, team):
 
     def _haveCachedData(self, url):
         return (self._today_scores_cached_url == url) and \
-                (self._today_scores_last_modified_time is not None)
+               (self._today_scores_last_modified_time is not None)
 
     def _cachedDataLastModified(self):
         return self._today_scores_last_modified_time
@@ -209,12 +208,10 @@ def _parseGames(self, json, team):
     def _resultAsString(self, games):
         if len(games) == 0:
             return "No games found"
-        else:
-            sorted_games = sorted(games, key=lambda k: k['ended']) # sort games list and put F(inal) games at end
-            b = []
-            for g in sorted_games:
-                b.append(self._gameToString(g))
-            return ' | '.join(b)
+
+        # sort games list and put F(inal) games at end
+        sorted_games = sorted(games, key=lambda k: k['ended'])
+        return ' | '.join([self._gameToString(g) for g in sorted_games])
 
     def _gameToString(self, game):
         """ Given a game, format the information into a string according to the
@@ -224,6 +221,7 @@ def _parseGames(self, json, team):
         "POR 36 LAC 42 8:01 Q2" (a game in progress)."""
         away_team = game['away_team']
         home_team = game['home_team']
+
         if game['period']['current'] == 0: # The game hasn't started yet
             starting_time = game['starting_time'] \
                             if not game['starting_time_TBD'] \
@@ -245,8 +243,8 @@ def _parseGames(self, json, team):
 
         game_string = "{} {} {}".format(away_string, home_string,
                                         self._clockBoardToString(game['clock'],
-                                                                game['period'],
-                                                                game['ended']))
+                                                                 game['period'],
+                                                                 game['ended']))
         # Highlighting 'buzzer-beaters':
         if game['buzzer_beater'] and not game['ended']:
             game_string = ircutils.mircColor(game_string, 'yellow')
