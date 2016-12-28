@@ -57,52 +57,85 @@ class NBA(callbacks.Plugin):
         self._today_scores_last_modified_time = None
         self._today_scores_last_modified_data = None
 
+        self._TEAM_TRICODES = ['CHA', 'ATL', 'IND', 'MEM', 'DET', 'UTA', 'CHI',
+                               'TOR', 'CLE', 'OKC', 'DAL', 'MIN', 'BOS', 'SAS',
+                               'MIA', 'DEN', 'LAL', 'PHX', 'NOP', 'MIL', 'HOU',
+                               'NYK', 'ORL', 'SAC', 'PHI', 'BKN', 'POR', 'GSW',
+                               'LAC', 'WAS']
+
     def nba(self, irc, msg, args, optional_team, optional_date):
         """[<team>] [<date>]
-        Get games for a given date (YYYY-MM-DD). If none is specified, return games
-        scheduled for today. Optionally add team abbreviation to filter
+        Get games for a given date (YYYY-MM-DD). If none is specified, return
+        games scheduled for today. Optionally add team abbreviation to filter
         for a specific team."""
 
         # Check to see if there's optional input and if there is check if it's
         # a date or a team, or both.
-        if optional_team is None:
-            team = "all"
-            try:
-                date = self._checkDateInput(optional_date)
-            except ValueError as e:
-                irc.reply('ERROR: {0!s}'.format(e))
-                return
+        try:
+            team, date = self._parseOptionalArguments(optional_team,
+                                                      optional_date)
+        except ValueError as e:
+            irc.error(str(e))
+            return
+
+        games = self._getTodayGames() if date is None \
+                                      else self._getGamesForDate(date)
+
+        games = self._filerGamesWithTeam(team, games)
+        games_string = self._resultAsString(games)
+
+        # When querying a specific game, if it has a text nugget print it:
+        if team is not None and len(games) == 1 and games[0]['text_nugget']:
+            games_string += ' | {}'.format(games[0]['text_nugget'])
+
+        irc.reply(games_string)
+
+    nba = wrap(nba, [optional('somethingWithoutSpaces'),
+                     optional('somethingWithoutSpaces')])
+
+    def _parseOptionalArguments(self, optional_team, optional_date):
+        """Parse the optional arguments, which could be None, and return
+        a (team, date) tuple. In case of finding an invalid argument, it
+        throws a ValueError exception."""
+        if optional_team is None: # No arguments
+            return (None, None)
+
+        if (optional_date is not None) and (optional_team is not None):
+            # Both arguments:
+            team = self._parseTeamInput(optional_team)
+            date = self._parseDateInput(optional_date)
+            return(team, date)
+
+        if self._isPotentialDate(optional_team): # Only one argument
+            # Should be a date.
+            team = None
+            date = self._parseDateInput(optional_team)
         else:
-            date = self._checkDateInput(optional_team)
-            if date:
-                team = "all"
-            else:
-                team = optional_team.upper()
-                try:
-                    date = self._checkDateInput(optional_date)
-                except ValueError as e:
-                    irc.reply('ERROR: {0!s}'.format(e))
-                    return
+            # Should be a team.
+            team = self._parseTeamInput(optional_team)
+            date = None
 
-        if date is None:
-            irc.reply(self._getTodayGames(team))
-        else:
-            irc.reply(self._getGamesForDate(team, date))
+        return(team, date)
 
-    nba = wrap(nba, [optional('somethingWithoutSpaces'), optional('somethingWithoutSpaces')])
+    def _getTodayGames(self):
+        return self._getGames(self._getTodayDate())
 
-    def _getTodayGames(self, team):
-        games = self._getGames(team, self._getTodayDate())
-        return self._resultAsString(games)
+    def _getGamesForDate(self, date):
+        return self._getGames(date)
 
-    def _getGamesForDate(self, team, date):
-        games = self._getGames(team, date)
-        return self._resultAsString(games)
+    def _filerGamesWithTeam(self, team, games):
+        """Given a list of games, return those that involve a given team.
+        If team is None, return the list with no modifications."""
+        if team is None:
+            return games
+
+        return [g for g in games if (team == g['home_team']) or \
+                                    (team == g['away_team'])]
 
 ############################
 # Content-getting helpers
 ############################
-    def _getGames(self, team, date):
+    def _getGames(self, date):
         """Given a date, populate the url with it and try to download its
         content. If successful, parse the JSON data and extract the relevant
         fields for each game. Returns a list of games."""
@@ -113,8 +146,8 @@ class NBA(callbacks.Plugin):
         response = self._getURL(url, use_cache)
 
         json = self._extractJSON(response)
-        games = self._parseGames(json, team)
-        return games
+
+        return self._parseGames(json)
 
     def _getEndpointURL(self, date):
         return self._SCOREBOARD_ENDPOINT.format(date)
@@ -129,7 +162,7 @@ class NBA(callbacks.Plugin):
         header = {'User-Agent': user_agent}
 
         # ('If-Modified-Since' to avoid unnecessary downloads.)
-        if use_cache and self._haveCachedData(url):
+        if use_cache and self._hasCachedData(url):
             header['If-Modified-Since'] = self._today_scores_last_modified_time
 
         request = urllib.request.Request(url, headers=header)
@@ -158,7 +191,7 @@ class NBA(callbacks.Plugin):
     def _extractJSON(self, body):
         return json.loads(body.decode('utf-8'))
 
-    def _parseGames(self, json, team):
+    def _parseGames(self, json):
         """Extract all relevant fields from NBA.com's scoreboard.json
         and return a list of games."""
         games = []
@@ -175,12 +208,11 @@ class NBA(callbacks.Plugin):
                          'clock': g['clock'],
                          'period': g['period'],
                          'buzzer_beater': g['isBuzzerBeater'],
-                         'ended': (g['statusNum'] == 3)
+                         'ended': (g['statusNum'] == 3),
+                         'text_nugget': g['nugget']['text']
                         }
 
-            if (team == "all") or (team == game_info['home_team']) or \
-               (team == game_info['away_team']):
-                games.append(game_info)
+            games.append(game_info)
 
         return games
 
@@ -190,7 +222,7 @@ class NBA(callbacks.Plugin):
     def _cachedData(self):
         return self._today_scores_last_modified_data
 
-    def _haveCachedData(self, url):
+    def _hasCachedData(self, url):
         return (self._today_scores_cached_url == url) and \
                (self._today_scores_last_modified_time is not None)
 
@@ -277,7 +309,8 @@ class NBA(callbacks.Plugin):
             return ircutils.mircColor("E{}".format(period_string), 'yellow')
         else:
             # Period in progress, show clock:
-            return "{} {}".format(clock, ircutils.mircColor(period_string, 'green'))
+            return "{} {}".format(clock, ircutils.mircColor(period_string,
+                                                            'green'))
 
     def _periodToString(self, period):
         """Get a string describing the current period in the game.
@@ -344,13 +377,31 @@ class NBA(callbacks.Plugin):
                       datetime.timedelta(days=day_delta)).strftime('%Y%m%d')
         return date_string
 
-    def _checkDateInput(self, date):
+    def _isValidTricode(self, team):
+        return (team in self._TEAM_TRICODES)
+
+############################
+# Input-parsing helpers
+############################
+    def _isPotentialDate(self, string):
+        """Given a user-provided string, check whether it could be a date."""
+        return (string in self._FUZZY_DAYS or
+                string.replace('-', '').isdigit())
+
+    def _parseTeamInput(self, team):
+        """Given a user-provided string, try to extract an upper-case team
+        tricode from it. If not valid, throws a ValueError exception."""
+        t = team.upper()
+        if not self._isValidTricode(t):
+            raise ValueError('{} is not a valid team'.format(team))
+        return t
+
+    def _parseDateInput(self, date):
         """Verify that the given string is a valid date formatted as
         YYYY-MM-DD. Also, the API seems to go back until 2014-10-04, so we
-        will check that the input is not a date earlier than that."""
-        if date is None:
-            return None
-
+        will check that the input is not a date earlier than that.
+        In case of failure, throws a ValueError exception.
+        """
         if date in self._FUZZY_DAYS:
             date = self._EnglishDateToDate(date)
         elif date.replace('-','').isdigit():
@@ -363,7 +414,7 @@ class NBA(callbacks.Plugin):
             if parsed_date.date() <  datetime.date(2014, 10, 4):
                 raise ValueError('I can only go back until 2014-10-04')
         else:
-            return None
+            raise ValueError('Date is not valid')
 
         return self._stripDateSeparators(date)
 
