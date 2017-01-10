@@ -32,7 +32,7 @@ import random
 import time
 import os
 import re
-import commands
+import subprocess
 
 import supybot.utils as utils
 from supybot.commands import *
@@ -56,11 +56,11 @@ import supybot.schedule as schedule
 try:
     from cobe.brain import Brain
 except ImportError:
-    raise callbacks.Error, 'You need to install cobe for this plugin to work!'
+    raise callbacks.Error('You need to install cobe for this plugin to work!')
 try:
     import chardet
 except ImportError:
-    raise callbacks.Error, 'You need to install chardet for this plugin to work!'
+    raise callbacks.Error('You need to install chardet for this plugin to work!')
     
 class Cobe(callbacks.Plugin):
     """
