@@ -15,7 +15,7 @@ import supybot.callbacks as callbacks
 import requests
 import json
 
-if sys.version_info >= 3:
+if sys.version_info[0] >= 3:
     from urllib.parse import quote_plus
 else:
     from urllib import quote_plus
