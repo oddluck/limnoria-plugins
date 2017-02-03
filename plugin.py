@@ -64,8 +64,9 @@ class NBA(callbacks.Plugin):
                                'LAC', 'WAS']
 
     def nba(self, irc, msg, args, optional_team, optional_date):
-        """[<team>] [<date>]
-        Get games for a given date (YYYY-MM-DD). If none is specified, return
+        """[<TTT>] [<YYYY-MM-DD>]
+
+        Get games for a given date. If none is specified, return
         games scheduled for today. Optionally add team abbreviation to filter
         for a specific team."""
 
@@ -81,13 +82,20 @@ class NBA(callbacks.Plugin):
         games = self._getTodayGames() if date is None \
                                       else self._getGamesForDate(date)
 
-        games = self._filerGamesWithTeam(team, games)
+        games = self._filterGamesWithTeam(team, games)
+
+        # No games:
+        if len(games) == 0:
+            irc.reply("No games found.")
+            return
+
         games_string = self._resultAsString(games)
 
-        # When querying a specific game, if it has a text nugget 
-        # and it's not 'Watch live', print it:
+        # When querying a specific game, if it has a text nugget and it's not
+        # 'Watch live', print it:
         enable_nugget = team is not None and len(games) == 1
-        nugget_is_interesting = games[0]['text_nugget'] and 'Watch live' not in g['nugget']['text']
+        nugget_is_interesting = games[0]['text_nugget'] and \
+                                'Watch live' not in g['nugget']['text']
         if enable_nugget and nugget_is_interesting:
             games_string += ' | {}'.format(games[0]['text_nugget'])
 
@@ -95,6 +103,32 @@ class NBA(callbacks.Plugin):
 
     nba = wrap(nba, [optional('somethingWithoutSpaces'),
                      optional('somethingWithoutSpaces')])
+
+    def tv(self, irc, msg, args, team):
+        """[<TTT>]
+
+        Given a team, if there is a game scheduled for today, return where
+        it is being broadcasted.
+        """
+        try:
+            team = self._parseTeamInput(team)
+        except ValueError as e:
+            irc.error(str(e))
+            return
+
+        games = self._filterGamesWithTeam(team, self._getTodayGames())
+
+        if len(games) == 0:
+            irc.reply('{} is not playing today.'.format(team))
+            return
+
+        game = games[0]
+        game_string = self._gameToString(game)
+        broadcasters_string = self._broadcastersToString(game['tv_broadcasters'])
+        irc.reply('{} on: {}'.format(game_string, broadcasters_string))
+
+    tv = wrap(tv, ['somethingWithoutSpaces'])
+
 
     def _parseOptionalArguments(self, optional_team, optional_date):
         """Parse the optional arguments, which could be None, and return
@@ -126,7 +160,7 @@ class NBA(callbacks.Plugin):
     def _getGamesForDate(self, date):
         return self._getGames(date)
 
-    def _filerGamesWithTeam(self, team, games):
+    def _filterGamesWithTeam(self, team, games):
         """Given a list of games, return those that involve a given team.
         If team is None, return the list with no modifications."""
         if team is None:
@@ -212,12 +246,26 @@ class NBA(callbacks.Plugin):
                          'period': g['period'],
                          'buzzer_beater': g['isBuzzerBeater'],
                          'ended': (g['statusNum'] == 3),
-                         'text_nugget': g['nugget']['text'].strip()
+                         'text_nugget': g['nugget']['text'].strip(),
+                         'tv_broadcasters': self._extractGameBroadcasters(g)
                         }
 
             games.append(game_info)
 
         return games
+
+    def _extractGameBroadcasters(self, game_json):
+        """Extract the list of broadcasters from the API. Return a dictionary
+        of broadcasts (['vTeam', 'hTeam', 'national', 'canadian']) to
+        the short name of the broadcaster."""
+        json = game_json['watch']['broadcast']['broadcasters']
+        game_broadcasters = dict()
+
+        for category in json:
+            broadcasters_list = json[category]
+            if broadcasters_list and 'shortName' in broadcasters_list[0]:
+               game_broadcasters[category] = broadcasters_list[0]['shortName']
+        return game_broadcasters
 
 ############################
 # Today's games cache
@@ -327,6 +375,16 @@ class NBA(callbacks.Plugin):
         if ot_number == 1:
             return "OT"
         return "OT{}".format(ot_number)
+
+    def _broadcastersToString(self, broadcasters):
+        """Given a broadcasters dictionary (category->name), where category
+        is in ['vTeam', 'hTeam', 'national', 'canadian'], return a printable
+        string representation of that list."""
+        items = []
+        for category in ['vTeam', 'hTeam', 'national', 'canadian']:
+            if category in broadcasters:
+                items.append(broadcasters[category])
+        return ', '.join(items)
 
 ############################
 # Date-manipulation helpers
