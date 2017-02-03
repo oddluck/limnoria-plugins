@@ -42,7 +42,7 @@ class NBA(callbacks.Plugin):
         self.__parent = super(NBA, self)
         self.__parent.__init__(irc)
 
-        self._SCOREBOARD_ENDPOINT = ("http://data.nba.net/" +
+        self._SCOREBOARD_ENDPOINT = ("https://data.nba.net/" +
                                      "data/10s/prod/v1/{}/" +
                                      "scoreboard.json")
 
