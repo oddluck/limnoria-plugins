@@ -84,8 +84,11 @@ class NBA(callbacks.Plugin):
         games = self._filerGamesWithTeam(team, games)
         games_string = self._resultAsString(games)
 
-        # When querying a specific game, if it has a text nugget print it:
-        if team is not None and len(games) == 1 and games[0]['text_nugget']:
+        # When querying a specific game, if it has a text nugget 
+        # and it's not 'Watch live', print it:
+        enable_nugget = team is not None and len(games) == 1
+        nugget_is_interesting = games[0]['text_nugget'] and 'Watch live' not in g['nugget']['text']
+        if enable_nugget and nugget_is_interesting:
             games_string += ' | {}'.format(games[0]['text_nugget'])
 
         irc.reply(games_string)
@@ -209,7 +212,7 @@ class NBA(callbacks.Plugin):
                          'period': g['period'],
                          'buzzer_beater': g['isBuzzerBeater'],
                          'ended': (g['statusNum'] == 3),
-                         'text_nugget': g['nugget']['text']
+                         'text_nugget': g['nugget']['text'].strip()
                         }
 
             games.append(game_info)
