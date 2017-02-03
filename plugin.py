@@ -84,20 +84,16 @@ class NBA(callbacks.Plugin):
 
         games = self._filterGamesWithTeam(team, games)
 
-        # No games:
-        if len(games) == 0:
-            irc.reply("No games found.")
-            return
 
         games_string = self._resultAsString(games)
 
         # When querying a specific game, if it has a text nugget and it's not
         # 'Watch live', print it:
-        enable_nugget = team is not None and len(games) == 1
-        nugget_is_interesting = games[0]['text_nugget'] and \
-                                'Watch live' not in g['nugget']['text']
-        if enable_nugget and nugget_is_interesting:
-            games_string += ' | {}'.format(games[0]['text_nugget'])
+        if len(games) == 1:
+            nugget = games[0]['text_nugget']
+            nugget_is_interesting = nugget and 'Watch live' not in nugget
+            if nugget_is_interesting:
+                games_string += ' | {}'.format(nugget)
 
         irc.reply(games_string)
 
