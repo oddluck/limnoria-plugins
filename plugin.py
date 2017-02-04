@@ -326,7 +326,7 @@ class NBA(callbacks.Plugin):
                                                                  game['ended']))
         # Highlighting 'buzzer-beaters':
         if game['buzzer_beater'] and not game['ended']:
-            game_string = ircutils.mircColor(game_string, 'yellow')
+            game_string = ircutils.mircColor(game_string, fg='yellow', bg='black')
 
         return game_string
 
@@ -353,7 +353,7 @@ class NBA(callbacks.Plugin):
 
         # Game in progress:
         if period['isEndOfPeriod']:
-            return ircutils.mircColor("E{}".format(period_string), 'yellow')
+            return ircutils.mircColor("E{}".format(period_string), 'blue')
         else:
             # Period in progress, show clock:
             return "{} {}".format(clock, ircutils.mircColor(period_string,
