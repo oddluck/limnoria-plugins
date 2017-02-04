@@ -1,5 +1,5 @@
 ###
-# Copyright (c) 2016, Liriel
+# Copyright (c) 2016 Ormanya
 # All rights reserved.
 #
 #
@@ -18,7 +18,7 @@ import supybot.world as world
 __version__ = ""
 
 # XXX Replace this with an appropriate author or supybot.Author instance.
-__author__ = 'liriel'
+__author__ = 'ormanya'
 
 # This is a dictionary mapping supybot.Author instances to lists of
 # contributions.

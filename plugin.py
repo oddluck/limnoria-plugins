@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
-
 ###
-# by liriel
+# Copyright (c) 2016-2017 Ormanya
+# All rights reserved.
+#
+#
 ###
 
 import supybot.plugins as plugins

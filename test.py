@@ -1,5 +1,5 @@
 ###
-# Copyright (c) 2016, liriel
+# Copyright (c) 2016-2017 Ormanya
 # All rights reserved.
 #
 #
