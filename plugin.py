@@ -154,7 +154,7 @@ class Cobe(callbacks.Plugin):
                 
         else: # Nope, let's make it!
                         
-            commands.getoutput('{0} {1}'.format(self._doCommand(channel), 'init'))
+            subprocess.getoutput('{0} {1}'.format(self._doCommand(channel), 'init'))
             
             text = self._cleanText(text)
             
@@ -258,7 +258,7 @@ class Cobe(callbacks.Plugin):
             if os.path.exists(self._getBrainDirectoryForChannel(channel)):
                 # Does this channel have a brain file?
                 
-                size = float(os.path.getsize(self.brainDirectories[channel]))
+                size = float(os.path.getsize(self._getBrainDirectoryForChannel(channel)))
                 irc.reply("The brain file for the channel {0} is {1}.".format(channel, self._makeSizePretty(size)))
                 
             else: # Nope, raise error msg!
@@ -306,7 +306,7 @@ class Cobe(callbacks.Plugin):
                 self.log.info("Non-existent brainfile in {0}!".format(channel))
                 self.log.info("Creating a brainfile now in {0}".format(self._getBrainDirectoryForChannel(channel)))
                 
-                commands.getoutput('{0} {1}'.format(self._doCommand(channel), 'init'))
+                subprocess.getoutput('{0} {1}'.format(self._doCommand(channel), 'init'))
                 
                 text = self._cleanText(text)
                 if text and len(text) > 1 and not text.isspace():
@@ -336,7 +336,7 @@ class Cobe(callbacks.Plugin):
             self.log.info("Non-existent brainfile in {0}!".format(channel))
             self.log.info("Creating a brainfile now in {0}".format(self._getBrainDirectoryForChannel(channel)))
             
-            commands.getoutput('{0} {1}'.format(self._doCommand(channel), 'init'))
+            subprocess.getoutput('{0} {1}'.format(self._doCommand(channel), 'init'))
             
             text = self._cleanText(text)
             if text and len(text) > 1 and not text.isspace():
@@ -367,7 +367,7 @@ class Cobe(callbacks.Plugin):
                     text = self._cleanText(text)
                     if text and len(text) > 1 and not text.isspace():
                 
-                        cobeBrain = Brain(self.brainDirectories[channel])
+                        cobeBrain = Brain(self._getBrainDirectoryForChannel(channel))
                         response = cobeBrain.reply(text).encode('utf-8')
                         irc.reply(response)
 
@@ -381,7 +381,7 @@ class Cobe(callbacks.Plugin):
                 self.log.info("Non-existent brainfile in {0}!".format(channel))
                 self.log.info("Creating a brainfile now in {0}".format(self._getBrainDirectoryForChannel(channel)))
                 
-                commands.getoutput('{0} {1}'.format(self._doCommand(channel), 'init'))
+                subprocess.getoutput('{0} {1}'.format(self._doCommand(channel), 'init'))
                 
                 text = self._cleanText(text)
                 if text and len(text) > 1 and not text.isspace():
@@ -412,7 +412,7 @@ class Cobe(callbacks.Plugin):
             self.log.info("Non-existent brainfile in {0}!".format(channel))
             self.log.info("Creating a brainfile now in {0}".format(self._getBrainDirectoryForChannel(channel)))
             
-            commands.getoutput('{0} {1}'.format(self._doCommand(channel), 'init'))
+            subprocess.getoutput('{0} {1}'.format(self._doCommand(channel), 'init'))
             
             text = self._cleanText(text)
             if text and len(text) > 1 and not text.isspace():

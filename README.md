@@ -27,7 +27,7 @@ Instructions
     
      * brainsize: Gives the size of the brain for a given channel on the disk.
      * teach: Teaches the bot a phrase.
-     * reply: Tells the bot to respond to a command without teaching it anything.
+     * respond: Tells the bot to respond to a command without teaching it anything.
 
 
 Inspiration: https://github.com/reticulatingspline/Supybot-MegaHAL
