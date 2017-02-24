@@ -53,7 +53,7 @@ class IMDB(callbacks.Plugin):
                 if not_found or unknown_error:
                     self.log.info("IMDB: OMDB error for %s" % (omdb_url))
                 else:
-                    imdb_template = self.registryValue("template")
+                    imdb_template = self.registryValue("template").decode("utf-8")
                     imdb_template = imdb_template.replace("$title", response["Title"])
                     imdb_template = imdb_template.replace("$year", response["Year"])
                     imdb_template = imdb_template.replace("$country", response["Country"])
