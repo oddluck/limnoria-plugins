@@ -63,6 +63,7 @@ class IMDB(callbacks.Plugin):
                     imdb_template = imdb_template.replace("$imdbRating", response["imdbRating"])
                     imdb_template = imdb_template.replace("$tomatoMeter", response["tomatoMeter"])
                     imdb_template = imdb_template.replace("$metascore", response["Metascore"])
+                    imdb_template = imdb_template.replace("$released",response["Released"])
                     
                     result = imdb_template
             else:
