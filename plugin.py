@@ -90,6 +90,8 @@ class NBA(callbacks.Plugin):
         # When querying a specific game, if it has a text nugget and it's not
         # 'Watch live', print it:
         if len(games) == 1:
+            broadcasters_string = self._broadcastersToString(games[0]['tv_broadcasters'])
+            games_string += ' [{}]'.format(broadcasters_string)
             nugget = games[0]['text_nugget']
             nugget_is_interesting = nugget and 'Watch live' not in nugget
             if nugget_is_interesting:
