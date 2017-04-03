@@ -12,11 +12,7 @@ import supybot.ircutils as ircutils
 import supybot.callbacks as callbacks
 import re
 import requests
-try:
-    from urllib.parse import urlencode
-    from urllib.parse import urlparse, parse_qsl
-except ImportError:
-    from urllib.parse import urlencode, urlparse, parse_qsl
+import sys
 from bs4 import BeautifulSoup
 import random
 import json
@@ -29,6 +25,12 @@ import unicodedata
 import supybot.ircdb as ircdb
 import supybot.log as log
 import pytz
+
+if sys.version_info[0] >= 3:
+    from urllib.parse import urlencode, urlparse, parse_qsl
+else:
+    from urllib import urlencode
+    from urlparse import urlparse, parse_qsl
 
 try:
     from supybot.i18n import PluginInternationalization
@@ -344,6 +346,7 @@ class SpiffyTitles(callbacks.Plugin):
                 return
 
             if url:
+                url = url.encode('utf-8')
                 # Check if channel is allowed based on white/black list restrictions
                 if not channel_is_allowed:
                     log.debug("SpiffyTitles: not responding to link in %s due to black/white list \
@@ -1400,7 +1403,7 @@ class SpiffyTitles(callbacks.Plugin):
 
         if match:
             raw_url = match.group(0).strip()
-            url = self.remove_control_characters(unicodedata.normalize('NFC', raw_url))
+            url = self.remove_control_characters(unicodedata.normalize('NFC', unicode(raw_url, 'utf-8')))
 
             return url
 
