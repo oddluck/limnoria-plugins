@@ -28,9 +28,11 @@ import pytz
 
 if sys.version_info[0] >= 3:
     from urllib.parse import urlencode, urlparse, parse_qsl
+    _str = lambda x: x
 else:
     from urllib import urlencode
     from urlparse import urlparse, parse_qsl
+    _str = lambda x: unicode(x)
 
 try:
     from supybot.i18n import PluginInternationalization
@@ -389,7 +391,7 @@ class SpiffyTitles(callbacks.Plugin):
         Retrieves the title of a website based on the URL provided
         """
         info = urlparse(url)
-        domain = info.netloc
+        domain = str(info.netloc)
         title = None
 
         """
@@ -793,7 +795,7 @@ class SpiffyTitles(callbacks.Plugin):
 
         if default_handler_enabled:
             log.debug("SpiffyTitles: calling default handler for %s" % (url))
-            default_template = Template(self.registryValue("defaultTitleTemplate", channel=channel).decode("utf-8"))
+            default_template = Template(_str(self.registryValue("defaultTitleTemplate", channel=channel)))
             (html, is_redirect) = self.get_source_by_url(url)
 
             if html is not None and html:
@@ -1280,7 +1282,7 @@ class SpiffyTitles(callbacks.Plugin):
 
             log.debug("SpiffyTitles: requesting %s" % (url))
 
-            request = requests.get(url, headers=headers, timeout=10, allow_redirects=True)
+            request = requests.get(url, headers=headers, timeout=15, allow_redirects=True, verify=False)
 
             is_redirect = False
             if request.history:
@@ -1403,7 +1405,7 @@ class SpiffyTitles(callbacks.Plugin):
 
         if match:
             raw_url = match.group(0).strip()
-            url = self.remove_control_characters(unicodedata.normalize('NFC', unicode(raw_url, 'utf-8')))
+            url = self.remove_control_characters(unicodedata.normalize('NFC', _str(raw_url)))
 
             return url
 
