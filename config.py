@@ -30,6 +30,9 @@ SpiffyTitles = conf.registerPlugin('SpiffyTitles')
 conf.registerGlobalValue(SpiffyTitles, 'maxRetries',
      registry.Integer(3, _("""Maximum retries upon failure""")))
 
+conf.registerGlobalValue(SpiffyTitles, 'verifySSL',
+        registry.Boolean(True, _("""Request websites if SSL cert verification fails?""")))
+
 conf.registerGlobalValue(SpiffyTitles, 'wallClockTimeoutInSeconds',
      registry.Integer(8, _("""Timeout for getting a title. If you set this too high, the bot will time out.""")))
 
@@ -140,10 +143,10 @@ conf.registerGlobalValue(SpiffyTitles, 'linkCacheLifetimeInSeconds',
 
 conf.registerChannelValue(SpiffyTitles, 'onDemandTitleError',
                         registry.String("Error retrieving title.", _("""This error message is used when there is a problem getting an on-demand title""")))
-                        
+
 conf.registerGlobalValue(SpiffyTitles, 'linkMessageIgnorePattern',
                         registry.Regexp("", _("""Messages matching this pattern will be ignored.""")))
-                        
+
 conf.registerChannelValue(SpiffyTitles, 'ignoreActionLinks',
      registry.Boolean(True, _("""Ignores URLs that appear in an action such as /me""")))
 

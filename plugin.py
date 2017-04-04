@@ -1266,6 +1266,7 @@ class SpiffyTitles(callbacks.Plugin):
         Get the HTML of a website based on a URL
         """
         max_retries = self.registryValue("maxRetries")
+        verify_ssl_certs = self.registryValue("verifySSL")
 
         if retries is None:
             retries = 1
@@ -1282,7 +1283,7 @@ class SpiffyTitles(callbacks.Plugin):
 
             log.debug("SpiffyTitles: requesting %s" % (url))
 
-            request = requests.get(url, headers=headers, timeout=15, allow_redirects=True, verify=False)
+            request = requests.get(url, headers=headers, timeout=15, allow_redirects=True, verify=verify_ssl_certs)
 
             is_redirect = False
             if request.history:
