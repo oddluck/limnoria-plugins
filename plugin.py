@@ -28,11 +28,9 @@ import pytz
 
 if sys.version_info[0] >= 3:
     from urllib.parse import urlencode, urlparse, parse_qsl
-    _str = lambda x: x
 else:
     from urllib import urlencode
     from urlparse import urlparse, parse_qsl
-    _str = lambda x: unicode(x)
 
 try:
     from supybot.i18n import PluginInternationalization
@@ -129,9 +127,14 @@ class SpiffyTitles(callbacks.Plugin):
 
                     if response is not None and "title" in response:
                         video = response
-                        dailymotion_template = \
-                            Template(self.registryValue("dailymotionVideoTitleTemplate",
-                                                        channel=channel).decode("utf-8"))
+                        if sys.version_info[0] >= 3:
+                            dailymotion_template = Template(
+                                self.registryValue("dailymotionVideoTitleTemplate",
+                                                   channel=channel))
+                        else:
+                            dailymotion_template = Template(
+                                self.registryValue("dailymotionVideoTitleTemplate",
+                                                   channel=channel).decode("utf-8"))
                         video["views_total"] = "{:,}".format(int(video["views_total"]))
                         video["duration"] = self.get_duration_from_seconds(video["duration"])
                         video["ownerscreenname"] = video["owner.screenname"]
@@ -184,9 +187,14 @@ class SpiffyTitles(callbacks.Plugin):
 
                     if response is not None and "title" in response[0]:
                         video = response[0]
-                        vimeo_template = Template(self.registryValue("vimeoTitleTemplate",
-                                                  channel=channel).decode("utf-8"))
-
+                        if sys.version_info[0] >= 3:
+                            vimeo_template = Template(
+                                self.registryValue("vimeoTitleTemplate",
+                                                   channel=channel))
+                        else:
+                            vimeo_template = Template(
+                                self.registryValue("vimeoTitleTemplate",
+                                                   channel=channel).decode("utf-8"))
                         """
                         Some videos do not have this information available
                         """
@@ -250,7 +258,12 @@ class SpiffyTitles(callbacks.Plugin):
 
                 if response:
                     video = response
-                    coub_template = Template(self.registryValue("coubTemplate").decode("utf-8"))
+                    if sys.version_info[0] >= 3:
+                        coub_template = Template(
+                            self.registryValue("coubTemplate"))
+                    else:
+                        coub_template = Template(
+                            self.registryValue("coubTemplate").decode("utf-8"))
 
                     video["likes_count"] = "{:,}".format(int(video["likes_count"]))
                     video["recoubs_count"] = "{:,}".format(int(video["recoubs_count"]))
@@ -348,7 +361,6 @@ class SpiffyTitles(callbacks.Plugin):
                 return
 
             if url:
-                url = url.encode('utf-8')
                 # Check if channel is allowed based on white/black list restrictions
                 if not channel_is_allowed:
                     log.debug("SpiffyTitles: not responding to link in %s due to black/white list \
@@ -618,7 +630,14 @@ class SpiffyTitles(callbacks.Plugin):
 
         log.debug("SpiffyTitles: calling Youtube handler for %s" % (url))
         video_id = self.get_video_id_from_url(url, domain)
-        yt_template = Template(self.registryValue("youtubeTitleTemplate", channel=channel).decode("utf-8"))
+        if sys.version_info[0] >= 3:
+            yt_template = Template(
+                self.registryValue("youtubeTitleTemplate",
+                                   channel=channel))
+        else:
+            yt_template = Template(
+                self.registryValue("youtubeTitleTemplate",
+                                   channel=channel).decode("utf-8"))
         title = ""
 
         if video_id:
@@ -837,7 +856,12 @@ class SpiffyTitles(callbacks.Plugin):
                 if request.status_code == requests.codes.ok:
                     response = json.loads(request.text)
                     result = None
-                    imdb_template = Template(self.registryValue("imdbTemplate").decode("utf-8"))
+                    if sys.version_info[0] >= 3:
+                        imdb_template = Template(
+                            self.registryValue("imdbTemplate"))
+                    else:
+                        imdb_template = Template(
+                            self.registryValue("imdbTemplate").decode("utf-8"))
                     not_found = "Error" in response
                     unknown_error = response["Response"] != "True"
 
@@ -941,7 +965,12 @@ class SpiffyTitles(callbacks.Plugin):
             max_chars = self.registryValue("wikipedia.maxChars", channel=channel)
             if len(extract) > max_chars:
                 extract = extract[:max_chars - 3].rsplit(' ', 1)[0].rstrip(',.') + '...'
-            extract_template = self.registryValue("wikipedia.extractTemplate", channel=channel).decode("utf-8")
+            if sys.version_info[0] >= 3:
+                extract_template = self.registryValue("wikipedia.extractTemplate",
+                                                      channel=channel)
+            else:
+                extract_template = self.registryValue("wikipedia.extractTemplate",
+                                                      channel=channel).decode("utf-8")
             wikipedia_template = Template(extract_template)
             return wikipedia_template.render({"extract": extract})
         else:
@@ -1043,8 +1072,12 @@ class SpiffyTitles(callbacks.Plugin):
                     extract = data.get('selftext', '')
             if link_type == "comment":
                 extract = data.get('body', '')
-            link_type_template = self.registryValue("reddit." + link_type + "Template",
-                                                    channel=channel).decode("utf-8")
+            if sys.version_info[0] >= 3:
+                link_type_template = self.registryValue("reddit." + link_type + "Template",
+                                                        channel=channel)
+            else:
+                link_type_template = self.registryValue("reddit." + link_type + "Template",
+                                                        channel=channel).decode("utf-8")
             reddit_template = Template(link_type_template)
             template_vars = {
                 "id": data.get('id', ''),
@@ -1129,7 +1162,12 @@ class SpiffyTitles(callbacks.Plugin):
                     album = self.imgur_client.get_album(album_id)
 
                     if album:
-                        album_template = self.registryValue("imgurAlbumTemplate", channel=channel).decode("utf-8")
+                        if sys.version_info[0] >= 3:
+                            album_template = self.registryValue(
+                                "imgurAlbumTemplate", channel=channel)
+                        else:
+                            album_template = self.registryValue(
+                                "imgurAlbumTemplate", channel=channel).decode("utf-8")
                         imgur_album_template = Template(album_template)
                         compiled_template = imgur_album_template.render({
                             "title": album.title,
@@ -1183,7 +1221,12 @@ class SpiffyTitles(callbacks.Plugin):
                     image = self.imgur_client.get_image(image_id)
 
                     if image:
-                        channel_template = self.registryValue("imgurTemplate", channel=channel).decode("utf-8")
+                        if sys.version_info[0] >= 3:
+                            channel_template = self.registryValue(
+                                "imgurTemplate", channel=channel)
+                        else:
+                            channel_template = self.registryValue(
+                                "imgurTemplate", channel=channel).decode("utf-8")
                         imgur_template = Template(channel_template)
                         readable_file_size = self.get_readable_file_size(image.size)
                         compiled_template = imgur_template.render({
@@ -1406,7 +1449,10 @@ class SpiffyTitles(callbacks.Plugin):
 
         if match:
             raw_url = match.group(0).strip()
-            url = self.remove_control_characters(unicodedata.normalize('NFC', _str(raw_url)))
+            if sys.version_info[0] >= 3:
+                url = self.remove_control_characters(unicodedata.normalize('NFC', str(raw_url)))
+            else:
+                url = self.remove_control_characters(unicodedata.normalize('NFC', unicode(raw_url)))
 
             return url
 
