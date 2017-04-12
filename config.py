@@ -40,16 +40,6 @@ conf.registerGlobalValue(SpiffyTitles, 'wallClockTimeoutInSeconds',
 conf.registerGlobalValue(SpiffyTitles, 'language',
      registry.String("en-US", _("""Language code""")))
 
-# imdb template
-conf.registerChannelValue(SpiffyTitles, 'imdbTemplate',
-     registry.String("^ {{Title}} ({{Year}}, {{Country}}) - Rating: {{imdbRating}} ::  {{Plot}}", _("""Uses http://www.omdbapi.com to provide additional information about IMDB links""")))
-
-# alternative template:
-#                     ^ {{Title}} ({{Year}} - {{Director}}) :: [i:{{imdbRating}} r:{{tomatoMeter}} m:{{Metascore}}] {{Plot}}
-
-conf.registerChannelValue(SpiffyTitles, 'coubTemplate',
-     registry.String("^ {%if not_safe_for_work %}NSFW{% endif %} [{{channel.title}}] {{title}} :: {{views_count}} views :: {{likes_count}} likes :: {{recoubs_count}} recoubs", _("""Uses Coub API to get additional information about coub.com links""")))
-
 # enable/disable toggles
 conf.registerChannelValue(SpiffyTitles, 'coubHandlerEnabled',
      registry.Boolean(True, _("""Whether to add additional information about coub links""")))
@@ -77,6 +67,17 @@ conf.registerChannelValue(SpiffyTitles, 'useBold',
 # Title template - show a warning if redirects to a different domain
 conf.registerChannelValue(SpiffyTitles, 'defaultTitleTemplate',
      registry.String("{% if redirect %}(REDIRECT) {% endif %}^ {{title}}", _("""Template used for default title responses""")))
+
+# imdb template
+conf.registerChannelValue(SpiffyTitles, 'imdbTemplate',
+     registry.String("^ {{Title}} ({{Year}}, {{Country}}) - Rating: {{imdbRating}} ::  {{Plot}}", _("""Uses http://www.omdbapi.com to provide additional information about IMDB links""")))
+
+# alternative imdb template:
+#                     ^ {{Title}} ({{Year}} - {{Director}}) :: [i:{{imdbRating}} r:{{tomatoMeter}} m:{{Metascore}}] {{Plot}}
+
+# coub template
+conf.registerChannelValue(SpiffyTitles, 'coubTemplate',
+     registry.String("^ {%if not_safe_for_work %}NSFW{% endif %} [{{channel.title}}] {{title}} :: {{views_count}} views :: {{likes_count}} likes :: {{recoubs_count}} recoubs", _("""Uses Coub API to get additional information about coub.com links""")))
 
 # YouTube template
 conf.registerChannelValue(SpiffyTitles, 'youtubeTitleTemplate',
