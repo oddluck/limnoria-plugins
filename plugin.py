@@ -127,14 +127,8 @@ class SpiffyTitles(callbacks.Plugin):
 
                     if response is not None and "title" in response:
                         video = response
-                        if sys.version_info[0] >= 3:
-                            dailymotion_template = Template(
-                                self.registryValue("dailymotionVideoTitleTemplate",
-                                                   channel=channel))
-                        else:
-                            dailymotion_template = Template(
-                                self.registryValue("dailymotionVideoTitleTemplate",
-                                                   channel=channel).decode("utf-8"))
+                        dailymotion_template = self.get_template(
+                            "dailymotionVideoTitleTemplate", channel)
                         video["views_total"] = "{:,}".format(int(video["views_total"]))
                         video["duration"] = self.get_duration_from_seconds(video["duration"])
                         video["ownerscreenname"] = video["owner.screenname"]
@@ -187,14 +181,7 @@ class SpiffyTitles(callbacks.Plugin):
 
                     if response is not None and "title" in response[0]:
                         video = response[0]
-                        if sys.version_info[0] >= 3:
-                            vimeo_template = Template(
-                                self.registryValue("vimeoTitleTemplate",
-                                                   channel=channel))
-                        else:
-                            vimeo_template = Template(
-                                self.registryValue("vimeoTitleTemplate",
-                                                   channel=channel).decode("utf-8"))
+                        vimeo_template = self.get_template("vimeoTitleTemplate", channel)
                         """
                         Some videos do not have this information available
                         """
@@ -258,13 +245,7 @@ class SpiffyTitles(callbacks.Plugin):
 
                 if response:
                     video = response
-                    if sys.version_info[0] >= 3:
-                        coub_template = Template(
-                            self.registryValue("coubTemplate"))
-                    else:
-                        coub_template = Template(
-                            self.registryValue("coubTemplate").decode("utf-8"))
-
+                    coub_template = self.get_template("coubTemplate", channel)
                     video["likes_count"] = "{:,}".format(int(video["likes_count"]))
                     video["recoubs_count"] = "{:,}".format(int(video["recoubs_count"]))
                     video["views_count"] = "{:,}".format(int(video["views_count"]))
@@ -438,7 +419,6 @@ class SpiffyTitles(callbacks.Plugin):
                 "timestamp": now,
                 "title": title
             })
-
         return title
 
     def t(self, irc, msg, args, query):
@@ -630,14 +610,7 @@ class SpiffyTitles(callbacks.Plugin):
 
         log.debug("SpiffyTitles: calling Youtube handler for %s" % (url))
         video_id = self.get_video_id_from_url(url, domain)
-        if sys.version_info[0] >= 3:
-            yt_template = Template(
-                self.registryValue("youtubeTitleTemplate",
-                                   channel=channel))
-        else:
-            yt_template = Template(
-                self.registryValue("youtubeTitleTemplate",
-                                   channel=channel).decode("utf-8"))
+        yt_template = self.get_template("youtubeTitleTemplate", channel)
         title = ""
 
         if video_id:
@@ -737,7 +710,6 @@ class SpiffyTitles(callbacks.Plugin):
             return title
         else:
             log.debug("SpiffyTitles: falling back to default handler")
-
             return self.handler_default(url, channel)
 
     def get_duration_from_seconds(self, duration_seconds):
@@ -749,7 +721,6 @@ class SpiffyTitles(callbacks.Plugin):
         """ Only include hour if the video is at least 1 hour long """
         if h > 0:
             duration = "%02d:%s" % (h, duration)
-
         return duration
 
     def get_youtube_logo(self):
@@ -759,7 +730,6 @@ class SpiffyTitles(callbacks.Plugin):
         ]
 
         yt_logo = "".join(colored_letters)
-
         return yt_logo
 
     def get_total_seconds_from_duration(self, input):
@@ -814,7 +784,7 @@ class SpiffyTitles(callbacks.Plugin):
 
         if default_handler_enabled:
             log.debug("SpiffyTitles: calling default handler for %s" % (url))
-            default_template = Template(_str(self.registryValue("defaultTitleTemplate", channel=channel)))
+            default_template = self.get_template("defaultTitleTemplate", channel)
             (html, is_redirect) = self.get_source_by_url(url)
 
             if html is not None and html:
@@ -856,12 +826,7 @@ class SpiffyTitles(callbacks.Plugin):
                 if request.status_code == requests.codes.ok:
                     response = json.loads(request.text)
                     result = None
-                    if sys.version_info[0] >= 3:
-                        imdb_template = Template(
-                            self.registryValue("imdbTemplate"))
-                    else:
-                        imdb_template = Template(
-                            self.registryValue("imdbTemplate").decode("utf-8"))
+                    imdb_template = self.get_template("imdbTemplate", channel)
                     not_found = "Error" in response
                     unknown_error = response["Response"] != "True"
 
@@ -883,7 +848,6 @@ class SpiffyTitles(callbacks.Plugin):
             return result
         else:
             log.debug("SpiffyTitles: IMDB handler failed. calling default handler")
-
             return self.handler_default(url, channel)
 
     def handler_wikipedia(self, url, domain, channel):
@@ -965,17 +929,10 @@ class SpiffyTitles(callbacks.Plugin):
             max_chars = self.registryValue("wikipedia.maxChars", channel=channel)
             if len(extract) > max_chars:
                 extract = extract[:max_chars - 3].rsplit(' ', 1)[0].rstrip(',.') + '...'
-            if sys.version_info[0] >= 3:
-                extract_template = self.registryValue("wikipedia.extractTemplate",
-                                                      channel=channel)
-            else:
-                extract_template = self.registryValue("wikipedia.extractTemplate",
-                                                      channel=channel).decode("utf-8")
-            wikipedia_template = Template(extract_template)
+            wikipedia_template = self.get_template("wikipedia.extractTemplate", channel)
             return wikipedia_template.render({"extract": extract})
         else:
             self.log.debug("SpiffyTitles: falling back to default handler")
-
             return self.handler_default(url, channel)
 
     def handler_reddit(self, url, domain, channel):
@@ -1072,13 +1029,9 @@ class SpiffyTitles(callbacks.Plugin):
                     extract = data.get('selftext', '')
             if link_type == "comment":
                 extract = data.get('body', '')
-            if sys.version_info[0] >= 3:
-                link_type_template = self.registryValue("reddit." + link_type + "Template",
-                                                        channel=channel)
-            else:
-                link_type_template = self.registryValue("reddit." + link_type + "Template",
-                                                        channel=channel).decode("utf-8")
-            reddit_template = Template(link_type_template)
+            reddit_template = self.get_template(''.join(["reddit.",
+                                                         link_type,
+                                                         "Template"]), channel)
             template_vars = {
                 "id": data.get('id', ''),
                 "user": data.get('name', ''),
@@ -1117,7 +1070,6 @@ class SpiffyTitles(callbacks.Plugin):
         Images, galleries, and albums all share their format in their identifier.
         """
         match = re.match(r"[a-z0-9]+", input, re.IGNORECASE)
-
         return match is not None
 
     def handler_imgur(self, url, info, channel):
@@ -1135,7 +1087,6 @@ class SpiffyTitles(callbacks.Plugin):
             result = self.handler_imgur_album(url, info, channel)
         else:
             result = self.handler_default(url, channel)
-
         return result
 
     def handler_imgur_album(self, url, info, channel):
@@ -1162,13 +1113,7 @@ class SpiffyTitles(callbacks.Plugin):
                     album = self.imgur_client.get_album(album_id)
 
                     if album:
-                        if sys.version_info[0] >= 3:
-                            album_template = self.registryValue(
-                                "imgurAlbumTemplate", channel=channel)
-                        else:
-                            album_template = self.registryValue(
-                                "imgurAlbumTemplate", channel=channel).decode("utf-8")
-                        imgur_album_template = Template(album_template)
+                        imgur_album_template = self.get_template("imgurAlbumTemplate", channel)
                         compiled_template = imgur_album_template.render({
                             "title": album.title,
                             "section": album.section,
@@ -1221,15 +1166,9 @@ class SpiffyTitles(callbacks.Plugin):
                     image = self.imgur_client.get_image(image_id)
 
                     if image:
-                        if sys.version_info[0] >= 3:
-                            channel_template = self.registryValue(
-                                "imgurTemplate", channel=channel)
-                        else:
-                            channel_template = self.registryValue(
-                                "imgurTemplate", channel=channel).decode("utf-8")
-                        imgur_template = Template(channel_template)
+                        imgur_image_template = self.get_template("imgurTemplate", channel)
                         readable_file_size = self.get_readable_file_size(image.size)
-                        compiled_template = imgur_template.render({
+                        compiled_template = imgur_image_template.render({
                             "title": image.title,
                             "type": image.type,
                             "nsfw": image.nsfw,
@@ -1280,7 +1219,6 @@ class SpiffyTitles(callbacks.Plugin):
             title = ircutils.bold(title)
 
         title = title.strip()
-
         return title
 
     def get_title_from_html(self, html):
@@ -1316,7 +1254,6 @@ class SpiffyTitles(callbacks.Plugin):
 
         if retries >= max_retries:
             log.debug("SpiffyTitles: hit maximum retries for %s" % url)
-
             return (None, False)
 
         log.debug("SpiffyTitles: attempt #%s for %s" % (retries, url))
@@ -1382,7 +1319,6 @@ class SpiffyTitles(callbacks.Plugin):
             log.error("SpiffyTitles HTTPError: %s" % (str(e)))
         except requests.exceptions.InvalidURL as e:
             log.error("SpiffyTitles InvalidURL: %s" % (str(e)))
-
         return (None, False)
 
     def get_base_domain(self, url):
@@ -1399,7 +1335,6 @@ class SpiffyTitles(callbacks.Plugin):
             "User-Agent": agent,
             "Accept-Language": ";".join((self.accept_language, "q=1.0"))
         }
-
         return headers
 
     def get_user_agent(self):
@@ -1407,7 +1342,6 @@ class SpiffyTitles(callbacks.Plugin):
         Returns a random user agent from the ones available
         """
         agents = self.registryValue("userAgents")
-
         return random.choice(agents)
 
     def message_matches_ignore_pattern(self, input):
@@ -1420,7 +1354,6 @@ class SpiffyTitles(callbacks.Plugin):
 
         if pattern:
             match = re.search(pattern, input)
-
         return match
 
     def title_matches_ignore_pattern(self, input, channel):
@@ -1437,7 +1370,6 @@ class SpiffyTitles(callbacks.Plugin):
             if match:
                 log.debug("SpiffyTitles: title %s matches ignoredTitlePattern for %s" %
                           (input, channel))
-
         return match
 
     def get_url_from_message(self, input):
@@ -1450,10 +1382,11 @@ class SpiffyTitles(callbacks.Plugin):
         if match:
             raw_url = match.group(0).strip()
             if sys.version_info[0] >= 3:
-                url = self.remove_control_characters(unicodedata.normalize('NFC', str(raw_url)))
+                url = self.remove_control_characters(
+                    unicodedata.normalize('NFC', str(raw_url)))
             else:
-                url = self.remove_control_characters(unicodedata.normalize('NFC', unicode(raw_url)))
-
+                url = self.remove_control_characters(
+                    unicodedata.normalize('NFC', unicode(raw_url)))
             return url
 
     def remove_control_characters(self, s):
@@ -1467,11 +1400,23 @@ class SpiffyTitles(callbacks.Plugin):
         has_cap = ircdb.checkCapability(mask, cap, ignoreDefaultAllow=True)
 
         if has_cap:
-            log.debug("SpiffyTitles: %s has required capability '%s'" % (mask, required_capability))
+            log.debug("SpiffyTitles: %s has required capability '%s'" %
+                      (mask, required_capability))
         else:
             log.debug("SpiffyTitles: %s does NOT have required capability '%s'" %
                       (mask, required_capability))
-
         return has_cap
+
+    def get_template(self, handler_template, channel):
+        """
+        Returns the requested template object.
+        """
+        if sys.version_info[0] >= 3:
+            template = Template(self.registryValue(handler_template,
+                                                   channel=channel))
+        else:
+            template = Template(self.registryValue(handler_template,
+                                                   channel=channel).decode("utf-8"))
+        return template
 
 Class = SpiffyTitles
