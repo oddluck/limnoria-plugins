@@ -41,13 +41,13 @@ conf.registerGlobalValue(SpiffyTitles, 'language',
      registry.String("en-US", _("""Language code""")))
 
 # imdb template
-conf.registerGlobalValue(SpiffyTitles, 'imdbTemplate',
+conf.registerChannelValue(SpiffyTitles, 'imdbTemplate',
      registry.String("^ {{Title}} ({{Year}}, {{Country}}) - Rating: {{imdbRating}} ::  {{Plot}}", _("""Uses http://www.omdbapi.com to provide additional information about IMDB links""")))
 
 # alternative template:
 #                     ^ {{Title}} ({{Year}} - {{Director}}) :: [i:{{imdbRating}} r:{{tomatoMeter}} m:{{Metascore}}] {{Plot}}
 
-conf.registerGlobalValue(SpiffyTitles, 'coubTemplate',
+conf.registerChannelValue(SpiffyTitles, 'coubTemplate',
      registry.String("^ {%if not_safe_for_work %}NSFW{% endif %} [{{channel.title}}] {{title}} :: {{views_count}} views :: {{likes_count}} likes :: {{recoubs_count}} recoubs", _("""Uses Coub API to get additional information about coub.com links""")))
 
 # enable/disable toggles
