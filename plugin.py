@@ -379,7 +379,7 @@ class SpiffyTitles(callbacks.Plugin):
                         log.debug("SpiffyTitles: could not get a title for %s but default \
                                    handler is disabled" % (url))
 
-    def get_title_by_url(self, url, channel,):
+    def get_title_by_url(self, url, channel):
         """
         Retrieves the title of a website based on the URL provided
         """
