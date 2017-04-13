@@ -379,7 +379,7 @@ class SpiffyTitles(callbacks.Plugin):
                         log.debug("SpiffyTitles: could not get a title for %s but default \
                                    handler is disabled" % (url))
 
-    def get_title_by_url(self, url, channel):
+    def get_title_by_url(self, url, channel,):
         """
         Retrieves the title of a website based on the URL provided
         """
@@ -430,17 +430,43 @@ class SpiffyTitles(callbacks.Plugin):
         url = self.get_url_from_message(message)
         title = None
         error_message = self.registryValue("onDemandTitleError", channel=channel)
+        handled = False
 
-        try:
-            if url:
-                title = self.get_title_by_url(query, channel)
-        except:
-            pass
+        if url:
+            title = self.get_title_by_url(query, channel)
+            if title is not None and title:
+                if "#" in channel:
+                    """
+                    This prevents the title being sent twice, when t
+                    is used in a channel, if it is handled by enabled
+                    handlers already, t will pass silently.
+                    If t is requested in a /msg, the title acquired
+                    using the enabled handlers will be replied back.
+                    """
+                    handled = True
+            else:
+                """
+                If the handlers are disabled, use the default handler
+                and attempt to get the title anyway.
+                """
+                title = self.handler_default(url, channel, t_override=True)
 
-        if title is not None and title:
-            irc.queueMsg(ircmsgs.privmsg(channel, title))
+            if not handled:
+                if title is not None and title:
+                    if "#" in channel:
+                        irc.queueMsg(ircmsgs.privmsg(channel, title))
+                    else:
+                        irc.reply(title)
+                else:
+                    """
+                    Unable to find a title in a valid URL
+                    """
+                    if "#" in channel:
+                        irc.queueMsg(ircmsgs.privmsg(channel, error_message))
+                    else:
+                        irc.reply(error_message)
         else:
-            irc.queueMsg(ircmsgs.privmsg(channel, error_message))
+            pass
 
     t = wrap(t, ['text'])
 
@@ -776,13 +802,13 @@ class SpiffyTitles(callbacks.Plugin):
         else:
             return ""
 
-    def handler_default(self, url, channel):
+    def handler_default(self, url, channel, t_override=False):
         """
         Default handler for websites
         """
         default_handler_enabled = self.registryValue("defaultHandlerEnabled", channel=channel)
-
-        if default_handler_enabled:
+        
+        if default_handler_enabled or t_override:
             log.debug("SpiffyTitles: calling default handler for %s" % (url))
             default_template = self.get_template("defaultTitleTemplate", channel)
             (html, is_redirect) = self.get_source_by_url(url)
@@ -1241,7 +1267,6 @@ class SpiffyTitles(callbacks.Plugin):
                     if len(title):
                         return title
 
-    @timeout_decorator.timeout(wall_clock_timeout)
     def get_source_by_url(self, url, retries=1):
         """
         Get the HTML of a website based on a URL
