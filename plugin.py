@@ -425,21 +425,23 @@ class SpiffyTitles(callbacks.Plugin):
         """
         Retrieves title for a URL on demand
         """
-        message = msg.args[1]
         channel = msg.args[0]
-        url = self.get_url_from_message(message)
+        is_channel = irc.isChannel(channel)
+        if not is_channel:
+            channel = msg.nick
+        url = self.get_url_from_message(query)
         title = None
         error_message = self.registryValue("onDemandTitleError", channel=channel)
         handled = False
 
         if url:
-            title = self.get_title_by_url(query, channel)
+            title = self.get_title_by_url(url, channel)
             if title is not None and title:
-                if "#" in channel:
+                if is_channel:
                     """
-                    This prevents the title being sent twice, when t
+                    This prevents the title being sent twice, when t()
                     is used in a channel, if it is handled by enabled
-                    handlers already, t will pass silently.
+                    handlers already, t() will pass silently.
                     If t is requested in a /msg, the title acquired
                     using the enabled handlers will be replied back.
                     """
@@ -453,18 +455,12 @@ class SpiffyTitles(callbacks.Plugin):
 
             if not handled:
                 if title is not None and title:
-                    if "#" in channel:
-                        irc.queueMsg(ircmsgs.privmsg(channel, title))
-                    else:
-                        irc.reply(title)
+                    irc.queueMsg(ircmsgs.privmsg(channel, title))
                 else:
                     """
                     Unable to find a title in a valid URL
                     """
-                    if "#" in channel:
-                        irc.queueMsg(ircmsgs.privmsg(channel, error_message))
-                    else:
-                        irc.reply(error_message)
+                    irc.queueMsg(ircmsgs.privmsg(channel, error_message))
         else:
             pass
 
