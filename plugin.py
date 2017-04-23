@@ -98,7 +98,7 @@ class NBA(callbacks.Plugin):
             games_string += ' [{}]'.format(broadcasters_string)
 
             nugget = games[0]['text_nugget']
-            nugget_is_interesting = nugget and 'Watch live' not in nugget
+            nugget_is_interesting = nugget and 'watch live' not in nugget.lower()
             if nugget_is_interesting:
                 games_string += ' | {}'.format(nugget)
 
