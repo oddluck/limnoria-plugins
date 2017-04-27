@@ -248,7 +248,10 @@ class NBA(callbacks.Plugin):
             # Eastern times.
             # (In the future we could add a user option to select
             # timezones.)
-            starting_time = self._ISODateToEasternTime(g['startTimeUTC'])
+            try:
+                starting_time = self._ISODateToEasternTime(g['startTimeUTC'])
+            except:
+                starting_time = 'TBD' if g['isStartTimeTBD'] else ''
             game_info = {'home_team': g['hTeam']['triCode'],
                          'away_team': g['vTeam']['triCode'],
                          'home_score': g['hTeam']['score'],
