@@ -13,6 +13,7 @@ import supybot.callbacks as callbacks
 import requests
 import json
 import sys
+import re
 
 class WebParser():
 	"""Contains functions for getting and parsing web data"""
@@ -227,6 +228,44 @@ class Trackers(callbacks.Plugin):
 			irc.reply(outStr[i])
 
 	ar = wrap(arStatus, [optional("something")])
+
+	def ahdStatus(self, irc, msg, args, all):
+		"""
+		Check the status of PTH site, tracker, and irc.
+		"""
+
+		# This function is different than the others because it scrapes HTML rather than use an api site
+		url = "https://status.awesome-hd.me"
+		site_name = "AHD"
+
+        # Get web page content
+		headers = {'User-Agent' : 'Mozilla/5.0 (X11; Linux i686) AppleWebKit/537.17 (KHTML, like Gecko) Chrome/24.0.1312.27 Safari/537.17'}
+		try:
+			content = requests.get(url, headers=headers)
+		except:
+			irc.reply("Error: Couldn't connect to "+url)
+			sys.exit()
+
+		# Extract statuses
+		status_txt = re.search(r'.*Site.*2x\ (.*)".*\n.*2x\ (.*)".*\n.*2x\ (.*)".*\n.*2x\ (.*)".*\n', content.text)
+		status = []
+		for i in range(0,5):
+			if status_txt.group(i) == "green":
+				status.append(1)
+			else:
+				status.append(0)
+
+		status = [status[1],status[2],status[4],status[3]]
+		status_headers = [site_name+" Site","IRC","Tracker","Moose"]
+		breakpoints = [0]
+		line_headers = [""]
+
+		outStr = WebParser().prepareStatusString(site_name, status, status_headers, breakpoints,line_headers)
+
+		for i in range(0, len(outStr)):
+			irc.reply(outStr[i])
+
+	ahd = wrap(ahdStatus, [optional("something")])
 
 Class = Trackers
 
