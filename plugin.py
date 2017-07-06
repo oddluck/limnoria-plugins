@@ -93,7 +93,7 @@ class Trackers(callbacks.Plugin):
 
 	def redStatus(self, irc, msg, args, all):
 		"""
-		Check the status of PTH site, tracker, and irc.
+		Check the status of RED site, tracker, and irc.
 		"""
 		url = "http://red.trackerstatus.info/api/status/"
 		site_name = "RED"
@@ -114,7 +114,7 @@ class Trackers(callbacks.Plugin):
 
 	def mtvStatus(self, irc, msg, args, all):
 		"""
-		Check the status of PTH site, tracker, and irc.
+		Check the status of MTV site, tracker, and irc.
 		"""
 		url = "http://mtv.trackerstatus.info/api/status/"
 		site_name = "MTV"
@@ -135,7 +135,7 @@ class Trackers(callbacks.Plugin):
 
 	def nwcdStatus(self, irc, msg, args, all):
 		"""
-		Check the status of PTH site, tracker, and irc.
+		Check the status of NWCD site, tracker, and irc.
 		"""
 		url = "http://nwcd.trackerstatus.info/api/status/"
 		site_name = "NWCD"
@@ -189,7 +189,7 @@ class Trackers(callbacks.Plugin):
 
 	def ggnStatus(self, irc, msg, args, all):
 		"""
-		Check the status of PTP site, tracker, and irc.
+		Check the status of GGN site, tracker, and irc.
 		"""
 		url = "https://ggn.trackerstatus.info/api/status/"
 		site_name = "GGn"
@@ -210,7 +210,7 @@ class Trackers(callbacks.Plugin):
 
 	def arStatus(self, irc, msg, args, all):
 		"""
-		Check the status of PTH site, tracker, and irc.
+		Check the status of AR site, tracker, and irc.
 		"""
 		url = "http://ar.trackerstatus.info/api/status/"
 		site_name = "AR"
@@ -231,7 +231,7 @@ class Trackers(callbacks.Plugin):
 
 	def ahdStatus(self, irc, msg, args, all):
 		"""
-		Check the status of PTH site, tracker, and irc.
+		Check the status of AHD site, tracker, and irc.
 		"""
 
 		# This function is different than the others because it scrapes HTML rather than use an api site
@@ -269,7 +269,7 @@ class Trackers(callbacks.Plugin):
 
 	def abStatus(self, irc, msg, args, all):
 		"""
-		Check the status of PTH site, tracker, and irc.
+		Check the status of AB site, tracker, and irc.
 		"""
 
 		# This function is different than the others because it scrapes HTML rather than use an api site
