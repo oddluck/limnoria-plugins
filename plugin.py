@@ -247,16 +247,17 @@ class Trackers(callbacks.Plugin):
 			sys.exit()
 
 		# Extract statuses
-		status_txt = re.search(r'.*Site.*2x\ (.*)".*\n.*2x\ (.*)".*\n.*2x\ (.*)".*\n.*2x\ (.*)".*\n', content.text)
+		status_txt = re.search(r'.*Site.*2x\ (.*)".*\n.*2x\ (.*)".*\n.*2x\ (.*)"', content.text)
+		print status_txt
 		status = []
-		for i in range(0,5):
+		for i in range(0,4):
 			if status_txt.group(i) == "green":
 				status.append(1)
 			else:
 				status.append(0)
 
-		status = [status[1],status[2],status[4],status[3]]
-		status_headers = [site_name+" Site","IRC","Tracker","Moose"]
+		status = [status[1],status[2],status[3]]
+		status_headers = [site_name+" Site","IRC","Tracker"]
 		breakpoints = [0]
 		line_headers = [""]
 
