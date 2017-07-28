@@ -306,6 +306,44 @@ class Trackers(callbacks.Plugin):
 
 	ab = wrap(abStatus, [optional("something")])
 
+	def empStatus(self, irc, msg, args, all):
+		"""
+		Check the status of EMP site, tracker, and irc.
+		"""
+
+		# This function is different than the others because it scrapes HTML rather than use an api site
+		url = "http://about.empornium.ph/"
+		site_name = "EMP"
+
+        # Get web page content
+		headers = {'User-Agent' : 'Mozilla/5.0 (X11; Linux i686) AppleWebKit/537.17 (KHTML, like Gecko) Chrome/24.0.1312.27 Safari/537.17'}
+		try:
+			content = requests.get(url, headers=headers)
+		except:
+			irc.reply("Error: Couldn't connect to "+url)
+			sys.exit()
+
+		# Extract statuses
+		status_txt = re.search(r'.*pull-right">(.*)<\/span>[\S\s.]+?pull-right">(.*)<\/span>[\S\s.]+?pull-right">(.*)<\/span>[\S\s.]+?pull-right">(.*)<\/span>', content.text)
+		status = []
+		for i in range(0,5):
+			if status_txt.group(i) == "Online":
+				status.append(1)
+			else:
+				status.append(0)
+
+		status = [status[1],status[2],status[4],status[3]]
+		status_headers = [site_name+" Site.me","Site.sx","Tracker","IRC"]
+		breakpoints = [0]
+		line_headers = [""]
+
+		outStr = WebParser().prepareStatusString(site_name, status, status_headers, breakpoints,line_headers)
+
+		for i in range(0, len(outStr)):
+			irc.reply(outStr[i])
+
+	emp = wrap(empStatus, [optional("something")])
+
 Class = Trackers
 
 
