@@ -216,8 +216,9 @@ class Trackers(callbacks.Plugin):
 		site_name = "AR"
 
 		content = WebParser().getWebData(irc,url)
+        content = content["services"]
 
-		status = [content["Website"], content["TrackerHTTP"], content["TrackerHTTPS"], content["IRC"], content["IRCTorrentAnnouncer"], content["IRCUserIdentifier"]]
+		status = [content["site"], content["tracker"], content["tracker_ssl"], content["IRC"], content["IRCTorrentAnnouncer"], content["IRCUserIdentifier"]]
 		status_headers = [site_name+" Site","Tracker","Tracker SSL","IRC","IRC Announce","IRC ID"]
 		breakpoints = [0]
 		line_headers = [""]
@@ -343,6 +344,36 @@ class Trackers(callbacks.Plugin):
 			irc.reply(outStr[i])
 
 	emp = wrap(empStatus, [optional("something")])
+
+	def mtvStatus(self, irc, msg, args, all):
+		"""
+		Check the status of Nebulance site, tracker, and irc.
+		"""
+		url = "https://status.nebulance.io/status.json"
+		site_name = "NBL"
+
+		content = WebParser().getWebData(irc,url)
+		content2 = content["services"]
+
+		status_tmp = [content2["site"]["status"],content2["tracker"]["status"],content2["ssl_tracker"]["status"],content2["imagehost"]["status"]]
+        status = []
+		for service in status_tmp:
+			if service:
+				status.append(1)
+			else:
+				status.append(0)
+		status_headers = [site_name+" Site","Tracker","Tracker SSL","Image Host"]
+
+		breakpoints = [0]
+		line_headers = [""]
+
+		outStr = WebParser().prepareStatusString(site_name, status, status_headers, breakpoints,line_headers)
+
+		for i in range(0, len(outStr)):
+			irc.reply(outStr[i])
+
+	nbl = wrap(nblStatus, [optional("something")])
+
 
 Class = Trackers
 
