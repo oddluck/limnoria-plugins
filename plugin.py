@@ -165,16 +165,16 @@ class Trackers(callbacks.Plugin):
 		content = WebParser().getWebData(irc,url)
 	
 		if all != "all":
-			status = [content["Website"], content["TrackerHTTP"], content["IRC"], content["IRCTorrentAnnouncer"], content["IRCUserIdentifier"], content["ImageHost"]]
-			status_headers = [site_name+" Site","Tracker","IRC","IRC Announce","IRC ID","Image Host"]
+			status = [content["Website"], content["TrackerHTTP"], content["IRC"], content["IRCTorrentAnnouncer"], content["IRCUserIdentifier"]]
+			status_headers = [site_name+" Site","Tracker","IRC","IRC Announce","IRC ID"]
 			breakpoints = [0]	
 			line_headers = [""]	
 		else:
-			status = ([content["Website"], content["IRCTorrentAnnouncer"], content["IRCUserIdentifier"], content["ImageHost"], 
+			status = ([content["Website"], content["IRCTorrentAnnouncer"], content["IRCUserIdentifier"], 
 				     content["TrackerHTTPAddresses"]["51.255.35.82"],
 				     content["TrackerHTTPAddresses"]["164.132.54.181"],content["TrackerHTTPAddresses"]["164.132.54.182"],content["TrackerHTTPAddresses"]["192.99.58.220"],
 				     content["IRCPersona"], content["IRCPalme"], content["IRCSaraband"]])
-			status_headers = ([site_name+" Site","IRC Announce","IRC ID","Image Host",
+			status_headers = ([site_name+" Site","IRC Announce","IRC ID",
 							 "51.255.35.82","164.132.54.181","164.132.54.182","192.99.58.220",
 							 "Persona","Palme","Saraband"])
 			breakpoints = [4,8]
@@ -196,8 +196,8 @@ class Trackers(callbacks.Plugin):
 
 		content = WebParser().getWebData(irc,url)
 	
-		status = [content["Website"], content["TrackerHTTP"], content["TrackerHTTPS"], content["IRC"], content["IRCTorrentAnnouncer"], content["IRCUserIdentifier"], content["ImageHost"]]
-		status_headers = [site_name+" Site","Tracker","TrackerSSL","IRC","IRC Announce","IRC ID","Image Host"]
+		status = [content["Website"], content["TrackerHTTP"], content["TrackerHTTPS"], content["IRC"], content["IRCTorrentAnnouncer"], content["IRCUserIdentifier"]]
+		status_headers = [site_name+" Site","Tracker","TrackerSSL","IRC","IRC Announce","IRC ID"]
 		breakpoints = [0]	
 		line_headers = [""]	
 
