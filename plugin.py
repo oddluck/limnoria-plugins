@@ -1,7 +1,7 @@
 ###
 # Limnoria plugin to retrieve results from NBA.com using their (undocumented)
 # JSON API.
-# Copyright (c) 2016, Santiago Gil
+# Copyright (c) 2018, Santiago Gil
 #
 #     This program is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU General Public License as published by
@@ -35,6 +35,7 @@ import dateutil.parser
 import json
 import pytz
 import urllib.request
+from xml.etree import ElementTree
 
 class NBA(callbacks.Plugin):
     """Get scores from NBA.com."""
@@ -65,6 +66,9 @@ class NBA(callbacks.Plugin):
                                          'HOU', 'NYK', 'ORL', 'SAC', 'PHI',
                                          'BKN', 'POR', 'GSW', 'LAC', 'WAS'))
 
+        # Function str -> str used to shorten URLs (optional):
+        self._URL_SHORTEN_FUNCTION = None
+
     def nba(self, irc, msg, args, optional_team, optional_date):
         """[<TTT>] [<YYYY-MM-DD>]
 
@@ -87,20 +91,32 @@ class NBA(callbacks.Plugin):
 
         games = self._filterGamesWithTeam(team, games)
 
-
         games_string = self._resultAsString(games)
 
-        # When querying a specific game, if it has a text nugget and
-        # it's not 'Watch live', print it:
+        # Single game query? We can show some extra info.
         if len(games) == 1:
-            broadcasters = games[0]['tv_broadcasters']
-            broadcasters_string = self._broadcastersToString(broadcasters)
-            games_string += ' [{}]'.format(broadcasters_string)
+            game = games[0]
 
-            nugget = games[0]['text_nugget']
-            nugget_is_interesting = nugget and 'watch live' not in nugget.lower()
-            if nugget_is_interesting:
-                games_string += ' | {}'.format(nugget)
+            # If the game has ended, we fetch the recap info from NBA.com:
+            if game['ended']:
+                recap = self._getRecapInfo(game, self._URL_SHORTEN_FUNCTION)
+
+                games_string += ' | {} {}'.format(ircutils.bold('Recap:'),
+                                                  recap)
+
+            else:
+                # Otherwise, when querying a specific game in progress,
+                # we show the broadcaster list.
+                # Also, if it has a text nugget, and it's not
+                # 'Watch live', we show it:
+                broadcasters = game['tv_broadcasters']
+                broadcasters_string = self._broadcastersToString(broadcasters)
+                games_string += ' [{}]'.format(broadcasters_string)
+
+                nugget = game['text_nugget']
+                nugget_is_interesting = nugget and 'Watch live' not in nugget
+                if nugget_is_interesting:
+                    games_string += ' | {}'.format(nugget)
 
         irc.reply(games_string)
 
@@ -252,10 +268,14 @@ class NBA(callbacks.Plugin):
                 starting_time = self._ISODateToEasternTime(g['startTimeUTC'])
             except:
                 starting_time = 'TBD' if g['isStartTimeTBD'] else ''
-            game_info = {'home_team': g['hTeam']['triCode'],
+            game_info = {'game_id': g['gameId'],
+                         'home_team': g['hTeam']['triCode'],
                          'away_team': g['vTeam']['triCode'],
                          'home_score': g['hTeam']['score'],
                          'away_score': g['vTeam']['score'],
+                         'starting_year': g['startDateEastern'][0:4],
+                         'starting_month': g['startDateEastern'][4:6],
+                         'starting_day': g['startDateEastern'][6:8],
                          'starting_time': starting_time,
                          'starting_time_TBD': g['isStartTimeTBD'],
                          'clock': g['clock'],
@@ -510,6 +530,45 @@ class NBA(callbacks.Plugin):
             raise ValueError('Date is not valid')
 
         return self._stripDateSeparators(date)
+
+    def _getRecapInfo(self, game, url_shortener=None):
+        """Given a finished game, fetch its recap summary and a link
+        to its video recap. It returns a string with the format
+        '{summary} (link to video)'.
+
+        If an optional function url_shortener(str) -> str is provided,
+        it is invoked on the video url.
+        """
+
+        recap_base_url = 'https://www.nba.com/video/'\
+                         '{year}/{month}/{day}/'\
+                         '{game_id}-{away_team}-{home_team}-recap.xml'
+
+        url = recap_base_url.format(year=game['starting_year'],
+                                    month=game['starting_month'],
+                                    day=game['starting_day'],
+                                    game_id=game['game_id'],
+                                    away_team=game['away_team'].lower(),
+                                    home_team=game['home_team'].lower())
+
+        xml = self._getURL(url).decode('utf-8')
+        tree = ElementTree.fromstring(xml)
+
+        res = []
+
+        summary = tree.find('description')
+        if summary is not None:
+            res.append(summary.text)
+
+        video_recap = tree.find("*file[@bitrate='1920x1080_5904']")
+        if video_recap is not None:
+            url = video_recap.text if url_shortener is None \
+                  else url_shortener(video_recap.text)
+
+            res.append('({})'.format(url))
+
+        return ' '.join(res)
+
 
 Class = NBA
 
