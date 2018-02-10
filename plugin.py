@@ -109,10 +109,13 @@ class NBA(callbacks.Plugin):
 
             # If the game has ended, we fetch the recap info from NBA.com:
             if game['ended']:
-                recap = self._getRecapInfo(game, self._URL_SHORTEN_FUNCTION)
+                try:
+                    recap = self._getRecapInfo(game, self._URL_SHORTEN_FUNCTION)
 
-                games_string += ' | {} {}'.format(ircutils.bold('Recap:'),
-                                                  recap)
+                    games_string += ' | {} {}'.format(ircutils.bold('Recap:'),
+                                                      recap)
+                except:
+                    pass
 
             else:
                 # Otherwise, when querying a specific game in progress,
