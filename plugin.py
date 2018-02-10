@@ -89,8 +89,15 @@ class NBA(callbacks.Plugin):
             irc.error(str(error))
             return
 
-        games = self._getTodayGames() if date is None \
-                                      else self._getGamesForDate(date)
+        try:
+            games = self._getTodayGames() if date is None \
+                    else self._getGamesForDate(date)
+        except ConnectionError as error:
+            irc.error('Could not connect to nba.com')
+            return
+        except:
+            irc.error('Something went wrong')
+
 
         games = self._filterGamesWithTeam(team, games)
 
@@ -240,14 +247,15 @@ class NBA(callbacks.Plugin):
             response = urllib.request.urlopen(request)
         except urllib.error.HTTPError as error:
             if use_cache and error.code == 304: # Cache hit
-                self.log.info("{} - 304"
-                              "(Last-Modified: "
-                              "{})".format(url, self._cachedDataLastModified()))
+                self.log.info('%s - 304'
+                              '(Last-Modified: '
+                              '%s)', url, self._cachedDataLastModified())
                 return self._cachedData()
             else:
-                self.log.error("HTTP Error ({}): {}".format(url, error.code))
+                self.log.error('HTTP Error (%s): %s', url, error.code)
+                raise ConnectionError('Could not access URL')
 
-        self.log.info("{} - 200".format(url))
+        self.log.info("%s - 200", url)
 
         if not use_cache:
             return response.read()
