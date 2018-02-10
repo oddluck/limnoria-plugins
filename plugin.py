@@ -56,9 +56,6 @@ class NBA(callbacks.Plugin):
                                 'HOU', 'NYK', 'ORL', 'SAC', 'PHI',
                                 'BKN', 'POR', 'GSW', 'LAC', 'WAS'))
 
-    # Function str -> str used to shorten URLs (optional):
-    _URL_SHORTEN_FUNCTION = None
-
     def __init__(self, irc):
         self.__parent = super(NBA, self)
         self.__parent.__init__(irc)
@@ -110,8 +107,7 @@ class NBA(callbacks.Plugin):
             # If the game has ended, we fetch the recap info from NBA.com:
             if game['ended']:
                 try:
-                    recap = self._getRecapInfo(game, self._URL_SHORTEN_FUNCTION)
-
+                    recap = self._getRecapInfo(game)
                     games_string += ' | {} {}'.format(ircutils.bold('Recap:'),
                                                       recap)
                 except:
@@ -569,13 +565,13 @@ class NBA(callbacks.Plugin):
 
         return cls._stripDateSeparators(date)
 
-    def _getRecapInfo(self, game, url_shortener=None):
+
+    def _getRecapInfo(self, game):
         """Given a finished game, fetch its recap summary and a link
         to its video recap. It returns a string with the format
         '{summary} (link to video)'.
 
-        If an optional function url_shortener(str) -> str is provided,
-        it is invoked on the video url.
+        The link is shortened by calling _shortenURL(str) -> str.
         """
 
         recap_base_url = 'https://www.nba.com/video/'\
@@ -600,12 +596,19 @@ class NBA(callbacks.Plugin):
 
         video_recap = tree.find("*file[@bitrate='1920x1080_5904']")
         if video_recap is not None:
-            url = video_recap.text if url_shortener is None \
-                  else url_shortener(video_recap.text)
-
+            url = self._shortenURL(video_recap.text)
             res.append('({})'.format(url))
 
         return ' '.join(res)
+
+    @staticmethod
+    def _shortenURL(url):
+        """ Run a link through an URL shortener and return the new url.
+        """
+
+        # Complete with the code that uses your desired
+        # shortener service.
+        return url
 
 
 Class = NBA
