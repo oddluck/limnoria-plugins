@@ -1,6 +1,7 @@
+""" Limnoria plugin to retrieve results from NBA.com using their
+(undocumented) JSON API.
+"""
 ###
-# Limnoria plugin to retrieve results from NBA.com using their (undocumented)
-# JSON API.
 # Copyright (c) 2018, Santiago Gil
 #
 #     This program is free software: you can redistribute it and/or modify
@@ -17,9 +18,11 @@
 #     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ###
 
-import supybot.utils as utils
-from supybot.commands import *
-import supybot.plugins as plugins
+#import supybot.utils as utils
+#from supybot.commands import *
+from supybot.commands import optional, wrap
+
+#import supybot.plugins as plugins
 import supybot.ircutils as ircutils
 import supybot.callbacks as callbacks
 try:
@@ -39,16 +42,26 @@ from xml.etree import ElementTree
 
 class NBA(callbacks.Plugin):
     """Get scores from NBA.com."""
+    _SCOREBOARD_ENDPOINT = ('https://data.nba.net/'
+                            + 'data/10s/prod/v1/{}/'
+                            + 'scoreboard.json')
+
+    _FUZZY_DAYS = frozenset(('yesterday', 'tonight',
+                             'today', 'tomorrow'))
+
+    _TEAM_TRICODES = frozenset(('CHA', 'ATL', 'IND', 'MEM', 'DET',
+                                'UTA', 'CHI', 'TOR', 'CLE', 'OKC',
+                                'DAL', 'MIN', 'BOS', 'SAS', 'MIA',
+                                'DEN', 'LAL', 'PHX', 'NOP', 'MIL',
+                                'HOU', 'NYK', 'ORL', 'SAC', 'PHI',
+                                'BKN', 'POR', 'GSW', 'LAC', 'WAS'))
+
+    # Function str -> str used to shorten URLs (optional):
+    _URL_SHORTEN_FUNCTION = None
+
     def __init__(self, irc):
         self.__parent = super(NBA, self)
         self.__parent.__init__(irc)
-
-        self._SCOREBOARD_ENDPOINT = ('https://data.nba.net/'
-                                     + 'data/10s/prod/v1/{}/'
-                                     + 'scoreboard.json')
-
-        self._FUZZY_DAYS = frozenset(('yesterday', 'tonight',
-                                      'today', 'tomorrow'))
 
         # These two variables store the latest data acquired from the
         # server and its modification time. It's a one-element cache.
@@ -58,16 +71,6 @@ class NBA(callbacks.Plugin):
         self._today_scores_cached_url = None
         self._today_scores_last_modified_time = None
         self._today_scores_last_modified_data = None
-
-        self._TEAM_TRICODES = frozenset(('CHA', 'ATL', 'IND', 'MEM', 'DET',
-                                         'UTA', 'CHI', 'TOR', 'CLE', 'OKC',
-                                         'DAL', 'MIN', 'BOS', 'SAS', 'MIA',
-                                         'DEN', 'LAL', 'PHX', 'NOP', 'MIL',
-                                         'HOU', 'NYK', 'ORL', 'SAC', 'PHI',
-                                         'BKN', 'POR', 'GSW', 'LAC', 'WAS'))
-
-        # Function str -> str used to shorten URLs (optional):
-        self._URL_SHORTEN_FUNCTION = None
 
     def nba(self, irc, msg, args, optional_team, optional_date):
         """[<TTT>] [<YYYY-MM-DD>]
@@ -82,8 +85,8 @@ class NBA(callbacks.Plugin):
         try:
             team, date = self._parseOptionalArguments(optional_team,
                                                       optional_date)
-        except ValueError as e:
-            irc.error(str(e))
+        except ValueError as error:
+            irc.error(str(error))
             return
 
         games = self._getTodayGames() if date is None \
@@ -131,13 +134,13 @@ class NBA(callbacks.Plugin):
         """
         try:
             team = self._parseTeamInput(team)
-        except ValueError as e:
-            irc.error(str(e))
+        except ValueError as error:
+            irc.error(str(error))
             return
 
         games = self._filterGamesWithTeam(team, self._getTodayGames())
 
-        if len(games) == 0:
+        if not games:
             irc.reply('{} is not playing today.'.format(team))
             return
 
@@ -149,7 +152,8 @@ class NBA(callbacks.Plugin):
     tv = wrap(tv, ['somethingWithoutSpaces'])
 
 
-    def _parseOptionalArguments(self, optional_team, optional_date):
+    @classmethod
+    def _parseOptionalArguments(cls, optional_team, optional_date):
         """Parse the optional arguments, which could be None, and return
         a (team, date) tuple. In case of finding an invalid argument, it
         throws a ValueError exception.
@@ -160,18 +164,18 @@ class NBA(callbacks.Plugin):
 
         # Both arguments:
         if (optional_date is not None) and (optional_team is not None):
-            team = self._parseTeamInput(optional_team)
-            date = self._parseDateInput(optional_date)
+            team = cls._parseTeamInput(optional_team)
+            date = cls._parseDateInput(optional_date)
             return (team, date)
 
         # Only one argument:
-        if self._isPotentialDate(optional_team):
+        if cls._isPotentialDate(optional_team):
             # Should be a date.
             team = None
-            date = self._parseDateInput(optional_team)
+            date = cls._parseDateInput(optional_team)
         else:
             # Should be a team.
-            team = self._parseTeamInput(optional_team)
+            team = cls._parseTeamInput(optional_team)
             date = None
 
         return (team, date)
@@ -182,7 +186,8 @@ class NBA(callbacks.Plugin):
     def _getGamesForDate(self, date):
         return self._getGames(date)
 
-    def _filterGamesWithTeam(self, team, games):
+    @staticmethod
+    def _filterGamesWithTeam(team, games):
         """Given a list of games, return those that involve a given
         team. If team is None, return the list with no modifications.
         """
@@ -190,7 +195,7 @@ class NBA(callbacks.Plugin):
             return games
 
         return [g for g in games if team == g['home_team']
-                                    or team == g['away_team']]
+                or team == g['away_team']]
 
 ############################
 # Content-getting helpers
@@ -206,12 +211,13 @@ class NBA(callbacks.Plugin):
         use_cache = (date == self._getTodayDate())
         response = self._getURL(url, use_cache)
 
-        json = self._extractJSON(response)
+        json_data = self._extractJSON(response)
 
-        return self._parseGames(json)
+        return self._parseGames(json_data)
 
-    def _getEndpointURL(self, date):
-        return self._SCOREBOARD_ENDPOINT.format(date)
+    @classmethod
+    def _getEndpointURL(cls, date):
+        return cls._SCOREBOARD_ENDPOINT.format(date)
 
     def _getURL(self, url, use_cache=False):
         """Use urllib to download the URL's content.
@@ -240,7 +246,6 @@ class NBA(callbacks.Plugin):
                 return self._cachedData()
             else:
                 self.log.error("HTTP Error ({}): {}".format(url, error.code))
-                pass
 
         self.log.info("{} - 200".format(url))
 
@@ -251,23 +256,26 @@ class NBA(callbacks.Plugin):
         self._updateCache(url, response)
         return self._cachedData()
 
-    def _extractJSON(self, body):
+    @staticmethod
+    def _extractJSON(body):
         return json.loads(body.decode('utf-8'))
 
-    def _parseGames(self, json):
+    @classmethod
+    def _parseGames(cls, json_data):
         """Extract all relevant fields from NBA.com's scoreboard.json
         and return a list of games.
         """
         games = []
-        for g in json['games']:
+        for g in json_data['games']:
             # Starting times are in UTC. By default, we will show
             # Eastern times.
             # (In the future we could add a user option to select
             # timezones.)
             try:
-                starting_time = self._ISODateToEasternTime(g['startTimeUTC'])
+                starting_time = cls._ISODateToEasternTime(g['startTimeUTC'])
             except:
                 starting_time = 'TBD' if g['isStartTimeTBD'] else ''
+
             game_info = {'game_id': g['gameId'],
                          'home_team': g['hTeam']['triCode'],
                          'away_team': g['vTeam']['triCode'],
@@ -283,26 +291,27 @@ class NBA(callbacks.Plugin):
                          'buzzer_beater': g['isBuzzerBeater'],
                          'ended': (g['statusNum'] == 3),
                          'text_nugget': g['nugget']['text'].strip(),
-                         'tv_broadcasters': self._extractGameBroadcasters(g)
+                         'tv_broadcasters': cls._extractGameBroadcasters(g)
                         }
 
             games.append(game_info)
 
         return games
 
-    def _extractGameBroadcasters(self, game_json):
+    @staticmethod
+    def _extractGameBroadcasters(game_json):
         """Extract the list of broadcasters from the API.
         Return a dictionary of broadcasts:
         (['vTeam', 'hTeam', 'national', 'canadian']) to
         the short name of the broadcaster.
         """
-        json = game_json['watch']['broadcast']['broadcasters']
+        json_data = game_json['watch']['broadcast']['broadcasters']
         game_broadcasters = dict()
 
-        for category in json:
-            broadcasters_list = json[category]
+        for category in json_data:
+            broadcasters_list = json_data[category]
             if broadcasters_list and 'shortName' in broadcasters_list[0]:
-               game_broadcasters[category] = broadcasters_list[0]['shortName']
+                game_broadcasters[category] = broadcasters_list[0]['shortName']
         return game_broadcasters
 
 ############################
@@ -326,15 +335,17 @@ class NBA(callbacks.Plugin):
 ############################
 # Formatting helpers
 ############################
-    def _resultAsString(self, games):
-        if len(games) == 0:
+    @classmethod
+    def _resultAsString(cls, games):
+        if not games:
             return "No games found"
 
         # sort games list and put F(inal) games at end
         sorted_games = sorted(games, key=lambda k: k['ended'])
-        return ' | '.join([self._gameToString(g) for g in sorted_games])
+        return ' | '.join([cls._gameToString(g) for g in sorted_games])
 
-    def _gameToString(self, game):
+    @classmethod
+    def _gameToString(cls, game):
         """ Given a game, format the information into a string
         according to the context.
 
@@ -367,47 +378,49 @@ class NBA(callbacks.Plugin):
             home_string = ircutils.bold(home_string)
 
         game_string = "{} {} {}".format(away_string, home_string,
-                                        self._clockBoardToString(game['clock'],
-                                                                 game['period'],
-                                                                 game['ended']))
+                                        cls._clockBoardToString(game['clock'],
+                                                                game['period'],
+                                                                game['ended']))
         # Highlighting 'buzzer-beaters':
         if game['buzzer_beater'] and not game['ended']:
             game_string = ircutils.mircColor(game_string, fg='yellow',
-                                                          bg='black')
+                                             bg='black')
 
         return game_string
 
-    def _clockBoardToString(self, clock, period, game_ended):
+    @classmethod
+    def _clockBoardToString(cls, clock, period, game_ended):
         """Get a string with current period and, if the game is still
         in progress, the remaining time in it.
         """
         period_number = period['current']
         # Game hasn't started => There is no clock yet.
         if period_number == 0:
-            return ""
+            return ''
 
         # Halftime
         if period['isHalftime']:
             return ircutils.mircColor('Halftime', 'orange')
 
-        period_string = self._periodToString(period_number)
+        period_string = cls._periodToString(period_number)
 
         # Game finished:
         if game_ended:
             if period_number == 4:
                 return ircutils.mircColor('F', 'red')
-            else:
-                return ircutils.mircColor("F {}".format(period_string), 'red')
+
+            return ircutils.mircColor("F {}".format(period_string), 'red')
 
         # Game in progress:
         if period['isEndOfPeriod']:
             return ircutils.mircColor("E{}".format(period_string), 'blue')
-        else:
-            # Period in progress, show clock:
-            return "{} {}".format(clock, ircutils.mircColor(period_string,
-                                                            'green'))
 
-    def _periodToString(self, period):
+        # Period in progress, show clock:
+        return "{} {}".format(clock, ircutils.mircColor(period_string,
+                                                        'green'))
+
+    @staticmethod
+    def _periodToString(period):
         """Get a string describing the current period in the game.
 
         Period is an integer counting periods from 1 (so 5 would be
@@ -423,7 +436,8 @@ class NBA(callbacks.Plugin):
             return "OT"
         return "OT{}".format(ot_number)
 
-    def _broadcastersToString(self, broadcasters):
+    @staticmethod
+    def _broadcastersToString(broadcasters):
         """Given a broadcasters dictionary (category->name), where
         category is in ['vTeam', 'hTeam', 'national', 'canadian'],
         return a printable string representation of that list.
@@ -437,7 +451,8 @@ class NBA(callbacks.Plugin):
 ############################
 # Date-manipulation helpers
 ############################
-    def _getTodayDate(self):
+    @classmethod
+    def _getTodayDate(cls):
         """Get the current date formatted as "YYYYMMDD".
         Because the API separates games by day of start, we will
         consider and return the date in the Pacific timezone.
@@ -448,17 +463,20 @@ class NBA(callbacks.Plugin):
         Taking the west coast time guarantees that the day will advance
         only when the whole continental US is already on that day.
         """
-        today = self._pacificTimeNow().date()
+        today = cls._pacificTimeNow().date()
         today_iso = today.isoformat()
         return today_iso.replace('-', '')
 
-    def _easternTimeNow(self):
+    @staticmethod
+    def _easternTimeNow():
         return datetime.datetime.now(pytz.timezone('US/Eastern'))
 
-    def _pacificTimeNow(self):
+    @staticmethod
+    def _pacificTimeNow():
         return datetime.datetime.now(pytz.timezone('US/Pacific'))
 
-    def _ISODateToEasternTime(self, iso):
+    @staticmethod
+    def _ISODateToEasternTime(iso):
         """Convert the ISO date in UTC time that the API outputs into an
         Eastern time formatted with am/pm.
         (The default human-readable format for the listing of games).
@@ -468,68 +486,77 @@ class NBA(callbacks.Plugin):
         eastern_time = date_eastern.strftime('%-I:%M %p')
         return "{} ET".format(eastern_time) # Strip the seconds
 
-    def _stripDateSeparators(self, date_string):
+    @staticmethod
+    def _stripDateSeparators(date_string):
         return date_string.replace('-', '')
 
-    def _EnglishDateToDate(self, date):
+    @classmethod
+    def _EnglishDateToDate(cls, date):
         """Convert a human-readable like 'yesterday' to a datetime
         object and return a 'YYYYMMDD' string.
         """
-        if date == "yesterday":
+        if date == 'yesterday':
             day_delta = -1
-        elif date == "today" or date =="tonight":
+        elif date == 'today' or date == 'tonight':
             day_delta = 0
-        elif date == "tomorrow":
+        elif date == 'tomorrow':
             day_delta = 1
         # Calculate the day difference and return a string
-        date_string = (self._pacificTimeNow() +
-                      datetime.timedelta(days=day_delta)).strftime('%Y%m%d')
+        date_string = (cls._pacificTimeNow() +
+                       datetime.timedelta(days=day_delta)).strftime('%Y%m%d')
         return date_string
 
-    def _isValidTricode(self, team):
-        return (team in self._TEAM_TRICODES)
+    @classmethod
+    def _isValidTricode(cls, team):
+        return team in cls._TEAM_TRICODES
 
 ############################
 # Input-parsing helpers
 ############################
-    def _isPotentialDate(self, string):
+    @classmethod
+    def _isPotentialDate(cls, string):
         """Given a user-provided string, check whether it could be a
         date.
         """
-        return (string in self._FUZZY_DAYS or
+        return (string.lower() in cls._FUZZY_DAYS or
                 string.replace('-', '').isdigit())
 
-    def _parseTeamInput(self, team):
+    @classmethod
+    def _parseTeamInput(cls, team):
         """Given a user-provided string, try to extract an upper-case
         team tricode from it. If not valid, throws a ValueError
         exception.
         """
         t = team.upper()
-        if not self._isValidTricode(t):
+        if not cls._isValidTricode(t):
             raise ValueError('{} is not a valid team'.format(team))
         return t
 
-    def _parseDateInput(self, date):
+    @classmethod
+    def _parseDateInput(cls, date):
         """Verify that the given string is a valid date formatted as
         YYYY-MM-DD. Also, the API seems to go back until 2014-10-04,
         so we will check that the input is not a date earlier than that.
         In case of failure, throws a ValueError exception.
         """
-        if date in self._FUZZY_DAYS:
-            date = self._EnglishDateToDate(date)
-        elif date.replace('-','').isdigit():
+        date = date.lower()
+
+        if date in cls._FUZZY_DAYS:
+            date = cls._EnglishDateToDate(date)
+
+        elif date.replace('-', '').isdigit():
             try:
                 parsed_date = datetime.datetime.strptime(date, '%Y-%m-%d')
             except:
                 raise ValueError('Incorrect date format, should be YYYY-MM-DD')
 
             # The current API goes back until 2014-10-04. Is it in range?
-            if parsed_date.date() <  datetime.date(2014, 10, 4):
+            if parsed_date.date() < datetime.date(2014, 10, 4):
                 raise ValueError('I can only go back until 2014-10-04')
         else:
             raise ValueError('Date is not valid')
 
-        return self._stripDateSeparators(date)
+        return cls._stripDateSeparators(date)
 
     def _getRecapInfo(self, game, url_shortener=None):
         """Given a finished game, fetch its recap summary and a link
