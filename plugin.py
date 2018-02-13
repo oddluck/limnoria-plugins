@@ -35,6 +35,7 @@ except ImportError:
 
 import datetime
 import dateutil.parser
+import httplib2
 import json
 import pytz
 import urllib.request
@@ -43,7 +44,7 @@ from xml.etree import ElementTree
 class NBA(callbacks.Plugin):
     """Get scores from NBA.com."""
     _SCOREBOARD_ENDPOINT = ('https://data.nba.net/'
-                            + 'data/10s/prod/v1/{}/'
+                            + 'data/10s/prod/v2/{}/'
                             + 'scoreboard.json')
 
     _FUZZY_DAYS = frozenset(('yesterday', 'tonight',
@@ -60,14 +61,7 @@ class NBA(callbacks.Plugin):
         self.__parent = super(NBA, self)
         self.__parent.__init__(irc)
 
-        # These two variables store the latest data acquired from the
-        # server and its modification time. It's a one-element cache.
-        # They are used to employ HTTP's 'If-Modified-Since' header and
-        # avoid unnecessary downloads for today's information (which
-        # will be requested all the time to update the scores).
-        self._today_scores_cached_url = None
-        self._today_scores_last_modified_time = None
-        self._today_scores_last_modified_data = None
+        self._http = httplib2.Http('.cache')
 
     def nba(self, irc, msg, args, optional_team, optional_date):
         """[<TTT>] [<YYYY-MM-DD>]
@@ -94,6 +88,7 @@ class NBA(callbacks.Plugin):
             return
         except:
             irc.error('Something went wrong')
+            return
 
 
         games = self._filterGamesWithTeam(team, games)
@@ -213,9 +208,10 @@ class NBA(callbacks.Plugin):
         """
         url = self._getEndpointURL(date)
 
-        # (If asking for today's results, enable the 'If-Mod.-Since' flag)
-        use_cache = (date == self._getTodayDate())
-        response = self._getURL(url, use_cache)
+        # If asking for today's results, revalidate the cached data.
+        # ('If-Mod.-Since' flag.)
+        revalidate_cache = (date == self._getTodayDate())
+        response = self._getURL(url, revalidate_cache)
 
         json_data = self._extractJSON(response)
 
@@ -225,47 +221,36 @@ class NBA(callbacks.Plugin):
     def _getEndpointURL(cls, date):
         return cls._SCOREBOARD_ENDPOINT.format(date)
 
-    def _getURL(self, url, use_cache=False):
-        """Use urllib to download the URL's content.
-        The use_cache flag enables the use of the one-element cache,
-        which will be reserved for today's games URL.
-        (In the future we could implement a real cache with TTLs).
+    def _getURL(self, url, force_revalidation=False):
+        """Use httplib2 to download the URL's content.
+
+        The force_revalidation parameter forces the data to be validated
+        before being returned. In the worst case the data has not
+        changed in the server, and we get a '304 - Not Modified'
+        response.
         """
         user_agent = 'Mozilla/5.0 \
                       (X11; Ubuntu; Linux x86_64; rv:45.0) \
                       Gecko/20100101 Firefox/45.0'
         header = {'User-Agent': user_agent}
 
-        # ('If-Modified-Since' to avoid unnecessary downloads.)
-        if use_cache and self._hasCachedData(url):
-            header['If-Modified-Since'] = self._today_scores_last_modified_time
+        if force_revalidation:
+            header['Cache-Control'] = 'max-age=0'
 
-        request = urllib.request.Request(url, headers=header)
+        response, content = self._http.request(url, 'GET', headers=header)
 
-        try:
-            response = urllib.request.urlopen(request)
-        except urllib.error.HTTPError as error:
-            if use_cache and error.code == 304: # Cache hit
-                self.log.info('%s - 304'
-                              '(Last-Modified: '
-                              '%s)', url, self._cachedDataLastModified())
-                return self._cachedData()
-            else:
-                self.log.error('HTTP Error (%s): %s', url, error.code)
-                raise ConnectionError('Could not access URL')
+        if response.fromcache:
+            self.log.debug('%s - 304/Cache Hit', url)
 
-        self.log.info("%s - 200", url)
+        if response.status == 200:
+            return content
 
-        if not use_cache:
-            return response.read()
-
-        # Updating the cached data:
-        self._updateCache(url, response)
-        return self._cachedData()
+        self.log.error('HTTP Error (%s): %s', url, error.code)
+        raise ConnectionError('Could not access URL')
 
     @staticmethod
     def _extractJSON(body):
-        return json.loads(body.decode('utf-8'))
+        return json.loads(body)
 
     @classmethod
     def _parseGames(cls, json_data):
@@ -320,24 +305,6 @@ class NBA(callbacks.Plugin):
             if broadcasters_list and 'shortName' in broadcasters_list[0]:
                 game_broadcasters[category] = broadcasters_list[0]['shortName']
         return game_broadcasters
-
-############################
-# Today's games cache
-############################
-    def _cachedData(self):
-        return self._today_scores_last_modified_data
-
-    def _hasCachedData(self, url):
-        return (self._today_scores_cached_url == url
-                and self._today_scores_last_modified_time is not None)
-
-    def _cachedDataLastModified(self):
-        return self._today_scores_last_modified_time
-
-    def _updateCache(self, url, response):
-        self._today_scores_cached_url = url
-        self._today_scores_last_modified_time = response.headers['last-modified']
-        self._today_scores_last_modified_data = response.read()
 
 ############################
 # Formatting helpers
