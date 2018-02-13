@@ -38,14 +38,19 @@ import dateutil.parser
 import httplib2
 import json
 import pytz
-import urllib.request
 from xml.etree import ElementTree
 
 class NBA(callbacks.Plugin):
     """Get scores from NBA.com."""
-    _SCOREBOARD_ENDPOINT = ('https://data.nba.net/'
-                            + 'data/10s/prod/v2/{}/'
+
+    _ENDPOINT_BASE_URL = 'https://data.nba.net'
+
+    _SCOREBOARD_ENDPOINT = (_ENDPOINT_BASE_URL
+                            + '/10s/prod/v2/{}/'
                             + 'scoreboard.json')
+
+    _TODAY_ENDPOINT = (_ENDPOINT_BASE_URL
+                       + '/prod/v3/today.json')
 
     _FUZZY_DAYS = frozenset(('yesterday', 'tonight',
                              'today', 'tomorrow'))
@@ -89,7 +94,6 @@ class NBA(callbacks.Plugin):
         except:
             irc.error('Something went wrong')
             return
-
 
         games = self._filterGamesWithTeam(team, games)
 
@@ -152,6 +156,78 @@ class NBA(callbacks.Plugin):
 
     tv = wrap(tv, ['somethingWithoutSpaces'])
 
+    def next(self, irc, msg, args, n, team):
+        """[n] <TTT>
+
+        Given a team, get the next <n> games (1 by default; max. 10).
+
+        """
+        MAX_GAMES_IN_RESULT = 10
+
+        try:
+            team = self._parseTeamInput(team)
+            team_schedule = self._getTeamSchedule(team)
+        except ValueError as error:
+            irc.error(str(error))
+            return
+
+        last_played = team_schedule['lastStandardGamePlayedIndex']
+
+        # Keeping only the games that haven't been played:
+        future_games = team_schedule['standard'][last_played+1:]
+
+        if not future_games:
+            irc.error('I could not find future games')
+            return
+
+        if n is None:
+            n = 1
+        end = min(MAX_GAMES_IN_RESULT, n, len(future_games)-1)
+
+        #res = []
+        for game in future_games[:end]:
+            #res.append(self._upcomingGameToString(game))
+            irc.reply(self._upcomingGameToString(game))
+
+    next = wrap(next, [optional('positiveInt'), 'somethingWithoutSpaces'])
+
+    def last(self, irc, msg, args, n, team):
+        """[<n>] <TTT>
+
+        Given a team, get the last <n> games (1 by default; max. 10).
+
+        """
+        MAX_GAMES_IN_RESULT = 10
+
+        try:
+            team = self._parseTeamInput(team)
+            team_schedule = self._getTeamSchedule(team)
+        except ValueError as error:
+            irc.error(str(error))
+            return
+
+        last_played = team_schedule['lastStandardGamePlayedIndex']
+
+        # Keeping only the games that have been played:
+        past_games = team_schedule['standard'][:last_played+1]
+        past_games.reverse() # (First game is the most recent)
+
+        if not past_games:
+            irc.error('I could not find past games')
+            return
+
+        if n is None:
+            n = 1
+        end = min(MAX_GAMES_IN_RESULT, n, len(past_games)-1)
+
+        res = []
+        for game in past_games[:end]:
+            res.append(self._pastGameToString(game))
+
+        for line in reversed(res):
+            irc.reply(line)
+
+    last = wrap(last, [optional('positiveInt'), 'somethingWithoutSpaces'])
 
     @classmethod
     def _parseOptionalArguments(cls, optional_team, optional_date):
@@ -201,6 +277,10 @@ class NBA(callbacks.Plugin):
 ############################
 # Content-getting helpers
 ############################
+    def _getTodayJSON(self):
+        today_url = self._ENDPOINT_BASE_URL + '/10s/prod/v3/today.json'
+        return self._getJSON(today_url)
+
     def _getGames(self, date):
         """Given a date, populate the url with it and try to download
         its content. If successful, parse the JSON data and extract the
@@ -209,7 +289,7 @@ class NBA(callbacks.Plugin):
         url = self._getEndpointURL(date)
 
         # If asking for today's results, revalidate the cached data.
-        # ('If-Mod.-Since' flag.)
+        # ('If-Mod.-Since' flag.). This allows to get real-time scores.
         revalidate_cache = (date == self._getTodayDate())
         response = self._getURL(url, revalidate_cache)
 
@@ -221,13 +301,59 @@ class NBA(callbacks.Plugin):
     def _getEndpointURL(cls, date):
         return cls._SCOREBOARD_ENDPOINT.format(date)
 
+    def _getTeamSchedule(self, tricode):
+        """Fetch the json with the given team's schedule"""
+
+        # First we fetch `today.json` to extract the path to teams'
+        # schedules and `seasonScheduleYear`:
+        today_json = self._getTodayJSON()
+        schedule_path = today_json['links']['teamScheduleYear2']
+        season_year = today_json['seasonScheduleYear']
+
+        # We also need to convert the `tricode` to a `team_id`:
+        team_id = self._tricodeToTeamId(tricode)
+
+        # (The path looks like this:
+        # '/prod/v1/{{seasonScheduleYear}}/teams/{{teamId}}/schedule.json')
+
+        # Now we can fill-in the url:
+        schedule_path = schedule_path.replace('{{teamId}}', team_id)
+        schedule_path = schedule_path.replace('{{seasonScheduleYear}}',
+                                              str(season_year))
+
+        return self._getJSON(self._ENDPOINT_BASE_URL + schedule_path)['league']
+
+    def _tricodeToTeamId(self, tricode):
+        """Given a valid team tricode, get the `teamId` used in NBA.com"""
+
+        teams_path = self._getJSON(self._TODAY_ENDPOINT)['links']['teams']
+        teams_json = self._getJSON(self._ENDPOINT_BASE_URL + teams_path)
+
+        for team in teams_json['league']['standard']:
+            if team['tricode'] == tricode:
+                return team['teamId']
+
+        raise ValueError('{} is not a valid tricode'.format(tricode))
+
+    def _teamIdToTricode(self, team_id):
+        """Given a valid teamId, get the team's tricode"""
+
+        teams_path = self._getJSON(self._TODAY_ENDPOINT)['links']['teams']
+        teams_json = self._getJSON(self._ENDPOINT_BASE_URL + teams_path)
+
+        for team in teams_json['league']['standard']:
+            if team['teamId'] == team_id:
+                return team['tricode']
+
+        raise ValueError('{} is not a valid teamId'.format(team_id))
+
     def _getURL(self, url, force_revalidation=False):
         """Use httplib2 to download the URL's content.
 
-        The force_revalidation parameter forces the data to be validated
-        before being returned. In the worst case the data has not
-        changed in the server, and we get a '304 - Not Modified'
-        response.
+        The `force_revalidation` parameter forces the data to be
+        validated before being returned from the cache.
+        In the worst case the data has not changed in the server,
+        and we get a '304 - Not Modified' response.
         """
         user_agent = 'Mozilla/5.0 \
                       (X11; Ubuntu; Linux x86_64; rv:45.0) \
@@ -251,6 +377,10 @@ class NBA(callbacks.Plugin):
     @staticmethod
     def _extractJSON(body):
         return json.loads(body)
+
+    def _getJSON(self, url):
+        """Fetch `url` and return its contents decoded as json."""
+        return self._extractJSON(self._getURL(url))
 
     @classmethod
     def _parseGames(cls, json_data):
@@ -422,6 +552,55 @@ class NBA(callbacks.Plugin):
                 items.append(broadcasters[category])
         return ', '.join(items)
 
+    def _upcomingGameToString(self, game):
+        """Given a team's upcoming game, return a string with
+        the opponent's tricode and the date of the game.
+        """
+
+        date = self._ISODateToEasternDatetime(game['startTimeUTC'])
+
+        home_tricode = self._teamIdToTricode(game['hTeam']['teamId'])
+        away_tricode = self._teamIdToTricode(game['vTeam']['teamId'])
+
+        if game['isHomeTeam']:
+            home_tricode = ircutils.bold(home_tricode)
+        else:
+            away_tricode = ircutils.bold(away_tricode)
+
+        return '{} | {} @ {}'.format(date, away_tricode, home_tricode)
+
+    def _pastGameToString(self, game):
+        """Given a team's upcoming game, return a string with
+        the opponent's tricode and the result.
+        """
+        date = self._ISODateToEasternDate(game['startTimeUTC'])
+
+        home_tricode = self._teamIdToTricode(game['hTeam']['teamId'])
+        away_tricode = self._teamIdToTricode(game['vTeam']['teamId'])
+
+        home_score = int(game['hTeam']['score'])
+        away_score = int(game['vTeam']['score'])
+
+        if game['isHomeTeam']:
+            was_victory = (home_score > away_score)
+        else:
+            was_victory = (away_score > home_score)
+
+        if home_score > away_score:
+            home_tricode = ircutils.bold(home_tricode)
+            home_score = ircutils.bold(home_score)
+        else:
+            away_tricode = ircutils.bold(away_tricode)
+            away_score = ircutils.bold(away_score)
+
+        result = ircutils.mircColor('W', 'green') if was_victory \
+                 else ircutils.mircColor('L', 'red')
+
+        points = '{} {} {} {}'.format(away_tricode, away_score,
+                                      home_tricode, home_score)
+
+        return '{} {} | {}'.format(date, result, points)
+
 ############################
 # Date-manipulation helpers
 ############################
@@ -450,6 +629,17 @@ class NBA(callbacks.Plugin):
         return datetime.datetime.now(pytz.timezone('US/Pacific'))
 
     @staticmethod
+    def _ISODateToEasternDate(iso):
+        """Convert the ISO date in UTC time that the API outputs into an
+        Eastern-time date.
+        (The default human-readable format for the listing of games).
+        """
+        date = dateutil.parser.parse(iso)
+        date_eastern = date.astimezone(pytz.timezone('US/Eastern'))
+        eastern_time = date_eastern.strftime('%a %m/%d')
+        return "{}".format(eastern_time)
+
+    @staticmethod
     def _ISODateToEasternTime(iso):
         """Convert the ISO date in UTC time that the API outputs into an
         Eastern time formatted with am/pm.
@@ -458,7 +648,17 @@ class NBA(callbacks.Plugin):
         date = dateutil.parser.parse(iso)
         date_eastern = date.astimezone(pytz.timezone('US/Eastern'))
         eastern_time = date_eastern.strftime('%-I:%M %p')
-        return "{} ET".format(eastern_time) # Strip the seconds
+        return "{} ET".format(eastern_time)
+
+    @staticmethod
+    def _ISODateToEasternDatetime(iso):
+        """Convert the ISO date in UTC time that the API outputs into a
+        string with a date and Eastern time formatted with am/pm.
+        """
+        date = dateutil.parser.parse(iso)
+        date_eastern = date.astimezone(pytz.timezone('US/Eastern'))
+        eastern_time = date_eastern.strftime('%a %m/%d, %I:%M %p')
+        return "{} ET".format(eastern_time)
 
     @staticmethod
     def _stripDateSeparators(date_string):
@@ -552,7 +752,7 @@ class NBA(callbacks.Plugin):
                                     away_team=game['away_team'].lower(),
                                     home_team=game['home_team'].lower())
 
-        xml = self._getURL(url).decode('utf-8')
+        xml = self._getURL(url)
         tree = ElementTree.fromstring(xml)
 
         res = []
