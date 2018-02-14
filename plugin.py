@@ -184,9 +184,7 @@ class NBA(callbacks.Plugin):
             n = 1
         end = min(MAX_GAMES_IN_RESULT, n, len(future_games)-1)
 
-        #res = []
         for game in future_games[:end]:
-            #res.append(self._upcomingGameToString(game))
             irc.reply(self._upcomingGameToString(game))
 
     next = wrap(next, [optional('positiveInt'), 'somethingWithoutSpaces'])
@@ -210,7 +208,6 @@ class NBA(callbacks.Plugin):
 
         # Keeping only the games that have been played:
         past_games = team_schedule['standard'][:last_played+1]
-        past_games.reverse() # (First game is the most recent)
 
         if not past_games:
             irc.error('I could not find past games')
@@ -218,10 +215,10 @@ class NBA(callbacks.Plugin):
 
         if n is None:
             n = 1
-        end = min(MAX_GAMES_IN_RESULT, n, len(past_games)-1)
+        n = min(MAX_GAMES_IN_RESULT, n, len(past_games))
 
         res = []
-        for game in past_games[:end]:
+        for game in past_games[-n:]:
             res.append(self._pastGameToString(game))
 
         for line in reversed(res):
