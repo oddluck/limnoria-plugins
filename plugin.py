@@ -189,16 +189,20 @@ class NBA(callbacks.Plugin):
 
     next = wrap(next, [optional('positiveInt'), 'somethingWithoutSpaces'])
 
-    def last(self, irc, msg, args, n, team):
-        """[<n>] <TTT>
+    def last(self, irc, msg, args, n, team, team2):
+        """[<n>] <TTT> [<TTT>]
 
-        Given a team, get the last <n> games (1 by default; max. 10).
+        Get the last <n> games (1 by default; max. 10) for a given team
+        or, if two teams are provided, matchups between them.
 
         """
         MAX_GAMES_IN_RESULT = 10
 
         try:
             team = self._parseTeamInput(team)
+            if team2 is not None:
+                team2 = self._parseTeamInput(team2)
+
             team_schedule = self._getTeamSchedule(team)
         except ValueError as error:
             irc.error(str(error))
@@ -207,24 +211,33 @@ class NBA(callbacks.Plugin):
         last_played = team_schedule['lastStandardGamePlayedIndex']
 
         # Keeping only the games that have been played:
-        past_games = team_schedule['standard'][:last_played+1]
+        team_past_games = team_schedule['standard'][:last_played+1]
 
-        if not past_games:
+        if not team_past_games:
             irc.error('I could not find past games')
             return
 
+        # Making sure the number of games we will show is a valid one:
         if n is None:
             n = 1
-        n = min(MAX_GAMES_IN_RESULT, n, len(past_games))
+        n = min(MAX_GAMES_IN_RESULT, n)
 
-        res = []
-        for game in past_games[-n:]:
-            res.append(self._pastGameToString(game))
+        if team2 is None:
+            games = team_past_games
+        else:
+            # Filtering matchups between team and team2:
+            team2_id = self._tricodeToTeamId(team2)
+            games = [g for g in team_past_games \
+                     if team2_id in [g['vTeam']['teamId'],
+                                     g['hTeam']['teamId']]][-n:]
 
-        for line in reversed(res):
-            irc.reply(line)
+        for game in reversed(games[-n:]): # Most-recent game first.
+            irc.reply(self._pastGameToString(game))
 
-    last = wrap(last, [optional('positiveInt'), 'somethingWithoutSpaces'])
+
+    last = wrap(last, [optional('positiveInt'),
+                       'somethingWithoutSpaces',
+                       optional('somethingWithoutSpaces')])
 
     @classmethod
     def _parseOptionalArguments(cls, optional_team, optional_date):
