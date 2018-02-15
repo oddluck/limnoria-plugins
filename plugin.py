@@ -613,6 +613,9 @@ class NBA(callbacks.Plugin):
         points = '{} {} {} {}'.format(away_tricode, away_score,
                                       home_tricode, home_score)
 
+        if game['seasonStageId'] == 1:
+            points += ' (Preseason)'
+
         return '{} {} | {}'.format(date, result, points)
 
 ############################
