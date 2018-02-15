@@ -203,6 +203,10 @@ class NBA(callbacks.Plugin):
             if team2 is not None:
                 team2 = self._parseTeamInput(team2)
 
+                if team == team2:
+                    irc.error('Both teams should be different.')
+                    return
+
             team_schedule = self._getTeamSchedule(team)
         except ValueError as error:
             irc.error(str(error))
@@ -212,10 +216,6 @@ class NBA(callbacks.Plugin):
 
         # Keeping only the games that have been played:
         team_past_games = team_schedule['standard'][:last_played+1]
-
-        if not team_past_games:
-            irc.error('I could not find past games')
-            return
 
         # Making sure the number of games we will show is a valid one:
         if n is None:
@@ -229,7 +229,11 @@ class NBA(callbacks.Plugin):
             team2_id = self._tricodeToTeamId(team2)
             games = [g for g in team_past_games \
                      if team2_id in [g['vTeam']['teamId'],
-                                     g['hTeam']['teamId']]][-n:]
+                                     g['hTeam']['teamId']]]
+
+        if not games:
+            irc.error('I could not find past games.')
+            return
 
         for game in reversed(games[-n:]): # Most-recent game first.
             irc.reply(self._pastGameToString(game))
