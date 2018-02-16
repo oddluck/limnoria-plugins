@@ -204,6 +204,7 @@ class NBA(callbacks.Plugin):
         for game in games[:end]:
             irc.reply(self._upcomingGameToString(game))
 
+
     next = wrap(next, [optional('positiveInt'),
                        'somethingWithoutSpaces',
                        optional('somethingWithoutSpaces')])
@@ -672,8 +673,8 @@ class NBA(callbacks.Plugin):
         """
         date = dateutil.parser.parse(iso)
         date_eastern = date.astimezone(pytz.timezone('US/Eastern'))
-        eastern_time = date_eastern.strftime('%a %m/%d')
-        return "{}".format(eastern_time)
+        eastern_date = date_eastern.strftime('%a %m/%d')
+        return "{}".format(eastern_date)
 
     @staticmethod
     def _ISODateToEasternTime(iso):
@@ -693,8 +694,8 @@ class NBA(callbacks.Plugin):
         """
         date = dateutil.parser.parse(iso)
         date_eastern = date.astimezone(pytz.timezone('US/Eastern'))
-        eastern_time = date_eastern.strftime('%a %m/%d, %I:%M %p')
-        return "{} ET".format(eastern_time)
+        eastern_datetime = date_eastern.strftime('%a %m/%d, %I:%M %p')
+        return "{} ET".format(eastern_datetime)
 
     @staticmethod
     def _stripDateSeparators(date_string):
@@ -806,8 +807,7 @@ class NBA(callbacks.Plugin):
 
     @staticmethod
     def _shortenURL(url):
-        """ Run a link through an URL shortener and return the new url.
-        """
+        """ Run a link through an URL shortener and return the new url."""
 
         # Complete with the code that uses your desired
         # shortener service.
