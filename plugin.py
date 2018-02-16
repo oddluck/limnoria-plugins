@@ -156,16 +156,24 @@ class NBA(callbacks.Plugin):
 
     tv = wrap(tv, ['somethingWithoutSpaces'])
 
-    def next(self, irc, msg, args, n, team):
-        """[n] <TTT>
+    def next(self, irc, msg, args, n, team, team2):
+        """[<n>] <TTT> [<TTT>]
 
-        Given a team, get the next <n> games (1 by default; max. 10).
+        Get the next <n> games (1 by default; max. 10) for a given team
+        or, if two teams are provided, matchups between them.
 
         """
         MAX_GAMES_IN_RESULT = 10
 
         try:
+            if team == team2:
+                irc.error('Both teams should be different.')
+                return
+
             team = self._parseTeamInput(team)
+            if team2 is not None:
+                team2 = self._parseTeamInput(team2)
+
             team_schedule = self._getTeamSchedule(team)
         except ValueError as error:
             irc.error(str(error))
@@ -176,18 +184,29 @@ class NBA(callbacks.Plugin):
         # Keeping only the games that haven't been played:
         future_games = team_schedule['standard'][last_played+1:]
 
-        if not future_games:
-            irc.error('I could not find future games')
-            return
-
         if n is None:
             n = 1
         end = min(MAX_GAMES_IN_RESULT, n, len(future_games)-1)
 
-        for game in future_games[:end]:
+        if team2 is None:
+            games = future_games
+        else:
+            # Filtering matchups between team and team2:
+            team2_id = self._tricodeToTeamId(team2)
+            games = [g for g in future_games \
+                     if team2_id in [g['vTeam']['teamId'],
+                                     g['hTeam']['teamId']]]
+
+        if not games:
+            irc.error('I could not find future games.')
+            return
+
+        for game in games[:end]:
             irc.reply(self._upcomingGameToString(game))
 
-    next = wrap(next, [optional('positiveInt'), 'somethingWithoutSpaces'])
+    next = wrap(next, [optional('positiveInt'),
+                       'somethingWithoutSpaces',
+                       optional('somethingWithoutSpaces')])
 
     def last(self, irc, msg, args, n, team, team2):
         """[<n>] <TTT> [<TTT>]
@@ -199,13 +218,13 @@ class NBA(callbacks.Plugin):
         MAX_GAMES_IN_RESULT = 10
 
         try:
+            if team == team2:
+                irc.error('Both teams should be different.')
+                return
+
             team = self._parseTeamInput(team)
             if team2 is not None:
                 team2 = self._parseTeamInput(team2)
-
-                if team == team2:
-                    irc.error('Both teams should be different.')
-                    return
 
             team_schedule = self._getTeamSchedule(team)
         except ValueError as error:
