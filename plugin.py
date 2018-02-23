@@ -187,6 +187,56 @@ class WolframAlpha(callbacks.Plugin):
                                                 'shortest':'',
                                                 'fulloutput':''}), ('text')])
 
+    def btc(self, irc, msg, args, amount, currency):
+        """<amount> <currency>
+
+        Convert bitcoin to another currency"""
+
+        # check for API key before we can do anything.
+        apiKey = self.registryValue('apiKey')
+        if not apiKey or apiKey == "Not set":
+            irc.reply("Wolfram Alpha API key not set. see 'config help supybot.plugins.WolframAlpha.apiKey'.")
+            return
+        # first, url arguments, some of which getopts and config variables can manipulate.
+        urlArgs = { 'input':'%d btc to %s' % (amount,currency),
+                    'appid':apiKey,
+                    'reinterpret':'false',
+                    'format':'plaintext',
+                    'units':'nonmetric' }
+        url = 'http://api.wolframalpha.com/v2/query?' + utils.web.urlencode(urlArgs)
+        print url
+        try:
+            page = utils.web.getUrl(url)
+        except Exception as e:
+            self.log.error("ERROR opening {0} message: {1}".format(url, e))
+            irc.reply("ERROR: Failed to open WolframAlpha API: {0}".format(url))
+            return
+        # now try to process XML.
+        try:
+            document = ElementTree.fromstring(page)
+        except Exception as e:
+            self.log.error("ERROR: Broke processing XML: {0}".format(e))
+            irc.reply("ERROR: Something broke processing XML from WolframAlpha's API.")
+            return
+
+        # each answer has a different amount of pods.
+        for pod in document.findall('.//pod'):
+            title = pod.attrib['title'].encode('utf-8')  # title of it.
+            if title == "Result":
+                for plaintext in pod.findall('.//plaintext'):
+                    print plaintext.text
+
+                    if 'not compatible' in plaintext.text:
+                        irc.reply('Conversion from btc to %s not available' % currency)
+                    else:
+                        converted_amount = plaintext.text.split('(')[0].strip()
+                        if '\:' in converted_amount:
+                            converted_amount = converted_amount.replace('\:','\u').decode("unicode_escape")
+                        irc.reply('%s%d = %s' % ('\u0e3f'.decode("unicode_escape"),amount, converted_amount))
+                    
+
+
+    btc = wrap(btc,['float', 'text'])
 
 Class = WolframAlpha
 
