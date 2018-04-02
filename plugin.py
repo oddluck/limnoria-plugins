@@ -229,6 +229,27 @@ class Trackers(callbacks.Plugin):
 
 	ar = wrap(arStatus, [optional("something")])
 
+	def p32Status(self, irc, msg, args, all):
+		"""
+		Check the status of AR site, tracker, and irc.
+		"""
+		url = "http://32p.trackerstatus.info/api/status/"
+		site_name = "32p"
+
+		content = WebParser().getWebData(irc,url)
+
+		status = [content["Website"], content["TrackerHTTP"], content["IRC"], content["IRCTorrentAnnouncer"], content["IRCUserIdentifier"]]
+		status_headers = [site_name+" Site","Tracker","IRC","IRC Announce","IRC ID"]
+		breakpoints = [0]
+		line_headers = [""]
+
+		outStr = WebParser().prepareStatusString(site_name, status, status_headers, breakpoints,line_headers)
+
+		for i in range(0, len(outStr)):
+		        irc.reply(outStr[i])
+
+	p32 = wrap(p32Status, [optional("something")])
+
 	def ahdStatus(self, irc, msg, args, all):
 		"""
 		Check the status of AHD site, tracker, and irc.
