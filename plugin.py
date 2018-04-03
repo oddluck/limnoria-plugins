@@ -36,25 +36,33 @@ class IMDB(callbacks.Plugin):
         """
         Queries OMDB api for query
         """
-        encoded_query = quote_plus(query)
-        omdb_url = "http://www.omdbapi.com/?t=%s&y=&plot=short&r=json&tomatoes=true" % (encoded_query)
+		
+        if query[-4:].isdigit():
+            encoded_query = quote_plus(query[0:-4])
+            encoded_query_year = quote_plus(query[-4:])
+            omdb_url = "http://www.omdbapi.com/?t=%s&y=%s&plot=short&r=json&tomatoes=true&apikey=xxxxxxxx" % (encoded_query, encoded_query_year)
+            self.log.info("IMDB: Check for %s year %s" % (query[0:-4], query[-4:]))
+        else:
+            encoded_query = quote_plus(query)
+            omdb_url = "http://www.omdbapi.com/?t=%s&y=&plot=short&r=json&tomatoes=true&apikey=xxxxxxxx" % (encoded_query)
+
         channel = msg.args[0]
         result = None
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.60 Safari/537.36"
         }
-        
+
         self.log.info("IMDB: requesting %s" % omdb_url)
-        
+
         try:
             request = requests.get(omdb_url, timeout=10, headers=headers)
-            
+
             if request.status_code == requests.codes.ok:
                 response = json.loads(request.text)
-                
+
                 not_found = "Error" in response
                 unknown_error = response["Response"] != "True"
-                
+
                 if not_found or unknown_error:
                     self.log.info("IMDB: OMDB error for %s" % (omdb_url))
                 else:
@@ -71,11 +79,15 @@ class IMDB(callbacks.Plugin):
                     imdb_template = imdb_template.replace("$tomatoMeter", response["tomatoMeter"])
                     imdb_template = imdb_template.replace("$metascore", response["Metascore"])
                     imdb_template = imdb_template.replace("$released",response["Released"])
-                    
+                    imdb_template = imdb_template.replace("$genre",response["Genre"])
+                    imdb_template = imdb_template.replace("$released",response["Released"])
+                    imdb_template = imdb_template.replace("$awards",response["Awards"])
+                    imdb_template = imdb_template.replace("$actors",response["Actors"])
+
                     result = imdb_template
             else:
-                self.log.error("IMDB OMDB API %s - %s" % (request.status_code, request.text)) 
-        
+                self.log.error("IMDB OMDB API %s - %s" % (request.status_code, request.text))
+
         except requests.exceptions.Timeout as e:
             self.log.error("IMDB Timeout: %s" % (str(e)))
         except requests.exceptions.ConnectionError as e:
@@ -87,9 +99,9 @@ class IMDB(callbacks.Plugin):
                 irc.sendMsg(ircmsgs.privmsg(channel, result))
             else:
                 irc.error(self.registryValue("noResultsMessage"))
-    
+
     imdb = wrap(imdb, ['text'])
-        
+
 Class = IMDB
 
 
