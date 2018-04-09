@@ -15,6 +15,15 @@ import json
 import sys
 import re
 
+import supybot.schedule as schedule
+from datetime import datetime
+
+
+
+status_commands = ['btnStatus', 'redStatus', 'mtvStatus', 'nwcdStatus', 'ptpStatus', 'ggnStatus', 'arStatus', 'p32Status', 'ahdStatus', 'ahdStatus', 'empStatus', 'nblStatus']
+status_trackers = ['btn', 'red', 'mtv', 'nwcd', 'ptp', 'ggn', 'ar', 'p32', 'ahd', 'ahd', 'emp', 'nbl']
+
+
 class WebParser():
 	"""Contains functions for getting and parsing web data"""
 
@@ -55,28 +64,63 @@ class WebParser():
 class Trackers(callbacks.Plugin):
 	"""Contains commands for checking server status of various trackers."""
 	threaded = True
-	def btnStatus(self, irc, msg, args, all):
-		"""[all]
 
-		Check the status of BTN site, tracker, and irc. Append " all" to get detailed information.
+	# def __init__(self, irc):
+	# 	print "Setting it up"
+
+	# 	self.__parent = super(Trackers, self)
+	# 	self.__parent.__init__(irc)
+	# 	# Set  scheduler variables
+
+	# 	# Schedule announce check
+	# 	# Check if event already exists
+	# 	try:
+	# 		schedule.removeEvent('statusAnnounce')
+	# 	except KeyError:
+	# 		pass
+
+	# 	def myEventCaller():
+	# 		print "Scheduling announce"
+	# 		self.autoAnnounce(irc)
+
+
+	# 	schedule.addPeriodicEvent(myEventCaller, 30, 'statusAnnounce')
+	# 	self.irc = irc
+
+	# 	print "All done"
+
+	def formatTimeSince(self, timestamp):
+		interval = datetime.now() - datetime.fromtimestamp(timestamp)
+		# seconds
+		if (interval.days == 0) and (interval.seconds < 60):
+		    time_passed = "%s seconds ago" % interval.seconds
+		# minutes
+		elif interval.days == 0 and interval.seconds < 3600:
+		    time_passed = "%s minutes ago" % int(interval.seconds / 60 )
+		# hours
+		elif interval.days == 0:
+		    time_passed = "%s hours ago" % int(interval.seconds / 3600 )
+		else:
+		    time_passed = "%s days ago" % interval.days
+
+		return time_passed
+
+	def btnStatus(self, irc, msg, args, opts):
+		"""[--message]
+
+		Check the status of BTN site, tracker, and irc. Use --message flag to check for additional information.
 		"""
 		url = "https://btn.trackerstatus.info/api/status/"
 		site_name = "BTN"
 
 		content = WebParser().getWebData(irc,url)
 
-		if all != "all":
-			if (int(content["TrackerHTTP"]) + int(content["TrackerHTTPS"])) == 2:
-				tracker_status = 1
-			elif (int(content["TrackerHTTP"]) + int(content["TrackerHTTPS"])) == 1:
-				tracker_status = 2
-			else:
-				tracker_status = 0
+		if opts == "--message":
+			message_string = content["tweet"]["message"]
+			time_string = self.formatTimeSince(content["tweet"]["unix"])
 
-			status = [content["Website"], content["IRC"], tracker_status]
-			status_headers = [site_name+" Site","IRC","Tracker"]
-			breakpoints = [0]
-			line_headers = [""]
+			outstr = "%s message: %s (%s)" % (site_name, message_string, time_string)
+			irc.reply(outstr)		
 
 		else:
 			status = [content["Website"], content["TrackerHTTP"], content["TrackerHTTPS"], content["IRC"], content["CableGuy"], content["Barney"]]
@@ -84,31 +128,40 @@ class Trackers(callbacks.Plugin):
 			breakpoints = [0]
 			line_headers = [""]
 
-		outStr = WebParser().prepareStatusString(site_name, status, status_headers, breakpoints,line_headers)
+			outStr = WebParser().prepareStatusString(site_name, status, status_headers, breakpoints,line_headers)
 
-		for i in range(0, len(outStr)):
-			irc.reply(outStr[i])
+			for i in range(0, len(outStr)):
+				irc.reply(outStr[i])
 
 	btn = wrap(btnStatus, [optional("something")])
 
-	def redStatus(self, irc, msg, args, all):
-		"""
-		Check the status of RED site, tracker, and irc.
+	def redStatus(self, irc, msg, args, opts):
+		"""[--message]
+
+		Check the status of RED site, tracker, and irc. Use --message flag to check for additional information.
 		"""
 		url = "http://red.trackerstatus.info/api/status/"
 		site_name = "RED"
 
 		content = WebParser().getWebData(irc,url)
 
-		status = [content["Website"], content["TrackerHTTP"], content["TrackerHTTPS"], content["IRC"], content["IRCTorrentAnnouncer"], content["IRCUserIdentifier"]]
-		status_headers = [site_name+" Site","Tracker","Tracker SSL","IRC","IRC Announce","IRC ID"]
-		breakpoints = [0]
-		line_headers = [""]
+		if opts == "--message":
+			message_string = content["tweet"]["message"]
+			time_string = self.formatTimeSince(content["tweet"]["unix"])
 
-		outStr = WebParser().prepareStatusString(site_name, status, status_headers, breakpoints,line_headers)
+			outstr = "%s message: %s (%s)" % (site_name, message_string, time_string)
+			irc.reply(outstr)
+		else:
+			status = [content["Website"], content["TrackerHTTP"], content["TrackerHTTPS"], content["IRC"], content["IRCTorrentAnnouncer"], content["IRCUserIdentifier"]]
+			status_headers = [site_name+" Site","Tracker","Tracker SSL","IRC","IRC Announce","IRC ID"]
+			breakpoints = [0]
+			line_headers = [""]
+	 
+			outStr = WebParser().prepareStatusString(site_name, status, status_headers, breakpoints,line_headers)
 
-		for i in range(0, len(outStr)):
-			irc.reply(outStr[i])
+			for i in range(0, len(outStr)):
+				irc.reply(outStr[i])
+
 
 	red = wrap(redStatus, [optional("something")])
 
@@ -394,7 +447,25 @@ class Trackers(callbacks.Plugin):
 
 	nbl = wrap(nblStatus, [optional("something")])
 
+	# def autoAnnounce(self, irc):
+	# 	"""Schedule periodic announces for enabled trackers and channels"""
+	# 	print "Start"
+	# 	i = 0
+	# 	for cmd in status_commands:
+	# 		print cmd
+	# 		for channel in irc.state.channels:
+	# 			print "announce.relay"+status_trackers[i]
+	# 			if self.registryValue("announce.relay"+status_trackers[i], channel):
+	# 				print "announce.relay"+status_trackers[i]
+	# 				try:
+	# 					locals()["self."+cmd]()
+	# 				except:
+	# 					print "Failed to query status"
+	# 				print channel
+	# 		i = +1
 
 Class = Trackers
+
+
 
 
