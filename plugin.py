@@ -130,8 +130,8 @@ class Trackers(callbacks.Plugin):
 
 		content = WebParser().getWebData(irc,url)
 
-		status = [content["Website"], content["TrackerHTTP"], content["TrackerHTTPS"], content["IRC"], content["CableGuy"], content["Barney"]]
-		status_headers = ["Site","Tracker","Tracker SSL","IRC","IRC Id","IRC Announce"]
+		status = [content["Website"], content["API"], content["TrackerHTTP"], content["TrackerHTTPS"], content["IRC"], content["CableGuy"], content["Barney"]]
+		status_headers = ["Site","API","Tracker","Tracker SSL","IRC","IRC Id","IRC Announce"]
 		breakpoints = [0]
 		line_headers = [""]
 
@@ -261,7 +261,7 @@ class Trackers(callbacks.Plugin):
 		status_headers = ([site_name+" Site","IRC Announce","IRC ID",
 						 "51.255.35.82", "51.255.35.90","164.132.51.73","164.132.54.181","164.132.54.182","192.99.58.220",
 						 "Persona"])
-		breakpoints = [4,9]
+		breakpoints = [3,9]
 		line_headers = ["Services: ", "Trackers: ", "IRC: "]
 
 		outStr = WebParser().prepareStatusString(site_name, status, status_headers,breakpoints,line_headers)
