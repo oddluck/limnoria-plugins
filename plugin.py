@@ -100,6 +100,9 @@ class UrbanDictionary(callbacks.Plugin):
             return
         # process json.
         results = jsondata.get('result_type')  # exact, no_results, fulltext .
+        if not results:
+            # assume exact i guess... 
+            results = 'exact'
         definitions = jsondata.get('list')
         # prep output now depending on results.
         if results == "exact":  # we did not find anything.
