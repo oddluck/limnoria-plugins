@@ -54,10 +54,10 @@ import time
 import dateutil.parser
 import urllib
 import collections
-from pprint import pprint
-from pybaseball import playerid_lookup
-from pybaseball import pitching_stats_bref
-from pybaseball import batting_stats_bref
+# from pprint import pprint
+# from pybaseball import playerid_lookup
+# from pybaseball import pitching_stats_bref
+# from pybaseball import batting_stats_bref
 
 
 class MLBScores(callbacks.Plugin):
@@ -510,15 +510,15 @@ class MLBScores(callbacks.Plugin):
         
         irc.reply("There are {} days left in the {} MLB season.".format(left.days, end.year))
             
-    @wrap(['text'])
-    def mlbstats(self, irc, msg, args, player):
-        """<player>
-        Fetches current season stats for the <player> provided.
-        """
+#     @wrap(['text'])
+#     def mlbstats(self, irc, msg, args, player):
+#         """<player>
+#         Fetches current season stats for the <player> provided.
+#         """
         
-        data = batting_stats_bref()
+#         data = batting_stats_bref()
         
-        #print(data.head())
+#         #print(data.head())
     
     @wrap(['text'])
     def mlbgame2(self, irc, msg, args, player):
