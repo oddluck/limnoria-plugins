@@ -385,14 +385,17 @@ class MLBScores(callbacks.Plugin):
                 tmp['home'] = '{}-{}'.format(team['records']['splitRecords'][0]['wins'], team['records']['splitRecords'][0]['losses'])
                 tmp['away'] = '{}-{}'.format(team['records']['splitRecords'][1]['wins'], team['records']['splitRecords'][1]['losses'])
                 tmp['.500'] = '{}-{}'.format(team['records']['splitRecords'][7]['wins'], team['records']['splitRecords'][7]['losses'])
-                if team['team']['abbreviation'] == team['team']['nextGameSchedule']['dates'][0]['games'][0]['teams']['away']['team']['abbreviation']:
-                    nextStr = 'at {}'.format(team['team']['nextGameSchedule']['dates'][0]['games'][0]['teams']['home']['team']['abbreviation'])
-                else:
-                    nextStr = 'vs {}'.format(team['team']['nextGameSchedule']['dates'][0]['games'][0]['teams']['away']['team']['abbreviation'])
-                tmp['next'] = '{} {}'.format(
-                    pendulum.parse(team['team']['nextGameSchedule']['dates'][0]['date']).format('MMM D'),
-                    nextStr                    
-                )
+                try:
+                    if team['team']['abbreviation'] == team['team']['nextGameSchedule']['dates'][0]['games'][0]['teams']['away']['team']['abbreviation']:
+                        nextStr = 'at {}'.format(team['team']['nextGameSchedule']['dates'][0]['games'][0]['teams']['home']['team']['abbreviation'])
+                    else:
+                        nextStr = 'vs {}'.format(team['team']['nextGameSchedule']['dates'][0]['games'][0]['teams']['away']['team']['abbreviation'])
+                    tmp['next'] = '{} {}'.format(
+                        pendulum.parse(team['team']['nextGameSchedule']['dates'][0]['date']).format('MMM D'),
+                        nextStr                    
+                    )
+                except:
+                    tmp['next'] = '-'
                 tmp['team'] = team['team']['shortName']
                 standings[abbrv].append(tmp)
                 
