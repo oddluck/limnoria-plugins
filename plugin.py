@@ -38,6 +38,7 @@ import json
 import pytz
 import urllib.request
 import pendulum
+import requests
 
 class NHLScores(callbacks.Plugin):
     """Get scores from NHL.com."""
@@ -63,6 +64,8 @@ class NHLScores(callbacks.Plugin):
         self._today_scores_cached_url = None
         self._today_scores_last_modified_time = None
         self._today_scores_last_modified_data = None
+        
+        self._TEAMS_BY_TRI = self._getTeams()
 
         #pendulum.set_formatter('alternative')
 
@@ -83,6 +86,7 @@ class NHLScores(callbacks.Plugin):
                     optional_date = optional_date.split()[0]
             try:
                 date = self._checkDateInput(optional_date)
+                #print("1")
             except ValueError as e:
                 irc.reply('ERROR: {0!s}'.format(e))
                 return
@@ -95,12 +99,17 @@ class NHLScores(callbacks.Plugin):
                 if optional_team.upper() == 'GNJD':
                     optional_team = 'njd'
                 date = self._checkDateInput(optional_team)
-                if date:
+                #print("2")
+                if date and len(date) != 3:
                     team = "all"
+                elif date and len(date) == 3:
+                    team = date
+                    date = None
                 else:
                     team = optional_team.upper()
                     try:
                         date = self._checkDateInput(optional_date)
+                        #print("3")
                     except ValueError as e:
                         irc.reply('ERROR: {0!s}'.format(e))
                         return
@@ -128,7 +137,7 @@ class NHLScores(callbacks.Plugin):
         else:
             games = self._getGamesForDate(team, date)
             games_string = self._resultAsString(games)
-            print(games_string)
+            #print(games_string)
             if games_string == '':
                 irc.reply("No games found for {}".format(team))
                 return
@@ -148,6 +157,20 @@ class NHLScores(callbacks.Plugin):
             irc.reply(games_string_date + games_string)
 
     nhl = wrap(nhl, [optional('somethingWithoutSpaces'), optional('somethingWithoutSpaces')])
+    
+    def _getTeams(self):
+        
+        url = 'https://statsapi.web.nhl.com/api/v1/teams'
+        try:
+            data = requests.get(url).json()
+            data = data['teams']
+        except:
+            return None
+        
+        teams = []
+        for team in data:
+            teams.append(team['abbreviation'])
+        return teams
 
     def nhltv(self, irc, msg, args, optional_team, optional_date):
         """[<team>] [<date>]
@@ -274,7 +297,7 @@ class NHLScores(callbacks.Plugin):
             header['If-Modified-Since'] = self._today_scores_last_modified_time
 
         request = urllib.request.Request(url, headers=header)
-        print(url)
+        #print(url)
 
         try:
             response = urllib.request.urlopen(request)
@@ -317,7 +340,7 @@ class NHLScores(callbacks.Plugin):
             # Starting times are in UTC. By default, we will show Eastern times.
             # (In the future we could add a user option to select timezones.)
             tbd_check = self._ISODateToEasternTime(g['gameDate'])
-            print(tbd_check)
+            #print(tbd_check)
             if '3:00 AM' in tbd_check:
                 starting_time = 'TBD'
                 #starting_time_TBD = True
@@ -351,7 +374,7 @@ class NHLScores(callbacks.Plugin):
                          'ppd': (g['status']['statusCode'] == '9'),
                          'type': g['gameType']
                         }
-            print(game_info)
+            #print(game_info)
             if team == "all":
                 games.append(game_info)
             else:
@@ -450,7 +473,7 @@ class NHLScores(callbacks.Plugin):
         elif int(home_score) > int(away_score):
             home_string = ircutils.bold(home_string)
 
-        print('got here ', game['broadcasts'])
+        #print('got here ', game['broadcasts'])
 
         base_str = ''
         if not game['ended']:
@@ -686,6 +709,9 @@ class NHLScores(callbacks.Plugin):
             date = self._EnglishDateToDate(date)
         elif date[:3].lower() in self._FUZZY_DAYS:
             date = self._EnglishDateToDate(date.lower())
+        elif date[:3].upper() in self._TEAMS_BY_TRI:
+            date = date[:3].upper()
+            return date
             
         #try:
         #    date = dateutil.parser.parse(date)
@@ -730,6 +756,7 @@ class NHLScores(callbacks.Plugin):
                     date = datetime.datetime.strptime(date, '%b%d%Y').strftime('%Y-%m-%d')
             except:
                 raise ValueError('Incorrect date format, should be YYYY-MM-DD')
+                #return "Incorrect date format, should be YYYY-MM-DD"
         else:
             return None
 
