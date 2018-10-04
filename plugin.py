@@ -1658,6 +1658,8 @@ class MLBScores(callbacks.Plugin):
             return pendulum.parse(time, strict=False).in_tz(tz).format('h:mm A zz')
 
         tmp = []
+        if len(games) == 1:
+            team = True
         for game in games:
             #print(game['homeTeam'], game['status'])
             if game['status'] == 'I':
