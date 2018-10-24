@@ -503,6 +503,71 @@ class MLBScores(callbacks.Plugin):
         if date:
             self.MLB_GAMES = self._fetchGames(team)
             
+    @wrap([getopts({'active': '',}), 'text'])
+    def mlbroster(self, irc, msg, args, optlist, opttype):
+        """<--active> <team> <type>
+        Fetches roster for given <team> filtered by <type>"""
+        
+        optlist = dict(optlist)
+        positions = {'pitchers': 'Pitcher', 'infielders': 'Infielder',
+                     'catchers': 'Catcher', 'outfielders': 'Outfielder'}
+        
+        base_url = 'http://statsapi.mlb.com/api/v1/teams/{team}/roster/{roster}'
+        api_base = 'http://statsapi.mlb.com'
+        
+        try:
+            team = opttype.split()[0].upper()
+        except:
+            irc.reply('Invalid input')
+            return
+        try:
+            filter_ = opttype.split()[1]
+        except:
+            filter_ = None
+        #print(filter_)
+        try:
+            filter_ = filter_.lower()
+            filter_ = positions[filter_]
+        except:
+            if filter_:
+                filter_ = filter_.title()
+        
+        if team not in self._TEAM_BY_TRI:
+            irc.reply('ERROR: Invalid team. Valid teams: {}'.format(', '.join(i for i in self._TEAM_BY_TRI)))
+            return
+        team_id = self._TEAM_BY_TRI[team]
+        
+        url = base_url.format(team=team_id, roster='active')
+        
+        data = requests.get(url).json()
+        
+        #print(data.json())
+        roster = []
+        tmp = data['roster']
+        tmp = sorted(tmp, key=lambda k: k['person']['fullName'].split()[-1])
+        #print(tmp)
+        for player in tmp:
+            num = self._red('#{}'.format(player['jerseyNumber']))
+            name = player['person']['fullName']
+            info_url = player['person']['link']
+            #print(api_base + info_url)
+            info = requests.get(api_base + info_url).json()
+            bats = info['people'][0]['batSide']['code']
+            pits = info['people'][0]['pitchHand']['code']
+            string = '{} {} (B:{} T:{})'.format(num, name, bats, pits)
+            if filter_:
+                if player['position']['type'] == filter_:
+                    roster.append(string)
+            else:
+                roster.append(string)
+                
+        if not roster:
+            irc.reply('Nothing found for that query')
+            return
+        else:
+            irc.reply(', '.join(i for i in roster))
+        return
+            
     @wrap
     def mlbdaysleft(self, irc, msg, args):
         """How many days are left in the current MLB season"""
@@ -594,7 +659,7 @@ class MLBScores(callbacks.Plugin):
         
         lineup_url = 'http://statsapi.mlb.com/api/v1/game/{}/boxscore'.format(games[0]['id'])
         lineup_url_2 = 'https://statsapi.mlb.com/api/v1/schedule?gamePk={}&language=en&hydrate=lineups,person,probablePitcher,team(leaders(showOnPreview(leaderCategories=[homeRuns,runsBattedIn,battingAverage],statGroup=[pitching,hitting])))'.format(games[0]['id'])
-        #print(lineup_url, lineup_url_2)
+        print(lineup_url, lineup_url_2)
         
         try:
             data = requests.get(lineup_url).json()
@@ -969,7 +1034,7 @@ class MLBScores(callbacks.Plugin):
             #       "&leaderCategories=&site=en_nhl&teamId={}&teamId={}")
             url = ('https://statsapi.mlb.com/api/v1/schedule'
                                      '?sportId=1&startDate={}&endDate={}'
-                                     '&hydrate=linescore,team'
+                                     '&hydrate=linescore,team,probablePitcher'
                                      '&teamId={}&teamId={}')
 
             # Fetch content
@@ -979,7 +1044,7 @@ class MLBScores(callbacks.Plugin):
         else:
             url = ('https://statsapi.mlb.com/api/v1/schedule'
                                      '?sportId=1&startDate={}&endDate={}'
-                                     '&hydrate=linescore,team'
+                                     '&hydrate=linescore,team,probablePitcher'
                                      '&teamId={}')
 
             # Fetch content
@@ -995,11 +1060,18 @@ class MLBScores(callbacks.Plugin):
                     if optteam in item['games'][gidx]['teams']['away']['team']['abbreviation'] and optteam2 in item['games'][gidx]['teams']['home']['team']['abbreviation']:
                         string1 = '{}'.format(self._ISODateToEasternTimeNext(item['games'][gidx]['gameDate']))
                         string2 = '{} @ {}'.format(self._bold(item['games'][gidx]['teams']['away']['team']['abbreviation']), item['games'][gidx]['teams']['home']['team']['abbreviation'])
-                        games.append(string1 + ' | ' + string2)
+                        ppitchers = ''
+                        if 'probablePitcher' in item['games'][gidx]['teams']['away'] and 'probablePitcher' in item['games'][gidx]['teams']['home']:
+                            ppitchers = ' - {} vs {}'.format(item['games'][gidx]['teams']['away']['probablePitcher']['fullName'].split(',')[0], item['games'][gidx]['teams']['home']['probablePitcher']['fullName'].split(',')[0])
+                        games.append(string1 + ' | ' + string2 + ppitchers)
                     elif optteam2 in item['games'][gidx]['teams']['away']['team']['abbreviation'] and optteam in item['games'][gidx]['teams']['home']['team']['abbreviation']:
                         string1 = '{}'.format(self._ISODateToEasternTimeNext(item['games'][gidx]['gameDate']))
                         string2 = '{} @ {}'.format(item['games'][gidx]['teams']['away']['team']['abbreviation'], self._bold(item['games'][gidx]['teams']['home']['team']['abbreviation']))
-                        games.append(string1 + ' | ' + string2)
+                        ppitchers = ''
+                        if 'probablePitcher' in item['games'][gidx]['teams']['away'] and 'probablePitcher' in item['games'][gidx]['teams']['home']:
+                            ppitchers = ' - {} vs {}'.format(item['games'][gidx]['teams']['away']['probablePitcher']['fullName'].split(',')[0], item['games'][gidx]['teams']['home']['probablePitcher']['fullName'].split(',')[0])
+                        games.append(string1 + ' | ' + string2 + ppitchers)
+                        
                     else:
                         pass
             
@@ -1023,13 +1095,18 @@ class MLBScores(callbacks.Plugin):
                 for gidx, _ in enumerate(item['games']):
                     #print(item['games'][gidx]['teams']['away']['team']['id'])
                     string1 = '{}'.format(self._ISODateToEasternTimeNext(item['games'][gidx]['gameDate']))
+                    necessary = ''
+                    if item['games'][gidx]['ifNecessary'] == 'Y':
+                        necessary = ' - If Necessary'
                     #string2 = '{}'.format('{} {}'.format('at', item['games'][gidx]['teams']['home']['team']['abbreviation']) if int(tid) == item['games'][gidx]['teams']['away']['team']['id'] else '{} {}'.format('vs', item['games'][gidx]['teams']['away']['team']['abbreviation']))
                     if optteam in item['games'][gidx]['teams']['away']['team']['abbreviation']:
                         string2 = '{} @ {}'.format(self._bold(item['games'][gidx]['teams']['away']['team']['abbreviation']), item['games'][gidx]['teams']['home']['team']['abbreviation'])
                     else:
                         string2 = '{} @ {}'.format(item['games'][gidx]['teams']['away']['team']['abbreviation'], self._bold(item['games'][gidx]['teams']['home']['team']['abbreviation']))
-                    games.append(string1 + ' | ' + string2)
-                
+                    ppitchers = ''
+                    if 'probablePitcher' in item['games'][gidx]['teams']['away'] and 'probablePitcher' in item['games'][gidx]['teams']['home']:
+                        ppitchers = ' - {} vs {}'.format(item['games'][gidx]['teams']['away']['probablePitcher']['fullName'].split(',')[0], item['games'][gidx]['teams']['home']['probablePitcher']['fullName'].split(',')[0])
+                    games.append(string1 + ' | ' + string2 + ppitchers + necessary)
             if len(games) <= 4:
                 for game in games:
                     irc.sendMsg(ircmsgs.privmsg(msg.args[0], game))
