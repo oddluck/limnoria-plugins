@@ -815,8 +815,11 @@ class MLBScores(callbacks.Plugin):
         tmp = tmp.json()
         if not tmp['stats']:
             # no current game
-            tmp = requests.get('{}{}'.format(api_base, sched_url.format(teamId=player['team']))).json()
-            if tmp['teams'][0]['nextGameSchedule']['dates'][0]['games'][0]['status']['abstractGameState'] == 'Final':
+            tmp = requests.get('{}{}'.format(api_base, sched_url.format(teamId=player['team'])))
+            print(tmp.url)
+            tmp = tmp.json()
+            statuses = ['Final', 'Live']
+            if tmp['teams'][0]['nextGameSchedule']['dates'][0]['games'][0]['status']['abstractGameState'] in statuses:
                 gamePk = tmp['teams'][0]['nextGameSchedule']['dates'][0]['games'][0]['gamePk']
                 gameDate = pendulum.parse(tmp['teams'][0]['nextGameSchedule']['dates'][0]['games'][0]['gameDate'],
                                          strict=False).in_tz('US/Eastern').format('MMM Do')
@@ -888,7 +891,7 @@ class MLBScores(callbacks.Plugin):
             #print(thing)
             if player['stat'] == thing['group']:
                 if not thing['stat']:
-                    stat_line['ERROR'] = 'No stats available for {} in current or previous game'.format(optplayer.title())
+                    stat_line['ERROR'] = 'No stats available for {} on {}'.format(optplayer.title(), gameDate)
                     break
                 if player['stat'] == 'hitting':
                     for s in hitting_stat_headers:
