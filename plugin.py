@@ -54,6 +54,8 @@ import time
 import dateutil.parser
 import urllib
 import collections
+import jellyfish
+from operator import itemgetter
 # from pprint import pprint
 # from pybaseball import playerid_lookup
 # from pybaseball import pitching_stats_bref
@@ -97,6 +99,7 @@ class MLBScores(callbacks.Plugin):
 
         self._TEAM_BY_TRI, self._TEAM_BY_ID = self._getTeams()
         self._STATUSES = self._getStatuses()
+        self._ACTIVE_PLAYERS = self._fetchActivePlayers()
 
         self._TEAM_BY_NICK = {'fish': 'MIA', 'poop': 'NYY', 'goat': 'BOS',
                               'best': 'BOS', 'worst': 'NYY', '💩': 'NYY'}
@@ -126,12 +129,16 @@ class MLBScores(callbacks.Plugin):
                                 'calendario':     'candelario',
                                 'scrabble':       'marc rzepczynski',
                                 'mr_pink':        'Enyel De Los Santos',
+                                'jbj':            'jackie bradley jr.',
         }
         
         def periodicCheckGames():
             #print('MLBScores: Periodic check')
             self.MLB_GAMES = self._fetchGames(None, None)
             #print(self.CFB_GAMES)
+            
+        def periodicCheckPlayers():
+            self._ACTIVE_PLAYERS = self._fetchActivePlayers()
             
         periodicCheckGames()
         
@@ -143,6 +150,15 @@ class MLBScores(callbacks.Plugin):
             except KeyError:
                 pass
             schedule.addPeriodicEvent(periodicCheckGames, 20, now=False, name='fetchMLBscores')
+            
+        try:  # check active rosters.
+            schedule.addPeriodicEvent(periodicCheckPlayers, 3600, now=False, name='fetchMLBplayers')
+        except AssertionError:
+            try:
+                schedule.removeEvent('fetchMLBplayers')
+            except KeyError:
+                pass
+            schedule.addPeriodicEvent(periodicCheckPlayers, 3600, now=False, name='fetchMLBplayers')
         
     def _shortenUrl(self, url):
         """Shortens a long URL into a short one."""
@@ -503,17 +519,111 @@ class MLBScores(callbacks.Plugin):
         if date:
             self.MLB_GAMES = self._fetchGames(team)
             
-    @wrap(['text'])
-    def mlbgamestats(self, irc, msg, args, optplayer):
-        """<player name>
-        Fetches current/previous game stats for given player"""
+    def _sanitizeName(self, name):
+        """ Sanitize name. """
+
+        name = name.lower()  # lower.
+        #name = name.strip('.')  # remove periods.
+        name = name.strip('-')  # remove dashes.
+        name = name.strip("'")  # remove apostrophies.
+        # possibly strip jr/sr/III suffixes in here?
+        return name
+    
+    def _pf(self, irc, db, pname):
+        """<e|r|s> <player>
+
+        Find a player's page via google ajax. Specify DB based on site.
+        """
+        #print(pname)
+        #print(self._player_aliases[pname.lower()])
+        #print(pname.lower() in self._player_aliases)
+        if pname.lower() in self._player_aliases:
+            #print('hi')
+            pname = self._player_aliases[pname.lower()]
+        # sanitize.
+        pname = self._sanitizeName(pname)
+        print(pname)
+        # db.
+        if db == "e":  # espn.
+            #splitsfix = '-site:espn.go.com/mlb/player/splits/'
+            burl = "site:espn.go.com/mlb/player/ {0}".format(pname)
+        elif db == "r":  # rworld.
+            burl = "site:www.rotoworld.com/player/mlb/ %s" % pname
+        elif db == "s":  # st.
+            burl = "site:www.spotrac.com/mlb/ %s" % pname
+        elif db == "br":  # br.
+            burl = "site:www.baseball-reference.com/ %s" % pname
+
+        try:
+            goog = irc.getCallback("Google")
+            if goog:
+                try:
+                    search = goog.search('{0}'.format(burl),'#reddit-baseball',{'smallsearch': True})
+                    search = goog.decode(search)
+                    if search:
+                        #print(search[0])
+                        url = search[0]['url']
+                        title = search[0]['title']
+                        title = title.replace('<b>', '')
+                        title = title.replace('</b>', '')
+                        title = title.strip()
+                        if pname.title() in title:
+                            title = title.split(pname.title())[0]
+                            title += pname.title()
+                        else:
+                            title = title.split('-')[0]
+                            title = title.strip()
+                        #print(title)
+                        #print(url)
+                        #results = search[0].next_sibling.next_sibling
+                        #link = results.a.get('href')
+                        #print(link)
+                        return title
+                except:
+                    self.log.exception("ERROR :: _pf :: failed to get link for {0}".format(burl))
+                    return None
+        except Exception as e:
+            self.log.info("ERROR :: _pf :: {0}".format(e))
+            return None
+            
+    def _similarPlayers(self, optname):
+        """Return a dict containing the five most similar players based on optname."""
+        
+        activeplayers = self._ACTIVE_PLAYERS
+        # test length as sanity check.
+        if len(activeplayers) == 0:
+            self.log.info("ERROR: _similarPlayers :: length 0. Could not find any players in players source")
+            return None
+        # ok, finally, lets go.
+        optname = str(self._sanitizeName(optname))  # sanitizename.
+        
+        jaro, damerau = [], []  # empty lists to put our results in.
+        # now we create the container to iterate over.
+        names = [{'fullname': str(self._sanitizeName(k)), 'id':v['id']} for k,v in activeplayers.items()]  # full_name # last_name # first_name
+        #print(type(optname))
+        # iterate over the entries.
+        for row in names:  # list of dicts.
+            jaroscore = jellyfish.jaro_distance(optname, row['fullname'])  # jaro.
+            damerauscore = jellyfish.damerau_levenshtein_distance(optname, row['fullname'])  # dld
+            jaro.append({'jaro': jaroscore, 'fullname': row['fullname'], 'id': row['id']})  # add dict to list.
+            damerau.append({'damerau': damerauscore, 'fullname': row['fullname'], 'id': row['id']})  # ibid.
+        # now, we do two "sorts" to find the "top5" matches. reverse is opposite on each.
+        jarolist = sorted(jaro, key=itemgetter('jaro'), reverse=True)[0:5]  # bot five.
+        dameraulist = sorted(damerau, key=itemgetter('damerau'), reverse=False)[0:5]  # top five.
+        # we now have two lists, top5 sorted, and need to do some further things.
+        # now, lets iterate through both lists. match if both are in it. (better matches)
+        matching = [k for k in jarolist if k['id'] in [f['id'] for f in dameraulist]]
+        # now, test if we have anything. better matches will have more.
+        if len(matching) == 0:  # we have NO matches. grab the top two from jaro/damerau (for error str)
+            matching = [jarolist[0], dameraulist[0], jarolist[1], dameraulist[1]]
+            self.log.info("_similarPlayers :: NO MATCHES for {0} :: {1}".format(optname, matching))
+        # return matching now.
+        return matching
+    
+    def _fetchActivePlayers(self):
         
         api_base = 'http://statsapi.mlb.com'
         roster_url = '/api/v1/teams/{team}/roster/active'
-        stats_url_current = '/api/v1/people/{personId}/stats/game/current'
-        stats_url_game = '/api/v1/people/{personId}/stats/game/{gamePk}'
-        sched_url = ('/api/v1/teams/{teamId}?hydrate=previousSchedule('
-                     'gameType=[E,S,R,A,F,D,L,W]),nextSchedule(gameType=[E,S,R,A,F,D,L,W])')
         
         players = {}
         for team in self._TEAM_BY_ID:
@@ -529,7 +639,42 @@ class MLBScores(callbacks.Plugin):
                                                          'url': player['person']['link'],
                                                          'team': player['parentTeamId'],
                                                          'stat': stat_type}
+        self._ACTIVE_PLAYERS = players
+        return players
+            
+    @wrap(['text'])
+    def fstats(self, irc, msg, args, optplayer):
+        """<player name>
+        Fetches current/previous game fielding stats for given player"""
+        
+        api_base = 'http://statsapi.mlb.com'
+        roster_url = '/api/v1/teams/{team}/roster/active'
+        stats_url_current = '/api/v1/people/{personId}/stats/game/current'
+        stats_url_game = '/api/v1/people/{personId}/stats/game/{gamePk}'
+        sched_url = ('/api/v1/teams/{teamId}?hydrate=previousSchedule('
+                     'gameType=[E,S,R,A,F,D,L,W]),nextSchedule(gameType=[E,S,R,A,F,D,L,W])')
+        
+        if not self._ACTIVE_PLAYERS:
+            players = self._fetchActivePlayers()
+        else:
+            players = self._ACTIVE_PLAYERS
         #print(players)
+        
+        if optplayer.title() not in players:
+            test = self._pf(irc, 'r', optplayer)
+            if test:
+                optplayer = test
+            if optplayer.title() not in players:
+                similar_players = self._similarPlayers(optplayer.lower())
+                #print(similar_players)
+                if similar_players:
+                    for item in similar_players:
+                        if item['fullname'].title() in players:
+                            optplayer = item['fullname']
+                            break
+                if optplayer.title() not in players:
+                    irc.reply('ERROR: {} not found on any active roster, check spelling/input'.format(optplayer.title()))
+                    return
         
         if optplayer.title() not in players:
             irc.reply('ERROR: {} not found on any active roster, check spelling/input'.format(optplayer.title()))
@@ -541,7 +686,133 @@ class MLBScores(callbacks.Plugin):
         #irc.reply('{}{}'.format(api_base, sched_url.format(teamId=player['team'])))
         
         current = False
-        tmp = requests.get('{}{}'.format(api_base, stats_url_current.format(personId=player['id']))).json()
+        tmp = requests.get('{}{}'.format(api_base, stats_url_current.format(personId=player['id'])))
+        print(tmp.url)
+        tmp = tmp.json()
+        if not tmp['stats']:
+            # no current game
+            tmp = requests.get('{}{}'.format(api_base, sched_url.format(teamId=player['team']))).json()
+            try:
+                if tmp['teams'][0]['nextGameSchedule']['dates'][0]['games'][0]['status']['abstractGameState'] == 'Final':
+                    gamePk = tmp['teams'][0]['nextGameSchedule']['dates'][0]['games'][0]['gamePk']
+                    gameDate = pendulum.parse(tmp['teams'][0]['nextGameSchedule']['dates'][0]['games'][0]['gameDate'],
+                                             strict=False).in_tz('US/Eastern').format('MMM Do')
+                else:
+                    gamePk = tmp['teams'][0]['previousGameSchedule']['dates'][0]['games'][0]['gamePk']
+                    gameDate = pendulum.parse(tmp['teams'][0]['previousGameSchedule']['dates'][0]['games'][0]['gameDate'],
+                                             strict=False).in_tz('US/Eastern').format('MMM Do')
+            except:
+                irc.reply('ERROR: No current/previous game fielding stats found for {}'.format(optplayer.title()))
+                return
+        else:
+            current = True
+            #TBD
+            
+        #print(gamePk)
+        
+        url = api_base + stats_url_game.format(personId=player['id'], gamePk=gamePk)
+        #irc.reply(url)
+        print(url)
+        tmp = requests.get(url).json()
+            
+        if not tmp['stats']:
+            irc.reply('ERROR: No current/previous game fielding stats found for {}'.format(optplayer.title()))
+            return
+        
+        stats = []
+        for thing in tmp['stats']:
+            if 'type' not in thing:
+                stats = thing
+                break
+                
+        #print(stats)
+        if not stats:
+            irc.reply('ERROR: No current/previous game fielding stats found for {}'.format(optplayer.title()))
+            return
+        
+        fielding_stat_headers = collections.OrderedDict()
+        fielding_stat_headers['chances'] = 'Chances'
+        fielding_stat_headers['errors'] = 'Errors'
+        fielding_stat_headers['putOuts'] = 'Put Outs'
+        fielding_stat_headers['assists'] = 'Assists'
+        fielding_stat_headers['passedBall'] = 'Passed Balls'
+        fielding_stat_headers['fielding'] = 'Fielding'
+        
+        stat_line = collections.OrderedDict({})
+        for thing in stats['splits']:
+            #print(thing)
+            if thing['group'] == 'fielding':
+                if not thing['stat']:
+                    stat_line['ERROR'] = 'No fielding stats available for {} in current or previous game'.format(optplayer.title())
+                    break
+                for s in fielding_stat_headers:
+                    #print(s)
+                    if s in thing['stat']:
+                        try:
+                            stat_line[fielding_stat_headers[s]] = thing['stat'][s]
+                        except:
+                            stat_line[fielding_stat_headers[s]] = None
+                    #print(stat_line)
+                try:
+                    pct = (stat_line['Put Outs'] + stat_line['Assists']) / stat_line['Chances']
+                    stat_line['Fielding'] = '{:.3f}'.format(pct)
+                except ZeroDivisionError:
+                    pass
+                        
+        #print(stat_line)
+        #for (k,v) in stat_line.items():
+        #    print(k,v)
+        
+        stat_string = ' '.join('{}: {}'.format(self._bold(k),v) for k,v in stat_line.items())
+        
+        irc.reply('{} ({}) {}'.format(self._bold(self._blue(optplayer.title())), gameDate, stat_string))
+        
+        return
+    
+    @wrap(['text'])
+    def mlbgamestats(self, irc, msg, args, optplayer):
+        """<player name>
+        Fetches current/previous game stats for given player"""
+        
+        api_base = 'http://statsapi.mlb.com'
+        roster_url = '/api/v1/teams/{team}/roster/active'
+        stats_url_current = '/api/v1/people/{personId}/stats/game/current'
+        stats_url_game = '/api/v1/people/{personId}/stats/game/{gamePk}'
+        sched_url = ('/api/v1/teams/{teamId}?hydrate=previousSchedule('
+                     'gameType=[E,S,R,A,F,D,L,W]),nextSchedule(gameType=[E,S,R,A,F,D,L,W])')
+        
+        if not self._ACTIVE_PLAYERS:
+            players = self._fetchActivePlayers()
+        else:
+            players = self._ACTIVE_PLAYERS
+        #print(players)
+        
+        if optplayer.title() not in players:
+            test = self._pf(irc, 'r', optplayer)
+            if test:
+                optplayer = test
+            if optplayer.title() not in players:
+                similar_players = self._similarPlayers(optplayer.lower())
+                #print(similar_players)
+                if similar_players:
+                    for item in similar_players:
+                        if item['fullname'].title() in players:
+                            optplayer = item['fullname']
+                            break
+                if optplayer.title() not in players:
+                    irc.reply('ERROR: {} not found on any active roster, check spelling/input'.format(optplayer.title()))
+                    return
+        
+        player = players[optplayer.title()]
+        print(optplayer.title(), player)
+        
+        #irc.reply('{}{}'.format(api_base, stats_url_current.format(personId=player['id'])))
+        #irc.reply('{}{}'.format(api_base, sched_url.format(teamId=player['team'])))
+        
+        current = False
+        tmp = requests.get('{}{}'.format(api_base, stats_url_current.format(personId=player['id'])))
+        print(tmp.url)
+        tmp = tmp.json()
         if not tmp['stats']:
             # no current game
             tmp = requests.get('{}{}'.format(api_base, sched_url.format(teamId=player['team']))).json()
@@ -553,16 +824,17 @@ class MLBScores(callbacks.Plugin):
                 gamePk = tmp['teams'][0]['previousGameSchedule']['dates'][0]['games'][0]['gamePk']
                 gameDate = pendulum.parse(tmp['teams'][0]['previousGameSchedule']['dates'][0]['games'][0]['gameDate'],
                                          strict=False).in_tz('US/Eastern').format('MMM Do')
+            url = api_base + stats_url_game.format(personId=player['id'], gamePk=gamePk)
+            #irc.reply(url)
+            print(url)
+            tmp = requests.get(url).json()
         else:
             current = True
             #TBD
-            
+            gameDate = pendulum.now().in_tz('US/Eastern').format('MMM Do')
         #print(gamePk)
         
-        url = api_base + stats_url_game.format(personId=player['id'], gamePk=gamePk)
-        #irc.reply(url)
-        print(url)
-        tmp = requests.get(url).json()
+        
             
         if not tmp['stats']:
             irc.reply('ERROR: No current/previous game stats found for {}'.format(optplayer.title()))
@@ -601,8 +873,8 @@ class MLBScores(callbacks.Plugin):
         pitching_stat_headers['baseOnBalls'] = 'BB'
         pitching_stat_headers['strikeOuts'] = 'K'
         pitching_stat_headers['pitchesThrown'] = '#P'
-        pitching_stat_headers['balls'] = '#B'
-        pitching_stat_headers['strikes'] = '#S'
+        pitching_stat_headers['balls'] = 'B-S'
+        pitching_stat_headers['strikes'] = 'B-S'
         pitching_stat_headers['hitBatsmen'] = 'HBP'
         pitching_stat_headers['earnedRuns'] = 'ER'
         pitching_stat_headers['runs'] = 'R'
@@ -634,7 +906,10 @@ class MLBScores(callbacks.Plugin):
                         #print(s)
                         if s in thing['stat']:
                             try:
-                                stat_line[pitching_stat_headers[s]] = thing['stat'][s]
+                                if s == 'balls' or s == 'strikes':
+                                    stat_line['B-S'] = '{}-{}'.format(thing['stat']['balls'], thing['stat']['strikes'])
+                                else:
+                                    stat_line[pitching_stat_headers[s]] = thing['stat'][s]
                             except:
                                 stat_line[pitching_stat_headers[s]] = None
                     try:
