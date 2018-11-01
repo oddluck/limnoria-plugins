@@ -162,7 +162,11 @@ class CFBScores(callbacks.Plugin):
         
     @wrap([getopts({'week': 'positiveInt', 'conf': 'positiveInt'}), optional('text')])
     def cfb(self, irc, msg, args, optlist, team=None):
-        """[--week #] [<team>]"""
+        """[--conf #] [--week #] [<team>]
+        Fetches CFB Scores. Defaults to current week and AP Top 25 teams. 
+        Use --conf # (ESPN league #) to fetch a specific conference. 
+        Use --week # to look up a specific week. 
+        """
         
         optlist = dict(optlist)
         week = optlist.get('week')
