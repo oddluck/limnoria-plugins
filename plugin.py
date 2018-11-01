@@ -10,6 +10,8 @@ import requests
 import pendulum
 import json
 import html
+from bs4 import BeautifulSoup
+import re
 
 from supybot import utils, plugins, ircutils, callbacks, schedule
 from supybot.commands import *
@@ -36,13 +38,19 @@ class CFBScores(callbacks.Plugin):
         self.FUZZY_DAYS = ['yesterday', 'tonight', 'today', 'tomorrow',
                            'sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']
         
+        self._current_week = 0
+        self._cfb_byes = {}
+        
         with open("abbrv.json", 'r') as json_file:
             self.abbrv = json.load(json_file)
+            
+        if not self.abbrv:
+            self.abbrv = requests.get(
+            'https://raw.githubusercontent.com/diagonalfish/FootballBotX2/master/abbrv.json')
+            self.abbrv = self.abbrv.json()
         
         def periodicCheckGames():
-            #print('Periodic check')
             self.CFB_GAMES = self._fetchGames(None, '')
-            #print(self.CFB_GAMES)
             
         periodicCheckGames()
         
@@ -55,11 +63,50 @@ class CFBScores(callbacks.Plugin):
                 pass
             schedule.addPeriodicEvent(periodicCheckGames, 20, now=False, name='fetchCFBscores')
             
-    @wrap([optional('text')])
-    def cfbrankings(self, irc, msg, args, filter_team=None):
+    @wrap
+    def cfbbyes(self, irc, msg, args):
+        """Gets teams on bye week for current week"""
+        
+        url = 'https://247sports.com/Article/Schedule-of-bye-weeks-for-college-footballs-top-2018-contenders-120880121/'
+        headers = {'User-Agent': 'Mozilla/5.0 (X11; CrOS x86_64 11151.4.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.8 Safari/537.36'}
+        
+        if not self._cfb_byes:
+            data = requests.get(url, headers=headers)
+            soup = BeautifulSoup(data.content)
+
+            pattern = re.compile(r'Week')
+            section = soup.find('section', class_='article-body')
+            ps = section.find_all('p')
+
+            output = {}
+            for p in ps:
+                if p.text.startswith('Week'):
+                    week = p.text.split(':')[0]
+                    week = week.split('(')[0].strip()
+                    byes = p.text.split(':')[1].strip()
+                    if byes:
+                        output[week] = byes
+                        
+            self._cfb_byes = output
+                
+        try:
+            irc.reply(self._cfb_byes[self._current_week])
+            return
+        except:
+            irc.reply('No teams on bye this week')
+            return
+            
+    
+    @wrap([getopts({'week': 'positiveInt'}), optional('text')])
+    def cfbrankings(self, irc, msg, args, optlist, filter_team=None):
         """Fetches CFB Rankings"""
         
+        optlist = dict(optlist)
+        week = optlist.get('week')
+        
         url = 'http://site.api.espn.com/apis/site/v2/sports/football/college-football/rankings'
+        if week:
+            url += '?weeks={}'.format(week)
         
         try:
             data = requests.get(url)
@@ -68,11 +115,17 @@ class CFBScores(callbacks.Plugin):
             irc.reply('Error fetching rankings')
             return
         
-        rankings = data['rankings'][0]
-        week = ' ' + data['latestWeek']['displayValue']
-        title = data['rankings'][0]['name']
+        if not week:
+            week = ' ' + data['latestWeek']['displayValue']
+        else:
+            if week > data['latestWeek']['number']:
+                irc.reply("Sorry, I cannot predict the future")
+                return
+            week = ' Week {}'.format(week)
         
-        # #1 ALA (3-0 | -)
+        rankings = data['rankings'][0]
+        self._current_week = week.strip()
+        title = data['rankings'][0]['name']
         
         output = []
         for team in rankings['ranks']:
@@ -93,6 +146,7 @@ class CFBScores(callbacks.Plugin):
             
             if filter_team:
                 if filter_team.upper() == team['team']['abbreviation']:
+                    tmp += ' :: {} points'.format(team['points'])
                     output.append(tmp)
                     break
             else:
@@ -125,7 +179,6 @@ class CFBScores(callbacks.Plugin):
             self.CFB_GAMES = self._fetchGames(team, conf, week)
         
         if not self.CFB_GAMES:
-            #print('Pulling fresh')
             self.CFB_GAMES = self._fetchGames(team, conf)
             if not self.CFB_GAMES:
                 irc.reply('No games found')
@@ -136,7 +189,6 @@ class CFBScores(callbacks.Plugin):
         
         reply_string = self._replyAsString(team, games)
         
-        #print(reply_string)
         for string in reply_string:
             irc.reply(string)
         
@@ -165,7 +217,6 @@ class CFBScores(callbacks.Plugin):
         if week:
             url += '&week={}'.format(week)
         
-        #print(url)
         games = requests.get(url)
         games = games.json()
         
@@ -178,14 +229,11 @@ class CFBScores(callbacks.Plugin):
             for game in games:
                 if team == game['competitions'][0]['competitors'][0]['team']['abbreviation'] \
                 or team == game['competitions'][0]['competitors'][1]['team']['abbreviation']:
-                #or team in html.unescape(game['competitions'][0]['competitors'][0]['team']['location']).upper() \
-                #or team in html.unescape(game['competitions'][0]['competitors'][1]['team']['location']).upper():
                     ngames.append(game)
             if not ngames:
                 if team == 'HAWAII':
                     team = "HAWAI'I"
                 for game in games:
-                    #print(team)
                     if team == html.unescape(game['competitions'][0]['competitors'][0]['team']['location']).upper() \
                     or team == html.unescape(game['competitions'][0]['competitors'][1]['team']['location']).upper():
                         ngames.append(game)
@@ -202,8 +250,6 @@ class CFBScores(callbacks.Plugin):
                 for idx, game in enumerate(games):
                     if team.upper() == game['competitions'][0]['competitors'][0]['team']['abbreviation'] \
                     or team.upper() == game['competitions'][0]['competitors'][1]['team']['abbreviation']:
-                    #or team in html.unescape(game['competitions'][0]['competitors'][0]['team']['location']).upper() \
-                    #or team in html.unescape(game['competitions'][0]['competitors'][1]['team']['location']).upper():
                         games = [games.pop(idx)]
                         break
         
@@ -235,7 +281,6 @@ class CFBScores(callbacks.Plugin):
                 new_game['odds'] = ''
                 print(e)
                 
-            #print(new_game['odds'])
             
             if new_game['status'] == 'in' and not new_game['final']:
                 new_game['in_progress'] = True
@@ -283,9 +328,7 @@ class CFBScores(callbacks.Plugin):
     def _replyAsString(self, team, games):
         reply_strings = []
         tmp_strings = []
-        #print(games[0])
         half_point = len(games)//2
-        #print(half_point)
         
         def _parseScores(away, ascr, home, hscr, arnk, hrnk):
             print(ascr, arnk, hscr, hrnk)
@@ -370,9 +413,10 @@ class CFBScores(callbacks.Plugin):
                         string += '{} :: \x02Last Play:\x02 {}'.format(desc, game['last_play'])
                     if game['broadcasts']:
                         string += ' :: \x02TV:\x02 {}'.format(game['broadcasts'])
+                if game['odds']:
+                    string += ' :: \x02Odds:\x02 {}'.format(game['odds'])
                 tmp_strings.append(string)
             elif game['status'] == 'post':
-                #print(game['shortDetail'])
                 if game['shortDetail'] != 'Final':
                     endCode = game['shortDetail']
                     if 'Postponed' in endCode:
@@ -400,8 +444,13 @@ class CFBScores(callbacks.Plugin):
                         endCode = self._red('Final')
                     else:
                         endCode = self._red('F')
-                away_str, home_str, _ = _parseScores(away, game['a_score'], home, game['h_score'], game['away_team_rank'], game['home_team_rank'])
+                away_str, home_str, upset = _parseScores(away, game['a_score'], home, game['h_score'], game['away_team_rank'], game['home_team_rank'])
                 string = '{} @ {} {}'.format(away_str, home_str, endCode)
+                if upset and not single:
+                    string = self._ul(string)
+                if single:
+                    if upset:
+                        string += ' :: {}'.format(self._orange('UPSET'))
                 tmp_strings.append(string)
                 
         
