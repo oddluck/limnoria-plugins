@@ -100,11 +100,11 @@ class NHLScores(callbacks.Plugin):
                     optional_team = 'njd'
                 date = self._checkDateInput(optional_team)
                 #print("2")
-                if date and len(date) != 3:
+                if date: # and len(date) != 3:
                     team = "all"
-                elif date and len(date) == 3:
-                    team = date
-                    date = None
+#                 elif date and len(date) == 3:
+#                     team = date
+#                     date = None
                 else:
                     team = optional_team.upper()
                     try:
@@ -709,9 +709,9 @@ class NHLScores(callbacks.Plugin):
             date = self._EnglishDateToDate(date)
         elif date[:3].lower() in self._FUZZY_DAYS:
             date = self._EnglishDateToDate(date.lower())
-        elif date[:3].upper() in self._TEAMS_BY_TRI:
-            date = date[:3].upper()
-            return date
+#         elif date[:3].upper() in self._TEAMS_BY_TRI:
+#             date = date[:3].upper()
+#             return date
             
         #try:
         #    date = dateutil.parser.parse(date)
