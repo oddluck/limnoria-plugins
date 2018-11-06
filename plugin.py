@@ -186,8 +186,12 @@ class Stocks(callbacks.Plugin):
                 return cap
             return cap
         
+        googs = ["GOOGL:US", "GOOG:US"]
         for symbol in data:
-            name = symbol['longName']
+            if symbol['id'] in googs:
+                name = symbol['shortName'].title()
+            else:
+                name = symbol['longName']
             name = ircutils.bold(name)
             current_price = symbol['price']
             change = symbol['priceChange1Day']
@@ -472,9 +476,39 @@ class Stocks(callbacks.Plugin):
                '{markets_to_fetch}'
                '?locale=en&customTickerList=true')
         
-        print(optmarket)
+        search_url = ('https://search.bloomberg.com/lookup.json?'
+                      'types=Company_Public,Index,Fund,Currency,'
+                      'Commodity,Bond&exclude_subtypes=label:editorial'
+                      '&group_size=3,3,3,3,3,3'
+                      '&fields=name,slug,ticker_symbol,organization,title,primary_site'
+                      '&query={query}')
         
-        m = '{}'.format(','.join(i.upper()+':US' for i in optmarket[:5]))
+        print(optmarket)
+        for idx,v in enumerate(optmarket):
+            if v == 'google':
+                optmarket[idx] = 'googl'
+                optmarket.append('goog')
+        
+        mkts = []
+        for m in optmarket:
+            try:
+                tmp_rank = 0
+                tmp_symbol = ''
+                search_data = requests.get(search_url.format(query=m.lower()), headers=self.HEADERS).json()
+                for group in search_data:
+                    if group['total_results'] == 0:
+                        continue
+                    for result in group['results']:
+                        if result['score'] > tmp_rank:
+                            tmp_symbol = result['ticker_symbol']
+                            tmp_rank = result['score']
+                mkts.append(tmp_symbol)
+            except:
+                mkts.append(m + ':US')
+                
+        print(mkts)
+        
+        m = '{}'.format(','.join(i.upper() for i in mkts[:5]))
         
         url = url.format(markets_to_fetch=m)
         print(url)
@@ -482,7 +516,7 @@ class Stocks(callbacks.Plugin):
         try:
             data = requests.get(url, headers=self.HEADERS).json()
         except:
-            irc.reply('Something went wrong fetching data')
+            irc.reply('Something went wrong fetching data, or couldn\'t find provided symbol')
             return
         
         ticker = self._parseTickerPrices(data, optmarket)
