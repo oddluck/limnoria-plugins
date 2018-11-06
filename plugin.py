@@ -193,15 +193,22 @@ class Stocks(callbacks.Plugin):
             change = symbol['priceChange1Day']
             pct_change = symbol['percentChange1Day']
             prv_close = symbol['previousClosingPriceOneTradingDayAgo']
-            market_cap = _humifyCap(symbol['marketCap'])
+            market_cap = _humifyCap(symbol.get('marketCap'))
             highYear = '${:.2f}'.format(symbol['highPrice52Week'])
             lowYear = '${:.2f}'.format(symbol['lowPrice52Week'])
-            pe_ratio = symbol['priceEarningsRatio']
+            pe_ratio = symbol.get('priceEarningsRatio')
+            ytd = symbol.get('totalReturnYtd')
+            oneyr = symbol.get('totalReturn1Year')
             
             if pe_ratio:
                 pe_ratio = ' | \x02P/E Ratio:\x02 ${:.2f}'.format(pe_ratio)
             else:
                 pe_ratio = ''
+                
+            if market_cap:
+                market_cap = ' | \x02Market Cap:\x02 {} | '.format(market_cap)
+            else:
+                market_cap = ' | '
             
             if 0 < pct_change < 0.5:
                 change = ircutils.mircColor('+{:.2f}'.format(change), 'yellow')
@@ -219,10 +226,27 @@ class Stocks(callbacks.Plugin):
                 change = '{:.2f}'.format(change)
                 pct_change = '{:.2f}%'.format(pct_change)
             string = ('{} ${:.2f} {} ({}) :: \x02Previous Close:\x02 ${:.2f}'
-                      ' | \x02Market Cap:\x02 {} | \x0252wk High:\x02 {} | \x0252wk Low:\x02 {}'
+                      '{}\x0252wk High:\x02 {} | \x0252wk Low:\x02 {}'
                       '{}').format(
                 name, current_price, change, pct_change, prv_close, market_cap,
                 ircutils.mircColor(highYear, 'green'), ircutils.mircColor(lowYear, 'red'), pe_ratio)
+            if ytd:
+                if ytd > 0:
+                    ytd = ircutils.mircColor('{:+.2f}%'.format(ytd), 'green')
+                elif ytd < 0:
+                    ytd = ircutils.mircColor('{:.2f}%'.format(ytd), 'red')
+                else:
+                    ytd = '{:.2f}%'.format(ytd)
+                string += ' | \x02YTD Return:\x02 {}'.format(ytd)
+
+            if oneyr:
+                if oneyr > 0:
+                    oneyr = ircutils.mircColor('{:+.2f}%'.format(oneyr), 'green')
+                elif oneyr < 0:
+                    oneyr = ircutils.mircColor('{:.2f}%'.format(oneyr), 'red')
+                else:
+                    oneyr = '{:.2f}%'.format(oneyr)
+                string += ' | \x021Yr Return:\x02 {}'.format(oneyr)
             ticker.append(string)
         
         return ticker
@@ -253,6 +277,8 @@ class Stocks(callbacks.Plugin):
             change = symbol['priceChange1Day']
             pct_change = symbol['percentChange1Day']
             prv_close = symbol['previousClosingPriceOneTradingDayAgo']
+            ytd = symbol.get('totalReturnYtd')
+            oneyr = symbol.get('totalReturn1Year')
             if 0 < pct_change < 0.5:
                 change = ircutils.mircColor('+{:.2f}'.format(change), 'yellow')
                 pct_change = ircutils.mircColor('+{:.2f}%'.format(pct_change), 'yellow')
@@ -272,6 +298,25 @@ class Stocks(callbacks.Plugin):
             if optmarket:
                 if optmarket.lower() in symbol['shortName'].lower():
                     string += ' :: Previous Close: {:.2f}'.format(prv_close)
+                    
+                    if ytd:
+                        if ytd > 0:
+                            ytd = ircutils.mircColor('{:+.2f}%'.format(ytd), 'green')
+                        elif ytd < 0:
+                            ytd = ircutils.mircColor('{:.2f}%'.format(ytd), 'red')
+                        else:
+                            ytd = '{:.2f}%'.format(ytd)
+                        string += ' :: YTD Return: {}'.format(ytd)
+                    
+                    if oneyr:
+                        if oneyr > 0:
+                            oneyr = ircutils.mircColor('{:+.2f}%'.format(oneyr), 'green')
+                        elif oneyr < 0:
+                            oneyr = ircutils.mircColor('{:.2f}%'.format(oneyr), 'red')
+                        else:
+                            oneyr = '{:.2f}%'.format(oneyr)
+                        string += ' :: 1Yr Return: {}'.format(oneyr)
+                    
                     ticker.append(string)
             else:
                 ticker.append(string)
@@ -296,6 +341,10 @@ class Stocks(callbacks.Plugin):
         coin_data = requests.get(coin_url.format(coins=coins_str))
         print(coin_data.url)
         coin_data = coin_data.json()
+        #print(coin_data)
+        if 'RAW' not in coin_data:
+            irc.reply('ERROR: no coin found for {}'.format(optcoin))
+            return
         
         output = []
         
@@ -378,6 +427,7 @@ class Stocks(callbacks.Plugin):
         m = 'INDU:IND,SPX:IND,CCMP:IND,NYA:IND,UKX:IND,NKY:IND,SPTSX:IND,HSI:IND'
         
         url = url.format(markets_to_fetch=m)
+        print(url)
         
         try:
             data = requests.get(url, headers=self.HEADERS).json()
@@ -440,93 +490,7 @@ class Stocks(callbacks.Plugin):
         for symbol in ticker:
             irc.reply(symbol)
         return
-        
-#     @wrap
-#     def djia(self, irc, msg, args):
-#         """Fetches current value of the Dow Jones Industrial Average"""
-        
-#         url = 'https://api.iextrading.com/1.0/stock/dia/quote'
-#         today = datetime.date.today().strftime("%Y-%m-%d")
-#         yesterday = pendulum.yesterday().strftime("%Y-%m-%d")
-#         now = pendulum.now('US/Eastern')
-        
-#         try:
-#             data = requests.get(url)
-#             data = data.json()
-#         except:
-#             irc.reply('Something went wrong fetching data.')
-#             return
-        
-#         #print(today)
-#         #print(data['Time Series (Daily)']['{}'.format(str(today))])
-# #         try:
-# #             today_data = data['Time Series (Daily)']['{}'.format(str(today))]
-# #             yesterday_data = data['Time Series (Daily)']['{}'.format(str(yesterday))]
-# #         except:
-# #             irc.reply("Something went wrong parsing data")
-# #             return
-        
-#         prices = {}
-#         company = data['companyName']
-#         prices['open'] = data['previousClose']
-#         prices['current'] = data['latestPrice']
-#         prices['delta'] = self._parseDelta(prices['current'] - prices['open'])
-#         prices['%'] = self._parsePct(((prices['current'] - prices['open']) / prices['open']) * 100)
-        
-#         reply_str = "\x02{} for {}:\x02 {:.2f} :: {} ({}) :: Previous close: {:.2f}".format(company, today, prices['current'],
-#                                                                        prices['delta'],
-#                                                                        prices['%'],
-#                                                                        prices['open'])
-#         irc.reply(reply_str)
-        
-#     @wrap(['text'])
-#     def ticker(self, irc, msg, args, symbol):
-#         """Fetches current value of the provided ticker symbol"""
-        
-#         url = 'https://api.iextrading.com/1.0/stock/{}/quote'
-#         today = datetime.date.today().strftime("%Y-%m-%d")
-#         yesterday = pendulum.yesterday().strftime("%Y-%m-%d")
-#         now = pendulum.now('US/Eastern')
-        
-#         try:
-#             data = requests.get(url.format(symbol))
-#         except Exception as err:
-#             print(err)
-#             irc.reply('Something went wrong fetching data.')
-#             return
-        
-#         if data.text == 'Unknown symbol':
-#             irc.reply(data.text)
-#             return
-#         else:
-#             try:
-#                 data = data.json()
-#             except:
-#                 irc.reply('Something went wrong parsing data.')
-#                 return
-#         #print(data.text)
-        
-#         #print(today)
-#         #print(data['Time Series (Daily)']['{}'.format(str(today))])
-# #         try:
-# #             today_data = data['Time Series (Daily)']['{}'.format(str(today))]
-# #             yesterday_data = data['Time Series (Daily)']['{}'.format(str(yesterday))]
-# #         except:
-# #             irc.reply("Something went wrong parsing data, is your symbol valid?")
-# #             return
-        
-#         prices = {}
-#         company = data['companyName']
-#         prices['open'] = data['previousClose']
-#         prices['current'] = data['latestPrice']
-#         prices['delta'] = self._parseDelta(prices['current'] - prices['open'])
-#         prices['%'] = self._parsePct(((prices['current'] - prices['open']) / prices['open']) * 100)
-        
-#         reply_str = "\x02{} for {}:\x02 {:.2f} :: {} ({}) :: Previous close: {:.2f}".format(company, today, prices['current'],
-#                                                                        prices['delta'],
-#                                                                        prices['%'],
-#                                                                        prices['open'])
-#         irc.reply(reply_str)
+    
 
 Class = Stocks
 
