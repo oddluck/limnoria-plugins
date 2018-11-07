@@ -56,6 +56,8 @@ import urllib
 import collections
 import jellyfish
 from operator import itemgetter
+
+from . import inputParser
 # from pprint import pprint
 # from pybaseball import playerid_lookup
 # from pybaseball import pitching_stats_bref
@@ -77,6 +79,11 @@ class MLBScores(callbacks.Plugin):
         self.__parent.__init__(irc)
         
         self._DEBUG = False
+        
+        try:
+            self.GOOG = irc.getCallback('Google')
+        except:
+            self.GOOG = None
 
         self._HTTP = httplib2.Http('.cache')
 
@@ -99,7 +106,7 @@ class MLBScores(callbacks.Plugin):
 
         self._TEAM_BY_TRI, self._TEAM_BY_ID = self._getTeams()
         self._STATUSES = self._getStatuses()
-        self._ACTIVE_PLAYERS = self._fetchActivePlayers()
+        #self._ACTIVE_PLAYERS = self._fetchActivePlayers()
 
         self._TEAM_BY_NICK = {'fish': 'MIA', 'poop': 'NYY', 'goat': 'BOS',
                               'best': 'BOS', 'worst': 'NYY', '💩': 'NYY'}
@@ -130,6 +137,13 @@ class MLBScores(callbacks.Plugin):
                                 'scrabble':       'marc rzepczynski',
                                 'mr_pink':        'Enyel De Los Santos',
                                 'jbj':            'jackie bradley jr.',
+                                'mvp':            'mookie betts',
+                                'tyler austin\'s daddy': 'joe kelly',
+                                'tyler austins daddy': 'joe kelly',
+                                'joe kelly\'s son': 'tyler austin',
+                                'joe kellys son': 'tyler austin',
+                                'joe kelly\'s daughter': 'tyler austin',
+                                'joe kellys daughter': 'tyler austin',
         }
         
         def periodicCheckGames():
@@ -138,9 +152,12 @@ class MLBScores(callbacks.Plugin):
             #print(self.CFB_GAMES)
             
         def periodicCheckPlayers():
-            self._ACTIVE_PLAYERS = self._fetchActivePlayers()
+            self._PLAYERS = {}
+            self._PLAYERS['active'] = self._fetchPlayers()
+            self._PLAYERS['allTime'] = self._fetchPlayers('allTime')
             
         periodicCheckGames()
+        periodicCheckPlayers()
         
         try:  # check scores.
             schedule.addPeriodicEvent(periodicCheckGames, 20, now=False, name='fetchMLBscores')
@@ -159,6 +176,11 @@ class MLBScores(callbacks.Plugin):
             except KeyError:
                 pass
             schedule.addPeriodicEvent(periodicCheckPlayers, 3600, now=False, name='fetchMLBplayers')
+            
+        try:
+            schedule.removeEvent('fetchALLMLBplayers')
+        except KeyError:
+            pass
         
     def _shortenUrl(self, url):
         """Shortens a long URL into a short one."""
@@ -485,7 +507,12 @@ class MLBScores(callbacks.Plugin):
             if 'was' in irc_args:
                 irc_args = irc_args.replace('was', 'wsh')
 
-        team, date, tz = self._parseInput(irc_args)
+        try:
+            team, date, tz = inputParser.parseInput(irc_args, self._TEAM_BY_TRI, self._TEAM_BY_NICK)
+            print('external parser worked')
+        except:
+            team, date, tz = self._parseInput(irc_args)
+            print('internal parser worked')
         #print(team)
         #print(date)
 
@@ -518,7 +545,198 @@ class MLBScores(callbacks.Plugin):
             
         if date:
             self.MLB_GAMES = self._fetchGames(team)
+    
+    
+    @wrap(['text'])
+    def currentab(self, irc, msg, args, irc_args):
+        """[<team tri code>]
+        Fetches details for current at bat for the given team."""
+
+        if irc_args:
+            if 'was' in irc_args:
+                irc_args = irc_args.replace('was', 'wsh')
+
+        try:
+            team, date, tz = inputParser.parseInput(irc_args, self._TEAM_BY_TRI, self._TEAM_BY_NICK)
+            print('external parser worked')
+        except:
+            team, date, tz = self._parseInput(irc_args)
+            print('internal parser worked')
+        #print(team)
+        #print(date)
+
+        games = self._fetchGames(team, date)
+
+        if not games:
+            irc.reply('No games found')
+            return
+
+        games = self._parseGames(games, date, team)
+        if not games:
+            irc.reply('No games found')
+            return
+        games = self._sortGames(games)
+        
+        for game in games:
+            at_bat = game['atBat']
             
+        if not at_bat:
+            irc.reply('ERROR: No current at bat found, game active?')
+            return
+
+        irc.reply(at_bat)
+        
+    @wrap(['positiveInt','text'])
+    def findab(self, irc, msg, args, ab_index, irc_args):
+        """<ab #> <team tri code>
+        Fetches details for current at bat for the given team."""
+
+        if irc_args:
+            if 'was' in irc_args:
+                irc_args = irc_args.replace('was', 'wsh')
+
+        try:
+            team, date, tz = inputParser.parseInput(irc_args, self._TEAM_BY_TRI, self._TEAM_BY_NICK)
+            print('external parser worked')
+        except:
+            team, date, tz = self._parseInput(irc_args)
+            print('internal parser worked')
+        #print(team)
+        #print(date)
+
+        games = self._fetchGames(team, date)
+
+        if not games:
+            irc.reply('No games found')
+            return
+
+        games = self._parseGames(games, date, team)
+        if not games:
+            irc.reply('No games found')
+            return
+        games = self._sortGames(games)
+        
+        ab_index = str(ab_index-1)
+        for game in games:
+            at_bat = game['atBats'].get(ab_index)
+            
+        if not at_bat:
+            irc.reply('ERROR: No at bat found, game active?')
+            return
+        
+        at_bat = at_bat[0]
+
+        irc.reply(at_bat)
+        
+    @wrap(['text'])
+    def atbats(self, irc, msg, args, irc_args):
+        """<ab #> <team tri code>
+        Fetches details for current at bat for the given team."""
+
+        if irc_args:
+            if 'was' in irc_args:
+                irc_args = irc_args.replace('was', 'wsh')
+
+        try:
+            team, date, tz = inputParser.parseInput(irc_args, self._TEAM_BY_TRI, self._TEAM_BY_NICK)
+            print('external parser worked')
+        except:
+            team, date, tz = self._parseInput(irc_args)
+            print('internal parser worked')
+        #print(team)
+        #print(date)
+
+        games = self._fetchGames(team, date)
+
+        if not games:
+            irc.reply('No games found')
+            return
+
+        games = self._parseGames(games, date, team)
+        if not games:
+            irc.reply('No games found')
+            return
+        games = self._sortGames(games)
+        
+        #ab_index = str(ab_index-1)
+        at_bats = []
+        for game in games:
+            for k,v in game['atBats'].items():
+                #print(k)
+                at_bats.append([v[1], v[2]])
+                
+            
+        if not at_bats:
+            irc.reply('ERROR: No at bats found, game active?')
+            return
+        
+        at_bats = sorted(at_bats, key=lambda k: k[0], reverse=True)
+
+        irc.reply(', '.join(str(a[0]) + '-' + a[1] for a in at_bats))
+        
+    @wrap(['text'])
+    def lastatbat(self, irc, msg, args, irc_args):
+        """<team> <player>
+        Fetches details for last at bat for the given team and player."""
+
+        if irc_args:
+            if 'was' in irc_args:
+                irc_args = irc_args.replace('was', 'wsh')
+                
+        player = irc_args.split()[1:]
+        player = ' '.join(n for n in player).strip()
+        irc_args = irc_args.split()[0]
+
+        try:
+            team, date, tz = inputParser.parseInput(irc_args, self._TEAM_BY_TRI, self._TEAM_BY_NICK)
+            print('external parser worked')
+        except:
+            team, date, tz = self._parseInput(irc_args)
+            print('internal parser worked')
+        #print(team)
+        #print(date)
+
+        games = self._fetchGames(team, date)
+
+        if not games:
+            irc.reply('No games found')
+            return
+
+        games = self._parseGames(games, date, team)
+        if not games:
+            irc.reply('No games found')
+            return
+        games = self._sortGames(games)
+        
+        #ab_index = str(ab_index-1)
+        at_bats = []
+        for game in games:
+            for k,v in game['atBats'].items():
+                #print(k)
+                at_bats.append([v[1], v[2]])
+                
+            
+        if not at_bats:
+            irc.reply('ERROR: No at bats found, game active?')
+            return
+        
+        at_bats = sorted(at_bats, key=lambda k: k[0], reverse=True)
+        
+        for at_bat in at_bats:
+            #print(player.lower(), at_bat[1].lower())
+            if player.lower() == at_bat[1].lower():
+                print('hi')
+                idx = str(at_bat[0]-1)
+                for game in games:
+                    print(game['atBats'].get(idx), idx)
+                    ab = game['atBats'].get(idx)
+                    if ab:
+                        ab = ab[0]
+                break
+
+        irc.reply(ab)
+    
+    
     def _sanitizeName(self, name):
         """ Sanitize name. """
 
@@ -529,20 +747,18 @@ class MLBScores(callbacks.Plugin):
         # possibly strip jr/sr/III suffixes in here?
         return name
     
-    def _pf(self, irc, db, pname):
+    def _pf(self, db, pname):
         """<e|r|s> <player>
 
         Find a player's page via google ajax. Specify DB based on site.
         """
-        #print(pname)
-        #print(self._player_aliases[pname.lower()])
-        #print(pname.lower() in self._player_aliases)
+
+        # check for aliases first
         if pname.lower() in self._player_aliases:
-            #print('hi')
             pname = self._player_aliases[pname.lower()]
         # sanitize.
         pname = self._sanitizeName(pname)
-        print(pname)
+        
         # db.
         if db == "e":  # espn.
             #splitsfix = '-site:espn.go.com/mlb/player/splits/'
@@ -554,30 +770,28 @@ class MLBScores(callbacks.Plugin):
         elif db == "br":  # br.
             burl = "site:www.baseball-reference.com/ %s" % pname
 
+        # now actually search
         try:
-            goog = irc.getCallback("Google")
-            if goog:
+            #goog = self.GOOG
+            if self.GOOG:
                 try:
-                    search = goog.search('{0}'.format(burl),'#reddit-baseball',{'smallsearch': True})
-                    search = goog.decode(search)
+                    search = self.GOOG.search('{0}'.format(burl),'#reddit-baseball',{'smallsearch': True})
+                    search = self.GOOG.decode(search)
                     if search:
-                        #print(search[0])
                         url = search[0]['url']
-                        title = search[0]['title']
-                        title = title.replace('<b>', '')
-                        title = title.replace('</b>', '')
-                        title = title.strip()
-                        if pname.title() in title:
-                            title = title.split(pname.title())[0]
-                            title += pname.title()
-                        else:
-                            title = title.split('-')[0]
-                            title = title.strip()
-                        #print(title)
-                        #print(url)
-                        #results = search[0].next_sibling.next_sibling
-                        #link = results.a.get('href')
-                        #print(link)
+#                         title = search[0]['title']
+#                         title = title.replace('<b>', '')
+#                         title = title.replace('</b>', '')
+#                         title = title.strip()
+#                         if pname.title() in title:
+#                             title = title.split(pname.title())[0]
+#                             title += pname.title()
+#                         else:
+#                             title = title.split('-')[0]
+#                             title = title.strip()
+                        title = url.split('/')[-1]
+                        title = title.replace('-', ' ')
+                        print(title)
                         return title
                 except:
                     self.log.exception("ERROR :: _pf :: failed to get link for {0}".format(burl))
@@ -589,7 +803,7 @@ class MLBScores(callbacks.Plugin):
     def _similarPlayers(self, optname):
         """Return a dict containing the five most similar players based on optname."""
         
-        activeplayers = self._ACTIVE_PLAYERS
+        activeplayers = self._PLAYERS['active']
         # test length as sanity check.
         if len(activeplayers) == 0:
             self.log.info("ERROR: _similarPlayers :: length 0. Could not find any players in players source")
@@ -617,31 +831,244 @@ class MLBScores(callbacks.Plugin):
         if len(matching) == 0:  # we have NO matches. grab the top two from jaro/damerau (for error str)
             matching = [jarolist[0], dameraulist[0], jarolist[1], dameraulist[1]]
             self.log.info("_similarPlayers :: NO MATCHES for {0} :: {1}".format(optname, matching))
+            match = False
+        else:
+            match = True
         # return matching now.
-        return matching
+        return matching, match
     
-    def _fetchActivePlayers(self):
+#     def _fetchActivePlayers(self):
+        
+#         api_base = 'http://statsapi.mlb.com'
+#         roster_url = '/api/v1/teams/{team}/roster/active'
+        
+#         players = {}
+#         for team in self._TEAM_BY_ID:
+#             url = api_base + roster_url.format(team=team)
+#             #print(url)
+#             tmp = requests.get(url).json()
+#             for player in tmp['roster']:
+#                 if 'Pitcher' in player['position']['type']:
+#                     stat_type = 'pitching'
+#                 else:
+#                     stat_type = 'hitting'
+#                 players[player['person']['fullName']] = {'id': player['person']['id'], 
+#                                                          'url': player['person']['link'],
+#                                                          'team': player['parentTeamId'],
+#                                                          'stat': stat_type}
+#         self._ACTIVE_PLAYERS = players
+#         return players
+    
+    def _fetchPlayers(self, search_type=None):
+        
+        # default to active rosters only
+        if not search_type:
+            search_type = 'active'
         
         api_base = 'http://statsapi.mlb.com'
-        roster_url = '/api/v1/teams/{team}/roster/active'
+        roster_url = '/api/v1/teams/{team}/roster/{search_type}'
         
+        # build db
         players = {}
         for team in self._TEAM_BY_ID:
-            url = api_base + roster_url.format(team=team)
-            #print(url)
+            url = api_base + roster_url.format(team=team, search_type=search_type)
             tmp = requests.get(url).json()
             for player in tmp['roster']:
+                # assign stat category to fetch
                 if 'Pitcher' in player['position']['type']:
                     stat_type = 'pitching'
                 else:
                     stat_type = 'hitting'
-                players[player['person']['fullName']] = {'id': player['person']['id'], 
-                                                         'url': player['person']['link'],
-                                                         'team': player['parentTeamId'],
-                                                         'stat': stat_type}
-        self._ACTIVE_PLAYERS = players
+                # active players will have a team, inactive will not
+                try:
+                    team = player['parentTeamId']
+                except:
+                    team = None
+                # finally assign the player and info
+                players[player['person']['fullName'].lower()] = {'id': player['person']['id'], 
+                                                                  'url': player['person']['link'],
+                                                                  'team': team,
+                                                                  'stat': stat_type,
+                                                                  'disp_name': player['person']['fullName'],
+                                                                }
         return players
-            
+    
+    def _playerSearch(self, optplayer, search_type):
+        
+        similar_players = None
+        match = False
+        
+        if not self._PLAYERS[search_type]:
+            players = self._fetchPlayers(search_type)
+        else:
+            players = self._PLAYERS[search_type]
+        
+        if optplayer.lower() not in players:
+            test = self._pf('e', optplayer)
+            if test:
+                optplayer = test
+            if optplayer.lower() not in players:
+                similar_players, match = self._similarPlayers(optplayer.lower())
+                #print(similar_players)
+                if match:
+                    for item in similar_players:
+                        if item['fullname'].title() in players:
+                            optplayer = item['fullname']
+                            break
+                if optplayer.lower() not in players:
+                    #irc.reply('ERROR: {} not found on any active roster, check spelling/input'.format(optplayer.title()))
+                    return None, similar_players
+        #print(optplayer)
+        if optplayer.lower() not in players:
+            #irc.reply('ERROR: {} not found on any active roster, check spelling/input'.format(optplayer.title()))
+            return None, similar_players
+        
+        player = players[optplayer.lower()]
+        player['name'] = player['disp_name']
+        
+        return player, similar_players
+    
+    @wrap([getopts({'career': '', 'season': 'somethingWithoutSpaces', 
+                    'postseason': '', 'stattype': 'somethingWithoutSpaces'}), 'text'])
+    def mlbstats(self, irc, msg, args, options, optplayer):
+        """<player name>
+        Fetches stats for given player. Options: --season <year>, --career, --postseason"""
+        
+        api_base = 'http://statsapi.mlb.com'
+        roster_url = '/api/v1/teams/{team}/roster/allTime'
+        stats_url = ('/api/v1/people?'
+                     'personIds={personId}'
+                     '&season={year}'
+                     '&hydrate=stats(group={group},season={year},type={statType},gameType={reg_or_post})')
+    
+        options = dict(options)
+        # defaults
+        statType = 'season'
+        year = pendulum.now().year
+        reg_or_post = 'R'
+        blurb = '{} Season Stats'.format(year)
+        if not options:
+            statType = 'season'
+            year = pendulum.now().year
+            reg_or_post = 'R'
+            blurb = '{} Season Stats'.format(year)
+        # parse our options
+        else:
+            if 'career' in options and 'postseason' in options:
+                # we want career postseason stats
+                reg_or_post = 'P'
+                statType = 'career'
+                year = pendulum.now().year
+                blurb = '{} Postseason Stats'.format(statType.title())
+            elif 'career' in options and 'postseason' not in options:
+                # we want career regular season stats
+                reg_or_post = 'R'
+                statType = 'career'
+                year = pendulum.now().year
+                blurb = '{} Stats'.format(statType.title())
+            elif 'postseason' in options and 'career' not in options and 'season' not in options:
+                # we want current season postseason stats
+                statType = 'season'
+                year = pendulum.now().year
+                reg_or_post = 'P'
+                blurb = '{} Postseason Stats'.format(year, statType.title())
+            elif 'season' in options and 'postseason' in options:
+                # we want custom season postseason stats
+                if not options['season'].isdigit():
+                    year = pendulum.now().year
+                    optplayer = '{} {}'.format(options['season'], optplayer)
+                else:
+                    year = options['season']
+                statType = 'season'
+                reg_or_post = 'P'
+                blurb = '{} Postseason Stats'.format(year, statType.title())
+            elif 'season' in options and 'postseason' not in options:
+                # we want custom season regular season stats
+                if not options['season'].isdigit():
+                    # this is a workaround for the @aka/alias functionality 
+                    year = pendulum.now().year
+                    optplayer = '{} {}'.format(options['season'], optplayer)
+                else:
+                    year = options['season']
+                statType = 'season'
+                reg_or_post = 'R'   
+                blurb = '{} {} Stats'.format(year, statType.title())
+        
+        print(options)
+        # now let's try to find our player
+        player, possibles = self._playerSearch(optplayer, 'allTime')
+        if not player and possibles:
+            irc.reply("I couldn't find stats for {}".format(optplayer))
+            irc.reply("Possible suggestions: {0}".format(" | ".join([i['fullname'].title() for i in possibles])))
+            return
+        
+        optplayer = player['name']
+        group = options.get('stattype') or player['stat']
+        print(group)
+        tmp = requests.get('{}{}'.format(api_base, stats_url.format(personId=player['id'],
+                                                                    year=year,
+                                                                    statType=statType,
+                                                                    group=group,
+                                                                    reg_or_post=reg_or_post)))
+        tmp = tmp.json()
+        
+        if 'stats' not in tmp['people'][0]:
+            irc.reply('ERROR: No stats found for {}'.format(optplayer.title()))
+            return
+        
+        stats = tmp['people'][0]['stats']
+        try:
+            plyr_info = ' (#{} {})'.format(tmp['people'][0]['primaryNumber'],
+                                         tmp['people'][0]['primaryPosition']['abbreviation'])
+        except:
+            plyr_info = ''
+        
+        hitting_stat_headers, pitching_stat_headers, _ = self._generateStatHeaders('mlbstats')        
+        
+        out_stats = []
+        stats = stats[0]['splits']
+        for thing in stats:
+            #print(thing)
+            stat_line = collections.OrderedDict({})
+            if 'numTeams' not in thing:
+                try:
+                    team = '{}'.format(self._TEAM_BY_ID[str(thing['team']['id'])])
+                except:
+                    team = ''
+            else:
+                team = 'Total'
+            if team:
+                team = '{} :: '.format(self._bu(team))
+            if not thing['stat']:
+                stat_line['ERROR'] = 'No stats available for {}'.format(optplayer.title())
+                break
+            if group == 'hitting':
+                for s in hitting_stat_headers:
+                    #print(s)
+                    if s in thing['stat']:
+                        try:
+                            stat_line[hitting_stat_headers[s]] = thing['stat'][s]
+                        except:
+                            stat_line[hitting_stat_headers[s]] = None
+            elif group == 'pitching':
+                for s in pitching_stat_headers:
+                    #print(s)
+                    if s in thing['stat']:
+                        try:
+                            stat_line[pitching_stat_headers[s]] = thing['stat'][s]
+                        except:
+                            stat_line[pitching_stat_headers[s]] = None
+        
+            stat_string = ' '.join('{}: {}'.format(self._bold(k),v) for k,v in stat_line.items())
+            out_stats.append('{}{}'.format(team, stat_string))
+        
+        irc.reply('{}{} :: {}'.format(self._bold(self._blue(optplayer)), plyr_info, blurb))
+        for line in out_stats:
+            irc.reply('{}'.format(line))
+        
+        return
+    
+    
     @wrap(['text'])
     def fstats(self, irc, msg, args, optplayer):
         """<player name>
@@ -654,40 +1081,16 @@ class MLBScores(callbacks.Plugin):
         sched_url = ('/api/v1/teams/{teamId}?hydrate=previousSchedule('
                      'gameType=[E,S,R,A,F,D,L,W]),nextSchedule(gameType=[E,S,R,A,F,D,L,W])')
         
-        if not self._ACTIVE_PLAYERS:
-            players = self._fetchActivePlayers()
-        else:
-            players = self._ACTIVE_PLAYERS
-        #print(players)
-        
-        if optplayer.title() not in players:
-            test = self._pf(irc, 'r', optplayer)
-            if test:
-                optplayer = test
-            if optplayer.title() not in players:
-                similar_players = self._similarPlayers(optplayer.lower())
-                #print(similar_players)
-                if similar_players:
-                    for item in similar_players:
-                        if item['fullname'].title() in players:
-                            optplayer = item['fullname']
-                            break
-                if optplayer.title() not in players:
-                    irc.reply('ERROR: {} not found on any active roster, check spelling/input'.format(optplayer.title()))
-                    return
-        
-        if optplayer.title() not in players:
-            irc.reply('ERROR: {} not found on any active roster, check spelling/input'.format(optplayer.title()))
+        player, possibles = self._playerSearch(optplayer, 'active')
+        if not player and possibles:
+            irc.reply("I couldn't find stats for {}".format(optplayer))
+            irc.reply("Possible suggestions: {0}".format(" | ".join([i['fullname'].title() for i in possibles])))
             return
         
-        player = players[optplayer.title()]
-        
-        #irc.reply('{}{}'.format(api_base, stats_url_current.format(personId=player['id'])))
-        #irc.reply('{}{}'.format(api_base, sched_url.format(teamId=player['team'])))
+        optplayer = player['name']
         
         current = False
         tmp = requests.get('{}{}'.format(api_base, stats_url_current.format(personId=player['id'])))
-        print(tmp.url)
         tmp = tmp.json()
         if not tmp['stats']:
             # no current game
@@ -701,6 +1104,8 @@ class MLBScores(callbacks.Plugin):
                     gamePk = tmp['teams'][0]['previousGameSchedule']['dates'][0]['games'][0]['gamePk']
                     gameDate = pendulum.parse(tmp['teams'][0]['previousGameSchedule']['dates'][0]['games'][0]['gameDate'],
                                              strict=False).in_tz('US/Eastern').format('MMM Do')
+                url = api_base + stats_url_game.format(personId=player['id'], gamePk=gamePk)
+                tmp = requests.get(url).json()
             except:
                 irc.reply('ERROR: No current/previous game fielding stats found for {}'.format(optplayer.title()))
                 return
@@ -708,12 +1113,8 @@ class MLBScores(callbacks.Plugin):
             current = True
             #TBD
             
-        #print(gamePk)
         
-        url = api_base + stats_url_game.format(personId=player['id'], gamePk=gamePk)
-        #irc.reply(url)
-        print(url)
-        tmp = requests.get(url).json()
+ 
             
         if not tmp['stats']:
             irc.reply('ERROR: No current/previous game fielding stats found for {}'.format(optplayer.title()))
@@ -725,43 +1126,29 @@ class MLBScores(callbacks.Plugin):
                 stats = thing
                 break
                 
-        #print(stats)
         if not stats:
             irc.reply('ERROR: No current/previous game fielding stats found for {}'.format(optplayer.title()))
             return
         
-        fielding_stat_headers = collections.OrderedDict()
-        fielding_stat_headers['chances'] = 'Chances'
-        fielding_stat_headers['errors'] = 'Errors'
-        fielding_stat_headers['putOuts'] = 'Put Outs'
-        fielding_stat_headers['assists'] = 'Assists'
-        fielding_stat_headers['passedBall'] = 'Passed Balls'
-        fielding_stat_headers['fielding'] = 'Fielding'
+        _, _, fielding_stat_headers = self._generateStatHeaders('fstats')
         
         stat_line = collections.OrderedDict({})
         for thing in stats['splits']:
-            #print(thing)
             if thing['group'] == 'fielding':
                 if not thing['stat']:
                     stat_line['ERROR'] = 'No fielding stats available for {} in current or previous game'.format(optplayer.title())
                     break
                 for s in fielding_stat_headers:
-                    #print(s)
                     if s in thing['stat']:
                         try:
                             stat_line[fielding_stat_headers[s]] = thing['stat'][s]
                         except:
                             stat_line[fielding_stat_headers[s]] = None
-                    #print(stat_line)
                 try:
                     pct = (stat_line['Put Outs'] + stat_line['Assists']) / stat_line['Chances']
                     stat_line['Fielding'] = '{:.3f}'.format(pct)
                 except ZeroDivisionError:
                     pass
-                        
-        #print(stat_line)
-        #for (k,v) in stat_line.items():
-        #    print(k,v)
         
         stat_string = ' '.join('{}: {}'.format(self._bold(k),v) for k,v in stat_line.items())
         
@@ -781,33 +1168,13 @@ class MLBScores(callbacks.Plugin):
         sched_url = ('/api/v1/teams/{teamId}?hydrate=previousSchedule('
                      'gameType=[E,S,R,A,F,D,L,W]),nextSchedule(gameType=[E,S,R,A,F,D,L,W])')
         
-        if not self._ACTIVE_PLAYERS:
-            players = self._fetchActivePlayers()
-        else:
-            players = self._ACTIVE_PLAYERS
-        #print(players)
+        player, possibles = self._playerSearch(optplayer, 'active')
+        if not player and possibles:
+            irc.reply("I couldn't find stats for {}".format(optplayer))
+            irc.reply("Possible suggestions: {0}".format(" | ".join([i['fullname'].title() for i in possibles])))
+            return
         
-        if optplayer.title() not in players:
-            test = self._pf(irc, 'r', optplayer)
-            if test:
-                optplayer = test
-            if optplayer.title() not in players:
-                similar_players = self._similarPlayers(optplayer.lower())
-                #print(similar_players)
-                if similar_players:
-                    for item in similar_players:
-                        if item['fullname'].title() in players:
-                            optplayer = item['fullname']
-                            break
-                if optplayer.title() not in players:
-                    irc.reply('ERROR: {} not found on any active roster, check spelling/input'.format(optplayer.title()))
-                    return
-        
-        player = players[optplayer.title()]
-        print(optplayer.title(), player)
-        
-        #irc.reply('{}{}'.format(api_base, stats_url_current.format(personId=player['id'])))
-        #irc.reply('{}{}'.format(api_base, sched_url.format(teamId=player['team'])))
+        optplayer = player['name']
         
         current = False
         tmp = requests.get('{}{}'.format(api_base, stats_url_current.format(personId=player['id'])))
@@ -854,37 +1221,7 @@ class MLBScores(callbacks.Plugin):
             irc.reply('ERROR: No current/previous game stats found for {}'.format(optplayer.title()))
             return
         
-        hitting_stat_headers = collections.OrderedDict()
-        hitting_stat_headers['atBats'] = 'AB'
-        hitting_stat_headers['hits'] = 'H'
-        hitting_stat_headers['runs'] = 'R'
-        hitting_stat_headers['baseOnBalls'] = 'BB'
-        hitting_stat_headers['strikeOuts'] = 'SO'
-        hitting_stat_headers['doubles'] = '2B'
-        hitting_stat_headers['triples'] = '3B'
-        hitting_stat_headers['homeRuns'] = 'HR'
-        hitting_stat_headers['stolenBases'] = 'SB'
-        hitting_stat_headers['caughtStealing'] = 'CS'
-        hitting_stat_headers['totalBases'] = 'TB'
-        hitting_stat_headers['rbi'] = 'RBI'
-        hitting_stat_headers['avg'] = 'AVG'
-        
-        pitching_stat_headers = collections.OrderedDict()
-        pitching_stat_headers['inningsPitched'] = 'IP'
-        pitching_stat_headers['battersFaced'] = 'BF'
-        pitching_stat_headers['hits'] = 'H'
-        pitching_stat_headers['baseOnBalls'] = 'BB'
-        pitching_stat_headers['strikeOuts'] = 'K'
-        pitching_stat_headers['pitchesThrown'] = '#P'
-        pitching_stat_headers['balls'] = 'B-S'
-        pitching_stat_headers['strikes'] = 'B-S'
-        pitching_stat_headers['hitBatsmen'] = 'HBP'
-        pitching_stat_headers['earnedRuns'] = 'ER'
-        pitching_stat_headers['runs'] = 'R'
-        pitching_stat_headers['homeRuns'] = 'HR'
-        pitching_stat_headers['flyOuts'] = 'FO'
-        pitching_stat_headers['groundOuts'] = 'GO'
-        pitching_stat_headers['era'] = 'gERA'
+        hitting_stat_headers, pitching_stat_headers, _ = self._generateStatHeaders('mlbgamestats')
         
         stat_line = collections.OrderedDict({})
         for thing in stats['splits']:
@@ -901,8 +1238,12 @@ class MLBScores(callbacks.Plugin):
                                 stat_line[hitting_stat_headers[s]] = thing['stat'][s]
                             except:
                                 stat_line[hitting_stat_headers[s]] = None
-                    avg = stat_line['H'] / stat_line['AB']
-                    avg = '{:.3f}'.format(avg)
+                    try:
+                        avg = stat_line['H'] / stat_line['AB']
+                        avg = '{:.3f}'.format(avg)                    
+                    except ZeroDivisionError:
+                        avg = ''
+                    
                     stat_line['AVG'] = avg
                 elif player['stat'] == 'pitching':
                     for s in pitching_stat_headers:
@@ -924,15 +1265,137 @@ class MLBScores(callbacks.Plugin):
                             era = '0.00'
                     stat_line['gERA'] = era
                         
-        #print(stat_line)
-        #for (k,v) in stat_line.items():
-        #    print(k,v)
-        
         stat_string = ' '.join('{}: {}'.format(self._bold(k),v) for k,v in stat_line.items())
         
         irc.reply('{} ({}) {}'.format(self._bold(self._blue(optplayer.title())), gameDate, stat_string))
         
         return
+    
+    def _generateStatHeaders(self, called_by):
+        
+        if called_by == 'mlbstats':
+            hitting_stat_headers =                          collections.OrderedDict()
+            hitting_stat_headers['gamesPlayed'] =           'GP'
+            hitting_stat_headers['atBats'] =                'AB'
+            hitting_stat_headers['plateAppearances'] =      'PA'
+            hitting_stat_headers['hits'] =                  'H'
+            hitting_stat_headers['runs'] =                  'R'
+            hitting_stat_headers['doubles'] =               '2B'
+            hitting_stat_headers['triples'] =               '3B'
+            hitting_stat_headers['homeRuns'] =              'HR'
+            hitting_stat_headers['baseOnBalls'] =           'BB'
+            hitting_stat_headers['intentionalWalks'] =      'IBB'
+            hitting_stat_headers['hitByPitch'] =            'HBP'
+            hitting_stat_headers['strikeOuts'] =            'SO'
+            hitting_stat_headers['groundOuts'] =            'GO'
+            hitting_stat_headers['groundIntoDoublePlay'] =  'GIDP'
+            hitting_stat_headers['stolenBases'] =           'SB'
+            hitting_stat_headers['caughtStealing'] =        'CS'
+            hitting_stat_headers['stolenBasePercentage'] =  'SB%'
+            hitting_stat_headers['totalBases'] =            'TB'
+            hitting_stat_headers['leftOnBase'] =            'LOB'
+            hitting_stat_headers['sacBunts'] =              'sacB'
+            hitting_stat_headers['sacFlies'] =              'sacF'
+            hitting_stat_headers['babip'] =                 'BABIP'
+            hitting_stat_headers['rbi'] =                   'RBI'
+            hitting_stat_headers['avg'] =                   'AVG'
+            hitting_stat_headers['obp'] =                   'OBP'
+            hitting_stat_headers['slg'] =                   'SLG'
+            hitting_stat_headers['ops'] =                   'OPS'
+
+            pitching_stat_headers =                         collections.OrderedDict()
+            pitching_stat_headers['gamesPlayed'] =          'GP'
+            pitching_stat_headers['gamesStarted'] =         'GS'
+            pitching_stat_headers['completeGames'] =        'CG'
+            pitching_stat_headers['shutouts'] =             'SHO'
+            pitching_stat_headers['inningsPitched'] =       'IP'
+            pitching_stat_headers['pitchesPerInning'] =     'PitPI'
+            pitching_stat_headers['battersFaced'] =         'BF'
+            pitching_stat_headers['hits'] =                 'H'
+            pitching_stat_headers['baseOnBalls'] =          'BB'
+            pitching_stat_headers['intentionalWalks'] =     'IBB'
+            pitching_stat_headers['hitBatsmen'] =           'HBP'
+            pitching_stat_headers['balks'] =                'BLK'
+            pitching_stat_headers['wildPitches'] =          'WP'
+            pitching_stat_headers['caughtStealing'] =       'CS'
+            pitching_stat_headers['strikeOuts'] =           'K'
+            pitching_stat_headers['groundOuts'] =           'GO'
+            pitching_stat_headers['earnedRuns'] =           'ER'
+            pitching_stat_headers['runs'] =                 'R'
+            pitching_stat_headers['homeRuns'] =             'HR'
+            pitching_stat_headers['flyOuts'] =              'FO'
+            pitching_stat_headers['groundOuts'] =           'GO'
+            pitching_stat_headers['era'] =                  'ERA'
+            pitching_stat_headers['whip'] =                 'WHIP'
+            pitching_stat_headers['avg'] =                  'AVG'
+            pitching_stat_headers['obp'] =                  'OBP'
+            pitching_stat_headers['slg'] =                  'SLG'
+            pitching_stat_headers['ops'] =                  'OPS'
+            pitching_stat_headers['strikeoutWalkRatio'] =   'K/W'
+            pitching_stat_headers['strikeoutsPer9Inn'] =    'K/9'
+            pitching_stat_headers['walksPer9Inn'] =         'W/9'
+            pitching_stat_headers['hitsPer9Inn'] =          'H/9'
+            pitching_stat_headers['wins'] =                 'W'
+            pitching_stat_headers['losses'] =               'L'
+            pitching_stat_headers['winPercentage'] =        'W%'
+            pitching_stat_headers['saves'] =                'SV'
+            pitching_stat_headers['saveOpportunities'] =    'SVO'
+            pitching_stat_headers['holds'] =                'HLD'
+            
+            fielding_stat_headers = None
+            
+            return hitting_stat_headers, pitching_stat_headers, fielding_stat_headers
+        elif called_by == 'fstats':
+            fielding_stat_headers =                 collections.OrderedDict()
+            fielding_stat_headers['chances'] =      'Chances'
+            fielding_stat_headers['errors'] =       'Errors'
+            fielding_stat_headers['putOuts'] =      'Put Outs'
+            fielding_stat_headers['assists'] =      'Assists'
+            fielding_stat_headers['passedBall'] =   'Passed Balls'
+            fielding_stat_headers['fielding'] =     'Fielding'
+            
+            hitting_stat_headers = None
+            pitching_stat_headers = None
+            
+            return hitting_stat_headers, pitching_stat_headers, fielding_stat_headers
+        elif called_by == 'mlbgamestats':
+            hitting_stat_headers =                      collections.OrderedDict()
+            hitting_stat_headers['atBats'] =            'AB'
+            hitting_stat_headers['hits'] =              'H'
+            hitting_stat_headers['runs'] =              'R'
+            hitting_stat_headers['baseOnBalls'] =       'BB'
+            hitting_stat_headers['strikeOuts'] =        'SO'
+            hitting_stat_headers['doubles'] =           '2B'
+            hitting_stat_headers['triples'] =           '3B'
+            hitting_stat_headers['homeRuns'] =          'HR'
+            hitting_stat_headers['stolenBases'] =       'SB'
+            hitting_stat_headers['caughtStealing'] =    'CS'
+            hitting_stat_headers['totalBases'] =        'TB'
+            hitting_stat_headers['rbi'] =               'RBI'
+            hitting_stat_headers['avg'] =               'AVG'
+
+            pitching_stat_headers =                     collections.OrderedDict()
+            pitching_stat_headers['inningsPitched'] =   'IP'
+            pitching_stat_headers['battersFaced'] =     'BF'
+            pitching_stat_headers['hits'] =             'H'
+            pitching_stat_headers['baseOnBalls'] =      'BB'
+            pitching_stat_headers['strikeOuts'] =       'K'
+            pitching_stat_headers['pitchesThrown'] =    '#P'
+            pitching_stat_headers['balls'] =            'B-S'
+            pitching_stat_headers['strikes'] =          'B-S'
+            pitching_stat_headers['hitBatsmen'] =       'HBP'
+            pitching_stat_headers['earnedRuns'] =       'ER'
+            pitching_stat_headers['runs'] =             'R'
+            pitching_stat_headers['homeRuns'] =         'HR'
+            pitching_stat_headers['flyOuts'] =          'FO'
+            pitching_stat_headers['groundOuts'] =       'GO'
+            pitching_stat_headers['era'] =              'gERA'
+            
+            fielding_stat_headers = None
+            
+            return hitting_stat_headers, pitching_stat_headers, fielding_stat_headers
+        else:
+            return None, None, None
             
     @wrap([getopts({'active': '',}), 'text'])
     def mlbroster(self, irc, msg, args, optlist, opttype):
@@ -1018,41 +1481,6 @@ class MLBScores(callbacks.Plugin):
 #         data = batting_stats_bref()
         
 #         #print(data.head())
-    
-    @wrap(['text'])
-    def mlbgame2(self, irc, msg, args, player):
-        """<player>
-        Fetches current game stats for the <player> provided.
-        """
-        #player = player.upper()
-        team, date, tz = self._parseInput(player)
-        
-        if date:
-            test = pendulum.parse(date)
-            now = pendulum.now().format('YYYY-MM-DD')
-            now = pendulum.parse(now)
-            k = (test > now)
-            #print(date, ' | ', k, ' | ', pendulum.now())
-            if k:
-                #irc_args = '{} {}'.format(team, date)
-                #self.mlb(msg, args, irc_args)
-                irc.reply("Sorry I can't predict the future.")
-                return
-
-#         if not team:
-#             irc.reply('No team provided.')
-#             return
-
-        games = self._fetchGames(team, date)
-
-        if not games:
-            irc.reply('No games found')
-            return
-
-        games = self._parseGames(games, date)
-        games = self._sortGames(games)
-        
-        #print(games)
         
             
     @wrap(['text'])
@@ -2584,7 +3012,7 @@ class MLBScores(callbacks.Plugin):
                 url = 'http://statsapi.mlb.com/api/v1/game/{}/playByPlay'
                 #print(url)
                 url = url.format(games[0]['gamePk'])
-                #print(url, 'http://statsapi.mlb.com/api/v1/game/{}/playByPlay'.format(games[0]['gamePk']))
+                print(url, 'http://statsapi.mlb.com/api/v1/game/{}/playByPlay'.format(games[0]['gamePk']))
                 data = requests.get(url)
                 data = data.json()
                 plays = reversed(data['allPlays'])
@@ -2594,6 +3022,102 @@ class MLBScores(callbacks.Plugin):
                         break
             #print(last_play)
             return last_play
+        
+        def _parseAllAtBats():
+            if len(games) == 1:
+                url = 'https://statsapi.mlb.com/api/v1.1/game/{}/feed/live'
+                #print(url)
+                url = url.format(games[0]['gamePk'])
+                print(url)
+                data = requests.get(url)
+                data = data.json()
+                plays = data['liveData']['plays']['allPlays']
+                #print(len(plays))
+                desc = ''
+                at_bats = {}
+                for play in plays:
+                    #print(play)
+                    if 'result' in play:
+                        if play['result'].get('type') == 'atBat':
+                            if play['about'].get('isComplete'):
+                                atidx = play['atBatIndex']
+                                #print(atidx)
+                                res = play['result']['description'].strip()
+                                res = ' '.join(res.split())
+                                desc = ' | \x02Result:\x02 {} :: {}'.format(play['result']['event'],
+                                                         res)
+                                #print(desc)
+                                count = '\x02B:\x02{} \x02S:\x02{} \x02O:\x02{}'.format(play['count']['balls'],
+                                                                play['count']['strikes'],
+                                                                play['count']['outs'])
+                                #print(count)
+                                batter = '\x02AB:\x02 {}'.format(play['matchup']['batter']['fullName'])
+                                #print(batter)
+                                pitcher = '\x02P:\x02 {}'.format(play['matchup']['pitcher']['fullName'])
+                                #print(pitcher)
+                                pitches = []
+                                pit_num = 0
+                                if play['playEvents']:
+                                    for idx, pitch in enumerate(play['playEvents']):
+                                        if pitch['isPitch']:
+                                            pit_num += 1
+                                            t = '({}){} - \x02{}mph {}\x02'.format(pit_num, pitch['details']['description'],
+                                                                       pitch['pitchData']['startSpeed'],
+                                                                       pitch['details']['type']['description'])
+                                            pitches.append(t)
+                                #print(pitches)
+                                at_bat = '{} | {} | {} | {}{}'.format(batter, pitcher, count,
+                                                                     ' \x034::\x03 '.join(p for p in pitches),
+                                                                     desc)
+                                #print(at_bat)
+                                at_bats[str(atidx)] = [at_bat, atidx+1, play['matchup']['batter']['fullName']]
+
+            #print(at_bats)
+            return at_bats
+        
+        def _parseAtBat():
+            if len(games) == 1:
+                url = 'https://statsapi.mlb.com/api/v1.1/game/{}/feed/live'
+                #print(url)
+                url = url.format(games[0]['gamePk'])
+                print(url)
+                data = requests.get(url)
+                data = data.json()
+                play = data['liveData']['plays']['currentPlay']
+                #print(play)
+                desc = ''
+                if 'result' in play:
+                    if play['about']['isComplete']:
+                        res = play['result']['description'].strip()
+                        res = ' '.join(res.split())
+                        desc = ' | \x02Result:\x02 {} :: {}'.format(play['result']['event'],
+                                                 res)
+                #print('desc')
+                count = '\x02B:\x02{} \x02S:\x02{} \x02O:\x02{}'.format(play['count']['balls'],
+                                                play['count']['strikes'],
+                                                play['count']['outs'])
+                #print('count')
+                batter = '\x02AB:\x02 {}'.format(play['matchup']['batter']['fullName'])
+                #print('batter')
+                pitcher = '\x02P:\x02 {}'.format(play['matchup']['pitcher']['fullName'])
+                #print('pitcher')
+                pitches = []
+                pit_num = 0
+                if play['playEvents']:
+                    for idx, pitch in enumerate(play['playEvents']):
+                        if pitch['isPitch']:
+                            pit_num += 1
+                            t = '({}){} - \x02{}mph {}\x02'.format(pit_num, pitch['details']['description'],
+                                                       pitch['pitchData']['startSpeed'],
+                                                       pitch['details']['type']['description'])
+                            pitches.append(t)
+                #print('pitches')
+                at_bat = '{} | {} | {} | {}{}'.format(batter, pitcher, count,
+                                                     ' \x034::\x03 '.join(p for p in pitches),
+                                                     desc)
+
+            #print(at_bat)
+            return at_bat
                     
 
         def _parsePitcher(pitcher):
@@ -2663,6 +3187,8 @@ class MLBScores(callbacks.Plugin):
             #print(date, time)
             status = game['status']['statusCode']
             reason = game['status'].get('reason')
+            at_bat = ''
+            at_bats = {}
             try:
                 description = game['description']
             except:
@@ -2807,6 +3333,15 @@ class MLBScores(callbacks.Plugin):
                                 last_play = " ".join(last_play.split())
                         except:
                             last_play = ''
+
+                        try:
+                            at_bat = _parseAtBat()
+                        except:
+                            at_bat = ''
+                        try:
+                            at_bats = _parseAllAtBats()
+                        except:
+                            at_bats = {}
                         try:
                             balls = str(game['linescore']['balls'])
                         except:
@@ -2821,6 +3356,8 @@ class MLBScores(callbacks.Plugin):
                             outs = outs
                     else:
                         last_play = ''
+                        at_bat = ''
+                        at_bats = {}
             if 'F' in status or 'O' in status:
                 decisions = {}
                 try:
@@ -2888,7 +3425,7 @@ class MLBScores(callbacks.Plugin):
             tmp.append({'id': gamePk, 'date': date, 'time': time, 'dt': dt, 'dh': dh, 'timestamp': timestamp,
                         'awayTeam': away_team, 'awayScore': away_score,
                         'homeTeam': home_team, 'homeScore': home_score,
-                        'inning': inning, 'state': state, 'last': last_play,
+                        'inning': inning, 'state': state, 'last': last_play, 'atBat': at_bat, 'atBats': at_bats,
                         'status': status, 'reason': reason, 'broadcasts': broadcasts, 'ended': ended,
                         'balls': balls, 'strikes': strikes, 'outs': outs,
                         'pitcher': pitcher, 'batter': batter, 'runners': runners, 'sh_runs': short_runners, 'risp': risp,
