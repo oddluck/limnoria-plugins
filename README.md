@@ -1,4 +1,5 @@
-[![Build Status](https://travis-ci.org/reticulatingspline/Tweety.svg?branch=master)](https://travis-ci.org/reticulatingspline/Tweety)
+### Forked and modified from https://github.com/reticulatingspline/Tweety
+### this fork REQUIRES Python 3.5+
 
 # Limnoria plugin for Twitter.
 
@@ -23,7 +24,7 @@ You will need a working Limnoria bot on Python 2.7 for this to work.
 Go into your Limnoria plugin dir, usually ~/supybot/plugins and run:
 
 ```
-git clone https://github.com/reticulatingspline/Tweety
+git clone https://gitlab.com/cottongin/Tweety.git
 ```
 
 To install additional requirements, run:
