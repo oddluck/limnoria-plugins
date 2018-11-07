@@ -154,7 +154,7 @@ class Trackers(callbacks.Plugin):
 	def redStatus(self, irc, msg, args, opts):
 		"""[--message]
 
-		Check the status of RED site, tracker, and irc. Use --message flag to force return of message, even if older than 24 hours.
+		Check the status of Redacted site, tracker, and irc. Use --message flag to force return of message, even if older than 24 hours.
 		"""
 		url = "http://red.trackerstatus.info/api/status/"
 		site_name = "RED"
@@ -181,6 +181,37 @@ class Trackers(callbacks.Plugin):
 			irc.reply(outstr)
 
 	red = wrap(redStatus, [optional("something")])
+
+	def opsStatus(self, irc, msg, args, opts):
+		"""[--message]
+
+		Check the status of Orpheus site, tracker, and irc. Use --message flag to force return of message, even if older than 24 hours.
+		"""
+		url = "http://ops.trackerstatus.info/api/status/"
+		site_name = "OPS"
+
+		content = WebParser().getWebData(irc,url)
+
+		status = [content["Website"], content["TrackerHTTP"], content["TrackerHTTPS"], content["IRC"], content["IRCTorrentAnnouncer"], content["IRCUserIdentifier"]]
+		status_headers = [site_name+" Site","Tracker","Tracker SSL","IRC","IRC Announce","IRC ID"]
+		breakpoints = [0]
+		line_headers = [""]
+ 
+		outStr = WebParser().prepareStatusString(site_name, status, status_headers, breakpoints,line_headers)
+
+		for i in range(0, len(outStr)):
+			irc.reply(outStr[i])
+			
+		# Output message if --message flag specified or newer than 1 day
+		interval = datetime.now() - datetime.fromtimestamp(float(content["tweet"]["unix"]))
+		if opts == "--message" or interval.days < 1:
+			message_string = content["tweet"]["message"]
+			time_string = self.formatTimeSince(interval)
+
+			outstr = "%s message: %s (%s)" % (site_name, message_string, time_string)
+			irc.reply(outstr)
+
+	ops = wrap(opsStatus, [optional("something")])
 
 	def mtvStatus(self, irc, msg, args, opts):
 		"""
