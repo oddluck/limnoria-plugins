@@ -1,0 +1,3 @@
+git+https://github.com/ProgVal/Limnoria.git
+oauth2==1.5.211
+requests>=2.17
