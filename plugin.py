@@ -54,23 +54,12 @@ class Stocks(callbacks.Plugin):
     def __init__(self, irc):
         self.__parent = super(Stocks, self)
         self.__parent.__init__(irc)
-        #self._google_api_key = self.registryValue('GoogleAPIKey')
-        self._stock_api_key = self.registryValue('StocksAPIKey')
         
+        # response headers from Postman go inside {} as 'key': 'value' format
         self.HEADERS = {
-            'Host': 'www.bloomberg.com',
-            'User-Agent': 'Mozilla/5.0 (X11; CrOS x86_64 11151.4.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.8 Safari/537.36',
-            'Accept': '*/*',
-            'Referer': 'https://www.bloomberg.com/quote/INDU:IND',
-            'Cookie': 'pxvid=ddebe760-c7f5-11e8-a682-73308eefdc23; _user-status=anonymous; agent_id=e0d13978-3eec-4c24-9ee2-e272d579c309; session_id=eee20924-ece1-4d7a-b35b-8ac6dc1d68b2; session_key=91bf3c15262d3327089818fad49b32f4e8505340; _pxvid=ddebe760-c7f5-11e8-a682-73308eefdc23; bb_geo_info={"country":"US","region":"US"}|1541093477988; _user-ip=172.56.7.187; _px2=eyJ1IjoiNGM0MzQ5ZjAtZDg3ZC0xMWU4LThkMGEtY2I0ZWMwN2I1YzdmIiwidiI6ImRkZWJlNzYwLWM3ZjUtMTFlOC1hNjgyLTczMzA4ZWVmZGMyMyIsInQiOjE1NDA0ODk4NzI3NDcsImgiOiIxMmNlYTc1MjE3MzE1MjQzZjFlZmNiYzgwOTE4MTAyZTlhODA5MWI0ZWVlYzZmYTMyYzlhODEzMGZmMjc2NzBjIn0=; _px3=16001718995882c0a708e91edfaf00e90c29b7ffa91a674b632d3d9352ac415c:tJVcHrOc8q5ZweBYZcDl6l4B1qCkFMYuQRXhfttgXGJutOTDn8PeIvwArsE30/a0bmS8sfFccSueLNnEPNXkjg==:1000:xmySGbKaaKn0QMZr3ZhABwVQOlQaDTxZ4BpBgiWoDzLKPxTiaCC9YjI6TlJL3FePznBOhu4ADhDRLUWkMrqYPUnhsGFuaiehhcNgtSkSOofaagxZK8YVH/jf5t5iUVIB6GkZ93c8e1+wmvQuS1Bie+MbmmP2P2Duyujx+In5LFQ=; _pxde=eee12b269f681eeaffaa85ced50bdf6970ad1606518f09164005dab05e61cafe:eyJ0aW1lc3RhbXAiOjE1NDA0ODk1ODg3MjksImlwY19pZCI6W119',
+            
         }
         
-        #if len(self._google_api_key) <= 1:
-        #    irc.reply("This plugin requires a Google API key to shorten URLs, please add yours via the configuration")
-        #    return
-        if len(self._stock_api_key) <= 1:
-            irc.reply("This plugin requires a Stocks API key to fetch data, please add yours via the configuration")
-            return
         
     def die(self):
         self.__parent.die()
@@ -127,7 +116,6 @@ class Stocks(callbacks.Plugin):
             return cap
         
         for symbol in data:
-            print(data[symbol])
             name = symbol
             name = ircutils.bold(name)
             symbol = data[symbol]['USD']
@@ -137,7 +125,6 @@ class Stocks(callbacks.Plugin):
             high24 = '${:g}'.format(symbol['HIGH24HOUR'])
             low24 = '${:g}'.format(symbol['LOW24HOUR'])
             mcap = _humifyCap(symbol['MKTCAP'])
-            #prv_close = symbol['previousClosingPriceOneTradingDayAgo']
             if 0 < pct_change < 0.5:
                 change = ircutils.mircColor('+{:g}'.format(change), 'yellow')
                 pct_change = ircutils.mircColor('+{:.2g}%'.format(pct_change), 'yellow')
@@ -331,21 +318,15 @@ class Stocks(callbacks.Plugin):
     def coin(self, irc, msg, args, optcoin):
         """Fetches current values for a given coin"""
         
-        #volm_url = 'https://min-api.cryptocompare.com/data/top/totalvol?limit=10&tsym=USD'
         coin_url = 'https://min-api.cryptocompare.com/data/pricemultifull?fsyms={coins}&tsyms=USD'
-        
-        #volm_data = requests.get(volm_url).json()
         
         coins = []
         coins.append(optcoin)
             
-        #coins.append('DOGE')
         coins_str = ','.join(c.upper() for c in coins)
         
         coin_data = requests.get(coin_url.format(coins=coins_str))
-        print(coin_data.url)
         coin_data = coin_data.json()
-        #print(coin_data)
         if 'RAW' not in coin_data:
             irc.reply('ERROR: no coin found for {}'.format(optcoin))
             return
@@ -354,20 +335,10 @@ class Stocks(callbacks.Plugin):
         
         tmp = {}
         data = coin_data['RAW']
-        #print(data)
-        #tmp['BTC'] = data.pop('BTC')
-                
-        #print(tmp)
         
-        #data = sorted(data)
         data2 = collections.OrderedDict.fromkeys(sorted(data))
         for k,v in data.items():
             data2.update({k: v})
-        #data2.update(tmp)
-        #print(data.keys())
-        #data2.move_to_end('BTC', last=False)
-        #print(data.items())
-        #print(data2)
         
         output = self._parseCoins(data2, optcoin)
             
@@ -392,27 +363,19 @@ class Stocks(callbacks.Plugin):
         coins_str = ','.join(c for c in coins)
         
         coin_data = requests.get(coin_url.format(coins=coins_str))
-        #print(coin_data.url)
         coin_data = coin_data.json()
         
         output = []
         
         tmp = {}
         data = coin_data['RAW']
-        #print(data)
         tmp['BTC'] = data.pop('BTC')
-                
-        #print(tmp)
         
-        #data = sorted(data)
         data2 = collections.OrderedDict.fromkeys(sorted(data))
         for k,v in data.items():
             data2.update({k: v})
         data2.update(tmp)
-        #print(data.keys())
         data2.move_to_end('BTC', last=False)
-        #print(data.items())
-        print(data2)
         
         output = self._parseCoins(data2, optcoin)
             
@@ -431,7 +394,6 @@ class Stocks(callbacks.Plugin):
         m = 'INDU:IND,SPX:IND,CCMP:IND,NYA:IND,UKX:IND,NKY:IND,SPTSX:IND,HSI:IND'
         
         url = url.format(markets_to_fetch=m)
-        print(url)
         
         try:
             data = requests.get(url, headers=self.HEADERS).json()
@@ -455,7 +417,6 @@ class Stocks(callbacks.Plugin):
         m = 'CL1:COM,NG1:COM,GC1:COM,SI1:COM'
         
         url = url.format(markets_to_fetch=m)
-        print(url)
         
         try:
             data = requests.get(url, headers=self.HEADERS).json()
@@ -468,7 +429,7 @@ class Stocks(callbacks.Plugin):
         irc.reply(' | '.join(t for t in ticker))
         return
     
-    @wrap([commalist('somethingWithoutSpaces')])
+    @wrap([commalist('text')])
     def ticker(self, irc, msg, args, optmarket):
         """Fetches current values for several commodities"""
         
@@ -483,7 +444,6 @@ class Stocks(callbacks.Plugin):
                       '&fields=name,slug,ticker_symbol,organization,title,primary_site'
                       '&query={query}')
         
-        print(optmarket)
         for idx,v in enumerate(optmarket):
             if v == 'google':
                 optmarket[idx] = 'googl'
@@ -502,16 +462,15 @@ class Stocks(callbacks.Plugin):
                         if result['score'] > tmp_rank:
                             tmp_symbol = result['ticker_symbol']
                             tmp_rank = result['score']
+                if not tmp_symbol:
+                    tmp_symbol = m.upper() + ":US"
                 mkts.append(tmp_symbol)
             except:
-                mkts.append(m + ':US')
-                
-        print(mkts)
+                mkts.append(m.upper() + ':US')
         
         m = '{}'.format(','.join(i.upper() for i in mkts[:5]))
         
         url = url.format(markets_to_fetch=m)
-        print(url)
         
         try:
             data = requests.get(url, headers=self.HEADERS).json()
