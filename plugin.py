@@ -36,14 +36,14 @@ class CBBScores(callbacks.Plugin):
             self.SCORES = self._checkscores()
         self.SCORES = self._checkscores()
         try:  # check scores.
-            schedule.addPeriodicEvent(checkcbbscores, 30, 
+            schedule.addPeriodicEvent(checkcbbscores, 10, 
                 now=False, name='checkcbbscores')
         except AssertionError:
             try:
                 schedule.removeEvent('checkcbbscores')
             except KeyError:
                 pass
-            schedule.addPeriodicEvent(checkcbbscores, 30, 
+            schedule.addPeriodicEvent(checkcbbscores, 10, 
                 now=False, name='checkcbbscores')
 
     def die(self):
