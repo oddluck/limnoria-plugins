@@ -83,6 +83,7 @@ class CBBScores(callbacks.Plugin):
             else:
                 # all teams
                 for key,value in self.SCORES[date].items():
+                    print(key, value)
                     irc.reply(' | '.join(item for item in value['short']))
                     return
                 pass
