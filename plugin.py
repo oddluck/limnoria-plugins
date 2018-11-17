@@ -33,25 +33,25 @@ class CBBScores(callbacks.Plugin):
         self.__parent.__init__(irc)
         #self.filename = conf.supybot.directories.data.dirize('CBBScores.db')
         def checkcbbscores():
-            self._checkscores()
+            self.SCORES = self._checkscores()
         self.SCORES = self._checkscores()
-        # try:  # check scores.
-        #     schedule.addPeriodicEvent(checkcbbscores, 30, 
-        #         now=False, name='checkcbbscores')
-        # except AssertionError:
-        #     try:
-        #         schedule.removeEvent('checkcbbscores')
-        #     except KeyError:
-        #         pass
-        #     schedule.addPeriodicEvent(checkcbbscores, 30, 
-        #         now=False, name='checkcbbscores')
+        try:  # check scores.
+            schedule.addPeriodicEvent(checkcbbscores, 30, 
+                now=False, name='checkcbbscores')
+        except AssertionError:
+            try:
+                schedule.removeEvent('checkcbbscores')
+            except KeyError:
+                pass
+            schedule.addPeriodicEvent(checkcbbscores, 30, 
+                now=False, name='checkcbbscores')
 
-    # def die(self):
-    #     try:
-    #         schedule.removeEvent('checkcbbscores')
-    #     except KeyError:
-    #         pass
-    #     self.__parent.die()
+    def die(self):
+        try:
+            schedule.removeEvent('checkcbbscores')
+        except KeyError:
+            pass
+        self.__parent.die()
 
     ####################
     # PUBLIC FUNCTIONS #
