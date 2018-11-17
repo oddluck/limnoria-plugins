@@ -108,10 +108,10 @@ class CBBScores(callbacks.Plugin):
         """
         games = {}
         for day, d in data.items():
-            print(day, d)
-            if d['events']:
+            #print(day, d)
+            if d:
                 games[day] = {}
-                for event in d['events']:
+                for event in d:
                     key = '{} | {}'.format(event['name'], event['shortName'])
                     comp = event['competitions'][0]
                     time = pendulum.parse(comp['date'], strict=False).in_tz('US/Eastern')
