@@ -68,8 +68,10 @@ class CBBScores(callbacks.Plugin):
         options = dict(options)
         date = options.get('date') or pendulum.now().format('YYYYMMDD')
 
-        games = self._checkscores()
-        print(games)
+        scores = self.SCORES['scores']
+        scores.insert(self._checkscores())
+        print(self.SCORES.tables)
+        
 
         if date not in self.SCORES:
             # fetch another day
@@ -134,7 +136,7 @@ class CBBScores(callbacks.Plugin):
                         if status == 'pre':
                             # pre
                             short = '{} @ {} {}'.format(away_short, home_short, short_time)
-                            long = '{} @ {} {}'.format(away_long, home_long, long_time)
+                            long = '{} @ {} | {}'.format(away_long, home_long, long_time)
                         else:
                             # inp
                             clock = comp['status']['displayClock']
