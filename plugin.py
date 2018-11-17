@@ -68,8 +68,9 @@ class CBBScores(callbacks.Plugin):
         options = dict(options)
         date = options.get('date') or pendulum.now().format('YYYYMMDD')
 
-        self._checkscores()
-        
+        games = self._checkscores()
+        print(games)
+
         if date not in self.SCORES:
             # fetch another day
             pass
@@ -100,9 +101,47 @@ class CBBScores(callbacks.Plugin):
                 strict=False).in_tz('US/Eastern').format('YYYYMMDD')
             data[tmp_date] = tmp['events']
 
-        print(data)
+        #print(data)
+        """
+        'day': {'game1': {'short', 'long'},
+                'game2': {'short', 'long'}}
+        """
+        games = {}
+        for day, d in data.items():
+            if d['events']:
+                games[day] = {}
+                for event in d['events']:
+                    key = '{} | {}'.format(event['name'], event['shortName'])
+                    comp = event['competitions'][0]
+                    time = pendulum.parse(comp['date'], strict=False).in_tz('US/Eastern')
+                    short_time = time.format('h:mm A zz')
+                    long_time = time.format('dddd, MMM Do, h:mm A zz')
+                    status = comp['status']['type']['state']
+                    is_ended = comp['status']['type']['completed']
+                    home_short = comp['competitors'][0]['team']['abbreviation']
+                    home_long = comp['competitors'][0]['team']['displayName']
+                    away_short = comp['competitors'][1]['team']['abbreviation']
+                    away_long = comp['competitors'][1]['team']['displayName']
+                    home_score = int(comp['competitors'][0]['score'])
+                    away_score = int(comp['competitors'][1]['score'])
+                    if is_ended:
+                        # strings for final games
+                        short = 'tbd'
+                        long = 'tbd'
+                    else:
+                        # strings for pre/in games
+                        if status == 'pre':
+                            # pre
+                            short = '{} @ {} {}'.format(away_short, home_short, short_time)
+                            long = '{} @ {} {}'.format(away_long, home_long, long_time)
+                        else:
+                            # inp
+                            clock = comp['status']['displayClock']
+                            short = 'tbd'
+                            long = 'tbd'
+                    games[day][key] = {'short': short, 'long': long}
 
-        return data
+        return games
 
 
 Class = CBBScores
