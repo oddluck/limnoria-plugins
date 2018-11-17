@@ -141,7 +141,7 @@ class CBBScores(callbacks.Plugin):
                             long = '{} @ {} | {}'.format(away_long, home_long, long_time)
                         else:
                             # inp
-                            clock_short = ircutils.mircColor(comp['status']['type']['shortDetail'], 'green')
+                            clock_short = ircutils.mircColor(comp['status']['type']['shortDetail'].replace(' - ', ' '), 'green')
                             clock_long = ircutils.mircColor(comp['status']['type']['detail'], 'green')
                             if away_score > home_score:
                                 away_short_str = ircutils.bold('{} {}'.format(away_short, away_score))
