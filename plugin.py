@@ -159,7 +159,10 @@ class CBBScores(callbacks.Plugin):
                             home_long_str = '{} {}'.format(home_long, home_score)
                         short = '{} {} {}'.format(away_short_str, home_short_str, clock_short)
                         long = '{} @ {} - {}'.format(away_long_str, home_long_str, clock_long)
-                    games[day][key] = {'short': short, 'long': long}
+                    games[day][key] = {'short': short, 'long': long, 'ended': is_ended}
+
+                # sort events
+                games[day] = sorted(games[day], key=games[day].get('ended'), reverse=True)
 
         return games
 
