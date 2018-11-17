@@ -8,7 +8,7 @@
 
 import pendulum
 import requests
-import dataset
+import collections
 
 from supybot import utils, plugins, ircutils, callbacks, conf, schedule
 from supybot.commands import *
@@ -97,7 +97,7 @@ class CBBScores(callbacks.Plugin):
         tomorrow = pendulum.tomorrow().format('YYYYMMDD')
 
         dates = [yesterday, today, tomorrow]
-        data = {}
+        data = collections.OrderedDict()
         for date in dates:
             tmp = requests.get(SCOREBOARD.format(date=date)).json()
             tmp_date = pendulum.parse(tmp['eventsDate']['date'], 
@@ -109,11 +109,11 @@ class CBBScores(callbacks.Plugin):
         'day': {'game1': {'short', 'long'},
                 'game2': {'short', 'long'}}
         """
-        games = {}
+        games = collections.OrderedDict()
         for day, d in data.items():
             #print(day, d)
             if d:
-                games[day] = {}
+                games[day] = collections.OrderedDict()
                 for event in d:
                     key = '{} | {}'.format(event['name'], event['shortName'])
                     comp = event['competitions'][0]
@@ -158,7 +158,7 @@ class CBBScores(callbacks.Plugin):
                                 home_short_str = '{} {}'.format(home_short, home_score)
                                 home_long_str = '{} {}'.format(home_long, home_score)
                             short = '{} {} {}'.format(away_short_str, home_short_str, clock)
-                            long = '{} {} {}'.format(away_long_str, home_long_str, clock)
+                            long = '{} @ {} - {}'.format(away_long_str, home_long_str, clock)
                     games[day][key] = {'short': short, 'long': long}
 
         return games
