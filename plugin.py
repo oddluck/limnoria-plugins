@@ -68,10 +68,10 @@ class CBBScores(callbacks.Plugin):
         options = dict(options)
         date = options.get('date')
         if date:
-            if date.lower() in ['yes', 'tom', 'tod']:
-                if date.lower() in 'yes':
+            if date.lower() in ['yesterday', 'tomorrow', 'today']:
+                if date.lower() in 'yesterday':
                     date = pendulum.yesterday().format('YYYYMMDD')
-                elif date.lower() in 'tom':
+                elif date.lower() in 'tomorrow':
                     date = pendulum.tomorrow().format('YYYYMMDD')
                 else:
                     date = pendulum.now().format('YYYYMMDD')
