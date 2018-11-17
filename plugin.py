@@ -31,10 +31,10 @@ class CBBScores(callbacks.Plugin):
     def __init__(self, irc):
         self.__parent = super(CBBScores, self)
         self.__parent.__init__(irc)
-        self.filename = conf.supybot.directories.data.dirize('CBBScores.db')
-        self.SCORES = dataset.connect('sqlite:///{}'.format(self.filename))
+        #self.filename = conf.supybot.directories.data.dirize('CBBScores.db')
         def checkcbbscores():
             self._checkscores()
+        self.SCORES = self._checkscores()
         # try:  # check scores.
         #     schedule.addPeriodicEvent(checkcbbscores, 30, 
         #         now=False, name='checkcbbscores')
@@ -66,22 +66,25 @@ class CBBScores(callbacks.Plugin):
         Ex: --date 20181117 MICH
         """
         options = dict(options)
-        date = options.get('date') or pendulum.now().format('YYYYMMDD')
-
-        scores = self.SCORES['scores']
-        scores.insert(self._checkscores())
-        print(self.SCORES.tables)
-        
+        date = options.get('date') or pendulum.now().format('YYYYMMDD')        
 
         if date not in self.SCORES:
             # fetch another day
+            print('date not in scores db')
             pass
         else:
             if team:
                 # single team
+                for key,value in self.SCORES[date].items():
+                    if team.lower() in key.lower():
+                        irc.reply(value['long'])
+                        return
                 pass
             else:
                 # all teams
+                for key,value in self.SCORES[date].items():
+                    irc.reply(' | '.join(item for item in value['short']))
+                    return
                 pass
 
         return
