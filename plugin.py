@@ -108,6 +108,7 @@ class CBBScores(callbacks.Plugin):
         """
         games = {}
         for day, d in data.items():
+            print(day, d)
             if d['events']:
                 games[day] = {}
                 for event in d['events']:
