@@ -2,6 +2,7 @@
 # Copyright (c) 2018, cottongin
 # All rights reserved.
 #
+# SEE LICENSE.txt
 #
 ###
 
