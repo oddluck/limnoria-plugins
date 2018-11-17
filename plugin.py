@@ -88,7 +88,7 @@ class MLBScores(callbacks.Plugin):
         self._HTTP = httplib2.Http('.cache')
 
         self._SCOREBOARD_ENDPOINT = ('https://statsapi.mlb.com/api/v1/schedule'
-                                     '?sportId=1&date={}'
+                                     '?sportId=1,51&date={}'
                                      '&hydrate=team(leaders(showOnPreview('
                                      'leaderCategories=[homeRuns,runsBattedIn,'
                                      'battingAverage],statGroup=[pitching,'
@@ -105,6 +105,8 @@ class MLBScores(callbacks.Plugin):
         #pendulum.set_formatter('alternative')
 
         self._TEAM_BY_TRI, self._TEAM_BY_ID = self._getTeams()
+        self._51_BY_TRI, self._51_BY_ID = self._get51Teams()
+        
         self._STATUSES = self._getStatuses()
         #self._ACTIVE_PLAYERS = self._fetchActivePlayers()
 
@@ -197,10 +199,28 @@ class MLBScores(callbacks.Plugin):
         except:
             return url
 
-    def _getTeams(self):
+    def _getTeams(self, league=None):
+        """fetches teams and tricodes"""
+        
+        if not league:
+            url = 'https://statsapi.mlb.com/api/v1/teams?sportId=1'
+        else:
+            url = 'https://statsapi.mlb.com/api/v1/teams?sportId={}&leagueId={}'.format(league[0], league[1])
+
+        data = requests.get(url).json()
+
+        tmp1 = {}
+        tmp2 = {}
+        for team in data['teams']:
+            tmp1[team['abbreviation']] = team['id']
+            tmp2[str(team['id'])] = team['abbreviation']
+        
+        return tmp1, tmp2
+    
+    def _get51Teams(self):
         """fetches teams and tricodes"""
 
-        url = 'https://statsapi.mlb.com/api/v1/teams?sportId=1'
+        url = 'https://statsapi.mlb.com/api/v1/teams?sportId=51'
 
         data = requests.get(url).json()
 
@@ -492,7 +512,475 @@ class MLBScores(callbacks.Plugin):
                         )
                         irc.reply(reply_string)
     
+    @wrap([optional('text')])
+    def offseason(self, irc, msg, args, irc_args=None):
+        """[<team tri code>] [<date>]
+        Fetches scores for given team and/or date. Defaults to today and all
+        teams if no input provided"""
 
+        tv = False
+        if irc_args:
+            if '--tv' in irc_args:
+                tv = True
+                irc_args = irc_args.replace('--tv','')
+            if 'was' in irc_args:
+                irc_args = irc_args.replace('was', 'wsh')
+                
+        team_codes, _ = self._getTeams(league=[17, '119,131,132,133,135,162,516,595'])
+
+        try:
+            team, date, tz = inputParser.parseInput(irc_args, team_codes, self._TEAM_BY_NICK)
+            print('external parser worked')
+        except:
+            team, date, tz = self._parseInput(irc_args)
+            print('internal parser worked')
+        print(team)
+        #print(date)
+
+        
+        #print('MLBScores: No cached scores, pulling fresh')
+        GAMES = self._fetchGames(team, date, league=[17, '119,131,132,133,135,162,516,595'])
+
+        if not GAMES:
+            irc.reply('No games found')
+            return
+
+        games = self._parseGames(GAMES, date, team)
+        if not games:
+            irc.reply('No games found')
+            return
+        games = self._sortGames(games)
+
+        reply_string = self._replyAsString(team, games, tz, tv)
+
+        # what = type(reply_string)
+        # print(what)
+
+        # print(reply_string)
+
+        if type(reply_string) is tuple or type(reply_string) is list:
+            for string in reply_string:
+                irc.reply(string)
+        else:
+            irc.reply(reply_string)
+    
+    @wrap([optional('text')])
+    def cs(self, irc, msg, args, irc_args=None):
+        """[<team tri code>] [<date>]
+        Fetches scores for given team and/or date. Defaults to today and all
+        teams if no input provided"""
+
+        tv = False
+        if irc_args:
+            if '--tv' in irc_args:
+                tv = True
+                irc_args = irc_args.replace('--tv','')
+            if 'was' in irc_args:
+                irc_args = irc_args.replace('was', 'wsh')
+                
+        team_codes, _ = self._getTeams(league=[17, 162])
+
+        try:
+            team, date, tz = inputParser.parseInput(irc_args, team_codes, self._TEAM_BY_NICK)
+            print('external parser worked')
+        except:
+            team, date, tz = self._parseInput(irc_args)
+            print('internal parser worked')
+        print(team)
+        #print(date)
+
+        
+        #print('MLBScores: No cached scores, pulling fresh')
+        GAMES = self._fetchGames(team, date, league=[17, 162])
+
+        if not GAMES:
+            irc.reply('No games found')
+            return
+
+        games = self._parseGames(GAMES, date, team)
+        if not games:
+            irc.reply('No games found')
+            return
+        games = self._sortGames(games)
+
+        reply_string = self._replyAsString(team, games, tz, tv)
+
+        # what = type(reply_string)
+        # print(what)
+
+        # print(reply_string)
+
+        if type(reply_string) is tuple or type(reply_string) is list:
+            for string in reply_string:
+                irc.reply(string)
+        else:
+            irc.reply(reply_string)
+    
+    @wrap([optional('text')])
+    def abl(self, irc, msg, args, irc_args=None):
+        """[<team tri code>] [<date>]
+        Fetches scores for given team and/or date. Defaults to today and all
+        teams if no input provided"""
+
+        tv = False
+        if irc_args:
+            if '--tv' in irc_args:
+                tv = True
+                irc_args = irc_args.replace('--tv','')
+            if 'was' in irc_args:
+                irc_args = irc_args.replace('was', 'wsh')
+                
+        team_codes, _ = self._getTeams(league=[17, 595])
+
+        try:
+            team, date, tz = inputParser.parseInput(irc_args, team_codes, self._TEAM_BY_NICK)
+            print('external parser worked')
+        except:
+            team, date, tz = self._parseInput(irc_args)
+            print('internal parser worked')
+        print(team)
+        #print(date)
+
+        
+        #print('MLBScores: No cached scores, pulling fresh')
+        GAMES = self._fetchGames(team, date, league=[17, 595])
+
+        if not GAMES:
+            irc.reply('No games found')
+            return
+
+        games = self._parseGames(GAMES, date, team)
+        if not games:
+            irc.reply('No games found')
+            return
+        games = self._sortGames(games)
+
+        reply_string = self._replyAsString(team, games, tz, tv)
+
+        # what = type(reply_string)
+        # print(what)
+
+        # print(reply_string)
+
+        if type(reply_string) is tuple or type(reply_string) is list:
+            for string in reply_string:
+                irc.reply(string)
+        else:
+            irc.reply(reply_string)
+    
+    @wrap([optional('text')])
+    def winl(self, irc, msg, args, irc_args=None):
+        """[<team tri code>] [<date>]
+        Fetches scores for given team and/or date. Defaults to today and all
+        teams if no input provided"""
+
+        tv = False
+        if irc_args:
+            if '--tv' in irc_args:
+                tv = True
+                irc_args = irc_args.replace('--tv','')
+            if 'was' in irc_args:
+                irc_args = irc_args.replace('was', 'wsh')
+                
+        team_codes, _ = self._getTeams(league=[17, 516])
+
+        try:
+            team, date, tz = inputParser.parseInput(irc_args, team_codes, self._TEAM_BY_NICK)
+            print('external parser worked')
+        except:
+            team, date, tz = self._parseInput(irc_args)
+            print('internal parser worked')
+        print(team)
+        #print(date)
+
+        
+        #print('MLBScores: No cached scores, pulling fresh')
+        GAMES = self._fetchGames(team, date, league=[17, 516])
+
+        if not GAMES:
+            irc.reply('No games found')
+            return
+
+        games = self._parseGames(GAMES, date, team)
+        if not games:
+            irc.reply('No games found')
+            return
+        games = self._sortGames(games)
+
+        reply_string = self._replyAsString(team, games, tz, tv)
+
+        # what = type(reply_string)
+        # print(what)
+
+        # print(reply_string)
+
+        if type(reply_string) is tuple or type(reply_string) is list:
+            for string in reply_string:
+                irc.reply(string)
+        else:
+            irc.reply(reply_string)
+    
+    @wrap([optional('text')])
+    def vwl(self, irc, msg, args, irc_args=None):
+        """[<team tri code>] [<date>]
+        Fetches scores for given team and/or date. Defaults to today and all
+        teams if no input provided"""
+
+        tv = False
+        if irc_args:
+            if '--tv' in irc_args:
+                tv = True
+                irc_args = irc_args.replace('--tv','')
+            if 'was' in irc_args:
+                irc_args = irc_args.replace('was', 'wsh')
+                
+        team_codes, _ = self._getTeams(league=[17, 135])
+
+        try:
+            team, date, tz = inputParser.parseInput(irc_args, team_codes, self._TEAM_BY_NICK)
+            print('external parser worked')
+        except:
+            team, date, tz = self._parseInput(irc_args)
+            print('internal parser worked')
+        print(team)
+        #print(date)
+
+        
+        #print('MLBScores: No cached scores, pulling fresh')
+        GAMES = self._fetchGames(team, date, league=[17, 135])
+
+        if not GAMES:
+            irc.reply('No games found')
+            return
+
+        games = self._parseGames(GAMES, date, team)
+        if not games:
+            irc.reply('No games found')
+            return
+        games = self._sortGames(games)
+
+        reply_string = self._replyAsString(team, games, tz, tv)
+
+        # what = type(reply_string)
+        # print(what)
+
+        # print(reply_string)
+
+        if type(reply_string) is tuple or type(reply_string) is list:
+            for string in reply_string:
+                irc.reply(string)
+        else:
+            irc.reply(reply_string)
+    
+    @wrap([optional('text')])
+    def pwl(self, irc, msg, args, irc_args=None):
+        """[<team tri code>] [<date>]
+        Fetches scores for given team and/or date. Defaults to today and all
+        teams if no input provided"""
+
+        tv = False
+        if irc_args:
+            if '--tv' in irc_args:
+                tv = True
+                irc_args = irc_args.replace('--tv','')
+            if 'was' in irc_args:
+                irc_args = irc_args.replace('was', 'wsh')
+                
+        team_codes, _ = self._getTeams(league=[17, 133])
+
+        try:
+            team, date, tz = inputParser.parseInput(irc_args, team_codes, self._TEAM_BY_NICK)
+            print('external parser worked')
+        except:
+            team, date, tz = self._parseInput(irc_args)
+            print('internal parser worked')
+        print(team)
+        #print(date)
+
+        
+        #print('MLBScores: No cached scores, pulling fresh')
+        GAMES = self._fetchGames(team, date, league=[17, 133])
+
+        if not GAMES:
+            irc.reply('No games found')
+            return
+
+        games = self._parseGames(GAMES, date, team)
+        if not games:
+            irc.reply('No games found')
+            return
+        games = self._sortGames(games)
+
+        reply_string = self._replyAsString(team, games, tz, tv)
+
+        # what = type(reply_string)
+        # print(what)
+
+        # print(reply_string)
+
+        if type(reply_string) is tuple or type(reply_string) is list:
+            for string in reply_string:
+                irc.reply(string)
+        else:
+            irc.reply(reply_string)
+    
+    @wrap([optional('text')])
+    def lmp(self, irc, msg, args, irc_args=None):
+        """[<team tri code>] [<date>]
+        Fetches scores for given team and/or date. Defaults to today and all
+        teams if no input provided"""
+
+        tv = False
+        if irc_args:
+            if '--tv' in irc_args:
+                tv = True
+                irc_args = irc_args.replace('--tv','')
+            if 'was' in irc_args:
+                irc_args = irc_args.replace('was', 'wsh')
+                
+        team_codes, _ = self._getTeams(league=[17, 132])
+
+        try:
+            team, date, tz = inputParser.parseInput(irc_args, team_codes, self._TEAM_BY_NICK)
+            print('external parser worked')
+        except:
+            team, date, tz = self._parseInput(irc_args)
+            print('internal parser worked')
+        print(team)
+        #print(date)
+
+        
+        #print('MLBScores: No cached scores, pulling fresh')
+        GAMES = self._fetchGames(team, date, league=[17, 132])
+
+        if not GAMES:
+            irc.reply('No games found')
+            return
+
+        games = self._parseGames(GAMES, date, team)
+        if not games:
+            irc.reply('No games found')
+            return
+        games = self._sortGames(games)
+
+        reply_string = self._replyAsString(team, games, tz, tv)
+
+        # what = type(reply_string)
+        # print(what)
+
+        # print(reply_string)
+
+        if type(reply_string) is tuple or type(reply_string) is list:
+            for string in reply_string:
+                irc.reply(string)
+        else:
+            irc.reply(reply_string)
+    
+    @wrap([optional('text')])
+    def dwl(self, irc, msg, args, irc_args=None):
+        """[<team tri code>] [<date>]
+        Fetches scores for given team and/or date. Defaults to today and all
+        teams if no input provided"""
+
+        tv = False
+        if irc_args:
+            if '--tv' in irc_args:
+                tv = True
+                irc_args = irc_args.replace('--tv','')
+            if 'was' in irc_args:
+                irc_args = irc_args.replace('was', 'wsh')
+                
+        team_codes, _ = self._getTeams(league=[17, 131])
+
+        try:
+            team, date, tz = inputParser.parseInput(irc_args, team_codes, self._TEAM_BY_NICK)
+            print('external parser worked')
+        except:
+            team, date, tz = self._parseInput(irc_args)
+            print('internal parser worked')
+        print(team)
+        #print(date)
+
+        
+        #print('MLBScores: No cached scores, pulling fresh')
+        GAMES = self._fetchGames(team, date, league=[17, 131])
+
+        if not GAMES:
+            irc.reply('No games found')
+            return
+
+        games = self._parseGames(GAMES, date, team)
+        if not games:
+            irc.reply('No games found')
+            return
+        games = self._sortGames(games)
+
+        reply_string = self._replyAsString(team, games, tz, tv)
+
+        # what = type(reply_string)
+        # print(what)
+
+        # print(reply_string)
+
+        if type(reply_string) is tuple or type(reply_string) is list:
+            for string in reply_string:
+                irc.reply(string)
+        else:
+            irc.reply(reply_string)
+    
+    @wrap([optional('text')])
+    def azfl(self, irc, msg, args, irc_args=None):
+        """[<team tri code>] [<date>]
+        Fetches scores for given team and/or date. Defaults to today and all
+        teams if no input provided"""
+
+        tv = False
+        if irc_args:
+            if '--tv' in irc_args:
+                tv = True
+                irc_args = irc_args.replace('--tv','')
+            if 'was' in irc_args:
+                irc_args = irc_args.replace('was', 'wsh')
+                
+        team_codes, _ = self._getTeams(league=[17, 119])
+
+        try:
+            team, date, tz = inputParser.parseInput(irc_args, team_codes, self._TEAM_BY_NICK)
+            print('external parser worked')
+        except:
+            team, date, tz = self._parseInput(irc_args)
+            print('internal parser worked')
+        print(team)
+        #print(date)
+
+        
+        #print('MLBScores: No cached scores, pulling fresh')
+        GAMES = self._fetchGames(team, date, league=[17, 119])
+
+        if not GAMES:
+            irc.reply('No games found')
+            return
+
+        games = self._parseGames(GAMES, date, team)
+        if not games:
+            irc.reply('No games found')
+            return
+        games = self._sortGames(games)
+
+        reply_string = self._replyAsString(team, games, tz, tv)
+
+        # what = type(reply_string)
+        # print(what)
+
+        # print(reply_string)
+
+        if type(reply_string) is tuple or type(reply_string) is list:
+            for string in reply_string:
+                irc.reply(string)
+        else:
+            irc.reply(reply_string)
+    
+    
     @wrap([optional('text')])
     def mlb(self, irc, msg, args, irc_args=None):
         """[<team tri code>] [<date>]
@@ -2602,32 +3090,42 @@ class MLBScores(callbacks.Plugin):
                 status = _parseStatus(game['state'], game['inning'])
                 if '↓' in status and game['risp']:
                     if 'Corners' in game['runners'] or 'Loaded' in game['runners'] or '3rd' in game['runners']:
-                        game['homeTeam'] = '\x034{}\x03'.format(game['homeTeam'])
+                        game['homeTeam']['abbr'] = '\x034{}\x03'.format(game['homeTeam']['abbr'])
+                        game['homeTeam']['full'] = '\x034{}\x03'.format(game['homeTeam']['full'])
                     elif '2nd' in game['runners']:
-                        game['homeTeam'] = '\x037{}\x03'.format(game['homeTeam'])
+                        game['homeTeam']['abbr'] = '\x037{}\x03'.format(game['homeTeam']['abbr'])
+                        game['homeTeam']['full'] = '\x037{}\x03'.format(game['homeTeam']['full'])
                 else:
                     if 'Corners' in game['runners'] or 'Loaded' in game['runners'] or '3rd' in game['runners']:
-                        game['awayTeam'] = '\x034{}\x03'.format(game['awayTeam'])
+                        game['awayTeam']['abbr'] = '\x034{}\x03'.format(game['awayTeam']['abbr'])
+                        game['awayTeam']['full'] = '\x034{}\x03'.format(game['awayTeam']['full'])
                     elif '2nd' in game['runners']:
-                        game['awayTeam'] = '\x037{}\x03'.format(game['awayTeam'])
-                if game['homeScore'] > game['awayScore']:
-                    tmp_st = '{} {} \x02{} {}\x02 {}'.format(game['awayTeam'],
-                                                                game['awayScore'],
-                                                                game['homeTeam'],
-                                                                game['homeScore'],
-                                                                status)
-                elif game['awayScore'] > game['homeScore']:
-                    tmp_st = '\x02{} {}\x02 {} {} {}'.format(game['awayTeam'],
-                                                                game['awayScore'],
-                                                                game['homeTeam'],
-                                                                game['homeScore'],
-                                                                status)
+                        game['awayTeam']['abbr'] = '\x037{}\x03'.format(game['awayTeam']['abbr'])
+                        game['awayTeam']['full'] = '\x037{}\x03'.format(game['awayTeam']['full'])
+                if team:
+                    away_disp = game['awayTeam']['full']
+                    home_disp = game['homeTeam']['full']
                 else:
-                    tmp_st = '{} {} {} {} {}'.format(game['awayTeam'],
-                                                                game['awayScore'],
-                                                                game['homeTeam'],
-                                                                game['homeScore'],
-                                                                status)
+                    away_disp = game['awayTeam']['abbr']
+                    home_disp = game['homeTeam']['abbr']
+                if game['homeScore'] > game['awayScore']:
+                    tmp_st = '{} {} \x02{} {}\x02 {}'.format(away_disp,
+                                                            game['awayScore'],
+                                                            home_disp,
+                                                            game['homeScore'],
+                                                            status)
+                elif game['awayScore'] > game['homeScore']:
+                    tmp_st = '\x02{} {}\x02 {} {} {}'.format(away_disp,
+                                                            game['awayScore'],
+                                                            home_disp,
+                                                            game['homeScore'],
+                                                            status)
+                else:
+                    tmp_st = '{} {} {} {} {}'.format(away_disp,
+                                                    game['awayScore'],
+                                                    home_disp,
+                                                    game['homeScore'],
+                                                    status)
                 if game['broadcasts'] and tv:
                     if game['broadcasts']['tv'] and game['broadcasts']['radio']:
                         watch = ' [\x02TV:\x02 {} | \x02Radio:\x02 {}]'.format(
@@ -2663,29 +3161,41 @@ class MLBScores(callbacks.Plugin):
                 tmp.append(tmp_st)
             elif ('F' in game['status'] or 'O' in game['status']) and not team:
                 status = _parseStatus(game['state'], game['inning'])
+                if team:
+                    away_disp = game['awayTeam']['full']
+                    home_disp = game['homeTeam']['full']
+                else:
+                    away_disp = game['awayTeam']['abbr']
+                    home_disp = game['homeTeam']['abbr']
                 if game['homeScore'] > game['awayScore']:
-                    tmp_st = '{} {} \x02{} {}\x02 {}'.format(game['awayTeam'],
+                    tmp_st = '{} {} \x02{} {}\x02 {}'.format(away_disp,
                                                                 game['awayScore'],
-                                                                game['homeTeam'],
+                                                                home_disp,
                                                                 game['homeScore'],
                                                                 status)
                 elif game['awayScore'] > game['homeScore']:
-                    tmp_st = '\x02{} {}\x02 {} {} {}'.format(game['awayTeam'],
+                    tmp_st = '\x02{} {}\x02 {} {} {}'.format(away_disp,
                                                                 game['awayScore'],
-                                                                game['homeTeam'],
+                                                                home_disp,
                                                                 game['homeScore'],
                                                                 status)
                 else:
-                    tmp_st = '{} {} {} {} {}'.format(game['awayTeam'],
+                    tmp_st = '{} {} {} {} {}'.format(away_disp,
                                                                 game['awayScore'],
-                                                                game['homeTeam'],
+                                                                home_disp,
                                                                 game['homeScore'],
                                                                 status)
                 
                 tmp.append(tmp_st)
             elif (game['status'] == 'S' or game['status'] == 'P') and team and not tv:
-                tmp_st = '{} {} @ {} {} {}'.format(game['awayTeam'], game['awayRecord'],
-                                                   game['homeTeam'], game['homeRecord'],
+                if team:
+                    away_disp = game['awayTeam']['full']
+                    home_disp = game['homeTeam']['full']
+                else:
+                    away_disp = game['awayTeam']['abbr']
+                    home_disp = game['homeTeam']['abbr']
+                tmp_st = '{} {} @ {} {} {}'.format(away_disp, game['awayRecord'],
+                                                   home_disp, game['homeRecord'],
                                                    game['dt'] if game['dh'] else _parseTimezone(game['dt'], tz))
                 pitchers = ' | {} vs {}'.format(game['awayProb'], game['homeProb'])
                 tmp_st += pitchers
@@ -2709,22 +3219,28 @@ class MLBScores(callbacks.Plugin):
                 tmp.append(tmp_st)
             elif ('F' in game['status'] or 'O' in game['status']) and team:
                 status = _parseStatus(game['state'], game['inning'])
+                if team:
+                    away_disp = game['awayTeam']['full']
+                    home_disp = game['homeTeam']['full']
+                else:
+                    away_disp = game['awayTeam']['abbr']
+                    home_disp = game['homeTeam']['abbr']
                 if game['homeScore'] > game['awayScore']:
-                    tmp_st = '{} {} \x02{} {}\x02 {}'.format(game['awayTeam'],
+                    tmp_st = '{} {} \x02{} {}\x02 {}'.format(away_disp,
                                                                 game['awayScore'],
-                                                                game['homeTeam'],
+                                                                home_disp,
                                                                 game['homeScore'],
                                                                 status)
                 elif game['awayScore'] > game['homeScore']:
-                    tmp_st = '\x02{} {}\x02 {} {} {}'.format(game['awayTeam'],
+                    tmp_st = '\x02{} {}\x02 {} {} {}'.format(away_disp,
                                                                 game['awayScore'],
-                                                                game['homeTeam'],
+                                                                home_disp,
                                                                 game['homeScore'],
                                                                 status)
                 else:
-                    tmp_st = '{} {} {} {} {}'.format(game['awayTeam'],
+                    tmp_st = '{} {} {} {} {}'.format(away_disp,
                                                                 game['awayScore'],
-                                                                game['homeTeam'],
+                                                                home_disp,
                                                                 game['homeScore'],
                                                                 status)
                 wls_line = ' | \x033W:\x03 {} \x034L:\x03 {}'.format(
@@ -2734,15 +3250,21 @@ class MLBScores(callbacks.Plugin):
                 tmp_st += wls_line
                 if game['homers']:
                     hr_str = ' | \x02HR: {}\x02: {} \x02{}\x02: {}'.format(
-                        game['awayTeam'],
-                        ' '.join(item for item in game['homers'][game['awayTeam']]),
-                        game['homeTeam'],
-                        ' '.join(item for item in game['homers'][game['homeTeam']]))
+                        game['awayTeam']['abbr'],
+                        ' '.join(item for item in game['homers'][game['awayTeam']['abbr']]),
+                        game['homeTeam']['abbr'],
+                        ' '.join(item for item in game['homers'][game['homeTeam']['abbr']]))
                     tmp_st += hr_str
                 tmp.append(tmp_st)
             elif game['status'] == 'DI' or game['status'] == 'DC' or game['status'] == 'DS' or game['status'] == 'DR' \
             or game['status'] == 'DV' or game['status'] == 'DG':
-                tmp_st = '{} @ {} \x034PPD\x03'.format(game['awayTeam'], game['homeTeam'])
+                if team:
+                    away_disp = game['awayTeam']['full']
+                    home_disp = game['homeTeam']['full']
+                else:
+                    away_disp = game['awayTeam']['abbr']
+                    home_disp = game['homeTeam']['abbr']
+                tmp_st = '{} @ {} \x034PPD\x03'.format(away_disp, home_disp)
                 if game['reason'] and team:
                     tmp_st += ' - {}'.format(game['reason'])
                 tmp.append(tmp_st)
@@ -2752,7 +3274,13 @@ class MLBScores(callbacks.Plugin):
             #         tmp_st += ' - {}'.format(game['reason'])
             #     tmp.append(tmp_st)
             elif game['status'] == 'PW':
-                tmp_st = '{} @ {} {} - Warmup'.format(game['awayTeam'], game['homeTeam'],
+                if team:
+                    away_disp = game['awayTeam']['full']
+                    home_disp = game['homeTeam']['full']
+                else:
+                    away_disp = game['awayTeam']['abbr']
+                    home_disp = game['homeTeam']['abbr']
+                tmp_st = '{} @ {} {} - Warmup'.format(away_disp, home_disp,
                                              _parseTimezone(game['dt'], tz))
                 if team:
                     pitchers = ' | {} vs {}'.format(game['awayProb'], game['homeProb'])
@@ -2779,21 +3307,27 @@ class MLBScores(callbacks.Plugin):
             elif game['status'] == 'PC' or game['status'] == 'PS' or game['status'] == 'PR' or game['status'] == 'PI':
                 status = _parseStatus(game['state'], game['inning'])
                 if game['homeScore'] > game['awayScore']:
-                    tmp_st = '{} {} \x02{} {}\x02 {}'.format(game['awayTeam'],
+                    if team:
+                        away_disp = game['awayTeam']['full']
+                        home_disp = game['homeTeam']['full']
+                    else:
+                        away_disp = game['awayTeam']['abbr']
+                        home_disp = game['homeTeam']['abbr']
+                    tmp_st = '{} {} \x02{} {}\x02 {}'.format(away_disp,
                                                                 game['awayScore'],
-                                                                game['homeTeam'],
+                                                                home_disp,
                                                                 game['homeScore'],
                                                                 status)
                 elif game['awayScore'] > game['homeScore']:
-                    tmp_st = '\x02{} {}\x02 {} {} {}'.format(game['awayTeam'],
+                    tmp_st = '\x02{} {}\x02 {} {} {}'.format(away_disp,
                                                                 game['awayScore'],
-                                                                game['homeTeam'],
+                                                                home_disp,
                                                                 game['homeScore'],
                                                                 status)
                 else:
-                    tmp_st = '{} {} {} {} {}'.format(game['awayTeam'],
+                    tmp_st = '{} {} {} {} {}'.format(away_disp,
                                                                 game['awayScore'],
-                                                                game['homeTeam'],
+                                                                home_disp,
                                                                 game['homeScore'],
                                                                 status)
                 tmp_st += ' \x037Delay\x03'
@@ -2802,22 +3336,28 @@ class MLBScores(callbacks.Plugin):
                 tmp.append(tmp_st)
             elif game['status'] == 'IW' or game['status'] == 'IC' or game['status'] == 'IS' or game['status'] == 'IR':
                 # status = _parseStatus(game['state'], game['inning'])
+                if team:
+                    away_disp = game['awayTeam']['full']
+                    home_disp = game['homeTeam']['full']
+                else:
+                    away_disp = game['awayTeam']['abbr']
+                    home_disp = game['homeTeam']['abbr']
                 if game['homeScore'] > game['awayScore']:
-                    tmp_st = '{} {} \x02{} {}\x02'.format(game['awayTeam'],
+                    tmp_st = '{} {} \x02{} {}\x02'.format(away_disp,
                                                                 game['awayScore'],
-                                                                game['homeTeam'],
+                                                                home_disp,
                                                                 game['homeScore'],
                                                                 )
                 elif game['awayScore'] > game['homeScore']:
-                    tmp_st = '\x02{} {}\x02 {} {}'.format(game['awayTeam'],
+                    tmp_st = '\x02{} {}\x02 {} {}'.format(away_disp,
                                                                 game['awayScore'],
-                                                                game['homeTeam'],
+                                                                home_disp,
                                                                 game['homeScore'],
                                                                 )
                 else:
-                    tmp_st = '{} {} {} {}'.format(game['awayTeam'],
+                    tmp_st = '{} {} {} {}'.format(away_disp,
                                                                 game['awayScore'],
-                                                                game['homeTeam'],
+                                                                home_disp,
                                                                 game['homeScore'],
                                                                 )
                 tmp_st += ' \x037Delay\x03'
@@ -2825,7 +3365,13 @@ class MLBScores(callbacks.Plugin):
                     tmp_st += ' - {}'.format(game['reason'])
                 tmp.append(tmp_st)
             else:
-                tmp_st = '{} @ {} {}'.format(game['awayTeam'], game['homeTeam'],
+                if team:
+                    away_disp = game['awayTeam']['full']
+                    home_disp = game['homeTeam']['full']
+                else:
+                    away_disp = game['awayTeam']['abbr']
+                    home_disp = game['homeTeam']['abbr']
+                tmp_st = '{} @ {} {}'.format(away_disp, home_disp,
                                              game['dt'] if game['dh'] else _parseTimezone(game['dt'], tz))
                 if game['status'] in self._STATUSES.keys() \
                 and game['status'] not in ['S', 'P', 'D']:
@@ -2966,13 +3512,26 @@ class MLBScores(callbacks.Plugin):
                 date_string = pendulum.now('US/Pacific').next(pendulum.SATURDAY).format('YYYY-MM-DD')
                 return date_string
 
-    def _fetchGames(self, team=None, date=None):
+    def _fetchGames(self, team=None, date=None, league=None):
         """fetches games for mlb2"""
 
         team = 'all' if not team else team
         date = pendulum.now('US/Pacific').to_date_string() if not date else date
 
-        url = self._SCOREBOARD_ENDPOINT.format(date)
+        if league:
+            url = ('https://statsapi.mlb.com/api/v1/schedule'
+                                     '?sportId={}&leagueId={}&date={}'
+                                     '&hydrate=team(leaders(showOnPreview('
+                                     'leaderCategories=[homeRuns,runsBattedIn,'
+                                     'battingAverage],statGroup=[pitching,'
+                                     'hitting]))),linescore(matchup,runners),'
+                                     'flags,liveLookin,review,broadcasts(all),'
+                                     'decisions,person,probablePitcher,stats,'
+                                     'homeRuns,previousPlay,game(content('
+                                     'media(featured,epg),summary),tickets),'
+                                     'seriesStatus(useOverride=true)').format(league[0], league[1], date)
+        else:
+            url = self._SCOREBOARD_ENDPOINT.format(date)
 
         if 'all' not in team:
             url += '&teamId={}'.format(team)
@@ -2995,16 +3554,18 @@ class MLBScores(callbacks.Plugin):
         """parse games for mlb2"""
         #print('http://statsapi.mlb.com/api/v1/game/{}/linescore'.format(games[0]['gamePk']))
         
-        if team:
-            date = pendulum.now('US/Pacific').to_date_string() if not date else date
-            games_url = self._SCOREBOARD_ENDPOINT.format(date)
-            games_url += '&teamId={}'.format(team)
-            games = requests.get(games_url).json()
-            #print(games_url)
-            try:
-                games = games['dates'][0]['games']
-            except:
-                return None
+#         if team:
+#             #date = pendulum.now('US/Pacific').to_date_string() if not date else date
+#             #games_url = self._SCOREBOARD_ENDPOINT.format(date)
+#             #games_url += '&teamId={}'.format(team)
+#             #games = requests.get(games_url).json()
+#             #print(games_url)
+#             try:
+#                 games = games['dates'][0]['games']
+#             except:
+#                 return None
+            
+        print(games)
         
         def _parseLastPlay():
             #print('len:', len(games))
@@ -3220,6 +3781,8 @@ class MLBScores(callbacks.Plugin):
                 broadcasts = None
             away_team = game['teams']['away']['team']['abbreviation']
             home_team = game['teams']['home']['team']['abbreviation']
+            away_full = game['teams']['away']['team']['name']
+            home_full = game['teams']['home']['team']['name']
             away_record = '({}-{})'.format(game['teams']['away']['leagueRecord']['wins'],
                                            game['teams']['away']['leagueRecord']['losses'])
             home_record = '({}-{})'.format(game['teams']['home']['leagueRecord']['wins'],
@@ -3423,8 +3986,8 @@ class MLBScores(callbacks.Plugin):
                 decisions = None
             #print(time)
             tmp.append({'id': gamePk, 'date': date, 'time': time, 'dt': dt, 'dh': dh, 'timestamp': timestamp,
-                        'awayTeam': away_team, 'awayScore': away_score,
-                        'homeTeam': home_team, 'homeScore': home_score,
+                        'awayTeam': {'abbr': away_team, 'full': away_full}, 'awayScore': away_score,
+                        'homeTeam': {'abbr': home_team, 'full': home_full}, 'homeScore': home_score,
                         'inning': inning, 'state': state, 'last': last_play, 'atBat': at_bat, 'atBats': at_bats,
                         'status': status, 'reason': reason, 'broadcasts': broadcasts, 'ended': ended,
                         'balls': balls, 'strikes': strikes, 'outs': outs,
