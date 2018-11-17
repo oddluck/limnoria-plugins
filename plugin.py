@@ -84,11 +84,6 @@ class CBBScores(callbacks.Plugin):
                 # all teams
                 irc.reply(' | '.join(value['short'] for item,value in self.SCORES[date].items()))
                 return
-                for key,value in self.SCORES[date].items():
-                    print(key, value)
-                    irc.reply(' | '.join(value['short'] for item in value))
-                    return
-                pass
 
         return
 
@@ -133,7 +128,7 @@ class CBBScores(callbacks.Plugin):
                     away_long = comp['competitors'][1]['team']['displayName']
                     home_score = int(comp['competitors'][0]['score'])
                     away_score = int(comp['competitors'][1]['score'])
-                    print(home_short, away_short, ' || ', is_ended, status)
+                    #print(home_short, away_short, ' || ', is_ended, status)
                     if is_ended:
                         # strings for final games
                         short = 'tbd'
@@ -146,9 +141,24 @@ class CBBScores(callbacks.Plugin):
                             long = '{} @ {} | {}'.format(away_long, home_long, long_time)
                         else:
                             # inp
-                            clock = comp['status']['displayClock']
-                            short = 'tbd'
-                            long = 'tbd'
+                            clock = ircutils.mircColor(comp['status']['displayClock'], 'green')
+                            if away_score > home_score:
+                                away_short_str = ircutils.bold('{} {}'.format(away_short, away_score))
+                                away_long_str = ircutils.bold('{} {}'.format(away_long, away_score))
+                                home_short_str = '{} {}'.format(home_short, home_score)
+                                home_long_str = '{} {}'.format(home_long, home_score)
+                            elif home_score > away_score:
+                                away_short_str = '{} {}'.format(away_short, away_score)
+                                away_long_str = '{} {}'.format(away_long, away_score)
+                                home_short_str = ircutils.bold('{} {}'.format(home_short, home_score))
+                                home_long_str = ircutils.bold('{} {}'.format(home_long, home_score))
+                            else:
+                                away_short_str = '{} {}'.format(away_short, away_score)
+                                away_long_str = '{} {}'.format(away_long, away_score)
+                                home_short_str = '{} {}'.format(home_short, home_score)
+                                home_long_str = '{} {}'.format(home_long, home_score)
+                            short = '{} {} {}'.format(away_short_str, home_short_str, clock)
+                            long = '{} {} {}'.format(away_long_str, home_long_str, clock)
                     games[day][key] = {'short': short, 'long': long}
 
         return games
