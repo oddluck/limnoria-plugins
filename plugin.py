@@ -66,7 +66,7 @@ class CBBScores(callbacks.Plugin):
         Ex: --date 20181117 MICH
         """
         options = dict(options)
-        date = pendulum.parse(options.get('date'), strict=False) or pendulum.now().format('YYYYMMDD')        
+        date = pendulum.parse(options.get('date'), strict=False) if options.get('date') else pendulum.now().format('YYYYMMDD')        
 
         if date not in self.SCORES:
             # fetch another day
