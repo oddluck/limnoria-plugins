@@ -131,6 +131,7 @@ class CBBScores(callbacks.Plugin):
                     away_long = comp['competitors'][1]['team']['displayName']
                     home_score = int(comp['competitors'][0]['score'])
                     away_score = int(comp['competitors'][1]['score'])
+                    print(home_short, away_short, ' || ', is_ended, status)
                     if is_ended:
                         # strings for final games
                         short = 'tbd'
