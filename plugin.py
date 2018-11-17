@@ -141,7 +141,8 @@ class CBBScores(callbacks.Plugin):
                             long = '{} @ {} | {}'.format(away_long, home_long, long_time)
                         else:
                             # inp
-                            clock = ircutils.mircColor(comp['status']['displayClock'], 'green')
+                            clock_short = ircutils.mircColor(comp['status']['type']['shortDetail'], 'green')
+                            clock_long = ircutils.mircColor(comp['status']['type']['detail'], 'green')
                             if away_score > home_score:
                                 away_short_str = ircutils.bold('{} {}'.format(away_short, away_score))
                                 away_long_str = ircutils.bold('{} {}'.format(away_long, away_score))
@@ -157,8 +158,8 @@ class CBBScores(callbacks.Plugin):
                                 away_long_str = '{} {}'.format(away_long, away_score)
                                 home_short_str = '{} {}'.format(home_short, home_score)
                                 home_long_str = '{} {}'.format(home_long, home_score)
-                            short = '{} {} {}'.format(away_short_str, home_short_str, clock)
-                            long = '{} @ {} - {}'.format(away_long_str, home_long_str, clock)
+                            short = '{} {} {}'.format(away_short_str, home_short_str, clock_short)
+                            long = '{} @ {} - {}'.format(away_long_str, home_long_str, clock_long)
                     games[day][key] = {'short': short, 'long': long}
 
         return games
