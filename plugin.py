@@ -162,7 +162,7 @@ class CBBScores(callbacks.Plugin):
                     games[day][key] = {'short': short, 'long': long, 'ended': is_ended}
 
                 # sort events
-                games[day] = collections.OrderedDict(sorted(games[day].items(), key=lambda k: games[day][k]['ended'], reverse=True))
+                games[day] = collections.OrderedDict(sorted(games[day].keys(), key=lambda k: games[day][k]['ended'], reverse=True))
 
         return games
 
