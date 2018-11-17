@@ -68,6 +68,8 @@ class CBBScores(callbacks.Plugin):
         options = dict(options)
         date = options.get('date') or pendulum.now().format('YYYYMMDD')
 
+        self._checkscores()
+        
         if date not in self.SCORES:
             # fetch another day
             pass
