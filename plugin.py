@@ -38,7 +38,7 @@ class TimeoutList:
         self.timeout = timeout
 
     def clearTimeout(self):
-        for k, t in self.dict.items():
+        for k, t in list(self.dict.items()):
             if t < (time.time() - self.timeout):
                 del self.dict[k]
 
@@ -262,7 +262,7 @@ class Game:
         if self.questionType == 'kaos':
             for ans in self.answers:
                 if ircutils.toLower(ans) not in self.guessedAnswers:
-                    ans = unicode(ans.decode('utf-8'))
+                    ans = str(ans)
                     hintStr = ''
                     if hintNum == 0:
                         for char in ans:
@@ -297,7 +297,7 @@ class Game:
                             hintStr += self.getMaskedRandom(ansend, divider-1)
                     hint += ' [{0}]'.format(hintStr)
         else:
-            ans = unicode(self.answers[0].decode('utf-8'))
+            ans = str(self.answers[0])
             if hintNum == 0:
                 for char in ans:
                     if char in self.unmaskedChars:
@@ -330,7 +330,7 @@ class Game:
                 else:
                     hint += self.getMaskedRandom(ansend, divider-1)
         
-        return hint.strip().encode('utf-8')
+        return hint.strip()
 
     def getMaskedVowels(self, letters, sizeOfUnmasked):
         charMask = self.registryValue('hints.charMask', self.channel)
@@ -340,7 +340,7 @@ class Game:
         for char in letters:
             if char in self.unmaskedChars:
                 hintsList.append(char)
-            elif str.lower(self.removeAccents(char.encode('utf-8'))) in 'aeiou' and unmasked < (len(letters)-1) and lettersInARow < 3:
+            elif str.lower(self.removeAccents(char)) in 'aeiou' and unmasked < (len(letters)-1) and lettersInARow < 3:
                 hintsList.append(char)
                 lettersInARow += 1
                 unmasked += 1
@@ -551,13 +551,13 @@ class Game:
             try:
                 schedule.addEvent(event, time, '%s.trivia' % self.channel)
             except AssertionError as e:
-                log.error('Unable to queue {0} because another event is already scheduled.'.format(event.func_name))
+                log.error('Unable to queue {0} because another event is already scheduled.'.format(event.__name__))
 
     def removeAccents(self, text):
-        text = unicode(text.decode('utf-8'))
+        text = str(text)
         normalized = unicodedata.normalize('NFKD', text)
-        normalized = u''.join([c for c in normalized if not unicodedata.combining(c)])
-        return normalized.encode('utf-8')
+        normalized = ''.join([c for c in normalized if not unicodedata.combining(c)])
+        return normalized
 
     def removeExtraSpaces(self, text):
         return utils.str.normalizeWhitespace(text)
@@ -597,9 +597,9 @@ class Game:
                 questionType = 'uword'
                 ans = questionParts[1]
                 answers.append(str(ans).strip())
-                shuffledLetters = list(unicode(ans.decode('utf-8')))
+                shuffledLetters = list(str(ans))
                 random.shuffle(shuffledLetters)
-                question = 'Unscramble the letters: {0}'.format(' '.join(shuffledLetters)).encode('utf-8')
+                question = 'Unscramble the letters: {0}'.format(' '.join(shuffledLetters))
             else:
                 questionType = 'regular'
                 for ans in questionParts[1:]:
@@ -692,7 +692,7 @@ class Storage:
 
     def chunk(self, qs, rows=10000):
         """ Divides the data into 10000 rows each """
-        for i in xrange(0, len(qs), rows):
+        for i in range(0, len(qs), rows):
             yield qs[i:i+rows]
 
     def countTemporaryQuestions(self, channel=None):
@@ -2709,8 +2709,8 @@ class Logger:
             log.write(' ')
 
     def checkLogNames(self):
-        for (irc, logs) in self.logs.items():
-            for (channel, log) in logs.items():
+        for (irc, logs) in list(self.logs.items()):
+            for (channel, log) in list(logs.items()):
                 name = self.getLogName(channel)
                 if name != log.name:
                     log.close()
@@ -2729,7 +2729,7 @@ class Logger:
             try:
                 name = self.getLogName(channel)
                 logDir = self.getLogDir(irc, channel)
-                log = file(os.path.join(logDir, name), 'a')
+                log = open(os.path.join(logDir, name), 'a')
                 logs[channel] = log
                 return log
             except IOError:
@@ -2825,8 +2825,8 @@ class TriviaTime(callbacks.Plugin):
             return
 
     def _games(self):
-        for (network, games) in self.games.items():
-            for (channel, game) in games.items():
+        for (network, games) in list(self.games.items()):
+            for (channel, game) in list(games.items()):
                 yield game
 
     def die(self):
@@ -2986,8 +2986,8 @@ class TriviaTime(callbacks.Plugin):
     def addZeroWidthSpace(self, text):
         if len(text) <= 1:
             return text
-        s = u'%s\u200b%s' % (text[:1], text[1:])
-        return s.encode('utf-8')
+        s = '%s\u200b%s' % (text[:1], text[1:])
+        return s
 
     def shortHash(self, text):
         hashText = hashlib.sha1(text).hexdigest()
