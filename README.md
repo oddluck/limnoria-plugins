@@ -1,6 +1,6 @@
 #Configuration
 ## Setting up the plugin
-1. Download [Supybot][]
+1. Download [Limnoria][]
 2. Download TriviaTime and place it into the plugins folder
 3. Load TriviaTime
 4. Configure your question file and database location in config.py or with commands
@@ -38,5 +38,5 @@ PHP's PDO requires that the user that PHP is run under has write access to the f
 
 I would recommend either creating a new group and adding the user that runs supybot and the webservers user to it, or changing the permissions of the database so that the group who owns it is the webserver, and the user who owns it is the user who runs supybot. After doing that, changing permissions to 775 will allow the group who owns the file to write to the database.
 
-  [Supybot]: http://sourceforge.net/projects/supybot/
+  [Limnoria]: https://github.com/ProgVal/Limnoria
   [here]: http://trivialand.org/
