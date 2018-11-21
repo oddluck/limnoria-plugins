@@ -1,4 +1,7 @@
 #Configuration
+
+Requires Limnoria and Python 3
+
 ## Setting up the plugin
 1. Download [Limnoria][]
 2. Download TriviaTime and place it into the plugins folder
