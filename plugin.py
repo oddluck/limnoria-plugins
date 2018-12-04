@@ -3149,7 +3149,7 @@ class TriviaTime(callbacks.Plugin):
             edit = threadStorage.getEditById(num, channel)
             
         if edit:
-            if username == edit['username']:
+            if username == edit['username'] and self.isTriviaMod(hostmask, channel) == False:
                 irc.reply('You cannot accept your own edit.')
             else:
                 question = threadStorage.getQuestionById(edit['question_id'])
