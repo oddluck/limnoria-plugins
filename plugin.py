@@ -130,7 +130,7 @@ class _Plugin(callbacks.Plugin):
             return
         if table !=None and table not in tables:
             # given table doesn't have a game going
-            if table not in range(len(self.game)):
+            if table not in list(range(len(self.game))):
                 irc.reply("Error: That table doesn't exist")
                 return
             irc.reply("Error: There is no game at that table")
@@ -149,7 +149,7 @@ class _Plugin(callbacks.Plugin):
         else:
             messagetxt="Please specify which table you'd like to play at (ucjoin <table>).  Current tables are: "
             for t in tables:
-                messagetxt+='Table %s (%s), ' % (t+1, ' '.join(self.game[t]['players'].keys()))
+                messagetxt+='Table %s (%s), ' % (t+1, ' '.join(list(self.game[t]['players'].keys())))
             messagetxt=messagetxt.rsplit(', ',1)[0]+'.'
             irc.reply(messagetxt)
             return
@@ -160,7 +160,7 @@ class _Plugin(callbacks.Plugin):
             isfake=True
             if fakenick.lower()=='cpu': iscpu=True
         if self.game[table]['phase']=='join':
-            if nick in self.game[table]['players'].keys():
+            if nick in list(self.game[table]['players'].keys()):
                 irc.reply('Error: you have already joined.')
                 return
 
@@ -267,7 +267,7 @@ class _Plugin(callbacks.Plugin):
             if nick not in self.game[table]['players']:
                 irc.reply("Error: You're not playing this game.")
                 return
-            if number not in range(1,5+1):
+            if number not in list(range(1,5+1)):
                 irc.reply('Error: You must play a number between 1 and 5.')
                 return
             opponent=[p for p in self.game[table]['players'] if p !=nick][0]
@@ -464,7 +464,7 @@ class _Plugin(callbacks.Plugin):
             self._read_options(irc)
         except:
             pass
-        txt=', '.join(['='.join([str(i) for i in item]) for item in self.channeloptions.items()])
+        txt=', '.join(['='.join([str(i) for i in item]) for item in list(self.channeloptions.items())])
         irc.reply(txt)
     ucshowoptions = wrap(ucshowoptions)
 
@@ -488,7 +488,8 @@ class _Plugin(callbacks.Plugin):
         tables=self._getcurrenttables()
         if not tables: return None
         for table in tables:
-            if n.lower() in map(lambda x:x.lower(), self.game[table]['players'].keys()):
+            #if n.lower() in map(lambda x:x.lower(), self.game[table]['players'].keys()):
+            if n.lower() in [x.lower() for x in list(self.game[table]['players'].keys())]:
                 return table
         return None
 
