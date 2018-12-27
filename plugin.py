@@ -13,13 +13,13 @@ import supybot.callbacks as callbacks
 import os, errno
 import supybot.registry as registry
 import supybot.ircdb as ircdb
-import gzip 
+import tarfile
+import gzip
 
 try:
-    import pygeoip
-except ImportError:
-    raise ImportError("The Geo plugin requires pygeoip be installed.  Load aborted.")
-    
+    import geoip2.database
+except:
+    raise ImportError("The Geo plugin requires geoip2 be installed.  Load aborted.")
 
 class Geo(callbacks.Plugin):
     threaded=True
@@ -47,63 +47,26 @@ class Geo(callbacks.Plugin):
             
             return
         
+        
         try:
-            gic = pygeoip.GeoIP('%s%spygeoip%sGeoLiteCity.dat' % (conf.supybot.directories.data(), os.sep, os.sep))
+            reader = geoip2.database.Reader('%s%sgeo%sGeoLite2-City.mmdb' % (conf.supybot.directories.data(), os.sep, os.sep))
         except:
-            irc.reply("Error:  GeoLiteCity database not found, attempting to update...")
+            irc.reply("Error:  GeoLite2-City database not found, attempting to update...")
             try:
                 self.update()
                 irc.reply('Update finished.')
             except:
                 irc.reply("Update failed.")
-            
             return
 
 
         if not utils.net.isIP(stuff):
-            try:
-                x_hostname=utils.web.getDomain(stuff) # get hostname from url
-                if not x_hostname: x_hostname= stuff # already hostname?
-                info=gic.record_by_name(x_hostname)
-                if 'city' in info.keys() and str(info['city']) != 'None':
-                    x_city=info['city'] + ', '
-                else:
-                    x_city=''
-                if 'region_code' in info.keys() and str(info['region_code']) != 'None' and str(info['region_code']) != '00':
-                    x_region_code=info['region_code'] + ', '
-                else:
-                    x_region_code=''
-                if 'region_name' in info.keys() and str(info['region_name']) != 'None':
-                    x_region_name=info['region_name'] + ', '
-                else:
-                    x_region_name=''
-                if 'country_name' in info.keys() and str(info['country_name']) != 'None':
-                    x_country_name=info['country_name']
-                else:
-                    x_country_name=''
-                irc.reply('%s%s%s%s' % (x_city,x_region_code,x_region_name,x_country_name))
-            except:
-                irc.reply('Not a valid ip or name.')
-                return
+            irc.reply('Error: Not a valid ip.')
         else:
-            info=gic.record_by_addr(stuff)
-            if 'city' in info.keys() and str(info['city']) != 'None':
-                x_city=info['city'] + ', '
-            else:
-                x_city=''
-            if 'region_code' in info.keys() and str(info['region_code']) != 'None' and str(info['region_code']) != '00':
-                 x_region_code=info['region_code'] + ', '
-            else:
-                 x_region_code=''
-            if 'region_name' in info.keys() and str(info['region_name']) != 'None':
-                x_region_name=info['region_name'] + ', '
-            else:
-                x_region_name=''
-            if 'country_name' in info.keys() and str(info['country_name']) != 'None':
-                x_country_name=info['country_name']
-            else:
-                x_country_name=''
-            irc.reply('%s%s%s%s' % (x_city,x_region_code,x_region_name,x_country_name))
+            ip=stuff
+            res = reader.city(stuff)
+            
+            irc.reply('%s, %s, %s' % (res.city.name, res.subdivisions.most_specific.name, res.country.name ))
     geo = wrap(geo, ['text'])
 
     def update(self):
@@ -128,10 +91,13 @@ class Geo(callbacks.Plugin):
         
     def getfile(self):
         """grabs the data file"""
-        u=r'http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz'
-        f= r'%s%sGeoLiteCity.dat.gz' % (conf.supybot.directories.data.tmp(),os.sep)
-        f2 = r'%s%spygeoip%sGeoLiteCity.dat' % (conf.supybot.directories.data(),os.sep, os.sep)
-        self.make_sure_path_exists(r'%s%spygeoip' % (conf.supybot.directories.data(),os.sep))
+        u='https://geolite.maxmind.com/download/geoip/database/GeoLite2-City.tar.gz'
+        f = '%s%sgeo%sGeoLite2-City.tar.gz' % (conf.supybot.directories.data(), os.sep, os.sep)
+        f2 = '%s%sgeo%sGeoLite2-City.tar' % (conf.supybot.directories.data(), os.sep, os.sep)
+        
+        self.make_sure_path_exists(r'%s%sgeo' % (conf.supybot.directories.data(),os.sep))
+        
+        path = '%s%sgeo' % (conf.supybot.directories.data(),os.sep)
         
         self.log.info('Starting download: %s' % f)
         
@@ -149,10 +115,23 @@ class Geo(callbacks.Plugin):
                 f_out.close()
                 f_in.close()
                 self.log.info('Finished Unzipping: %s' % f)
+                self.log.info('Untarring: %s' % f2)
+                tar = tarfile.open(f2)
+                tar.getmembers()
+                
+                for member in tar.getmembers():
+                    if "GeoLite2-City.mmdb" in member.name:
+                        member.name = "GeoLite2-City.mmdb"
+                        self.log.info(member.name)
+                        tar.extract(member, path=path)
+                self.log.info('Finished Untarring: %s' % f2)
+                
+                tar.close()
+                
+                os.remove(f)
+                os.remove(f2)
         else:
             self.log.info('Could not download: %s' % f)
         return
 
 Class = Geo
-
-# vim:set shiftwidth=4 softtabstop=4 expandtab textwidth=79:
