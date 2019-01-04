@@ -10,7 +10,9 @@ import requests
 import pendulum
 import urllib.parse
 
-from supybot import utils, plugins, ircutils, callbacks
+from . import accountsdb
+
+from supybot import utils, plugins, ircutils, callbacks, world
 from supybot.commands import *
 try:
     from supybot.i18n import PluginInternationalization
@@ -27,8 +29,12 @@ class TVMaze(callbacks.Plugin):
     
     def __init__(self, irc):
         super().__init__(irc)
+        self.db = accountsdb.AccountsDB("TVMaze", 'TVMaze.db', self.registryValue(accountsdb.CONFIG_OPTION_NAME))
+        world.flushers.append(self.db.flush)
         
     def die(self):
+        world.flushers.remove(self.db.flush)
+        self.db.flush()
         super().die()
         
     #--------------------#
@@ -94,7 +100,11 @@ class TVMaze(callbacks.Plugin):
         Optionally include --country to find shows with the same name from another country
         Ex: tvshow --country GB the office
         """
-        options = dict(options)
+        # prefer manually passed options, then saved user options
+        # this merges the two possible dictionaries, prefering manually passed
+        # options if they already exist
+        options = {**self.db.get(msg.prefix), **dict(options)}
+        
         country = options.get('country')
         
         show_search = self._get('search', query=query)
@@ -196,7 +206,11 @@ class TVMaze(callbacks.Plugin):
         """[--all | --tz <IANA timezone> | --network <network> | --country <country>]
         Fetches upcoming TV schedule from TVMaze.com.
         """
-        options = dict(options)
+        # prefer manually passed options, then saved user options
+        # this merges the two possible dictionaries, prefering manually passed
+        # options if they already exist
+        options = {**self.db.get(msg.prefix), **dict(options)}
+        
         tz = options.get('tz') or 'US/Eastern'
         country = options.get('country')
         if country:
@@ -242,6 +256,28 @@ class TVMaze(callbacks.Plugin):
                 
         reply = "{}: {}".format(self._ul("Today's Shows"), ", ".join(s for s in shows))
         irc.reply(reply)
+        
+    @wrap([getopts({'country': 'somethingWithoutSpaces',
+                    'tz': 'somethingWithoutSpaces',
+                    'clear': ''})])
+    def settvmazeoptions(self, irc, msg, args, options):
+        """--country <country> | --tz <IANA timezone>
+        Allows user to set options for easier use of TVMaze commands.
+        Use --clear to reset all options.
+        """
+        
+        options = dict(options)
+        if options.get('clear'):
+            self.db.set(msg.prefix, {})
+            irc.replySuccess()
+            return
+        if not options:
+            irc.reply('You must give me some options!')
+            return
+        
+        self.db.set(msg.prefix, options)
+        irc.replySuccess()
+        
         
         
 

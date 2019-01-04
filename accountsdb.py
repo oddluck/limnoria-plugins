@@ -36,7 +36,7 @@ import pickle
 from supybot import ircdb, log, conf, registry
 
 MODES = ["accounts", "identhost", "nicks"]
-DEFAULT_MODE = MODES[0]
+DEFAULT_MODE = MODES[2]
 
 class _AccountsDBAddressConfig(registry.OnlySomeStrings):
     validStrings = MODES

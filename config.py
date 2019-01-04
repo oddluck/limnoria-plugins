@@ -13,6 +13,8 @@ except:
     # Placeholder that allows to run the plugin on a bot
     # without the i18n module
     _ = lambda x: x
+    
+from . import accountsdb
 
 
 def configure(advanced):
@@ -28,6 +30,7 @@ TVMaze = conf.registerPlugin('TVMaze')
 # This is where your configuration variables (if any) should go.  For example:
 # conf.registerGlobalValue(TVMaze, 'someConfigVariableName',
 #     registry.Boolean(False, _("""Help for someConfigVariableName.""")))
+conf.registerGlobalValue(TVMaze, accountsdb.CONFIG_OPTION_NAME, accountsdb.CONFIG_OPTION)
 
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:

@@ -18,14 +18,15 @@ from supybot import world
 __version__ = ""
 
 # XXX Replace this with an appropriate author or supybot.Author instance.
-__author__ = supybot.authors.unknown
+__author__ = supybot.Author('cottongin', 'cottongin',
+                            'cottongin@cottongin.club')
 
 # This is a dictionary mapping supybot.Author instances to lists of
 # contributions.
 __contributors__ = {}
 
 # This is a url where the most recent plugin package can be downloaded.
-__url__ = ''
+__url__ = 'https://gitlab.com/cottongin/TVMaze'
 
 from . import config
 from . import plugin
@@ -38,6 +39,8 @@ reload(config)
 reload(plugin)
 # Add more reloads here if you add third-party modules and want them to be
 # reloaded when this plugin is reloaded.  Don't forget to import them as well!
+from . import accountsdb
+reload(accountsdb)
 
 if world.testing:
     from . import test
