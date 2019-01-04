@@ -30,3 +30,14 @@ pip install -r requirements.txt
 <bot> The Orville (2017) | Next: Home [S02E03] (2019-01-10 in 6 days) | Prev: Primal Urges [S02E02] (2019-01-03) | Running | English | 60m | FOX | Comedy/Adventure/Science-Fiction | http://www.tvmaze.com/shows/20263/the-orville | https://imdb.com/title/tt5691552/ | http://www.fox.com/the-orville
 ```
 Use @help tvshow|schedule to see details on each command.
+---
+You can use @settvmazeoptions to save common command options to make using commands easier:
+```
+@settvmazeoptions --country GB
+@settvmazeoptions --tz US/Central
+@settvmazeoptions --country AU --tz US/Pacific
+```
+This stores settings per nick, you can clear them via --clear:
+```
+@settvmazeoptions --clear
+```
