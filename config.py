@@ -32,5 +32,8 @@ TVMaze = conf.registerPlugin('TVMaze')
 #     registry.Boolean(False, _("""Help for someConfigVariableName.""")))
 conf.registerGlobalValue(TVMaze, accountsdb.CONFIG_OPTION_NAME, accountsdb.CONFIG_OPTION)
 
+conf.registerChannelValue(TVMaze, 'showEpisodeTitle',
+    registry.Boolean(True, _("""Determines whether the episode title will be displayed in the schedule output.""")))
+
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:

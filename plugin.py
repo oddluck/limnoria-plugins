@@ -93,11 +93,14 @@ class TVMaze(callbacks.Plugin):
     # Public functions #
     #------------------#
     
-    @wrap([getopts({'country': 'somethingWithoutSpaces'}), 'text'])
+    @wrap([getopts({'country': 'somethingWithoutSpaces',
+                    'detail': '',
+                    'd': ''}), 'text'])
     def tvshow(self, irc, msg, args, options, query):
-        """[--country <country>] <TV Show Title>
+        """[--country <country> | --detail|--d] <TV Show Title>
         Fetches information about provided TV Show from TVMaze.com.
-        Optionally include --country to find shows with the same name from another country
+        Optionally include --country to find shows with the same name from another country.
+        Optionally include --detail (or --d) to show additional details.
         Ex: tvshow --country GB the office
         """
         # prefer manually passed options, then saved user options
@@ -105,48 +108,93 @@ class TVMaze(callbacks.Plugin):
         # options if they already exist
         options = {**self.db.get(msg.prefix), **dict(options)}
         
+        # filter out any manually passed options
         country = options.get('country')
+        show_detail = options.get('d') or options.get('detail')
         
+        # search for the queried TV show
         show_search = self._get('search', query=query)
         if not show_search:
             irc.reply('Nothing found for your query: {}'.format(query))
             return
         
+        # if we have a country, look for that first instead of the first result
         if country:
             for show in show_search:
                 if show['show'].get('network'):
                     if show['show']['network']['country']['code'].upper() == country.upper():
                         show_id = show['show']['id']
                         break
+            # if we can't find it, default to the first result anyway
+            if not show_id:
+                show_id = show_search[0]['show']['id']
         else:
             show_id = show_search[0]['show']['id']
         
+        # fetch the show information
         show_info = self._get('shows', id_=show_id)
         
+        # grab the included URLs and generate an imdb one
         urls = []
         urls.append(show_info['url'])
         urls.append('https://imdb.com/title/{}/'.format(show_info['externals']['imdb']))
         urls.append(show_info['officialSite'])
         
-        genres = '/'.join(g for g in show_info['genres'])
+        # grab the genres
+        genres = '{}: {}'.format(
+            self._bold('Genre(s)'),
+            '/'.join(show_info['genres'])
+        )
         
+        # show name
         name = self._bold(show_info['name'])
-        lang = show_info['language']
+        
+        # show language
+        lang = "{}: {}".format(
+            self._bold('Language'),
+            show_info['language']
+        )
+        
+        # show status
         status = show_info['status']
         if status == 'Ended':
             status = self._color(status, 'red')
         elif status == 'Running':
             status = self._color(status, 'green')
-        runtime = "{}m".format(show_info['runtime'])
+            
+        # show duration
+        runtime = "{}: {}m".format(
+            self._bold('Duration'),
+            show_info['runtime']
+        )
+        
+        # show premiere date, stripped to year and added to name
         if show_info.get('premiered'):
             premiered = show_info['premiered'][:4]
         else:
             premiered = "TBD"
         name = "{} ({})".format(name, premiered)
-        network = show_info.get('network')
-        network = network['name'] if network else ""
         
+        # is the show on television or web (netflix, amazon, etc)
+        if show_info.get('network'):
+            # we use this if --detail/--d is asked for
+            network = show_info['network']['name']
+            schedule = "{}: {} at {} on {}".format(
+                self._bold('Schedule'),
+                ', '.join(show_info['schedule']['days']),
+                show_info['schedule']['time'],
+                network
+            )
+        elif show_info.get('webChannel'):
+            # we use this if --detail/--d is asked for
+            network = show_info['webChannel']['name']
+            schedule = "Watch on {}".format(
+                network
+            )
+            
+        # try to get previous and/or next episode details
         if show_info['_embedded']:
+            # previous episode
             if show_info['_embedded'].get('previousepisode'):
                 try:
                     ep = "S{:02d}E{:02d}".format(
@@ -156,7 +204,7 @@ class TVMaze(callbacks.Plugin):
                 except:
                     ep = "?"
                 ep = self._color(ep, 'orange')
-                previous = " | {}: {ep_name} [{ep}] ({ep_date}) | ".format(
+                previous = " | {}: {ep_name} [{ep}] ({ep_date})".format(
                     self._bold('Prev'),
                     ep_name=show_info['_embedded']['previousepisode']['name'],
                     ep=ep,
@@ -164,7 +212,7 @@ class TVMaze(callbacks.Plugin):
                 )
             else:
                 previous = ""
-                
+            # next episode
             if show_info['_embedded'].get('nextepisode'):
                 try:
                     ep = "S{:02d}E{:02d}".format(
@@ -183,25 +231,33 @@ class TVMaze(callbacks.Plugin):
                 )
             else:
                 next_ = ""
-                
-        reply = "{}{}{}{} | {} | {} | {} | {} | {}".format(
+        
+        # now finally put it all together and reply
+        reply = "{0} ({3}){1}{2} | {4}".format(
             name,
             next_,
             previous,
             status,
-            lang,
-            runtime,
-            network,
-            genres,
-            ' | '.join(u for u in urls)
+            ' | '.join(urls)
         )
         irc.reply(reply)
+        
+        # add a second line for details if requested
+        if show_detail:
+            reply = "{} | {} | {} | {}".format(
+                schedule,
+                runtime,
+                lang,
+                genres
+            )
+            irc.reply(reply)
         
     
     @wrap([getopts({'all': '', 
                     'tz': 'somethingWithoutSpaces',
                     'network': 'somethingWithoutSpaces',
-                    'country': 'somethingWithoutSpaces'})])
+                    'country': 'somethingWithoutSpaces',
+                    'showEpisodeTitle': ''})])
     def schedule(self, irc, msg, args, options):
         """[--all | --tz <IANA timezone> | --network <network> | --country <country>]
         Fetches upcoming TV schedule from TVMaze.com.
@@ -211,10 +267,14 @@ class TVMaze(callbacks.Plugin):
         # options if they already exist
         options = {**self.db.get(msg.prefix), **dict(options)}
         
+        # parse manually passed options, if any
         tz = options.get('tz') or 'US/Eastern'
         country = options.get('country')
+        # TO-DO: add a --filter option(s)
         if country:
             country = country.upper()
+            # if user isn't asking for a specific timezone,
+            # default to some sane ones given the country
             if not options.get('tz'):
                 if country == 'GB':
                     tz = 'GMT'
@@ -224,26 +284,37 @@ class TVMaze(callbacks.Plugin):
                     tz = 'US/Eastern'
         else:
             country = 'US'
+            # we don't need to default tz here because it's already set
         
+        # fetch the schedule
         schedule_data = self._get('schedule', country=country)
         
         if not schedule_data:
             irc.reply('Something went wrong fetching TVMaze schedule data.')
             return
         
+        # parse schedule
         shows = []
         for show in schedule_data:
-            # TO-DO: implement custom --filter
             tmp = "{show_name} [{ep}] ({show_time})"
-            name = "{1}: {0}".format(show['name'], show['show']['name'])
+            # by default we show the episode title, there is a channel config option to disable this
+            # and users can override with --showEpisodeTitle flag
+            show_title = options.get('showEpisodeTitle') or self.registryValue('showEpisodeTitle', msg.args[0])
+            if show_title:
+                name = "{1}: {0}".format(show['name'], show['show']['name'])
+            else:
+                name = "{0}".format(show['show']['name'])
+            # try to build some season/episode information
             try:
                 ep_id = "S{:02d}E{:02d}".format(show['season'], show['number'])
             except:
                 ep_id = '?'
             time = pendulum.parse(show['airstamp']).in_tz(tz).format('h:mm A zz')
+            # put it all together
             tmp = tmp.format(show_name=self._bold(name), 
                              ep=self._color(ep_id, 'orange'), 
                              show_time=time)
+            # depending on any options, append to list
             if options.get('all'):
                 shows.append(tmp)
             elif options.get('network'):
@@ -251,17 +322,20 @@ class TVMaze(callbacks.Plugin):
                     if show['show']['network']['name'].lower() == options.get('network').lower():
                         shows.append(tmp)
             else:
+                # for now, defaults to only 'Scripted' shows
                 if show['show']['type'] == 'Scripted':
                     shows.append(tmp)
-                
-        reply = "{}: {}".format(self._ul("Today's Shows"), ", ".join(s for s in shows))
+         
+        # finally reply
+        reply = "{}: {}".format(self._ul("Today's Shows"), ", ".join(shows))
         irc.reply(reply)
         
     @wrap([getopts({'country': 'somethingWithoutSpaces',
                     'tz': 'somethingWithoutSpaces',
+                    'showEpisodeTitle': 'boolean',
                     'clear': ''})])
     def settvmazeoptions(self, irc, msg, args, options):
-        """--country <country> | --tz <IANA timezone>
+        """--country <country> | --tz <IANA timezone> | --showEpisodeTitle (True|False)
         Allows user to set options for easier use of TVMaze commands.
         Use --clear to reset all options.
         """
