@@ -309,11 +309,11 @@ class TVMaze(callbacks.Plugin):
                 ep_id = "S{:02d}E{:02d}".format(show['season'], show['number'])
             except:
                 ep_id = '?'
-            time = pendulum.parse(show['airstamp']).in_tz(tz).format('h:mm A zz')
+            time = pendulum.parse(show['airstamp']).in_tz(tz)
             # put it all together
             tmp = tmp.format(show_name=self._bold(name), 
                              ep=self._color(ep_id, 'orange'), 
-                             show_time=time)
+                             show_time=time.format('h:mm A zz'))
             # depending on any options, append to list
             if options.get('all'):
                 shows.append(tmp)
@@ -322,8 +322,8 @@ class TVMaze(callbacks.Plugin):
                     if show['show']['network']['name'].lower() == options.get('network').lower():
                         shows.append(tmp)
             else:
-                # for now, defaults to only 'Scripted' shows
-                if show['show']['type'] == 'Scripted':
+                # for now, defaults to only upcoming 'Scripted' shows
+                if show['show']['type'] == 'Scripted' and pendulum.now(tz) <= time:
                     shows.append(tmp)
          
         # finally reply
