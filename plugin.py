@@ -106,7 +106,8 @@ class TVMaze(callbacks.Plugin):
         # prefer manually passed options, then saved user options
         # this merges the two possible dictionaries, prefering manually passed
         # options if they already exist
-        options = {**self.db.get(msg.prefix), **dict(options)}
+        user_options = self.db.get(msg.prefix) or dict()
+        options = {**user_options, **dict(options)}
         
         # filter out any manually passed options
         country = options.get('country')
@@ -139,7 +140,8 @@ class TVMaze(callbacks.Plugin):
         urls = []
         urls.append(show_info['url'])
         urls.append('https://imdb.com/title/{}/'.format(show_info['externals']['imdb']))
-        urls.append(show_info['officialSite'])
+        if show_info['officialSite']:
+            urls.append(show_info['officialSite'])
         
         # grab the genres
         genres = '{}: {}'.format(
@@ -266,7 +268,8 @@ class TVMaze(callbacks.Plugin):
         # prefer manually passed options, then saved user options
         # this merges the two possible dictionaries, prefering manually passed
         # options if they already exist
-        options = {**self.db.get(msg.prefix), **dict(options)}
+        user_options = self.db.get(msg.prefix) or dict()
+        options = {**user_options, **dict(options)}
         
         # parse manually passed options, if any
         tz = options.get('tz') or 'US/Eastern'
@@ -334,9 +337,11 @@ class TVMaze(callbacks.Plugin):
     @wrap([getopts({'country': 'somethingWithoutSpaces',
                     'tz': 'somethingWithoutSpaces',
                     'showEpisodeTitle': 'boolean',
+                    'detail': 'boolean',
+                    'd': 'boolean',
                     'clear': ''})])
     def settvmazeoptions(self, irc, msg, args, options):
-        """--country <country> | --tz <IANA timezone> | --showEpisodeTitle (True|False)
+        """--country <country> | --tz <IANA timezone> | --showEpisodeTitle (True/False) | --detail/--d (True/False)
         Allows user to set options for easier use of TVMaze commands.
         Use --clear to reset all options.
         """
@@ -347,7 +352,8 @@ class TVMaze(callbacks.Plugin):
         # prefer manually passed options, then saved user options
         # this merges the two possible dictionaries, prefering manually passed
         # options if they already exist
-        options = {**self.db.get(msg.prefix), **dict(options)}
+        user_options = self.db.get(msg.prefix) or dict()
+        options = {**user_options, **dict(options)}
         
         if options.get('clear'):
             self.db.set(msg.prefix, {})
