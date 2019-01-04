@@ -265,14 +265,18 @@ class TVMaze(callbacks.Plugin):
         Allows user to set options for easier use of TVMaze commands.
         Use --clear to reset all options.
         """
+        if not options:
+            irc.reply('You must give me some options!')
+            return
         
-        options = dict(options)
+        # prefer manually passed options, then saved user options
+        # this merges the two possible dictionaries, prefering manually passed
+        # options if they already exist
+        options = {**self.db.get(msg.prefix), **dict(options)}
+        
         if options.get('clear'):
             self.db.set(msg.prefix, {})
             irc.replySuccess()
-            return
-        if not options:
-            irc.reply('You must give me some options!')
             return
         
         self.db.set(msg.prefix, options)
