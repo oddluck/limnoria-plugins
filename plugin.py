@@ -120,6 +120,7 @@ class TVMaze(callbacks.Plugin):
         
         # if we have a country, look for that first instead of the first result
         if country:
+            show_id = None
             for show in show_search:
                 if show['show'].get('network'):
                     if show['show']['network']['country']['code'].upper() == country.upper():
