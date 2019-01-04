@@ -260,9 +260,10 @@ class TVMaze(callbacks.Plugin):
                     'tz': 'somethingWithoutSpaces',
                     'network': 'somethingWithoutSpaces',
                     'country': 'somethingWithoutSpaces',
+                    'date': 'somethingWithoutSpaces',
                     'showEpisodeTitle': ''})])
     def schedule(self, irc, msg, args, options):
-        """[--all | --tz <IANA timezone> | --network <network> | --country <country>]
+        """[--all | --tz <IANA timezone> | --network <network> | --country <country> | --date <YYYY-MM-DD>]
         Fetches upcoming TV schedule from TVMaze.com.
         """
         # prefer manually passed options, then saved user options
@@ -274,6 +275,7 @@ class TVMaze(callbacks.Plugin):
         # parse manually passed options, if any
         tz = options.get('tz') or 'US/Eastern'
         country = options.get('country')
+        date = options.get('date')
         # TO-DO: add a --filter option(s)
         if country:
             country = country.upper()
@@ -290,8 +292,14 @@ class TVMaze(callbacks.Plugin):
             country = 'US'
             # we don't need to default tz here because it's already set
         
+        # parse date input
+        if date:
+            date = pendulum.parse(date, strict=False).format('YYYY-MM-DD')
+        else:
+            date = pendulum.now(tz).format('YYYY-MM-DD')
+        
         # fetch the schedule
-        schedule_data = self._get('schedule', country=country)
+        schedule_data = self._get('schedule', country=country, date=date)
         
         if not schedule_data:
             irc.reply('Something went wrong fetching TVMaze schedule data.')
@@ -329,10 +337,15 @@ class TVMaze(callbacks.Plugin):
                 # for now, defaults to only upcoming 'Scripted' shows
                 if show['show']['type'] == 'Scripted' and pendulum.now(tz) <= time:
                     shows.append(tmp)
-         
+                    
+        # set a default message if no shows were found
+        if not shows:
+            shows.append('No upcoming shows found')
+        
         # finally reply
         reply = "{}: {}".format(self._ul("Today's Shows"), ", ".join(shows))
         irc.reply(reply)
+        
         
     @wrap([getopts({'country': 'somethingWithoutSpaces',
                     'tz': 'somethingWithoutSpaces',
