@@ -95,7 +95,9 @@ class TVMaze(callbacks.Plugin):
     
     @wrap([getopts({'country': 'somethingWithoutSpaces',
                     'detail': '',
-                    'd': ''}), 'text'])
+                    'd': '',
+                    'search': '',
+                    'record': 'positiveInt'}), 'text'])
     def tvshow(self, irc, msg, args, options, query):
         """[--country <country> | --detail|--d] <TV Show Title>
         Fetches information about provided TV Show from TVMaze.com.
@@ -119,6 +121,32 @@ class TVMaze(callbacks.Plugin):
             irc.reply('Nothing found for your query: {}'.format(query))
             return
         
+        # if the user is using --search let's just output the results
+        if options.get('search'):
+            results = []
+            for idx, show in enumerate(show_search):
+                # try to pin the year of release to the show name
+                if show['show'].get('premiered'):
+                    premiered = show['show']['premiered'][:4]
+                else:
+                    premiered = "TBD"
+                name = "{} ({})".format(show['show']['name'], premiered)
+                results.append("{}. {}".format(
+                    idx+1,
+                    self._bold(name)
+                ))
+            irc.reply("Results: {}".format(" | ".join(results)))
+            return
+        
+        # pull a specific show from --search results
+        if options.get('record'):
+            if options.get('record') > len(show_search):
+                irc.reply('Invalid record!')
+                return
+            result_to_show = options.get('record') - 1
+        else:
+            result_to_show = 0
+        
         # if we have a country, look for that first instead of the first result
         if country:
             show_id = None
@@ -129,9 +157,9 @@ class TVMaze(callbacks.Plugin):
                         break
             # if we can't find it, default to the first result anyway
             if not show_id:
-                show_id = show_search[0]['show']['id']
+                show_id = show_search[result_to_show]['show']['id']
         else:
-            show_id = show_search[0]['show']['id']
+            show_id = show_search[result_to_show]['show']['id']
         
         # fetch the show information
         show_info = self._get('shows', id_=show_id)
@@ -261,7 +289,8 @@ class TVMaze(callbacks.Plugin):
                     'network': 'somethingWithoutSpaces',
                     'country': 'somethingWithoutSpaces',
                     'date': 'somethingWithoutSpaces',
-                    'showEpisodeTitle': ''})])
+                    'showEpisodeTitle': '',
+                    'debug': ''})])
     def schedule(self, irc, msg, args, options):
         """[--all | --tz <IANA timezone> | --network <network> | --country <country> | --date <YYYY-MM-DD>]
         Fetches upcoming TV schedule from TVMaze.com.
@@ -344,6 +373,9 @@ class TVMaze(callbacks.Plugin):
         
         # finally reply
         reply = "{}: {}".format(self._ul("Today's Shows"), ", ".join(shows))
+        if options.get('debug'):
+            #irc.reply(repr(reply))
+            print(repr(reply))
         irc.reply(reply)
         
         
