@@ -123,7 +123,6 @@ class NFLScores2(callbacks.Plugin):
         url = BASE_URL.format('/scores/{}/{}/{}'.format(
             season, seasonType.upper(), week
         ))
-        print(url)
         try:
             scores = requests.get(url).json()['gameScores']
         except json.decoder.JSONDecodeError:
@@ -132,7 +131,6 @@ class NFLScores2(callbacks.Plugin):
             print(e)
             irc.error('something went wrong parsing data', Raise=True)
 
-        print(gameIds)
         new_scores = []
         if gameIds or team:
             for game in scores:
@@ -172,6 +170,7 @@ class NFLScores2(callbacks.Plugin):
                 prefix = prefix.format("Week {}".format(week))
         
         games = []
+        print(new_scores)
         for game in new_scores:
             if len(new_scores) == 1:
                 long_ = True
@@ -223,10 +222,15 @@ class NFLScores2(callbacks.Plugin):
                     if info['gameType'] == "SB":
                         string += f" :: {info['site']['siteFullname']}{' ({})'.format(info['site']['roofType'].title()) if info['site']['roofType'] else ''}, {info['site']['siteCity']}, {info['site']['siteState']}"
                     games.append(string)
+                elif "PRE" in score['phase']:
+                    string = (f"{info[away]} @ {info[home]}{sep}"
+                              f"{time}{network}")
+                    if info['gameType'] == "SB":
+                        string += f" :: {info['site']['siteFullname']}{' ({})'.format(info['site']['roofType'].title()) if info['site']['roofType'] else ''}, {info['site']['siteCity']}, {info['site']['siteState']}"
+                    games.append(string)
                 else:
-                    #tbd
                     pass
-                
+                    
         
         irc.reply(f"{prefix} {' | '.join(games)}")
         
