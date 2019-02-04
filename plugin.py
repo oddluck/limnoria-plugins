@@ -228,10 +228,63 @@ class NFLScores2(callbacks.Plugin):
                     if info['gameType'] == "SB":
                         string += f" :: {info['site']['siteFullname']}{' ({})'.format(info['site']['roofType'].title()) if info['site']['roofType'] else ''}, {info['site']['siteCity']}, {info['site']['siteState']}"
                     games.append(string)
+                elif "HALFTIME" in score['phase']:
+                    phase = "Halftime" if long_ else "HT"
+                    phase = self._color(phase, 'orange')
+                    h_score = score['homeTeamScore']['pointTotal']
+                    v_score = score['visitorTeamScore']['pointTotal']
+                    if v_score > h_score:
+                        v_str = self._bold(f"{info[away]} {v_score}")
+                        h_str = f"{info[home]} {h_score}"
+                    elif h_score > v_score:
+                        v_str = f"{info[away]} {v_score}"
+                        h_str = self._bold(f"{info[home]} {h_score}")
+                    else:
+                        v_str = f"{info[away]} {v_score}"
+                        h_str = f"{info[home]} {h_score}"
+                    string = (f"{v_str} @ {h_str}{sep}{phase}")
+                    games.append(string)
                 else:
-                    pass
-                    
-        
+                    phase = score['phaseDescription'] if long_ else score['phase']
+                    phase = self._color(phase, 'green')
+                    time = self._color(score['time'], 'green')
+                    h_score = score['homeTeamScore']['pointTotal']
+                    v_score = score['visitorTeamScore']['pointTotal']
+                    if v_score > h_score:
+                        v_str = self._bold(f"{info[away]} {v_score}")
+                        h_str = f"{info[home]} {h_score}"
+                    elif h_score > v_score:
+                        v_str = f"{info[away]} {v_score}"
+                        h_str = self._bold(f"{info[home]} {h_score}")
+                    else:
+                        v_str = f"{info[away]} {v_score}"
+                        h_str = f"{info[home]} {h_score}"
+                    string = (f"{v_str} @ {h_str}{sep}{time} {phase}")
+                    status = None
+                    try:
+                        pos_team = score.get('possessionTeamAbbr')
+                        at = score['yardline']
+                        down = "{} and {}".format(score['down'], score['yardsToGo'])
+                        status = " :: {}".format(down)
+                        last_play = None
+                        if pos_team:
+                            status += " :: {} has the ball at {}".format(pos_team, at)
+                        if len(new_scores) == 1:
+                            gameId = info['gameId']
+                            url = BASE_URL.format('/playbyplay/{}/latest'.format(gameId))
+                            try:
+                                last_play = requests.get(url).json()
+                                last_play = last_play['plays'][-1]['playDescription']
+                            except:
+                                pass
+                        if last_play:
+                            status += " :: {}".format(last_play)
+                    except:
+                        pass
+                    if status:
+                        string += status
+                    games.append(string)
+
         irc.reply(f"{prefix} {' | '.join(games)}")
         
 
