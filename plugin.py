@@ -205,7 +205,7 @@ class MLBScores(callbacks.Plugin):
         if not league:
             url = 'https://statsapi.mlb.com/api/v1/teams?sportId=1'
         else:
-            url = 'https://statsapi.mlb.com/api/v1/teams?sportId={}&leagueId={}'.format(league[0], league[1])
+            url = 'https://statsapi.mlb.com/api/v1/teams?sportIds={}&leagueId={}'.format(league[0], league[1])
 
         data = requests.get(url).json()
 
@@ -269,7 +269,7 @@ class MLBScores(callbacks.Plugin):
             year = date.year
 
             if year == 1900:
-                year = 2018
+                year = 2019
 
             if (year < 2016):
                 irc.reply("Sorry, the API only back dates until 2016")
@@ -1498,6 +1498,7 @@ class MLBScores(callbacks.Plugin):
                                                                     statType=statType,
                                                                     group=group,
                                                                     reg_or_post=reg_or_post)))
+        print(tmp.url)
         tmp = tmp.json()
         
         if 'stats' not in tmp['people'][0]:
@@ -1510,6 +1511,18 @@ class MLBScores(callbacks.Plugin):
                                          tmp['people'][0]['primaryPosition']['abbreviation'])
         except:
             plyr_info = ''
+            
+        try:
+            if not tmp['people'][0].get('active'):
+                years = ' ({}-{})'.format(tmp['people'][0]['mlbDebutDate'].split('-')[0],
+                                          tmp['people'][0]['lastPlayedDate'].split('-')[0])
+            else:
+                years = ' ({}-)'.format(tmp['people'][0]['mlbDebutDate'].split('-')[0]) #,
+                                          #tmp['people'][0]['lastPlayedDate'].split('-')[0])
+        except:
+            years = ''
+            
+        blurb += years
         
         hitting_stat_headers, pitching_stat_headers, _ = self._generateStatHeaders('mlbstats')        
         
@@ -1955,7 +1968,7 @@ class MLBScores(callbacks.Plugin):
         """How many days are left in the current MLB season"""
         
         now = pendulum.now()
-        end = pendulum.parse('2018-09-30')
+        end = pendulum.parse('201920-09-30')
         left = end-now
         
         irc.reply("There are {} days left in the {} MLB season.".format(left.days, end.year))
@@ -1977,7 +1990,23 @@ class MLBScores(callbacks.Plugin):
         Fetches lineup for the game <team> is playing
         """
         abbv = team.upper()
-        team, date, tz = self._parseInput(team)
+        #team, date, tz = self._parseInput(team)
+        
+        team_codes, _ = self._getTeams(league=['1,17', '103,104,119,131,132,133,135,162,516,595'])
+
+        try:
+            team, date, tz = inputParser.parseInput(team, team_codes, self._TEAM_BY_NICK)
+            print('external parser worked')
+        except:
+            team, date, tz = self._parseInput(team)
+            print('internal parser worked')
+        #print(team)
+        #print(date)
+
+        
+        #print('MLBScores: No cached scores, pulling fresh')
+        
+
         
         if date:
             test = pendulum.parse(date)
@@ -1994,8 +2023,10 @@ class MLBScores(callbacks.Plugin):
         if not team:
             irc.reply('No team provided.')
             return
+        
+        games = self._fetchGames(team, date, league=['1,17', '103,104,119,131,132,133,135,162,516,595'])
 
-        games = self._fetchGames(team, date)
+        #games = self._fetchGames(team, date)
 
         if not games:
             irc.reply('No games found')
@@ -2362,7 +2393,7 @@ class MLBScores(callbacks.Plugin):
                 return
         
         today = self._getTodayDate()
-        end = '2018-11-01'
+        end = '2019-11-01'
         try:
             tid = tids[optteam]
         except:
@@ -2511,7 +2542,7 @@ class MLBScores(callbacks.Plugin):
         yesterday = dt_yesterday.strftime('%Y-%m-%d')
         #last_date = datetime.datetime.today() - datetime.timedelta(days=optdays)
         #print(last_date)
-        end = '2018-03-01'
+        end = '2019-03-01'
         try:
             tid = tids[optteam]
         except:
