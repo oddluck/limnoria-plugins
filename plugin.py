@@ -66,11 +66,6 @@ class Weed(callbacks.Plugin):
                 flavor1 = data2[0]
                 flavor2 = data2[1]
                 flavor3 = data2[2]
-                url3 = "http://strainapi.evanbusse.com/{0}/strains/data/flavors/{1}".format(strain_api, id)
-                data3 = requests.get(url2).json()
-                effect1 = data2[0]
-                effect2 = data2[1]
-                effect3 = data2[2]
                 response2 = "{0} | {1} | Flavors: {2}, {3}, {4} | {5}".format(name, type, flavor1, flavor2, flavor3, desc)
                 break
         if  response1 != None:
