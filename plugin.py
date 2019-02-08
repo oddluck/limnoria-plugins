@@ -38,13 +38,7 @@ class Lyrics(callbacks.Plugin):
             query = None
         if query:
             data = requests.get("https://lyric-api.herokuapp.com/api/find/{0}/{1}".format(query[0], query[1])).json()
-            lyrics = data['lyric'].replace('\n\n', '. ')
-            lyrics = lyrics.replace('?\n', '? ')
-            lyrics = lyrics.replace('!\n', '! ')
-            lyrics = lyrics.replace('.\n', '. ')
-            lyrics = lyrics.replace(',\n', ', ')
-            lyrics = lyrics.replace('...\n', '... ')
-            lyrics = lyrics.replace('\n', ', ')
+            lyrics = data['lyric'].replace('\n\n', '. ').replace('?\n', '? ').replace('!\n', '! ').replace('.\n', '. ').replace(',\n', ', ').replace('...\n', '... ').replace('\n', ', ')
             if lyrics:
                 irc.reply(lyrics)
             else:
