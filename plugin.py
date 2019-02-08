@@ -85,11 +85,15 @@ class Fun(callbacks.Plugin):
     
     def startup(self, irc, msg, args):
         """
-        Startup idea generator
+        Startup generator
         """
         channel = msg.args[0]
         data = requests.get("http://itsthisforthat.com/api.php?json").json()
-        response = "So, Basically, It\'s Like A {0} for {1}".format(data['this'], data['that'])
+        vowels = ('a','e','i','o','u','A','E','I','O','U')
+        if data['this'].startswith(vowels):
+            response = "So, Basically, It\'s Like An {0} for {1}".format(data['this'], data['that'])
+        else:
+            response = "So, Basically, It\'s Like A {0} for {1}".format(data['this'], data['that'])
         irc.reply(response)
     startup = wrap(startup)
     
