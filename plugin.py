@@ -12,6 +12,7 @@ import supybot.ircutils as ircutils
 import supybot.callbacks as callbacks
 import supybot.ircmsgs as ircmsgs
 import requests
+import html
 
 try:
     from supybot.i18n import PluginInternationalization
@@ -38,7 +39,7 @@ class Lyrics(callbacks.Plugin):
             query = None
         if query:
             data = requests.get("https://lyric-api.herokuapp.com/api/find/{0}/{1}".format(query[0], query[1])).json()
-            lyrics = data['lyric'].replace('\n\n', '. ').replace('?\n', '? ').replace('!\n', '! ').replace('.\n', '. ').replace(',\n', ', ').replace('...\n', '... ').replace('\n', ', ')
+            lyrics = html.unescape(data['lyric']).replace('\n\n', '. ').replace('?\n', '? ').replace('!\n', '! ').replace('.\n', '. ').replace(',\n', ', ').replace('...\n', '... ').replace('\n', ', ')
             if lyrics:
                 irc.reply(lyrics)
             else:
