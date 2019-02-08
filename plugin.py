@@ -26,7 +26,7 @@ class Fun(callbacks.Plugin):
     threaded = True
 
     def advice(self, irc, msg, args):
-        """<user>
+        """
         Get some advice
         """
 
@@ -37,7 +37,7 @@ class Fun(callbacks.Plugin):
     advice = wrap(advice)
 
     def joke(self, irc, msg, args):
-        """<user>
+        """
         Get a joke
         """
 
@@ -53,8 +53,8 @@ class Fun(callbacks.Plugin):
     joke = wrap(joke)
 
     def catfact(self, irc, msg, args):
-        """<user>
-        Get some advice
+        """
+        Cat fact
         """
 
         channel = msg.args[0]
@@ -62,10 +62,10 @@ class Fun(callbacks.Plugin):
         irc.reply(data['fact'])
 
     catfact = wrap(catfact)
-    
+
     def useless(self, irc, msg, args):
-        """<user>
-        Get some advice
+        """
+        Useless fact
         """
 
         channel = msg.args[0]
@@ -73,5 +73,14 @@ class Fun(callbacks.Plugin):
         irc.reply(data['text'])
 
     useless = wrap(useless)
+
+    def buzz(self, irc, msg, args):
+        """
+        Corporate buzzord generator
+        """
+        channel = msg.args[0]
+        data = requests.get("https://corporatebs-generator.sameerkumar.website").json()
+        irc.reply(data['phrase'])
+    buzz = wrap(buzz)
     
 Class = Fun
