@@ -63,4 +63,15 @@ class Fun(callbacks.Plugin):
 
     catfact = wrap(catfact)
     
+    def useless(self, irc, msg, args):
+        """<user>
+        Get some advice
+        """
+
+        channel = msg.args[0]
+        data = requests.get("http://randomuselessfact.appspot.com/random.json").json()
+        irc.reply(data['text'])
+
+    useless = wrap(useless)
+    
 Class = Fun
