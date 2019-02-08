@@ -550,7 +550,7 @@ class Game:
         answers = []
         questionType = 'regular'
         answers.append(re.sub('<[^<]+?>', '', rawData[0]['answer']).strip())
-        points = rawData[0]['value']
+        points = float(rawData[0]['value'])
         # Calculate additional points
         #addPoints = -5 * netTimesAnswered
         #addPoints = min(addPoints, 200)
