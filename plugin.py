@@ -42,6 +42,8 @@ class Lyrics(callbacks.Plugin):
             lyrics = lyrics.replace('?\n', '? ')
             lyrics = lyrics.replace('!\n', '! ')
             lyrics = lyrics.replace('.\n', '. ')
+            lyrics = lyrics.replace(',\n', ', ')
+            lyrics = lyrics.replace('...\n', '... ')
             lyrics = lyrics.replace('\n', ', ')
             if lyrics:
                 irc.reply(lyrics)
