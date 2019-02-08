@@ -1,3 +1,7 @@
+This branch uses the jservice.io api to supply questions.
+
+This no longer uses the internal question database, rendering question reporting, editing, etc. obsolete. Consider this a hack, though a fully functional one. Previous user stats are not affected by the change.
+
 #Configuration
 
 Requires Limnoria and Python 3
