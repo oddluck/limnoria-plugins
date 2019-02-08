@@ -83,4 +83,14 @@ class Fun(callbacks.Plugin):
         irc.reply(data['phrase'])
     buzz = wrap(buzz)
     
+    def startup(self, irc, msg, args):
+        """
+        Startup idea generator
+        """
+        channel = msg.args[0]
+        data = requests.get("http://itsthisforthat.com/api.php?json").json()
+        response = "So, Basically, It\'s Like A {0} for {1}".format(data['this'], data['that'])
+        irc.reply(response)
+    startup = wrap(startup)
+    
 Class = Fun
