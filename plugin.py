@@ -551,6 +551,8 @@ class Game:
         questionType = 'regular'
         answers.append(re.sub('<[^<]+?>', '', rawData[0]['answer']).strip())
         points = float(rawData[0]['value'])
+	if points is None:
+           points = float(500)
         # Calculate additional points
         #addPoints = -5 * netTimesAnswered
         #addPoints = min(addPoints, 200)
