@@ -35,16 +35,18 @@ class Lyrics(callbacks.Plugin):
             query = lyric.split(', ')          
         else:
             irc.reply("Searches must be formatted as artist, song title")
-        data = requests.get("https://lyric-api.herokuapp.com/api/find/{0}/{1}".format(query[0], query[1])).json()
-        lyrics = data['lyric'].replace('\n\n', '. ')
-        lyrics = lyrics.replace('?\n', '? ')
-        lyrics = lyrics.replace('!\n', '! ')
-        lyrics = lyrics.replace('.\n', '. ')
-        lyrics = lyrics.replace('\n', ', ')
-        if lyrics: 
-            irc.reply(lyrics)
-        else:
-            irc.reply("Nothing found.")
+            query = None
+        if query:
+            data = requests.get("https://lyric-api.herokuapp.com/api/find/{0}/{1}".format(query[0], query[1])).json()
+            lyrics = data['lyric'].replace('\n\n', '. ')
+            lyrics = lyrics.replace('?\n', '? ')
+            lyrics = lyrics.replace('!\n', '! ')
+            lyrics = lyrics.replace('.\n', '. ')
+            lyrics = lyrics.replace('\n', ', ')
+            if lyrics:
+                irc.reply(lyrics)
+            else:
+                irc.reply("Nothing found.")
 
     lyric = wrap(lyric, ['text'])
 
