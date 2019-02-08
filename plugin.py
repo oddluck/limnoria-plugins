@@ -32,8 +32,7 @@ class Lyrics(callbacks.Plugin):
         channel = msg.args[0]
         lyrics = None
         if ',' in lyric:
-            query = lyric.split(', ')
-            
+            query = lyric.split(', ')          
         else:
             irc.reply("Searches must be formatted as artist, song title")
         data = requests.get("https://lyric-api.herokuapp.com/api/find/{0}/{1}".format(query[0], query[1])).json()
