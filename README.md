@@ -1,2 +1,4 @@
 # Fun
-Limnoria plugin to return random jokes, advice, or cat facts from various APIs
+Limnoria plugin to return a random joke, cat fact, or advice from various APIs
+
+requires limnoria, python 3, requests
