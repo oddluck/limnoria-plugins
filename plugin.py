@@ -43,12 +43,10 @@ class Fun(callbacks.Plugin):
 
         channel = msg.args[0]
         headers = {
-        'Accept': 'text/plain',
+        'Accept': 'application/json',
         }
-
-        response = requests.get('https://icanhazdadjoke.com/', headers=headers, verify=False)
-
-        irc.reply(response.text)
+        data = requests.get('https://icanhazdadjoke.com/', headers=headers).json()
+        irc.reply(data['joke'])
 
     joke = wrap(joke)
 
