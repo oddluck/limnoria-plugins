@@ -46,7 +46,7 @@ class Fun(callbacks.Plugin):
         'Accept': 'application/json',
         }
         data = requests.get('https://icanhazdadjoke.com/', headers=headers).json()
-        irc.reply(data['joke'])
+        irc.reply(data['joke'].replace('\n', '').replace('\r', '').replace('\t', ''))
 
     joke = wrap(joke)
 
