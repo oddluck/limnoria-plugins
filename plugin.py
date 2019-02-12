@@ -549,8 +549,7 @@ class Game:
         airdate = rawData[0]['airdate'].split('T')
         answers = []
         questionType = 'regular'
-        answer = unidecode(rawData[0]['answer'])
-        answers.append(re.sub('<[^<]+?>', '', answer).replace('\\', '').strip())
+        answers.append(re.sub('<[^<]+?>', '', unidecode(rawData[0]['answer']).replace('\\', '').strip())
         points = float(rawData[0]['value'])
         if points is None:
            points = float(500)
