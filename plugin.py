@@ -26,6 +26,7 @@ import unicodedata
 import hashlib
 import requests
 import re
+from unidecode import unidecode
 
 #A list with items that are removed when timeout is reached, values must be unique
 class TimeoutList:
@@ -541,18 +542,19 @@ class Game:
             pass
 
     def retrieveQuestion(self):
-        # Retrieve and parse question data from database
+         # Retrieve and parse question data from database
         rawData = requests.get("http://jservice.io/api/random").json()
         rawQuestion = rawData[0]['question']
         #netTimesAnswered = rawData['num_answered'] - rawData['num_missed']
         airdate = rawData[0]['airdate'].split('T')
-        question = "({0}) {1}: {2}".format(airdate[0], ircutils.bold(rawData[0]['category']['title'].title()), re.sub('<[^<]+?>', '', rawData[0]['question']))
         answers = []
         questionType = 'regular'
-        answers.append(re.sub('<[^<]+?>', '', rawData[0]['answer']).strip())
+        answer = unidecode(rawData[0]['answer'])
+        answers.append(re.sub('<[^<]+?>', '', answer).replace('\\', '').strip())
         points = float(rawData[0]['value'])
-	if points is None:
+        if points is None:
            points = float(500)
+        question = "({0}) [${1}] {2}: {3}".format(airdate[0], int(points), rawData[0]['category']['title'].title(), re.sub('<[^<]+?>', '', rawData[0]['question']).replace('\\', ''))
         # Calculate additional points
         #addPoints = -5 * netTimesAnswered
         #addPoints = min(addPoints, 200)
