@@ -1,4 +1,4 @@
-This is a Supybot plugin implementation of UNO.
+This is a Limnoria plugin implementation of UNO.
 
 ==== Usage ====
 
