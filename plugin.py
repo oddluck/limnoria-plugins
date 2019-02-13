@@ -23,9 +23,15 @@ import time
 import os, errno
 import pickle
 
-# This will be used to change the name of the class to the folder name
-PluginName=os.path.dirname( __file__ ).split(os.sep)[-1]
-class _Plugin(callbacks.Plugin):
+try:
+    from supybot.i18n import PluginInternationalization
+    _ = PluginInternationalization('Uno')
+except ImportError:
+    # Placeholder that allows to run the plugin on a bot
+    # without the i18n module
+    _ = lambda x: x
+
+class Uno(callbacks.Plugin):
     """
     Uno!
     """
@@ -106,7 +112,7 @@ class _Plugin(callbacks.Plugin):
         """
         begin uno game
         """
-        self._uno_begin(irc,msg.nick)
+        self._uno_begin(irc, msg.nick)
     begin = wrap(begin)
 
     def _uno_begin(self, irc, nick):
@@ -114,21 +120,21 @@ class _Plugin(callbacks.Plugin):
         test
         """
         table=self._gettablefromnick(nick)
-        if table==None:
+        if table == None:
             irc.reply('Error: You are not playing a game at any of the tables.')
             return
-        if self.game[table]['type']!='uno':
+        if self.game[table]['type'] != 'uno':
             irc.reply('Error: Not an Uno game.')
             return
-        if self.game[table]['phase']!='join':
+        if self.game[table]['phase'] != 'join':
             irc.reply("Error: You can't use this command right now.")
             return
-        nplayers=self.game[table]['players'].keys()
-        if nplayers<2:
+        nplayers= list(self.game[table]['players'].keys())
+        if len(nplayers) < 2:
             irc.reply('Error: You need at least two players for Uno.')
             return
         # start things for real
-        for n in self.game[table]['players'].keys():
+        for n in list(self.game[table]['players'].keys()):
             self.game[table]['players'][n]['hand']=[]
             # each player draws 7 initial cards
             for i in range(0,7):
@@ -136,7 +142,7 @@ class _Plugin(callbacks.Plugin):
                 self.game[table]['players'][n]['hand'].append(card)
         self.game[table]['phase']='running'
         irc.reply('Game started!  Check your private messages and follow the instructions.', prefixNick=False, to=self.game[table]['channel'])
-        for n in self.game[table]['players'].keys():
+        for n in list(self.game[table]['players'].keys()):
             self._uno_tell_status(irc, n)
         self._uno_do_cpu(irc, table)
 
@@ -146,7 +152,7 @@ class _Plugin(callbacks.Plugin):
                 return
             if self.game[table].get('type')!='uno':
                 return
-            turnplayer=self.game[table]['players'].keys()[self.game[table]['turn']]
+            turnplayer=list(self.game[table]['players'].keys())[self.game[table]['turn']]
             if self.game[table]['players'][turnplayer].get('cpu'):
                 self._uno_cpu_play(irc, table)
             else:
@@ -162,9 +168,9 @@ class _Plugin(callbacks.Plugin):
             irc.reply('Error: You are not playing Uno at any of the tables.')
             return
         channel=self.game[table]['channel']
-        opponents=[p for p in self.game[table]['players'].keys() if p!=nick]
+        opponents=[p for p in list(self.game[table]['players'].keys()) if p!=nick]
         opponent=opponents[0]
-        opponent_cards=['%s has %s cards' % (n,len(self.game[table]['players'][n]['hand'])) for n in self.game[table]['players'].keys() if n!=nick]
+        opponent_cards=['%s has %s cards' % (n,len(self.game[table]['players'][n]['hand'])) for n in list(self.game[table]['players'].keys()) if n!=nick]
         opponent_cards=', '.join(opponent_cards)
         topcard=self.game[table]['discard'][-1]
         if 'Wild' in topcard:
@@ -173,7 +179,7 @@ class _Plugin(callbacks.Plugin):
         yourhand=utils.str.commaAndify(self.game[table]['players'][nick]['hand'])
         ncards=len(self.game[table]['players'][nick]['hand'])
         opponent_ncards=len(self.game[table]['players'][opponent]['hand'])
-        turnplayer=self.game[table]['players'].keys()[self.game[table]['turn']]
+        turnplayer=list(self.game[table]['players'].keys())[self.game[table]['turn']]
         if turnplayer==nick:
             if self.game[table]['players'][turnplayer].get('cpu'):
                 # We'll skip notice in the channel since the cpu player will
@@ -194,7 +200,7 @@ class _Plugin(callbacks.Plugin):
             # Wild draw 4 is always a valid play for now
             return True
         if card=='Wild Draw 4':
-            turnplayer=self.game[table]['players'].keys()[self.game[table]['turn']]
+            turnplayer=list(self.game[table]['players'].keys())[self.game[table]['turn']]
             if 'Wild Draw 4' in self.game[table]['players'][turnplayer]['hand']:
                 if 'Wild' in discard:
                     # can't play it, because wild draw 4 is black and color of last card
@@ -236,18 +242,22 @@ class _Plugin(callbacks.Plugin):
         return card
 
     def tellstatus(self, irc, msg, args):
-        """?"""
+        """
+        ?
+        """
         self._uno_tell_status(irc, msg.nick)
     tellstatus=wrap(tellstatus)
 
-    def test(self,irc,msg,args):
+    def test(self, irc, msg, args):
+        """
+        ?
+        """
         prefixChar = conf.supybot.reply.whenAddressedBy.chars()[0]
         irc.reply(chars)
     test=wrap(test)
 
     def rules(self, irc, msg, args, text):
         """takes no arguments
-        
         Display rules for uno.  Start a game of uno with the "uno start" command.
         """
         if text:
@@ -283,7 +293,7 @@ class _Plugin(callbacks.Plugin):
             return
         if table !=None and table not in tables:
             # given table doesn't have a game going
-            if table not in range(len(self.game)):
+            if table not in list(range(len(self.game))):
                 irc.reply("Error: That table doesn't exist")
                 return
             irc.reply("Error: There is no game at that table")
@@ -302,7 +312,7 @@ class _Plugin(callbacks.Plugin):
         else:
             messagetxt="Please specify which table you'd like to play at (uno join <table>).  Current tables are: "
             for t in tables:
-                messagetxt+='Table %s (%s), ' % (t+1, ' '.join(self.game[t]['players'].keys()))
+                messagetxt+='Table %s (%s), ' % (t+1, ' '.join(list(self.game[t]['players'].keys())))
             messagetxt=messagetxt.rsplit(', ',1)[0]+'.'
             irc.reply(messagetxt)
             return
@@ -313,7 +323,7 @@ class _Plugin(callbacks.Plugin):
             isfake=True
             if fakenick.lower()=='cpu': iscpu=True
         if self.game[table]['phase']=='join':
-            if nick in self.game[table]['players'].keys():
+            if nick in list(self.game[table]['players'].keys()):
                 irc.reply('Error: you have already joined.')
                 return
             if self.game[table]['type']=='uno':
@@ -325,18 +335,18 @@ class _Plugin(callbacks.Plugin):
                 if isfake==True:
                     self.game[table]['players'][nick]['fake']=True
                 
-                if len(self.game[table]['players'].keys()) < self.game[table]['nplayers']:
+                if len(list(self.game[table]['players'].keys())) < self.game[table]['nplayers']:
                     irc.reply('%s has joined the %s game at table %s.  Use %suno begin to begin the game.' % (nick,self.game[table]['type'],table+1, self.prefixChar), prefixNick=False, to=self.game[table]['channel'])
                     return
                 
-                for n in self.game[table]['players'].keys():
+                for n in list(self.game[table]['players'].keys()):
                     self.game[table]['players'][n]['hand']=[]
                     # each player draws 7 initial cards
                     for i in range(0,7):
                         card=self.game[table]['deck'].pop(random.randint(0,len(self.game[table]['deck'])-1))
                         self.game[table]['players'][n]['hand'].append(card)
                 irc.reply('Game started!  Check your private messages and follow the instructions.', prefixNick=False, to=self.game[table]['channel'])
-                for n in self.game[table]['players'].keys():
+                for n in list(self.game[table]['players'].keys()):
                     self._uno_tell_status(irc, n)
             self.game[table]['phase']='running'
         else:
@@ -408,7 +418,7 @@ class _Plugin(callbacks.Plugin):
         
         # check if it's only bot players left
         Human=False
-        for n in self.game[table]['players'].keys():
+        for n in list(self.game[table]['players'].keys()):
             if not self.game[table]['players'][n].get('cpu'):
                 if n!=nick: Human=True
         
@@ -474,7 +484,7 @@ class _Plugin(callbacks.Plugin):
                    'Robo',
                    'Cyrax','Sektor'
                    ]
-        nicklist=[n for n in nicklist if n not in self.game[table]['players'].keys()]
+        nicklist=[n for n in nicklist if n not in list(self.game[table]['players'].keys())]
         nick=random.choice(nicklist)
         #assumes nick isn't taken atm
         self.game[table]['players'][nick]={}
@@ -486,7 +496,7 @@ class _Plugin(callbacks.Plugin):
         channel=self.game[table]['channel']
         
         Human=False
-        for n in self.game[table]['players'].keys():
+        for n in list(self.game[table]['players'].keys()):
             if not self.game[table]['players'][n].get('cpu'):
                 Human=True
         
@@ -496,7 +506,7 @@ class _Plugin(callbacks.Plugin):
             self._cleanup(table)
             return
         
-        nick=self.game[table]['players'].keys()[self.game[table]['turn']]
+        nick=list(self.game[table]['players'].keys())[self.game[table]['turn']]
         discard=self.game[table]['discard'][-1]
         novalid=True
         for c in self.game[table]['players'][nick]['hand']:
@@ -539,7 +549,7 @@ class _Plugin(callbacks.Plugin):
         if 'Reverse' in card:
             self.game[table]['direction']*=-1
 
-        nplayers=len(self.game[table]['players'].keys())
+        nplayers=len(list(self.game[table]['players'].keys()))
         turn=self.game[table]['turn']+1*self.game[table]['direction']
         if turn>nplayers-1:turn=0
         if turn<0:turn=nplayers-1
@@ -548,7 +558,7 @@ class _Plugin(callbacks.Plugin):
         if 'Draw Two' in card or 'Draw 4' in card:
             ndrawcards=2
             if 'Draw 4' in card: ndrawcards=4
-            drawplayer=self.game[table]['players'].keys()[self.game[table]['turn']]
+            drawplayer=list(self.game[table]['players'].keys())[self.game[table]['turn']]
             for n in range(ndrawcards):
                 c=self.game[table]['deck'].pop(random.randint(0,len(self.game[table]['deck'])-1))
                 self.game[table]['players'][drawplayer]['hand'].append(c)
@@ -562,7 +572,7 @@ class _Plugin(callbacks.Plugin):
             if turn<0:turn=nplayers-1
             self.game[table]['turn']=turn
 
-        for n in self.game[table]['players'].keys():
+        for n in list(self.game[table]['players'].keys()):
             self._uno_tell_status(irc, n)
         return
 
@@ -589,13 +599,13 @@ class _Plugin(callbacks.Plugin):
                 text=text.rsplit(' ',1)[:-1][0]
         
         if self.game[table]['phase']=='running':
-            nplayers=len(self.game[table]['players'].keys())
+            nplayers=len(list(self.game[table]['players'].keys()))
             if nick not in self.game[table]['players']:
                 irc.reply("Error: You're not playing this game.")
                 return
             opponent=[p for p in self.game[table]['players'] if p !=nick][0]
             
-            turnplayer=self.game[table]['players'].keys()[self.game[table]['turn']]
+            turnplayer=list(self.game[table]['players'].keys())[self.game[table]['turn']]
             if nick!=turnplayer:
                 # Note: it will prefix nick in private -- need to fix that
                 irc.reply("%s: It is %s's turn." % (nick, turnplayer), prefixNick=False)
@@ -637,7 +647,7 @@ class _Plugin(callbacks.Plugin):
                         if turn<0:turn=nplayers-1
                         self.game[table]['turn']=turn
 
-                        for n in self.game[table]['players'].keys():
+                        for n in list(self.game[table]['players'].keys()):
                             self._uno_tell_status(irc, n)
                         self._uno_do_cpu(irc, table)
                         return
@@ -654,7 +664,7 @@ class _Plugin(callbacks.Plugin):
                 if turn<0:turn=nplayers-1
                 self.game[table]['turn']=turn
 
-                for nn in self.game[table]['players'].keys():
+                for nn in list(self.game[table]['players'].keys()):
                     self._uno_tell_status(irc, nn)
                 self._uno_do_cpu(irc, table)
                 return
@@ -722,7 +732,7 @@ class _Plugin(callbacks.Plugin):
             if 'Draw Two' in card or 'Draw 4' in card:
                 ndrawcards=2
                 if 'Draw 4' in card: ndrawcards=4
-                drawplayer=self.game[table]['players'].keys()[self.game[table]['turn']]
+                drawplayer=list(self.game[table]['players'].keys())[self.game[table]['turn']]
                 for n in range(ndrawcards):
                     c=self.game[table]['deck'].pop(random.randint(0,len(self.game[table]['deck'])-1))
                     self.game[table]['players'][drawplayer]['hand'].append(c)
@@ -736,7 +746,7 @@ class _Plugin(callbacks.Plugin):
                 if turn<0:turn=nplayers-1
                 self.game[table]['turn']=turn
 
-            for n in self.game[table]['players'].keys():
+            for n in list(self.game[table]['players'].keys()):
                 self._uno_tell_status(irc, n)
             self._uno_do_cpu(irc, table)
         else:
@@ -787,7 +797,7 @@ class _Plugin(callbacks.Plugin):
             self._read_options(irc)
         except:
             pass
-        txt=', '.join(['='.join([str(i) for i in item]) for item in self.channeloptions.items()])
+        txt=', '.join(['='.join([str(i) for i in item]) for item in list(self.channeloptions.items())])
         irc.reply(txt)
     showoptions = wrap(showoptions)
 
@@ -811,7 +821,7 @@ class _Plugin(callbacks.Plugin):
         tables=self._getcurrenttables()
         if not tables: return None
         for table in tables:
-            if n.lower() in map(lambda x:x.lower(), self.game[table]['players'].keys()):
+            if n.lower() in [x.lower() for x in list(self.game[table]['players'].keys())]:
                 return table
         return None
 
@@ -908,8 +918,6 @@ class _Plugin(callbacks.Plugin):
             m=ircmsgs.privmsg(to, text)
             self._sendMsg(irc, m)
 
-
-_Plugin.__name__=PluginName
-Class = _Plugin
+Class = Uno
 
 # vim:set shiftwidth=4 softtabstop=4 expandtab textwidth=79:
