@@ -1,5 +1,7 @@
 This is a Limnoria plugin implementation of UNO.
 
+See testing branch for latest additions/changes such as colors/notices
+
 ==== Usage ====
 
 To use this plugin, you need to change a game setting to allow it.
