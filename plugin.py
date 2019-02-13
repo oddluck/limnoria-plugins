@@ -12,6 +12,7 @@ import supybot.ircutils as ircutils
 import supybot.callbacks as callbacks
 import supybot.ircmsgs as ircmsgs
 import requests
+import html
 
 try:
     from supybot.i18n import PluginInternationalization
@@ -80,7 +81,7 @@ class Fun(callbacks.Plugin):
         data = requests.get("https://corporatebs-generator.sameerkumar.website").json()
         irc.reply(data['phrase'])
     buzz = wrap(buzz)
-    
+
     def startup(self, irc, msg, args):
         """
         Startup generator
@@ -94,5 +95,15 @@ class Fun(callbacks.Plugin):
             response = "So, Basically, It\'s Like A {0} for {1}".format(data['this'], data['that'])
         irc.reply(response)
     startup = wrap(startup)
+
+    def insult(self, irc, msg, args):
+        """
+        Insult generator.
+        """
+        channel = msg.args[0]
+        data = requests.get("https://insult.mattbas.org/api/en/insult.json").json()
+        irc.reply(data['insult'])
+    insult = wrap(insult)
+
     
 Class = Fun
