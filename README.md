@@ -1,5 +1,7 @@
 #Configuration
 
+See jeopardy branch for using jservice.io (156,800+ Jeopardy! questions) as trivia question source
+
 Requires Limnoria and Python 3
 
 ## Setting up the plugin
