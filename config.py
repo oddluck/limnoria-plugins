@@ -4,9 +4,13 @@
 
 import supybot.conf as conf
 import supybot.registry as registry
-import os
-#The plugin name will be based on the plugin's folder.
-PluginName=os.path.dirname( __file__ ).split(os.sep)[-1]
+try:
+    from supybot.i18n import PluginInternationalization
+    _ = PluginInternationalization('Uno')
+except:
+    # Placeholder that allows to run the plugin on a bot
+    # without the i18n module
+    _ = lambda x: x
 
 def configure(advanced):
     # This will be called by supybot to configure this module.  advanced is
@@ -14,9 +18,8 @@ def configure(advanced):
     # user or not.  You should effect your configuration by manipulating the
     # registry as appropriate.
     from supybot.questions import expect, anything, something, yn
-    conf.registerPlugin(PluginName, True)
+    conf.registerPlugin('Uno', True)
 
-P = conf.registerPlugin(PluginName)
-P.__name__ = PluginName
+Uno = conf.registerPlugin('Uno')
 
 # vim:set shiftwidth=4 softtabstop=4 expandtab textwidth=79:
