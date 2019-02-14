@@ -13,6 +13,11 @@ Jeopardy
 TrivaTime reconfigured to use jservice.io (156,800+ Jeopardy! questions) as trivia source
 
 
+TriviaTime
+
+Trivia plugin, uses user supplied trivia questions.
+
+
 Weed
 
 fetch cannabis (marijuana) strain information from the strain api (strains.evanbusse.com)
