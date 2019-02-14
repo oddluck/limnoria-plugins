@@ -1,6 +1,8 @@
 This is a Limnoria plugin implementation of UNO.
 
+made Python3 compatible, fixed minor bugs
 add colors and reply with notices.
+
 uno setoption use_colors False (disable colors)
 uno setoption use_notice False (disable notices)
 
