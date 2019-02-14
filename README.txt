@@ -1,6 +1,8 @@
 This is a Limnoria plugin implementation of UNO.
 
-See testing branch for latest additions/changes such as colors/notices
+add colors and reply with notices.
+uno setoption use_colors False (disable colors)
+uno setoption use_notice False (disable notices)
 
 ==== Usage ====
 
