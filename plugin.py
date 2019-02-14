@@ -521,6 +521,8 @@ class Uno(callbacks.Plugin):
                 # always play the card if possible
                 ncards=len(self.game[table]['players'][nick]['hand'])
                 irc.reply("%s draws a card, and plays it; It's a %s (%s cards left in hand)." % (nick, card, ncards), to=channel)
+                self.game[table]['players'][nick]['hand'].remove(card)
+                self.game[table]['discard'].append(card)
             else:
                 # Can't play a card, end turn
                 ncards=len(self.game[table]['players'][nick]['hand'])
