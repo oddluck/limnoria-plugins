@@ -1,3 +1,7 @@
+Plugins I wrote or forked. All working under Python 3. 
+Requires Limnoria, obviously. Additional requirements in readmes or requirements.txt
+files found in individual plugin folders.
+
 Fun
 
 return a random joke, cat fact, useless fact, corporate buzzwords, startup idea, insult, or advice from various APIs
