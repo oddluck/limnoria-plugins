@@ -8,9 +8,9 @@ Lyrics
 return song lyrics by artist, song title from lyric-api.herokuapp.com
 
 
-TriviaTime
+Jeopardy
 
-See jeopardy branch for using jservice.io (156,800+ Jeopardy! questions) as trivia source
+TrivaTime reconfigured to use jservice.io (156,800+ Jeopardy! questions) as trivia source
 
 
 Weed
