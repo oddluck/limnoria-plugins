@@ -45,6 +45,9 @@ class Uno(callbacks.Plugin):
     channeloptions['use_queue']=True
     channeloptions['nplayers']=10
     channeloptions['maxbots']=9
+    channeloptions['use_colors']=True
+    channeloptions['use_notice']=True
+    
     lastgame=time.time()
     
     def make_sure_path_exists(path):
@@ -61,7 +64,7 @@ class Uno(callbacks.Plugin):
     def start(self, irc, msg, args, text):
         """takes no arguments
         
-        Start a new game of Uno.  For the rules of the game, use the unorules command.
+        Start a new game of Uno. For the rules of the game, use the unorules command.
         """
         try:
             self._read_options(irc)
@@ -75,7 +78,7 @@ class Uno(callbacks.Plugin):
         if text:
             gametype=text.lower().strip()
             if gametype.replace(' ', '')=='globalthermalnuclearwar':
-                irc.reply('Curious game.  The only winning move is not to play.')
+                irc.reply('Curious game. The only winning move is not to play.')
                 return
             if gametype not in ['uno']:
                 irc.reply('Error: Invald game type %s.' % gametype)
@@ -103,7 +106,7 @@ class Uno(callbacks.Plugin):
             self.game[table]['players'][nick]={}
             #self.game[table]['nplayers']=int(self.channeloptions[gametype+'_nplayers'])
             self.game[table]['nplayers']=int(self.channeloptions['nplayers'])
-            irc.reply('%s has started a new game of %s at table %s.  For the rules of the game, type "%sunorules".  To accept this challenge, join with "%suno join".  To add a cpu player, type "%suno join cpu".' % (nick, gametype.capitalize(), table+1, self.prefixChar,self.prefixChar,self.prefixChar), prefixNick=False)
+            irc.reply('%s has started a new game of %s at table %s. For the rules of the game, type "%sunorules". To accept this challenge, join with "%suno join". To add a cpu player, type "%suno join cpu".' % (nick, gametype.capitalize(), table+1, self.prefixChar,self.prefixChar,self.prefixChar), prefixNick=False)
         self.game[table]['phase']='join'
         
     start = wrap(start, ['public', optional('something')])
@@ -141,7 +144,7 @@ class Uno(callbacks.Plugin):
                 card=self.game[table]['deck'].pop(random.randint(0,len(self.game[table]['deck'])-1))
                 self.game[table]['players'][n]['hand'].append(card)
         self.game[table]['phase']='running'
-        irc.reply('Game started!  Check your private messages and follow the instructions.', prefixNick=False, to=self.game[table]['channel'])
+        irc.reply('Game started!  Check your notices and follow the instructions.', prefixNick=False, to=self.game[table]['channel'])
         for n in list(self.game[table]['players'].keys()):
             self._uno_tell_status(irc, n)
         self._uno_do_cpu(irc, table)
@@ -175,8 +178,7 @@ class Uno(callbacks.Plugin):
         topcard=self.game[table]['discard'][-1]
         if 'Wild' in topcard:
             topcard='%s (%s)' % (topcard, self.game[table].get('wildcolor'))
-        
-        yourhand=utils.str.commaAndify(self.game[table]['players'][nick]['hand'])
+        yourhand=self.game[table]['players'][nick]['hand']
         ncards=len(self.game[table]['players'][nick]['hand'])
         opponent_ncards=len(self.game[table]['players'][opponent]['hand'])
         turnplayer=list(self.game[table]['players'].keys())[self.game[table]['turn']]
@@ -186,12 +188,48 @@ class Uno(callbacks.Plugin):
                 # take their turn quickly, and no need to announce it.
                 pass
             else:
-                txt="It is %s's turn.  The top card is %s." % (nick, topcard)
-                txt=txt.replace("s's","s'")
-                irc.reply(txt, to=channel)
-                turnplayer='your'
-                txt='It is your turn.  The top card is %s.  You have %s cards (%s). %s.  To play a card, use the "uno play" command.' % (topcard, ncards, yourhand, opponent_cards)
-                self.reply(irc, txt, to=nick, private=True)
+                if self.channeloptions['use_colors']==True:
+                    if 'Red' in topcard:
+                        topcardcolor = ircutils.mircColor(topcard, 'red', None)
+                    elif 'Blue' in topcard:
+                        topcardcolor = ircutils.mircColor(topcard, 'light blue', None)
+                    elif 'Green' in topcard:
+                        topcardcolor = ircutils.mircColor(topcard, 'green', None)
+                    else:
+                        topcardcolor = ircutils.mircColor(topcard, 'yellow', None)
+                    txt="It is %s's turn. The top card is %s." % (nick, topcardcolor)
+                    txt=txt.replace("s's","s'")
+                    irc.reply(txt, to=channel)
+                    turnplayer='your'
+                    yourhandcolor = []
+                    for i in range (len(yourhand)):
+                        if 'Red' in yourhand[i]:
+                            yourhandcolor.append(ircutils.mircColor(yourhand[i], 'red', None))
+                        elif 'Green' in yourhand[i]:
+                            yourhandcolor.append(ircutils.mircColor(yourhand[i], 'green', None))
+                        elif 'Blue' in yourhand[i]:
+                            yourhandcolor.append(ircutils.mircColor(yourhand[i], 'light blue', None))
+                        elif 'Yellow' in yourhand[i]:
+                            yourhandcolor.append(ircutils.mircColor(yourhand[i], 'yellow', None))
+                        else:
+                            yourhandcolor.append(ircutils.mircColor(yourhand[i], None, None))
+                    yourhandcolor = utils.str.commaAndify(yourhandcolor)
+                    txt='It is your turn. The top card is %s. You have %s cards (%s). %s. To play a card, use the "uno play" command.' % (topcardcolor, ncards, yourhandcolor, opponent_cards)
+                    if self.channeloptions['use_notice']==True:
+                        self.reply(irc, txt, to=nick, notice=True, private=True)
+                    else:
+                        self.reply(irc, txt, to=nick, notice=False, private=True)
+                else:
+                    yourhand = utils.str.commaAndify(yourhand)
+                    txt="It is %s's turn. The top card is %s." % (nick, topcard)
+                    txt=txt.replace("s's","s'")
+                    irc.reply(txt, to=channel)
+                    turnplayer='your'
+                    txt='It is your turn. The top card is %s. You have %s cards (%s). %s. To play a card, use the "uno play" command.' % (topcard, ncards, yourhand, opponent_cards)
+                    if self.channeloptions['use_notice']==True:
+                        self.reply(irc, txt, to=nick, notice=True, private=True)
+                    else:
+                        self.reply(irc, txt, to=nick, notice=False, private=True)
         else:
             pass
 
@@ -258,7 +296,7 @@ class Uno(callbacks.Plugin):
 
     def rules(self, irc, msg, args, text):
         """takes no arguments
-        Display rules for uno.  Start a game of uno with the "uno start" command.
+        Display rules for uno. Start a game of uno with the "uno start" command.
         """
         if text:
             gametype=text.lower().strip()
@@ -310,7 +348,7 @@ class Uno(callbacks.Plugin):
         elif len(tables)==1:
             table=tables[0]
         else:
-            messagetxt="Please specify which table you'd like to play at (uno join <table>).  Current tables are: "
+            messagetxt="Please specify which table you'd like to play at (uno join <table>). Current tables are: "
             for t in tables:
                 messagetxt+='Table %s (%s), ' % (t+1, ' '.join(list(self.game[t]['players'].keys())))
             messagetxt=messagetxt.rsplit(', ',1)[0]+'.'
@@ -336,7 +374,7 @@ class Uno(callbacks.Plugin):
                     self.game[table]['players'][nick]['fake']=True
                 
                 if len(list(self.game[table]['players'].keys())) < self.game[table]['nplayers']:
-                    irc.reply('%s has joined the %s game at table %s.  Use %suno begin to begin the game.' % (nick,self.game[table]['type'],table+1, self.prefixChar), prefixNick=False, to=self.game[table]['channel'])
+                    irc.reply('%s has joined the %s game at table %s. Use %suno begin to begin the game.' % (nick,self.game[table]['type'],table+1, self.prefixChar), prefixNick=False, to=self.game[table]['channel'])
                     return
                 
                 for n in list(self.game[table]['players'].keys()):
@@ -345,7 +383,7 @@ class Uno(callbacks.Plugin):
                     for i in range(0,7):
                         card=self.game[table]['deck'].pop(random.randint(0,len(self.game[table]['deck'])-1))
                         self.game[table]['players'][n]['hand'].append(card)
-                irc.reply('Game started!  Check your private messages and follow the instructions.', prefixNick=False, to=self.game[table]['channel'])
+                irc.reply('Game started!  Check your notices and follow the instructions.', prefixNick=False, to=self.game[table]['channel'])
                 for n in list(self.game[table]['players'].keys()):
                     self._uno_tell_status(irc, n)
             self.game[table]['phase']='running'
@@ -501,7 +539,7 @@ class Uno(callbacks.Plugin):
                 Human=True
         
         if not Human:
-            irc.reply('There are no more human players; the game is over.  ', to=channel)
+            irc.reply('There are no more human players; the game is over.', to=channel)
             self.game[table]['phase']='gameover'
             self._cleanup(table)
             return
@@ -539,11 +577,24 @@ class Uno(callbacks.Plugin):
             self.game[table]['players'][nick]['hand'].remove(card)
             self.game[table]['discard'].append(card)
             ncards=len(self.game[table]['players'][nick]['hand'])
-            irc.reply('%s played %s (%s cards left in hand).' % (nick, card, ncards), to=channel)
+            if 'Wild' in card:
+                card='%s (%s)' % (card, self.game[table]['wildcolor'])
+            if self.channeloptions['use_colors']==True:
+                if 'Red' in card:
+                    cardcolor = ircutils.mircColor(card, 'red', None)
+                elif 'Blue' in card:
+                    cardcolor = ircutils.mircColor(card, 'light blue', None)
+                elif 'Green' in card:
+                    cardcolor = ircutils.mircColor(card, 'green', None)
+                else:
+                    cardcolor = ircutils.mircColor(card, 'yellow', None)
+                irc.reply('%s played %s (%s cards left in hand).' % (nick, cardcolor, ncards), to=channel)
+            else:
+                irc.reply('%s played %s (%s cards left in hand).' % (nick, card, ncards), to=channel)
 
         ncards = len(self.game[table]['players'][nick]['hand'])
         if ncards==0:
-            irc.reply('The game is over.  '+ircutils.bold('%s wins!' % nick), to=channel)
+            irc.reply('The game is over. '+ircutils.bold('%s wins!' % nick), to=channel)
             self.game[table]['phase']='gameover'
             self._cleanup(table)
             return
@@ -581,7 +632,7 @@ class Uno(callbacks.Plugin):
     def play(self, irc, msg, args, text):
         """<card>
         
-        Play a <card> for the Uno game.  Examples: "uno play red 0", "uno play wild blue", "uno play draw", "uno play done"
+        Play a <card> for the Uno game. Examples: "uno play red 0", "uno play wild blue", "uno play draw", "uno play done"
         """
 
         nick=msg.nick
@@ -609,7 +660,7 @@ class Uno(callbacks.Plugin):
             
             turnplayer=list(self.game[table]['players'].keys())[self.game[table]['turn']]
             if nick!=turnplayer:
-                # Note: it will prefix nick in private -- need to fix that
+                # Note: it will prefix nick in notice -- need to fix that
                 irc.reply("%s: It is %s's turn." % (nick, turnplayer), prefixNick=False)
                 return
             
@@ -634,14 +685,14 @@ class Uno(callbacks.Plugin):
                     c=self.game[table]['deck'].pop(random.randint(0,len(self.game[table]['deck'])-1))
                     self.game[table]['players'][nick]['hand'].append(c)
                     if self._uno_is_valid_play(table, c, discard)==True:
-                        self.reply(irc, 'You draw a %s from the draw pile.  You can choose not to play this card using "%suno play done"' % (c, self.prefixChar), to=nick, private=True)
+                        self.reply(irc, 'You draw a %s from the draw pile. You can choose not to play this card using "%suno play done"' % (c, self.prefixChar), to=nick, notice=True, private=True)
                         self.game[table]['players'][nick]['hasdrawn']=True
                         return
                         # card=c
                     else:
                         # Can't play a card, end turn
                         ncards=len(self.game[table]['players'][nick]['hand'])
-                        self.reply(irc, 'You draw a %s from the draw pile.  You have no cards to play, and your turn is over.' % c, to=nick, private=True)
+                        self.reply(irc, 'You draw a %s from the draw pile. You have no cards to play, and your turn is over.' % c, to=nick, notice=True, private=True)
                         irc.reply('%s draws a card (%s cards in hand).' % (nick, ncards), to=self.game[table]['channel'])
 
                         turn=self.game[table]['turn']+1*self.game[table]['direction']
@@ -656,7 +707,7 @@ class Uno(callbacks.Plugin):
 
             if text.lower()=='done':
                 if self.game[table]['players'][nick].get('hasdrawn')!=True:
-                    self.reply(irc, "You can't finish your turn without playing or drawing a card.", to=nick, private=True)
+                    self.reply(irc, "You can't finish your turn without playing or drawing a card.", to=nick, notice=True, private=True)
                     return
                 ncards=len(self.game[table]['players'][nick]['hand'])
                 irc.reply('%s draws a card (%s cards in hand).' % (nick, ncards), to=self.game[table]['channel'])
@@ -706,19 +757,33 @@ class Uno(callbacks.Plugin):
             # play the card
             self.game[table]['players'][nick]['hand'].remove(card)
             self.game[table]['discard'].append(card)
-            ncards=len(self.game[table]['players'][nick]['hand'])
-            
+            ncards=len(self.game[table]['players'][nick]['hand'])            
             if 'Wild' in card:
-                card='%s(%s)' % (card, self.game[table]['wildcolor'])
-            if self.game[table]['players'][nick].get('hasdrawn')==True:
-                irc.reply("%s draws a card, and plays it; It's a %s (%s cards left in hand)." % (nick, card, ncards), to=channel)
-                self.game[table]['players'][nick]['hasdrawn']=False
+                card='%s (%s)' % (card, self.game[table]['wildcolor'])
+            if self.channeloptions['use_colors']==True:
+                if 'Red' in card:
+                    cardcolor = ircutils.mircColor(card, 'red', None)
+                elif 'Blue' in card:
+                    cardcolor = ircutils.mircColor(card, 'light blue', None)
+                elif 'Green' in card:
+                    cardcolor = ircutils.mircColor(card, 'green', None)
+                else:
+                    cardcolor = ircutils.mircColor(card, 'yellow', None)
+                if self.game[table]['players'][nick].get('hasdrawn')==True:
+                    irc.reply("%s draws a card, and plays it; It's a %s (%s cards left in hand)." % (nick, cardcolor, ncards), to=channel)
+                    self.game[table]['players'][nick]['hasdrawn']=False
+                else:
+                    irc.reply('%s played %s (%s cards left in hand).' % (nick, cardcolor, ncards), to=channel)
             else:
-                irc.reply('%s played %s (%s cards left in hand).' % (nick, card, ncards), to=channel)
+                if self.game[table]['players'][nick].get('hasdrawn')==True:
+                    irc.reply("%s draws a card, and plays it; It's a %s (%s cards left in hand)." % (nick, card, ncards), to=channel)
+                    self.game[table]['players'][nick]['hasdrawn']=False
+                else:
+                    irc.reply('%s played %s (%s cards left in hand).' % (nick, card, ncards), to=channel)
             
             ncards = len(self.game[table]['players'][nick]['hand'])
             if ncards==0:
-                irc.reply('The game is over.  '+ircutils.bold('%s wins!' % nick), to=channel)
+                irc.reply('The game is over. '+ircutils.bold('%s wins!' % nick), to=channel)
                 self.game[table]['phase']='gameover'
                 self._cleanup(table)
                 return
@@ -758,7 +823,7 @@ class Uno(callbacks.Plugin):
     def setoption(self, irc, msg, args, channel, text, value):
         """<option> <value>
         
-        Changes an option for Uno game.  You can view the 
+        Changes an option for Uno game. You can view the 
         options for the current channel with the "uno showoptions" command."""
         try:
             self._read_options(irc)
@@ -845,6 +910,8 @@ class Uno(callbacks.Plugin):
             channeloptions['use_queue']=True
             channeloptions['nplayers']=10
             channeloptions['maxbots']=9
+            channeloptions['use_colors']=True
+            channeloptions['use_notice']=True
         return
 
     def _write_options(self, irc):
@@ -897,7 +964,7 @@ class Uno(callbacks.Plugin):
             irc.sendMsg(msg)
         irc.noReply()
 
-    def reply(self, irc, text, action=False, private=False, prefixNick=False, to='', fast=False):
+    def reply(self, irc, text, action=False, notice=False, private=False, prefixNick=False, to='', fast=False):
         table=self._gettablefromnick(to)
         if table == None:
             # hopefully it's a valid channel
@@ -913,7 +980,7 @@ class Uno(callbacks.Plugin):
                     return
 
         if action==True or fast==False:
-            irc.reply(text, action=action, private=private, prefixNick=prefixNick, to=to)
+            irc.reply(text, action=action, notice=notice, private=private, prefixNick=prefixNick, to=to)
         else:
             if (prefixNick) and ('#' not in to):
                 text='%s: %s' % (to, text)
