@@ -1,5 +1,7 @@
 Plugins I wrote or forked. All working under Python 3. 
 
+repolist oddluck / install oddluck <Plugin> (testing Limnoria branch)
+
 Requires Limnoria, obviously. Additional requirements in readmes or requirements.txt files
 
 Fun
