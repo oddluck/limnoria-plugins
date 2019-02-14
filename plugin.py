@@ -444,7 +444,7 @@ class Uno(callbacks.Plugin):
     def _init_uno(self, table):
         self.game[table]['deck']=[]
         self.game[table]['discard']=[]
-        self.game[table]['wildcolor']='red'
+        self.game[table]['wildcolor']='Red'
         self.game[table]['turn']=0
         self.game[table]['direction']=1
         unocolors=['Blue','Green','Red','Yellow']
