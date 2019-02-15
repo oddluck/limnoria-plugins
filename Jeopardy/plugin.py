@@ -550,8 +550,8 @@ class Game:
         answers = []
         questionType = 'regular'
         answers.append(re.sub('<[^<]+?>', '', unidecode(rawData[0]['answer'])).replace('\\', '').strip())
-	points = float(500) 
-        if rawData[0]['value']:
+        points = float(500)
+	if rawData[0]['value']:
             points = float(rawData[0]['value'])
         question = "({0}) [${1}] {2}: {3}".format(airdate[0], int(points), rawData[0]['category']['title'].title(), re.sub('<[^<]+?>', '', rawData[0]['question']).replace('\\', ''))
         # Calculate additional points
