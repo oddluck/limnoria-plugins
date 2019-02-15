@@ -96,14 +96,19 @@ class Fun(callbacks.Plugin):
         irc.reply(response)
     startup = wrap(startup)
 
-    def insult(self, irc, msg, args):
-        """
-        Insult generator.
+    def insult(self, irc, msg, args, nick):
+        """[<nick>]
+        Insult generator. Optionally send insult to <nick> (<nick> must be in channel).
         """
         channel = msg.args[0]
         data = requests.get("https://insult.mattbas.org/api/en/insult.json").json()
-        irc.reply(data['insult'])
-    insult = wrap(insult)
+        if nick:
+            response = "{0}: {1}".format(nick, data['insult'])
+            irc.reply(response, prefixNick=False)
+        else:
+            irc.reply(data['insult'])
+
+    insult = wrap(insult, [additional('nickInChannel')])
 
     
 Class = Fun
