@@ -16,5 +16,3 @@ ascii --font (font) (text) to use chosen font
   
 
 insult (target) optionally target the randomly generated insult at a nick in channel
-
-requires limnoria, python 3, requests
