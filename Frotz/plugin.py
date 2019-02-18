@@ -114,7 +114,6 @@ class Frotz(callbacks.Plugin):
         """
         List files in the game directory.
         """
-        self.game_path = '/home/sdavidrichards_gmail_com/torgo/plugins/Frotz/games/'
         reply = ", ".join(os.listdir(self.game_path))
         irc.reply(reply, prefixNick=False)
     games = wrap(games)
