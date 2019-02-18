@@ -125,7 +125,8 @@ class Fun(callbacks.Plugin):
                      irc.reply(line, prefixNick=False)
         elif 'fontlist' in optlist:
             fontlist = requests.get("https://artii.herokuapp.com/fonts_list")
-            irc.reply(fontlist.text.replace('\n', ', '))
+            response = sorted(fontlist.text.split('\n'))
+            irc.reply(str(response).replace('\'', '').replace('[', '').replace(']', ''))
         elif 'font' not in optlist:
             data = requests.get("https://artii.herokuapp.com/make?text={0}&font=univers".format(text))
             for line in data.text.splitlines():
