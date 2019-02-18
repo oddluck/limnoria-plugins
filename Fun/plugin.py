@@ -109,15 +109,28 @@ class Fun(callbacks.Plugin):
             irc.reply(data['insult'])
     insult = wrap(insult, [additional('nickInChannel')])
 
-    def ascii(self, irc, msg, args, text):
-        """<text>
+    def ascii(self, irc, msg, args, optlist, text):
+        """[--font <font>] [--fontlist] [<text>]
         text to ASCII art
         """
         channel = msg.args[0]
-        data = requests.get("https://artii.herokuapp.com/make?text={0}&font=univers".format(text))
-        for line in data.text.splitlines():
-            if line.strip():
-                irc.reply(line, prefixNick=False)
-    ascii = wrap(ascii, ['text'])
+        optlist = dict(optlist)
+        if text:
+            text = text.upper().strip()
+        if 'font' in optlist:
+             font = optlist.get('font')
+             data = requests.get("https://artii.herokuapp.com/make?text={0}&font={1}".format(text, font))
+             for line in data.text.splitlines():
+                 if line.strip():
+                     irc.reply(line, prefixNick=False)
+        elif 'fontlist' in optlist:
+            fontlist = requests.get("https://artii.herokuapp.com/fonts_list")
+            irc.reply(fontlist.text.replace('\n', ', '))
+        elif 'font' not in optlist:
+            data = requests.get("https://artii.herokuapp.com/make?text={0}&font=univers".format(text))
+            for line in data.text.splitlines():
+                if line.strip():
+                    irc.reply(line, prefixNick=False)
+    ascii = wrap(ascii, [getopts({'font':'something', 'fontlist':''}), additional('text')])
     
 Class = Fun
