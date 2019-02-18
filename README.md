@@ -4,6 +4,10 @@ repolist oddluck / install oddluck Plugin_Name (testing Limnoria branch)
 
 Requires Limnoria, obviously. Additional requirements in readmes or requirements.txt files
 
+Frotz
+
+Play interactive fiction games such as the Infocom classics Zork, The Hitchhiker's Guide to the Galaxy, Leather Goddesses of Phobos. etc. Multiplayer and multi-channel/pm supported.
+
 Fun
 
 return a random joke, cat fact, useless fact, corporate buzzwords, startup idea, insult, or advice from various APIs
