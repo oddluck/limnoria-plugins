@@ -101,7 +101,7 @@ class Frotz(callbacks.Plugin):
                 self.game[channel].sendline()
             response = self.output(self.game[channel])
             if len(response) > 2:
-                irc.reply(re.sub(' +', ' ', response[1]), prefixNick=False)
+                irc.reply(response[1], prefixNick=False)
                 irc.reply(" ".join(response[2:]), prefixNick=False)
             else:
                 irc.reply(" ".join(response), prefixNick=False)
