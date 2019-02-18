@@ -10,7 +10,7 @@ Play interactive fiction games such as the Infocom classics Zork, The Hitchhiker
 
 Fun
 
-return a random joke, cat fact, useless fact, corporate buzzwords, startup idea, insult, or advice from various APIs
+return text-to-ascii-art, a random; joke, cat fact, useless fact, corporate buzzwords, startup idea, insult, or advice from various APIs
 
 
 Lyrics
