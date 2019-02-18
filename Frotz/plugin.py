@@ -59,7 +59,6 @@ class Frotz(callbacks.Plugin):
                 irc.reply(" ".join(response), prefixNick=False)
     load = wrap(load, ['text'])
 
-
     def output(self, output):
         response = []
         prompts = ["\n>", "\n> >","to begin]", "\n\*\*\*MORE\*\*\*", pexpect.TIMEOUT]
