@@ -53,19 +53,20 @@ class Frotz(callbacks.Plugin):
             self.game[channel] = pexpect.spawn("{0} -S 0 {1}".format(self.binary, game_file))
             response = self.output(self.game[channel])
             if len(response) > 2:
-                irc.reply(response[0], prefixNick=False)
-                irc.reply(" ".join(response[1:]), prefixNick=False)
+                irc.reply(re.sub(' +', ' ', response[0]), prefixNick=False)
+                irc.reply(" ".join(response[1:]).replace(' .', '.'), prefixNick=False)
             else:
-                irc.reply(" ".join(response), prefixNick=False)
+                irc.reply(" ".join(response).replace(' .', '.'), prefixNick=False)
     load = wrap(load, ['text'])
+
 
     def output(self, output):
         response = []
-        prompts = ["\n>", "\n> >","to begin]", "\n\*\*\*MORE\*\*\*", pexpect.TIMEOUT]
+        prompts = ["\n>", "\n> >", "to begin]", "\n\*\*\*MORE\*\*\*", pexpect.TIMEOUT]
         output.expect(prompts, timeout=5)
         for line in output.before.splitlines():
-            if line.strip().strip(b". "):
-                response.append(re.sub(' +', ' ', line.decode().strip()).replace(' .', '.'))
+            if line.strip():
+                response.append(line.decode().strip())
         return response
 
     def stop(self, irc, msg, args):
@@ -101,10 +102,10 @@ class Frotz(callbacks.Plugin):
                 self.game[channel].sendline()
             response = self.output(self.game[channel])
             if len(response) > 2:
-                irc.reply(response[1], prefixNick=False)
-                irc.reply(" ".join(response[2:]), prefixNick=False)
+                irc.reply(re.sub(' +', ' ', response[1]), prefixNick=False)
+                irc.reply(" ".join(response[2:].replace(' .', '.')), prefixNick=False)
             else:
-                irc.reply(" ".join(response), prefixNick=False)
+                irc.reply(" ".join(response).replace(' .', '.'), prefixNick=False)
         except:
             irc.reply("No game running in {0}?".format(channel))
     z = wrap(z, [additional('text')])
