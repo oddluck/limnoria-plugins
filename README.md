@@ -6,7 +6,7 @@ Requires Limnoria, obviously. Additional requirements in readmes or requirements
 
 Frotz
 
-Play interactive fiction games such as the Infocom classics Zork, The Hitchhiker's Guide to the Galaxy, Leather Goddesses of Phobos. etc. Multiplayer and multi-channel/pm supported.
+Play interactive fiction games such as the Infocom classics Zork, The Hitchhiker's Guide to the Galaxy, Leather Goddesses of Phobos, etc. multiplayer and multi-channel/pm supported.
 
 Fun
 
