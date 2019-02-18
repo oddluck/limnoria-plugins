@@ -1,5 +1,7 @@
 Play interactive fiction Z-Machine games like the Infocom classic Zork.
 
+Requires limnoria, python 3, pexpect
+
 Uses the dfrotz (dumb frotz) interpreter https://github.com/DavidGriffith/frotz
 
 Looks for games in ./games/ directory
