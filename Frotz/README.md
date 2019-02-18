@@ -5,7 +5,7 @@ Requires limnoria, python 3, pexpect
 Uses the dfrotz (dumb frotz) interpreter https://github.com/DavidGriffith/frotz
 
 Looks for games in ./games/ directory
-and for the binary in ./frotz/dfrotz
+and for the binary at ./frotz/dfrotz
 
 usage:
 frotz load <game name> ex. frotz load zork1.z5 - loads game
