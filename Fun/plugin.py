@@ -114,7 +114,7 @@ class Fun(callbacks.Plugin):
         text to ASCII art
         """
         channel = msg.args[0]
-        data = requests.get("https://artii.herokuapp.com/make?text={0}".format(text))
+        data = requests.get("https://artii.herokuapp.com/make?text={0}&font=univers".format(text))
         for line in data.text.splitlines():
             if line.strip():
                 irc.reply(line, prefixNick=False)
