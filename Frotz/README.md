@@ -23,5 +23,7 @@ game text reformatted to eliminate line/by line output and for easier reading on
 Some games and a frotz binary included, may need to build your own depending on your system.
 https://github.com/DavidGriffith/frotz/blob/master/DUMB
 
+python3 -m pip install pexpect
+
 Games included here are easily found and freely available all over the net, their owners are their respective owners 
 and if you believe a game should not be here contact me and I will remove it immediately. 
