@@ -107,8 +107,17 @@ class Fun(callbacks.Plugin):
             irc.reply(response, prefixNick=False)
         else:
             irc.reply(data['insult'])
-
     insult = wrap(insult, [additional('nickInChannel')])
 
+    def ascii(self, irc, msg, args, text):
+        """<text>
+        text to ASCII art
+        """
+        channel = msg.args[0]
+        data = requests.get("https://artii.herokuapp.com/make?text={0}".format(text))
+        for line in data.text.splitlines():
+            if line.strip():
+                irc.reply(line, prefixNick=False)
+    ascii = wrap(ascii, ['text'])
     
 Class = Fun
