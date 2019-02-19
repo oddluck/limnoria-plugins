@@ -1,4 +1,4 @@
-Limnoria plugins (an IRC bot) I wrote or forked. All working under Python 3. 
+Limnoria (an IRC bot) plugins I wrote or forked. All working under Python 3. 
 
 repolist oddluck / install oddluck Plugin_Name (testing Limnoria branch)
 
