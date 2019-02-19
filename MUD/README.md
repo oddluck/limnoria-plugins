@@ -9,6 +9,6 @@ config plugins.MUD.port (port)
 
 MUD join (connect to server/port and print output to current channel)
 
-MUD m (send text to channel or newline if blank)
+MUD m (send text to MUD or newline if blank and return output)
 
 MUD stop (disconnect the telnet session)
