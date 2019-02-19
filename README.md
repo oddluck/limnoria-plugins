@@ -4,6 +4,10 @@ repolist oddluck / install oddluck Plugin_Name (testing Limnoria branch)
 
 Requires Limnoria, obviously. Additional requirements in readmes or requirements.txt files
 
+MUD
+
+MUD client. Play Multi User Dungeon text games with others over IRC.
+
 Frotz
 
 Play interactive fiction games such as the Infocom classics Zork, The Hitchhiker's Guide to the Galaxy, Leather Goddesses of Phobos, etc. multiplayer and multi-channel/pm supported.
