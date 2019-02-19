@@ -61,7 +61,7 @@ class MUD(callbacks.Plugin):
             if command:
                 self.tn[nick].write(command.encode() + b"\r\n")
             else:
-                self.tn[nick].write(b"\n")
+                self.tn[nick].write(b"\r\n")
             response = self.output(self.tn[nick])
             for line in response:
                  if line.strip():
@@ -89,7 +89,7 @@ class MUD(callbacks.Plugin):
 
     def output(self, output):
         response = []
-        response = output.read_until(b">", timeout=1)
+        response = output.read_until(b"\a", timeout=1)
         clean = []
         for line in response.splitlines():
             clean.append(self.ansi_escape.sub('', line.decode()))
