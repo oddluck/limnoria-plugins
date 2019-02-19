@@ -40,12 +40,6 @@ class MUD(callbacks.Plugin):
         """
         channel = msg.args[0]
         nick = msg.nick
-        def join(self, irc, msg, args):
-        """
-        Join the MUD
-        """
-        channel = msg.args[0]
-        nick = msg.nick
         try:
             if self.tn[nick]:
                 irc.reply("You already have an open connection. Please stop that connection first.")
