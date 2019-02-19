@@ -93,7 +93,7 @@ class MUD(callbacks.Plugin):
 
     def output(self, output):
         response = []
-        response = output.read_until(b"\a", timeout=1)
+        response = output.read_until(b"\a", timeout=2)
         clean = []
         for line in response.splitlines():
             clean.append(self.ansi_escape.sub('', line.decode()))
