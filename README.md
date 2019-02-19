@@ -6,7 +6,7 @@ Requires Limnoria, obviously. Additional requirements in readmes or requirements
 
 MUD
 
-MUD client. Play Multi User Dungeon text games with others over IRC.
+MUD client. Play Multi User Dungeon text games with others over IRC. Multi-user support, play with IRC friends.
 
 Frotz
 
