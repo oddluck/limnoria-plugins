@@ -1,12 +1,20 @@
 Plugins I wrote or forked. All working under Python 3. 
 
-repolist oddluck / install oddluck (Plugin) (testing Limnoria branch)
+repolist oddluck / install oddluck Plugin_Name (testing Limnoria branch)
 
 Requires Limnoria, obviously. Additional requirements in readmes or requirements.txt files
 
+MUD
+
+MUD client. Play Multi User Dungeon text games with others over IRC. Multi-user support, play with IRC friends.
+
+Frotz
+
+Play interactive fiction games such as the Infocom classics Zork, The Hitchhiker's Guide to the Galaxy, Leather Goddesses of Phobos, etc. multiplayer and multi-channel/pm supported.
+
 Fun
 
-return a random joke, cat fact, useless fact, corporate buzzwords, startup idea, insult, or advice from various APIs
+return text-to-ascii-art, a random; joke, cat fact, useless fact, corporate buzzwords, startup idea, insult, or advice from various APIs
 
 
 Lyrics

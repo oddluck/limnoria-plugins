@@ -1,6 +1,6 @@
-This branch uses the jservice.io api to supply questions.
+This plugin, a modification of TriviaTime, uses the jservice.io api to supply questions.
 
-This no longer uses the internal question database, rendering question reporting, editing, etc. obsolete. Consider this a hack, though a fully functional one. Previous user stats are not affected by the change.
+This no longer uses the internal question database, rendering question reporting, editing, etc. obsolete. Consider this a hack, though a fully functional one. Previous user stats are not affected by the change. At some point I will break this out into its own plugin with options to choose category/value, but for now it works well enough as is.
 
 #Configuration
 

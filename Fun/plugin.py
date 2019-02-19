@@ -96,14 +96,42 @@ class Fun(callbacks.Plugin):
         irc.reply(response)
     startup = wrap(startup)
 
-    def insult(self, irc, msg, args):
-        """
-        Insult generator.
+    def insult(self, irc, msg, args, nick):
+        """[<nick>]
+        Insult generator. Optionally send insult to <nick> (<nick> must be in channel).
         """
         channel = msg.args[0]
         data = requests.get("https://insult.mattbas.org/api/en/insult.json").json()
-        irc.reply(data['insult'])
-    insult = wrap(insult)
+        if nick:
+            response = "{0}: {1}".format(nick, data['insult'])
+            irc.reply(response, prefixNick=False)
+        else:
+            irc.reply(data['insult'])
+    insult = wrap(insult, [additional('nickInChannel')])
 
+    def ascii(self, irc, msg, args, optlist, text):
+        """[--font <font>] [--fontlist] [<text>]
+        text to ASCII art
+        """
+        channel = msg.args[0]
+        optlist = dict(optlist)
+        if text:
+            text = text.upper().strip()
+        if 'font' in optlist:
+             font = optlist.get('font')
+             data = requests.get("https://artii.herokuapp.com/make?text={0}&font={1}".format(text, font))
+             for line in data.text.splitlines():
+                 if line.strip():
+                     irc.reply(line, prefixNick=False)
+        elif 'fontlist' in optlist:
+            fontlist = requests.get("https://artii.herokuapp.com/fonts_list")
+            response = sorted(fontlist.text.split('\n'))
+            irc.reply(str(response).replace('\'', '').replace('[', '').replace(']', ''))
+        elif 'font' not in optlist:
+            data = requests.get("https://artii.herokuapp.com/make?text={0}&font=univers".format(text))
+            for line in data.text.splitlines():
+                if line.strip():
+                    irc.reply(line, prefixNick=False)
+    ascii = wrap(ascii, [getopts({'font':'something', 'fontlist':''}), additional('text')])
     
 Class = Fun
