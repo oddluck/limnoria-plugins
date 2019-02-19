@@ -33,10 +33,10 @@ from supybot.commands import *
 import supybot.plugins as plugins
 import supybot.ircutils as ircutils
 import supybot.callbacks as callbacks
-
+import unicodedata
 import simplejson
 import supybot.utils.web as web
-from urllib import urlencode, quote
+from urllib.parse import urlencode, quote
 
 HEADERS = dict(ua = 'Zoia/1.0 (Supybot/0.83; Unicode Plugin; http://code4lib.org/irc)')
 
@@ -53,13 +53,14 @@ class Unicode(callbacks.Plugin):
         responses = []
         for result in json['results']:
           ucode = result[2].replace('0x','U+')
-          responses.append('%s (%s): %s [HTML: %s / Decimal: %s / Hex: %s]' % (ucode, result[5], result[4], result[3], result[1], result[2]))
-        response = '; '.join(responses).encode('utf8','ignore')
+          name = unicodedata.name('{0}'.format(query))
+          responses.append('%s (%s): %s [HTML: %s / Decimal: %s / Hex: %s]' % (ucode, name, result[4], result[3], result[1], result[2]))
+        response = '; '.join(responses)
         irc.reply(response)
       except ValueError:
         irc.reply('No unicode characters matching /' + query + '/ found.')
 
-    unicode = wrap(unicode, ['text'])
+    unicode = unicode(unicode, ['text'])
 
 Class = Unicode
 
