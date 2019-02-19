@@ -40,11 +40,21 @@ class MUD(callbacks.Plugin):
         """
         channel = msg.args[0]
         nick = msg.nick
-        self.tn[nick] = Telnet(self.registryValue('server'), self.registryValue('port'))
-        response = self.output(self.tn[nick])
-        for line in response:
-            if line.strip():
-                irc.reply(line, prefixNick=False)
+        def join(self, irc, msg, args):
+        """
+        Join the MUD
+        """
+        channel = msg.args[0]
+        nick = msg.nick
+        try:
+            if self.tn[nick]:
+                irc.reply("You already have an open connection. Please stop that connection first.")
+        except:
+            self.tn[nick] = Telnet(self.registryValue('server'), self.registryValue('port'))
+            response = self.output(self.tn[nick])
+            for line in response:
+                if line.strip():
+                    irc.reply(line, prefixNick=False)
     join = wrap(join)
 
     def m(self, irc, msg, args, input):
