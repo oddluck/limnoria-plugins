@@ -1,5 +1,5 @@
 # Fun
-Limnoria plugin to return a random joke, cat fact, useless fact, corporate buzzwords, startup idea, or advice from various APIs
+Limnoria plugin to return ascii art, random: joke, insult, cat fact, useless fact, corporate buzzwords, startup idea, or advice from various APIs
 
 requirements: limnoria (obviously) python 3, requests, html
 
