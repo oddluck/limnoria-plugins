@@ -114,7 +114,8 @@ class Soccer(callbacks.Plugin):
         return
         
     @wrap([getopts({'date': 'somethingWithoutSpaces',
-                    'league': 'somethingWithoutSpaces'}), optional('text')])
+                    'league': 'somethingWithoutSpaces',
+                    'tz': 'somethingWithoutSpaces'}), optional('text')])
     def soccer(self, irc, msg, args, options, filter_team=None):
         """--league <league> (--date <date>) (team)
         Fetches soccer scores for given team on date in provided league, defaults to current 
@@ -127,6 +128,7 @@ class Soccer(callbacks.Plugin):
         options = dict(options)
         date = options.get('date')
         league = options.get('league')
+        tz = options.get('tz') or 'US/Eastern'
         
         if date:
             date = self._parseDate(date)
@@ -197,19 +199,19 @@ class Soccer(callbacks.Plugin):
         matches = []
         for match in comps:
             #print(match)
-            time = pendulum.parse(match['date'], strict=False).in_tz('US/Eastern').format('h:mm A zz')
-            long_time = pendulum.parse(match['date'], strict=False).in_tz('US/Eastern').format('ddd MM/Do h:mm A zz')
+            time = pendulum.parse(match['date'], strict=False).in_tz(tz).format('h:mm A zz')
+            long_time = pendulum.parse(match['date'], strict=False).in_tz(tz).format('ddd MMM Do h:mm A zz')
             teams_abbr = [match['competitors'][0]['team']['abbreviation'].lower(), 
                           match['competitors'][1]['team']['abbreviation'].lower()]
             for team in match['competitors']:
                 if team['homeAway'] == 'home':
-                    home = ircutils.bold(team['team']['shortDisplayName']) if team.get('winner') else team['team']['shortDisplayName'] 
-                    home_abbr = ircutils.bold(team['team']['abbreviation']) if team.get('winner') else team['team']['abbreviation']
-                    home_score = ircutils.bold(team['score']) if team.get('winner') else team['score']
+                    home = team['team']['shortDisplayName'] 
+                    home_abbr = team['team']['abbreviation']
+                    home_score = team['score']
                 elif team['homeAway'] == 'away':
-                    away = ircutils.bold(team['team']['shortDisplayName']) if team.get('winner') else team['team']['shortDisplayName'] 
-                    away_abbr = ircutils.bold(team['team']['abbreviation']) if team.get('winner') else team['team']['abbreviation']
-                    away_score = ircutils.bold(team['score']) if team.get('winner') else team['score']
+                    away = team['team']['shortDisplayName'] 
+                    away_abbr = team['team']['abbreviation']
+                    away_score = team['score']
             clock = match['status']['displayClock']
             final = match['status']['type']['completed']
             status = match['status']['type']['shortDetail']
@@ -222,9 +224,9 @@ class Soccer(callbacks.Plugin):
             if state == 'pre':
                 #
                 if not filter_team and not single:
-                    string = '{} @ {} {}'.format(away_abbr, home_abbr, time)
+                    string = '{1} - {0} {2}'.format(away_abbr, home_abbr, time)
                 else:
-                    string = '{} @ {} - {}'.format(away, home, long_time)
+                    string = '{1} - {0}, {2}'.format(away, home, long_time)
             elif state == 'in':
                 #
                 if away_score > home_score:
@@ -236,9 +238,9 @@ class Soccer(callbacks.Plugin):
                     home_abbr = ircutils.bold(home_abbr)
                     home_score = ircutils.bold(home_score)
                 if not filter_team and not single:
-                    string = '{} {} {} {} {}'.format(away_abbr, away_score, home_abbr, home_score, clock)
+                    string = '{2} {3}-{1} {0} {4}'.format(away_abbr, away_score, home_abbr, home_score, clock)
                 else:
-                    string = '{} {} {} {} {}'.format(away, away_score, home, home_score, clock)
+                    string = '{2} {3}-{1} {0} {4}'.format(away, away_score, home, home_score, clock)
             elif state == 'post':
                 #
                 if away_score > home_score:
@@ -250,14 +252,14 @@ class Soccer(callbacks.Plugin):
                     home_abbr = ircutils.bold(home_abbr)
                     home_score = ircutils.bold(home_score)
                 if not filter_team and not single:
-                    string = '{} {} {} {} {}'.format(away_abbr, away_score, home_abbr, home_score, status)
+                    string = '{2} {3}-{1} {0} {4}'.format(away_abbr, away_score, home_abbr, home_score, status)
                 else:
-                    string = '{} {} {} {} {}'.format(away, away_score, home, home_score, status)
+                    string = '{2} {3}-{1} {0} {4}'.format(away, away_score, home, home_score, status)
             else:
                 if not filter_team and not single:
-                    string = '{} @ {} {}'.format(away_abbr, home_abbr, time)
+                    string = '{1} - {0} {2}'.format(away_abbr, home_abbr, time)
                 else:
-                    string = '{} @ {} - {}'.format(away, home, long_time)
+                    string = '{1} - {0}, {2}'.format(away, home, long_time)
                     
             if filter_team:
                 #print(filter_team, string)
