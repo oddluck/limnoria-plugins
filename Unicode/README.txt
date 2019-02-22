@@ -1,1 +1,3 @@
-Insert a description of your plugin here, with any notes, etc. about using it.
+Returns info on a unicode symbol such as emoji, returning name, hex/html values, etc.
+
+usage: unicde <symbol>
