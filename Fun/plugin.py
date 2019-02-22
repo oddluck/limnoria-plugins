@@ -116,10 +116,11 @@ class Fun(callbacks.Plugin):
         channel = msg.args[0]
         optlist = dict(optlist)
         font = None
+        words = []
         if text:
             text = text.strip()
-            if '|' in text:
-                words = text.split('|')
+        elif '|' in text:
+            words = text.split('|')
         if 'font' in optlist:
              font = optlist.get('font')
              if words:
