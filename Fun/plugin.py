@@ -115,23 +115,42 @@ class Fun(callbacks.Plugin):
         """
         channel = msg.args[0]
         optlist = dict(optlist)
+        font = None
         if text:
-            text = text.upper().strip()
+            text = text.strip()
+            if '|' in text:
+                words = text.split('|')
         if 'font' in optlist:
              font = optlist.get('font')
-             data = requests.get("https://artii.herokuapp.com/make?text={0}&font={1}".format(text, font))
-             for line in data.text.splitlines():
-                 if line.strip():
-                     irc.reply(line, prefixNick=False)
+             if words:
+                 for word in words:
+                     if word.strip():
+                         data = requests.get("https://artii.herokuapp.com/make?text={0}&font={1}".format(word.strip(), font))
+                         for line in data.text.splitlines():
+                             if line.strip():
+                                 irc.reply(line, prefixNick=False)
+             else:
+                 data = requests.get("https://artii.herokuapp.com/make?text={0}&font={1}".format(text, font))
+                 for line in data.text.splitlines():
+                     if line.strip():
+                         irc.reply(line, prefixNick=False)
         elif 'fontlist' in optlist:
             fontlist = requests.get("https://artii.herokuapp.com/fonts_list")
             response = sorted(fontlist.text.split('\n'))
             irc.reply(str(response).replace('\'', '').replace('[', '').replace(']', ''))
         elif 'font' not in optlist:
-            data = requests.get("https://artii.herokuapp.com/make?text={0}&font=univers".format(text))
-            for line in data.text.splitlines():
-                if line.strip():
-                    irc.reply(line, prefixNick=False)
+            if words:
+                 for word in words:
+                     if word.strip():
+                         data = requests.get("https://artii.herokuapp.com/make?text={0}&font=univers".format(word.strip()))
+                         for line in data.text.splitlines():
+                             if line.strip():
+                                 irc.reply(line, prefixNick=False)
+            else:
+                data = requests.get("https://artii.herokuapp.com/make?text={0}&font=univers".format(text))
+                for line in data.text.splitlines():
+                    if line.strip():
+                        irc.reply(line, prefixNick=False)
     ascii = wrap(ascii, [getopts({'font':'something', 'fontlist':''}), additional('text')])
     
 Class = Fun
