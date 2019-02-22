@@ -1,5 +1,7 @@
 MUD Client
 
+I suppose this also works as telnet client. That's basically all it is at the moment.
+
 Connect to a MUD over telnet and play over channel/PM. Allows one telnet session per nick so you can play with your IRC friends. 
 MUD not included, there are plenty out there, there is just a client to allow playing them over IRC.
 
