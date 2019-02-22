@@ -119,8 +119,8 @@ class Fun(callbacks.Plugin):
         words = []
         if text:
             text = text.strip()
-        elif '|' in text:
-            words = text.split('|')
+            if '|' in text:
+                words = text.split('|')
         if 'font' in optlist:
              font = optlist.get('font')
              if words:
