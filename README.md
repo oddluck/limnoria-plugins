@@ -22,6 +22,10 @@ Lyrics
 return song lyrics by artist, song title from lyric-api.herokuapp.com
 
 
+Unicode
+
+returns info on a unicode symbol such as emoji, returning name, hex/html values, etc.
+
 Jeopardy
 
 TrivaTime reconfigured to use jservice.io (156,800+ Jeopardy! questions) as trivia source
