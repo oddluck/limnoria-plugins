@@ -6,7 +6,7 @@ Requires Limnoria, obviously. Additional requirements in readmes or requirements
 
 MUD
 
-MUD client. Play Multi User Dungeon text games with others over IRC. Multi-user support, play with IRC friends.
+MUD/Telnet client. Use Telnet and/or Play Multi User Dungeon text games with others over IRC. Multi-user support, play with IRC friends. Or just make changes to your router or whatever.
 
 Frotz
 
