@@ -4,7 +4,7 @@ repolist oddluck / install oddluck Plugin_Name (testing Limnoria branch)
 
 Requires Limnoria, obviously. Additional requirements in readmes or requirements.txt files
 
-MUD
+MUD/Telnet
 
 MUD/Telnet client. Use Telnet and/or Play Multi User Dungeon text games with others over IRC. Multi-user support, play with IRC friends. Or just make changes to your router or whatever.
 
