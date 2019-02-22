@@ -35,7 +35,6 @@ class Frotz(callbacks.Plugin):
         self.game = {}
         self.game_path = "{0}/games/".format(os.path.dirname(os.path.abspath(__file__)))
         self.binary = '{0}/frotz/dfrotz'.format(os.path.dirname(os.path.abspath(__file__)))
-        #self.prompts = [">", "***MORE***", pexpect.TIMEOUT, pexpect.EOF]
 
     def load(self, irc, msg, args, input):
         """<game_name>
@@ -114,7 +113,7 @@ class Frotz(callbacks.Plugin):
         """
         List files in the game directory.
         """
-        reply = ", ".join(os.listdir(self.game_path))
+        reply = ", ".join(sorted(os.listdir(self.game_path)))
         irc.reply(reply, prefixNick=False)
     games = wrap(games)
 
