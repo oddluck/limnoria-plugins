@@ -100,20 +100,20 @@ class DuckHunt(callbacks.Plugin):
 
         # scores
         # Adding current scores to the channel scores
-        for player in self.scores[channel].items():
+        for player, value in self.scores[channel].items():
             if not player in self.channelscores[channel]:
                 # It's a new player
-                self.channelscores[channel][player] = self.scores[channel][player]
+                self.channelscores[channel][player] = value
             else:
                 # It's a player that already has a saved score
-                self.channelscores[channel][player] += self.scores[channel][player]
+                self.channelscores[channel][player] += value
 
         # times
         # Adding times scores to the channel scores
-        for player in self.toptimes[channel].items():
+        for player, value in self.toptimes[channel].items():
             if not player in self.channeltimes[channel]:
                 # It's a new player
-                self.channeltimes[channel][player] = self.toptimes[channel][player]
+                self.channeltimes[channel][player] = value
             else:
                 # It's a player that already has a saved score
                 # And we save the time of the current hunt if it's better than it's previous time
@@ -122,25 +122,25 @@ class DuckHunt(callbacks.Plugin):
 
         # worst times
         # Adding worst times scores to the channel scores
-        for player in self.worsttimes[channel].items():
+        for player, value in self.worsttimes[channel].items():
             if not player in self.channelworsttimes[channel]:
                 # It's a new player
-                self.channelworsttimes[channel][player] = self.worsttimes[channel][player]
+                self.channelworsttimes[channel][player] = value
             else:
                 # It's a player that already has a saved score
                 # And we save the time of the current hunt if it's worst than it's previous time
-                if(self.worsttimes[channel][player] > self.channelworsttimes[channel][player]):
-                    self.channelworsttimes[channel][player] = self.worsttimes[channel][player]
+                if(self.worsttimes[channel][player] > value):
+                    self.channelworsttimes[channel][player] = value
 
         # week scores
-        for player in self.scores[channel].items():
+        for player, value in self.scores[channel].items():
             #FIXME: If the hunt starts a day and ends the day after, this will produce an error:
             if not player in self.channelweek[channel][self.woy][self.dow]:
                 # It's a new player
-                self.channelweek[channel][self.woy][self.dow][player] = self.scores[channel][player]
+                self.channelweek[channel][self.woy][self.dow][player] = value
             else:
                 # It's a player that already has a saved score
-                self.channelweek[channel][self.woy][self.dow][player] += self.scores[channel][player]
+                self.channelweek[channel][self.woy][self.dow][player] += value
 
 
 
@@ -1101,7 +1101,7 @@ class DuckHunt(callbacks.Plugin):
                     for i in (1,2,3,4,5,6,7):
                         if self.channelweek[currentChannel][self.woy].get(i):
                             # Getting all scores, to get the winner of the week
-                            for i, players in self.channelweek[channel][week].items():
+                            for i, players in self.channelweek[currentChannel][self.woy].items():
                                 for player, value in players.items():
                                     weekscores.setdefault(player, 0)
                                     weekscores[player] += value
