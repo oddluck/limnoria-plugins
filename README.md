@@ -1,5 +1,6 @@
 Requires Python3, Limnoria.
-Python 3 and score fixes by me. Plugin working.
+
+Python 3 and score fixes. Plugin working.
 
 \_o< ~ DuckHunt game for supybot ~ >o_/
 =======================================
