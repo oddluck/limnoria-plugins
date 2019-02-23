@@ -1,6 +1,6 @@
 Limnoria (an IRC bot) plugins I wrote or forked. All working under Python 3. 
 
-repolist oddluck / install oddluck Plugin_Name (testing Limnoria branch)
+repolist oddluck / install oddluck Plugin_Name
 
 Requires Limnoria, obviously. Additional requirements in readmes or requirements.txt files
 
