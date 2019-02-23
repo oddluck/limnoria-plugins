@@ -757,8 +757,8 @@ class DuckHunt(callbacks.Plugin):
             if (self.channelscores.get(channel)):
                 scores = self.channelscores[channel]
                 total = 0
-                for player in scores.items():
-                    total += scores[player]
+                for player, value in scores.items():
+                    total += value
                 irc.reply(str(total) + " ducks have been shot in " + channel + "!")
             else:
                 irc.reply("There are no scores for this channel yet")
