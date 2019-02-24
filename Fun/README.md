@@ -13,9 +13,9 @@ commands: advice, ascii, buzz, cat fact, joke, startup, useless, insult
 
 ascii --fontlist to get list of fonts
 
-ascii --font (font) (text) to use chosen font. s
+ascii --font (font) (text) to use chosen font.
 
-plit lines with | ex. ascii|art for large fonts
+split lines with | ex. ascii|art for large fonts
   
 
 insult (target) optionally target the randomly generated insult at a nick in channel
