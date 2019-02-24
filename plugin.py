@@ -36,7 +36,8 @@ import supybot.schedule as schedule
 import supybot.log as log
 import supybot.world as world
 
-from trie import Trie
+from .trie import Trie
+from functools import reduce
 
 DEBUG = False
 
@@ -84,7 +85,7 @@ def get_max_targets(irc):
                 result = int(match.group(1))
         else:
             debug('Unable to find max targets, using default (1).')
-    except Exception, e:
+    except Exception as e:
         error('Detecting max targets: %s. Using default (1).' % str(e))
     return result
 
@@ -137,7 +138,7 @@ class Wordgames(callbacks.Plugin):
         self.games = {}
 
     def die(self):
-        for channel, game in self.games.iteritems():
+        for channel, game in self.games.items():
             if game.is_running():
                 game.stop(now=True)
         self.parent.die()
@@ -198,7 +199,7 @@ class Wordgames(callbacks.Plugin):
                     game.stats()
             else:
                 irc.reply('Unrecognized command to worddle.')
-        except WordgamesError, e:
+        except WordgamesError as e:
             irc.reply('Wordgames error: %s' % str(e))
             irc.reply('Please check the configuration and try again. ' +
                       'See README for help.')
@@ -245,7 +246,7 @@ class Wordgames(callbacks.Plugin):
     def _find_player_game(self, player):
         "Find a game (in any channel) that lists player as an active player."
         my_game = None
-        for game in self.games.values():
+        for game in list(self.games.values()):
             if game.is_running() and 'players' in dir(game):
                 if player in game.players:
                     my_game = game
@@ -255,14 +256,14 @@ class Wordgames(callbacks.Plugin):
     def _get_words(self):
         try:
             regexp = re.compile(self.registryValue('wordRegexp'))
-        except Exception, e:
+        except Exception as e:
             raise WordgamesError("Bad value for wordRegexp: %s" % str(e))
         path = self.registryValue('wordFile')
         try:
-            wordFile = file(path)
-        except Exception, e:
+            wordFile = open(path)
+        except Exception as e:
             raise WordgamesError("Unable to open word file: %s" % path)
-        return filter(regexp.match, map(str.strip, wordFile.readlines()))
+        return list(filter(regexp.match, list(map(str.strip, wordFile.readlines()))))
 
     def _start_game(self, Game, irc, channel, *args, **kwargs):
         try:
@@ -274,7 +275,7 @@ class Wordgames(callbacks.Plugin):
                 words = self._get_words()
                 self.games[channel] = Game(words, irc, channel, *args, **kwargs)
                 self.games[channel].start()
-        except WordgamesError, e:
+        except WordgamesError as e:
             # Get rid of the game in case it's in an indeterminate state
             if channel in self.games: del self.games[channel]
             irc.reply('Wordgames error: %s' % str(e))
@@ -454,7 +455,7 @@ class Worddle(BaseGame):
             dup = set()
             for word in words:
                 bad = False
-                for result in self.player_results.values():
+                for result in list(self.player_results.values()):
                     if word in result.unique:
                         result.unique.remove(word)
                         result.dup.add(word)
@@ -469,7 +470,7 @@ class Worddle(BaseGame):
                     Worddle.PlayerResult(player, unique, dup)
 
         def sorted_results(self):
-            return sorted(self.player_results.values(), reverse=True)
+            return sorted(list(self.player_results.values()), reverse=True)
 
     def __init__(self, words, irc, channel, nick, delay, duration, difficulty):
         # See tech note in the Wordgames class.
@@ -501,8 +502,8 @@ class Worddle(BaseGame):
             self._broadcast('chat', self.players, nick=nick, text=text)
             return
         guesses = set(map(str.lower, text.split()))
-        accepted = filter(lambda s: s in self.board.solutions, guesses)
-        rejected = filter(lambda s: s not in self.board.solutions, guesses)
+        accepted = [s for s in guesses if s in self.board.solutions]
+        rejected = [s for s in guesses if s not in self.board.solutions]
         if len(accepted) > 3:
             message = '%sGreat!%s' % (LGREEN, WHITE)
         elif len(accepted) > 0:
@@ -571,8 +572,7 @@ class Worddle(BaseGame):
         points = 0
         for word in self.board.solutions:
             points += Worddle.POINT_VALUES.get(len(word), Worddle.MAX_POINTS)
-        longest_words = filter(lambda w: len(w) == self.longest_len,
-            self.board.solutions)
+        longest_words = [w for w in self.board.solutions if len(w) == self.longest_len]
         self.announce(('There were %s%d%s possible words, with total point'
             ' value %s%d%s. The longest word%s: %s%s%s.') %
             (WHITE, len(self.board.solutions), LGRAY, LGREEN, points, LGRAY,
@@ -672,11 +672,11 @@ class Worddle(BaseGame):
 
         # Compute results
         results = Worddle.Results()
-        for player, answers in self.player_answers.iteritems():
+        for player, answers in self.player_answers.items():
             results.add_player_words(player, answers)
 
         # Notify players
-        for result in results.player_results.values():
+        for result in list(results.player_results.values()):
             self._broadcast('gameover', [result.player], now=True)
 
         # Announce results
@@ -714,7 +714,7 @@ class Worddle(BaseGame):
         "Generate several boards and return the most bountiful board."
         attempts = 5
         wordtrie = Trie()
-        map(wordtrie.add, self.words)
+        list(map(wordtrie.add, self.words))
         boards = [WorddleBoard(wordtrie, Worddle.BOARD_SIZE, self.min_length)
             for i in range(0, attempts)]
         board_quality = lambda b: len(b.solutions)
@@ -770,9 +770,9 @@ class WorddleBoard(object):
 
     def _generate_rows(self):
         "Randomly generate a Worddle board (a list of lists)."
-        letters = reduce(add, (map(mul,
-                Worddle.FREQUENCY_TABLE.keys(),
-                Worddle.FREQUENCY_TABLE.values())))
+        letters = reduce(add, (list(map(mul,
+                list(Worddle.FREQUENCY_TABLE.keys()),
+                list(Worddle.FREQUENCY_TABLE.values())))))
         rows = []
         values = random.sample(letters, self.size**2)
         for i in range(0, self.size):
@@ -811,10 +811,9 @@ class WordChain(BaseGame):
         self.solutions = []
         self.word_map = {}
         if settings.word_lengths:
-            self.words = filter(lambda w: len(w) in settings.word_lengths,
-                                self.words)
+            self.words = [w for w in self.words if len(w) in settings.word_lengths]
         else:
-            self.words = filter(lambda w: len(w) >= 3, self.words)
+            self.words = [w for w in self.words if len(w) >= 3]
         self.build_word_map()
 
     def start(self):
@@ -831,7 +830,7 @@ class WordChain(BaseGame):
                 self.solution = [random.choice(self.words)]
                 for i in range(1, self.solution_length):
                     values = self.word_map[self.solution[-1]]
-                    values = filter(lambda w: w not in self.solution, values)
+                    values = [w for w in values if w not in self.solution]
                     if not values: break
                     self.solution.append(random.choice(values))
             self.solutions = []
@@ -882,7 +881,7 @@ class WordChain(BaseGame):
             self.announce(self._join_words(self.solution))
 
     def handle_message(self, msg):
-        words = map(str.strip, msg.args[1].split('>'))
+        words = list(map(str.strip, msg.args[1].split('>')))
         for word in words:
             if not re.match(r"^[a-z]+$", word):
                 return
@@ -963,10 +962,10 @@ class WordShrink(WordChain):
     def __init__(self, words, irc, channel, difficulty):
         assert difficulty in ['easy', 'medium', 'hard', 'evil'], "Bad mojo."
         settings = {
-            'easy':   WordChain.Settings([4], range(3, 9), range(15, 100)),
-            'medium': WordChain.Settings([5], range(4, 10), range(8, 25)),
-            'hard':   WordChain.Settings([6], range(4, 12), range(4, 12)),
-            'evil':   WordChain.Settings([7], range(4, 15), range(1, 10)),
+            'easy':   WordChain.Settings([4], list(range(3, 9)), list(range(15, 100))),
+            'medium': WordChain.Settings([5], list(range(4, 10)), list(range(8, 25))),
+            'hard':   WordChain.Settings([6], list(range(4, 12)), list(range(4, 12))),
+            'evil':   WordChain.Settings([7], list(range(4, 15)), list(range(1, 10))),
         }
         super(WordShrink, self).__init__(
             words, irc, channel, settings[difficulty])
@@ -1006,10 +1005,10 @@ class WordTwist(WordChain):
     def __init__(self, words, irc, channel, difficulty):
         assert difficulty in ['easy', 'medium', 'hard', 'evil'], "Bad mojo."
         settings = {
-            'easy':   WordChain.Settings([4], [3, 4], range(10, 100)),
-            'medium': WordChain.Settings([5], [4, 5], range(5, 12)),
-            'hard':   WordChain.Settings([6], [4, 5, 6], range(2, 5)),
-            'evil':   WordChain.Settings([7], [4, 5, 6], range(1, 3)),
+            'easy':   WordChain.Settings([4], [3, 4], list(range(10, 100))),
+            'medium': WordChain.Settings([5], [4, 5], list(range(5, 12))),
+            'hard':   WordChain.Settings([6], [4, 5, 6], list(range(2, 5))),
+            'evil':   WordChain.Settings([7], [4, 5, 6], list(range(1, 3))),
         }
         super(WordTwist, self).__init__(
             words, irc, channel, settings[difficulty])
@@ -1030,8 +1029,7 @@ class WordTwist(WordChain):
             self.word_map[word] = []
             for pos in range(0, len(word)):
                 key = word[0:pos] + wildcard + word[pos+1:]
-                self.word_map[word] += filter(
-                    lambda w: w != word, keymap.get(key, []))
+                self.word_map[word] += [w for w in keymap.get(key, []) if w != word]
 
     def is_trivial_solution(self, solution):
         "If it's possible to get there in fewer hops, this is trivial."
