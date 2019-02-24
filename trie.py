@@ -71,8 +71,8 @@ if __name__ == '__main__':
             t.add(line.strip())
         mem = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
         elapsed = time.time() - start
-        print('Trie created in %g seconds.' % elapsed)
-        print('Used %dMB RAM.' % (mem/1024))
+        print(('Trie created in %g seconds.' % elapsed))
+        print(('Used %dMB RAM.' % (mem/1024)))
     else:
         # Regular sanity test
         t = Trie()
