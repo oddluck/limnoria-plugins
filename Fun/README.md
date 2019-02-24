@@ -8,7 +8,7 @@ python3 -m pip install requests
 python3 -m pip install html
 
 
-commands: advice, ascii buzz, cat fact, joke, startup, useless, insult
+commands: advice, ascii, buzz, cat fact, joke, startup, useless, insult
 
 
 ascii --fontlist to get list of fonts
