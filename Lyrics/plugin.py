@@ -28,7 +28,7 @@ class Lyrics(callbacks.Plugin):
 
     def lyric(self, irc, msg, args, lyric):
         """<artist | song_title>
-        Get song lyrics. search must be formatted as artist, song title.
+        Get song lyrics. search must be formatted as artist | song title.
         """
         channel = msg.args[0]
         lyrics = None
