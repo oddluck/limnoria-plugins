@@ -16,7 +16,7 @@ Hunting and fishing game
 
 <b>Wordgames</b>
 
-Word games; Word Shring, Word Twist, Wordle
+Word games; Word Shrink, Word Twist, Wordle
 
 
 <b>MUD/Telnet</b>
