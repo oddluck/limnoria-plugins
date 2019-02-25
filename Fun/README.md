@@ -5,7 +5,7 @@ Limnoria plugin to return text-to-ascii-art, pirate translation, piglatin transl
 requirements: limnoria (obviously) python 3, requests, html, arrr, bs4
 
 
-python3 -m pip install requests html arrr bs4
+pip install requests html arrr bs4
 
 
 commands: advice, ascii, buzz, cat fact, devexcuse, insult, joke, piglatin, pirate, startup, useless
