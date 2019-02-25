@@ -43,18 +43,6 @@ from supybot.i18n import PluginInternationalization, internationalizeDocstring
 
 _ = PluginInternationalization('HuntNFish')
 
-hunttrophy = conf.supybot.directories.data.dirize('hunttrophy.db')
-fishtrophy = conf.supybot.directories.data.dirize('fishtrophy.db')
-
-if not os.path.isfile(hunttrophy):
-    with open(hunttrophy, 'w') as f:
-        f.write('Nobody\nnothing\n2')
-
-if not os.path.isfile(fishtrophy):
-    with open(fishtrophy, 'w') as f:
-        f.write('Nobody\nnothing\n2')
-
-
 @internationalizeDocstring
 class HuntNFish(callbacks.Plugin):
     """Adds hunt and fish commands for a basic hunting and fishing game."""
@@ -64,6 +52,11 @@ class HuntNFish(callbacks.Plugin):
         """takes no arguments
         performs a random hunt
         """
+        channel = msg.args[0]
+        hunttrophy = conf.supybot.directories.data.dirize("hunttrophy_{0}.db".format(channel))
+        if not os.path.isfile(hunttrophy):
+            with open(hunttrophy, 'w') as f:
+                f.write('Nobody\nnothing\n2')
         if(self.registryValue('enable', msg.args[0])):
             animals = ['bear', 'gopher', 'rabbit', 'hunter', 'deer', 'fox', 'duck', 'moose', 'pokemon named Pikachu', 'park ranger', 'Yogi Bear', 'Boo Boo Bear', 'dog named Benji', 'cow', 'raccoon', 'koala bear', 'camper', 'channel lamer', 'your mom']
             places = ['in some bushes', 'in a hunting blind', 'in a hole', 'up in a tree', 'in a hiding place', 'out in the open', 'in the middle of a field', 'downtown', 'on a street corner', 'at the local mall']
@@ -71,7 +64,7 @@ class HuntNFish(callbacks.Plugin):
             with open(hunttrophy, 'r') as f:
                 data = f.readlines()
                 highScore = data[2].rstrip('\n')
-            huntrandom = random.getstate()   
+            huntrandom = random.getstate()
             random.seed(time.time())
             currentWhat = random.choice(animals)
             currentWhere = random.choice(places)
@@ -95,7 +88,7 @@ class HuntNFish(callbacks.Plugin):
                     if weight > int(bigHunt):
                         with open(hunttrophy, 'w') as f:
                             data[0] = msg.nick
-                            data[1] = currentWhat 
+                            data[1] = currentWhat
                             data[2] = weight
                             f.write(str(data[0]) + '\n' + str(data[1]) + '\n' + str(data[2]))
                             irc.reply("you got a new highscore")
@@ -110,6 +103,11 @@ class HuntNFish(callbacks.Plugin):
         """takes no arguments
         performs a random fishing trip
         """
+        channel = msg.args[0]
+        fishtrophy = conf.supybot.directories.data.dirize("fishtrophy_{0}.db".format(channel))
+        if not os.path.isfile(fishtrophy):
+            with open(fishtrophy, 'w') as f:
+                f.write('Nobody\nnothing\n2')
         if(self.registryValue('enable', msg.args[0])):
             fishes = ('Salmon', 'Herring', 'Yellowfin Tuna', 'Pink Salmon', 'Chub', 'Barbel', 'Perch', 'Northern Pike', 'Brown Trout', 'Arctic Char', 'Roach', 'Brayling', 'Bleak', 'Cat Fish', 'Sun Fish', 'Old Tire', 'Rusty Tin Can', 'Genie Lamp', 'Love Message In A Bottle', 'Old Log', 'Rubber Boot' , 'Dead Body', 'Loch Ness Monster', 'Old Fishing Lure', 'Piece of the Titanic', 'Chunk of Atlantis', 'Squid', 'Whale', 'Dolphin',  'Porpoise' , 'Stingray', 'Submarine', 'Seal', 'Seahorse', 'Jellyfish', 'Starfish', 'Electric Eel', 'Great White Shark', 'Scuba Diver' , 'Lag Monster', 'Virus', 'Soggy Pack of Smokes', 'Bag of Weed', 'Boat Anchor', 'Pair Of Floaties', 'Mermaid', ' Merman', 'Halibut', 'Tiddler', 'Sock', 'Trout')
             fishSpots = ('a Stream', 'a Lake', 'a River', 'a Pond', 'an Ocean', 'a Bathtub', 'a Kiddies Swimming Pool', 'a Toilet', 'a Pile of Vomit', 'a Pool of Urine', 'a Kitchen Sink', 'a Bathroom Sink', 'a Mud Puddle', 'a Pail of Water', 'a Bowl of Jell-O', 'a Wash Basin', 'a Rain Barrel', 'an Aquarium', 'a SnowBank', 'a WaterFall', 'a Cup of Coffee', 'a Glass of Milk')
@@ -141,7 +139,7 @@ class HuntNFish(callbacks.Plugin):
                     if weight > int(bigFish):
                         with open(fishtrophy, 'w') as f:
                             data[0] = msg.nick
-                            data[1] = currentWhat 
+                            data[1] = currentWhat
                             data[2] = weight
                             f.writelines(str(data[0]) + '\n' + str(data[1]) + '\n' + str(data[2]))
                             irc.reply("you got a new highscore")
@@ -156,6 +154,15 @@ class HuntNFish(callbacks.Plugin):
         """takes no arguments
         checks the current highscores for hunting and fishing
         """
+        channel = msg.args[0]
+        hunttrophy = conf.supybot.directories.data.dirize("hunttrophy_{0}.db".format(channel))
+        fishtrophy = conf.supybot.directories.data.dirize("fishtrophy_{0}.db".format(channel))
+        if not os.path.isfile(fishtrophy):
+            with open(fishtrophy, 'w') as f:
+                f.write('Nobody\nnothing\n2')
+        if not os.path.isfile(hunttrophy):
+            with open(hunttrophy, 'w') as f:
+                f.write('Nobody\nnothing\n2')
         if(self.registryValue('enable', msg.args[0])):
             weightType = self.registryValue('weightType')
             with open(hunttrophy, 'r') as f:
@@ -177,13 +184,21 @@ class HuntNFish(callbacks.Plugin):
         """takes no arguments
         resets the highscores for both hunting and fishing. this command is limited to the owner, to prevent just anyone from clearing the scores
         """
+        hunttrophy = conf.supybot.directories.data.dirize("hunttrophy_{0}.db".format(channel))
+        fishtrophy = conf.supybot.directories.data.dirize("fishtrophy_{0}.db".format(channel))
+        if not os.path.isfile(fishtrophy):
+            with open(fishtrophy, 'w') as f:
+                f.write('Nobody\nnothing\n2')
+        if not os.path.isfile(hunttrophy):
+            with open(hunttrophy, 'w') as f:
+                f.write('Nobody\nnothing\n2')
         with open(hunttrophy, 'w') as f:
             f.write('Nobody\nnothing\n2')
         with open(fishtrophy, 'w') as f:
             f.write('Nobody\nnothing\n2')
         irc.replySuccess()
 
-    resetscores = wrap(resetscores, ['owner'])        
+    resetscores = wrap(resetscores, ['owner'])
 
 Class = HuntNFish
 
