@@ -213,5 +213,4 @@ class Fun(callbacks.Plugin):
         irc.reply(" ".join(l))
     piglatin = wrap(piglatin, [('text')])
 
-
 Class = Fun
