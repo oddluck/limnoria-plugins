@@ -2,7 +2,7 @@
 Limnoria plugin to return text-to-ascii-art, pirate translation, piglatin translation, random; joke, cat fact, dev excuse, useless fact, corporate buzzwords, startup idea, insult, or advice from various APIs
 
 
-requirements: limnoria (obviously) python 3, requests, html
+requirements: limnoria (obviously) python 3, requests, html, arrr, bs4
 
 
 python3 -m pip install requests
