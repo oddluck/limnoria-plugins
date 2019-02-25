@@ -4,61 +4,61 @@ repolist oddluck / install oddluck Plugin_Name
 
 Requires Limnoria, obviously. Additional requirements in readmes or requirements.txt files
 
-Geo
+<b>Geo</b>
 
 GeoIP lookups
 
 
-HuntNFish
+<b>HuntNFish</b>
 
 Hunting and fishing game
 
 
-Wordgames
+<b>Wordgames</b>
 
 Word games.
 
 
-MUD/Telnet
+<b>MUD/Telnet</b>
 
 MUD/Telnet client. Use Telnet and/or Play Multi User Dungeon text games with others over IRC. Multi-user support, play with IRC friends. Or just make changes to your router or whatever.
 
 
-Frotz
+<b>Frotz</b>
 
 Play interactive fiction games such as the Infocom classics Zork, The Hitchhiker's Guide to the Galaxy, Leather Goddesses of Phobos, etc. multiplayer and multi-channel/pm supported.
 
 
-Fun
+<b>Fun</b>
 
 return text-to-ascii-art, a random; joke, cat fact, useless fact, corporate buzzwords, startup idea, insult, or advice from various APIs
 
 
-Lyrics
+<b>Lyrics</b>
 
 return song lyrics by artist, song title from lyric-api.herokuapp.com
 
 
-Unicode
+<b>Unicode</b>
 
 returns info on a unicode symbol such as emoji, returning name, hex/html values, etc.
 
 
-Jeopardy
+<b>Jeopardy</b>
 
 TrivaTime reconfigured to use jservice.io (156,800+ Jeopardy! questions) as trivia source
 
 
-TriviaTime
+<b>TriviaTime</b>
 
 Trivia plugin, uses user supplied trivia questions.
 
 
-Weed
+<b>Weed</b>
 
 fetch cannabis (marijuana) strain information from the strain api (strains.evanbusse.com)
 
 
-Uno
+<b>Uno</b>
 
 Play the game Uno over IRC. Has color support, and bot AI players.
