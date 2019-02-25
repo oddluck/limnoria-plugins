@@ -13,6 +13,8 @@ import supybot.callbacks as callbacks
 import supybot.ircmsgs as ircmsgs
 import requests
 import html
+import arrr
+from bs4 import BeautifulSoup
 
 try:
     from supybot.i18n import PluginInternationalization
@@ -153,5 +155,63 @@ class Fun(callbacks.Plugin):
                     if line.strip():
                         irc.reply(line, prefixNick=False)
     ascii = wrap(ascii, [getopts({'font':'something', 'fontlist':''}), additional('text')])
-    
+
+    def pirate(self, irc, msg, args, text):
+        """<text>
+        English to pirate translator.
+        """
+        channel = msg.args[0]
+        pirate = arrr.translate(text)
+        irc.reply(pirate)
+    pirate = wrap(pirate, ['text'])
+
+    def devexcuse(self, irc, msg, args):
+        """
+        Returns an excuse from http://developerexcuses.com
+        """
+        data = requests.get('http://developerexcuses.com')
+        if not data:  # http fetch breaks.
+            irc.reply("ERROR")
+            return
+        soup = BeautifulSoup(data.text)
+        text = soup.find('center').getText()
+        irc.reply("{0}".format(text))
+    devexcuse = wrap(devexcuse)
+
+    def _pigword(self, word):
+        shouldCAP = (word[:1] == word[:1].upper())
+        word = word.lower()
+        letters = "qwertyuiopasdfghjklzxcvbnm"
+        i = len(word) - 1
+        while i >= 0 and letters.find(word[i]) == -1:
+            i = i - 1
+        if i == -1:
+            return word
+        punctuation = word[i+1:]
+        word = word[:i+1]
+
+        vowels = "aeiou"
+        if vowels.find(word[0]) >= 0:
+            word = word + "yay" + punctuation
+        else:
+            word = word[1:] + word[0] + "ay" + punctuation
+
+        if shouldCAP:
+            return word[:1].upper() + word[1:]
+        else:
+            return word
+
+    def piglatin(self, irc, msg, args, optinput):
+        """<text>
+        Convert text from English to Pig Latin.
+        """
+
+        l = optinput.split(" ")
+        for i in range(len(l)):
+            l[i] = self._pigword(l[i])
+
+        irc.reply(" ".join(l))
+    piglatin = wrap(piglatin, [('text')])
+
+
 Class = Fun
