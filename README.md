@@ -31,7 +31,7 @@ Play interactive fiction games such as the Infocom classics Zork, The Hitchhiker
 
 <b>Fun</b>
 
-Return text-to-ascii-art, a random; joke, cat fact, useless fact, corporate buzzwords, startup idea, insult, or advice from various APIs
+Return text-to-ascii-art, pirate translation, piglatin translation, random; joke, cat fact, dev excuse, useless fact, corporate buzzwords, startup idea, insult, or advice from various APIs
 
 
 <b>Lyrics</b>
