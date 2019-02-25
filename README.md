@@ -36,7 +36,7 @@ Return text-to-ascii-art, pirate translation, piglatin translation, random; joke
 
 <b>Lyrics</b>
 
-Return song lyrics by artist, song title from lyric-api.herokuapp.com
+Return song lyrics by artist | song_title
 
 
 <b>Unicode</b>
