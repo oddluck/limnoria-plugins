@@ -6,7 +6,7 @@ Requires Limnoria, obviously. Additional requirements in readmes or requirements
 
 <b>Geo</b>
 
-GeoIP lookups
+GeoIP lookups of IP/Hostname
 
 
 <b>HuntNFish</b>
@@ -16,7 +16,7 @@ Hunting and fishing game
 
 <b>Wordgames</b>
 
-Word games.
+Word games; Word Shring, Word Twist, Wordle
 
 
 <b>MUD/Telnet</b>
@@ -31,17 +31,17 @@ Play interactive fiction games such as the Infocom classics Zork, The Hitchhiker
 
 <b>Fun</b>
 
-return text-to-ascii-art, a random; joke, cat fact, useless fact, corporate buzzwords, startup idea, insult, or advice from various APIs
+Return text-to-ascii-art, a random; joke, cat fact, useless fact, corporate buzzwords, startup idea, insult, or advice from various APIs
 
 
 <b>Lyrics</b>
 
-return song lyrics by artist, song title from lyric-api.herokuapp.com
+Return song lyrics by artist, song title from lyric-api.herokuapp.com
 
 
 <b>Unicode</b>
 
-returns info on a unicode symbol such as emoji, returning name, hex/html values, etc.
+Returns info on a unicode symbol such as emoji, returning name, hex/html values, etc.
 
 
 <b>Jeopardy</b>
@@ -56,7 +56,7 @@ Trivia plugin, uses user supplied trivia questions.
 
 <b>Weed</b>
 
-fetch cannabis (marijuana) strain information from the strain api (strains.evanbusse.com)
+Fetch cannabis (marijuana) strain information from the strain api (strains.evanbusse.com)
 
 
 <b>Uno</b>
