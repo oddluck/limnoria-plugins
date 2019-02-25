@@ -1,3 +1,7 @@
+Working with Python3 and Limnoria.
+
+apt install wamerican
+
 Supybot Word Games Plugin
 =========================
 
