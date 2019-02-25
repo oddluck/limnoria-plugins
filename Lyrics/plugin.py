@@ -32,13 +32,13 @@ class Lyrics(callbacks.Plugin):
         """
         channel = msg.args[0]
         lyrics = None
-        if ',' in lyric:
-            query = lyric.split(', ')          
+        if '|' in lyric:
+            query = lyric.split('|')          
         else:
             irc.reply("Searches must be formatted as artist, song title")
             query = None
         if query:
-            data = requests.get("https://lyric-api.herokuapp.com/api/find/{0}/{1}".format(query[0], query[1])).json()
+            data = requests.get("https://lyric-api.herokuapp.com/api/find/{0}/{1}".format(query[0].strip(), query[1].strip())).json()
             lyrics = html.unescape(data['lyric']).replace('\n\n', '. ').replace('?\n', '? ').replace('!\n', '! ').replace('.\n', '. ').replace(',\n', ', ').replace('...\n', '... ').replace('\n', ', ')
             if lyrics:
                 irc.reply(lyrics)
