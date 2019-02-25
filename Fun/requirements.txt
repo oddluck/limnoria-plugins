@@ -1,2 +1,4 @@
 requests
 html
+bs4
+arrr
