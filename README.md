@@ -4,13 +4,30 @@ repolist oddluck / install oddluck Plugin_Name
 
 Requires Limnoria, obviously. Additional requirements in readmes or requirements.txt files
 
+Geo
+
+GeoIP lookups
+
+
+HuntNFish
+
+Hunting and fishing game
+
+
+Wordgames
+
+Word games.
+
+
 MUD/Telnet
 
 MUD/Telnet client. Use Telnet and/or Play Multi User Dungeon text games with others over IRC. Multi-user support, play with IRC friends. Or just make changes to your router or whatever.
 
+
 Frotz
 
 Play interactive fiction games such as the Infocom classics Zork, The Hitchhiker's Guide to the Galaxy, Leather Goddesses of Phobos, etc. multiplayer and multi-channel/pm supported.
+
 
 Fun
 
