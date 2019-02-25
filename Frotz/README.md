@@ -8,10 +8,15 @@ Looks for games in ./games/ directory
 and for the binary at ./frotz/dfrotz
 
 usage:
+
 frotz load <game name> ex. frotz load zork1.z5 - loads game
+  
 z <command> ex. z open mailbox, z look - send command
+
 z <no input> - sends a blank line equivalent to [RETURN]/[ENTER] when needed
+  
 frotz stop - ends the game
+
 frotz games - lists contents of ./games/ directory
 
 one game allowed to run per channel/pm. will prompt you to stop running games before allowing a new one to be started.
