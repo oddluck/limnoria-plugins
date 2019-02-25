@@ -534,7 +534,7 @@ class MLBScores(callbacks.Plugin):
         except:
             team, date, tz = self._parseInput(irc_args)
             print('internal parser worked')
-        print(team)
+        #print(team)
         #print(date)
 
         
@@ -586,7 +586,7 @@ class MLBScores(callbacks.Plugin):
         except:
             team, date, tz = self._parseInput(irc_args)
             print('internal parser worked')
-        print(team)
+        #print(team)
         #print(date)
 
         
@@ -638,7 +638,7 @@ class MLBScores(callbacks.Plugin):
         except:
             team, date, tz = self._parseInput(irc_args)
             print('internal parser worked')
-        print(team)
+        #print(team)
         #print(date)
 
         
@@ -690,7 +690,7 @@ class MLBScores(callbacks.Plugin):
         except:
             team, date, tz = self._parseInput(irc_args)
             print('internal parser worked')
-        print(team)
+        #print(team)
         #print(date)
 
         
@@ -742,7 +742,7 @@ class MLBScores(callbacks.Plugin):
         except:
             team, date, tz = self._parseInput(irc_args)
             print('internal parser worked')
-        print(team)
+        #print(team)
         #print(date)
 
         
@@ -794,7 +794,7 @@ class MLBScores(callbacks.Plugin):
         except:
             team, date, tz = self._parseInput(irc_args)
             print('internal parser worked')
-        print(team)
+        #print(team)
         #print(date)
 
         
@@ -846,7 +846,7 @@ class MLBScores(callbacks.Plugin):
         except:
             team, date, tz = self._parseInput(irc_args)
             print('internal parser worked')
-        print(team)
+        #print(team)
         #print(date)
 
         
@@ -898,7 +898,7 @@ class MLBScores(callbacks.Plugin):
         except:
             team, date, tz = self._parseInput(irc_args)
             print('internal parser worked')
-        print(team)
+        #print(team)
         #print(date)
 
         
@@ -950,7 +950,7 @@ class MLBScores(callbacks.Plugin):
         except:
             team, date, tz = self._parseInput(irc_args)
             print('internal parser worked')
-        print(team)
+        #print(team)
         #print(date)
 
         
@@ -995,8 +995,11 @@ class MLBScores(callbacks.Plugin):
             if 'was' in irc_args:
                 irc_args = irc_args.replace('was', 'wsh')
 
+        team_codes, _ = self._getTeams()
+        #print(team_codes)
+
         try:
-            team, date, tz = inputParser.parseInput(irc_args, self._TEAM_BY_TRI, self._TEAM_BY_NICK)
+            team, date, tz = inputParser.parseInput(irc_args, team_codes, self._TEAM_BY_NICK)
             print('external parser worked')
         except:
             team, date, tz = self._parseInput(irc_args)
@@ -3547,6 +3550,7 @@ class MLBScores(callbacks.Plugin):
         """fetches games for mlb2"""
 
         team = 'all' if not team else team
+        #print(team)
         date = pendulum.now('US/Pacific').to_date_string() if not date else date
 
         if league:
@@ -3585,18 +3589,28 @@ class MLBScores(callbacks.Plugin):
         """parse games for mlb2"""
         #print('http://statsapi.mlb.com/api/v1/game/{}/linescore'.format(games[0]['gamePk']))
         
-#         if team:
-#             #date = pendulum.now('US/Pacific').to_date_string() if not date else date
-#             #games_url = self._SCOREBOARD_ENDPOINT.format(date)
-#             #games_url += '&teamId={}'.format(team)
-#             #games = requests.get(games_url).json()
-#             #print(games_url)
-#             try:
-#                 games = games['dates'][0]['games']
-#             except:
-#                 return None
+        #print(games)
+        if team:
+            #date = pendulum.now('US/Pacific').to_date_string() if not date else date
+            #games_url = self._SCOREBOARD_ENDPOINT.format(date)
+            #games_url += '&teamId={}'.format(team)
+            #games = requests.get(games_url).json()
+            #print(games_url)
+            try:
+                #games = games['dates'][0]['games']
+                tmpg = []
+                for game in games:
+                    #print(game['teams']['away']['team']['id'], game['teams']['home']['team']['id'])
+                    if str(team) in [str(game['teams']['away']['team']['id']), str(game['teams']['home']['team']['id'])]:
+                        tmpg.append(game)
+                if tmpg:
+                    games = tmpg
+                else:
+                    return None
+            except:
+                return None
             
-        print(games)
+        #print(games)
         
         def _parseLastPlay():
             #print('len:', len(games))

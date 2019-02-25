@@ -55,6 +55,8 @@ def parseInput(args=None, _TEAM_BY_TRI=None, _TEAM_BY_NICK=None):
         arg_array = []
         for arg in args.split(' '):
             arg_array.append(arg)
+
+        print(_TEAM_BY_TRI)
         
         for idx, arg in enumerate(arg_array):
             #print(arg)
@@ -101,5 +103,7 @@ def parseInput(args=None, _TEAM_BY_TRI=None, _TEAM_BY_NICK=None):
                     team = str(_TEAM_BY_TRI[abbr])
                 #else:
                 #    team = arg.upper()
+
+        print(team)
 
         return team, date, tz
