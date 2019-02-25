@@ -53,6 +53,9 @@ class HuntNFish(callbacks.Plugin):
         performs a random hunt
         """
         channel = msg.args[0]
+        if not irc.isChannel(channel):
+           irc.reply("This command must be run in a channel")
+           return
         hunttrophy = conf.supybot.directories.data.dirize("hunttrophy_{0}.db".format(channel))
         if not os.path.isfile(hunttrophy):
             with open(hunttrophy, 'w') as f:
@@ -104,6 +107,9 @@ class HuntNFish(callbacks.Plugin):
         performs a random fishing trip
         """
         channel = msg.args[0]
+        if not irc.isChannel(channel):
+           irc.reply("This command must be run in a channel")
+           return
         fishtrophy = conf.supybot.directories.data.dirize("fishtrophy_{0}.db".format(channel))
         if not os.path.isfile(fishtrophy):
             with open(fishtrophy, 'w') as f:
@@ -155,6 +161,9 @@ class HuntNFish(callbacks.Plugin):
         checks the current highscores for hunting and fishing
         """
         channel = msg.args[0]
+        if not irc.isChannel(channel):
+           irc.reply("This command must be run in a channel")
+           return
         hunttrophy = conf.supybot.directories.data.dirize("hunttrophy_{0}.db".format(channel))
         fishtrophy = conf.supybot.directories.data.dirize("fishtrophy_{0}.db".format(channel))
         if not os.path.isfile(fishtrophy):
@@ -184,6 +193,10 @@ class HuntNFish(callbacks.Plugin):
         """takes no arguments
         resets the highscores for both hunting and fishing. this command is limited to the owner, to prevent just anyone from clearing the scores
         """
+        channel = msg.args[0]
+        if not irc.isChannel(channel):
+           irc.reply("This command must be run in a channel")
+           return
         hunttrophy = conf.supybot.directories.data.dirize("hunttrophy_{0}.db".format(channel))
         fishtrophy = conf.supybot.directories.data.dirize("fishtrophy_{0}.db".format(channel))
         if not os.path.isfile(fishtrophy):
