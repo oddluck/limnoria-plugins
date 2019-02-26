@@ -864,7 +864,7 @@ class DuckHunt(callbacks.Plugin):
 
                 # Is the player reloading?
                 if (self.reloading[currentChannel].get(msg.nick) and time.time() - self.reloading[currentChannel][msg.nick] < self.reloadtime[currentChannel]):
-                    irc.reply("%s, you are reloading... (Reloading takes %i seconds)" % (msg.nick, self.reloadtime[currentChannel]))
+                    irc.reply("You are reloading... (Reloading takes %i seconds)" % (self.reloadtime[currentChannel]))
                     return 0
                 
 
@@ -876,7 +876,7 @@ class DuckHunt(callbacks.Plugin):
 
                     # Did the player missed it?
                     if (random.random() < self.missprobability[currentChannel]):
-                        irc.reply("%s, you missed the duck!" % (msg.nick))
+                        irc.reply("You missed the duck!")
                     else:
 
                         # Adds one point for the nick that shot the duck
@@ -889,7 +889,7 @@ class DuckHunt(callbacks.Plugin):
                                 self.scores[currentChannel] = {} 
                                 self.scores[currentChannel][msg.nick] = 1
 
-                        irc.reply("\_x< %s: %i (%.2f seconds)" % (msg.nick,  self.scores[currentChannel][msg.nick], bangdelay))
+                        irc.reply("\_x< %s: %i (%.2f seconds)" % (msg.nick, self.scores[currentChannel][msg.nick], bangdelay))
 
                         self.averagetime[currentChannel] += bangdelay
 
@@ -1035,7 +1035,7 @@ class DuckHunt(callbacks.Plugin):
                 #irc.reply("Winner: %s with %i points" % (winnernick, winnerscore))
                 #irc.reply(self.scores.get(currentChannel))
                 #TODO: Better display
-                irc.reply(sorted(iter(self.scores.get(currentChannel).items()), key=lambda k_v4:(k_v4[1],k_v4[0]), reverse=True))
+                irc.reply(sorted(iter(self.scores.get(currentChannel).items()), key=lambda k_v4:(k_v4[1],k_v4[0]), reverse=True), prefixNick=False)
 
 
 
@@ -1058,7 +1058,7 @@ class DuckHunt(callbacks.Plugin):
                 except:
                     recordmsg = ''
 
-            irc.reply("Best time: %s with %.2f seconds%s" % (key, value, recordmsg))
+            irc.reply("Best time: %s with %.2f seconds%s" % (key, value, recordmsg), prefixNick=False)
 
             # Getting channel worst time (to see if the worst time of this hunt is worst)
             channelworstnick = None
