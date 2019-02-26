@@ -889,7 +889,7 @@ class DuckHunt(callbacks.Plugin):
                                 self.scores[currentChannel] = {} 
                                 self.scores[currentChannel][msg.nick] = 1
 
-                        irc.reply("\_x< %s: %i (%.2f seconds)" % (msg.nick, self.scores[currentChannel][msg.nick], bangdelay))
+                        irc.reply("\_x< %s: %i (%.2f seconds)" % (msg.nick, self.scores[currentChannel][msg.nick], bangdelay), prefixNick=False)
 
                         self.averagetime[currentChannel] += bangdelay
 
