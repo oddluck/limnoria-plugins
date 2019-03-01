@@ -43,22 +43,25 @@ import supybot.ircmsgs as ircmsgs
 import supybot.ircutils as ircutils
 import supybot.schedule as schedule
 import supybot.callbacks as callbacks
+import requests
+import re
+from unidecode import unidecode
 from supybot.i18n import PluginInternationalization, internationalizeDocstring
-_ = PluginInternationalization('Trivia')
+_ = PluginInternationalization('Jeopardy')
 
-class Trivia(callbacks.Plugin):
-    """Add the help for "@plugin help Trivia" here
+class Jeopardy(callbacks.Plugin):
+    """Add the help for "@plugin help Jeopardy" here
     This should describe *how* to use this plugin."""
     threaded = True
 
 
     def __init__(self, irc):
-        self.__parent = super(Trivia, self)
+        self.__parent = super(Jeopardy, self)
         self.__parent.__init__(irc)
         self.games = {}
         self.scores = {}
         questionfile = self.registryValue('questionFile')
-        if not os.path.exists(questionfile):
+        if not os.path.exists(questionfile) and questionfile != 'jservice.io':
             f = open(questionfile, 'w')
             f.write(('If you\'re seeing this question, it means that the '
                      'questions file that you specified wasn\'t found, and '
@@ -103,24 +106,37 @@ class Trivia(callbacks.Plugin):
             self.scores = plugin.scores
             self.scorefile = plugin.scorefile
             self.questionfile = self.registryValue('questionFile')
+            self.points = self.registryValue('defaultPointValue')
             self.total = num
             self.active = True
             self.questions = []
             self.roundscores = {}
             self.unanswered = 0
-            f = open(self.questionfile, 'r')
-            line = f.readline()
-            while line:
-                self.questions.append(line.strip('\n\r'))
+            if self.questionfile != 'jservice.io':
+                f = open(self.questionfile, 'r')
                 line = f.readline()
-            f.close()
-            if self.registryValue('randomize', channel): random.shuffle(self.questions)
-            try:
-                schedule.removeEvent('next_%s' % self.channel)
-            except KeyError:
-                pass
+                while line:
+                    self.questions.append(line.strip('\n\r'))
+                    line = f.readline()
+                f.close()
+                if self.registryValue('randomize', channel): random.shuffle(self.questions)
+                try:
+                    schedule.removeEvent('next_%s' % self.channel)
+                except KeyError:
+                    pass
+            else:
+                data = requests.get("http://jservice.io/api/random?&count=100").json()
+                for item in data:
+                    question = re.sub('<[^<]+?>', '', unidecode(item['question'])).replace('\\', '').strip()
+                    airdate = item['airdate'].split('T')
+                    answer = re.sub('<[^<]+?>', '', unidecode(item['answer'])).replace('\\', '').strip()
+                    category = unidecode(item['category']['title']).strip().title()
+                    points = self.points
+                    if item['value']:
+                        points = int(item['value'])
+                    if question and airdate and answer and category and points:
+                        self.questions.append("({0}) [${1}] {2}: {3}*{4}*{5}".format(airdate[0], str(points), category, question, answer, points))
             self.newquestion()
-
 
         def newquestion(self):
             inactiveShutoff = self.registryValue('inactiveShutoff',
@@ -131,7 +147,7 @@ class Trivia(callbacks.Plugin):
                 self.reply(_('Seems like no one\'s playing any more.'))
                 self.active = False
             elif len(self.questions) == 0:
-                self.reply(_('Oops!  I ran out of questions!'))
+                self.reply(_('Oops! I ran out of questions!'))
                 self.active = False
             if not self.active:
                 self.stop()
@@ -143,9 +159,15 @@ class Trivia(callbacks.Plugin):
             sep = self.registryValue('questionFileSeparator')
             self.q = q[:q.find(sep)]
             self.a = q[q.find(sep)+len(sep):].split(sep)
+            if self.a[1]:
+                self.p = int(self.a[1])
+                del self.a[1]
+            else:
+                self.p = self.points
             color = self.registryValue('color', self.channel)
             self.reply(_('\x03%s#%d of %d: %s') % (color, self.numAsked,
                                                 self.total, self.q))
+
             def event():
                 self.timedEvent()
             timeout = self.registryValue('timeout', self.channel)
@@ -156,7 +178,7 @@ class Trivia(callbacks.Plugin):
 
 
         def stop(self):
-            self.reply(_('Trivia stopping.'))
+            self.reply(_('Jeopardy! stopping.'))
             self.active = False
             try:
                 schedule.removeEvent('next_%s' % self.channel)
@@ -174,20 +196,20 @@ class Trivia(callbacks.Plugin):
             if len(sorted) < max:
                 max = len(sorted)
                 #self.reply('max: %d.  len: %d' % (max, len(sorted)))
-            s = _('Top finishers: ')
+            s = _('Top finishers:')
             if max > 0:
                 recipients = []
                 maxp = sorted[0][1]
                 for i in range(0, max):
                     item = sorted[i]
-                    s = _('%s %s %s.') % (s, item[0], item[1])
+                    s = _('%s (%s: %s)') % (s, str(item[0].split(':')[1]), item[1])
                 self.reply(s)
             del self.games[self.channel]
 
 
         def timedEvent(self):
             if self.hints >= self.registryValue('numHints', self.channel):
-                self.reply(_('No one got the answer!  It was: %s') % self.a[0])
+                self.reply(_('No one got the answer! It was: %s') % self.a[0])
                 self.unanswered += 1
                 self.newquestion()
             else:
@@ -216,6 +238,7 @@ class Trivia(callbacks.Plugin):
 
 
         def answer(self, msg):
+            channel = msg.args[0]
             correct = False
             for ans in self.a:
                 dist = self.DL(str.lower(msg.args[1]), str.lower(ans))
@@ -225,15 +248,16 @@ class Trivia(callbacks.Plugin):
                 #if self.registryValue('debug'):
                 #    self.reply('Distance: %d' % dist)
             if correct:
-                if not msg.nick in self.scores:
-                    self.scores[msg.nick] = 0
-                self.scores[msg.nick] += 1
-                if not msg.nick in self.roundscores:
-                    self.roundscores[msg.nick] = 0
-                self.roundscores[msg.nick] += 1
+                name = "{0}:{1}".format(channel, msg.nick)
+                if not name in self.scores:
+                    self.scores[name] = 0
+                self.scores[name] += self.p
+                if not name in self.roundscores:
+                    self.roundscores[name] = 0
+                self.roundscores[name] += self.p
                 self.unanswered = 0
-                self.reply(_('%s got it!  The full answer was: %s. Points: %d') %
-                           (msg.nick, self.a[0], self.scores[msg.nick]))
+                self.reply(_('%s got it! The full answer was: %s. Points: %d') %
+                           (msg.nick, self.a[0], self.scores[name]))
                 schedule.removeEvent('next_%s' % self.channel)
                 self.writeScores()
                 self.newquestion()
@@ -275,7 +299,7 @@ class Trivia(callbacks.Plugin):
     def start(self, irc, msg, args, channel, num):
         """[<channel>] [<number of questions>]
 
-        Starts a game of trivia.  <channel> is only necessary if the message
+        Starts a game of Jeopardy! <channel> is only necessary if the message
         isn't sent in the channel itself."""
         if num == None:
             num = self.registryValue('defaultRoundLength', channel)
@@ -291,7 +315,7 @@ class Trivia(callbacks.Plugin):
                     schedule.removeEvent('next_%s' % channel)
                 except KeyError:
                     pass
-                irc.reply(_('Orphaned trivia game found and removed.'))
+                irc.reply(_('Orphaned Jeopardy! game found and removed.'))
             else:
                 self.games[channel].num += num
                 self.games[channel].total += num
@@ -305,25 +329,25 @@ class Trivia(callbacks.Plugin):
     def stop(self, irc, msg, args, channel):
         """[<channel>]
 
-        Stops a running game of trivia.  <channel> is only necessary if the
+        Stops a running game of Jeopardy!. <channel> is only necessary if the
         message isn't sent in the channel itself."""
         channel = ircutils.toLower(channel)
         try:
             schedule.removeEvent('next_%s' % channel)
         except KeyError:
-            irc.error(_('No trivia started'))
+            irc.error(_('No Jeopardy! game started.'))
         if channel in self.games:
             if self.games[channel].active:
                 self.games[channel].stop()
             else:
                 del self.games[channel]
-                irc.reply(_('Trivia stopped'))
+                irc.reply(_('Jeopardy! stopped.'))
         else:
             irc.noReply()
     stop = wrap(stop, ['channel'])
 
 
-Class = Trivia
+Class = Jeopardy
 
 
 # vim:set shiftwidth=4 softtabstop=4 expandtab textwidth=79:
