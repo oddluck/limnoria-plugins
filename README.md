@@ -4,6 +4,12 @@ repolist oddluck / install oddluck Plugin_Name
 
 Requires Limnoria, obviously. Additional requirements in readmes or requirements.txt files
 
+
+<b>Jeopardy</b>
+
+Fork of Triva (https://github.com/ProgVal/Supybot-plugins/tree/master/Trivia) reconfigured to use jservice.io (156,800+ Jeopardy! questions) as trivia source
+
+
 <b>Geo</b>
 
 GeoIP lookups of IP/Hostname
@@ -42,11 +48,6 @@ Return song lyrics by artist | song_title
 <b>Unicode</b>
 
 Returns info on a unicode symbol such as emoji, returning name, hex/html values, etc.
-
-
-<b>Jeopardy</b>
-
-TrivaTime reconfigured to use jservice.io (156,800+ Jeopardy! questions) as trivia source
 
 
 <b>TriviaTime</b>
