@@ -1,5 +1,5 @@
 # Fun
-Limnoria plugin to return text-to-ascii-art, pirate translation, piglatin translation, play rock-paper-scissors. random; joke, cat fact, dev excuse, bofh excuse, useless fact, corporate buzzwords, startup idea, insult, or advice from various APIs
+Limnoria plugin to return text-to-ascii-art, pirate translation, piglatin translation, play rock-paper-scissors. random; joke, cat fact, cat .gif, dev excuse, bofh excuse, useless fact, corporate buzzwords, startup idea, insult, or advice from various APIs
 
 
 requirements: limnoria (obviously) python 3, requests, html, arrr, bs4
