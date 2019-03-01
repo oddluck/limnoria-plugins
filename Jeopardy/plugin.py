@@ -167,6 +167,10 @@ class Jeopardy(callbacks.Plugin):
             color = self.registryValue('color', self.channel)
             self.reply(_('\x03%s#%d of %d: %s') % (color, self.numAsked,
                                                 self.total, self.q))
+            ans = self.a[0]
+            blankChar = self.registryValue('blankChar', self.channel)
+            blank = re.sub('\w', blankChar, ans)
+            self.reply("HINT: {0}".format(blank))
 
             def event():
                 self.timedEvent()
@@ -321,6 +325,7 @@ class Jeopardy(callbacks.Plugin):
                 self.games[channel].total += num
                 irc.reply(_('%d questions added to active game!') % num)
         else:
+            irc.reply("This... is... Jeopardy!", prefixNick=False)
             self.games[channel] = self.Game(irc, channel, num, self)
         irc.noReply()
     start = wrap(start, ['channel', optional('positiveInt')])
