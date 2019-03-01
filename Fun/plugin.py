@@ -15,6 +15,8 @@ import requests
 import html
 import arrr
 from bs4 import BeautifulSoup
+import os
+import random
 
 try:
     from supybot.i18n import PluginInternationalization
@@ -212,5 +214,16 @@ class Fun(callbacks.Plugin):
 
         irc.reply(" ".join(l))
     piglatin = wrap(piglatin, [('text')])
+
+    def bofh(self, irc, msg, args):
+        """
+        BOFH Excuse Generator
+        """
+        data = open("{0}/excuses.txt".format(os.path.dirname(os.path.abspath(__file__))))
+        text = data.read()
+        reply = text.splitlines()
+        excuse = random.randrange(0, len(reply))
+        irc.reply(reply[excuse])
+    bofh = wrap(bofh)
 
 Class = Fun
