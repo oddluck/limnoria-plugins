@@ -131,10 +131,11 @@ class Jeopardy(callbacks.Plugin):
                     airdate = item['airdate'].split('T')
                     answer = re.sub('<[^<]+?>', '', unidecode(item['answer'])).replace('\\', '').strip()
                     category = unidecode(item['category']['title']).strip().title()
+                    invalid = item['invalid_count']
                     points = self.points
                     if item['value']:
                         points = int(item['value'])
-                    if question and airdate and answer and category and points:
+                    if question and airdate and answer and category and points and not invalid:
                         self.questions.append("({0}) [${1}] {2}: {3}*{4}*{5}".format(airdate[0], str(points), category, question, answer, points))
             self.newquestion()
 
