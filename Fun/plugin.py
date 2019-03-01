@@ -226,4 +226,64 @@ class Fun(callbacks.Plugin):
         irc.reply(reply[excuse])
     bofh = wrap(bofh)
 
+    def rock(self, irc, msg, args):
+        """takes no arguments
+        Choose rock in Rock, Paper, Scissors.
+        """
+        botchoice2 = random.randint(1, 3)
+        if botchoice2 == 1:
+            botchoice = "rock"
+        elif botchoice2 == 2:
+            botchoice = "paper"
+        elif botchoice2 == 3:
+            botchoice = "scissors"
+        userchoice = "rock"
+        if botchoice == userchoice:
+            irc.reply("I chose %s. Looks like we tied." % (botchoice))
+        elif botchoice == "paper" and userchoice == "rock":
+            irc.reply("I chose %s. Looks like I won." % (botchoice))
+        elif botchoice == "scissors" and userchoice == "rock":
+            irc.reply("I chose %s. Looks like you won." % (botchoice))
+    rock = wrap(rock)
+
+    def paper(self, irc, msg, args):
+        """takes no arguments
+        Choose paper in Rock, Paper, Scissors.
+        """
+        botchoice2 = random.randint(1, 3)
+        if botchoice2 == 1:
+            botchoice = "rock"
+        elif botchoice2 == 2:
+            botchoice = "paper"
+        elif botchoice2 == 3:
+            botchoice = "scissors"
+        userchoice = "paper"
+        if botchoice == userchoice:
+            irc.reply("I chose %s. Looks like we tied." % (botchoice))
+        elif botchoice == "scissors" and userchoice == "paper":
+            irc.reply("I chose %s. Looks like I won." % (botchoice))
+        elif botchoice == "rock" and userchoice == "paper":
+            irc.reply("I chose %s. Looks like you won." % (botchoice))
+    paper = wrap(paper)
+
+    def scissors(self, irc, msg, args):
+        """takes no arguments
+        Choose scissors in Rock, Paper, Scissors.
+        """
+        botchoice2 = random.randint(1, 3)
+        if botchoice2 == 1:
+            botchoice = "rock"
+        elif botchoice2 == 2:
+            botchoice = "paper"
+        elif botchoice2 == 3:
+            botchoice = "scissors"
+        userchoice = "scissors"
+        if botchoice == userchoice:
+            irc.reply("I chose %s. Looks like we tied." % (botchoice))
+        elif botchoice == "rock" and userchoice == "scissors":
+            irc.reply("I chose %s. Looks like I won." % (botchoice))
+        elif botchoice == "paper" and userchoice == "scissors":
+            irc.reply("I chose %s. Looks like you won." % (botchoice))
+    scissors = wrap(scissors)
+
 Class = Fun
