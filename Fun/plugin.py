@@ -285,5 +285,20 @@ class Fun(callbacks.Plugin):
         elif botchoice == "paper" and userchoice == "scissors":
             irc.reply("I chose %s. Looks like you won." % (botchoice))
     scissors = wrap(scissors)
+    
+    def catgif(self, irc, msg, args):
+        """
+        Get a random cat .gif
+        """
+        try:
+            response = utils.web.getUrl("http://edgecats.net/random").decode("utf8")
+            # Expecting a link
+            if "http" in response:
+                irc.reply(response)
+            else:
+                self.log.error("Received unexpected response from http://edgecats.net/random")
+        except:
+            self.log.exception("Error fetching URL")
+    catgif = wrap(catgif)
 
 Class = Fun
