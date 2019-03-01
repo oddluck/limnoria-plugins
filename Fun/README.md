@@ -8,7 +8,7 @@ requirements: limnoria (obviously) python 3, requests, html, arrr, bs4
 pip install requests html arrr bs4
 
 
-commands: advice, ascii, bofh, buzz, cat fact, devexcuse, insult, joke, paper, piglatin, pirate, rock, scissors, startup, useless
+commands: advice, ascii, bofh, buzz, catfact, catgif, devexcuse, insult, joke, paper, piglatin, pirate, rock, scissors, startup, useless
 
 
 ascii --fontlist to get list of fonts
