@@ -30,12 +30,12 @@
 
 from supybot.test import *
 
-class TriviaTestCase(ChannelPluginTestCase):
-    plugins = ('Trivia',)
+class JeopardyTestCase(ChannelPluginTestCase):
+    plugins = ('Jeopardy',)
 
     def testStartStop(self):
         self.assertRegexp('start', '...#1 of 10:.*')
-        self.assertResponse('stop', 'Trivia stopping.')
+        self.assertResponse('stop', 'Jeopardy! stopping.')
         self.assertError('stop')
 
 
