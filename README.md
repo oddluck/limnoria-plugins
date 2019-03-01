@@ -7,7 +7,7 @@ Requires Limnoria, obviously. Additional requirements in readmes or requirements
 
 <b>Jeopardy</b>
 
-Fork of Triva (https://github.com/ProgVal/Supybot-plugins/tree/master/Trivia) reconfigured to use jservice.io (156,800+ Jeopardy! questions) as trivia source
+Fork of Trivia (https://github.com/ProgVal/Supybot-plugins/tree/master/Trivia) reconfigured to use jservice.io (156,800+ Jeopardy! questions) as trivia source
 
 
 <b>Geo</b>
