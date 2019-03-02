@@ -2,4 +2,4 @@ Fork of Trivia (https://github.com/ProgVal/Supybot-plugins/tree/master/Trivia) r
 
 pip install requests unidecode
 
-start --num <int> --cat <int> | optionally specify # of questions or category id
+start --num <int> --cat <int> | optionally specify number of questions or category id
