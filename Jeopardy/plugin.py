@@ -121,21 +121,25 @@ class Jeopardy(callbacks.Plugin):
                     line = f.readline()
                 f.close()
             else:
-                if self.category == 'random':
-                    data = requests.get("http://jservice.io/api/random?&count=100").json()
-                else:
-                    data = requests.get("http://jservice.io/api/clues?&count=100&category={0}".format(self.category)).json()
-                for item in data:
-                    question = re.sub('<[^<]+?>', '', unidecode(item['question'])).replace('\\', '').strip()
-                    airdate = item['airdate'].split('T')
-                    answer = re.sub('<[^<]+?>', '', unidecode(item['answer'])).replace('\\', '').strip()
-                    category = unidecode(item['category']['title']).strip().title()
-                    invalid = item['invalid_count']
-                    points = self.points
-                    if item['value']:
-                        points = int(item['value'])
-                    if question and airdate and answer and category and points and not invalid:
-                        self.questions.append("({0}) [${1}] {2}: {3}*{4}*{5}".format(airdate[0], str(points), category, question, answer, points))
+                n = 0
+                while n < self.num:
+                    if self.category == 'random':
+                        data = requests.get("http://jservice.io/api/random?&count=100").json()
+                    else:
+                        data = requests.get("http://jservice.io/api/clues?&count=100&category={0}".format(self.category)).json()
+                    random.shuffle(data)
+                    for item in data:
+                        question = re.sub('<[^<]+?>', '', unidecode(item['question'])).replace('\\', '').strip()
+                        airdate = item['airdate'].split('T')
+                        answer = re.sub('<[^<]+?>', '', unidecode(item['answer'])).replace('\\', '').strip()
+                        category = unidecode(item['category']['title']).strip().title()
+                        invalid = item['invalid_count']
+                        points = self.points
+                        if item['value']:
+                            points = int(item['value'])
+                        if question and airdate and answer and category and points and not invalid:
+                            self.questions.append("({0}) [${1}] {2}: {3}*{4}*{5}".format(airdate[0], str(points), category, question, answer, points))
+                            n += 1
             if self.registryValue('randomize', channel):
                 random.shuffle(self.questions)
             try:
