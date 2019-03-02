@@ -93,13 +93,14 @@ class Jeopardy(callbacks.Plugin):
 
 
     class Game:
-        def __init__(self, irc, channel, num, plugin):
+        def __init__(self, irc, channel, num, category, plugin):
             self.rng = random.Random()
             self.rng.seed()
             self.registryValue = plugin.registryValue
             self.irc = irc
             self.channel = channel
             self.num = num
+            self.category = category
             self.numAsked = 0
             self.hints = 0
             self.games = plugin.games
@@ -119,13 +120,11 @@ class Jeopardy(callbacks.Plugin):
                     self.questions.append(line.strip('\n\r'))
                     line = f.readline()
                 f.close()
-                if self.registryValue('randomize', channel): random.shuffle(self.questions)
-                try:
-                    schedule.removeEvent('next_%s' % self.channel)
-                except KeyError:
-                    pass
             else:
-                data = requests.get("http://jservice.io/api/random?&count=100").json()
+                if self.category == 'random':
+                    data = requests.get("http://jservice.io/api/random?&count=100").json()
+                else:
+                    data = requests.get("http://jservice.io/api/clues?&count=100&category={0}".format(self.category)).json()
                 for item in data:
                     question = re.sub('<[^<]+?>', '', unidecode(item['question'])).replace('\\', '').strip()
                     airdate = item['airdate'].split('T')
@@ -137,7 +136,14 @@ class Jeopardy(callbacks.Plugin):
                         points = int(item['value'])
                     if question and airdate and answer and category and points and not invalid:
                         self.questions.append("({0}) [${1}] {2}: {3}*{4}*{5}".format(airdate[0], str(points), category, question, answer, points))
+            if self.registryValue('randomize', channel):
+                random.shuffle(self.questions)
+            try:
+                schedule.removeEvent('next_%s' % self.channel)
+            except KeyError:
+                pass
             self.newquestion()
+
 
         def newquestion(self):
             inactiveShutoff = self.registryValue('inactiveShutoff',
@@ -301,17 +307,20 @@ class Jeopardy(callbacks.Plugin):
             return thisrow[len(seq2) - 1]
 
     @internationalizeDocstring
-    def start(self, irc, msg, args, channel, num):
-        """[<channel>] [<number of questions>]
+    def start(self, irc, msg, args, channel, optlist):
+        """[<channel>] [--num <number of questions>] [--cat <category>]
 
         Starts a game of Jeopardy! <channel> is only necessary if the message
         isn't sent in the channel itself."""
-        if num == None:
+        optlist = dict(optlist)
+        if 'num' in optlist:
+            num = optlist.get('num')
+        else:
             num = self.registryValue('defaultRoundLength', channel)
-        #elif num > 100:
-        #    irc.reply('sorry, for now, you can\'t start games with more '
-        #              'than 100 questions :(')
-        #    num = 100
+        if 'cat' in optlist:
+            category = optlist.get('cat')
+        else:
+            category = 'random'
         channel = ircutils.toLower(channel)
         if channel in self.games:
             if not self.games[channel].active:
@@ -327,9 +336,9 @@ class Jeopardy(callbacks.Plugin):
                 irc.reply(_('%d questions added to active game!') % num)
         else:
             irc.reply("This... is... Jeopardy!", prefixNick=False)
-            self.games[channel] = self.Game(irc, channel, num, self)
+            self.games[channel] = self.Game(irc, channel, num, category, self)
         irc.noReply()
-    start = wrap(start, ['channel', optional('positiveInt')])
+    start = wrap(start, ['channel', getopts({'num':'int', 'cat':'int'})])
 
     @internationalizeDocstring
     def stop(self, irc, msg, args, channel):
