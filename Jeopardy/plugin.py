@@ -364,6 +364,17 @@ class Jeopardy(callbacks.Plugin):
     stop = wrap(stop, ['channel'])
 
 
+    def categories(self, irc, msg, args):
+        """
+        Returns list of popular jeopardy! categories and their category ID #
+        """
+        data = open("{0}/categories.txt".format(os.path.dirname(os.path.abspath(__file__))))
+        text = data.read()
+        reply = text.splitlines()
+        irc.reply(str(reply).replace("[", "").replace("]", "").replace("'", ""))
+    categories = wrap(categories)
+
+
 Class = Jeopardy
 
 
