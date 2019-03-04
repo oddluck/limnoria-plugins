@@ -121,6 +121,13 @@ class Jeopardy(callbacks.Plugin):
                     line = f.readline()
                 f.close()
             else:
+                self.historyfile = self.registryValue('historyFile')
+                if not os.path.exists(self.historyfile):
+                    f = open(self.historyfile, 'w')
+                    f.write('Nothing:Nothing\n')
+                    f.close()
+                with open(self.historyfile) as f:
+                    history = f.read().splitlines()
                 n = 0
                 while n < self.num:
                     if self.category == 'random':
@@ -129,6 +136,7 @@ class Jeopardy(callbacks.Plugin):
                         data = requests.get("http://jservice.io/api/clues?&count=100&category={0}".format(self.category)).json()
                     random.shuffle(data)
                     for item in data:
+                        id = item['id']
                         question = re.sub('<[^<]+?>', '', unidecode(item['question'])).replace('\\', '').strip()
                         airdate = item['airdate'].split('T')
                         answer = re.sub('<[^<]+?>', '', unidecode(item['answer'])).replace('\\', '').strip()
@@ -137,8 +145,8 @@ class Jeopardy(callbacks.Plugin):
                         points = self.points
                         if item['value']:
                             points = int(item['value'])
-                        if question and airdate and answer and category and points and not invalid:
-                            self.questions.append("({0}) [${1}] {2}: {3}*{4}*{5}".format(airdate[0], str(points), category, question, answer, points))
+                        if question and airdate and answer and category and points and not invalid and "{0}:{1}".format(self.channel, id) not in history:
+                            self.questions.append("{0}:{1}*({2}) [${3}] {4}: {5}*{6}*{7}".format(self.channel, id, airdate[0], str(points), category, question, answer, points))
                             n += 1
             if self.registryValue('randomize', channel):
                 random.shuffle(self.questions)
@@ -163,18 +171,27 @@ class Jeopardy(callbacks.Plugin):
             if not self.active:
                 self.stop()
                 return
+            self.id = None
             self.hints = 0
             self.num -= 1
             self.numAsked += 1
-            q = self.questions.pop(len(self.questions)-1)
             sep = self.registryValue('questionFileSeparator')
-            self.q = q[:q.find(sep)]
-            self.a = q[q.find(sep)+len(sep):].split(sep)
-            if self.a[1]:
-                self.p = int(self.a[1])
-                del self.a[1]
+            q = self.questions.pop(len(self.questions)-1).split(sep)
+            if q[0].startswith('#'):
+                self.id = q[0]
+                self.q = q[1]
+                self.a = [q[2]] 
+                if q[3]:
+                    self.p = int(q[3])
+                else:
+                    self.p = self.points
             else:
-                self.p = self.points
+                self.q = q[0]
+                self.a = [q[1]]
+                if q[2]:
+                    self.p = int(q[2])
+                else:
+                    self.p = self.points
             color = self.registryValue('color', self.channel)
             self.reply(_('\x03%s#%d of %d: %s') % (color, self.numAsked,
                                                 self.total, self.q))
@@ -182,6 +199,10 @@ class Jeopardy(callbacks.Plugin):
             blankChar = self.registryValue('blankChar', self.channel)
             blank = re.sub('\w', blankChar, ans)
             self.reply("HINT: {0}".format(blank))
+            if self.id:
+                f = open(self.historyfile, 'a')
+                f.write("{0}\n".format(self.id))
+                f.close()
 
             def event():
                 self.timedEvent()
