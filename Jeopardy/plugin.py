@@ -408,6 +408,7 @@ class Jeopardy(callbacks.Plugin):
         data = open("{0}/categories.txt".format(os.path.dirname(os.path.abspath(__file__))))
         text = data.read()
         reply = text.splitlines()
+        irc.reply("Vist http://jservice.io/search to search for more categories. Add --cat <id_number> to the start command to select category.")
         irc.reply(str(reply).replace("[", "").replace("]", "").replace("'", ""))
     categories = wrap(categories)
 
