@@ -133,7 +133,23 @@ class Jeopardy(callbacks.Plugin):
                     if self.category == 'random':
                         data = requests.get("http://jservice.io/api/random?&count=100").json()
                     else:
-                        data = requests.get("http://jservice.io/api/clues?&count=100&category={0}".format(self.category)).json()
+                        data = requests.get("http://jservice.io/api/clues?&category={0}".format(self.category)).json()
+                        cluecount = data[0]['category']['clues_count']
+                        if cluecount > 100:
+                            data1 = requests.get("http://jservice.io/api/clues?&category={0}&offset=100".format(self.category)).json()
+                            data.extend(data1)
+                        if cluecount > 200:
+                            data2 = requests.get("http://jservice.io/api/clues?&category={0}&offset=200".format(self.category)).json()
+                            data.extend(data2)
+                        if cluecount > 300:
+                            data3 = requests.get("http://jservice.io/api/clues?&category={0}&offset=300".format(self.category)).json()
+                            data.extend(data3)
+                        if cluecount > 400:
+                            data4 = requests.get("http://jservice.io/api/clues?&category={0}&offset=400".format(self.category)).json()
+                            data.extend(data4)
+                        if cluecount > 500:
+                            data5 = requests.get("http://jservice.io/api/clues?&category={0}&offset=500".format(self.category)).json()
+                            data.extend(data5)
                     random.shuffle(data)
                     for item in data:
                         id = item['id']
