@@ -136,20 +136,15 @@ class Jeopardy(callbacks.Plugin):
                         data = requests.get("http://jservice.io/api/clues?&category={0}".format(self.category)).json()
                         cluecount = data[0]['category']['clues_count']
                         if cluecount > 100:
-                            data1 = requests.get("http://jservice.io/api/clues?&category={0}&offset=100".format(self.category)).json()
-                            data.extend(data1)
+                            data.extend(requests.get("http://jservice.io/api/clues?&category={0}&offset=100".format(self.category)).json())
                         if cluecount > 200:
-                            data2 = requests.get("http://jservice.io/api/clues?&category={0}&offset=200".format(self.category)).json()
-                            data.extend(data2)
+                            data.extend(requests.get("http://jservice.io/api/clues?&category={0}&offset=200".format(self.category)).json())
                         if cluecount > 300:
-                            data3 = requests.get("http://jservice.io/api/clues?&category={0}&offset=300".format(self.category)).json()
-                            data.extend(data3)
+                            data.extend(requests.get("http://jservice.io/api/clues?&category={0}&offset=300".format(self.category)).json())
                         if cluecount > 400:
-                            data4 = requests.get("http://jservice.io/api/clues?&category={0}&offset=400".format(self.category)).json()
-                            data.extend(data4)
+                            data.extend(requests.get("http://jservice.io/api/clues?&category={0}&offset=400".format(self.category)).json())
                         if cluecount > 500:
-                            data5 = requests.get("http://jservice.io/api/clues?&category={0}&offset=500".format(self.category)).json()
-                            data.extend(data5)
+                            data.extend(requests.get("http://jservice.io/api/clues?&category={0}&offset=500".format(self.category)).json())
                     random.shuffle(data)
                     for item in data:
                         id = item['id']
@@ -162,8 +157,9 @@ class Jeopardy(callbacks.Plugin):
                         if item['value']:
                             points = int(item['value'])
                         if question and airdate and answer and category and points and not invalid and "{0}:{1}".format(self.channel, id) not in history:
-                            self.questions.append("{0}:{1}*({2}) [${3}] {4}: {5}*{6}*{7}".format(self.channel, id, airdate[0], str(points), category, question, answer, points))
+                            self.questions.append("{0}:{1}*({2}) [${3}] \x02{4}: {5}\x0F*{6}*{7}".format(self.channel, id, airdate[0], str(points), category, question, answer, points))
                             n += 1
+                del data
             if self.registryValue('randomize', channel):
                 random.shuffle(self.questions)
             try:
