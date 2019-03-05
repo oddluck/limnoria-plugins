@@ -119,13 +119,13 @@ class Wordgames(callbacks.Plugin):
         # command prefix and the nick is currently playing a guessing game.
         if len(msg.args) > 0:
             channel = msg.args[0]
-        commandChars = conf.supybot.reply.whenAddressedBy.chars
-        if msg.command == 'PRIVMSG' and msg.args[1][0] not in str(commandChars):
-            if not irc.isChannel(channel) and msg.nick:
-                game = self._find_player_game(msg.nick)
-                if game and 'guess' in dir(game):
-                    game.guess(msg.nick, msg.args[1])
-                    return None
+            commandChars = conf.supybot.reply.whenAddressedBy.chars
+            if msg.command == 'PRIVMSG' and msg.args[1][0] not in str(commandChars):
+                if not irc.isChannel(channel) and msg.nick:
+                    game = self._find_player_game(msg.nick)
+                    if game and 'guess' in dir(game):
+                        game.guess(msg.nick, msg.args[1])
+                        return None
         # In all other cases, default to normal message handling
         return self.parent.inFilter(irc, msg)
 
