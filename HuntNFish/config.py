@@ -50,7 +50,7 @@ conf.registerChannelValue(HuntNFish, 'WeightType',
 conf.registerChannelValue(HuntNFish, 'enable',
     registry.Boolean(True, _("""Turns on and off the hunt and fish commands.""")))
 conf.registerChannelValue(HuntNFish, 'successRate',
-    registry.NonNegativeInteger(0, _("""Percent of chance of success""")))
+    registry.NonNegativeInteger(50, _("""Percent of chance of success""")))
 conf.registerChannelValue(HuntNFish, 'huntTargets',
                         registry.CommaSeparatedListOfStrings(["bear","gopher","rabbit","hunter","deer","fox","duck","moose","park ranger","Yogi Bear","Boo Boo Bear","dog named Benji","cow","raccoon","koala bear","camper","channel lurker","your mother","lion","ocelot","house cat"], _("""List of hunting tagets""")))
 conf.registerChannelValue(HuntNFish, 'fishTargets',
