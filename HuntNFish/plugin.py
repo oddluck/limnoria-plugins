@@ -61,8 +61,8 @@ class HuntNFish(callbacks.Plugin):
             with open(hunttrophy, 'w') as f:
                 f.write('Nobody\nnothing\n2')
         if(self.registryValue('enable', msg.args[0])):
-            animals = ['bear', 'gopher', 'rabbit', 'hunter', 'deer', 'fox', 'duck', 'moose', 'park ranger', 'Yogi Bear', 'Boo Boo Bear', 'dog named Benji', 'cow', 'raccoon', 'koala bear', 'camper', 'channel lurker', 'your mother']
-            places = ['in some bushes', 'in a hunting blind', 'in a hole', 'up in a tree', 'in a hiding place', 'out in the open', 'in the middle of a field', 'downtown', 'on a street corner', 'at the local mall']
+            animals = self.registryValue("huntTargets", channel)
+            places = self.registryValue("huntLocales", channel)
 
             with open(hunttrophy, 'r') as f:
                 data = f.readlines()
@@ -112,8 +112,8 @@ class HuntNFish(callbacks.Plugin):
             with open(fishtrophy, 'w') as f:
                 f.write('Nobody\nnothing\n2')
         if(self.registryValue('enable', msg.args[0])):
-            fishes = ('salmon', 'herring', 'yellowfin tuna', 'pink salmon', 'chub', 'barbel', 'perch', 'northern pike', 'brown trout', 'arctic char', 'roach', 'brayling', 'bleak', 'cat fish', 'sun fish', 'old tire', 'rusty tin can', 'genie lamp', 'message in a bottle', 'old log', 'rubber boot' , 'dead body', 'Loch Ness Monster', 'old fishing lure', 'piece of the Titanic', 'chunk of Atlantis', 'squid', 'whale', 'dolphin',  'porpoise' , 'stingray', 'submarine', 'seal', 'seahorse', 'jellyfish', 'starfish', 'electric eel', 'great white shark', 'scuba diver' , 'lag monster', 'virus', 'soggy pack of cigarettes', 'soggy bag of weed', 'boat anchor', 'corpse', 'mermaid', ' merman', 'halibut', 'tiddler', 'sock', 'trout')
-            fishSpots = ('a stream', 'a lake', 'a river', 'a pond', 'an ocean', 'a bathtub', 'a swimming pool', 'a toilet', 'a pile of vomit', 'a pool of urine', 'a kitchen Sink', 'a bathroom sink', 'a mud puddle', 'a pail of water', 'a bowl of Jell-O', 'a wash basin', 'a rain barrel', 'an aquarium', 'a snowbank', 'a waterFall', 'a cup of coffee', 'a glass of milk')
+            fishes = self.registryValue("fishTargets", channel)
+            fishSpots = self.registryValue("fishLocales", channel)
 
             with open(fishtrophy, 'r') as f:
                 data = f.readlines()
