@@ -3,14 +3,16 @@
 ###
 
 # my libs
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 import json
+import requests
+import urllib
 # libraries for time_created_at
 import time
 from datetime import datetime
 # for unescape
 import re
-import htmlentitydefs
+import html.entities
 # oauthtwitter
 import oauth2 as oauth
 # supybot libs
@@ -19,7 +21,7 @@ from supybot.commands import *
 import supybot.plugins as plugins
 import supybot.ircutils as ircutils
 import supybot.callbacks as callbacks
-
+from bs4 import BeautifulSoup
 
 class OAuthApi:
     """OAuth class to work with Twitter v1.1 API."""
@@ -38,7 +40,7 @@ class OAuthApi:
             extra_params.update(parameters)
 
         req = self._makeOAuthRequest(url, params=extra_params)
-        opener = urllib2.build_opener(urllib2.HTTPHandler(debuglevel=0))
+        opener = urllib.request.build_opener(urllib.request.HTTPHandler(debuglevel=0))
         url = req.to_url()
         url_data = opener.open(url)
         opener.close()
@@ -69,9 +71,9 @@ class OAuthApi:
 
         try:
             data = self._FetchUrl("https://api.twitter.com/1.1/" + call + ".json", parameters)
-        except urllib2.HTTPError, e:  # http error code.
+        except urllib.error.HTTPError as e:  # http error code.
             return e.code
-        except urllib2.URLError, e:  # http "reason"
+        except urllib.error.URLError as e:  # http "reason"
             return e.reason
         else:  # return data if good.
             return data
@@ -87,6 +89,40 @@ class Tweety(callbacks.Plugin):
         self.twitterApi = False
         if not self.twitterApi:
             self._checkAuthorization()
+            
+    def _httpget(self, url, h=None, d=None, l=False):
+        """General HTTP resource fetcher. Pass headers via h, data via d, and to log via l."""
+
+        try:
+            if h and d:
+                page = utils.web.getUrl(url, headers=h, data=d)
+            else:
+                h = {"User-Agent":"Mozilla/5.0 (X11; Ubuntu; Linux i686; rv:17.0) Gecko/20100101 Firefox/17.0"}
+                page = utils.web.getUrl(url, headers=h)
+                try:
+                    page = page.decode()
+                except:
+                    page = page.decode('iso-8859-1')
+            return page
+        except utils.web.Error as e:
+            self.log.error("ERROR opening {0} message: {1}".format(url, e))
+            return None
+
+
+    def _shortenUrl(self, url):
+        """Shortens a long URL into a short one."""
+        
+        api_key = self.registryValue('bitlyKey')
+        url_enc = urllib.parse.quote_plus(url)
+        api_url = 'https://api-ssl.bitly.com/v3/shorten?access_token={}&longUrl={}&format=txt'
+
+        try:
+            url2 = requests.get(api_url.format(api_key, url_enc))
+            if 'RATE_LIMIT_EXCEEDED' in url2.text.strip():
+                return url
+            return url2.text.strip()
+        except:
+            return url
 
     def _checkAuthorization(self):
         """ Check if we have our keys and can auth."""
@@ -110,7 +146,7 @@ class Tweety(callbacks.Plugin):
             data = twitterApi.ApiCall('account/verify_credentials')
             # check the response. if we can load json, it means we're authenticated. else, return response.
             try:  # if we pass, response is validated. set self.twitterApi w/object.
-                json.loads(data.read())
+                json.loads(data.read().decode())
                 self.log.info("I have successfully authorized and logged in to Twitter using your credentials.")
                 self.twitterApi = OAuthApi(self.registryValue('consumerKey'), self.registryValue('consumerSecret'), self.registryValue('accessKey'), self.registryValue('accessSecret'))
             except:  # response failed. Return what we got back.
@@ -159,15 +195,15 @@ class Tweety(callbacks.Plugin):
                 # character reference
                 try:
                     if text[:3] == "&#x":
-                        return unichr(int(text[3:-1], 16))
+                        return chr(int(text[3:-1], 16))
                     else:
-                        return unichr(int(text[2:-1]))
+                        return chr(int(text[2:-1]))
                 except (ValueError, OverflowError):
                     pass
             else:
                 # named entity
                 try:
-                    text = unichr(htmlentitydefs.name2codepoint[text[1:-1]])
+                    text = chr(html.entities.name2codepoint[text[1:-1]])
                 except KeyError:
                     pass
             return text # leave as is
@@ -189,16 +225,16 @@ class Tweety(callbacks.Plugin):
         d = datetime.utcnow() - datetime(*ddate, tzinfo=None)
         # now parse and return.
         if d.days:
-            rel_time = "%sd ago" % abs(d.days)
+            rel_time = "{:1d}d ago".format(abs(d.days))
         elif d.seconds > 3600:
-            rel_time = "%sh ago" % (abs(d.seconds) / 3600)
+            rel_time = "{:.1f}h ago".format(round((abs(d.seconds) / 3600),1))
         elif 60 <= d.seconds < 3600:
-            rel_time = "%sm ago" % (abs(d.seconds) / 60)
+            rel_time = "{:.1f}m ago".format(round((abs(d.seconds) / 60),1))
         else:
             rel_time = "%ss ago" % (abs(d.seconds))
         return rel_time
 
-    def _outputTweet(self, irc, msg, nick, name, text, time, tweetid):
+    def _outputTweet(self, irc, msg, nick, name, verified, text, time, tweetid):
         """
         Constructs string to output for Tweet. Used for tsearch and twitter.
         """
@@ -208,6 +244,9 @@ class Tweety(callbacks.Plugin):
             ret = "@{0}".format(self._ul(self._blue(nick)))
         else:  # bold otherwise.
             ret = "@{0}".format(self._bu(nick))
+        if verified:
+            string = self._bold(ircutils.mircColor("✓", 'white', 'blue'))
+            ret += "{}".format(string)
         # show real name in tweet output?
         if not self.registryValue('hideRealName', msg.args[0]):
             ret += " ({0})".format(name)
@@ -235,7 +274,7 @@ class Tweety(callbacks.Plugin):
             headers = {'Content-Type':'application/json'}
             request = utils.web.getUrl(posturi, data=data, headers=headers)
             return json.loads(request)['id']
-        except Exception, err:
+        except Exception as err:
             self.log.error("ERROR: Failed shortening url: {0} :: {1}".format(longurl, err))
             return None
 
@@ -251,16 +290,14 @@ class Tweety(callbacks.Plugin):
                   "env":"store://datatables.org/alltableswithkeys" }
         # everything in try/except block incase it breaks.
         try:
-            url = "http://query.yahooapis.com/v1/public/yql?"+utils.web.urlencode(params)
-            response = utils.web.getUrl(url)
-            data = json.loads(response)
-
-            if data['query']['count'] > 1:  # return the "first" one.
-                woeid = data['query']['results']['place'][0]['woeid']
-            else:  # if one, return it.
-                woeid = data['query']['results']['place']['woeid']
+            data = requests.get('http://woeid.rosselliot.co.nz/lookup/{0}'.format(lookup))
+            if not data:  # http fetch breaks.
+                irc.reply("ERROR")
+                return
+            soup = BeautifulSoup(data.text)
+            woeid = soup.find("td", class_='woeid').getText()
             return woeid
-        except Exception, err:
+        except Exception as err:
             self.log.error("ERROR: Failed looking up WOEID for '{0}' :: {1}".format(lookup, err))
             return None
 
@@ -294,7 +331,7 @@ class Tweety(callbacks.Plugin):
         # make API call.
         data = self.twitterApi.ApiCall('application/rate_limit_status', parameters={'resources':'trends,search,statuses,users'})
         try:
-            data = json.loads(data.read())
+            data = json.loads(data.read().decode())
         except:
             irc.reply("ERROR: Failed to lookup ratelimit data: {0}".format(data))
             return
@@ -363,7 +400,7 @@ class Tweety(callbacks.Plugin):
         # now build our API call
         data = self.twitterApi.ApiCall('trends/place', parameters=args)
         try:
-            data = json.loads(data.read())
+            data = json.loads(data.read().decode())
         except:
             irc.reply("ERROR: failed to lookup trends on Twitter: {0}".format(data))
             return
@@ -378,7 +415,7 @@ class Tweety(callbacks.Plugin):
                 return
         # if no error here, we found trends. prepare string and output.
         location = data[0]['locations'][0]['name']
-        ttrends = " | ".join([trend['name'].encode('utf-8') for trend in data[0]['trends']])
+        ttrends = " | ".join([trend['name'] for trend in data[0]['trends']])
         irc.reply("Top 10 Twitter Trends in {0} :: {1}".format(self._bold(location), ttrends))
 
     trends = wrap(trends, [getopts({'exclude':''}), optional('text')])
@@ -406,6 +443,7 @@ class Tweety(callbacks.Plugin):
 
         # default arguments.
         tsearchArgs = {'include_entities':'false',
+                       'tweet_mode': 'extended',
                        'count': self.registryValue('defaultSearchResults', msg.args[0]),
                        'lang':'en',
                        'q':utils.web.urlquote(optterm)}
@@ -426,7 +464,7 @@ class Tweety(callbacks.Plugin):
         # now build our API call.
         data = self.twitterApi.ApiCall('search/tweets', parameters=tsearchArgs)
         try:
-            data = json.loads(data.read())
+            data = json.loads(data.read().decode())
         except:
             irc.reply("ERROR: Something went wrong trying to search Twitter. ({0})".format(data))
             return
@@ -437,13 +475,14 @@ class Tweety(callbacks.Plugin):
             return
         else:  # we found something.
             for result in results[0:int(tsearchArgs['count'])]:  # iterate over each.
-                nick = self._unescape(result['user'].get('screen_name').encode('utf-8'))
-                name = self._unescape(result["user"].get('name').encode('utf-8'))
-                text = self._unescape(result.get('text')).encode('utf-8')
+                nick = self._unescape(result['user'].get('screen_name'))
+                name = self._unescape(result["user"].get('name'))
+                verified = result['user'].get('verified')
+                text = self._unescape(result.get('full_text')) or self._unescape(result.get('text'))
                 date = self._time_created_at(result.get('created_at'))
                 tweetid = result.get('id_str')
                 # build output string and output.
-                output = self._outputTweet(irc, msg, nick, name, text, date, tweetid)
+                output = self._outputTweet(irc, msg, nick, name, verified, text, date, tweetid)
                 irc.reply(output)
 
     tsearch = wrap(tsearch, [getopts({'num':('int'),
@@ -451,7 +490,7 @@ class Tweety(callbacks.Plugin):
                                       'lang':('somethingWithoutSpaces')}),
                                      ('text')])
 
-    def twitter(self, irc, msg, args, optlist, optnick):
+    def twitter(self, irc, msg, args, optlist, optnick, opturl):
         """[--noreply] [--nort] [--num number] <nick> | [--id id] | [--info nick]
 
         Returns last tweet or 'number' tweets (max 10). Shows all tweets, including rt and reply.
@@ -479,6 +518,7 @@ class Tweety(callbacks.Plugin):
         args = {'id': False,
                 'nort': False,
                 'noreply': False,
+                'url': False,
                 'num': self.registryValue('defaultResults', msg.args[0]),
                 'info': False}
         # handle input optlist.
@@ -486,6 +526,8 @@ class Tweety(callbacks.Plugin):
             for (key, value) in optlist:
                 if key == 'id':
                     args['id'] = True
+                if key == 'url':
+                    args['url'] = True
                 if key == 'nort':
                     args['nort'] = True
                 if key == 'noreply':
@@ -502,7 +544,7 @@ class Tweety(callbacks.Plugin):
         # handle the three different rest api endpoint urls + twitterArgs dict for options.
         if args['id']:  # -id #.
             apiUrl = 'statuses/show'
-            twitterArgs = {'id': optnick, 'include_entities':'false'}
+            twitterArgs = {'id': optnick, 'include_entities':'false', 'tweet_mode': 'extended'}
         elif args['info']:  # --info.
             apiUrl = 'users/show'
             twitterArgs = {'screen_name': optnick, 'include_entities':'false'}
@@ -520,7 +562,7 @@ class Tweety(callbacks.Plugin):
         # call the Twitter API with our data.
         data = self.twitterApi.ApiCall(apiUrl, parameters=twitterArgs)
         try:
-            data = json.loads(data.read())
+            data = json.loads(data.read().decode())
         except:
             irc.reply("ERROR: Failed to lookup Twitter for '{0}' ({1}) ".format(optnick, data))
             return
@@ -539,13 +581,18 @@ class Tweety(callbacks.Plugin):
                 return
         # no errors, so we process data conditionally.
         if args['id']:  # If --id was given for a single tweet.
-            text = self._unescape(data.get('text')).encode('utf-8')
-            nick = self._unescape(data["user"].get('screen_name').encode('utf-8'))
-            name = self._unescape(data["user"].get('name').encode('utf-8'))
+            url = ''
+            if opturl:
+                url = ' - {}'.format(self._shortenUrl(opturl))
+            text = self._unescape(data.get('full_text')) or self._unescape(data.get('text'))
+            nick = self._unescape(data["user"].get('screen_name'))
+            name = self._unescape(data["user"].get('name'))
+            verified = data["user"].get('verified')
             relativeTime = self._time_created_at(data.get('created_at'))
             tweetid = data.get('id')
             # prepare string to output and send to irc.
-            output = self._outputTweet(irc, msg, nick, name, text, relativeTime, tweetid)
+            output = self._outputTweet(irc, msg, nick, name, verified, text, relativeTime, tweetid)
+            output += url
             irc.reply(output)
             return
         elif args['info']:  # --info to return info on a Twitter user.
@@ -560,22 +607,22 @@ class Tweety(callbacks.Plugin):
             name = self._unescape(data.get('name'))
             url = data.get('url')
             # build output string conditionally. build string conditionally.
-            ret = self._bu("@{0}".format(screen_name.encode('utf-8')))
-            ret += " ({0})".format(name.encode('utf-8'))
+            ret = self._bu("@{0}".format(screen_name))
+            ret += " ({0})".format(name)
             if protected:  # is the account protected/locked?
                 ret += " [{0}]:".format(self._bu('LOCKED'))
             else:  # open.
                 ret += ":"
             if url:  # do they have a url?
-                ret += " {0}".format(self._ul(url.encode('utf-8')))
+                ret += " {0}".format(self._ul(url))
             if description:  # a description?
-                ret += " {0}".format(self._unescape(description).encode('utf-8'))
+                ret += " {0}".format(self._unescape(description))
             ret += " [{0} friends,".format(self._bold(friends))
             ret += " {0} tweets,".format(self._bold(statuses_count))
             ret += " {0} followers,".format(self._bold(followers))
             ret += " signup: {0}".format(self._bold(self._time_created_at(created_at)))
             if location:  # do we have location?
-                ret += " Location: {0}]".format(self._bold(location.encode('utf-8')))
+                ret += " Location: {0}]".format(self._bold(location))
             else: # nope.
                 ret += "]"
             # finally, output.
@@ -586,20 +633,22 @@ class Tweety(callbacks.Plugin):
                 irc.reply("ERROR: '{0}' has not tweeted yet.".format(optnick))
                 return
             for tweet in data:  # n+1 tweets found. iterate through each tweet.
-                text = self._unescape(tweet.get('text')).encode('utf-8')
-                nick = self._unescape(tweet["user"].get('screen_name').encode('utf-8'))
-                name = self._unescape(tweet["user"].get('name').encode('utf-8'))
+                text = self._unescape(tweet.get('text')) or self._unescape(tweet.get('full_text'))
+                nick = self._unescape(tweet["user"].get('screen_name'))
+                name = self._unescape(tweet["user"].get('name'))
+                verified = tweet['user'].get('verified')
                 tweetid = tweet.get('id')
                 relativeTime = self._time_created_at(tweet.get('created_at'))
                 # prepare string to output and send to irc.
-                output = self._outputTweet(irc, msg, nick, name, text, relativeTime, tweetid)
+                output = self._outputTweet(irc, msg, nick, name, verified, text, relativeTime, tweetid)
                 irc.reply(output)
 
     twitter = wrap(twitter, [getopts({'noreply':'',
                                       'nort':'',
                                       'info':'',
                                       'id':'',
-                                      'num':('int')}), ('somethingWithoutSpaces')])
+                                      'url':'',
+                                      'num':('int')}), ('somethingWithoutSpaces'), optional('somethingWithoutSpaces')])
 
 Class = Tweety
 
