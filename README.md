@@ -4,6 +4,7 @@ repolist oddluck / install oddluck Plugin_Name
 
 Requires Limnoria, obviously. Additional requirements in readmes or requirements.txt files
 
+gitlab mirror: https://gitlab.com/oddluck/limnoria-plugins
 
 <b>Jeopardy</b>
 
