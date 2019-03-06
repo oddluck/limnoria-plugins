@@ -32,67 +32,74 @@
 import supybot.conf as conf
 import supybot.registry as registry
 from supybot.i18n import PluginInternationalization, internationalizeDocstring
-_ = PluginInternationalization('Trivia')
+_ = PluginInternationalization('Jeopardy')
 def configure(advanced):
     # This will be called by supybot to configure this module.  advanced is
     # a bool that specifies whether the user identified himself as an advanced
     # user or not.  You should effect your configuration by manipulating the
     # registry as appropriate.
     from supybot.questions import expect, anything, something, yn
-    conf.registerPlugin('Trivia', True)
+    conf.registerPlugin('Jeopardy', True)
 
 
-Trivia = conf.registerPlugin('Trivia')
+Jeopardy = conf.registerPlugin('Jeopardy')
 # This is where your configuration variables (if any) should go.  For example:
-# conf.registerGlobalValue(Trivia, 'someConfigVariableName',
+# conf.registerGlobalValue(Jeopardy, 'someConfigVariableName',
 #     registry.Boolean(False, """Help for someConfigVariableName."""))
 
-conf.registerChannelValue(Trivia, 'blankChar',
+conf.registerChannelValue(Jeopardy, 'blankChar',
         registry.String('*', _("""The character used for a blank when
         displaying hints""")))
 
-conf.registerChannelValue(Trivia, 'numHints',
+conf.registerChannelValue(Jeopardy, 'numHints',
         registry.PositiveInteger(3, _("""The number of hints to be given for
         each question""")))
 
-conf.registerChannelValue(Trivia, 'timeout',
+conf.registerChannelValue(Jeopardy, 'timeout',
         registry.PositiveInteger(90, _("""The number of seconds to allow for
         each question""")))
 
-conf.registerChannelValue(Trivia, 'hintPercentage',
+conf.registerChannelValue(Jeopardy, 'hintPercentage',
         registry.Probability(0.25, _("""The fraction of the answer that
         should be revealed with each hint""")))
 
-conf.registerChannelValue(Trivia, 'flexibility',
-        registry.PositiveInteger(8, _("""The flexibility of the trivia answer
+conf.registerChannelValue(Jeopardy, 'flexibility',
+        registry.PositiveInteger(8, _("""The flexibility of the answer
         checker.  One typo will be allowed for every __ characters.""")))
 
-conf.registerChannelValue(Trivia, 'color',
-        registry.PositiveInteger(10, _("""The mIRC color to use for trivia
-        questions""")))
+conf.registerChannelValue(Jeopardy, 'color',
+        registry.PositiveInteger(10, _("""The mIRC color to use for questions""")))
 
-conf.registerChannelValue(Trivia, 'inactiveShutoff',
-        registry.Integer(6, _("""The number of questions that can go
-        unanswered before the trivia stops automatically.""")))
+conf.registerChannelValue(Jeopardy, 'inactiveShutoff',
+        registry.Integer(5, _("""The number of questions that can go
+        unanswered before the game stops automatically.""")))
 
-conf.registerGlobalValue(Trivia, 'scoreFile',
-        registry.String('scores.txt', _("""The path to the scores file.
+conf.registerGlobalValue(Jeopardy, 'scoreFile',
+        registry.String('data/JeopardyScores.txt', _("""The path to the scores file.
         If it doesn't exist, it will be created.""")))
 
-conf.registerGlobalValue(Trivia, 'questionFile',
-        registry.String('questions.txt', _("""The path to the questions file.
-        If it doesn't exist, it will be created.""")))
+conf.registerGlobalValue(Jeopardy, 'questionFile',
+        registry.String('jservice.io', _("""Use jservice.io for Jeopardy! Or, the
+        path to the questions file. If it doesn't exist, it will be created.""")))
 
-conf.registerChannelValue(Trivia, 'defaultRoundLength',
+conf.registerGlobalValue(Jeopardy, 'historyFile',
+        registry.String('data/JeopardyHistory.txt', _("""Location of the history file to
+        keep a record of previously asked Jeopardy! questions in each channel""")))
+
+conf.registerChannelValue(Jeopardy, 'defaultRoundLength',
         registry.PositiveInteger(10, _("""The default number of questions to
-        be asked in a round of trivia.""")))
+        be asked in a round.""")))
 
-conf.registerGlobalValue(Trivia, 'questionFileSeparator',
-        registry.String('*', _("""The separator used between the questions
-        and answers in your trivia file.""")))
+conf.registerGlobalValue(Jeopardy, 'questionFileSeparator',
+        registry.String('*', _("""The separator used between the questions,
+        answers, and points in your question file.""")))
 
-conf.registerChannelValue(Trivia, 'randomize',
+conf.registerChannelValue(Jeopardy, 'randomize',
         registry.Boolean('True', _("""This will determine whether or not the
-        bot will randomize the trivia questions.""")))
+        bot will randomize the questions.""")))
+
+conf.registerChannelValue(Jeopardy, 'defaultPointValue',
+        registry.PositiveInteger(500, _("""The default point value for questions if
+        no point value is given""")))
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:

@@ -64,7 +64,7 @@ class Uno(callbacks.Plugin):
     def start(self, irc, msg, args, text):
         """takes no arguments
         
-        Start a new game of Uno. For the rules of the game, use the unorules command.
+        Start a new game of Uno. For the rules of the game, use the uno rules command.
         """
         try:
             self._read_options(irc)
@@ -106,7 +106,7 @@ class Uno(callbacks.Plugin):
             self.game[table]['players'][nick]={}
             #self.game[table]['nplayers']=int(self.channeloptions[gametype+'_nplayers'])
             self.game[table]['nplayers']=int(self.channeloptions['nplayers'])
-            irc.reply('%s has started a new game of %s at table %s. For the rules of the game, type "%sunorules". To accept this challenge, join with "%suno join". To add a cpu player, type "%suno join cpu".' % (nick, gametype.capitalize(), table+1, self.prefixChar,self.prefixChar,self.prefixChar), prefixNick=False)
+            irc.reply('%s has started a new game of %s at table %s. For the rules of the game, type "%suno rules". To accept this challenge, join with "%suno join". To add a cpu player, type "%suno join cpu".' % (nick, gametype.capitalize(), table+1, self.prefixChar,self.prefixChar,self.prefixChar), prefixNick=False)
         self.game[table]['phase']='join'
         
     start = wrap(start, ['public', optional('something')])

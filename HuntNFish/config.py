@@ -50,7 +50,13 @@ conf.registerChannelValue(HuntNFish, 'WeightType',
 conf.registerChannelValue(HuntNFish, 'enable',
     registry.Boolean(True, _("""Turns on and off the hunt and fish commands.""")))
 conf.registerChannelValue(HuntNFish, 'successRate',
-    registry.NonNegativeInteger(20, _("""Percent of chance of success""")))
-
-
+    registry.NonNegativeInteger(50, _("""Percent of chance of success""")))
+conf.registerChannelValue(HuntNFish, 'huntTargets',
+                        registry.CommaSeparatedListOfStrings(["bear","gopher","rabbit","hunter","deer","fox","duck","moose","park ranger","Yogi Bear","Boo Boo Bear","dog named Benji","cow","raccoon","koala bear","camper","channel lurker","your mother","lion","ocelot","house cat"], _("""List of hunting tagets""")))
+conf.registerChannelValue(HuntNFish, 'fishTargets',
+                        registry.CommaSeparatedListOfStrings(["salmon","herring","yellowfin tuna","pink salmon","chub","barbel","perch","northern pike","brown trout","arctic char","roach","brayling","bleak","cat fish","sun fish","old tire","rusty tin can","genie lamp","message in a bottle","old log","rubber boot","dead body","Loch Ness Monster","old fishing lure","piece of the Titanic","chunk of Atlantis","squid","whale","dolphin","porpoise","stingray","submarine","seal","seahorse","jellyfish","starfish","electric eel","great white shark","scuba diver","lag monster","virus","soggy pack of cigarettes","soggy bag of weed","boat anchor","corpse","mermaid"," merman","halibut","tiddler","sock","trout"], _("""List of fishing targets""")))
+conf.registerChannelValue(HuntNFish, 'huntLocales',
+                        registry.CommaSeparatedListOfStrings(["in some bushes","in a hunting blind","in a hole","up in a tree","in a hiding place","out in the open","in the middle of a field","downtown","on a street corner","at the local mall"], _("""List of hunting locales""")))
+conf.registerChannelValue(HuntNFish, 'fishLocales',
+                        registry.CommaSeparatedListOfStrings(["a stream","a lake","a river","a pond","an ocean","a bathtub","a swimming pool","a toilet","a pile of vomit","a pool of urine","a kitchen Sink","a bathroom sink","a mud puddle","a pail of water","a bowl of Jell-O","a wash basin","a rain barrel","an aquarium","a snowbank","a waterFall","a cup of coffee","a glass of milk"], _("""List of fishing locales""")))
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
