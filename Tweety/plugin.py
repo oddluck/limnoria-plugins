@@ -633,7 +633,7 @@ class Tweety(callbacks.Plugin):
                 irc.reply("ERROR: '{0}' has not tweeted yet.".format(optnick))
                 return
             for tweet in data:  # n+1 tweets found. iterate through each tweet.
-                text = self._unescape(tweet.get('full_text')) or self._unescape(tweet.get('text'))
+                text = self._unescape(tweet.get('text')) or self._unescape(tweet.get('full_text'))
                 nick = self._unescape(tweet["user"].get('screen_name'))
                 name = self._unescape(tweet["user"].get('name'))
                 verified = tweet['user'].get('verified')
