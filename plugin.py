@@ -21,7 +21,7 @@ from supybot.commands import *
 import supybot.plugins as plugins
 import supybot.ircutils as ircutils
 import supybot.callbacks as callbacks
-
+from bs4 import BeautifulSoup
 
 class OAuthApi:
     """OAuth class to work with Twitter v1.1 API."""
@@ -290,14 +290,12 @@ class Tweety(callbacks.Plugin):
                   "env":"store://datatables.org/alltableswithkeys" }
         # everything in try/except block incase it breaks.
         try:
-            url = "http://query.yahooapis.com/v1/public/yql?"+utils.web.urlencode(params)
-            response = utils.web.getUrl(url)
-            data = json.loads(response)
-
-            if data['query']['count'] > 1:  # return the "first" one.
-                woeid = data['query']['results']['place'][0]['woeid']
-            else:  # if one, return it.
-                woeid = data['query']['results']['place']['woeid']
+            data = requests.get('http://woeid.rosselliot.co.nz/lookup/{0}'.format(lookup))
+            if not data:  # http fetch breaks.
+                irc.reply("ERROR")
+                return
+            soup = BeautifulSoup(data.text)
+            woeid = soup.find("td", class_='woeid').getText()
             return woeid
         except Exception as err:
             self.log.error("ERROR: Failed looking up WOEID for '{0}' :: {1}".format(lookup, err))
@@ -635,7 +633,7 @@ class Tweety(callbacks.Plugin):
                 irc.reply("ERROR: '{0}' has not tweeted yet.".format(optnick))
                 return
             for tweet in data:  # n+1 tweets found. iterate through each tweet.
-                text = self._unescape(data.get('full_text')) or self._unescape(data.get('text'))
+                text = self._unescape(tweet.get('full_text')) or self._unescape(tweet.get('text'))
                 nick = self._unescape(tweet["user"].get('screen_name'))
                 name = self._unescape(tweet["user"].get('name'))
                 verified = tweet['user'].get('verified')
