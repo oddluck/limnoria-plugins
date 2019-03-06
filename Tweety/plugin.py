@@ -114,14 +114,17 @@ class Tweety(callbacks.Plugin):
         
         api_key = self.registryValue('bitlyKey')
         url_enc = urllib.parse.quote_plus(url)
-        api_url = 'https://api-ssl.bitly.com/v3/shorten?access_token={}&longUrl={}&format=txt'
+        api_url = 'https://api-ssl.bitly.com/v3/shorten?access_token={}&longUrl={}&format=json'
 
         try:
-            url2 = requests.get(api_url.format(api_key, url_enc))
-            if 'RATE_LIMIT_EXCEEDED' in url2.text.strip():
+            data = requests.get(api_url.format(api_key, url_enc)).json()
+            url2 = data['data'].get('url')
+            if url2.strip():
+                return url2.strip()
+            else:
                 return url
-            return url2.text.strip()
         except:
+            self.log.error("ERROR: Failed shortening url: {0}".format(longurl))
             return url
 
     def _checkAuthorization(self):
@@ -267,16 +270,20 @@ class Tweety(callbacks.Plugin):
     def _createShortUrl(self, nick, tweetid):
         """Shortens a tweet into a short one."""
 
+        api_key = self.registryValue('bitlyKey')
+        longurl = "https://twitter.com/%s/status/%s" % (nick, tweetid)
+        api_url = 'https://api-ssl.bitly.com/v3/shorten?access_token={}&longUrl={}&format=json'
+
         try:
-            longurl = "https://twitter.com/#!/%s/status/%s" % (nick, tweetid)
-            posturi = "https://www.googleapis.com/urlshortener/v1/url"
-            data = json.dumps({'longUrl': longurl})
-            headers = {'Content-Type':'application/json'}
-            request = utils.web.getUrl(posturi, data=data, headers=headers)
-            return json.loads(request)['id']
-        except Exception as err:
-            self.log.error("ERROR: Failed shortening url: {0} :: {1}".format(longurl, err))
-            return None
+            data = requests.get(api_url.format(api_key, longurl)).json()
+            url2 = data['data'].get('url')
+            if url2.strip():
+                return url2.strip()
+            else:
+                return longurl
+        except:
+            self.log.error("ERROR: Failed shortening url: {0}".format(longurl))
+            return longurl
 
     def _woeid_lookup(self, lookup):
         """<location>
