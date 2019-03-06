@@ -131,7 +131,7 @@ class Jeopardy(callbacks.Plugin):
                 n = 0
                 while n < self.num:
                     if self.category == 'random':
-                        data = requests.get("http://jservice.io/api/random?&count=100").json()
+                        data = requests.get("http://jservice.io/api/random").json()
                     else:
                         data = requests.get("http://jservice.io/api/clues?&category={0}".format(self.category)).json()
                         cluecount = data[0]['category']['clues_count']
@@ -145,7 +145,7 @@ class Jeopardy(callbacks.Plugin):
                             data.extend(requests.get("http://jservice.io/api/clues?&category={0}&offset=400".format(self.category)).json())
                         if cluecount > 500:
                             data.extend(requests.get("http://jservice.io/api/clues?&category={0}&offset=500".format(self.category)).json())
-                    random.shuffle(data)
+                        random.shuffle(data)
                     for item in data:
                         id = item['id']
                         question = re.sub('<[^<]+?>', '', unidecode(item['question'])).replace('\\', '').strip()
