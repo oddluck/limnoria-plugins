@@ -1,2 +1,3 @@
-git+https://github.com/ProgVal/Limnoria.git
-oauth2==1.5.211
+oauth2
+requests
+bs4
