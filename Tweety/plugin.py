@@ -550,7 +550,7 @@ class Tweety(callbacks.Plugin):
             twitterArgs = {'screen_name': optnick, 'include_entities':'false'}
         else:  # if not an --id or --info, we're printing from their timeline.
             apiUrl = 'statuses/user_timeline'
-            twitterArgs = {'screen_name': optnick, 'count': args['num']}
+            twitterArgs = {'screen_name': optnick, 'count': args['num'], 'tweet_mode': 'extended'}
             if args['nort']:  # show retweets?
                 twitterArgs['include_rts'] = 'false'
             else:  # default is to show retweets.
@@ -633,7 +633,7 @@ class Tweety(callbacks.Plugin):
                 irc.reply("ERROR: '{0}' has not tweeted yet.".format(optnick))
                 return
             for tweet in data:  # n+1 tweets found. iterate through each tweet.
-                text = self._unescape(tweet.get('text')) or self._unescape(tweet.get('full_text'))
+                text = self._unescape(tweet.get('full_text')) or self._unescape(tweet.get('text'))
                 nick = self._unescape(tweet["user"].get('screen_name'))
                 name = self._unescape(tweet["user"].get('name'))
                 verified = tweet['user'].get('verified')
