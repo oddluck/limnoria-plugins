@@ -31,20 +31,20 @@ class WikiLeaf(callbacks.Plugin):
         """<strain>
         Searches API based on user input
         """
-        strain = strain.replace(" ", "-").replace("#", "-").lower()
+        strain = strain.replace(" ", "-").replace("#", "").lower()
         url = "https://www.wikileaf.com/strain/{0}".format(strain)
         data = requests.get(url)
         if not data:  # http fetch breaks.
-                irc.reply("ERROR")
-                return
-        soup = BeautifulSoup(data.text)
-        name = re.sub('\s+', ' ', soup.find("h1", itemprop="name").getText())
-        description = re.sub('\s+', ' ', soup.find("div", itemprop='description').getText())
-        thc = re.sub('\s+', ' ', soup.find_all("div", class_="product-container-header cf")[1].getText())
-        reply = "\x02{0}\x0F | {1} | {2}".format(name.strip(), thc.strip(), description.strip())
-        if reply:
+            irc.reply("ERROR")
+            return
+        try:
+            soup = BeautifulSoup(data.text)
+            name = re.sub('\s+', ' ', soup.find("h1", itemprop="name").getText())
+            description = re.sub('\s+', ' ', soup.find("div", itemprop='description').getText())
+            thc = re.sub('\s+', ' ', soup.find_all("div", class_="product-container-header cf")[1].getText())
+            reply = "\x02{0}\x0F | {1} | {2}".format(name.strip(), thc.strip(), description.strip())
             irc.reply(reply)
-        else:
+        except:
             irc.reply('No results found, what have you been smoking?')
 
     strain = wrap(strain, ['text'])
