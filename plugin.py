@@ -816,6 +816,7 @@ class SpiffyTitles(callbacks.Plugin):
 
         Typical IMDB URL: http://www.imdb.com/title/tt2467372/
         """
+        apikey = self.registryValue('omdbAPI')
         headers = self.get_headers()
         result = None
 
@@ -831,7 +832,7 @@ class SpiffyTitles(callbacks.Plugin):
         # We can only accommodate a specific format of URL here
         if "/title/" in url:
             imdb_id = url.split("/title/")[1].rstrip("/")
-            omdb_url = "http://www.omdbapi.com/?i=%s&plot=short&r=json&tomatoes=true&apikey=7410c07d" % (imdb_id)
+            omdb_url = "http://www.omdbapi.com/?i=%s&plot=short&r=json&tomatoes=true&apikey=%s" % (imdb_id, apikey)
 
             try:
                 request = requests.get(omdb_url, timeout=10, headers=headers)
