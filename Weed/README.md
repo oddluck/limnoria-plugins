@@ -1,4 +1,4 @@
-#This plugin is no longer actively developed, use https://github.com/oddluck/limnoria-plugins/tree/master/WikiLeaf
+This plugin is no longer actively developed, use https://github.com/oddluck/limnoria-plugins/tree/master/WikiLeaf
 
 Weed
 
