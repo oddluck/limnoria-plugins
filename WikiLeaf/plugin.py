@@ -29,7 +29,7 @@ class WikiLeaf(callbacks.Plugin):
 
     def strain(self, irc, msg, args, strain):
         """<strain>
-        Searches API based on user input
+        Get strain information from WikiLeaf
         """
         strain = strain.replace(" ", "-").replace("#", "").lower()
         url = "https://www.wikileaf.com/strain/{0}".format(strain)
