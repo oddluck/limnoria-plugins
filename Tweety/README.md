@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/reticulatingspline/Tweety.svg?branch=master)](https://travis-ci.org/reticulatingspline/Tweety)
+Forked from https://github.com/reticulatingspline/Tweety
 
 # Limnoria plugin for Twitter.
 
