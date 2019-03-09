@@ -117,7 +117,7 @@ class Wordgames(callbacks.Plugin):
     def inFilter(self, irc, msg):
         # Filter out private messages to the bot when they don't use the
         # command prefix and the nick is currently playing a guessing game.
-        if len(msg.args) > 0:
+        try:
             channel = msg.args[0]
             commandChars = conf.supybot.reply.whenAddressedBy.chars
             if msg.command == 'PRIVMSG' and msg.args[1][0] not in str(commandChars):
@@ -126,6 +126,8 @@ class Wordgames(callbacks.Plugin):
                     if game and 'guess' in dir(game):
                         game.guess(msg.nick, msg.args[1])
                         return None
+        except:
+            return
         # In all other cases, default to normal message handling
         return self.parent.inFilter(irc, msg)
 
