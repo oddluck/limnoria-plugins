@@ -12,7 +12,6 @@ import supybot.ircutils as ircutils
 import supybot.callbacks as callbacks
 import supybot.ircmsgs as ircmsgs
 import requests
-import json
 import re
 from bs4 import BeautifulSoup
 
