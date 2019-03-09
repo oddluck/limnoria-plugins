@@ -24,7 +24,7 @@ except ImportError:
     _ = lambda x: x
 
 class WikiLeaf(callbacks.Plugin):
-    """Uses API to retrieve information"""
+    """Get strain information from WikiLeaf"""
     threaded = True
 
     def strain(self, irc, msg, args, strain):
