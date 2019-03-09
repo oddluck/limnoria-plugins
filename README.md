@@ -116,6 +116,8 @@ Tip: You can use irc colors colors in your templates, but be sure to quote the v
 ### imdb handler
 Queries the [OMDB API](http://www.omdbapi.com) to get additional information about [IMDB](http://imdb.com) links
 
+`omdbAPI` - Set your OMDB API key here
+
 `imdbHandlerEnabled` - Whether to show additional information about [IMDB](http://imdb.com) links
 
 `imdbTemplate` - This is the template used for [IMDB](http://imdb.com) links
