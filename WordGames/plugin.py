@@ -417,8 +417,26 @@ class Worddle(BaseGame):
             self.unique = unique if unique else set()
             self.dup = dup if dup else set()
 
-        def __cmp__(self, other):
-            return cmp(self.get_score(), other.get_score())
+        def __eq__(self, other):
+            return ((self.get_score()) == (other.get_score()))
+
+        def __ne__(self, other):
+            return ((self.get_score()) != (other.get_score()))
+
+        def __lt__(self, other):
+            return ((self.get_score()) < (other.get_score()))
+
+        def __le__(self, other):
+            return ((self.get_score()) <= (other.get_score()))
+
+        def __gt__(self, other):
+            return ((self.get_score()) > (other.get_score()))
+
+        def __ge__(self, other):
+            return ((self.get_score()) >= (other.get_score()))
+
+        def __repr__(self):
+            return "%s %s" % (self.get_score(), other.get_score())
 
         def get_score(self):
             score = 0
