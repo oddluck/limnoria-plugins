@@ -1,5 +1,3 @@
-#WikiLeaf
-
 Return strain information from https://www.wikileaf.com/
 
 Requires Limnoria, requests, bs4
