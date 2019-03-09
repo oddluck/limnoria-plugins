@@ -66,6 +66,16 @@ Returns info on a unicode symbol such as emoji, returning name, hex/html values,
 Trivia plugin, uses user supplied trivia questions.
 
 
+<b>IMDB</b>
+
+IMDB lookups using the OMDB API
+
+
+<b>SpiffyTitles</b>
+
+Fetch link titles and more from URLs. Handlers for YouTube, IMDB, Wikipedia, Reddit, Vimeo, etc.
+
+
 <b>Geo</b>
 
 GeoIP lookups of IP/Hostname
