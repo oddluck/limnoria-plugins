@@ -69,7 +69,7 @@ conf.registerChannelValue(SpiffyTitles, 'defaultTitleTemplate',
      registry.String("{% if redirect %}(REDIRECT) {% endif %}^ {{title}}", _("""Template used for default title responses""")))
 
 #OMDB API Key
-conf.registerGlobalValue(IMDB, 'omdbAPI',
+conf.registerGlobalValue(SpiffyTitles, 'omdbAPI',
      registry.String('', _("""OMDB API Key""")))
 
 # imdb template
