@@ -1,3 +1,5 @@
+Forked from https://github.com/butterscotchstallion/limnoria-plugins/tree/master/SpiffyTitles
+
 # SpiffyTitles #
 
 The ONLY gluten-free plugin for displaying link titles.
