@@ -66,9 +66,14 @@ Returns info on a unicode symbol such as emoji, returning name, hex/html values,
 Trivia plugin, uses user supplied trivia questions.
 
 
+<b>Tweety</b>
+
+Return tweet text or twitter user info, search twitter, and get trend data by location.
+
+
 <b>IMDB</b>
 
-IMDB lookups using the OMDB API
+IMDB lookups using the OMDB API.
 
 
 <b>SpiffyTitles</b>
@@ -78,4 +83,4 @@ Fetch link titles and more from URLs. Handlers for YouTube, IMDB, Wikipedia, Red
 
 <b>Geo</b>
 
-GeoIP lookups of IP/Hostname
+GeoIP lookups of IP/Hostname.
