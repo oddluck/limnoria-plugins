@@ -25,10 +25,14 @@ Play interactive fiction games such as the Infocom classics Zork, The Hitchhiker
 
 Return song lyrics by artist | song_title
 
+<b>WikiLeaf</b>
+
+Fetch cannabis (marijuana) strain information from https://www.wikileaf.com/
+
 
 <b>Weed</b>
 
-Fetch cannabis (marijuana) strain information from the strain api (strains.evanbusse.com)
+(Deprecated, use WikiLeaf plugin for better results) Fetches cannabis (marijuana) strain information from the strain api https://strainapi.evanbusse.com/
 
 
 <b>Uno</b>
