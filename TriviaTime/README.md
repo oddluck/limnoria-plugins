@@ -1,3 +1,5 @@
+Forked from https://github.com/tannn/TriviaTime
+
 #Configuration
 
 See Jeopardy plugin for using jservice.io (156,800+ Jeopardy! questions) as trivia question source
