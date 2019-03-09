@@ -1,3 +1,5 @@
+Forked from https://github.com/veggiematts/supybot-duckhunt
+
 Requires Python3, Limnoria.
 
 Python 3 and score fixes. Plugin working.
