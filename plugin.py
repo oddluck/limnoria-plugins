@@ -36,15 +36,15 @@ class IMDB(callbacks.Plugin):
         """
         Queries OMDB api for query
         """
-		
+        apikey = self.registryValue('omdbAPI')
         if query[-4:].isdigit():
             encoded_query = quote_plus(query[0:-4])
             encoded_query_year = quote_plus(query[-4:])
-            omdb_url = "http://www.omdbapi.com/?t=%s&y=%s&plot=short&r=json&tomatoes=true&apikey=xxxxxxxx" % (encoded_query, encoded_query_year)
+            omdb_url = "http://www.omdbapi.com/?t=%s&y=%s&plot=short&r=json&tomatoes=true&apikey=%s" % (encoded_query, encoded_query_year, apikey)
             self.log.info("IMDB: Check for %s year %s" % (query[0:-4], query[-4:]))
         else:
             encoded_query = quote_plus(query)
-            omdb_url = "http://www.omdbapi.com/?t=%s&y=&plot=short&r=json&tomatoes=true&apikey=xxxxxxxx" % (encoded_query)
+            omdb_url = "http://www.omdbapi.com/?t=%s&y=&plot=short&r=json&tomatoes=true&apikey=%s" % (encoded_query, apikey)
 
         channel = msg.args[0]
         result = None
@@ -83,6 +83,9 @@ class IMDB(callbacks.Plugin):
                     imdb_template = imdb_template.replace("$released",response["Released"])
                     imdb_template = imdb_template.replace("$awards",response["Awards"])
                     imdb_template = imdb_template.replace("$actors",response["Actors"])
+                    imdb_template = imdb_template.replace("$rated",response["Rated"])
+                    imdb_template = imdb_template.replace("$runtime",response["Runtime"])
+                    imdb_template = imdb_template.replace("$writer",response["Writer"])
 
                     result = imdb_template
             else:
@@ -96,7 +99,7 @@ class IMDB(callbacks.Plugin):
             self.log.error("IMDB HTTPError: %s" % (str(e)))
         finally:
             if result is not None:
-                irc.sendMsg(ircmsgs.privmsg(channel, result))
+                irc.reply(result)
             else:
                 irc.error(self.registryValue("noResultsMessage"))
 
