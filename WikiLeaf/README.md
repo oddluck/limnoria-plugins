@@ -4,4 +4,4 @@ Requires Limnoria, requests, bs4
 
 pip install requests bs4
 
-Usage: strain <strain name>
+Usage: strain (strain_name)
