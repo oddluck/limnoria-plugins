@@ -28,14 +28,14 @@ def configure(advanced):
 IMDB = conf.registerPlugin('IMDB')
 
 conf.registerGlobalValue(IMDB, 'template',
-    registry.String("$title ($year, $country, [$rated], $genre, $runtime) | IMDB: $imdbRating MC: $metascore% | $plot | Director: $director | Writer: $writer | Actors: $actors | http://imdb.com/title/$imdbID", _("""Template for the output of a search query.""")))
+     registry.String("$title ($year, $country, [$rated], $genre, $runtime) | IMDB: $imdbRating MC: $metascore% | $plot | Director: $director | Writer: $writer | Actors: $actors | http://imdb.com/title/$imdbID", _("""Template for the output of a search query.""")))
 
 # alternative template:
 #                     $title ($year - $director) :: [i:$imdbRating r:$tomatoMeter m:$metascore] $plot :: http://imdb.com/title/$imdbID
 
 conf.registerGlobalValue(IMDB, 'noResultsMessage',
-    registry.String("No results for that query.", _("""This message is sent when there are no results""")))
+     registry.String("No results for that query.", _("""This message is sent when there are no results""")))
 conf.registerGlobalValue(IMDB, 'omdbAPI',
-    registry.String('', _("""OMDB API Key""")))
+     registry.String('', _("""OMDB API Key""")))
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
