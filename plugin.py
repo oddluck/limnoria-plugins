@@ -373,7 +373,7 @@ class SpiffyTitles(callbacks.Plugin):
                         return
                     else:
                         if not is_ignored:
-                            irc.sendMsg(ircmsgs.privmsg(channel, title))
+                            irc.reply(title, prefixNick=False)
                 else:
                     if self.default_handler_enabled:
                         log.debug("SpiffyTitles: could not get a title for %s" % (url))
@@ -448,9 +448,9 @@ class SpiffyTitles(callbacks.Plugin):
             pass
 
         if title is not None and title:
-            irc.sendMsg(ircmsgs.privmsg(channel, title))
+            irc.reply(title)
         else:
-            irc.sendMsg(ircmsgs.privmsg(channel, error_message + " {}".format(err)))
+            irc.reply(error_message + " {}".format(err))
 
     t = wrap(t, ['text'])
 
@@ -1322,7 +1322,7 @@ class SpiffyTitles(callbacks.Plugin):
                 else:
                     log.error("SpiffyTitles HTTP response code %s" % (request.status_code,))
                                                                            #request.content))
-                    return ('<html><head><title>nice link idiot</title></head><body></body></html>', is_redirect)
+                    return ('<html><head><title>Nice link idiot.</title></head><body></body></html>', is_redirect)
 
         except timeout_decorator.TimeoutError:
             log.error("SpiffyTitles: wall timeout!")
