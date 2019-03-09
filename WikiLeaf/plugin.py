@@ -40,12 +40,13 @@ class WikiLeaf(callbacks.Plugin):
         try:
             soup = BeautifulSoup(data.text)
             name = re.sub('\s+', ' ', soup.find("h1", itemprop="name").getText())
-            description = re.sub('\s+', ' ', soup.find("div", itemprop='description').getText())
+            straininfo = re.sub('\s+', ' ', soup.find("div", class_="product-info-line cannabis").getText())
+            description = re.sub('\s+', ' ', soup.find("div", itemprop="description").getText())
             thc = re.sub('\s+', ' ', soup.find_all("div", class_="product-container-header cf")[1].getText())
-            reply = "\x02{0}\x0F | {1} | {2}".format(name.strip(), thc.strip(), description.strip())
+            reply = "\x02{0}\x0F | {1} | {2} | {3}".format(name.strip(), straininfo.strip(), thc.strip(), description.strip())
             irc.reply(reply)
         except:
-            irc.reply('No results found, what have you been smoking?')
+            irc.reply("No results found, what have you been smoking?")
 
     strain = wrap(strain, ['text'])
 
