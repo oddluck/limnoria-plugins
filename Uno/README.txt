@@ -1,3 +1,5 @@
+Forked from https://github.com/SpiderDave/spidey-supybot-plugins/tree/master/Plugins/Uno
+
 This is a Limnoria plugin implementation of UNO.
 
 made Python3 compatible, fixed minor bugs
