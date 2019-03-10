@@ -13,7 +13,9 @@ commands: advice, ascii, bofh, buzz, catfact, catgif, devexcuse, insult, joke, p
 
 ascii --fontlist to get list of fonts
 
-ascii --font (font) (text) to use chosen font.
+ascii --font (font) to use chosen font.
+
+ascii --color (color) to set a color
 
 split lines with | ex. ascii|art for large fonts
   
