@@ -15,7 +15,7 @@ ascii --fontlist to get list of fonts
 
 ascii --font (font) to use chosen font.
 
-ascii --color (color) to set a color
+ascii --color (color1,color2) to set a foreground and/or background color
 
 split lines with | ex. ascii|art for large fonts
   
