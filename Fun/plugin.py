@@ -114,7 +114,7 @@ class Fun(callbacks.Plugin):
     insult = wrap(insult, [additional('nickInChannel')])
 
     def ascii(self, irc, msg, args, optlist, text):
-        """[--font <font>] [--fontlist] [<text>]
+        """[--font <font>] [--fontlist] [--color] [<text>]
         text to ASCII art
         """
         channel = msg.args[0]
@@ -133,12 +133,20 @@ class Fun(callbacks.Plugin):
                          data = requests.get("https://artii.herokuapp.com/make?text={0}&font={1}".format(word.strip(), font))
                          for line in data.text.splitlines():
                              if line.strip():
-                                 irc.reply(line, prefixNick=False)
+                                 if 'color' in optlist:
+                                     color = optlist.get('color')
+                                 else:
+                                     color = None
+                                 irc.reply(ircutils.mircColor(line, color, None), prefixNick=False)
              else:
                  data = requests.get("https://artii.herokuapp.com/make?text={0}&font={1}".format(text, font))
                  for line in data.text.splitlines():
                      if line.strip():
-                         irc.reply(line, prefixNick=False)
+                         if 'color' in optlist:
+                             color = optlist.get('color')
+                         else:
+                             color = None
+                     irc.reply(ircutils.mircColor(line, color, None), prefixNick=False)
         elif 'fontlist' in optlist:
             fontlist = requests.get("https://artii.herokuapp.com/fonts_list")
             response = sorted(fontlist.text.split('\n'))
@@ -150,13 +158,22 @@ class Fun(callbacks.Plugin):
                          data = requests.get("https://artii.herokuapp.com/make?text={0}&font=univers".format(word.strip()))
                          for line in data.text.splitlines():
                              if line.strip():
-                                 irc.reply(line, prefixNick=False)
+                                 if 'color' in optlist:
+                                     color = optlist.get('color')
+                                 else:
+                                     color = None
+                                 irc.reply(ircutils.mircColor(line, color, None), prefixNick=False)
             else:
                 data = requests.get("https://artii.herokuapp.com/make?text={0}&font=univers".format(text))
                 for line in data.text.splitlines():
                     if line.strip():
-                        irc.reply(line, prefixNick=False)
-    ascii = wrap(ascii, [getopts({'font':'something', 'fontlist':''}), additional('text')])
+                        if 'color' in optlist:
+                            color = optlist.get('color')
+                        else:
+                            color = None
+                        irc.reply(ircutils.mircColor(line, color, None), prefixNick=False)
+
+    ascii = wrap(ascii, [getopts({'font':'text', 'color':'text', 'fontlist':''}), additional('text')])
 
     def pirate(self, irc, msg, args, text):
         """<text>
@@ -215,9 +232,10 @@ class Fun(callbacks.Plugin):
         irc.reply(" ".join(l))
     piglatin = wrap(piglatin, [('text')])
 
+
     def bofh(self, irc, msg, args):
         """
-        BOFH Excuse Generator
+        BOFH (Bastard Operator From Hell) Excuse Generator
         """
         data = open("{0}/excuses.txt".format(os.path.dirname(os.path.abspath(__file__))))
         text = data.read()
@@ -228,6 +246,7 @@ class Fun(callbacks.Plugin):
 
     def rock(self, irc, msg, args):
         """takes no arguments
+
         Choose rock in Rock, Paper, Scissors.
         """
         botchoice2 = random.randint(1, 3)
@@ -248,6 +267,7 @@ class Fun(callbacks.Plugin):
 
     def paper(self, irc, msg, args):
         """takes no arguments
+
         Choose paper in Rock, Paper, Scissors.
         """
         botchoice2 = random.randint(1, 3)
@@ -268,6 +288,7 @@ class Fun(callbacks.Plugin):
 
     def scissors(self, irc, msg, args):
         """takes no arguments
+
         Choose scissors in Rock, Paper, Scissors.
         """
         botchoice2 = random.randint(1, 3)
@@ -285,7 +306,7 @@ class Fun(callbacks.Plugin):
         elif botchoice == "paper" and userchoice == "scissors":
             irc.reply("I chose %s. Looks like you won." % (botchoice))
     scissors = wrap(scissors)
-    
+
     def catgif(self, irc, msg, args):
         """
         Get a random cat .gif
