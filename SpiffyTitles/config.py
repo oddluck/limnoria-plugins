@@ -30,9 +30,6 @@ SpiffyTitles = conf.registerPlugin('SpiffyTitles')
 conf.registerGlobalValue(SpiffyTitles, 'maxRetries',
      registry.Integer(3, _("""Maximum retries upon failure""")))
 
-conf.registerGlobalValue(SpiffyTitles, 'verifySSL',
-        registry.Boolean(True, _("""Request websites if SSL cert verification fails?""")))
-
 conf.registerGlobalValue(SpiffyTitles, 'wallClockTimeoutInSeconds',
      registry.Integer(8, _("""Timeout for getting a title. If you set this too high, the bot will time out.""")))
 
