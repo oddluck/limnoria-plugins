@@ -125,6 +125,18 @@ class Fun(callbacks.Plugin):
             text = text.strip()
             if '|' in text:
                 words = text.split('|')
+        if 'color' in optlist:
+            color = optlist.get('color')
+            if "," in color:
+                color = color.split(",")
+                color1 = color[0].strip()
+                color2 = color[1].strip()
+            else:
+                color1 = color
+                color2 = None
+        else:
+            color1 = None
+            color2 = None
         if 'font' in optlist:
              font = optlist.get('font')
              if words:
@@ -133,20 +145,12 @@ class Fun(callbacks.Plugin):
                          data = requests.get("https://artii.herokuapp.com/make?text={0}&font={1}".format(word.strip(), font))
                          for line in data.text.splitlines():
                              if line.strip():
-                                 if 'color' in optlist:
-                                     color = optlist.get('color')
-                                 else:
-                                     color = None
-                                 irc.reply(ircutils.mircColor(line, color, None), prefixNick=False)
+                                 irc.reply(ircutils.mircColor(line, color1, color2), prefixNick=False)
              else:
                  data = requests.get("https://artii.herokuapp.com/make?text={0}&font={1}".format(text, font))
                  for line in data.text.splitlines():
                      if line.strip():
-                         if 'color' in optlist:
-                             color = optlist.get('color')
-                         else:
-                             color = None
-                     irc.reply(ircutils.mircColor(line, color, None), prefixNick=False)
+                         irc.reply(ircutils.mircColor(line, color1, color2), prefixNick=False)
         elif 'fontlist' in optlist:
             fontlist = requests.get("https://artii.herokuapp.com/fonts_list")
             response = sorted(fontlist.text.split('\n'))
@@ -158,20 +162,12 @@ class Fun(callbacks.Plugin):
                          data = requests.get("https://artii.herokuapp.com/make?text={0}&font=univers".format(word.strip()))
                          for line in data.text.splitlines():
                              if line.strip():
-                                 if 'color' in optlist:
-                                     color = optlist.get('color')
-                                 else:
-                                     color = None
-                                 irc.reply(ircutils.mircColor(line, color, None), prefixNick=False)
+                                 irc.reply(ircutils.mircColor(line, color1, color2), prefixNick=False)
             else:
                 data = requests.get("https://artii.herokuapp.com/make?text={0}&font=univers".format(text))
                 for line in data.text.splitlines():
                     if line.strip():
-                        if 'color' in optlist:
-                            color = optlist.get('color')
-                        else:
-                            color = None
-                        irc.reply(ircutils.mircColor(line, color, None), prefixNick=False)
+                        irc.reply(ircutils.mircColor(line, color1, color2), prefixNick=False)
 
     ascii = wrap(ascii, [getopts({'font':'text', 'color':'text', 'fontlist':''}), additional('text')])
 
