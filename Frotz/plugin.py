@@ -67,6 +67,21 @@ class Frotz(callbacks.Plugin):
             if line.strip():
                 response.append(line.decode().strip())
         return response
+    
+    def doPrivmsg(self, irc, msg):
+        channel = msg.args[0]
+        if not irc.isChannel(channel):
+            channel = msg.nick
+        self.game.setdefault(channel, None)
+        if self.game[channel]:
+            command = msg.args[1]
+            self.game[channel].sendline(command)
+            response = self.output(self.game[channel])
+            if len(response) > 2:
+                irc.reply(re.sub(' +', ' ', response[1]), prefixNick=False)
+                irc.reply(" ".join(response[2:]).replace(' .', '.'), prefixNick=False)
+            else:
+                irc.reply(" ".join(response).replace(' .', '.'), prefixNick=False)
 
     def stop(self, irc, msg, args):
         """
