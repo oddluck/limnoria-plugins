@@ -52,11 +52,8 @@ class Frotz(callbacks.Plugin):
             game_file= "{0}{1}".format(self.game_path, game_name)
             self.game[channel] = pexpect.spawn("{0} -S 0 {1}".format(self.binary, game_file))
             response = self.output(self.game[channel])
-            if len(response) > 2:
-                irc.reply(response[0].strip(), prefixNick=False)
-                irc.reply(" ".join(response[1:]).replace(" .", ".").strip(". ").strip(), prefixNick=False)
-            else:
-                irc.reply(" ".join(response).replace(" .", ".").strip(". ").strip(), prefixNick=False)
+            for line in response:
+                irc.reply(line, prefixNick=False)
     load = wrap(load, ['text'])
 
     def output(self, output):
@@ -64,9 +61,9 @@ class Frotz(callbacks.Plugin):
         prompts = ["\n>", "\n> >", "to begin]", "\n\*\*\*MORE\*\*\*", pexpect.TIMEOUT]
         output.expect(prompts, timeout=2)
         for line in output.before.splitlines():
-            if line.strip():
-                line = re.sub('\s+', ' ', line.decode())
-                response.append(line.strip())
+            line = line.decode().strip()
+            if line and line != ".":
+                response.append(line)
         return response
 
     def doPrivmsg(self, irc, msg):
@@ -80,11 +77,8 @@ class Frotz(callbacks.Plugin):
             command = msg.args[1]
             self.game[channel].sendline(command)
             response = self.output(self.game[channel])
-            if len(response) > 2:
-                irc.reply(response[1].strip(), prefixNick=False)
-                irc.reply(" ".join(response[2:]).replace(" .", ".").strip(". ").strip(), prefixNick=False)
-            else:
-                irc.reply(" ".join(response).replace(" .", ".").strip(". ").strip(), prefixNick=False)
+            for line in response[1:]:
+                irc.reply(line, prefixNick=False)
 
     def stop(self, irc, msg, args):
         """
@@ -124,11 +118,8 @@ class Frotz(callbacks.Plugin):
             else:
                 self.game[channel].sendline()
             response = self.output(self.game[channel])
-            if len(response) > 2:
-                irc.reply(response[1].strip(), prefixNick=False)
-                irc.reply(" ".join(response[2:]).replace(" .", ".").strip(". ").strip(), prefixNick=False)
-            else:
-                irc.reply(" ".join(response).replace(" .", ".").strip(". ").strip(), prefixNick=False)
+            for line in response[1:]:
+                irc.reply(line, prefixNick=False)
         else:
             irc.reply("No game running in {0}?".format(channel))
     z = wrap(z, [additional('text')])
