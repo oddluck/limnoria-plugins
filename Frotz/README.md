@@ -11,7 +11,9 @@ usage:
 
 frotz load <game name> ex. frotz load zork1.z5 - loads game
   
-z <command> ex. z open mailbox, z look - send command
+Game will process channel messages as commands while a game is running.
+  
+z <command> ex. z open mailbox, z look - send command manually
 
 z <no input> - sends a blank line equivalent to [RETURN]/[ENTER] when needed
   
@@ -22,8 +24,6 @@ frotz games - lists contents of ./games/ directory
 one game allowed to run per channel/pm. will prompt you to stop running games before allowing a new one to be started.
 this limits the number of potential child dfrotz processes and keeps this simpler in terms of routing the right game data
 to the right place.
-
-game text reformatted to eliminate line/by line output and for easier reading on various screen sizes.
 
 Some games and a frotz binary included, may need to build your own depending on your system.
 https://github.com/DavidGriffith/frotz/blob/master/DUMB
