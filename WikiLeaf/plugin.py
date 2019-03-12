@@ -33,14 +33,14 @@ class WikiLeaf(callbacks.Plugin):
         """
         strain = strain.replace(" ", "-").replace("#", "").lower()
         searchurl = "https://duckduckgo.com/html/?q={0} site: wikileaf.com/strain".format(strain)
-        search = requests.get(searchurl)
-        soup = BeautifulSoup(search.text)
-        url = re.sub('\s+', '', soup.find("a", class_="result__url").getText())
-        data = requests.get("https://{0}".format(url))
-        if not data:  # http fetch breaks.
-            irc.reply("ERROR")
-            return
         try:
+            search = requests.get(searchurl)
+            soup = BeautifulSoup(search.text)
+            url = re.sub('\s+', '', soup.find("a", class_="result__url").getText())
+            data = requests.get("https://{0}".format(url))
+            if not data:  # http fetch breaks.
+                irc.reply("ERROR")
+                return
             soup = BeautifulSoup(data.text)
             name = re.sub('\s+', ' ', soup.find("h1", itemprop="name").getText())
             straininfo = re.sub('\s+', ' ', soup.find("div", class_="product-info-line cannabis").getText())
