@@ -35,6 +35,7 @@ class Frotz(callbacks.Plugin):
         self.game = {}
         self.game_path = "{0}/games/".format(os.path.dirname(os.path.abspath(__file__)))
         self.binary = '{0}/frotz/dfrotz'.format(os.path.dirname(os.path.abspath(__file__)))
+        #self.prompts = [">", "***MORE***", pexpect.TIMEOUT, pexpect.EOF]
 
     def load(self, irc, msg, args, input):
         """<game_name>
@@ -53,10 +54,10 @@ class Frotz(callbacks.Plugin):
             self.game[channel] = pexpect.spawn("{0} -S 0 {1}".format(self.binary, game_file))
             response = self.output(self.game[channel])
             if len(response) > 2:
-                irc.reply(re.sub(' +', ' ', response[0].strip(". ")), prefixNick=False)
-                irc.reply(" ".join(response[1:]).replace(' .', '.').strip(". "), prefixNick=False)
+                irc.reply(response[0].strip(), prefixNick=False)
+                irc.reply(" ".join(response[1:]).replace(" .", ".").strip(". ").strip(), prefixNick=False)
             else:
-                irc.reply(" ".join(response).replace(' .', '.').strip(". "), prefixNick=False)
+                irc.reply(" ".join(response).replace(" .", ".").strip(". ").strip(), prefixNick=False)
     load = wrap(load, ['text'])
 
     def output(self, output):
@@ -65,9 +66,10 @@ class Frotz(callbacks.Plugin):
         output.expect(prompts, timeout=2)
         for line in output.before.splitlines():
             if line.strip():
-                response.append(line.decode().strip())
+                line = re.sub('\s+', ' ', line.decode())
+                response.append(line.strip())
         return response
-    
+
     def doPrivmsg(self, irc, msg):
         channel = msg.args[0]
         if callbacks.addressed(irc.nick, msg):
@@ -80,10 +82,10 @@ class Frotz(callbacks.Plugin):
             self.game[channel].sendline(command)
             response = self.output(self.game[channel])
             if len(response) > 2:
-                irc.reply(re.sub(' +', ' ', response[1].strip(". ")), prefixNick=False)
-                irc.reply(" ".join(response[2:]).replace(' .', '.').strip(". "), prefixNick=False)
+                irc.reply(response[1].strip(), prefixNick=False)
+                irc.reply(" ".join(response[2:]).replace(" .", ".").strip(". ").strip(), prefixNick=False)
             else:
-                irc.reply(" ".join(response).replace(' .', '.').strip(". "), prefixNick=False)
+                irc.reply(" ".join(response).replace(" .", ".").strip(". ").strip(), prefixNick=False)
 
     def stop(self, irc, msg, args):
         """
@@ -124,10 +126,10 @@ class Frotz(callbacks.Plugin):
                 self.game[channel].sendline()
             response = self.output(self.game[channel])
             if len(response) > 2:
-                irc.reply(re.sub(' +', ' ', response[1]), prefixNick=False)
-                irc.reply(" ".join(response[2:]).replace(' .', '.'), prefixNick=False)
+                irc.reply(response[1].strip(), prefixNick=False)
+                irc.reply(" ".join(response[2:]).replace(" .", ".").strip(". ").strip(), prefixNick=False)
             else:
-                irc.reply(" ".join(response).replace(' .', '.'), prefixNick=False)
+                irc.reply(" ".join(response).replace(" .", ".").strip(". ").strip(), prefixNick=False)
         else:
             irc.reply("No game running in {0}?".format(channel))
     z = wrap(z, [additional('text')])
@@ -141,3 +143,4 @@ class Frotz(callbacks.Plugin):
     games = wrap(games)
 
 Class = Frotz
+
