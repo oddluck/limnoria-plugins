@@ -24,16 +24,19 @@ except ImportError:
     _ = lambda x: x
 
 class WikiLeaf(callbacks.Plugin):
-    """Get strain information from WikiLeaf"""
+    """Retrieve Marjuana Strain Information From WikiLeaf"""
     threaded = True
 
     def strain(self, irc, msg, args, strain):
         """<strain>
-        Get strain information from WikiLeaf
+        Returns strain information from WikiLeaf. Searches powered by DuckDuckGo.
         """
         strain = strain.replace(" ", "-").replace("#", "").lower()
-        url = "https://www.wikileaf.com/strain/{0}".format(strain)
-        data = requests.get(url)
+        searchurl = "https://duckduckgo.com/html/?q={0} site: wikileaf.com/strain".format(strain)
+        search = requests.get(searchurl)
+        soup = BeautifulSoup(search.text)
+        url = re.sub('\s+', '', soup.find("a", class_="result__url").getText())
+        data = requests.get("https://{0}".format(url))
         if not data:  # http fetch breaks.
             irc.reply("ERROR")
             return
