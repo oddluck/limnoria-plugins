@@ -14,6 +14,7 @@ import supybot.ircmsgs as ircmsgs
 import requests
 import re
 from bs4 import BeautifulSoup
+from fake_useragent import UserAgent
 
 try:
     from supybot.i18n import PluginInternationalization
@@ -31,13 +32,14 @@ class WikiLeaf(callbacks.Plugin):
         """<strain>
         Returns strain information from WikiLeaf. Searches powered by DuckDuckGo.
         """
-        strain = strain.replace(" ", "-").replace("#", "").lower()
         searchurl = "https://duckduckgo.com/html/?q={0} site: wikileaf.com/strain".format(strain)
+        ua = UserAgent()
+        header = {'User-Agent':str(ua.random)}
         try:
-            search = requests.get(searchurl)
+            search = requests.get(searchurl, headers=header)
             soup = BeautifulSoup(search.text)
             url = re.sub('\s+', '', soup.find("a", class_="result__url").getText())
-            data = requests.get("https://{0}".format(url))
+            data = requests.get("https://{0}".format(url), headers=header)
             soup = BeautifulSoup(data.text)
             name = re.sub('\s+', ' ', soup.find("h1", itemprop="name").getText())
             straininfo = re.sub('\s+', ' ', soup.find("div", class_="product-info-line cannabis").getText())
@@ -50,4 +52,3 @@ class WikiLeaf(callbacks.Plugin):
     strain = wrap(strain, ['text'])
 
 Class = WikiLeaf
-
