@@ -1,4 +1,4 @@
-Return strain information from https://www.wikileaf.com/
+Return strain information from https://www.wikileaf.com/ Seaches powered by https://duckduckgo.com/
 
 Requires Limnoria, requests, bs4
 
