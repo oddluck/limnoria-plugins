@@ -38,9 +38,6 @@ class WikiLeaf(callbacks.Plugin):
             soup = BeautifulSoup(search.text)
             url = re.sub('\s+', '', soup.find("a", class_="result__url").getText())
             data = requests.get("https://{0}".format(url))
-            if not data:  # http fetch breaks.
-                irc.reply("ERROR")
-                return
             soup = BeautifulSoup(data.text)
             name = re.sub('\s+', ' ', soup.find("h1", itemprop="name").getText())
             straininfo = re.sub('\s+', ' ', soup.find("div", class_="product-info-line cannabis").getText())
@@ -50,7 +47,6 @@ class WikiLeaf(callbacks.Plugin):
             irc.reply(reply)
         except:
             irc.reply("No results found, what have you been smoking?")
-
     strain = wrap(strain, ['text'])
 
 Class = WikiLeaf
