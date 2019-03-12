@@ -36,8 +36,8 @@ class WikiLeaf(callbacks.Plugin):
         ua = UserAgent()
         header = {'User-Agent':str(ua.random)}
         try:
-            search = requests.get(searchurl, headers=header)
-            soup = BeautifulSoup(search.text)
+            data = requests.get(searchurl, headers=header)
+            soup = BeautifulSoup(data.text)
             url = re.sub('\s+', '', soup.find("a", class_="result__url").getText())
             data = requests.get("https://{0}".format(url), headers=header)
             soup = BeautifulSoup(data.text)
@@ -46,6 +46,7 @@ class WikiLeaf(callbacks.Plugin):
             description = re.sub('\s+', ' ', soup.find("div", itemprop="description").getText())
             thc = re.sub('\s+', ' ', soup.find_all("div", class_="product-container-header cf")[1].getText())
             reply = "\x02{0}\x0F | {1} | {2} | {3}".format(name.strip(), straininfo.strip(), thc.strip(), description.strip())
+            del data, soup
             irc.reply(reply)
         except:
             irc.reply("No results found, what have you been smoking?")
