@@ -70,6 +70,8 @@ class Frotz(callbacks.Plugin):
     
     def doPrivmsg(self, irc, msg):
         channel = msg.args[0]
+        if callbacks.addressed(irc.nick, msg):
+            return
         if not irc.isChannel(channel):
             channel = msg.nick
         self.game.setdefault(channel, None)
