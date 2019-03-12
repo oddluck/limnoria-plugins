@@ -97,8 +97,8 @@ Load the messageparser plugin:
 
 ```
 /msg <bot> load MessageParser
-/msg <bot> messageparser add global "https?://.*\.?twitter\.com/([^ \t/]+)(?:$|[ \t])" "Tweety twitter --info $1"
-/msg <bot> messageparser add global "https?://.*\.?twitter\.com/([A-Za-z0-9_]+)/status/([0-9]+)" "Tweety twitter --id $2"
+/msg <bot> messageparser add global "https?://.*\.?twitter\.com/([^ \t/]+)(?:$|[ \t])" "echo ^ [Tweety twitter --info $1]"
+/msg <bot> messageparser add global "https?://.*\.?twitter\.com/([A-Za-z0-9_]+)/status/([0-9]+)" "echo ^ [Tweety twitter --id $2]"
 ```
 
 ## About
