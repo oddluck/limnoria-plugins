@@ -128,11 +128,30 @@ class Jeopardy(callbacks.Plugin):
                     f.close()
                 with open(self.historyfile) as f:
                     history = f.read().splitlines()
-                n = 0
-                while n < self.num:
-                    if self.category == 'random':
-                        data = requests.get("http://jservice.io/api/random").json()
-                    else:
+                cluecount = self.num
+                failed = 0
+                if self.category == 'random':
+                    n = 0
+                    while n <= self.num:
+                        try:
+                            data = requests.get("http://jservice.io/api/random").json()
+                            for item in data:
+                                id = item['id']
+                                question = re.sub('<[^<]+?>', '', unidecode(item['question'])).replace('\\', '').strip()
+                                airdate = item['airdate'].split('T')
+                                answer = re.sub('<[^<]+?>', '', unidecode(item['answer'])).replace('\\', '').strip()
+                                category = unidecode(item['category']['title']).strip().title()
+                                invalid = item['invalid_count']
+                                points = self.points
+                                if item['value']:
+                                    points = int(item['value'])
+                                if question and airdate and answer and category and points and not invalid and "{0}:{1}".format(self.channel, id) not in history:
+                                    self.questions.append("{0}:{1}*({2}) [${3}] \x02{4}: {5}\x0F*{6}*{7}".format(self.channel, id, airdate[0], str(points), category, question, answer, points))
+                                    n += 1
+                        except Exception:
+                            pass
+                else:
+                    try:
                         data = requests.get("http://jservice.io/api/clues?&category={0}".format(self.category)).json()
                         cluecount = data[0]['category']['clues_count']
                         if cluecount > 100:
@@ -146,19 +165,24 @@ class Jeopardy(callbacks.Plugin):
                         if cluecount > 500:
                             data.extend(requests.get("http://jservice.io/api/clues?&category={0}&offset=500".format(self.category)).json())
                         random.shuffle(data)
-                    for item in data:
-                        id = item['id']
-                        question = re.sub('<[^<]+?>', '', unidecode(item['question'])).replace('\\', '').strip()
-                        airdate = item['airdate'].split('T')
-                        answer = re.sub('<[^<]+?>', '', unidecode(item['answer'])).replace('\\', '').strip()
-                        category = unidecode(item['category']['title']).strip().title()
-                        invalid = item['invalid_count']
-                        points = self.points
-                        if item['value']:
-                            points = int(item['value'])
-                        if question and airdate and answer and category and points and not invalid and "{0}:{1}".format(self.channel, id) not in history:
-                            self.questions.append("{0}:{1}*({2}) [${3}] \x02{4}: {5}\x0F*{6}*{7}".format(self.channel, id, airdate[0], str(points), category, question, answer, points))
-                            n += 1
+                        n = 0
+                        for item in data:
+                            id = item['id']
+                            question = re.sub('<[^<]+?>', '', unidecode(item['question'])).replace('\\', '').strip()
+                            airdate = item['airdate'].split('T')
+                            answer = re.sub('<[^<]+?>', '', unidecode(item['answer'])).replace('\\', '').strip()
+                            category = unidecode(item['category']['title']).strip().title()
+                            invalid = item['invalid_count']
+                            points = self.points
+                            if item['value']:
+                                points = int(item['value'])
+                            if n >= self.num:
+                                break
+                            elif question and airdate and answer and category and points and not invalid and "{0}:{1}".format(self.channel, id) not in history:
+                                self.questions.append("{0}:{1}*({2}) [${3}] \x02{4}: {5}\x0F*{6}*{7}".format(self.channel, id, airdate[0], str(points), category, question, answer, points))
+                                n += 1
+                    except Exception:
+                        pass
                 del data
             if self.registryValue('randomize', channel):
                 random.shuffle(self.questions)
@@ -208,6 +232,10 @@ class Jeopardy(callbacks.Plugin):
             self.reply(_('\x03%s#%d of %d: %s') % (color, self.numAsked,
                                                 self.total, self.q))
             ans = self.a[0]
+            if "(" in self.a[0]:
+                a1, a2, a3 = re.match("(.*)\((.*)\)(.*)", self.a[0]).groups()
+                self.a.append(a1 + a3)
+                self.a.append(a2)
             blankChar = self.registryValue('blankChar', self.channel)
             blank = re.sub('\w', blankChar, ans)
             self.reply("HINT: {0}".format(blank))
@@ -252,7 +280,10 @@ class Jeopardy(callbacks.Plugin):
                     item = sorted[i]
                     s = _('%s (%s: %s)') % (s, str(item[0].split(':')[1]), item[1])
                 self.reply(s)
-            del self.games[self.channel]
+            try:
+                del self.games[self.channel]
+            except KeyError:
+                return
 
 
         def timedEvent(self):
@@ -369,6 +400,8 @@ class Jeopardy(callbacks.Plugin):
                 except KeyError:
                     pass
                 irc.reply(_('Orphaned Jeopardy! game found and removed.'))
+                irc.reply("This... is... Jeopardy!", prefixNick=False)
+                self.games[channel] = self.Game(irc, channel, num, category, self)
             else:
                 self.games[channel].num += num
                 self.games[channel].total += num
