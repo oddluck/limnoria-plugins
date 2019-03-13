@@ -23,11 +23,11 @@ Play interactive fiction games such as the Infocom classics Zork, The Hitchhiker
 
 <b>Lyrics</b>
 
-Return song lyrics by artist | song_title
+Retrieve song lyrics from http://lyrics.wikia.com/. Search powered by Google.
 
 <b>WikiLeaf</b>
 
-Fetch cannabis (marijuana) strain information from https://www.wikileaf.com/
+Fetch cannabis (marijuana) strain information from https://www.wikileaf.com/. Search powered by Google.
 
 
 <b>Weed</b>
