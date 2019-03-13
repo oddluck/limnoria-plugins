@@ -384,15 +384,14 @@ class DuckHunt(callbacks.Plugin):
         if irc.isChannel(currentChannel):
             if self.started.get(currentChannel) == True:
                 self._end(irc, msg, args)
-
+            else:
+                irc.reply('Nothing to stop: there\'s no hunt right now.')
             # If someone uses the stop command,
             # we stop the scheduler, even if autoRestart is enabled
             try:
                 schedule.removeEvent('DuckHunt_' + currentChannel)
-            except KeyError:
-                irc.reply('Error: the spammer wasn\'t running! This is a bug.')
             except:
-                irc.reply('Nothing to stop: there\'s no hunt right now.')
+                pass
         else:
             irc.error('You have to be on a channel')
     stophunt = wrap(stophunt)
@@ -1177,3 +1176,4 @@ class DuckHunt(callbacks.Plugin):
 Class = DuckHunt
 
 # vim:set shiftwidth=4 softtabstop=4 expandtab textwidth=79:
+
