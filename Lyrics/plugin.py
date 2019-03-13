@@ -49,7 +49,6 @@ class Lyrics(callbacks.Plugin):
                 title, url = self.dosearch(lyric)
             except:
                 retries += 1
-                irc.reply("Retrying...")
         if url:
             lyrics = self.getlyrics(url)
             irc.reply(title.replace(":", " - "))
