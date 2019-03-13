@@ -1,2 +1,4 @@
 requests
 html
+gsearch
+pylyrics3
