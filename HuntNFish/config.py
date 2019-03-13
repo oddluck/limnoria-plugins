@@ -51,6 +51,8 @@ conf.registerChannelValue(HuntNFish, 'enable',
     registry.Boolean(True, _("""Turns on and off the hunt and fish commands.""")))
 conf.registerChannelValue(HuntNFish, 'successRate',
     registry.NonNegativeInteger(50, _("""Percent of chance of success""")))
+conf.registerChannelValue(HuntNFish, 'timeout',
+    registry.NonNegativeInteger(300, _("""How long in seconds the pause between hunts and fishs should be.""")))
 conf.registerChannelValue(HuntNFish, 'huntTargets',
                         registry.CommaSeparatedListOfStrings(["bear","gopher","rabbit","hunter","deer","fox","duck","moose","park ranger","Yogi Bear","Boo Boo Bear","dog named Benji","cow","raccoon","koala bear","camper","channel lurker","your mother","lion","ocelot","house cat"], _("""List of hunting tagets""")))
 conf.registerChannelValue(HuntNFish, 'fishTargets',
