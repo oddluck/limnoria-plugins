@@ -29,15 +29,25 @@ class WikiLeaf(callbacks.Plugin):
     """Retrieve Marjuana Strain Information From WikiLeaf"""
     threaded = True
 
+    def dosearch(self, strain):
+        data = search("{0} site:wikileaf.com/strain/".format(strain))
+        title, url = data[0]
+        return title, url
+
     def strain(self, irc, msg, args, strain):
         """<strain>
         Returns strain information from WikiLeaf. Search powered by Google.
         """
-        try:
+        retries = 0
+        url = None
+        while not url and retries <= 3:
+            try:
+                title, url = self.dosearch(strain)
+            except:
+                retries +=1
+        if url:
             ua = UserAgent()
             header = {'User-Agent':str(ua.random)}
-            data = search("{0} site:wikileaf.com/strain/".format(strain), num_results=1)
-            title, url = data[0]
             data = requests.get(url, headers=header)
             soup = BeautifulSoup(data.text)
             name = re.sub('\s+', ' ', soup.find("h1", itemprop="name").getText())
@@ -47,9 +57,8 @@ class WikiLeaf(callbacks.Plugin):
             reply = "\x02{0}\x0F | {1} | {2} | {3}".format(name.strip(), straininfo.strip(), thc.strip(), description.strip())
             del data, soup
             irc.reply(reply)
-        except:
+        else:
             irc.reply("No results found, what have you been smoking?")
     strain = wrap(strain, ['text'])
 
 Class = WikiLeaf
-
