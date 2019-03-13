@@ -149,7 +149,7 @@ class Jeopardy(callbacks.Plugin):
                                     self.questions.append("{0}:{1}*({2}) [${3}] \x02{4}: {5}\x0F*{6}*{7}".format(self.channel, id, airdate[0], str(points), category, question, answer, points))
                                     n += 1
                         except Exception:
-                            pass
+                            continue
                 else:
                     try:
                         data = requests.get("http://jservice.io/api/clues?&category={0}".format(self.category)).json()
