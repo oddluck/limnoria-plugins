@@ -28,7 +28,7 @@ class Lyrics(callbacks.Plugin):
     threaded = True
 
     def dosearch(self, lyric):
-        data = search("{0} site:lyrics.wikia.com/wiki/".format(lyric))
+        data = search("{0} \"Lyrics\" site:lyrics.wikia.com/wiki/".format(lyric))
         try:
             title, url = data[0]
             return title, url
