@@ -70,6 +70,7 @@ class DuckHunt(callbacks.Plugin):
     leader = {}        # Who is the leader for the week?
     reloading = {}     # Who is currently reloading?
     reloadtime = {}    # Time to reload after shooting (in seconds)
+    reloadcount = {}   # Number of shots fired while reloading
 
     # Does a duck needs to be launched?
     lastSpoke = {}
@@ -117,7 +118,7 @@ class DuckHunt(callbacks.Plugin):
             else:
                 # It's a player that already has a saved score
                 # And we save the time of the current hunt if it's better than it's previous time
-                if(self.toptimes[channel][player] < self.channeltimes[channel][player]):
+                if self.toptimes[channel][player] < self.channeltimes[channel][player]:
                     self.channeltimes[channel][player] = self.toptimes[channel][player]
 
         # worst times
@@ -129,7 +130,7 @@ class DuckHunt(callbacks.Plugin):
             else:
                 # It's a player that already has a saved score
                 # And we save the time of the current hunt if it's worst than it's previous time
-                if(self.worsttimes[channel][player] > value):
+                if self.worsttimes[channel][player] > value:
                     self.channelworsttimes[channel][player] = value
 
         # week scores
@@ -231,10 +232,10 @@ class DuckHunt(callbacks.Plugin):
             self.leader[channel] = None
 
         # autoFriday?
-        if (not self.fridayMode.get(channel)):
+        if not self.fridayMode.get(channel):
             self.fridayMode[channel] = False
 
-        if (not self.manualFriday.get(channel)):
+        if not self.manualFriday.get(channel):
             self.manualFriday[channel] = False
 
 
@@ -283,7 +284,7 @@ class DuckHunt(callbacks.Plugin):
         currentChannel = msg.args[0]
         if irc.isChannel(currentChannel):
 
-            if(self.started.get(currentChannel) == True):
+            if self.started.get(currentChannel) == True:
                 irc.reply("There is already a hunt right now!")
             else:
 
@@ -327,6 +328,9 @@ class DuckHunt(callbacks.Plugin):
                 # Reinit reloading
                 self.reloading[currentChannel] = {}
 
+                # Reinit reloadcount
+                self.reloadcount[currentChannel] = {}
+
                 # No duck launched
                 self.duck[currentChannel] = False
 
@@ -337,7 +341,7 @@ class DuckHunt(callbacks.Plugin):
                 self.shoots[currentChannel] = 0
 
                 # Init averagetime
-                self.averagetime[currentChannel] = 0;
+                self.averagetime[currentChannel] = 0
 
                 # Init schedule
 
@@ -365,8 +369,8 @@ class DuckHunt(callbacks.Plugin):
         currentChannel = msg.args[0]
         now = time.time()
         if irc.isChannel(currentChannel):
-            if(self.started.get(currentChannel) == True):
-                if (self.duck[currentChannel] == False):
+            if self.started.get(currentChannel) == True:
+                if self.duck[currentChannel] == False:
                     if now > self.lastSpoke[currentChannel] + self.throttle[currentChannel]:
                         self._launch(irc, msg, '')
 
@@ -378,7 +382,7 @@ class DuckHunt(callbacks.Plugin):
 
         currentChannel = msg.args[0]
         if irc.isChannel(currentChannel):
-            if (self.started.get(currentChannel) == True):
+            if self.started.get(currentChannel) == True:
                 self._end(irc, msg, args)
 
             # If someone uses the stop command,
@@ -401,11 +405,11 @@ class DuckHunt(callbacks.Plugin):
         """
         if irc.isChannel(channel):
 
-            if (status == 'status'):
-                irc.reply('Manual friday mode for ' + channel + ' is ' + str(self.manualFriday.get(channel)));
-                irc.reply('Auto friday mode for ' + channel + ' is ' + str(self.fridayMode.get(channel)));
+            if status == 'status':
+                irc.reply('Manual friday mode for ' + channel + ' is ' + str(self.manualFriday.get(channel)))
+                irc.reply('Auto friday mode for ' + channel + ' is ' + str(self.fridayMode.get(channel)))
             else:
-                if (self.manualFriday.get(channel) == None or self.manualFriday[channel] == False):
+                if self.manualFriday.get(channel) == None or self.manualFriday[channel] == False:
                     self.manualFriday[channel] = True
                     irc.reply("Friday mode is now enabled! Shoot alllllllllllll the ducks!")
                 else:
@@ -427,8 +431,8 @@ class DuckHunt(callbacks.Plugin):
 
         currentChannel = msg.args[0]
         if irc.isChannel(currentChannel):
-            if(self.started.get(currentChannel) == True):
-                if(self.duck[currentChannel] == True):
+            if self.started.get(currentChannel) == True:
+                if self.duck[currentChannel] == True:
                     irc.reply("There is currently a duck! You can shoot it with the 'bang' command")
                 else:
                     irc.reply("There is no duck right now! Wait for one to be launched!")
@@ -626,7 +630,7 @@ class DuckHunt(callbacks.Plugin):
             self._read_scores(channel)
             weekscores = {}
 
-            if (not week):
+            if not week:
                 week = self.woy
 
             if self.channelweek.get(channel):
@@ -698,7 +702,7 @@ class DuckHunt(callbacks.Plugin):
             self._read_scores(channel)
 
             # How many results do we display?
-            if (not size):
+            if not size:
                 listsize = self.toplist
             else:
                 listsize = size
@@ -729,7 +733,7 @@ class DuckHunt(callbacks.Plugin):
 
         if irc.isChannel(channel):
             self._read_scores(channel)
-            if (self.channelscores.get(channel)):
+            if self.channelscores.get(channel):
                 scores = self.channelscores[channel]
                 total = 0
                 for player, value in scores.items():
@@ -763,7 +767,7 @@ class DuckHunt(callbacks.Plugin):
                 self.channelworsttimes[channel] = {}
 
             # How many results do we display?
-            if (not size):
+            if not size:
                 listsize = self.toplist
             else:
                 listsize = size
@@ -811,7 +815,7 @@ class DuckHunt(callbacks.Plugin):
         This is a debug command. If debug mode is not enabled, it won't do anything 
         """
         currentChannel = msg.args[0]
-        if (self.debug):
+        if self.debug:
             if irc.isChannel(currentChannel):
                 self._launch(irc, msg, '')
     dbg = wrap(dbg)
@@ -824,7 +828,7 @@ class DuckHunt(callbacks.Plugin):
         currentChannel = msg.args[0]
 
         if irc.isChannel(currentChannel):
-            if(self.started.get(currentChannel) == True):
+            if self.started.get(currentChannel) == True:
 
                 # bangdelay: how much time between the duck was launched and this shot?
                 if self.times[currentChannel]:
@@ -834,18 +838,52 @@ class DuckHunt(callbacks.Plugin):
 
 
                 # Is the player reloading?
-                if (self.reloading[currentChannel].get(msg.nick) and time.time() - self.reloading[currentChannel][msg.nick] < self.reloadtime[currentChannel]):
+                if self.reloading[currentChannel].get(msg.nick) and time.time() - self.reloading[currentChannel][msg.nick] < self.reloadtime[currentChannel] and self.reloadcount[currentChannel][msg.nick] < 1:
                     irc.reply("You are reloading... (Reloading takes %i seconds)" % (self.reloadtime[currentChannel]))
+                    self.reloadcount[currentChannel][msg.nick] += 1
+                    return 0
+                if self.reloading[currentChannel].get(msg.nick) and time.time() - self.reloading[currentChannel][msg.nick] < self.reloadtime[currentChannel] and self.reloadcount[currentChannel][msg.nick] > 0:
+                    try:
+                        self.scores[currentChannel][msg.nick] -= 1
+                    except:
+                        try:
+                            self.scores[currentChannel][msg.nick] = -1
+                        except:
+                            self.scores[currentChannel] = {}
+                            self.scores[currentChannel][msg.nick] = -1
+
+                    # Base message
+                    message = 'You shot yourself while trying to reload!'
+
+                    # Adding additional message if kick
+                    if self.registryValue('kickMode', currentChannel) and irc.nick in irc.state.channels[currentChannel].ops:
+                        message += ' Reloading takes %s seconds.' % self.reloadtime[currentChannel]
+
+                    # Adding nick and score
+                    message += " %s: %i" % (msg.nick, self.scores[currentChannel][msg.nick])
+
+                    # If we were able to have a bangdelay (ie: a duck was launched before someone did bang)
+                    if bangdelay:
+                        # Adding time
+                        message += " (" + str(round(bangdelay,2)) + " seconds)"
+
+                    # If kickMode is enabled for this channel, and the bot have op capability, let's kick!
+                    if self.registryValue('kickMode', currentChannel) and irc.nick in irc.state.channels[currentChannel].ops:
+                        irc.queueMsg(ircmsgs.kick(currentChannel, msg.nick, message))
+                    else:
+                        # Else, just say it
+                        irc.reply(message)
                     return 0
 
                 # This player is now reloading
-                self.reloading[currentChannel][msg.nick] = time.time();
+                self.reloading[currentChannel][msg.nick] = time.time()
+                self.reloadcount[currentChannel][msg.nick] = 0
 
                 # There was a duck
-                if (self.duck[currentChannel] == True):
+                if self.duck[currentChannel] == True:
 
                     # Did the player missed it?
-                    if (random.random() < self.missprobability[currentChannel]):
+                    if random.random() < self.missprobability[currentChannel]:
                         irc.reply("You missed the duck!")
                     else:
 
@@ -866,7 +904,7 @@ class DuckHunt(callbacks.Plugin):
                         # Now save the bang delay for the player (if it's quicker than it's previous bangdelay)
                         try:
                             previoustime = self.toptimes[currentChannel][msg.nick]
-                            if(bangdelay < previoustime):
+                            if bangdelay < previoustime:
                                 self.toptimes[currentChannel][msg.nick] = bangdelay
                         except:
                             self.toptimes[currentChannel][msg.nick] = bangdelay
@@ -875,7 +913,7 @@ class DuckHunt(callbacks.Plugin):
                         # Now save the bang delay for the player (if it's worst than it's previous bangdelay)
                         try:
                             previoustime = self.worsttimes[currentChannel][msg.nick]
-                            if(bangdelay > previoustime):
+                            if bangdelay > previoustime:
                                 self.worsttimes[currentChannel][msg.nick] = bangdelay
                         except:
                             self.worsttimes[currentChannel][msg.nick] = bangdelay
@@ -892,7 +930,7 @@ class DuckHunt(callbacks.Plugin):
                             maxShoots = 10
 
                         # End of Hunt
-                        if (self.shoots[currentChannel]  == maxShoots):
+                        if self.shoots[currentChannel]  == maxShoots:
                             self._end(irc, msg, args)
 
                             # If autorestart is enabled, we restart a hunt automatically!
@@ -932,7 +970,7 @@ class DuckHunt(callbacks.Plugin):
                     message += " %s: %i" % (msg.nick, self.scores[currentChannel][msg.nick])
 
                     # If we were able to have a bangdelay (ie: a duck was launched before someone did bang)
-                    if (bangdelay):
+                    if bangdelay:
                         # Adding time
                         message += " (" + str(round(bangdelay,2)) + " seconds)"
 
@@ -955,8 +993,8 @@ class DuckHunt(callbacks.Plugin):
     def doPrivmsg(self, irc, msg):
         currentChannel = msg.args[0]
         if irc.isChannel(msg.args[0]):
-            if (msg.args[1] == '\_o< quack!'):
-                message = msg.nick + ", don't pretend to be me!";
+            if msg.args[1] == '\_o< quack!':
+                message = msg.nick + ", don't pretend to be me!"
                 # If kickMode is enabled for this channel, and the bot have op capability, let's kick!
                 if self.registryValue('kickMode', currentChannel) and irc.nick in irc.state.channels[currentChannel].ops:
                     irc.queueMsg(ircmsgs.kick(currentChannel, msg.nick, message))
@@ -985,7 +1023,7 @@ class DuckHunt(callbacks.Plugin):
             irc.reply("The hunt stops now!", prefixNick=False)
 
         # Showing scores
-        if (self.scores.get(currentChannel)):
+        if self.scores.get(currentChannel):
 
             # Getting winner
             winnernick, winnerscore = max(iter(self.scores.get(currentChannel).items()), key=lambda k_v12:(k_v12[1],k_v12[0]))
@@ -995,7 +1033,7 @@ class DuckHunt(callbacks.Plugin):
                 maxShoots = 10
 
             # Is there a perfect?
-            if (winnerscore == maxShoots):
+            if winnerscore == maxShoots:
                 irc.reply("\o/ %s: %i ducks out of %i: perfect!!! +%i \o/" % (winnernick, winnerscore, maxShoots, self.perfectbonus), prefixNick=False)
                 self.scores[currentChannel][winnernick] += self.perfectbonus
             else:
@@ -1015,18 +1053,20 @@ class DuckHunt(callbacks.Plugin):
 
             # Showing best time
             recordmsg = ''
-            if (self.toptimes.get(currentChannel)):
-                key,value = min(iter(self.toptimes.get(currentChannel).items()), key=lambda k_v6:(k_v6[1],k_v6[0]))
-            if (channelbesttime and value < channelbesttime):
-                recordmsg = '. This is the new record for this channel! (previous record was held by ' + channelbestnick + ' with ' + str(round(channelbesttime,2)) +  ' seconds)'
-            else:
-                try:
-                    if(value < self.channeltimes[currentChannel][key]):
-                        recordmsg = ' (this is your new record in this channel! Your previous record was ' + str(round(self.channeltimes[currentChannel][key],2)) + ')'
-                except:
-                    recordmsg = ''
-
-            irc.reply("Best time: %s with %.2f seconds%s" % (key, value, recordmsg), prefixNick=False)
+            try:
+                if self.toptimes.get(currentChannel):
+                    key,value = min(iter(self.toptimes.get(currentChannel).items()), key=lambda k_v6:(k_v6[1],k_v6[0]))
+                if channelbesttime and value < channelbesttime:
+                    recordmsg = '. This is the new record for this channel! (previous record was held by ' + channelbestnick + ' with ' + str(round(channelbesttime,2)) +  ' seconds)'
+                else:
+                    try:
+                        if value < self.channeltimes[currentChannel][key]:
+                            recordmsg = ' (this is your new record in this channel! Your previous record was ' + str(round(self.channeltimes[currentChannel][key],2)) + ')'
+                    except:
+                        recordmsg = ''
+                irc.reply("Best time: %s with %.2f seconds%s" % (key, value, recordmsg), prefixNick=False)
+            except:
+                recordmsg = ''
 
             # Getting channel worst time (to see if the worst time of this hunt is worst)
             channelworstnick = None
@@ -1036,19 +1076,22 @@ class DuckHunt(callbacks.Plugin):
 
             # Showing worst time
             recordmsg = ''
-            if (self.worsttimes.get(currentChannel)):
-                key,value = max(iter(self.worsttimes.get(currentChannel).items()), key=lambda k_v8:(k_v8[1],k_v8[0]))
-            if (channelworsttime and value > channelworsttime):
-                recordmsg = '. This is the new longest time for this channel! (previous longest time was held by ' + channelworstnick + ' with ' + str(round(channelworsttime,2)) +  ' seconds)'
-            else:
-                try:
-                    if(value > self.channelworsttimes[currentChannel][key]):
-                        recordmsg = ' (this is your new longest time in this channel! Your previous longest time was ' + str(round(self.channelworsttimes[currentChannel][key],2)) + ')'
-                except:
-                    recordmsg = ''
+            try:
+                if self.worsttimes.get(currentChannel):
+                    key,value = max(iter(self.worsttimes.get(currentChannel).items()), key=lambda k_v8:(k_v8[1],k_v8[0]))
+                if channelworsttime and value > channelworsttime:
+                    recordmsg = '. This is the new longest time for this channel! (previous longest time was held by ' + channelworstnick + ' with ' + str(round(channelworsttime,2)) +  ' seconds)'
+                else:
+                    try:
+                        if value > self.channelworsttimes[currentChannel][key]:
+                            recordmsg = ' (this is your new longest time in this channel! Your previous longest time was ' + str(round(self.channelworsttimes[currentChannel][key],2)) + ')'
+                    except:
+                        recordmsg = ''
+            except:
+                recordmsg = ''
 
             # Only display worst time if something new
-            if (recordmsg != ''):
+            if recordmsg != '':
                 irc.reply("Longest time: %s with %.2f seconds%s" % (key, value, recordmsg), prefixNick=False)
 
             # Showing average shooting time:
@@ -1072,7 +1115,7 @@ class DuckHunt(callbacks.Plugin):
                                     weekscores.setdefault(player, 0)
                                     weekscores[player] += value
                             winnernick, winnerscore = max(iter(weekscores.items()), key=lambda k_v3:(k_v3[1],k_v3[0]))
-                            if (winnernick != self.leader[currentChannel]):
+                            if winnernick != self.leader[currentChannel]:
                                 if self.leader[currentChannel] != None:
                                     irc.reply("%s took the lead for the week over %s with %i points." % (winnernick, self.leader[currentChannel], winnerscore), prefixNick=False) 
                                 else:
@@ -1104,8 +1147,8 @@ class DuckHunt(callbacks.Plugin):
         """
         currentChannel = msg.args[0]
         if irc.isChannel(currentChannel):
-            if(self.started[currentChannel] == True):
-                if (self.duck[currentChannel] == False):
+            if self.started[currentChannel] == True:
+                if self.duck[currentChannel] == False:
 
                     # Store the time when the duck has been launched
                     self.times[currentChannel] = time.time()
