@@ -34,7 +34,6 @@ This is a DuckHunt game for supybot
 
 import supybot
 import supybot.world as world
-from imp import reload
 import importlib
 
 # Use this for the version of this plugin.  You may wish to put a CVS keyword
