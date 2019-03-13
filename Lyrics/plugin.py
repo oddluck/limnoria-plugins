@@ -12,6 +12,7 @@ import supybot.ircutils as ircutils
 import supybot.callbacks as callbacks
 import supybot.ircmsgs as ircmsgs
 from gsearch.googlesearch import search
+import re
 import pylyrics3
 
 try:
@@ -36,6 +37,7 @@ class Lyrics(callbacks.Plugin):
 
     def getlyrics(self, url):
         lyrics = pylyrics3.get_lyrics_from_url(url)
+        lyrics = re.sub('(?<!\.|\!|\?)\s\\n', '.', lyrics).replace(" \n", "")
         return lyrics
 
     def lyric(self, irc, msg, args, lyric):
@@ -52,7 +54,7 @@ class Lyrics(callbacks.Plugin):
         if url:
             lyrics = self.getlyrics(url)
             irc.reply(title.replace(":", " - "))
-            irc.reply(lyrics.replace(" \n", ".").replace("\\", ""))
+            irc.reply(lyrics)
         else:
             irc.reply("No lyrics found... or some other error.")
     lyric = wrap(lyric, ['text'])
