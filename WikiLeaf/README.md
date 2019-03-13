@@ -1,7 +1,5 @@
-Return strain information from https://www.wikileaf.com/ Seaches powered by https://duckduckgo.com/
+Return strain information from https://www.wikileaf.com/ Seaches powered by Google
 
-Requires Limnoria, requests, bs4
-
-pip install requests bs4 fake-useragent
+pip install requests bs4 fake-useragent gsearch
 
 Usage: strain (strain name)
