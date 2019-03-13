@@ -1,6 +1,4 @@
 # Lyrics
-Limnoria plugin to return song lyrics by artist, song title from lyric-api.herokuapp.com
+Limnoria plugin to return song lyrics. Search powered by Google.
 
-lyric artist | song title
-
-requirements: limnoria, python 3, requests
+pip install -r requirements.txt
