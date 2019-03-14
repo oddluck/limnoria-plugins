@@ -6,6 +6,8 @@ ascii (text) convert text to ascii art
 
 img2ascii (url) convert an image to ascii art
 
+scroll (url) playback of ansi art files from the web
+
 fontlist to get list of fonts
 
 ascii --font (font) (text) to use chosen font.
