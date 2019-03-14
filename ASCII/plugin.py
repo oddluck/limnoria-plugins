@@ -13,8 +13,6 @@ import supybot.ircutils as ircutils
 import supybot.callbacks as callbacks
 import supybot.ircmsgs as ircmsgs
 import os
-import webbrowser
-import urllib.request
 import pexpect
 import requests
 from bs4 import BeautifulSoup
