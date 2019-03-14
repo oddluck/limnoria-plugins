@@ -92,7 +92,7 @@ class ASCII(callbacks.Plugin):
         filepath = "{0}/tmp".format(path)
         filename = "{0}/{1}".format(filepath, url.split('/')[-1])
         urllib.request.urlretrieve(url, filename)
-        output = pexpect.run('img2txt.py {0} --targetAspect=0.5'.format(str(filename)))
+        output = pexpect.run('img2txt.py {0} --targetAspect=0.5 --antialias'.format(str(filename)))
         soup = BeautifulSoup(output)
         ascii = soup.pre.getText()
         for line in ascii.splitlines():
