@@ -68,10 +68,6 @@ class ASCII(callbacks.Plugin):
                  for line in data.text.splitlines():
                      if line.strip():
                          irc.reply(ircutils.mircColor(line, color1, color2), prefixNick=False)
-        elif 'fontlist' in optlist:
-            fontlist = requests.get("https://artii.herokuapp.com/fonts_list")
-            response = sorted(fontlist.text.split('\n'))
-            irc.reply(str(response).replace('\'', '').replace('[', '').replace(']', ''))
         elif 'font' not in optlist:
             if words:
                  for word in words:
