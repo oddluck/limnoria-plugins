@@ -106,7 +106,6 @@ class HuntNFish(callbacks.Plugin):
                                 irc.reply("You got a new highscore!")
                 else:
                     irc.reply("Oops, you missed the {0}{1} {2}.".format(weight, weightType, currentWhat))
-
     hunt = wrap(hunt)
 
     def fish(self,irc,msg,args):
@@ -195,7 +194,6 @@ class HuntNFish(callbacks.Plugin):
                 catch = data[1].rstrip('\n')
                 size = data[2].rstrip('\n')
                 irc.reply('Fishing highscore held by: %s with a %s%s %s' % (fisherman, size, weightType, catch))
-
     trophy = wrap(trophy)
 
     def resetscores(self,irc,msg,args):
@@ -208,18 +206,11 @@ class HuntNFish(callbacks.Plugin):
            return
         hunttrophy = conf.supybot.directories.data.dirize("hunttrophy_{0}.db".format(channel))
         fishtrophy = conf.supybot.directories.data.dirize("fishtrophy_{0}.db".format(channel))
-        if not os.path.isfile(fishtrophy):
-            with open(fishtrophy, 'w') as f:
-                f.write('Nobody\nnothing\n2')
-        if not os.path.isfile(hunttrophy):
-            with open(hunttrophy, 'w') as f:
-                f.write('Nobody\nnothing\n2')
         with open(hunttrophy, 'w') as f:
             f.write('Nobody\nnothing\n2')
         with open(fishtrophy, 'w') as f:
             f.write('Nobody\nnothing\n2')
         irc.replySuccess()
-
     resetscores = wrap(resetscores, ['owner'])
 
 Class = HuntNFish
