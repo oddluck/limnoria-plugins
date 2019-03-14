@@ -11,12 +11,9 @@ import supybot.plugins as plugins
 import supybot.ircutils as ircutils
 import supybot.callbacks as callbacks
 import supybot.ircmsgs as ircmsgs
-import requests
-import html
-import arrr
-from bs4 import BeautifulSoup
-import os
 import random
+import requests
+from bs4 import BeautifulSoup
 
 try:
     from supybot.i18n import PluginInternationalization
@@ -112,73 +109,6 @@ class Fun(callbacks.Plugin):
         else:
             irc.reply(data['insult'])
     insult = wrap(insult, [additional('nickInChannel')])
-
-    def ascii(self, irc, msg, args, optlist, text):
-        """[--font <font>] [--fontlist] [--color] [<text>]
-        text to ASCII art
-        """
-        channel = msg.args[0]
-        optlist = dict(optlist)
-        font = None
-        words = []
-        if text:
-            text = text.strip()
-            if '|' in text:
-                words = text.split('|')
-        if 'color' in optlist:
-            color = optlist.get('color')
-            if "," in color:
-                color = color.split(",")
-                color1 = color[0].strip()
-                color2 = color[1].strip()
-            else:
-                color1 = color
-                color2 = None
-        else:
-            color1 = None
-            color2 = None
-        if 'font' in optlist:
-             font = optlist.get('font')
-             if words:
-                 for word in words:
-                     if word.strip():
-                         data = requests.get("https://artii.herokuapp.com/make?text={0}&font={1}".format(word.strip(), font))
-                         for line in data.text.splitlines():
-                             if line.strip():
-                                 irc.reply(ircutils.mircColor(line, color1, color2), prefixNick=False)
-             else:
-                 data = requests.get("https://artii.herokuapp.com/make?text={0}&font={1}".format(text, font))
-                 for line in data.text.splitlines():
-                     if line.strip():
-                         irc.reply(ircutils.mircColor(line, color1, color2), prefixNick=False)
-        elif 'fontlist' in optlist:
-            fontlist = requests.get("https://artii.herokuapp.com/fonts_list")
-            response = sorted(fontlist.text.split('\n'))
-            irc.reply(str(response).replace('\'', '').replace('[', '').replace(']', ''))
-        elif 'font' not in optlist:
-            if words:
-                 for word in words:
-                     if word.strip():
-                         data = requests.get("https://artii.herokuapp.com/make?text={0}&font=univers".format(word.strip()))
-                         for line in data.text.splitlines():
-                             if line.strip():
-                                 irc.reply(ircutils.mircColor(line, color1, color2), prefixNick=False)
-            else:
-                data = requests.get("https://artii.herokuapp.com/make?text={0}&font=univers".format(text))
-                for line in data.text.splitlines():
-                    if line.strip():
-                        irc.reply(ircutils.mircColor(line, color1, color2), prefixNick=False)
-
-    ascii = wrap(ascii, [getopts({'font':'text', 'color':'text', 'fontlist':''}), additional('text')])
-
-    def pirate(self, irc, msg, args, text):
-        """<text>
-        English to pirate translator.
-        """
-        channel = msg.args[0]
-        pirate = arrr.translate(text)
-        irc.reply(pirate)
-    pirate = wrap(pirate, ['text'])
 
     def devexcuse(self, irc, msg, args):
         """
