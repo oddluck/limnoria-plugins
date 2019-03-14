@@ -17,7 +17,7 @@ Fork of Trivia with option to use jservice.io (156,800+ Jeopardy! questions) as 
 
 <b>Fun</b>
 
-Return text-to-ascii-art, pirate translation, piglatin translation, play rock-paper-scissors. Random; joke, cat fact, cat .gif, dev excuse, bofh excuse, useless fact, corporate buzzwords, startup idea, insult, or advice from various APIs
+Return a random; joke, cat fact, cat .gif, dev excuse, bofh excuse, useless fact, corporate buzzwords, startup idea, insult, or advice from various APIs. Also piglatin translation and play rock-paper-scissors. 
 
 
 <b>Frotz</b>
