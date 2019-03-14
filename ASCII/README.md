@@ -1,6 +1,6 @@
 #ASCII Art Plugin
 
-pip install img2txt.py requests bs4
+pip install img2txt.py requests bs4 pexpect
 
 ascii (text) convert text to ascii art
 
