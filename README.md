@@ -6,6 +6,10 @@ Requires Limnoria, obviously. Additional requirements in readmes or requirements
 
 gitlab mirror: https://gitlab.com/oddluck/limnoria-plugins
 
+<b>ASCII</b>
+
+Plugin to turn text and images into ASCII Art.
+
 <b>Jeopardy</b>
 
 Fork of Trivia with option to use jservice.io (156,800+ Jeopardy! questions) as trivia source plus additional features such as category selection, question history, and improved scoring and answer checking. 
