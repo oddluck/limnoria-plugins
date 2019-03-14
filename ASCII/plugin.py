@@ -32,7 +32,7 @@ class ASCII(callbacks.Plugin):
 
     def ascii(self, irc, msg, args, optlist, text):
         """[--font <font>] [--color <color1,color2>] [<text>]
-        text to ASCII art
+        Text to ASCII art
         """
         channel = msg.args[0]
         optlist = dict(optlist)
@@ -109,5 +109,18 @@ class ASCII(callbacks.Plugin):
         response = sorted(fontlist.text.split('\n'))
         irc.reply(str(response).replace('\'', '').replace('[', '').replace(']', ''))
     fontlist = wrap(fontlist)
+
+    def scroll(self, irc, msg, args, url):
+        """
+        Play ASCII/ANSI art files from web links
+        """
+        file = requests.get(url)
+        if "html" in file.text:
+            irc.reply("Don't try and scroll html files, jackass.")
+        else:
+            for line in file.text.splitlines():
+                if line.strip():
+                    irc.reply(line, prefixNick = False)
+    scroll = wrap(scroll, ['text'])
 
 Class = ASCII
