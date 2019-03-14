@@ -1,4 +1,6 @@
-ASCII Art Plugin
+#ASCII Art Plugin
+
+pip install img2txt.py requests bs4
 
 ascii (text) convert text to ascii art
 
