@@ -24,5 +24,7 @@ def configure(advanced):
     from supybot.questions import expect, anything, something, yn
     conf.registerPlugin('Frotz', True)
 
+conf.registerGlobalValue(Frotz, 'dfrotzPath',
+        registry.String('/usr/local/bin/dfrotz', _("""The path to the dfrotz executable.""")))
 
 Frotz = conf.registerPlugin('Frotz')
