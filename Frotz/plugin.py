@@ -52,7 +52,8 @@ class Frotz(callbacks.Plugin):
             game_file= "{0}{1}".format(self.game_path, game_name)
             self.game[channel] = pexpect.spawn("{0} -S 0 {1}".format(self.binary, game_file))
             score, response = self.output(self.game[channel])
-            irc.reply(score, prefixNick=False)
+            if score:
+                irc.reply(score, prefixNick=False)
             irc.reply(response, prefixNick=False)
     load = wrap(load, ['text'])
 
@@ -63,7 +64,14 @@ class Frotz(callbacks.Plugin):
         response = re.sub('(?<!\.|\!|\?|\s)\\r\\n\s*(?!\.|\!|\?|\s*[a-z])', '. ', output.before.decode().strip())
         response = re.sub('\\r\\n|\\r|\\n', '', response)
         response = re.sub('\s+', ' ', response)
-        score, response = re.match("(.*\d+\/\d+)(.*)", response).groups()
+        if re.match(".*\d+\/\d+", response):
+            score, response = re.match("(.*\d+\/\d+)(.*)", response).groups()
+            score = re.sub("(.*)(\d+\/\d+)", r"\1| \2", score)
+        elif re.match(".*Score:\s*\d\s*Moves:\s*\d", response):
+            score, response = re.match("(.*Score:\s*\d\s*Moves:\s*\d)(.*)", response).groups()
+            score = re.sub("(.*)(Score:\s*\d\s*Moves:\s*\d)", r"\1| \2", score)
+        else:
+            score = None
         response = re.sub('^\.\s*', '', response)
         return score, response
 
@@ -79,7 +87,8 @@ class Frotz(callbacks.Plugin):
             self.game[channel].sendline(command)
             score, response = self.output(self.game[channel])
             score = re.sub("(.*{0}.\s*)".format(command), "", score)
-            irc.reply(score, prefixNick=False)
+            if score:
+                irc.reply(score, prefixNick=False)
             irc.reply(response, prefixNick=False)
 
     def stop(self, irc, msg, args):
@@ -121,7 +130,8 @@ class Frotz(callbacks.Plugin):
                 self.game[channel].sendline()
             response = self.output(self.game[channel])
             score = re.sub("(.*{0}.\s*)".format(command), "", score)
-            irc.reply(score, prefixNick=False)
+            if score:
+                irc.reply(score, prefixNick=False)
             irc.reply(response, prefixNick=False)
         else:
             irc.reply("No game running in {0}?".format(channel))
