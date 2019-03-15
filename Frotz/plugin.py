@@ -120,6 +120,7 @@ class Frotz(callbacks.Plugin):
             else:
                 self.game[channel].sendline()
             response = self.output(self.game[channel])
+            score = re.sub("(.*{0}.\s*)".format(command), "", score)
             irc.reply(score, prefixNick=False)
             irc.reply(response, prefixNick=False)
         else:
