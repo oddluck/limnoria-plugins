@@ -91,6 +91,8 @@ class BadWords(callbacks.Privmsg):
                     else:
                         self.log.warning('Should kick %s from %s, but not opped.',
                                          msg.nick, channel)
+            elif ircutils.isChannel(channel) and self.regexp.search(s):
+                return
         return msg
 
     def updateRegexp(self, channel):
