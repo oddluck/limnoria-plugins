@@ -4,8 +4,13 @@ Requires limnoria, python 3, pexpect
 
 Uses the dfrotz (dumb frotz) interpreter https://github.com/DavidGriffith/frotz
 
+git clone https://github.com/DavidGriffith/frotz
+cd frotz
+make dumb
+make install_dumb
+
+config plugins.frotz.dfrotzPath (path_to_dfrotz_binary) (default /usr/local/bin/dfrotz)
 Looks for games in ./games/ directory
-and for the binary at ./frotz/dfrotz
 
 usage:
 
