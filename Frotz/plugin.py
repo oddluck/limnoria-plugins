@@ -60,7 +60,7 @@ class Frotz(callbacks.Plugin):
         response = []
         prompts = ["\n>", "\n> >", "to begin]", "\n\*\*\*MORE\*\*\*", pexpect.TIMEOUT]
         output.expect(prompts, timeout=2)
-        response = re.sub('(?<!\.|\!|\?|\s)\\r\\n\s*(?!\.|\s*[a-z])', '. ', output.before.decode().strip())
+        response = re.sub('(?<!\.|\!|\?|\s)\\r\\n\s*(?!\.|\!|\?|\s*[a-z])', '. ', output.before.decode().strip())
         response = re.sub('\\r\\n|\\r|\\n', '', response)
         response = re.sub('\s+', ' ', response)
         score, response = re.match("(.*\d+\/\d+)(.*)", response).groups()
@@ -136,4 +136,3 @@ class Frotz(callbacks.Plugin):
     games = wrap(games)
 
 Class = Frotz
-
