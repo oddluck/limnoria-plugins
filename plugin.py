@@ -91,7 +91,7 @@ class BadWords(callbacks.Privmsg):
                     else:
                         self.log.warning('Should kick %s from %s, but not opped.',
                                          msg.nick, channel)
-            elif ircutils.isChannel(channel) and self.regexp.search(s):
+            elif ircutils.isChannel(channel) and self.regexp.search(s) and not ircdb.checkCapability(msg.prefix, 'trusted'):
                 return
         return msg
 
