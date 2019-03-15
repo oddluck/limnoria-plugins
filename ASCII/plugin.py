@@ -12,8 +12,8 @@ import supybot.plugins as plugins
 import supybot.ircutils as ircutils
 import supybot.callbacks as callbacks
 import supybot.ircmsgs as ircmsgs
-import urllib
 import os
+import urllib
 import pexpect
 import requests
 from bs4 import BeautifulSoup
@@ -83,24 +83,24 @@ class ASCII(callbacks.Plugin):
                     if line.strip():
                         irc.reply(ircutils.mircColor(line, color1, color2), prefixNick=False)
 
-    ascii = wrap(ascii, [getopts({'font':'text', 'color':'text', 'fontlist':''}), additional('text')])
+    ascii = wrap(ascii, [getopts({'font':'text', 'color':'text'}), ('text')])
 
-    def img2ascii(self, irc, msg, args, url):
-        """[--font <font>] [--fontlist] [--color] [<text>]
+    def img(self, irc, msg, args, url):
+        """
         Image to ASCII Art
         """
         path = os.path.dirname(os.path.abspath(__file__))
         filepath = "{0}/tmp".format(path)
         filename = "{0}/{1}".format(filepath, url.split('/')[-1])
         urllib.request.urlretrieve(url, filename)
-        output = pexpect.run('img2txt.py {0} --targetAspect=0.5 --antialias'.format(str(filename)))
+        output = pexpect.run('img2txt.py {0} --targetAspect=0.5 --maxLen=80 --antialias'.format(str(filename)))
         soup = BeautifulSoup(output)
         ascii = soup.pre.getText()
         for line in ascii.splitlines():
             if line.strip:
                 irc.reply(line, prefixNick=False)
         os.remove(filename)
-    img2ascii = wrap(img2ascii, ['text'])
+    img = wrap(img, ['text'])
 
     def fontlist(self, irc, msg, args):
         """
