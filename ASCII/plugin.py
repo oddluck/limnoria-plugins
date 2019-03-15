@@ -116,8 +116,8 @@ class ASCII(callbacks.Plugin):
         Play ASCII/ANSI art files from web links
         """
         file = requests.get(url)
-        if "html" in file.text:
-            irc.reply("Don't try and scroll html files, jackass.")
+        if "html" in file.text or not url.endswith(".txt"):
+            irc.reply("Error: Scroll requires a text file as input.")
         else:
             for line in file.text.splitlines():
                 if line.strip():
