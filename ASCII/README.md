@@ -4,7 +4,7 @@ pip install img2txt.py requests bs4 pexpect
 
 ascii (text) convert text to ascii art
 
-img2ascii (url) convert an image to ascii art
+img (url) convert an image to ascii art
 
 scroll (url) playback of ansi art files from the web
 
