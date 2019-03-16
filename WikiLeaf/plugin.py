@@ -15,7 +15,6 @@ import requests
 import re
 from bs4 import BeautifulSoup
 from fake_useragent import UserAgent
-from gsearch.googlesearch import search
 
 try:
     from supybot.i18n import PluginInternationalization
@@ -29,22 +28,23 @@ class WikiLeaf(callbacks.Plugin):
     """Retrieve Marjuana Strain Information From WikiLeaf"""
     threaded = True
 
-    def dosearch(self, strain):
-        data = search("{0} site:wikileaf.com/strain/".format(strain))
-        title, url = data[0]
+    def dosearch(self, search):
+        searchurl = "https://www.google.com/search?&q={0} site:wikileaf.com/strain/".format(search)
+        ua = UserAgent()
+        header = {'User-Agent':str(ua.random)}
+        data = requests.get(searchurl, headers=header)
+        soup = BeautifulSoup(data.text)
+        url = soup.find('cite').getText()
+        title = soup.find("h3").getText()
         return title, url
 
     def strain(self, irc, msg, args, strain):
         """<strain>
         Returns strain information from WikiLeaf. Search powered by Google.
         """
-        retries = 0
-        url = None
-        while not url and retries <= 3:
-            try:
-                title, url = self.dosearch(strain)
-            except:
-                retries +=1
+        title, url = self.dosearch(strain)
+        irc.reply(title)
+        irc.reply(url)
         if url:
             ua = UserAgent()
             header = {'User-Agent':str(ua.random)}
@@ -62,3 +62,4 @@ class WikiLeaf(callbacks.Plugin):
     strain = wrap(strain, ['text'])
 
 Class = WikiLeaf
+
