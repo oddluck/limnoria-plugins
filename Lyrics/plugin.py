@@ -11,9 +11,11 @@ import supybot.plugins as plugins
 import supybot.ircutils as ircutils
 import supybot.callbacks as callbacks
 import supybot.ircmsgs as ircmsgs
-from gsearch.googlesearch import search
+from bs4 import BeautifulSoup
+import requests
 import re
 import pylyrics3
+from fake_useragent import UserAgent
 
 try:
     from supybot.i18n import PluginInternationalization
@@ -28,12 +30,16 @@ class Lyrics(callbacks.Plugin):
     threaded = True
 
     def dosearch(self, lyric):
-        data = search("{0} \"Lyrics\" site:lyrics.wikia.com/wiki/".format(lyric))
-        try:
-            title, url = data[0]
-            return title, url
-        except:
-            pass
+        searchurl = "https://www.google.com/search?&q={0} site:lyrics.wikia.com/wiki \"Lyrics\"".format(lyric)
+        ua = UserAgent()
+        header = {'User-Agent':str(ua.random)}
+        data = requests.get(searchurl, headers=header)
+        soup = BeautifulSoup(data.text)
+        soup.prettify()
+        url = soup.find('cite').getText()
+        title = soup.find("h3").getText()
+        url = "http://{0}".format(url)
+        return title, url
 
     def getlyrics(self, url):
         lyrics = pylyrics3.get_lyrics_from_url(url)
@@ -44,13 +50,7 @@ class Lyrics(callbacks.Plugin):
         """<text>
         Get song lyrics from Lyrics Wiki. Search powered by Google.
         """
-        retries = 0
-        url = None
-        while not url and retries <= 3:
-            try:
-                title, url = self.dosearch(lyric)
-            except:
-                retries += 1
+        title, url = self.dosearch(lyric)
         if url:
             lyrics = self.getlyrics(url)
             irc.reply(title.replace(":", " - "))
