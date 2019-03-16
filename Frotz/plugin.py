@@ -59,9 +59,14 @@ class Frotz(callbacks.Plugin):
 
     def output(self, output):
         response = []
-        prompts = ["\n>", "\n> >", "to begin]", "\n\*\*\*MORE\*\*\*", "to continue.]", pexpect.TIMEOUT]
+        prompts = ["> >$", ">$", "\*\*\*MORE\*\*\*", "\) \[Hit any key to continue.\]", pexpect.TIMEOUT]
         output.expect(prompts, timeout=2)
-        response = output.before.decode().splitlines()
+        response = output.before
+        while not output.match.group().decode().endswith(">"):
+            output.sendline()
+            output.expect(prompts, timeout=2)
+            response += output.before
+        response = response.decode().splitlines()
         return response
 
     def doPrivmsg(self, irc, msg):
@@ -133,3 +138,4 @@ class Frotz(callbacks.Plugin):
     games = wrap(games)
 
 Class = Frotz
+
