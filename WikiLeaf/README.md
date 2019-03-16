@@ -1,5 +1,5 @@
 Return strain information from https://www.wikileaf.com/ Seaches powered by Google
 
-pip install requests bs4 fake-useragent gsearch
+pip install -r requirements.txt
 
 Usage: strain (strain name)
