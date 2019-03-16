@@ -51,29 +51,18 @@ class Frotz(callbacks.Plugin):
             irc.reply("Starting {0} on {1}. Please wait...".format(game_name, channel))
             game_file= "{0}{1}".format(self.game_path, game_name)
             self.game[channel] = pexpect.spawn("{0} -S 0 {1}".format(self.binary, game_file))
-            score, response = self.output(self.game[channel])
-            if score:
-                irc.reply(score, prefixNick=False)
-            irc.reply(response, prefixNick=False)
+            response = self.output(self.game[channel])
+            for line in response:
+                if line.strip() and line.strip() != ".":
+                    irc.reply(line, prefixNick=False)
     load = wrap(load, ['text'])
 
     def output(self, output):
         response = []
-        prompts = ["\n>", "\n> >", "to begin]", "\n\*\*\*MORE\*\*\*", pexpect.TIMEOUT]
+        prompts = ["\n>", "\n> >", "to begin]", "\n\*\*\*MORE\*\*\*", "to continue.]", pexpect.TIMEOUT]
         output.expect(prompts, timeout=2)
-        response = re.sub('(?<!\.|\!|\?|\s)\\r\\n\s*(?!\.|\!|\?|\s*[a-z])', '. ', output.before.decode().strip())
-        response = re.sub('\\r\\n|\\r|\\n', '', response)
-        response = re.sub('\s+', ' ', response)
-        if re.match(".*\d+\/\d+", response):
-            score, response = re.match("(.*\d+\/\d+)(.*)", response).groups()
-            score = re.sub("(.*)(\d+\/\d+)", r"\1| \2", score)
-        elif re.match(".*Score:\s*\d\s*Moves:\s*\d", response):
-            score, response = re.match("(.*Score:\s*\d\s*Moves:\s*\d)(.*)", response).groups()
-            score = re.sub("(.*)(Score:\s*\d\s*Moves:\s*\d)", r"\1| \2", score)
-        else:
-            score = None
-        response = re.sub('^\.\s*', '', response)
-        return score, response
+        response = output.before.decode().splitlines()
+        return response
 
     def doPrivmsg(self, irc, msg):
         channel = msg.args[0]
@@ -85,11 +74,10 @@ class Frotz(callbacks.Plugin):
         if self.game[channel]:
             command = msg.args[1]
             self.game[channel].sendline(command)
-            score, response = self.output(self.game[channel])
-            score = re.sub("(.*{0}.\s*)".format(command), "", score)
-            if score:
-                irc.reply(score, prefixNick=False)
-            irc.reply(response, prefixNick=False)
+            response = self.output(self.game[channel])
+            for line in response[1:]:
+                if line.strip() and line.strip() != ".":
+                    irc.reply(line, prefixNick=False)
 
     def stop(self, irc, msg, args):
         """
@@ -129,10 +117,9 @@ class Frotz(callbacks.Plugin):
             else:
                 self.game[channel].sendline()
             response = self.output(self.game[channel])
-            score = re.sub("(.*{0}.\s*)".format(command), "", score)
-            if score:
-                irc.reply(score, prefixNick=False)
-            irc.reply(response, prefixNick=False)
+            for line in response[1:]:
+                if line.strip() and line.strip() != ".":
+                    irc.reply(line, prefixNick=False)
         else:
             irc.reply("No game running in {0}?".format(channel))
     z = wrap(z, [additional('text')])
