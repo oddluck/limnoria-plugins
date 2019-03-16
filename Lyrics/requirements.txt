@@ -1,2 +1,4 @@
-gsearch
+requests
+bs4
+fake_useragent
 pylyrics3
