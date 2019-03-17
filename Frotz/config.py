@@ -28,5 +28,3 @@ Frotz = conf.registerPlugin('Frotz')
 
 conf.registerGlobalValue(Frotz, 'dfrotzPath',
         registry.String('/usr/local/bin/dfrotz', _("""The path to the dfrotz executable.""")))
-
-Frotz = conf.registerPlugin('Frotz')
