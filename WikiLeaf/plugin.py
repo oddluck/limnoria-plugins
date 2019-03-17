@@ -29,36 +29,45 @@ class WikiLeaf(callbacks.Plugin):
     threaded = True
 
     def dosearch(self, search):
-        searchurl = "https://www.google.com/search?&q={0} site:wikileaf.com/strain/".format(search)
-        ua = UserAgent()
-        header = {'User-Agent':str(ua.random)}
-        data = requests.get(searchurl, headers=header)
-        soup = BeautifulSoup(data.text)
-        url = soup.find('cite').getText()
-        title = soup.find("h3").getText()
-        return title, url
+        try:
+            searchurl = "https://www.google.com/search?&q={0} site:wikileaf.com/strain/".format(search)
+            ua = UserAgent()
+            header = {'User-Agent':str(ua.random)}
+            data = requests.get(searchurl, headers=header)
+            soup = BeautifulSoup(data.text)
+            url = soup.find('cite').getText()
+            title = soup.find("h3").getText()
+        except Exception:
+            return
+        else:
+            return title, url
 
     def strain(self, irc, msg, args, strain):
         """<strain>
         Returns strain information from WikiLeaf. Search powered by Google.
         """
-        title, url = self.dosearch(strain)
-        irc.reply(title)
-        irc.reply(url)
-        if url:
-            ua = UserAgent()
-            header = {'User-Agent':str(ua.random)}
-            data = requests.get(url, headers=header)
-            soup = BeautifulSoup(data.text)
-            name = re.sub('\s+', ' ', soup.find("h1", itemprop="name").getText())
-            straininfo = re.sub('\s+', ' ', soup.find("div", class_="product-info-line cannabis").getText())
-            description = re.sub('\s+', ' ', soup.find("div", itemprop="description").getText())
-            thc = re.sub('\s+', ' ', soup.find_all("div", class_="product-container-header cf")[1].getText())
-            reply = "\x02{0}\x0F | {1} | {2} | {3}".format(name.strip(), straininfo.strip(), thc.strip(), description.strip())
-            del data, soup
-            irc.reply(reply)
-        else:
+        try:
+            title, url = self.dosearch(strain)
+            irc.reply(title)
+            irc.reply(url)
+        except Exception:
             irc.reply("No results found, what have you been smoking?")
+        else:
+            try:
+                ua = UserAgent()
+                header = {'User-Agent':str(ua.random)}
+                data = requests.get(url, headers=header)
+                soup = BeautifulSoup(data.text)
+                name = re.sub('\s+', ' ', soup.find("h1", itemprop="name").getText())
+                straininfo = re.sub('\s+', ' ', soup.find("div", class_="product-info-line cannabis").getText())
+                description = re.sub('\s+', ' ', soup.find("div", itemprop="description").getText())
+                thc = re.sub('\s+', ' ', soup.find_all("div", class_="product-container-header cf")[1].getText())
+                reply = "\x02{0}\x0F | {1} | {2} | {3}".format(name.strip(), straininfo.strip(), thc.strip(), description.strip())
+                del data, soup
+                irc.reply(reply)
+            except Exception:
+                irc.reply("Unable to retrieve info from {0}".format(url))
+
     strain = wrap(strain, ['text'])
 
 Class = WikiLeaf
