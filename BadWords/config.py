@@ -107,7 +107,7 @@ conf.registerChannelValue(BadWords.kick, 'message',
     bot when kicking users for saying bad words.""")))
 
 conf.registerChannelValue(BadWords, 'inFilter',
-    registry.Boolean(False, _("""Determines whether the bot will filter badwords
-    from being passsed to commands.""")))
+    registry.Boolean(False, _("""Determines whether the bot will not respond
+    to messages with badwords from untrusted users.""")))
 
 # vim:set shiftwidth=4 softtabstop=4 expandtab textwidth=79:
