@@ -30,33 +30,45 @@ class Lyrics(callbacks.Plugin):
     threaded = True
 
     def dosearch(self, lyric):
-        searchurl = "https://www.google.com/search?&q={0} site:lyrics.wikia.com/wiki \"Lyrics\"".format(lyric)
-        ua = UserAgent()
-        header = {'User-Agent':str(ua.random)}
-        data = requests.get(searchurl, headers=header)
-        soup = BeautifulSoup(data.text)
-        url = soup.find('cite').getText()
-        title = soup.find("h3").getText()
-        url = "http://{0}".format(url)
-        return title, url
+        try:
+            searchurl = "https://www.google.com/search?&q={0} site:lyrics.wikia.com/wiki \"Lyrics\"".format(lyric)
+            ua = UserAgent()
+            header = {'User-Agent':str(ua.random)}
+            data = requests.get(searchurl, headers=header)
+            soup = BeautifulSoup(data.text)
+            url = soup.find('cite').getText()
+            title = soup.find("h3").getText()
+            url = "http://{0}".format(url)
+        except Exception:
+            return
+        else:
+            return title, url
 
     def getlyrics(self, url):
-        lyrics = pylyrics3.get_lyrics_from_url(url)
-        lyrics = re.sub('(?<!\.|\!|\?)\s\\n', '.', lyrics).replace(" \n", "")
-        return lyrics
+        try:
+            lyrics = pylyrics3.get_lyrics_from_url(url)
+            lyrics = re.sub('(?<!\.|\!|\?)\s\\n', '.', lyrics).replace(" \n", "")
+        except Exception:
+            lyrics = pylyrics3.get_lyrics_from_url(url)
+            lyrics = re.sub('(?<!\.|\!|\?)\s\\n', '.', lyrics).replace(" \n", "")
+        else:
+            return lyrics
 
     def lyric(self, irc, msg, args, lyric):
         """<text>
         Get song lyrics from Lyrics Wiki. Search powered by Google.
         """
-        title, url = self.dosearch(lyric)
-        if url:
-            lyrics = self.getlyrics(url)
-            irc.reply(title.replace(":", " - "))
-            irc.reply(lyrics)
+        try:
+            title, url = self.dosearch(lyric)
+        except Exception:
+            irc.reply("No results found for {0}".format(lyric))
         else:
-            irc.reply("No lyrics found... or some other error.")
+            try:
+                lyrics = self.getlyrics(url)
+                irc.reply(title.replace(":", " - "))
+                irc.reply(lyrics)
+            except Exception:
+                irc.reply("Unable to retrieve lyrics from {0}".format(url))
     lyric = wrap(lyric, ['text'])
 
 Class = Lyrics
-
