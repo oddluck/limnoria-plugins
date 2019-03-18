@@ -14,10 +14,12 @@ import supybot.callbacks as callbacks
 import supybot.ircmsgs as ircmsgs
 import os
 import urllib
-import pexpect
 import requests
-from bs4 import BeautifulSoup
-
+from PIL import Image, ImageEnhance
+import numpy as np
+import sys, math
+from colormath.color_objects import LabColor, sRGBColor
+from colormath.color_conversions import convert_color
 
 try:
     from supybot.i18n import PluginInternationalization
@@ -85,6 +87,41 @@ class ASCII(callbacks.Plugin):
 
     ascii = wrap(ascii, [getopts({'font':'text', 'color':'text'}), ('text')])
 
+    def distance(self, c1, c2):
+        rgb1 = sRGBColor(c1[0], c1[1], c1[2])
+        rgb2 = sRGBColor(c2[0], c2[1], c2[2])
+        lab1 = convert_color(rgb1, LabColor)
+        lab2 = convert_color(rgb2, LabColor)
+        (r1,g1,b1) = lab1.lab_l, lab1.lab_a, lab1.lab_b
+        (r2,g2,b2) = lab2.lab_l, lab2.lab_a, lab2.lab_b
+        return math.sqrt((r1 - r2)**2 + (g1 - g2) ** 2 + (b1 - b2) **2)
+
+    def load_and_resize_image(self, imgname):
+        aspectRatio = 1.0
+        maxLen = 55.0 # default maxlen: 100px
+        img = Image.open(imgname)
+        # force image to RGBA - deals with palettized images (e.g. gif) etc.
+        if img.mode != 'RGBA':
+            img = img.convert('RGBA')
+        # need to change the size of the image?
+        if maxLen is not None or aspectRatio != 1.0:
+            native_width, native_height = img.size
+            new_width = native_width
+            new_height = native_height
+            # First apply aspect ratio change (if any) - just need to adjust one axis
+            # so we'll do the height.
+            if aspectRatio != 1.0:
+                new_height = int(float(aspectRatio) * new_height)
+            # Now isotropically resize up or down (preserving aspect ratio) such that
+            # longer side of image is maxLen
+            if maxLen is not None:
+                rate = float(maxLen) / max(new_width, new_height)
+                new_width = int(rate * new_width)
+                new_height = int(rate * new_height)
+            if native_width != new_width or native_height != new_height:
+                img = img.resize((new_width, new_height), Image.NEAREST)
+        return img
+
     def img(self, irc, msg, args, url):
         """
         Image to ASCII Art
@@ -93,12 +130,35 @@ class ASCII(callbacks.Plugin):
         filepath = "{0}/tmp".format(path)
         filename = "{0}/{1}".format(filepath, url.split('/')[-1])
         urllib.request.urlretrieve(url, filename)
-        output = pexpect.run('img2txt.py {0} --targetAspect=0.5 --maxLen=80 --antialias'.format(str(filename)))
-        soup = BeautifulSoup(output)
-        ascii = soup.pre.getText()
-        for line in ascii.splitlines():
-            if line.strip:
-                irc.reply(line, prefixNick=False)
+        img = self.load_and_resize_image(filename)
+        arr = np.array(np.asarray(img).astype('float'))
+        ircColors = {(211, 215, 207): 0,
+             (46, 52, 54): 1,
+             (52, 101, 164): 2,
+             (78, 154, 6): 3,
+             (204, 0, 0): 4,
+             (143, 57, 2): 5,
+             (92, 53, 102): 6,
+             (206, 92, 0): 7,
+             (196, 160, 0): 8,
+             (115, 210, 22): 9,
+             (17, 168, 121): 10,
+             (88, 161, 157): 11,
+             (87, 121, 158): 12,
+             (160, 67, 101): 13,
+             (85, 87, 83): 14,
+             (136, 137, 133): 15}
+        colors = list(ircColors.keys())
+        for line in arr:
+            row = ""
+            for pixel in line:
+                if pixel[3] == 0:
+                    row += "\003  " # \003 to close any potential open color tag
+                else:
+                    closest_colors = sorted(colors, key=lambda color: self.distance(color, pixel))
+                    closest_color = closest_colors[0]
+                    row += "\003{0},{0}  ".format(ircColors[closest_color])
+            irc.reply(row, prefixNick=False)
         os.remove(filename)
     img = wrap(img, ['text'])
 
