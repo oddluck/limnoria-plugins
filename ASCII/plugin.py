@@ -13,13 +13,13 @@ import supybot.ircutils as ircutils
 import supybot.callbacks as callbacks
 import supybot.ircmsgs as ircmsgs
 import os
-import urllib
 import requests
 from PIL import Image, ImageEnhance
 import numpy as np
 import sys, math
 from colormath.color_objects import LabColor, sRGBColor
 from colormath.color_conversions import convert_color
+from fake_useragent import UserAgent
 
 try:
     from supybot.i18n import PluginInternationalization
@@ -129,7 +129,12 @@ class ASCII(callbacks.Plugin):
         path = os.path.dirname(os.path.abspath(__file__))
         filepath = "{0}/tmp".format(path)
         filename = "{0}/{1}".format(filepath, url.split('/')[-1])
-        urllib.request.urlretrieve(url, filename)
+        ua = UserAgent()
+        header = {'User-Agent':str(ua.random)}
+        response = requests.get(url, headers=header)
+        if response.status_code == 200:
+            with open("{0}".format(filename), 'wb') as f:
+                f.write(response.content)
         img = self.load_and_resize_image(filename)
         arr = np.array(np.asarray(img).astype('float'))
         ircColors = {(211, 215, 207): 0,
