@@ -48,7 +48,6 @@ class WikiLeaf(callbacks.Plugin):
         """
         try:
             title, url = self.dosearch(strain)
-            irc.reply(title)
             irc.reply(url)
         except Exception:
             irc.reply("No results found, what have you been smoking?")
