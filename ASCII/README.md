@@ -1,10 +1,10 @@
 #ASCII Art Plugin
 
-pip install img2txt.py requests bs4 pexpect
+pip install -r requirements.txt
 
 ascii (text) convert text to ascii art
 
-img (url) convert an image to ascii art
+img (url) convert an image to ascii art - now in color!
 
 scroll (url) playback of ansi art files from the web
 
