@@ -48,7 +48,6 @@ class WikiLeaf(callbacks.Plugin):
         """
         try:
             title, url = self.dosearch(strain)
-            irc.reply(url)
         except Exception:
             irc.reply("No results found, what have you been smoking?")
         else:
@@ -64,6 +63,7 @@ class WikiLeaf(callbacks.Plugin):
                 reply = "\x02{0}\x0F | {1} | {2} | {3}".format(name.strip(), straininfo.strip(), thc.strip(), description.strip())
                 del data, soup
                 irc.reply(reply)
+                irc.reply(url)
             except Exception:
                 irc.reply("Unable to retrieve info from {0}".format(url))
 
