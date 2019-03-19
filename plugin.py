@@ -145,7 +145,7 @@ class WolframAlpha(callbacks.Plugin):
                 outputlist[position] = title  # pu
                 for plaintext in pod.findall('.//plaintext'):
                     if plaintext.text:
-                        output[title].append(plaintext.text.encode('utf-8').replace('\n',' '))
+                        output[title].append(plaintext.text.replace('\n',' '))
         # last sanity check...
         if len(output) == 0:
             irc.reply("ERROR: I received no output looking up: {0}".format(optinput))
@@ -204,7 +204,7 @@ class WolframAlpha(callbacks.Plugin):
                     'format':'plaintext',
                     'units':'nonmetric' }
         url = 'http://api.wolframalpha.com/v2/query?' + utils.web.urlencode(urlArgs)
-        print url
+        print(url)
         try:
             page = utils.web.getUrl(url)
         except Exception as e:
@@ -224,15 +224,15 @@ class WolframAlpha(callbacks.Plugin):
             title = pod.attrib['title'].encode('utf-8')  # title of it.
             if title == "Result":
                 for plaintext in pod.findall('.//plaintext'):
-                    print plaintext.text
+                    print(plaintext.text)
 
                     if 'not compatible' in plaintext.text:
                         irc.reply('Conversion from btc to %s not available' % currency)
                     else:
                         converted_amount = plaintext.text.split('(')[0].strip()
                         if '\:' in converted_amount:
-                            converted_amount = converted_amount.replace('\:','\u').decode("unicode_escape")
-                        irc.reply('%s%d = %s' % ('\u0e3f'.decode("unicode_escape"),amount, converted_amount))
+                            converted_amount = converted_amount.replace('\:','\\u').decode("unicode_escape")
+                        irc.reply('%s%d = %s' % ('\\u0e3f'.decode("unicode_escape"),amount, converted_amount))
                     
 
 
