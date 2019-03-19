@@ -41,7 +41,7 @@ for ev in _events:
 
 
 P = conf.registerPlugin(PluginName)
-P.__name__ = PluginName
+#P.__name__ = PluginName
 
 # This is where your configuration variables (if any) should go.  For example:
 # conf.registerGlobalValue(PluginName, 'someConfigVariableName',

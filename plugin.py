@@ -420,7 +420,7 @@ class Trackers(callbacks.Plugin):
 
 		# Extract statuses
 		status_txt = re.search(r'.*Site.*2x\ (.*)".*\n.*2x\ (.*)".*\n.*2x\ (.*)"', content.text)
-		print status_txt
+		print(status_txt)
 		status = []
 		for i in range(0,4):
 			if status_txt.group(i) == "green":
