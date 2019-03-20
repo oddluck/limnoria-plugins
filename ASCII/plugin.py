@@ -87,15 +87,6 @@ class ASCII(callbacks.Plugin):
 
     ascii = wrap(ascii, [getopts({'font':'text', 'color':'text'}), ('text')])
 
-    def distance(self, c1, c2):
-        rgb1 = sRGBColor(c1[0], c1[1], c1[2])
-        rgb2 = sRGBColor(c2[0], c2[1], c2[2])
-        lab1 = convert_color(rgb1, LabColor)
-        lab2 = convert_color(rgb2, LabColor)
-        (r1,g1,b1) = lab1.lab_l, lab1.lab_a, lab1.lab_b
-        (r2,g2,b2) = lab2.lab_l, lab2.lab_a, lab2.lab_b
-        return math.sqrt((r1 - r2)**2 + (g1 - g2) ** 2 + (b1 - b2) **2)
-
     def getAverageL(self, image):
         """
         Given PIL Image, return average value of grayscale value
@@ -111,26 +102,28 @@ class ASCII(callbacks.Plugin):
         """
         Given PIL Image, return average RGB value
         """
-        ircColors = {(211, 215, 207): 0,
-             (46, 52, 54): 1,
-             (52, 101, 164): 2,
-             (78, 154, 6): 3,
-             (204, 0, 0): 4,
-             (143, 57, 2): 5,
-             (92, 53, 102): 6,
-             (206, 92, 0): 7,
-             (196, 160, 0): 8,
-             (115, 210, 22): 9,
-             (17, 168, 121): 10,
-             (88, 161, 157): 11,
-             (87, 121, 158): 12,
-             (160, 67, 101): 13,
-             (85, 87, 83): 14,
-             (136, 137, 133): 15}
-        colors = list(ircColors.keys())
-        closest_colors = sorted(colors, key=lambda color: self.distance(color, pixel))
-        closest_color = closest_colors[0]
-        return ircColors[closest_color]
+        pixel = pixel[:3]
+        colors = {"white": (211, 215, 207),
+            "black": (46, 52, 54),
+            "blue":(52, 101, 164),
+            "green":(78, 154, 6),
+            "red":(204, 0, 0),
+            "brown":(143, 57, 2),
+            "purple":(92, 53, 102),
+            "orange":(206, 92, 0),
+            "yellow":(196, 160, 0),
+            "light green":(115, 210, 22),
+            "teal":(17, 168, 121),
+            "light blue":(88, 161, 157),
+            "dark blue":(87, 121, 158),
+            "pink":(160, 67, 101),
+            "dark grey":(85, 87, 83),
+            "light grey":(136, 137, 133)}
+        manhattan = lambda x,y : abs(x[0] - y[0]) + abs(x[1] - y[1]) + abs(x[2] - y[2]) 
+        distances = {k: manhattan(v, pixel) for k, v in colors.items()}
+        color = min(distances, key=distances.get)
+        return color
+
 
     def img(self, irc, msg, args, url):
         """
@@ -149,6 +142,7 @@ class ASCII(callbacks.Plugin):
         # open image and convert to grayscale
         image = Image.open(filename).convert('L')
         image2 = Image.open(filename)
+        os.remove(filename)
         # store dimensions
         W, H = image.size[0], image.size[1]
         # compute width of tile
@@ -163,7 +157,7 @@ class ASCII(callbacks.Plugin):
         if cols > W or rows > H:
             print("Image too small for specified cols!")
             exit(0)
-        image2 = image2.convert("P", dither=Image.FLOYDSTEINBERG, palette=Image.WEB)
+        #image2 = image2.convert("P", dither=Image.FLOYDSTEINBERG, palette=Image.WEB)
         if image2.mode != 'RGBA':
             image2 = image2.convert('RGBA')
         image2 = image2.resize((cols, rows), Image.LANCZOS)
@@ -188,6 +182,7 @@ class ASCII(callbacks.Plugin):
                     x2 = W
                 # crop image to extract tile
                 img = image.crop((x1, y1, x2, y2))
+                img2 = image2.crop((x1, y1, x2, y2))
                 # get average luminance
                 avg = int(self.getAverageL(img))
                 # look up ascii char
@@ -197,11 +192,11 @@ class ASCII(callbacks.Plugin):
                 # append ascii char to string
                 aimg[j] += ircutils.mircColor(gsval, color, None)
         # return txt image
-        os.remove(filename)
         output = aimg
         for line in output:
             irc.reply(line, prefixNick=False)
     img = wrap(img, ['text'])
+
 
     def fontlist(self, irc, msg, args):
         """
