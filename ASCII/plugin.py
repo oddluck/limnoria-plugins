@@ -107,11 +107,10 @@ class ASCII(callbacks.Plugin):
         # get average
         return np.average(im.reshape(w*h))
 
-    def getAverageC(self, image):
+    def getAverageC(self, pixel):
         """
         Given PIL Image, return average RGB value
         """
-        pixel = np.array(image).mean(axis=(0,1))
         ircColors = {(211, 215, 207): 0,
              (46, 52, 54): 1,
              (52, 101, 164): 2,
@@ -147,13 +146,10 @@ class ASCII(callbacks.Plugin):
         if response.status_code == 200:
             with open("{0}".format(filename), 'wb') as f:
                 f.write(response.content)
-        #img = self.load_and_resize_image(filename)
         gscale = "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\|()1{}[]?-_+~<>i!lI;:,\"^`'. "
         # open image and convert to grayscale
         image = Image.open(filename).convert('L')
         image2 = Image.open(filename)
-        if image2.mode != 'RGBA':
-            image2 = image2.convert('RGBA')
         # store dimensions
         W, H = image.size[0], image.size[1]
         # compute width of tile
@@ -168,6 +164,11 @@ class ASCII(callbacks.Plugin):
         if cols > W or rows > H:
             print("Image too small for specified cols!")
             exit(0)
+        image2 = image2.convert("P", dither=None, palette=Image.WEB)
+        if image2.mode != 'RGBA':
+            image2 = image2.convert('RGBA')
+        image2 = image2.resize((cols, rows), Image.LANCZOS)
+        colormap = np.array(image2)
         # ascii image is a list of character strings
         aimg = []
         # generate list of dimensions
@@ -194,7 +195,7 @@ class ASCII(callbacks.Plugin):
                 # look up ascii char
                 gsval = gscale[int((avg*69)/255)]
                 # get color value
-                color = self.getAverageC(img2)
+                color = self.getAverageC(colormap[j][i].tolist())
                 # append ascii char to string
                 aimg[j] += ircutils.mircColor(gsval, color, None)
         # return txt image
@@ -227,3 +228,4 @@ class ASCII(callbacks.Plugin):
     scroll = wrap(scroll, ['text'])
 
 Class = ASCII
+
