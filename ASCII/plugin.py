@@ -155,7 +155,6 @@ class ASCII(callbacks.Plugin):
         if cols > W or rows > H:
             print("Image too small for specified cols!")
             exit(0)
-        image2 = image2.convert("P", dither=None, palette=Image.WEB)
         if image2.mode != 'RGBA':
             image2 = image2.convert('RGBA')
         image2 = image2.resize((cols, rows), Image.NEAREST)
