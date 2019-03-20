@@ -17,8 +17,6 @@ import requests
 from PIL import Image
 import numpy as np
 import sys, math
-from colormath.color_objects import LabColor, sRGBColor
-from colormath.color_conversions import convert_color
 from fake_useragent import UserAgent
 
 try:
