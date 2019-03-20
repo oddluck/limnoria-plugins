@@ -132,7 +132,6 @@ class ASCII(callbacks.Plugin):
         closest_color = closest_colors[0]
         return ircColors[closest_color]
 
-
     def img(self, irc, msg, args, url):
         """
         Image to ANSI Art
@@ -189,7 +188,6 @@ class ASCII(callbacks.Plugin):
                     x2 = W
                 # crop image to extract tile
                 img = image.crop((x1, y1, x2, y2))
-                img2 = image2.crop((x1, y1, x2, y2))
                 # get average luminance
                 avg = int(self.getAverageL(img))
                 # look up ascii char
@@ -203,7 +201,6 @@ class ASCII(callbacks.Plugin):
         for line in output:
             irc.reply(line, prefixNick=False)
     img = wrap(img, ['text'])
-
 
     def fontlist(self, irc, msg, args):
         """
