@@ -197,6 +197,7 @@ class ASCII(callbacks.Plugin):
                 # append ascii char to string
                 aimg[j] += ircutils.mircColor(gsval, color, None)
         # return txt image
+        os.remove(filename)
         output = aimg
         for line in output:
             irc.reply(line, prefixNick=False)
