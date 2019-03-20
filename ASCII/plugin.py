@@ -14,7 +14,7 @@ import supybot.callbacks as callbacks
 import supybot.ircmsgs as ircmsgs
 import os
 import requests
-from PIL import Image, ImageEnhance
+from PIL import Image
 import numpy as np
 import sys, math
 from colormath.color_objects import LabColor, sRGBColor
@@ -96,47 +96,22 @@ class ASCII(callbacks.Plugin):
         (r2,g2,b2) = lab2.lab_l, lab2.lab_a, lab2.lab_b
         return math.sqrt((r1 - r2)**2 + (g1 - g2) ** 2 + (b1 - b2) **2)
 
-    def load_and_resize_image(self, imgname):
-        aspectRatio = 1.0
-        maxLen = 55.0 # default maxlen: 100px
-        img = Image.open(imgname)
-        # force image to RGBA - deals with palettized images (e.g. gif) etc.
-        if img.mode != 'RGBA':
-            img = img.convert('RGBA')
-        # need to change the size of the image?
-        if maxLen is not None or aspectRatio != 1.0:
-            native_width, native_height = img.size
-            new_width = native_width
-            new_height = native_height
-            # First apply aspect ratio change (if any) - just need to adjust one axis
-            # so we'll do the height.
-            if aspectRatio != 1.0:
-                new_height = int(float(aspectRatio) * new_height)
-            # Now isotropically resize up or down (preserving aspect ratio) such that
-            # longer side of image is maxLen
-            if maxLen is not None:
-                rate = float(maxLen) / max(new_width, new_height)
-                new_width = int(rate * new_width)
-                new_height = int(rate * new_height)
-            if native_width != new_width or native_height != new_height:
-                img = img.resize((new_width, new_height), Image.NEAREST)
-        return img
+    def getAverageL(self, image):
+        """
+        Given PIL Image, return average value of grayscale value
+        """
+        # get image as numpy array
+        im = np.array(image)
+        # get shape
+        w,h = im.shape
+        # get average
+        return np.average(im.reshape(w*h))
 
-    def img(self, irc, msg, args, url):
+    def getAverageC(self, image):
         """
-        Image to ASCII Art
+        Given PIL Image, return average RGB value
         """
-        path = os.path.dirname(os.path.abspath(__file__))
-        filepath = "{0}/tmp".format(path)
-        filename = "{0}/{1}".format(filepath, url.split('/')[-1])
-        ua = UserAgent()
-        header = {'User-Agent':str(ua.random)}
-        response = requests.get(url, headers=header)
-        if response.status_code == 200:
-            with open("{0}".format(filename), 'wb') as f:
-                f.write(response.content)
-        img = self.load_and_resize_image(filename)
-        arr = np.array(np.asarray(img).astype('float'))
+        pixel = np.array(image).mean(axis=(0,1))
         ircColors = {(211, 215, 207): 0,
              (46, 52, 54): 1,
              (52, 101, 164): 2,
@@ -154,18 +129,80 @@ class ASCII(callbacks.Plugin):
              (85, 87, 83): 14,
              (136, 137, 133): 15}
         colors = list(ircColors.keys())
-        for line in arr:
-            row = ""
-            for pixel in line:
-                if pixel[3] == 0:
-                    row += "\003  " # \003 to close any potential open color tag
-                else:
-                    closest_colors = sorted(colors, key=lambda color: self.distance(color, pixel))
-                    closest_color = closest_colors[0]
-                    row += "\003{0},{0}  ".format(ircColors[closest_color])
-            irc.reply(row, prefixNick=False)
-        os.remove(filename)
+        closest_colors = sorted(colors, key=lambda color: self.distance(color, pixel))
+        closest_color = closest_colors[0]
+        return ircColors[closest_color]
+
+
+    def img(self, irc, msg, args, url):
+        """
+        Image to ANSI Art
+        """
+        path = os.path.dirname(os.path.abspath(__file__))
+        filepath = "{0}/tmp".format(path)
+        filename = "{0}/{1}".format(filepath, url.split('/')[-1])
+        ua = UserAgent()
+        header = {'User-Agent':str(ua.random)}
+        response = requests.get(url, headers=header)
+        if response.status_code == 200:
+            with open("{0}".format(filename), 'wb') as f:
+                f.write(response.content)
+        #img = self.load_and_resize_image(filename)
+        gscale = "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\|()1{}[]?-_+~<>i!lI;:,\"^`'. "
+        # open image and convert to grayscale
+        image = Image.open(filename).convert('L')
+        image2 = Image.open(filename)
+        if image2.mode != 'RGBA':
+            image2 = image2.convert('RGBA')
+        # store dimensions
+        W, H = image.size[0], image.size[1]
+        # compute width of tile
+        cols = 80
+        w = W/cols
+        # compute tile height based on aspect ratio and scale
+        scale = 0.5
+        h = w/scale
+        # compute number of rows
+        rows = int(H/h)
+        # check if image size is too small
+        if cols > W or rows > H:
+            print("Image too small for specified cols!")
+            exit(0)
+        # ascii image is a list of character strings
+        aimg = []
+        # generate list of dimensions
+        for j in range(rows):
+            y1 = int(j*h)
+            y2 = int((j+1)*h)
+            # correct last tile
+            if j == rows-1:
+                y2 = H
+            # append an empty string
+            aimg.append("")
+            for i in range(cols):
+                # crop image to tile
+                x1 = int(i*w)
+                x2 = int((i+1)*w)
+                # correct last tile
+                if i == cols-1:
+                    x2 = W
+                # crop image to extract tile
+                img = image.crop((x1, y1, x2, y2))
+                img2 = image2.crop((x1, y1, x2, y2))
+                # get average luminance
+                avg = int(self.getAverageL(img))
+                # look up ascii char
+                gsval = gscale[int((avg*69)/255)]
+                # get color value
+                color = self.getAverageC(img2)
+                # append ascii char to string
+                aimg[j] += ircutils.mircColor(gsval, color, None)
+        # return txt image
+        output = aimg
+        for line in output:
+            irc.reply(line, prefixNick=False)
     img = wrap(img, ['text'])
+
 
     def fontlist(self, irc, msg, args):
         """
