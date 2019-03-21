@@ -157,7 +157,7 @@ class ASCII(callbacks.Plugin):
             exit(0)
         if image2.mode != 'RGBA':
             image2 = image2.convert('RGBA')
-        image2 = image2.resize((cols, rows), Image.NEAREST)
+        image2 = image2.resize((cols, rows), Image.LANCZOS)
         colormap = np.array(image2)
         # ascii image is a list of character strings
         aimg = []
