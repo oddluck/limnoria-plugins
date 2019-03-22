@@ -22,6 +22,7 @@ from colormath.color_objects import sRGBColor, LabColor
 from colormath.color_conversions import convert_color
 from colour.difference import *
 
+
 try:
     from supybot.i18n import PluginInternationalization
     _ = PluginInternationalization('Weed')
@@ -34,78 +35,10 @@ class ASCII(callbacks.Plugin):
     """Uses API to retrieve information"""
     threaded = True
 
-    def ascii(self, irc, msg, args, optlist, text):
-        """[--font <font>] [--color <color1,color2>] [<text>]
-        Text to ASCII art
-        """
-        channel = msg.args[0]
-        optlist = dict(optlist)
-        font = None
-        words = []
-        if text:
-            text = text.strip()
-            if '|' in text:
-                words = text.split('|')
-        if 'color' in optlist:
-            color = optlist.get('color')
-            if "," in color:
-                color = color.split(",")
-                color1 = color[0].strip()
-                color2 = color[1].strip()
-            else:
-                color1 = color
-                color2 = None
-        else:
-            color1 = None
-            color2 = None
-        if 'font' in optlist:
-             font = optlist.get('font')
-             if words:
-                 for word in words:
-                     if word.strip():
-                         data = requests.get("https://artii.herokuapp.com/make?text={0}&font={1}".format(word.strip(), font))
-                         for line in data.text.splitlines():
-                             if line.strip():
-                                 irc.reply(ircutils.mircColor(line, color1, color2), prefixNick=False)
-             else:
-                 data = requests.get("https://artii.herokuapp.com/make?text={0}&font={1}".format(text, font))
-                 for line in data.text.splitlines():
-                     if line.strip():
-                         irc.reply(ircutils.mircColor(line, color1, color2), prefixNick=False)
-        elif 'font' not in optlist:
-            if words:
-                 for word in words:
-                     if word.strip():
-                         data = requests.get("https://artii.herokuapp.com/make?text={0}&font=univers".format(word.strip()))
-                         for line in data.text.splitlines():
-                             if line.strip():
-                                 irc.reply(ircutils.mircColor(line, color1, color2), prefixNick=False)
-            else:
-                data = requests.get("https://artii.herokuapp.com/make?text={0}&font=univers".format(text))
-                for line in data.text.splitlines():
-                    if line.strip():
-                        irc.reply(ircutils.mircColor(line, color1, color2), prefixNick=False)
-
-    ascii = wrap(ascii, [getopts({'font':'text', 'color':'text'}), ('text')])
-
-    def getAverageL(self, image):
-        """
-        Given PIL Image, return average value of grayscale value
-        """
-        # get image as numpy array
-        im = np.array(image)
-        # get shape
-        w,h = im.shape
-        # get average
-        return np.average(im.reshape(w*h))
-
-    def getAverageC(self, pixel,speed):
-        """
-        Given PIL Image, return average RGB value
-        """
-        speed = speed
-        ircColors = {
-             (1993.20515351498,2324.0983231476234,1950.0779087841693):16,
+    def __init__(self, irc):
+        self.__parent = super(ASCII, self)
+        self.__parent.__init__(irc)
+        self.ircColors= {(1993.20515351498,2324.0983231476234,1950.0779087841693):16,
              (2302.159132332113,1476.5998328806731,2094.817440516089):17,
              (3267.109569734987,-625.5719921685046,2741.5824054551854):18,
              (3117.7906623358294,-1524.3182007475084,2563.4872768819705):19,
@@ -188,10 +121,81 @@ class ASCII(callbacks.Plugin):
              (7317.0369197362015,-0.0290406891458872,-0.5412197880815484):96,
              (8480.24950353612,-0.03364730649479952,-0.6270714856782433):97,
              (9341.568974319263,-0.037058350415009045,-0.6906417562959177):98}
-        colors = list(ircColors.keys())
+
+    def ascii(self, irc, msg, args, optlist, text):
+        """[--font <font>] [--color <color1,color2>] [<text>]
+        Text to ASCII art
+        """
+        channel = msg.args[0]
+        optlist = dict(optlist)
+        font = None
+        words = []
+        if text:
+            text = text.strip()
+            if '|' in text:
+                words = text.split('|')
+        if 'color' in optlist:
+            color = optlist.get('color')
+            if "," in color:
+                color = color.split(",")
+                color1 = color[0].strip()
+                color2 = color[1].strip()
+            else:
+                color1 = color
+                color2 = None
+        else:
+            color1 = None
+            color2 = None
+        if 'font' in optlist:
+             font = optlist.get('font')
+             if words:
+                 for word in words:
+                     if word.strip():
+                         data = requests.get("https://artii.herokuapp.com/make?text={0}&font={1}".format(word.strip(), font))
+                         for line in data.text.splitlines():
+                             if line.strip():
+                                 irc.reply(ircutils.mircColor(line, color1, color2), prefixNick=False)
+             else:
+                 data = requests.get("https://artii.herokuapp.com/make?text={0}&font={1}".format(text, font))
+                 for line in data.text.splitlines():
+                     if line.strip():
+                         irc.reply(ircutils.mircColor(line, color1, color2), prefixNick=False)
+        elif 'font' not in optlist:
+            if words:
+                 for word in words:
+                     if word.strip():
+                         data = requests.get("https://artii.herokuapp.com/make?text={0}&font=univers".format(word.strip()))
+                         for line in data.text.splitlines():
+                             if line.strip():
+                                 irc.reply(ircutils.mircColor(line, color1, color2), prefixNick=False)
+            else:
+                data = requests.get("https://artii.herokuapp.com/make?text={0}&font=univers".format(text))
+                for line in data.text.splitlines():
+                    if line.strip():
+                        irc.reply(ircutils.mircColor(line, color1, color2), prefixNick=False)
+
+    ascii = wrap(ascii, [getopts({'font':'text', 'color':'text'}), ('text')])
+
+    def getAverageL(self, image):
+        """
+        Given PIL Image, return average value of grayscale value
+        """
+        # get image as numpy array
+        im = np.array(image)
+        # get shape
+        w,h = im.shape
+        # get average
+        return np.average(im.reshape(w*h))
+
+    def getAverageC(self, pixel,speed):
+        """
+        Given PIL Image, return average RGB value
+        """
+        speed = speed
+        colors = list(self.ircColors.keys())
         closest_colors = sorted(colors, key=lambda color: self.distance(color, pixel, speed))
         closest_color = closest_colors[0]
-        return ircColors[closest_color]
+        return self.ircColors[closest_color]
 
     def distance(self, c1, c2, speed):
         if speed == 'fast':
@@ -301,6 +305,57 @@ class ASCII(callbacks.Plugin):
             irc.reply(line, prefixNick=False, noLengthCheck=False)
     img = wrap(img,[getopts({'cols':'int', 'invert':'', 'slow':'', 'insane':''}), ('text')])
 
+    def ansi(self, irc, msg, args, optlist, url):
+        """[--cols <number of columns>] [--slow] [--insane]
+        Converts image to ANSI art
+        """
+        optlist = dict(optlist)
+        if 'cols' in optlist:
+            cols = optlist.get('cols')
+        else:
+            cols = 100
+        speed = 'fast'
+        path = os.path.dirname(os.path.abspath(__file__))
+        filepath = "{0}/tmp".format(path)
+        filename = "{0}/{1}".format(filepath, url.split('/')[-1])
+        ua = UserAgent()
+        header = {'User-Agent':str(ua.random)}
+        response = requests.get(url, headers=header)
+        if response.status_code == 200:
+            with open("{0}".format(filename), 'wb') as f:
+                f.write(response.content)
+        image = Image.open(filename)
+        # store dimensions
+        W, H = image.size[0], image.size[1]
+        # compute width of tile
+        w = W/cols
+        # compute tile height based on aspect ratio and scale
+        scale = 0.5
+        h = w/scale
+        # compute number of rows
+        rows = int(H/h)
+        image = image.convert('RGBA')
+        image = image.resize((cols, rows), Image.LANCZOS)
+        os.remove(filename)
+        irc.reply("Please be patient while I colorize the ANSI output.")
+        colormap = np.array(image)
+        colors = list(self.ircColors.keys())
+        output = []
+        for j in range(rows):
+            row = ""
+            old_color = None
+            for i in range(cols):
+                closest_colors = sorted(colors, key=lambda color: self.distance(color, colormap[j][i], speed))
+                closest_color = closest_colors[0]
+                if closest_color != old_color:
+                    old_color = closest_color
+                    row += "\x03{0},{0} ".format(self.ircColors[closest_color])
+                else:
+                    row += " "
+            output.append(row)
+        for line in output:
+            irc.reply(line, prefixNick=False)
+    ansi = wrap(ansi,[getopts({'cols':'int', 'slow':'', 'insane':''}), ('text')])
 
     def fontlist(self, irc, msg, args):
         """
@@ -325,3 +380,5 @@ class ASCII(callbacks.Plugin):
     scroll = wrap(scroll, ['text'])
 
 Class = ASCII
+
+
