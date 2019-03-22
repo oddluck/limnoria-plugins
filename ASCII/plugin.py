@@ -301,6 +301,9 @@ class ASCII(callbacks.Plugin):
                     aimg[j] += "{0}".format(gsval)
         # return txt image
         output = aimg
+        del image
+        del image2
+        del colormap
         for line in output:
             irc.reply(line, prefixNick=False, noLengthCheck=False)
     img = wrap(img,[getopts({'cols':'int', 'invert':'', 'slow':'', 'insane':''}), ('text')])
@@ -353,6 +356,8 @@ class ASCII(callbacks.Plugin):
                 else:
                     row += " "
             output.append(row)
+        del image
+        del colormap
         for line in output:
             irc.reply(line, prefixNick=False)
     ansi = wrap(ansi,[getopts({'cols':'int', 'slow':'', 'insane':''}), ('text')])
@@ -380,5 +385,3 @@ class ASCII(callbacks.Plugin):
     scroll = wrap(scroll, ['text'])
 
 Class = ASCII
-
-
