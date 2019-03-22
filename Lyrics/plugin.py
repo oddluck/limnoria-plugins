@@ -36,9 +36,9 @@ class Lyrics(callbacks.Plugin):
             header = {'User-Agent':str(ua.random)}
             data = requests.get(searchurl, headers=header)
             soup = BeautifulSoup(data.text)
-            url = soup.find('cite').getText()
+            elements = soup.select('.r a')
+            url = elements[0]['href']
             title = soup.find("h3").getText()
-            url = "http://{0}".format(url)
         except Exception:
             return
         else:
