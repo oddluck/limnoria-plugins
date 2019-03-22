@@ -35,19 +35,19 @@ class WikiLeaf(callbacks.Plugin):
             header = {'User-Agent':str(ua.random)}
             data = requests.get(searchurl, headers=header)
             soup = BeautifulSoup(data.text)
-            url = soup.find('cite').getText()
-            title = soup.find("h3").getText()
+            elements = soup.select('.r a')
+            url = elements[0]['href']
         except Exception:
             return
         else:
-            return title, url
+            return url
 
     def strain(self, irc, msg, args, strain):
         """<strain>
         Returns strain information from WikiLeaf. Search powered by Google.
         """
         try:
-            title, url = self.dosearch(strain)
+            url = self.dosearch(strain)
         except Exception:
             irc.reply("No results found, what have you been smoking?")
         else:
