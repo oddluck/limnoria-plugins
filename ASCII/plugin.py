@@ -376,12 +376,14 @@ class ASCII(callbacks.Plugin):
         Play ASCII/ANSI art files from web links
         """
         file = requests.get(url)
-        if "html" in file.text or not url.endswith(".txt"):
+        if "html" in file.text:
             irc.reply("Error: Scroll requires a text file as input.")
-        else:
+        elif url.endswith(".txt") or url.startswith("https://pastebin.com/raw/"):
             for line in file.text.splitlines():
                 if line.strip():
                     irc.reply(line, prefixNick = False)
+        else:
+            irc.reply("Unexpected file type or link format")
     scroll = wrap(scroll, ['text'])
 
 Class = ASCII
