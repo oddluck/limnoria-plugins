@@ -9,7 +9,7 @@ img (url) convert an image to ascii art - now in color!
 The img command uses the 99 color extended irc color set.
 Be sure your plugin supports 99 color output.
 Three presets: fast (default), slow, and insane.
-Sast uses the cie1976 color difference algorithm,
+Fast uses the cie1976 color difference algorithm,
 slow uses the cie_cmc algorithm and insane uses the
 cie2000 algorithm. Which looks best is a matter of preference,
 slower settings generally result in more colorful images
