@@ -203,12 +203,12 @@ class ASCII(callbacks.Plugin):
             c2 = sRGBColor(c2[0],c2[1],c2[2])
             c2 = convert_color(c2, LabColor)
             c2 = (c2.lab_l, c2.lab_a, c2.lab_b)
-            delta_e = delta_E_CIE2000(c1, c2)
+            delta_e = delta_E_CMC(c1, c2)
         else:
             c2 = sRGBColor(c2[0],c2[1],c2[2])
             c2 = convert_color(c2, LabColor)
             c2 = (c2.lab_l, c2.lab_a, c2.lab_b)
-            delta_e = delta_E_CMC(c1, c2)
+            delta_e = delta_E_CIE2000(c1, c2)
         return delta_e
 
     def img(self, irc, msg, args, optlist, url):
