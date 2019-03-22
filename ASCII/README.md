@@ -6,7 +6,7 @@ ascii (text) convert text to ascii art
 
 img (url) convert an image to ascii art - now in color!
 
-The image plugin uses the 99 color extended irc color set.
+The img command uses the 99 color extended irc color set.
 Be sure your plugin supports 99 color output.
 Three presets: fast (default), slow, and insane.
 Sast uses the cie1976 color difference algorithm,
