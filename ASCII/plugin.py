@@ -14,14 +14,13 @@ import supybot.callbacks as callbacks
 import supybot.ircmsgs as ircmsgs
 import os
 import requests
-from PIL import Image, ImageOps
+from PIL import Image
 import numpy as np
 import sys, math
 from fake_useragent import UserAgent
 from colormath.color_objects import sRGBColor, LabColor
 from colormath.color_conversions import convert_color
 from colour.difference import *
-
 
 try:
     from supybot.i18n import PluginInternationalization
@@ -187,7 +186,7 @@ class ASCII(callbacks.Plugin):
         # get average
         return np.average(im.reshape(w*h))
 
-    def getAverageC(self, pixel,speed):
+    def getAverageC(self, pixel, speed):
         """
         Given PIL Image, return average RGB value
         """
@@ -216,10 +215,10 @@ class ASCII(callbacks.Plugin):
         return delta_e
 
     def img(self, irc, msg, args, optlist, url):
-        """[--cols <number of columns>] [--invert] [--slow] [--insane] (<url>)
+        """[--cols <number of columns>] [--invert] [--slow] (<url>)
         Image to Color ASCII Art. --cols to set number of columns wide. --invert to invert the greyscale. 
-        --slow for cie1976 delta-e. --insane for cie2000 delta-e. Don't use --insane. It takes too long 
-        and has the potential to crash.
+        --slow for cieCMC delta-e. --insane for cie2000 delta-e. Don't use insane, it takes way too long 
+        for little improvement.
         """
         optlist = dict(optlist)
         if 'slow' in optlist:
@@ -233,9 +232,9 @@ class ASCII(callbacks.Plugin):
         else:
             cols = 100
         if 'invert' in optlist:
-            gscale = "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\|()1{}[]?-_+~<>i!lI;:,\"^`'. "
+            gscale = "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\|()1{}[]?-_+~<>i!lI;:,\"^`'."
         else:
-            gscale = " .'`^\",:;Il!i><~+_-?][}{1)(|\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$"
+            gscale = ".'`^\",:;Il!i><~+_-?][}{1)(|\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$"
         path = os.path.dirname(os.path.abspath(__file__))
         filepath = "{0}/tmp".format(path)
         filename = "{0}/{1}".format(filepath, url.split('/')[-1])
@@ -264,12 +263,14 @@ class ASCII(callbacks.Plugin):
             print("Image too small for specified cols!")
             exit(0)
         image2 = image2.convert('RGBA')
+        image2 = Image.alpha_composite(Image.new("RGBA", image2.size, '#000000'), image2)
+        image2 = image2.convert(mode="P", matrix=None, dither=Image.FLOYDSTEINBERG, palette=Image.WEB)
+        image2 = image2.convert('RGB')
         image2 = image2.resize((cols, rows), Image.LANCZOS)
         colormap = np.array(image2)
         # ascii image is a list of character strings
         aimg = []
         # generate list of dimensions
-        old_color = None
         for j in range(rows):
             y1 = int(j*h)
             y2 = int((j+1)*h)
@@ -278,6 +279,7 @@ class ASCII(callbacks.Plugin):
                 y2 = H
             # append an empty string
             aimg.append("")
+            old_color = None
             for i in range(cols):
                 # crop image to tile
                 x1 = int(i*w)
@@ -287,13 +289,15 @@ class ASCII(callbacks.Plugin):
                     x2 = W
                 # crop image to extract tile
                 img = image.crop((x1, y1, x2, y2))
+                #img2 = image2.crop((x1, y1, x2, y2))
                 # get average luminance
                 avg = int(self.getAverageL(img))
                 # look up ascii char
-                gsval = gscale[int((avg*69)/255)]
+                gsval = gscale[int((avg*68)/255)]
                 # get color value
                 color = self.getAverageC(colormap[j][i].tolist(),speed)
-                if color != old_color or gsval != " ":
+                #color = self.getAverageC(img2,speed)
+                if color != old_color:
                     old_color = color
                     # append ascii char to string
                     aimg[j] += "\x03{0}{1}".format(color, gsval)
@@ -309,14 +313,14 @@ class ASCII(callbacks.Plugin):
     img = wrap(img,[getopts({'cols':'int', 'invert':'', 'slow':'', 'insane':''}), ('text')])
 
     def ansi(self, irc, msg, args, optlist, url):
-        """[--cols <number of columns>] [--slow] [--insane]
+        """[--cols <number of columns>] [--slow]
         Converts image to ANSI art
         """
         optlist = dict(optlist)
         if 'cols' in optlist:
             cols = optlist.get('cols')
         else:
-            cols = 100
+            cols = 80
         speed = 'fast'
         path = os.path.dirname(os.path.abspath(__file__))
         filepath = "{0}/tmp".format(path)
@@ -338,6 +342,9 @@ class ASCII(callbacks.Plugin):
         # compute number of rows
         rows = int(H/h)
         image = image.convert('RGBA')
+        image = Image.alpha_composite(Image.new("RGBA", image.size, '#000000'), image)
+        image = image.convert(mode="P", matrix=None, dither=Image.FLOYDSTEINBERG, palette=Image.WEB)
+        image = image.convert('RGB')
         image = image.resize((cols, rows), Image.LANCZOS)
         os.remove(filename)
         irc.reply("Please be patient while I colorize the ANSI output.")
