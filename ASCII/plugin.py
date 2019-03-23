@@ -390,7 +390,7 @@ class ASCII(callbacks.Plugin):
                 # get average luminance
                 avg = int(self.getAverageL(img))
                 # look up ascii char
-                gsval = gscale[int((avg*4)/255)]
+                gsval = gscale[int((avg*3)/255)]
                 # get color value
                 color = self.getAverageC(colormap[j][i].tolist(),speed)
                 #color = self.getAverageC(img2,speed)
