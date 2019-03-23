@@ -320,7 +320,7 @@ class ASCII(callbacks.Plugin):
         if 'cols' in optlist:
             cols = optlist.get('cols')
         else:
-            cols = 100
+            cols = 80
         speed = 'fast'
         path = os.path.dirname(os.path.abspath(__file__))
         filepath = "{0}/tmp".format(path)
