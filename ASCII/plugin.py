@@ -21,6 +21,7 @@ from fake_useragent import UserAgent
 from colormath.color_objects import sRGBColor, LabColor
 from colormath.color_conversions import convert_color
 from colour.difference import *
+import re
 
 try:
     from supybot.i18n import PluginInternationalization
@@ -309,7 +310,7 @@ class ASCII(callbacks.Plugin):
         del image2
         del colormap
         for line in output:
-            irc.reply(line, prefixNick=False, noLengthCheck=False)
+            irc.reply(line, prefixNick=False, noLengthCheck=True)
     img = wrap(img,[getopts({'cols':'int', 'invert':'', 'slow':'', 'insane':''}), ('text')])
 
     def ansi(self, irc, msg, args, optlist, url):
@@ -317,11 +318,20 @@ class ASCII(callbacks.Plugin):
         Converts image to ANSI art
         """
         optlist = dict(optlist)
+        if 'slow' in optlist:
+            speed = 'medium'
+        elif 'insane' in optlist:
+            speed = 'insane'
+        else:
+            speed = 'fast'
         if 'cols' in optlist:
             cols = optlist.get('cols')
         else:
             cols = 80
-        speed = 'fast'
+        if 'invert' in optlist:
+            gscale = "█▓▒░"
+        else:
+            gscale = "░▒▓█"
         path = os.path.dirname(os.path.abspath(__file__))
         filepath = "{0}/tmp".format(path)
         filename = "{0}/{1}".format(filepath, url.split('/')[-1])
@@ -331,7 +341,11 @@ class ASCII(callbacks.Plugin):
         if response.status_code == 200:
             with open("{0}".format(filename), 'wb') as f:
                 f.write(response.content)
-        image = Image.open(filename)
+        # open image and convert to grayscale
+        image = Image.open(filename).convert('L')
+        image2 = Image.open(filename)
+        os.remove(filename)
+        irc.reply("Please be patient while I render the image into ASCII characters and colorize the output.")
         # store dimensions
         W, H = image.size[0], image.size[1]
         # compute width of tile
@@ -341,33 +355,59 @@ class ASCII(callbacks.Plugin):
         h = w/scale
         # compute number of rows
         rows = int(H/h)
-        image = image.convert('RGBA')
-        image = Image.alpha_composite(Image.new("RGBA", image.size, '#000000'), image)
-        image = image.convert(mode="P", matrix=None, dither=Image.FLOYDSTEINBERG, palette=Image.WEB)
-        image = image.convert('RGB')
-        image = image.resize((cols, rows), Image.LANCZOS)
-        os.remove(filename)
-        irc.reply("Please be patient while I colorize the ANSI output.")
-        colormap = np.array(image)
-        colors = list(self.ircColors.keys())
-        output = []
+        # check if image size is too small
+        if cols > W or rows > H:
+            print("Image too small for specified cols!")
+            exit(0)
+        image2 = image2.convert('RGBA')
+        image2 = Image.alpha_composite(Image.new("RGBA", image2.size, '#000000'), image2)
+        image2 = image2.convert(mode="P", matrix=None, dither=Image.FLOYDSTEINBERG, palette=Image.WEB)
+        image2 = image2.convert('RGB')
+        image2 = image2.resize((cols, rows), Image.LANCZOS)
+        colormap = np.array(image2)
+        # ascii image is a list of character strings
+        aimg = []
+        # generate list of dimensions
         for j in range(rows):
-            row = ""
+            y1 = int(j*h)
+            y2 = int((j+1)*h)
+            # correct last tile
+            if j == rows-1:
+                y2 = H
+            # append an empty string
+            aimg.append("")
             old_color = None
             for i in range(cols):
-                closest_colors = sorted(colors, key=lambda color: self.distance(color, colormap[j][i], speed))
-                closest_color = closest_colors[0]
-                if closest_color != old_color:
-                    old_color = closest_color
-                    row += "\x03{0}█".format(self.ircColors[closest_color])
+                # crop image to tile
+                x1 = int(i*w)
+                x2 = int((i+1)*w)
+                # correct last tile
+                if i == cols-1:
+                    x2 = W
+                # crop image to extract tile
+                img = image.crop((x1, y1, x2, y2))
+                #img2 = image2.crop((x1, y1, x2, y2))
+                # get average luminance
+                avg = int(self.getAverageL(img))
+                # look up ascii char
+                gsval = gscale[int((avg*4)/255)]
+                # get color value
+                color = self.getAverageC(colormap[j][i].tolist(),speed)
+                #color = self.getAverageC(img2,speed)
+                if color != old_color:
+                    old_color = color
+                    # append ascii char to string
+                    aimg[j] += "\x03{0}{1}".format(color, gsval)
                 else:
-                    row += "█"
-            output.append(row)
+                    aimg[j] += "{0}".format(gsval)
+        # return txt image
+        output = aimg
         del image
+        del image2
         del colormap
         for line in output:
-            irc.reply(line, prefixNick=False)
-    ansi = wrap(ansi,[getopts({'cols':'int', 'slow':'', 'insane':''}), ('text')])
+            irc.reply(line, prefixNick=False, noLengthCheck=True)
+    ansi = wrap(ansi, [getopts({'cols':'int', 'invert':'', 'slow':'', 'insane':''}), ('text')])
 
     def fontlist(self, irc, msg, args):
         """
@@ -382,10 +422,12 @@ class ASCII(callbacks.Plugin):
         """
         Play ASCII/ANSI art files from web links
         """
+        if url.startswith("https://paste.ee/p/"):
+            url = re.sub("https://paste.ee/p/", "https://paste.ee/r/", url)
         file = requests.get(url)
         if "html" in file.text:
             irc.reply("Error: Scroll requires a text file as input.")
-        elif url.endswith(".txt") or url.startswith("https://pastebin.com/raw/"):
+        elif url.endswith(".txt") or url.startswith("https://pastebin.com/raw/") or url.startswith("https://paste.ee/r/"):
             for line in file.text.splitlines():
                 if line.strip():
                     irc.reply(line, prefixNick = False)
