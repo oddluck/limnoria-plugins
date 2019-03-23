@@ -320,7 +320,7 @@ class ASCII(callbacks.Plugin):
         if 'cols' in optlist:
             cols = optlist.get('cols')
         else:
-            cols = 80
+            cols = 100
         speed = 'fast'
         path = os.path.dirname(os.path.abspath(__file__))
         filepath = "{0}/tmp".format(path)
@@ -359,9 +359,9 @@ class ASCII(callbacks.Plugin):
                 closest_color = closest_colors[0]
                 if closest_color != old_color:
                     old_color = closest_color
-                    row += "\x03{0},{0} ".format(self.ircColors[closest_color])
+                    row += "\x03{0}█".format(self.ircColors[closest_color])
                 else:
-                    row += " "
+                    row += "█"
             output.append(row)
         del image
         del colormap
