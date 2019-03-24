@@ -310,9 +310,9 @@ class ASCII(callbacks.Plugin):
         else:
             cols = 80
         if 'invert' in optlist:
-            gscale = "██▓▒░"
+            gscale = "█▓▒░"
         else:
-            gscale = "░▒▓██"
+            gscale = "░▒▓█"
         path = os.path.dirname(os.path.abspath(__file__))
         filepath = "{0}/tmp".format(path)
         filename = "{0}/{1}".format(filepath, url.split('/')[-1])
@@ -363,7 +363,7 @@ class ASCII(callbacks.Plugin):
                 # get average luminance
                 avg = int(np.average(lumamap[j][i]))
                 # look up ascii char
-                gsval = gscale[int((avg*4)/255)]
+                gsval = gscale[int((avg*3)/255)]
                 # get color value
                 color = self.getAverageC(colormap[j][i].tolist(),speed)
                 #color = self.getAverageC(img2,speed)
