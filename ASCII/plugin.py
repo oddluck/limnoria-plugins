@@ -237,7 +237,10 @@ class ASCII(callbacks.Plugin):
         # open image and convert to grayscale
         image = Image.open(filename).convert('L')
         image2 = Image.open(filename)
-        os.remove(filename)
+        try:
+            os.remove(filename)
+        except:
+            pass
         irc.reply("Please be patient while I render the image into ASCII characters and colorize the output.")
         # store dimensions
         W, H = image.size[0], image.size[1]
@@ -326,7 +329,10 @@ class ASCII(callbacks.Plugin):
         # open image and convert to grayscale
         image = Image.open(filename).convert('L')
         image2 = Image.open(filename)
-        os.remove(filename)
+        try:
+            os.remove(filename)
+        except:
+            pass
         irc.reply("Please be patient while I render the image into ASCII characters and colorize the output.")
         # store dimensions
         W, H = image.size[0], image.size[1]
