@@ -14,7 +14,7 @@ import supybot.callbacks as callbacks
 import supybot.ircmsgs as ircmsgs
 import os
 import requests
-from PIL import Image
+from PIL import Image, ImageOps
 import numpy as np
 import sys, math
 from fake_useragent import UserAgent
@@ -252,6 +252,7 @@ class ASCII(callbacks.Plugin):
         if cols > W or rows > H:
             print("Image too small for specified cols!")
             exit(0)
+        image = ImageOps.autocontrast(image)
         image = image.resize((cols, rows), Image.LANCZOS)
         image2 = image2.convert('RGBA')
         image2 = image2.convert(mode="P", matrix=None, dither=Image.FLOYDSTEINBERG, palette=Image.WEB)
@@ -340,6 +341,7 @@ class ASCII(callbacks.Plugin):
         if cols > W or rows > H:
             print("Image too small for specified cols!")
             exit(0)
+        image = ImageOps.autocontrast(image)
         image = image.resize((cols, rows), Image.LANCZOS)
         image2 = image2.convert('RGBA')
         image2 = image2.convert(mode="P", matrix=None, dither=Image.FLOYDSTEINBERG, palette=Image.WEB)
