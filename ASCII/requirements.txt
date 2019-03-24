@@ -1,6 +1,6 @@
 requests
 numpy
 pillow
-color-science
+colour-science
 colormath
 fake-useragent
