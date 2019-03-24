@@ -176,17 +176,6 @@ class ASCII(callbacks.Plugin):
 
     ascii = wrap(ascii, [getopts({'font':'text', 'color':'text'}), ('text')])
 
-    def getAverageL(self, image):
-        """
-        Given PIL Image, return average value of grayscale value
-        """
-        # get image as numpy array
-        im = np.array(image)
-        # get shape
-        w,h = im.shape
-        # get average
-        return np.average(im.reshape(w*h))
-
     def getAverageC(self, pixel, speed):
         """
         Given PIL Image, return average RGB value
@@ -263,11 +252,12 @@ class ASCII(callbacks.Plugin):
         if cols > W or rows > H:
             print("Image too small for specified cols!")
             exit(0)
+        image = image.resize((cols, rows), Image.LANCZOS)
         image2 = image2.convert('RGBA')
-        image2 = Image.alpha_composite(Image.new("RGBA", image2.size, '#000000'), image2)
         image2 = image2.convert(mode="P", matrix=None, dither=Image.FLOYDSTEINBERG, palette=Image.WEB)
         image2 = image2.convert('RGB')
         image2 = image2.resize((cols, rows), Image.LANCZOS)
+        lumamap = np.array(image)
         colormap = np.array(image2)
         # ascii image is a list of character strings
         aimg = []
@@ -282,17 +272,8 @@ class ASCII(callbacks.Plugin):
             aimg.append("")
             old_color = None
             for i in range(cols):
-                # crop image to tile
-                x1 = int(i*w)
-                x2 = int((i+1)*w)
-                # correct last tile
-                if i == cols-1:
-                    x2 = W
-                # crop image to extract tile
-                img = image.crop((x1, y1, x2, y2))
-                #img2 = image2.crop((x1, y1, x2, y2))
                 # get average luminance
-                avg = int(self.getAverageL(img))
+                avg = int(np.average(lumamap[j][i]))
                 # look up ascii char
                 gsval = gscale[int((avg*68)/255)]
                 # get color value
@@ -359,11 +340,12 @@ class ASCII(callbacks.Plugin):
         if cols > W or rows > H:
             print("Image too small for specified cols!")
             exit(0)
+        image = image.resize((cols, rows), Image.LANCZOS)
         image2 = image2.convert('RGBA')
-        image2 = Image.alpha_composite(Image.new("RGBA", image2.size, '#000000'), image2)
         image2 = image2.convert(mode="P", matrix=None, dither=Image.FLOYDSTEINBERG, palette=Image.WEB)
         image2 = image2.convert('RGB')
         image2 = image2.resize((cols, rows), Image.LANCZOS)
+        lumamap = np.array(image)
         colormap = np.array(image2)
         # ascii image is a list of character strings
         aimg = []
@@ -378,17 +360,8 @@ class ASCII(callbacks.Plugin):
             aimg.append("")
             old_color = None
             for i in range(cols):
-                # crop image to tile
-                x1 = int(i*w)
-                x2 = int((i+1)*w)
-                # correct last tile
-                if i == cols-1:
-                    x2 = W
-                # crop image to extract tile
-                img = image.crop((x1, y1, x2, y2))
-                #img2 = image2.crop((x1, y1, x2, y2))
                 # get average luminance
-                avg = int(self.getAverageL(img))
+                avg = int(np.average(lumamap[j][i]))
                 # look up ascii char
                 gsval = gscale[int((avg*4)/255)]
                 # get color value
