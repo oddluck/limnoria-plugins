@@ -4,3 +4,4 @@ pillow
 colour-science
 colormath
 fake-useragent
+scipy
