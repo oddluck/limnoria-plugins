@@ -116,7 +116,7 @@ class Trackers(callbacks.Plugin):
 			if interval.days < 14:
 				time_passed = "1 week ago"
 			else:
-				time_passed = "%s weeks ago" % (interval.days/7)
+				time_passed = "%s weeks ago" % int(interval.days/7)
 
 		return time_passed
 
