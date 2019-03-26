@@ -230,7 +230,13 @@ class ASCII(callbacks.Plugin):
         filename = "{0}/{1}".format(filepath, url.split('/')[-1])
         ua = UserAgent()
         header = {'User-Agent':str(ua.random)}
-        response = requests.get(url, headers=header)
+        image_formats = ("image/png", "image/jpeg", "image/jpg", "image/gif")
+        r = requests.head(url, headers=header)
+        if r.headers["content-type"] in image_formats:
+            response = requests.get(url, headers=header)
+        else:
+            irc.reply("Invalid file type.")
+            return
         if response.status_code == 200:
             with open("{0}".format(filename), 'wb') as f:
                 f.write(response.content)
@@ -322,7 +328,13 @@ class ASCII(callbacks.Plugin):
         filename = "{0}/{1}".format(filepath, url.split('/')[-1])
         ua = UserAgent()
         header = {'User-Agent':str(ua.random)}
-        response = requests.get(url, headers=header)
+        image_formats = ("image/png", "image/jpeg", "image/jpg", "image/gif")
+        r = requests.head(url, headers=header)
+        if r.headers["content-type"] in image_formats:
+            response = requests.get(url, headers=header)
+        else:
+            irc.reply("Invalid file type.")
+            return
         if response.status_code == 200:
             with open("{0}".format(filename), 'wb') as f:
                 f.write(response.content)
