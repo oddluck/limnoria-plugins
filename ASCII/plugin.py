@@ -226,11 +226,13 @@ class ASCII(callbacks.Plugin):
 
     def distance(self, c1, c2, speed):
         if speed == 'fast':
-            delta_e = delta_E_CIE1976(c1, c2)
+            (r1,g1,b1) = (c1[0], c1[1], c1[2])
+            (r2,g2,b2) = (c2[0], c2[1], c2[2])
+            delta_e = math.sqrt((r1 - r2)**2 + (g1 - g2) ** 2 + (b1 - b2) **2)
         elif speed == 'medium':
-            delta_e = delta_E_CMC(c1, c2)
+            delta_e = delta_E_CIE1994(c1, c2)
         else:
-            delta_e = delta_E_CIE2000(c1, c2)
+            delta_e = delta_E_CMC(c1, c2)
         return delta_e
 
     def img(self, irc, msg, args, optlist, url):
