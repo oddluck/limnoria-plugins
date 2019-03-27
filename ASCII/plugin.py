@@ -284,14 +284,9 @@ class ASCII(callbacks.Plugin):
         h = w/scale
         # compute number of rows
         rows = int(H/h)
-        # check if image size is too small
-        if cols > W or rows > H:
-            print("Image too small for specified cols!")
-            exit(0)
         image = ImageOps.autocontrast(image)
         image = image.resize((cols, rows), Image.LANCZOS)
         image2 = image2.convert('RGBA')
-        image2 = image2.convert(mode="P", matrix=None, dither=Image.FLOYDSTEINBERG, palette=Image.ADAPTIVE)
         image2 = image2.convert('RGB')
         image2 = image2.resize((cols, rows), Image.LANCZOS)
         lumamap = np.array(image)
@@ -382,14 +377,9 @@ class ASCII(callbacks.Plugin):
         h = w/scale
         # compute number of rows
         rows = int(H/h)
-        # check if image size is too small
-        if cols > W or rows > H:
-            print("Image too small for specified cols!")
-            exit(0)
         image = ImageOps.autocontrast(image)
         image = image.resize((cols, rows), Image.LANCZOS)
         image2 = image2.convert('RGBA')
-        image2 = image2.convert(mode="P", matrix=None, dither=Image.FLOYDSTEINBERG, palette=Image.ADAPTIVE)
         image2 = image2.convert('RGB')
         image2 = image2.resize((cols, rows), Image.LANCZOS)
         lumamap = np.array(image)
