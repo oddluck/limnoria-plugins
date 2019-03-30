@@ -14,6 +14,7 @@ import supybot.ircmsgs as ircmsgs
 import random
 import requests
 from bs4 import BeautifulSoup
+import os
 
 try:
     from supybot.i18n import PluginInternationalization
