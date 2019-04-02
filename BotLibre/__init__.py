@@ -35,12 +35,6 @@ Cleverbot AI through the BotLibre API.
 
 import supybot
 import supybot.world as world
-
-__version__ = "0.1"
-__author__ = supybot.Author("Michael Daniel Telatynski", "t3chguy", "postmaster@webdevguru.co.uk")
-__contributors__ = {}
-__url__ = 'https://github.com/t3chguy/Limnoria-Plugins'
-
 from . import config
 from . import plugin
 from imp import reload
