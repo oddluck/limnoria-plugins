@@ -54,14 +54,14 @@ class BotLibre(callbacks.Plugin):
         self.__parent.__init__(irc)
         self.url = 'https://www.botlibre.com/rest/json/chat'
         self.conversation = {}
-        
+
     def _queryBot(self, irc, channel, query):
         self.conversation.setdefault(channel, None)
         if self.conversation[channel]:
             payload = {
                 'application': self.registryValue('application'),
                 'instance': self.registryValue('instance'),
-                'message': query
+                'message': query,
                 'conversation': self.conversation[channel]
             }
         else:
@@ -70,18 +70,18 @@ class BotLibre(callbacks.Plugin):
                 'instance': self.registryValue('instance'),
                 'message': query
             }
-        r = requests.post(self.url, data=payload)
+        r = requests.post(self.url, json=payload)
         j = r.json()
         response = j['message']
         self.conversation[channel] = j['conversation']
-        response:
+        if response:
             irc.reply(j['message'])
 
-    def BotLibre(self, irc, msg, args, text):
+    def botlibre(self, irc, msg, args, text):
         """Manual Call to the Cleverbot.io API"""
         channel = msg.args[0]
         self._queryBot(irc, channel, text)
-    BotLibre = wrap(BotLibre, ['text'])
+    botlibre = wrap(botlibre, ['text'])
 
     def invalidCommand(self, irc, msg, tokens):
         chan = msg.args[0]
