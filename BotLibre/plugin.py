@@ -80,6 +80,8 @@ class BotLibre(callbacks.Plugin):
     def botlibre(self, irc, msg, args, text):
         """Manual Call to the Cleverbot.io API"""
         channel = msg.args[0]
+        if not irc.isChannel(channel):
+            channel = msg.nick
         self._queryBot(irc, channel, text)
     botlibre = wrap(botlibre, ['text'])
 
