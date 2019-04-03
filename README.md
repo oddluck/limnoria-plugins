@@ -10,6 +10,10 @@ gitlab mirror: https://gitlab.com/oddluck/limnoria-plugins
 
 Plugin to turn text and images into ASCII Art. Also supports scrolling IRC ASCII .txt files.
 
+<b>BotLibre</b>
+
+Plugin to interface with the Bot Libre chat API.
+
 <b>Jeopardy</b>
 
 Fork of Trivia with option to use jservice.io (156,800+ Jeopardy! questions) as trivia source plus additional features such as category selection, question history, and improved scoring and answer checking. 
