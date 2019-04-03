@@ -88,7 +88,7 @@ class BotLibre(callbacks.Plugin):
     def invalidCommand(self, irc, msg, tokens):
         chan = msg.args[0]
         if irc.isChannel(chan) and self.registryValue('invalidCommand', chan):
-            self._queryBot(irc, chan, msg.args[1])
+            self._queryBot(irc, chan, msg.args[1][1:].strip())
 
 Class = BotLibre
 
