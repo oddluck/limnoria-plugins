@@ -27,7 +27,7 @@ def configure(advanced):
 Cayenne = conf.registerPlugin('Cayenne')
 
 conf.registerChannelValue(Cayenne, 'enable',
-registry.Boolean(True, _("""Turns on and off Cayenne.""")))
+                        registry.Boolean(True, _("""Turns on and off Cayenne.""")))
 
 conf.registerGlobalValue(Cayenne, 'factChance',
                         registry.Integer(10, _("""0-100 chance to trigger a cat fact""")))
