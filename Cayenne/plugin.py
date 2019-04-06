@@ -12,6 +12,7 @@ import supybot.callbacks as callbacks
 import random
 import datetime
 import os
+import requests
 
 try:
     from supybot.i18n import PluginInternationalization
@@ -51,7 +52,8 @@ class Cayenne(callbacks.Plugin):
         """
         Get a random cat fact
         """        
-        return random.choice(self.cat_facts)
+        data = requests.get("https://catfact.ninja/fact").json()
+        return data['fact']
     
     def message_contains_trigger_word(self, message):
         """
@@ -77,17 +79,14 @@ class Cayenne(callbacks.Plugin):
         Query cat URL to get a random link
         """
         try:
-            link_url = self.registryValue("linkURL")
-            response = utils.web.getUrl(link_url).decode("utf8")
-            
+            response = utils.web.getUrl("http://edgecats.net/random").decode("utf8")
             # Expecting a link
             if "http" in response:
                 return response
             else:
-                self.log.error("Cayenne: received unexpected response from cat URL: %s" % (response))
-            
+                self.log.error("Received unexpected response from http://edgecats.net/random")
         except:
-            self.log.exception("Cayenne: error fetching cat URL")
+self.log.exception("Error fetching URL")
     
     def doPrivmsg(self, irc, msg):
         """
