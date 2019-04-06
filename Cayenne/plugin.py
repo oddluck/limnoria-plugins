@@ -79,7 +79,8 @@ class Cayenne(callbacks.Plugin):
         Query cat URL to get a random link
         """
         try:
-            response = utils.web.getUrl("http://edgecats.net/random").decode("utf8")
+            link_url = self.registryValue("linkURL")
+            response = utils.web.getUrl(link_url).decode("utf8")
             # Expecting a link
             if "http" in response:
                 return response
