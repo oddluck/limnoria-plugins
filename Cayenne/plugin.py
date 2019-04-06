@@ -107,7 +107,7 @@ class Cayenne(callbacks.Plugin):
         
         # Only react to messages/actions in a channel and to messages that aren't from
         # the bot itself.
-        if is_channel and not is_ctcp and not is_message_from_self and self.registryValue('enable', msg.args[0]):            
+        if is_channel and not is_ctcp and not is_message_from_self and self.registryValue('enable', channel):            
             if type(message) is str and len(message):
                 fact_chance = int(self.registryValue("factChance"))
                 link_chance = int(self.registryValue("linkChance"))            
