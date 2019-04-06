@@ -87,7 +87,7 @@ class Cayenne(callbacks.Plugin):
             else:
                 self.log.error("Received unexpected response from http://edgecats.net/random")
         except:
-self.log.exception("Error fetching URL")
+            self.log.exception("Error fetching URL")
     
     def doPrivmsg(self, irc, msg):
         """
