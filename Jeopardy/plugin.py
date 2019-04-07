@@ -307,6 +307,7 @@ class Jeopardy(callbacks.Plugin):
             blankChar = self.registryValue('blankChar', self.channel)
             blank = re.sub('\w', blankChar, blank)
             self.reply(_('HINT: %s%s') % (show, blank))
+            self.p = self.p // 2
             def event():
                 self.timedEvent()
             timeout = self.registryValue('timeout', self.channel)
