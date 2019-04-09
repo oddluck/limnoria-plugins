@@ -30,9 +30,6 @@ one game allowed to run per channel/pm. will prompt you to stop running games be
 this limits the number of potential child dfrotz processes and keeps this simpler in terms of routing the right game data
 to the right place.
 
-Some games and a frotz binary included, may need to build your own depending on your system.
-https://github.com/DavidGriffith/frotz/blob/master/DUMB
-
 python3 -m pip install pexpect
 
 Games included here are easily found and freely available all over the net, their owners are their respective owners 
