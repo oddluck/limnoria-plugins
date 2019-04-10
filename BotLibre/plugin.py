@@ -55,20 +55,24 @@ class BotLibre(callbacks.Plugin):
         self.url = 'https://www.botlibre.com/rest/json/chat'
         self.conversation = {}
 
-    def _queryBot(self, irc, channel, query):
+    def _queryBot(self, irc, channel, text):
+        text = re.sub('fuck', 'screw', text, flags=re.IGNORECASE)
+        text = re.sub('cunt', 'pussy', text, flags=re.IGNORECASE)
+        text = re.sub('bitch', '', text, flags=re.IGNORECASE)
+        text = re.sub('whore', 'slut', text, flags=re.IGNORECASE)
         self.conversation.setdefault(channel, None)
         if self.conversation[channel]:
             payload = {
                 'application': self.registryValue('application'),
                 'instance': self.registryValue('instance'),
-                'message': query,
+                'message': text,
                 'conversation': self.conversation[channel]
             }
         else:
             payload = {
                 'application': self.registryValue('application'),
                 'instance': self.registryValue('instance'),
-                'message': query
+                'message': text
             }
         try:
             r = requests.post(self.url, json=payload)
@@ -79,7 +83,7 @@ class BotLibre(callbacks.Plugin):
                 irc.reply(j['message'])
         except:
             return
-
+        
     def botlibre(self, irc, msg, args, text):
         """Manual Call to the Cleverbot.io API"""
         channel = msg.args[0]
@@ -94,6 +98,5 @@ class BotLibre(callbacks.Plugin):
             self._queryBot(irc, chan, msg.args[1][1:].strip())
 
 Class = BotLibre
-
 
 # vim:set shiftwidth=4 softtabstop=4 expandtab textwidth=79:
