@@ -70,12 +70,15 @@ class BotLibre(callbacks.Plugin):
                 'instance': self.registryValue('instance'),
                 'message': query
             }
-        r = requests.post(self.url, json=payload)
-        j = r.json()
-        response = j['message']
-        self.conversation[channel] = j['conversation']
-        if response:
-            irc.reply(j['message'])
+        try:
+            r = requests.post(self.url, json=payload)
+            j = r.json()
+            response = j['message']
+            self.conversation[channel] = j['conversation']
+            if response:
+                irc.reply(j['message'])
+        except:
+            return
 
     def botlibre(self, irc, msg, args, text):
         """Manual Call to the Cleverbot.io API"""
