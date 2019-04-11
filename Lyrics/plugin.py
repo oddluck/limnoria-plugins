@@ -39,6 +39,7 @@ class Lyrics(callbacks.Plugin):
             elements = soup.select('.r a')
             url = elements[0]['href']
             url = re.sub("http://www.google.com/url?url=", "", url)
+            url = re.sub("&rct=.*", "", url)
             title = soup.find("h3").getText()
         except Exception:
             return
