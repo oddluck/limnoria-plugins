@@ -85,7 +85,7 @@ Return tweet text or twitter user info, search twitter, and get trend data by lo
 
 <b>IMDB</b>
 
-IMDB lookups using the OMDB API.
+IMDB lookups using the OMDB API. Search powered by Google.
 
 
 <b>SpiffyTitles</b>
