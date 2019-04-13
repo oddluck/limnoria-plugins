@@ -14,11 +14,9 @@ import supybot.ircmsgs as ircmsgs
 import supybot.callbacks as callbacks
 import requests
 import json
-
-if sys.version_info[0] >= 3:
-    from urllib.parse import quote_plus
-else:
-    from urllib import quote_plus
+import re
+from fake_useragent import UserAgent
+from bs4 import BeautifulSoup
 
 try:
     from supybot.i18n import PluginInternationalization
@@ -32,25 +30,38 @@ class IMDB(callbacks.Plugin):
     """Queries OMDB database for information about IMDB titles"""
     threaded = True
 
+    def dosearch(self, query):
+        try:
+            searchurl = "https://www.google.com/search?&q={0} site:imdb.com/title/".format(query)
+            ua = UserAgent()
+            header = {'User-Agent':str(ua.random)}
+            data = requests.get(searchurl, headers=header)
+            soup = BeautifulSoup(data.text)
+            elements = soup.select('.r a')
+            url = elements[0]['href']
+            url = re.sub("http://www.google.com/url?url=", "", url)
+            url = re.sub("&rct=.*", "", url)
+        except Exception:
+            return
+        else:
+            return url
+
     def imdb(self, irc, msg, args, query):
         """
         Queries OMDB api for query
         """
         apikey = self.registryValue('omdbAPI')
-        if query[-4:].isdigit():
-            encoded_query = quote_plus(query[0:-4])
-            encoded_query_year = quote_plus(query[-4:])
-            omdb_url = "http://www.omdbapi.com/?t=%s&y=%s&plot=short&r=json&tomatoes=true&apikey=%s" % (encoded_query, encoded_query_year, apikey)
-            self.log.info("IMDB: Check for %s year %s" % (query[0:-4], query[-4:]))
+        url = self.dosearch(query)
+        if url:
+            imdb_id = url.split("/title/")[1].rstrip("/")
+            omdb_url = "http://www.omdbapi.com/?i=%s&plot=short&r=json&tomatoes=true&apikey=%s" % (imdb_id, apikey)
         else:
-            encoded_query = quote_plus(query)
-            omdb_url = "http://www.omdbapi.com/?t=%s&y=&plot=short&r=json&tomatoes=true&apikey=%s" % (encoded_query, apikey)
+            irc.reply("No results found for {0}".format(query))
 
         channel = msg.args[0]
         result = None
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.60 Safari/537.36"
-        }
+        ua = UserAgent()
+        headers = {'User-Agent':str(ua.random)}
 
         self.log.info("IMDB: requesting %s" % omdb_url)
 
