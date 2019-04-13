@@ -80,7 +80,7 @@ class BotLibre(callbacks.Plugin):
             response = j['message']
             self.conversation[channel] = j['conversation']
             if response:
-                irc.reply(j['message'])
+                irc.reply(re.sub('<[^<]+?>', '', j['message']))
         except:
             return
         
