@@ -1,1 +1,1 @@
-Insert a description of your plugin here, with any notes, etc. about using it.
+Forked from https://github.com/quantumlemur/Supybot-Plugins/tree/master/Timebomb
