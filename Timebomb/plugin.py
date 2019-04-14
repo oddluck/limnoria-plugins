@@ -45,13 +45,13 @@ import supybot.registry as registry
 import supybot.conf as conf
 
 
-class Timebomb(callbacks.Plugin):
-    """Add the help for "@plugin help Timebomb" here
+class TimeBomb(callbacks.Plugin):
+    """Add the help for "@plugin help TimeBomb" here
     This should describe *how* to use this plugin."""
     threaded = True
 
     def __init__(self, irc):
-        self.__parent = super(Timebomb, self)
+        self.__parent = super(TimeBomb, self)
         self.__parent.__init__(irc)
         self.rng = random.Random()
         self.rng.seed()
@@ -262,7 +262,7 @@ class Timebomb(callbacks.Plugin):
             if hasCap:
                 oldValue = self.registryValue('allowBombs', channel)
                 try:
-                    conf.supybot.plugins.Timebomb.allowBombs.get(channel).set(value)
+                    conf.supybot.plugins.TimeBomb.allowBombs.get(channel).set(value)
                 except registry.InvalidRegistryValue:
                     irc.error('Value must be either True or False (or On or Off)')
                     return
@@ -275,9 +275,9 @@ class Timebomb(callbacks.Plugin):
                 return
 
         if self.registryValue('allowBombs', channel):
-            irc.reply('Timebombs {} enabled in{}'.format(statusDescription, channel))
+            irc.reply('TimeBombs {} enabled in{}'.format(statusDescription, channel))
         else:
-            irc.reply('Timebombs {} disabled in{}'.format(statusDescription, channel))
+            irc.reply('TimeBombs {} disabled in{}'.format(statusDescription, channel))
     bombsenabled = wrap(bombsenabled, ['Channel', optional('somethingWithoutSpaces')])
 
     def duck(self, irc, msg, args, channel):
@@ -302,7 +302,7 @@ class Timebomb(callbacks.Plugin):
         """
         channel = ircutils.toLower(channel)
         if not self.registryValue('allowBombs', channel):
-            irc.reply('Timebombs aren\'t allowed in this channel.  Set plugins.Timebomb.allowBombs to true if you want them.')
+            irc.reply('TimeBombs aren\'t allowed in this channel.  Set plugins.TimeBomb.allowBombs to true if you want them.')
             return
         try:
             if self.bombs[channel].active:
@@ -382,7 +382,7 @@ class Timebomb(callbacks.Plugin):
         For bombing people!"""
         channel = ircutils.toLower(channel)
         if not self.registryValue('allowBombs', channel):
-            irc.reply('Timebombs aren\'t allowed in this channel.  Set plugins.Timebomb.allowBombs to true if you want them.')
+            irc.reply('TimeBombs aren\'t allowed in this channel.  Set plugins.TimeBomb.allowBombs to true if you want them.')
             return
         try:
             if self.bombs[channel].active:
@@ -491,7 +491,7 @@ class Timebomb(callbacks.Plugin):
     defuse = wrap(defuse, [('checkChannelCapability', 'op')])
 
 
-Class = Timebomb
+Class = TimeBomb
 
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:

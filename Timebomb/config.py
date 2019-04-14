@@ -37,14 +37,14 @@ def configure(advanced):
     # user or not.  You should effect your configuration by manipulating the
     # registry as appropriate.
     from supybot.questions import expect, anything, something, yn
-    conf.registerPlugin('Timebomb', True)
+    conf.registerPlugin('TimeBomb', True)
 
 
-Timebomb = conf.registerPlugin('Timebomb')
+TimeBomb = conf.registerPlugin('TimeBomb')
 # This is where your configuration variables (if any) should go.  For example:
-# conf.registerGlobalValue(Timebomb, 'someConfigVariableName',
+# conf.registerGlobalValue(TimeBomb, 'someConfigVariableName',
 #     registry.Boolean(False, """Help for someConfigVariableName."""))
-conf.registerGlobalValue(Timebomb, 'colors',
+conf.registerGlobalValue(TimeBomb, 'colors',
     registry.SpaceSeparatedListOfStrings(['AliceBlue', 'AntiqueWhite', 'Aqua',
         'Aquamarine', 'Azure', 'Beige', 'Bisque', 'Black', 'BlanchedAlmond',
         'Blue', 'BlueViolet', 'Brown', 'BurlyWood', 'CadetBlue', 'Chartreuse',
@@ -77,96 +77,96 @@ conf.registerGlobalValue(Timebomb, 'colors',
     """The set of possible timebomb wire colors"""))
 
 
-conf.registerGlobalValue(Timebomb, 'shortcolors',
+conf.registerGlobalValue(TimeBomb, 'shortcolors',
         registry.SpaceSeparatedListOfStrings(['red', 'orange', 'yellow',
             'green', 'blue', 'purple', 'pink', 'black', 'brown', 'gray',
             'white'],
         """The set of possible timebomb wire colors when there are few
                 wires"""))
 
-conf.registerChannelValue(Timebomb, 'randomExclusions',
+conf.registerChannelValue(TimeBomb, 'randomExclusions',
         registry.SpaceSeparatedListOfStrings([],
         """A list of nicks who should be excluded from being
             randombombed"""))
 
-conf.registerChannelValue(Timebomb, 'exclusions',
+conf.registerChannelValue(TimeBomb, 'exclusions',
         registry.SpaceSeparatedListOfStrings([],
         """A list of nicks who should be completely excluded from being
             bombed"""))
 
-conf.registerChannelValue(Timebomb, 'allowBombs',
+conf.registerChannelValue(TimeBomb, 'allowBombs',
         registry.Boolean(False, """Determines whether timebombs are allowed
             in the channel."""))
 
-conf.registerChannelValue(Timebomb, 'bombHistory',
+conf.registerChannelValue(TimeBomb, 'bombHistory',
         registry.SpaceSeparatedListOfStrings([],
         """Timestamps, senders and victims for previous bombs in the channel"""))
 
-conf.registerChannelValue(Timebomb, 'rateLimitTime',
+conf.registerChannelValue(TimeBomb, 'rateLimitTime',
         registry.Integer(1800, """Time in seconds for which previous bombs are remembered and count towards the rate limit"""))
 
-conf.registerChannelValue(Timebomb, 'rateLimitSender',
+conf.registerChannelValue(TimeBomb, 'rateLimitSender',
         registry.Float(5.0, """Mean bombs/hour allowed in the past rateLimitTime from each host"""))
 
-conf.registerChannelValue(Timebomb, 'rateLimitVictim',
+conf.registerChannelValue(TimeBomb, 'rateLimitVictim',
         registry.Float(3.0, """Mean bombs/hour allowed in the past rateLimitTime targeting a particular nick"""))
 
-conf.registerChannelValue(Timebomb, 'rateLimitTotal',
+conf.registerChannelValue(TimeBomb, 'rateLimitTotal',
         registry.Float(9.0, """Total mean bombs/hour allowed in the past rateLimitTime"""))
 
-conf.registerChannelValue(Timebomb, 'minWires',
+conf.registerChannelValue(TimeBomb, 'minWires',
         registry.PositiveInteger(2, """Determines the minimum number of wires
             a timebomb will have."""))
 
-conf.registerChannelValue(Timebomb, 'maxWires',
+conf.registerChannelValue(TimeBomb, 'maxWires',
         registry.PositiveInteger(4, """Determines the maximum number of wires
             a timebomb will have."""))
 
-conf.registerChannelValue(Timebomb, 'minTime',
+conf.registerChannelValue(TimeBomb, 'minTime',
         registry.PositiveInteger(45, """Determines the minimum time of a
             timebomb timer, in seconds."""))
 
-conf.registerChannelValue(Timebomb, 'maxTime',
+conf.registerChannelValue(TimeBomb, 'maxTime',
         registry.PositiveInteger(70, """Determines the maximum time of a
             timebomb timer, in seconds."""))
 
-conf.registerChannelValue(Timebomb, 'minRandombombTime',
+conf.registerChannelValue(TimeBomb, 'minRandombombTime',
         registry.PositiveInteger(60, """Determines the minimum time of a
             randombomb timer, which should in general be greater than the
             minimum targeted bomb time, to allow someone who's not paying
             attention to respond."""))
 
-conf.registerChannelValue(Timebomb, 'maxRandombombTime',
+conf.registerChannelValue(TimeBomb, 'maxRandombombTime',
         registry.PositiveInteger(120, """Determines the maximum time of a
             randombomb timer, which should in general be greater than the
             maxiumum targeted bomb time, to allow someone who's not paying
             attention to respond."""))
 
-conf.registerChannelValue(Timebomb, 'showArt',
+conf.registerChannelValue(TimeBomb, 'showArt',
         registry.Boolean(False, """Determines whether an ASCII art bomb should
             be shown on detonation, or a simple message."""))
 
-conf.registerChannelValue(Timebomb, 'bombActiveUsers',
+conf.registerChannelValue(TimeBomb, 'bombActiveUsers',
         registry.Boolean(True, """Determines whether only active users
             should be randombombed"""))
 
-conf.registerChannelValue(Timebomb, 'joinIsActivity',
+conf.registerChannelValue(TimeBomb, 'joinIsActivity',
         registry.Boolean(False, """Determines whether channel joins should
             count as activity for randombombs"""))
 
-conf.registerChannelValue(Timebomb, 'allowSelfBombs',
+conf.registerChannelValue(TimeBomb, 'allowSelfBombs',
         registry.Boolean(False, """Allow the bot to bomb itself?"""))
 
-conf.registerChannelValue(Timebomb, 'idleTime',
+conf.registerChannelValue(TimeBomb, 'idleTime',
         registry.PositiveInteger(30, """The number of minutes before someone
             is counted as idle for randombombs, if idle-checking is
             enabled."""))
 
-conf.registerChannelValue(Timebomb, 'showCorrectWire',
+conf.registerChannelValue(TimeBomb, 'showCorrectWire',
         registry.Boolean(False, """Determines whether the correct wire will be
             shown when a bomb detonates."""))
 
-conf.registerGlobalValue(Timebomb, 'debug',
+conf.registerGlobalValue(TimeBomb, 'debug',
         registry.Boolean(False, """Determines whether debugging info will be
             shown."""))
 
