@@ -2,4 +2,8 @@ Forked from https://github.com/butterscotchstallion/limnoria-plugins/tree/master
 
 Queries OMDB database for information about IMDB titles. Search powered by Google.
 
-config plugins.IMDB.omdbAPI (your_api_key) https://omdbapi.com/apikey.aspx
+https://omdbapi.com/apikey.aspx
+```
+config plugins.IMDB.omdbAPI (your_api_key) 
+```
+
