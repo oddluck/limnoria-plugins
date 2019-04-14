@@ -93,7 +93,7 @@ class TimeBomb(callbacks.Plugin):
                 self.detonate(irc)
 
             schedule.addEvent(detonate, time.time() + self.detonateTime, '{}_bomb'.format(self.channel))
-            s = 'stuffs a bomb down {}\'s pants.  The timer is set for {} seconds!  There are {} wires.  They are: {}.'.format(self.victim, self.detonateTime, len(wires), utils.str.commaAndify(wires))
+            s = 'stuffs a bomb down {}\'s pants.  The timer is set for {} seconds! There are {} wires.  They are: {}.'.format(self.victim, self.detonateTime, len(wires), utils.str.commaAndify(wires))
             self.irc.queueMsg(ircmsgs.action(self.channel, s))
 
             if self.victim == irc.nick:
@@ -126,7 +126,7 @@ class TimeBomb(callbacks.Plugin):
                 self.irc.queueMsg(ircmsgs.privmsg(self.channel, '{0} has turned the bomb into a pizza! {0}\'s pants have been ruined by the pizza stuffed into them, but at least they haven\'t exploded.'.format(self.victim)))
                 self.defuse()
             elif self.goodWire.lower() == self.cutWire.lower():
-                self.irc.queueMsg(ircmsgs.privmsg(self.channel, '{} has cut the {} wire!  This has defused the bomb!'.format(self.victim, self.cutWire)))
+                self.irc.queueMsg(ircmsgs.privmsg(self.channel, '{} has cut the {} wire! This has defused the bomb!'.format(self.victim, self.cutWire)))
 
                 if self.victim.lower() != self.sender.lower():
                     self.irc.queueMsg(ircmsgs.privmsg(self.channel, 'They then quickly rearm the bomb and throw it back at {} with just seconds on the clock!'.format(self.sender)))
@@ -149,7 +149,7 @@ class TimeBomb(callbacks.Plugin):
 
         def duck(self, irc, ducker):
             if self.thrown and ircutils.nickEqual(self.victim, ducker):
-                self.irc.queueMsg(ircmsgs.privmsg(self.channel, '{} ducks!  The bomb misses, and explodes harmlessly a few meters away.'.format(self.victim)))
+                self.irc.queueMsg(ircmsgs.privmsg(self.channel, '{} ducks! The bomb misses, and explodes harmlessly a few meters away.'.format(self.victim)))
                 self.defuse()
 
         def detonate(self, irc):
