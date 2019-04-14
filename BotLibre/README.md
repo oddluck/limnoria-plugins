@@ -13,5 +13,6 @@ config channel #channel plugins.BotLibre.invalidcommand True
 ```
 Use messapeparser to make the bot respond to messages containing its nick:
 ```
-messageparser add (#channel/global) "(?i)(.*)(your_bot_nick)(.*)" "botlibre $1$3"
+messageparser add (#channel/global) "(?i)(.+)(your_bot_nick)(.*)" "botlibre $1$3"
+messageparser add (#channel/global) "(?i)(.*)(your_bot_nick)(.+)" "botlibre $1$3"
 ```
