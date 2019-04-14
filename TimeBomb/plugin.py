@@ -17,7 +17,7 @@
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-# ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+# ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
 # LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
 # CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
 # SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
@@ -93,7 +93,7 @@ class TimeBomb(callbacks.Plugin):
                 self.detonate(irc)
 
             schedule.addEvent(detonate, time.time() + self.detonateTime, '{}_bomb'.format(self.channel))
-            s = 'stuffs a bomb down {}\'s pants.  The timer is set for {} seconds! There are {} wires.  They are: {}.'.format(self.victim, self.detonateTime, len(wires), utils.str.commaAndify(wires))
+            s = 'stuffs a bomb down {}\'s pants. The timer is set for {} seconds! There are {} wires. They are: {}.'.format(self.victim, self.detonateTime, len(wires), utils.str.commaAndify(wires))
             self.irc.queueMsg(ircmsgs.action(self.channel, s))
 
             if self.victim == irc.nick:
@@ -302,7 +302,7 @@ class TimeBomb(callbacks.Plugin):
         """
         channel = ircutils.toLower(channel)
         if not self.registryValue('allowBombs', channel):
-            irc.reply('TimeBombs aren\'t allowed in this channel.  Set plugins.TimeBomb.allowBombs to true if you want them.')
+            irc.reply('TimeBombs aren\'t allowed in this channel. Set plugins.TimeBomb.allowBombs to true if you want them.')
             return
         try:
             if self.bombs[channel].active:
@@ -382,7 +382,7 @@ class TimeBomb(callbacks.Plugin):
         For bombing people!"""
         channel = ircutils.toLower(channel)
         if not self.registryValue('allowBombs', channel):
-            irc.reply('TimeBombs aren\'t allowed in this channel.  Set plugins.TimeBomb.allowBombs to true if you want them.')
+            irc.reply('TimeBombs aren\'t allowed in this channel. Set plugins.TimeBomb.allowBombs to true if you want them.')
             return
         try:
             if self.bombs[channel].active:
@@ -392,7 +392,7 @@ class TimeBomb(callbacks.Plugin):
             pass
 
         if victim.lower() == irc.nick.lower() and not self.registryValue('allowSelfBombs', channel):
-            irc.reply('You really expect me to bomb myself?  Stuffing explosives into my own pants isn\'t exactly my idea of fun.')
+            irc.reply('You really expect me to bomb myself? Stuffing explosives into my own pants isn\'t exactly my idea of fun.')
             return
         victim = victim.casefold()
         found = False
