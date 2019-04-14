@@ -62,9 +62,9 @@ Hunting and fishing game
 
 The classic game of IRC DuckHunt. Top scores/times per channel. Lots of stats, etc.
 
-<b>Timebomb</b>
+<b>TimeBomb</b>
 
-The classic game of IRC Timebomb.
+The classic game of IRC TimeBomb.
 
 
 <b>MUD/Telnet</b>
