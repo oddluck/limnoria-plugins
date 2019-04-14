@@ -229,35 +229,42 @@ class Jeopardy(callbacks.Plugin):
                 else:
                     self.p = self.points
             color = self.registryValue('color', self.channel)
-            self.reply(_('\x03%s#%d of %d: %s') % (color, self.numAsked,
+            def next_question():
+                self.reply(_('\x03%s#%d of %d: %s') % (color, self.numAsked,
                                                 self.total, self.q))
-            ans = self.a[0]
-            if "(" in self.a[0]:
-                a1, a2, a3 = re.match("(.*)\((.*)\)(.*)", self.a[0]).groups()
-                self.a.append(a1 + a3)
-                self.a.append(a2)
-            blankChar = self.registryValue('blankChar', self.channel)
-            blank = re.sub('\w', blankChar, ans)
-            self.reply("HINT: {0}".format(blank))
-            if self.id:
-                f = open(self.historyfile, 'a')
-                f.write("{0}\n".format(self.id))
-                f.close()
-
-            def event():
-                self.timedEvent()
-            timeout = self.registryValue('timeout', self.channel)
-            numHints = self.registryValue('numHints', self.channel)
-            eventTime = time.time() + timeout / (numHints + 1)
+                ans = self.a[0]
+                if "(" in self.a[0]:
+                    a1, a2, a3 = re.match("(.*)\((.*)\)(.*)", self.a[0]).groups()
+                    self.a.append(a1 + a3)
+                    self.a.append(a2)
+                blankChar = self.registryValue('blankChar', self.channel)
+                blank = re.sub('\w', blankChar, ans)
+                self.reply("HINT: {0}".format(blank))
+                if self.id:
+                    f = open(self.historyfile, 'a')
+                    f.write("{0}\n".format(self.id))
+                    f.close()
+                def event():
+                    self.timedEvent()
+                timeout = self.registryValue('timeout', self.channel)
+                numHints = self.registryValue('numHints', self.channel)
+                eventTime = time.time() + timeout / (numHints + 1)
+                if self.active:
+                    schedule.addEvent(event, eventTime, 'next_%s' % self.channel)
+            if self.numAsked > 1:
+                delay = self.registryValue('delay', self.channel)
+                delayTime = time.time() + delay
+            else:
+                delayTime = time.time()
             if self.active:
-                schedule.addEvent(event, eventTime, 'next_%s' % self.channel)
-
+                schedule.addEvent(next_question, delayTime, 'new_%s' % self.channel)
 
         def stop(self):
             self.reply(_('Jeopardy! stopping.'))
             self.active = False
             try:
                 schedule.removeEvent('next_%s' % self.channel)
+                schedule.removeEvent('new_%s' % self.channel)
             except KeyError:
                 pass
             scores = iter(self.roundscores.items())
@@ -380,7 +387,6 @@ class Jeopardy(callbacks.Plugin):
     @internationalizeDocstring
     def start(self, irc, msg, args, channel, optlist):
         """[<channel>] [--num <number of questions>] [--cat <category>]
-
         Starts a game of Jeopardy! <channel> is only necessary if the message
         isn't sent in the channel itself."""
         optlist = dict(optlist)
@@ -398,6 +404,7 @@ class Jeopardy(callbacks.Plugin):
                 del self.games[channel]
                 try:
                     schedule.removeEvent('next_%s' % channel)
+                    schedule.removeEvent('new_%s' % channel)
                 except KeyError:
                     pass
                 irc.reply(_('Orphaned Jeopardy! game found and removed.'))
@@ -416,10 +423,13 @@ class Jeopardy(callbacks.Plugin):
     @internationalizeDocstring
     def stop(self, irc, msg, args, channel):
         """[<channel>]
-
         Stops a running game of Jeopardy!. <channel> is only necessary if the
         message isn't sent in the channel itself."""
         channel = ircutils.toLower(channel)
+        try:
+            schedule.removeEvent('new_%s' % channel)
+        except KeyError:
+            pass
         try:
             schedule.removeEvent('next_%s' % channel)
         except KeyError:
