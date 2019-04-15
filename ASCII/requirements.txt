@@ -4,3 +4,4 @@ scipy
 pillow
 colour-science
 fake-useragent
+pexpect
