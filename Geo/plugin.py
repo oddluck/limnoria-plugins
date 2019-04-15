@@ -34,35 +34,36 @@ class Geo(callbacks.Plugin):
             if exception.errno != errno.EEXIST:
                 raise
 
-    # **********************************************************************
-
-    def geo( self, irc, msgs, args, stuff):
-        """[<ip> | <hostname>]
-        Geolocation of an ip or host.
+    def geo(self, irc, msg, args, stuff):
+        """[<ip> | <hostname>] [nick]
+        Geolocation of an ip, hostname, or nick. Nick must be in channel.
         """
-        if stuff.lower()=='update':
-            irc.reply('Updating data file...')
-            self.update()
-            irc.reply('Update finished.')
-            return
+        channel = msg.args[0]
         try:
             reader = geoip2.database.Reader('%s%sgeo%sGeoLite2-City.mmdb' % (conf.supybot.directories.data(), os.sep, os.sep))
         except:
             irc.reply("Error:  GeoLite2-City database not found, attempting to update...")
             try:
-                self.update()
+                self.do_update()
                 irc.reply('Update finished.')
             except:
                 irc.reply("Update failed.")
             return
-        if not utils.net.isIP(stuff):
+        if stuff.lower() in (nick.lower() for nick in list(irc.state.channels[channel].users)):
+            try:
+                stuff = irc.state.nickToHostmask(stuff).split('@')[1]
+                ip = socket.gethostbyname(stuff)
+            except:
+                irc.reply("Invalid hostname {0}".format(stuff))
+                return
+        elif not utils.net.isIP(stuff):
             try:
                 ip = socket.gethostbyname(stuff)
             except:
-                irc.reply("Invalid Hostname.")
+                irc.reply("Invalid nick/hostname {0}".format(stuff))
                 return
         else:
-            ip = stuff
+            irc.reply("invalid nick or hostname/ip {0}".format(stuff))
         res = reader.city(ip)
         if res:
             irc.reply('%s, %s, %s' % (res.city.name, res.subdivisions.most_specific.name, res.country.name ))
@@ -70,7 +71,20 @@ class Geo(callbacks.Plugin):
             irc.reply("No results found")
     geo = wrap(geo, ['text'])
 
-    def update(self):
+    def update(self, irc, msg, args):
+        """
+        Update geoip database
+        """
+        try:
+            irc.reply('Updating data file...')
+            self.do_update()
+            irc.reply('Update finished.')
+        except:
+            irc.reply("Update failed.")
+            return
+    update = wrap(update)
+
+    def do_update(self):
         """update the geo files"""
         now=int(time.time())
         try:
