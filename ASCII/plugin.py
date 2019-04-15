@@ -436,7 +436,7 @@ class ASCII(callbacks.Plugin):
             os.remove(filename)
         except:
             pass
-        irc.reply("Please be patient while I render the image into ASCII characters and colorize the output.")
+        irc.reply("Please be patient while I render the image into ANSI shader blocks and colorize the output.")
         # store dimensions
         W, H = image.size[0], image.size[1]
         # compute width of tile
@@ -518,8 +518,9 @@ class ASCII(callbacks.Plugin):
         if url.startswith("https://paste.ee/p/"):
             url = re.sub("https://paste.ee/p/", "https://paste.ee/r/", url)
         file = requests.get(url)
-        if "html" in file.text:
-            irc.reply("Error: Scroll requires a text file as input.")
+        if "<!DOCTYPE html>" in file.text:
+            irc.reply("Error: ansi2irc requires a text file as input.")
+            return
         elif url.endswith(".txt") or url.startswith("https://pastebin.com/raw/") or url.startswith("https://paste.ee/r/"):
             for line in file.text.splitlines():
                 if line.strip():
@@ -533,6 +534,10 @@ class ASCII(callbacks.Plugin):
         Convert ANSI files to IRC formatted text
         """
         if url.lower().endswith(".ans"):
+            file = requests.get(url)
+            if "<!DOCTYPE html>" in file.text:
+                irc.reply("Error: ansi2irc requires a text file as input.")
+                return
             try:
                 path = os.path.dirname(os.path.abspath(__file__))
                 filepath = "{0}/tmp".format(path)
