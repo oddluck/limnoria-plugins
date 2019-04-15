@@ -4,3 +4,10 @@ Provides geographical information from an ip address, hostmask, or url using Geo
 
 requires GeoIP2-python:
 pip install geoip2
+
+```
+geo <nick/hostmask/ip> (geolocate <nick> (must be in channel) <hostmask>, or <ip> address
+```
+```
+geo update (force update of geoip database)
+```
