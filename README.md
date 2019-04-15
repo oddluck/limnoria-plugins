@@ -99,4 +99,4 @@ Fetch link titles and more from URLs. Handlers for YouTube, IMDB, Wikipedia, Red
 
 <b>Geo</b>
 
-GeoIP lookups of IP/Hostname.
+GeoIP lookups of IP/Host/Nick.
