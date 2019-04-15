@@ -20,12 +20,12 @@ fontlist (get list of fonts)
 
 Image URL to ASCII/ANSI Art:
 ```
-img <url> (convert an image <url> to ascii art using euclidian color distance and extended 99 color palette)
-img --16 <url> (convert image to ascii art using euclidian color distance and standard 16 color palette)
+img <url> (convert an image <url> to ascii art using euclidian color distance and 99 color palette)
+img --16 <url> (convert image to ascii art using euclidian color distance and 16 color palette)
 ```
 ```
-ansi <url> (convert an image <url> to ansi block art using euclidian color distance and extended 99 color palette)
-ansi --16 <url> (convert image <url> to ansi block art using euclidian color distance and standard 16 color palette)
+ansi <url> (convert an <url> to ansi block art using euclidian color distance and 99 color palette)
+ansi --16 <url> (convert <url> to ansi block art using euclidian color distance and 16 color palette)
 ```
 Speed Presets. (Euclidian (the default) is very fast. The following presets each get progressively slower)
 ```
