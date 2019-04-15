@@ -20,6 +20,8 @@ import sys, math
 from fake_useragent import UserAgent
 from colour.difference import *
 import re
+import pexpect
+import urllib
 
 try:
     from supybot.i18n import PluginInternationalization
@@ -36,6 +38,7 @@ class ASCII(callbacks.Plugin):
     def __init__(self, irc):
         self.__parent = super(ASCII, self)
         self.__parent.__init__(irc)
+        self.colors = 83
         self.ircColors= {
             (11.5497, 31.8768, 18.1739):16,
             (17.5866, 15.7066, 25.9892):17,
@@ -120,6 +123,23 @@ class ASCII(callbacks.Plugin):
             (76.2461, 0.0044, -0.0083):96,
             (89.8837, 0.0048, -0.0094):97,
             (100.0, 0.0053, -0.0104):98}
+        self.colors16 = {
+            (211, 215, 207):'00',
+            (46, 52, 54):'01',
+            (52, 101, 164):'02',
+            (78, 154, 6):'03',
+            (204, 0, 0):'04',
+            (143, 57, 2):'05',
+            (92, 53, 102):'06',
+            (206, 92, 0):'07',
+            (196, 160, 0):'08',
+            (115, 210, 22):'09',
+            (17, 168, 121):'10',
+            (88, 161, 157):'11',
+            (87, 121, 158):'12',
+            (160, 67, 101):'13',
+            (85, 87, 83): '14',
+            (136, 137, 133):'15'}
 
     def ascii(self, irc, msg, args, optlist, text):
         """[--font <font>] [--color <color1,color2>] [<text>]
@@ -179,11 +199,18 @@ class ASCII(callbacks.Plugin):
         """
         Given PIL Image, return average RGB value
         """
-        speed = speed
-        colors = list(self.ircColors.keys())
-        closest_colors = sorted(colors, key=lambda color: self.distance(color, self.rgb2lab(pixel), speed))
-        closest_color = closest_colors[0]
-        return self.ircColors[closest_color]
+        if self.colors == 16:
+            speed = speed
+            colors = list(self.colors16.keys())
+            closest_colors = sorted(colors, key=lambda color: self.distance(self.rgb2lab(color), self.rgb2lab(pixel), speed))
+            closest_color = closest_colors[0]
+            return self.colors16[closest_color]
+        else:
+            speed = speed
+            colors = list(self.ircColors.keys())
+            closest_colors = sorted(colors, key=lambda color: self.distance(color, self.rgb2lab(pixel), speed))
+            closest_color = closest_colors[0]
+            return self.ircColors[closest_color]
 
     def rgb2lab (self, inputColor) :
         num = 0
@@ -225,14 +252,20 @@ class ASCII(callbacks.Plugin):
         return Lab
 
     def distance(self, c1, c2, speed):
-        if speed == 'fast':
+        if speed == 'faster':
             (r1,g1,b1) = (c1[0], c1[1], c1[2])
             (r2,g2,b2) = (c2[0], c2[1], c2[2])
-            delta_e = math.sqrt((r1 - r2)**2 + (g1 - g2) ** 2 + (b1 - b2) **2)
-        elif speed == 'medium':
+            delta_e =  math.sqrt((r1 - r2)**2 + (g1 - g2) ** 2 + (b1 - b2) **2)
+        elif speed == 'fast':
+            delta_e = delta_E_CIE1976(c1, c2)
+        elif speed == 'slow':
             delta_e = delta_E_CIE1994(c1, c2)
-        else:
+        elif speed == 'slower':
             delta_e = delta_E_CMC(c1, c2)
+        elif speed == 'slowest':
+            delta_e = delta_E_CIE2000(c1, c2)
+        else:
+            delta_e = delta_E_DIN99(c1, c2)
         return delta_e
 
     def img(self, irc, msg, args, optlist, url):
@@ -240,12 +273,22 @@ class ASCII(callbacks.Plugin):
         Image to Color ASCII Art. --cols to set number of columns wide. --invert to invert the greyscale. 
         """
         optlist = dict(optlist)
-        if 'slow' in optlist:
-            speed = 'medium'
+        if '16' in optlist:
+            self.colors = 16
+        else:
+            self.colors = 83
+        if 'fast' in optlist:
+            speed = 'fast'
+        elif 'slow' in optlist:
+            speed = 'slow'
+        elif 'slower' in optlist:
+            speed = 'slower'
+        elif 'slowest' in optlist:
+            speed = 'slowest'
         elif 'insane' in optlist:
             speed = 'insane'
         else:
-            speed = 'fast'
+            speed = 'faster'
         if 'cols' in optlist:
             cols = optlist.get('cols')
         else:
@@ -325,21 +368,44 @@ class ASCII(callbacks.Plugin):
         del image
         del image2
         del colormap
+        paste = ""
         for line in output:
+            if self.registryValue('pasteEnable', msg.args[0]):
+                paste += line + "\n"
             irc.reply(line, prefixNick=False, noLengthCheck=True)
-    img = wrap(img,[getopts({'cols':'int', 'invert':'', 'slow':'', 'insane':''}), ('text')])
+        if self.registryValue('pasteEnable', msg.args[0]):
+            try:
+                apikey = self.registryValue('pasteAPI')
+                payload = {'description':url,'sections':[{'contents':paste}]}
+                headers = {'X-Auth-Token':apikey}
+                post_response = requests.post(url='https://api.paste.ee/v1/pastes', json=payload, headers=headers)
+                response = post_response.json()
+                irc.reply(response['link'])
+            except:
+                irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
+    img = wrap(img,[getopts({'cols':'int', 'invert':'', 'fast':'', 'slow':'', 'slower':'', 'slowest':'', 'insane':'', '16':''}), ('text')])
 
     def ansi(self, irc, msg, args, optlist, url):
         """[--cols <number of columns>] [--invert] <url>
         Converts image to ANSI art
         """
         optlist = dict(optlist)
-        if 'slow' in optlist:
-            speed = 'medium'
+        if '16' in optlist:
+            self.colors = 16
+        else:
+            self.colors = 83
+        if 'fast' in optlist:
+            speed = 'fast'
+        elif 'slow' in optlist:
+            speed = 'slow'
+        elif 'slower' in optlist:
+            speed = 'slower'
+        elif 'slowest' in optlist:
+            speed = 'slowest'
         elif 'insane' in optlist:
             speed = 'insane'
         else:
-            speed = 'fast'
+            speed = 'faster'
         if 'cols' in optlist:
             cols = optlist.get('cols')
         else:
@@ -419,9 +485,22 @@ class ASCII(callbacks.Plugin):
         del image
         del image2
         del colormap
+        paste = ""
         for line in output:
+            if self.registryValue('pasteEnable', msg.args[0]):
+                paste += line + "\n"
             irc.reply(line, prefixNick=False, noLengthCheck=True)
-    ansi = wrap(ansi, [getopts({'cols':'int', 'invert':'', 'slow':'', 'insane':''}), ('text')])
+        if self.registryValue('pasteEnable', msg.args[0]):
+            try:
+                apikey = self.registryValue('pasteAPI')
+                payload = {'description':url,'sections':[{'contents':paste}]}
+                headers = {'X-Auth-Token':apikey}
+                post_response = requests.post(url='https://api.paste.ee/v1/pastes', json=payload, headers=headers)
+                response = post_response.json()
+                irc.reply(response['link'])
+            except:
+                irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
+    ansi = wrap(ansi, [getopts({'cols':'int', 'invert':'', 'fast':'', 'slow':'', 'slower':'', 'slowest':'', 'insane':'', '16':''}), ('text')])
 
     def fontlist(self, irc, msg, args):
         """
@@ -448,5 +527,44 @@ class ASCII(callbacks.Plugin):
         else:
             irc.reply("Unexpected file type or link format")
     scroll = wrap(scroll, ['text'])
+
+    def ansi2irc(self, irc, msg, args, url):
+        """
+        Convert ANSI files to IRC formatted text
+        """
+        if url.lower().endswith(".ans"):
+            try:
+                path = os.path.dirname(os.path.abspath(__file__))
+                filepath = "{0}/tmp".format(path)
+                filename = "{0}/{1}".format(filepath, url.split('/')[-1])
+                urllib.request.urlretrieve(url, filename)
+                output = pexpect.run('a2m {0}'.format(str(filename)))
+                try:
+                    os.remove(filename)
+                except:
+                    pass
+            except:
+                irc.reply("Error. Have you installed A2M? https://github.com/tat3r/a2m")
+                return
+            paste = ""
+            for line in output.splitlines():
+                line = line.decode()
+                if self.registryValue('pasteEnable', msg.args[0]):
+                    paste += line + "\n"
+                if line.strip():
+                    irc.reply(line, prefixNick = False)
+            if self.registryValue('pasteEnable', msg.args[0]):
+                try:
+                    apikey = self.registryValue('pasteAPI')
+                    payload = {'description':url,'sections':[{'contents':paste}]}
+                    headers = {'X-Auth-Token':apikey}
+                    post_response = requests.post(url='https://api.paste.ee/v1/pastes', json=payload, headers=headers)
+                    response = post_response.json()
+                    irc.reply(response['link'])
+                except:
+                    irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
+        else:
+            irc.reply("Unexpected file type or link format")
+    ansi2irc = wrap(ansi2irc, ['text'])
 
 Class = ASCII
