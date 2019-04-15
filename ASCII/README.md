@@ -24,19 +24,19 @@ Image URL to ASCII/ANSI Art:
 ```
 img <url> (convert an image <url> to ascii art using euclidian color distance and 99 color palette)
 img --16 <url> (convert image to ascii art using euclidian color distance and 16 color palette)
+img --invert <url> (invert the ascii luminance character palette)
 ```
 ```
 ansi <url> (convert an <url> to ansi block art using euclidian color distance and 99 color palette)
 ansi --16 <url> (convert <url> to ansi block art using euclidian color distance and 16 color palette)
 ```
-Speed Presets. (Euclidian (the default) is very fast. The following presets each get progressively slower)
+Speed Presets. (Euclidian (the default) is very fast. The following presets each get progressively slower but color choice should improve with slower presets.)
 ```
 img/ansi --fast <url> (use cie1976 color difference algorithm)
 img/ansi --slow <url> (use cie1994 color difference algorithm)
 img/ansi --slower <url> (use cieCMC color difference algorithm)
 img/ansi --slowest <url> (use cie2000 color difference algorithm)
 ```
-
 Scroll ASCII/ANSI Art .TXT or .ANS Files from URL
 ```
 scroll <url> (playback of ansi/ascii art .txt files from the web)
