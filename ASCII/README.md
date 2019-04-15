@@ -9,14 +9,13 @@ config plugins.ascii.pasteAPI PASTE.EE_API_KEY_HERE (set paste.ee API key)
 config channel plugins.ascii.pasteEnable True (enable paste.ee links)
 ```
 
-Text-to-ASCII Art:
+Text-to-ASCII Art (split lines with | ex. ascii|art for large fonts):
 ```
 ascii <text> (convert <text> to ascii art)
 ascii --font <font> <text> (to use chosen <font>)
 ascii --color <color> <text> (to set a foreground <color>)
 ascii --color <color1,color2> <text> (to set a foreground/background <color>)
 fontlist (get list of fonts)
-(split lines with | ex. ascii|art for large fonts)
 ```
 
 Image URL to ASCII/ANSI Art:
