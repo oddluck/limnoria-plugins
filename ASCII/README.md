@@ -38,5 +38,6 @@ img/ansi --slowest <url> (use cie2000 color difference algorithm)
 Scroll ASCII/ANSI Art .TXT or .ANS Files from URL
 ```
 scroll <url> (playback of ansi/ascii art .txt files from the web)
-ansi2irc <url> (Conversion/Playback of ansi art .ans files from the web. Requires A2M https://github.com/tat3r/a2m)
+ansi2irc <url> (Conversion/Playback of ansi art .ans files from the web.)
 ```
+ascii2irc Requires A2M https://github.com/tat3r/a2m
