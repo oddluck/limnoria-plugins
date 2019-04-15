@@ -40,4 +40,4 @@ Scroll ASCII/ANSI Art .TXT or .ANS Files from URL
 scroll <url> (playback of ansi/ascii art .txt files from the web)
 ansi2irc <url> (Conversion/Playback of ansi art .ans files from the web.)
 ```
-ascii2irc command requires A2M https://github.com/tat3r/a2m (optional)
+ascii2irc command requires A2M https://github.com/tat3r/a2m (optional. disable command if not installing a2m.)
