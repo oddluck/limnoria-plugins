@@ -269,8 +269,8 @@ class ASCII(callbacks.Plugin):
         return delta_e
 
     def img(self, irc, msg, args, optlist, url):
-        """[--cols <number of columns>] [--invert] (<url>)
-        Image to Color ASCII Art. --cols to set number of columns wide. --invert to invert the greyscale. 
+        """[--cols <number of columns>] [--16] [--fast | --slow | --slower] [--invert] <url>
+        Converts image to ANSI art. --16 for 16 colors. --invert to invert luminance character map. Set speed to vary color difference algorithm.
         """
         optlist = dict(optlist)
         if '16' in optlist:
@@ -386,8 +386,8 @@ class ASCII(callbacks.Plugin):
     img = wrap(img,[getopts({'cols':'int', 'invert':'', 'fast':'', 'slow':'', 'slower':'', 'slowest':'', 'insane':'', '16':''}), ('text')])
 
     def ansi(self, irc, msg, args, optlist, url):
-        """[--cols <number of columns>] [--invert] <url>
-        Converts image to ANSI art
+        """[--cols <number of columns>] [--16] [--fast | --slow | --slower] [--invert] <url>
+        Converts image to ANSI art. --16 for 16 colors. --invert to invert luminance character map. Set speed to vary color difference algorithm.
         """
         optlist = dict(optlist)
         if '16' in optlist:
