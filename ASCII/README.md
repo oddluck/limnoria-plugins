@@ -3,7 +3,7 @@
 pip install -r requirements.txt
 
 Convert text to ASCII art or image URLs to ASCII/ANSI art. Support for the Paste.ee API to save art conversions for later use.
-Get an API key from https://paste.ee/account/api (FREE).
+Get an API key from https://paste.ee/account/api (FREE. Not required to use plugin).
 ```
 config plugins.ascii.pasteAPI <PASTE.EE_API_KEY_HERE> (set paste.ee API key)
 config channel plugins.ascii.pasteEnable <True/False> (enable/disable paste.ee links)
