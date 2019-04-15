@@ -15,7 +15,7 @@ ascii <text> (convert <text> to ascii art)
 ascii --font <font> <text> (to use chosen <font>)
 ascii --color <color> <text> (to set a foreground <color>)
 ascii --color <color1,color2> <text> (to set a foreground/background <color>)
-fontlist (get list of fonts)
+fontlist (get list of availble <fonts>)
 ```
 
 Image URL to ASCII/ANSI Art:
