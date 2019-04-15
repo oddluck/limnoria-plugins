@@ -1,6 +1,7 @@
 #ASCII Art Plugin
 
 Requires Limnoria https://github.com/ProgVal/Limnoria and Python3
+
 pip install -r requirements.txt
 
 Convert text to ASCII art or image URLs to ASCII/ANSI art. Support for the Paste.ee API to save art conversions for later use.
