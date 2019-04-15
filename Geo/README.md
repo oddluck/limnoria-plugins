@@ -2,9 +2,11 @@ Forked from https://github.com/SpiderDave/spidey-supybot-plugins/tree/master/Plu
 
 Provides geographical information from an ip address, hostmask, nick (must be in channel), or url using GeoLite2.
 
-requires GeoIP2-python:
+Requires GeoIP2-python:
+```
 pip install geoip2
-
+```
+Usage:
 ```
 geo <nick/host/ip> (geolocate <nick> (must be in channel) <host>, or <ip> address
 ```
