@@ -116,7 +116,7 @@ class TimeBomb(callbacks.Plugin):
             self.responded = True
             specialWires = False
 
-            if self.rng.randint(1, len(self.wires)) == 1 or self.victim.lower() == 'jacksonmj':
+            if self.rng.randint(1, len(self.wires)) == 1:
                 specialWires = True
 
             if self.cutWire.lower() == 'potato' and specialWires:
@@ -366,7 +366,6 @@ class TimeBomb(callbacks.Plugin):
         wires = self.rng.sample(colors, wireCount)
         goodWire = self.rng.choice(wires)
         self.log.info("TimeBomb: Safewire is {}".format(goodWire))
-        irc.queueMsg(ircmsgs.privmsg("##jacksonmj-test", "TIMEBOMB: Safe wire is {}".format(goodWire)))
         self._logBomb(irc, channel, msg.nick, victim)
         self.bombs[channel] = self.Bomb(irc, victim, wires, detonateTime, goodWire, channel, msg.nick, self.registryValue('showArt', channel), self.registryValue('showCorrectWire', channel), self.registryValue('debug'))
 
@@ -431,9 +430,6 @@ class TimeBomb(callbacks.Plugin):
         # if not (victim == msg.nick and victim == 'mniip'):
         self._logBomb(irc, channel, msg.nick, victim)
         self.bombs[channel] = self.Bomb(irc, victim, wires, detonateTime, goodWire, channel, msg.nick, self.registryValue('showArt', channel), self.registryValue('showCorrectWire', channel), self.registryValue('debug'))
-        irc.queueMsg(ircmsgs.privmsg("jacksonmj", "TIMEBOMB: Safe wire is {}".format(goodWire)))
-        # irc.queueMsg(ircmsgs.privmsg("##jacksonmj-test", "TIMEBOMB: Safe wire is {}".format(goodWire)))
-        irc.queueMsg(ircmsgs.privmsg("##jacksonmj-test", "TIMEBOMB: Safe wire is {}".format(self.rng.choice(wires))))
         if self.registryValue('debug'):
             irc.reply('This message means that I got past the bomb creation line in the timebomb command')
     timebomb = wrap(timebomb, ['Channel', ('checkChannelCapability', 'timebombs'), 'somethingWithoutSpaces'])
