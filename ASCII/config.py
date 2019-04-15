@@ -24,6 +24,10 @@ def configure(advanced):
     from supybot.questions import expect, anything, something, yn
     conf.registerPlugin('ASCII', True)
 
+ASCII = conf.registerPlugin('ASCII')
 
-Advice = conf.registerPlugin('ASCII')
+conf.registerGlobalValue(ASCII, 'pasteAPI',
+registry.String('', _("""Paste.ee API Key""")))
 
+conf.registerChannelValue(ASCII, 'pasteEnable',
+registry.Boolean(False, _("""Turns on and off paste.ee support""")))
