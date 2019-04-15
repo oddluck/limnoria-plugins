@@ -35,7 +35,7 @@ class Geo(callbacks.Plugin):
                 raise
 
     def geo(self, irc, msg, args, stuff):
-        """[<ip> | <hostname>] [nick]
+        """[<ip> | <host> | <nick>]
         Geolocation of an ip, hostname, or nick. Nick must be in channel.
         """
         channel = msg.args[0]
