@@ -2,29 +2,42 @@
 
 pip install -r requirements.txt
 
-ascii (text) convert text to ascii art
+Convert text to ASCII art or image URLs to ASCII/ANSI art. Support for the Paste.ee API to save art conversions for later use.
+Get an API key from https://paste.ee/account/api (FREE).
+```
+config plugins.ascii.pasteAPI PASTE.EE_API_KEY_HERE (set paste.ee API key)
+config channel plugins.ascii.pasteEnable True (enable paste.ee links)
+```
 
-img (url) convert an image to ascii art - now in color!
+Text-to-ASCII Art:
+```
+ascii <text> (convert <text> to ascii art)
+ascii --font <font> <text> (to use chosen <font>)
+ascii --color <color> <text> (to set a foreground <color>)
+ascii --color <color1,color2> <text> (to set a foreground/background <color>)
+fontlist (get list of fonts)
+(split lines with | ex. ascii|art for large fonts)
+```
 
-ansi (url) convert an image to ansi art
+Image URL to ASCII/ANSI Art:
+```
+img <url> (convert an image <url> to ascii art using euclidian color distance and extended 99 color palette)
+img --16 <url> (convert image to ascii art using euclidian color distance and standard 16 color palette)
+```
+```
+ansi <url> (convert an image <url> to ansi block art using euclidian color distance and extended 99 color palette)
+ansi --16 <url> (convert image <url> to ansi block art using euclidian color distance and standard 16 color palette)
+```
+Speed Presets. (Euclidian (the default) is very fast. The following presets each get progressively slower)
+```
+img/ansi --fast <url> (use cie1976 color difference algorithm)
+img/ansi --slow <url> (use cie1994 color difference algorithm)
+img/ansi --slower <url> (use cieCMC color difference algorithm)
+img/ansi --slowest <url> (use cie2000 color difference algorithm)
+```
 
-The img/ansi commands use the 99 color extended irc color set.
-Be sure your client supports 99 color output.
-Three presets: fast (default), slow, and insane.
-Fast uses euclidean color difference,
-slow uses the cie1994 algorithm and insane uses the
-cieCMC algorithm. Which looks best is a matter of preference,
-slower settings generally result in more colorful images
-but take considerably longer to generate a color map.
-
-scroll (url) playback of ansi art files from the web
-
-fontlist to get list of fonts
-
-ascii --font (font) (text) to use chosen font.
-
-ascii --color (color) (text) to set a foeground color
-
-ascii --color (color1,color2) (text) to set a foreground and/or background color
-
-split lines with | ex. ascii|art for large fonts
+Scroll ASCII/ANSI Art .TXT or .ANS Files from URL
+```
+scroll <url> (playback of ansi/ascii art .txt files from the web)
+ansi2irc <url> (Playback of ansi art .ans files from the web. Requires A2M https://github.com/tat3r/a2m)
+```
