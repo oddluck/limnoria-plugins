@@ -270,7 +270,7 @@ class ASCII(callbacks.Plugin):
 
     def img(self, irc, msg, args, optlist, url):
         """[--cols <number of columns>] [--16] [--fast | --slow | --slower] [--invert] <url>
-        Converts image to ANSI art. --16 for 16 colors. --invert to invert luminance character map. Set speed to vary color difference algorithm.
+        Converts image to ASCII art. --16 for 16 colors. --invert to invert luminance character map. Set speed to vary color difference algorithm.
         """
         optlist = dict(optlist)
         if '16' in optlist:
