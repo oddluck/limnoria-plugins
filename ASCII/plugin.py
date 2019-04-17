@@ -22,6 +22,7 @@ from colour.difference import *
 import re
 import pexpect
 import urllib
+import time
 
 try:
     from supybot.i18n import PluginInternationalization
@@ -269,7 +270,7 @@ class ASCII(callbacks.Plugin):
         return delta_e
 
     def img(self, irc, msg, args, optlist, url):
-        """[--cols <number of columns>] [--16] [--fast | --slow | --slower] [--invert] <url>
+        """[--cols <number of columns>] [--16] [--fast | --slow | --slower] [--invert] [--delay] <url>
         Converts image to ASCII art. --16 for 16 colors. --invert to invert luminance character map. Set speed to vary color difference algorithm.
         """
         optlist = dict(optlist)
@@ -297,6 +298,10 @@ class ASCII(callbacks.Plugin):
             gscale = "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\|()1{}[]?-_+~<>i!lI;:,\"^`'."
         else:
             gscale = ".'`^\",:;Il!i><~+_-?][}{1)(|\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$"
+        if 'delay' in optlist:
+            delay = optlist.get('delay')
+        else:
+            delay = self.registryValue('delay', msg.args[0])
         path = os.path.dirname(os.path.abspath(__file__))
         filepath = "{0}/tmp".format(path)
         filename = "{0}/{1}".format(filepath, url.split('/')[-1])
@@ -372,6 +377,7 @@ class ASCII(callbacks.Plugin):
         for line in output:
             if self.registryValue('pasteEnable', msg.args[0]):
                 paste += line + "\n"
+            time.sleep(delay)
             irc.reply(line, prefixNick=False, noLengthCheck=True)
         if self.registryValue('pasteEnable', msg.args[0]):
             try:
@@ -383,10 +389,10 @@ class ASCII(callbacks.Plugin):
                 irc.reply(response['link'].replace('/p/', '/r/'))
             except:
                 irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
-    img = wrap(img,[getopts({'cols':'int', 'invert':'', 'fast':'', 'slow':'', 'slower':'', 'slowest':'', 'insane':'', '16':''}), ('text')])
+    img = wrap(img,[getopts({'cols':'int', 'invert':'', 'fast':'', 'slow':'', 'slower':'', 'slowest':'', 'insane':'', '16':'', 'delay':'float'}), ('text')])
 
     def ansi(self, irc, msg, args, optlist, url):
-        """[--cols <number of columns>] [--16] [--fast | --slow | --slower] [--invert] <url>
+        """[--cols <number of columns>] [--16] [--fast | --slow | --slower] [--invert] [--delay] <url>
         Converts image to ANSI art. --16 for 16 colors. --invert to invert luminance character map. Set speed to vary color difference algorithm.
         """
         optlist = dict(optlist)
@@ -414,6 +420,10 @@ class ASCII(callbacks.Plugin):
             gscale = "█▓▒░"
         else:
             gscale = "░▒▓█"
+        if 'delay' in optlist:
+            delay = optlist.get('delay')
+        else:
+            delay = self.registryValue('delay', msg.args[0])
         path = os.path.dirname(os.path.abspath(__file__))
         filepath = "{0}/tmp".format(path)
         filename = "{0}/{1}".format(filepath, url.split('/')[-1])
@@ -489,6 +499,7 @@ class ASCII(callbacks.Plugin):
         for line in output:
             if self.registryValue('pasteEnable', msg.args[0]):
                 paste += line + "\n"
+            time.sleep(delay)
             irc.reply(line, prefixNick=False, noLengthCheck=True)
         if self.registryValue('pasteEnable', msg.args[0]):
             try:
@@ -500,7 +511,7 @@ class ASCII(callbacks.Plugin):
                 irc.reply(response['link'].replace('/p/', '/r/'))
             except:
                 irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
-    ansi = wrap(ansi, [getopts({'cols':'int', 'invert':'', 'fast':'', 'slow':'', 'slower':'', 'slowest':'', 'insane':'', '16':''}), ('text')])
+    ansi = wrap(ansi, [getopts({'cols':'int', 'invert':'', 'fast':'', 'slow':'', 'slower':'', 'slowest':'', 'insane':'', '16':'', 'delay':'float'}), ('text')])
 
     def fontlist(self, irc, msg, args):
         """
@@ -511,10 +522,15 @@ class ASCII(callbacks.Plugin):
         irc.reply(str(response).replace('\'', '').replace('[', '').replace(']', ''))
     fontlist = wrap(fontlist)
 
-    def scroll(self, irc, msg, args, url):
-        """<url>
+    def scroll(self, irc, msg, args, optlist, url):
+        """[--delay] <url>
         Play ASCII/ANSI art files from web links
         """
+        optlist = dict(optlist)
+        if 'delay' in optlist:
+            delay = optlist.get('delay')
+        else:
+            delay = self.registryValue('delay', msg.args[0])
         if url.startswith("https://paste.ee/p/"):
             url = re.sub("https://paste.ee/p/", "https://paste.ee/r/", url)
         file = requests.get(url)
@@ -524,13 +540,14 @@ class ASCII(callbacks.Plugin):
         elif url.endswith(".txt") or url.startswith("https://pastebin.com/raw/") or url.startswith("https://paste.ee/r/"):
             for line in file.text.splitlines():
                 if line.strip():
+                    time.sleep(delay)
                     irc.reply(line, prefixNick = False)
         else:
             irc.reply("Unexpected file type or link format")
-    scroll = wrap(scroll, ['text'])
+    scroll = wrap(scroll, [getopts({'delay':'float'}), ('text')])
 
     def a2m(self, irc, msg, args, optlist, url):
-        """[--l] [--r] [--n] [--p] [--t] [--w] <url>
+        """[--l] [--r] [--n] [--p] [--t] [--w] [--delay] <url>
         Convert ANSI files to IRC formatted text. https://github.com/tat3r/a2m
         """
         optlist = dict(optlist)
@@ -553,6 +570,10 @@ class ASCII(callbacks.Plugin):
             opts += '-w {0} '.format(w)
         else:
             opts += '-w 80 '
+        if 'delay' in optlist:
+            delay = optlist.get('delay')
+        else:
+            delay = self.registryValue('delay', msg.args[0])
         if url.lower().endswith(".ans") or url.lower().endswith(".asc"):
             file = requests.get(url)
             if "<!DOCTYPE html>" in file.text:
@@ -577,6 +598,7 @@ class ASCII(callbacks.Plugin):
                 if self.registryValue('pasteEnable', msg.args[0]):
                     paste += line + "\n"
                 if line.strip():
+                    time.sleep(delay)
                     irc.reply(line, prefixNick = False, noLengthCheck=True)
             if self.registryValue('pasteEnable', msg.args[0]):
                 try:
@@ -590,10 +612,10 @@ class ASCII(callbacks.Plugin):
                     irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
         else:
             irc.reply("Unexpected file type or link format")
-    a2m = wrap(a2m, [getopts({'l':'int', 'r':'int', 't':'int', 'w':'int'}), ('text')])
-    
+    a2m = wrap(a2m, [getopts({'l':'int', 'r':'int', 't':'int', 'w':'int', 'delay':'float'}), ('text')])
+
     def p2u(self, irc, msg, args, optlist, url):
-        """[--b] [--f] [--p] [--s] [--t] [--w] <url>
+        """[--b] [--f] [--p] [--s] [--t] [--w] [--delay] <url>
         Picture to Unicode. https://git.trollforge.org/p2u/about/
         """
         optlist = dict(optlist)
@@ -622,6 +644,10 @@ class ASCII(callbacks.Plugin):
             opts += '-w {0} '.format(w)
         else:
             opts += '-w 80 '
+        if 'delay' in optlist:
+            delay = optlist.get('delay')
+        else:
+            delay = self.registryValue('delay', msg.args[0])
         path = os.path.dirname(os.path.abspath(__file__))
         filepath = "{0}/tmp".format(path)
         filename = "{0}/{1}".format(filepath, url.split('/')[-1])
@@ -652,6 +678,7 @@ class ASCII(callbacks.Plugin):
                 if self.registryValue('pasteEnable', msg.args[0]):
                     paste += line + "\n"
                 if line.strip():
+                    time.sleep(delay)
                     irc.reply(line, prefixNick = False, noLengthCheck=True)
             if self.registryValue('pasteEnable', msg.args[0]):
                 try:
@@ -665,7 +692,7 @@ class ASCII(callbacks.Plugin):
                     irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
         else:
             irc.reply("Unexpected file type or link format")
-    p2u = wrap(p2u, [getopts({'b':'int', 'f':'text', 'p':'text', 's':'int', 't':'int', 'w':'int'}), ('text')])
+    p2u = wrap(p2u, [getopts({'b':'int', 'f':'text', 'p':'text', 's':'int', 't':'int', 'w':'int', 'delay':'float'}), ('text')])
 
     def cq(self, irc, msg, args):
         """
@@ -674,5 +701,5 @@ class ASCII(callbacks.Plugin):
         irc.queue.reset()
         irc.replySuccess()
     cq = wrap(cq)
-    
+
 Class = ASCII
