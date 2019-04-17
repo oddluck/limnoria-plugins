@@ -512,7 +512,7 @@ class ASCII(callbacks.Plugin):
     fontlist = wrap(fontlist)
 
     def scroll(self, irc, msg, args, url):
-        """
+        """<url>
         Play ASCII/ANSI art files from web links
         """
         if url.startswith("https://paste.ee/p/"):
@@ -667,5 +667,12 @@ class ASCII(callbacks.Plugin):
             irc.reply("Unexpected file type or link format")
     p2u = wrap(p2u, [getopts({'b':'int', 'f':'text', 'p':'text', 's':'int', 't':'int', 'w':'int'}), ('text')])
 
-
+    def cq(self, irc, msg, args):
+        """
+        Clear the queue
+        """
+        irc.queue.reset()
+        irc.replySuccess()
+    cq = wrap(cq)
+    
 Class = ASCII
