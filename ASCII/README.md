@@ -6,6 +6,11 @@ Requires Limnoria https://github.com/ProgVal/Limnoria and Python3
 
 pip install -r requirements.txt
 
+Configure the delay between lines when outputting ASCII. Setting configurable per channel.
+```
+config channel plugins.ascii.delay 0.5 (set a delay of 0.5 seconds between lines, default 1.0)
+```
+
 Convert text to ASCII art or image URLs to ASCII/ANSI art. Support for the Paste.ee API to save art conversions for later use.
 Get an API key from https://paste.ee/account/api (FREE. Not required to use plugin, disabled by default).
 ```
