@@ -324,7 +324,8 @@ class ASCII(callbacks.Plugin):
             os.remove(filename)
         except:
             pass
-        irc.reply("Please be patient while I render the image into ASCII characters and colorize the output.")
+        waitmsg = self.registryValue('waitMessage', msg.args[0])
+        irc.reply(waitmsg)
         # store dimensions
         W, H = image.size[0], image.size[1]
         # compute width of tile
@@ -446,7 +447,8 @@ class ASCII(callbacks.Plugin):
             os.remove(filename)
         except:
             pass
-        irc.reply("Please be patient while I render the image into ANSI shader blocks and colorize the output.")
+        waitmsg = self.registryValue('waitMessage', msg.args[0])
+        irc.reply(waitmsg)
         # store dimensions
         W, H = image.size[0], image.size[1]
         # compute width of tile
