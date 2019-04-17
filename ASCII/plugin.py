@@ -553,7 +553,7 @@ class ASCII(callbacks.Plugin):
             opts += '-w {0} '.format(w)
         else:
             opts += '-w 80 '
-        if url.lower().endswith(".ans"):
+        if url.lower().endswith(".ans") or url.lower().endswith(".asc"):
             file = requests.get(url)
             if "<!DOCTYPE html>" in file.text:
                 irc.reply("Error: ansi2irc requires a text file as input.")
