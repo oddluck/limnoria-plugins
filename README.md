@@ -10,7 +10,7 @@ gitlab mirror: https://gitlab.com/oddluck/limnoria-plugins
 
 <b>ASCII</b>
 
-Plugin to turn text and images into ASCII Art. Also supports scrolling IRC ASCII .txt files.
+Plugin to turn text and images into ASCII/ANSI Art. Also supports scrolling IRC ASCII .txt and ANSI .ans/.asc files.
 
 <b>BotLibre</b>
 
