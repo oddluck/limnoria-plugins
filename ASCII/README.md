@@ -1,7 +1,7 @@
 [![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=T8E56M6SP9JH2)
 
 <b>ASCII Art Plugin</b><br>
-Convert text to ASCII art or image URLs to ASCII/ANSI art. S
+Convert text to ASCII art or image URLs to ASCII/ANSI art.
 
 Requires Limnoria https://github.com/ProgVal/Limnoria and Python3
 
