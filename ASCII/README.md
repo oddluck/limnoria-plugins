@@ -40,6 +40,10 @@ img/ansi --slowest <url> (use cie2000 color difference algorithm)
 Scroll ASCII/ANSI Art .TXT or .ANS Files from URL
 ```
 scroll <url> (playback of ansi/ascii art .txt files from the web)
-ansi2irc <url> (conversion and playback of ansi art .ans files from the web.)
+a2m <url> (conversion and playback of ansi art .ans files from the web.)
 ```
-ascii2irc command requires A2M https://github.com/tat3r/a2m (optional. disable command if not installing a2m.)
+a2m command requires A2M https://github.com/tat3r/a2m (optional. disable command if not installing a2m.)
+```
+p2u <url>
+```
+p2u command requires p2u https://git.trollforge.org/p2u/about/ (optional. disable command if not installing p2u.)
