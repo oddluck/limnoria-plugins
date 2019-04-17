@@ -529,10 +529,30 @@ class ASCII(callbacks.Plugin):
             irc.reply("Unexpected file type or link format")
     scroll = wrap(scroll, ['text'])
 
-    def ansi2irc(self, irc, msg, args, url):
+    def a2m(self, irc, msg, args, optlist, url):
+        """[--l] [--r] [--n] [--p] [--t] [--w] <url>
+        Convert ANSI files to IRC formatted text. https://github.com/tat3r/a2m
         """
-        Convert ANSI files to IRC formatted text
-        """
+        optlist = dict(optlist)
+        opts = ''
+        if 'l' in optlist:
+            l = optlist.get('l')
+            opts += '-l {0} '.format(l)
+        if 'r' in optlist:
+            r = optlist.get('r')
+            opts += '-r {0} '.format(r)
+        if 'n' in optlist:
+            opts += '-n '.format(n)
+        if 'p' in optlist:
+            opts += '-p '.format(p)
+        if 't' in optlist:
+            t = optlist.get('t')
+            opts += '-t {0} '.format(t)
+        if 'w' in optlist:
+            w = optlist.get('w')
+            opts += '-w {0} '.format(w)
+        else:
+            opts += '-w 80 '
         if url.lower().endswith(".ans"):
             file = requests.get(url)
             if "<!DOCTYPE html>" in file.text:
@@ -543,7 +563,7 @@ class ASCII(callbacks.Plugin):
                 filepath = "{0}/tmp".format(path)
                 filename = "{0}/{1}".format(filepath, url.split('/')[-1])
                 urllib.request.urlretrieve(url, filename)
-                output = pexpect.run('a2m {0}'.format(str(filename)))
+                output = pexpect.run('a2m {0} {1}'.format(opts.strip(), str(filename)))
                 try:
                     os.remove(filename)
                 except:
@@ -557,7 +577,7 @@ class ASCII(callbacks.Plugin):
                 if self.registryValue('pasteEnable', msg.args[0]):
                     paste += line + "\n"
                 if line.strip():
-                    irc.reply(line, prefixNick = False)
+                    irc.reply(line, prefixNick = False, noLengthCheck=True)
             if self.registryValue('pasteEnable', msg.args[0]):
                 try:
                     apikey = self.registryValue('pasteAPI')
@@ -570,6 +590,82 @@ class ASCII(callbacks.Plugin):
                     irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
         else:
             irc.reply("Unexpected file type or link format")
-    ansi2irc = wrap(ansi2irc, ['text'])
+    a2m = wrap(a2m, [getopts({'l':'int', 'r':'int', 't':'int', 'w':'int'}), ('text')])
+    
+    def p2u(self, irc, msg, args, optlist, url):
+        """[--b] [--f] [--p] [--s] [--t] [--w] <url>
+        Picture to Unicode. https://git.trollforge.org/p2u/about/
+        """
+        optlist = dict(optlist)
+        opts = ''
+        if 'b' in optlist:
+            b = optlist.get('b')
+            opts += '-b {0} '.format(b)
+        if 'f' in optlist:
+            f = optlist.get('f')
+            opts += '-f {0} '.format(f)
+        else:
+            opts += '-f m '
+        if 'p' in optlist:
+            p = optlist.get('p')
+            opts += '-p {0} '.format(p)
+        else:
+            opts += '-p x '
+        if 's' in optlist:
+            s = optlist.get('s')
+            opts += '-s {0} '.format(s)
+        if 't' in optlist:
+            t = optlist.get('t')
+            opts += '-t {0} '.format(t)
+        if 'w' in optlist:
+            w = optlist.get('w')
+            opts += '-w {0} '.format(w)
+        else:
+            opts += '-w 80 '
+        path = os.path.dirname(os.path.abspath(__file__))
+        filepath = "{0}/tmp".format(path)
+        filename = "{0}/{1}".format(filepath, url.split('/')[-1])
+        ua = UserAgent()
+        header = {'User-Agent':str(ua.random)}
+        image_formats = ("image/png", "image/jpeg", "image/jpg", "image/gif")
+        r = requests.head(url, headers=header)
+        if r.headers["content-type"] in image_formats:
+            response = requests.get(url, headers=header)
+        else:
+            irc.reply("Invalid file type.")
+            return
+        if response.status_code == 200:
+            with open("{0}".format(filename), 'wb') as f:
+                f.write(response.content)
+            try:
+                output = pexpect.run('p2u -f m {0} {1}'.format(opts.strip(), str(filename)))
+                try:
+                    os.remove(filename)
+                except:
+                    pass
+            except:
+                irc.reply("Error. Have you installed p2u? https://git.trollforge.org/p2u")
+                return
+            paste = ""
+            for line in output.splitlines():
+                line = line.decode()
+                if self.registryValue('pasteEnable', msg.args[0]):
+                    paste += line + "\n"
+                if line.strip():
+                    irc.reply(line, prefixNick = False, noLengthCheck=True)
+            if self.registryValue('pasteEnable', msg.args[0]):
+                try:
+                    apikey = self.registryValue('pasteAPI')
+                    payload = {'description':url,'sections':[{'contents':paste}]}
+                    headers = {'X-Auth-Token':apikey}
+                    post_response = requests.post(url='https://api.paste.ee/v1/pastes', json=payload, headers=headers)
+                    response = post_response.json()
+                    irc.reply(response['link'])
+                except:
+                    irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
+        else:
+            irc.reply("Unexpected file type or link format")
+    p2u = wrap(p2u, [getopts({'b':'int', 'f':'text', 'p':'text', 's':'int', 't':'int', 'w':'int'}), ('text')])
+
 
 Class = ASCII
