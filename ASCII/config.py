@@ -31,3 +31,6 @@ registry.String('', _("""Paste.ee API Key""")))
 
 conf.registerChannelValue(ASCII, 'pasteEnable',
 registry.Boolean(False, _("""Turns on and off paste.ee support""")))
+
+conf.registerChannelValue(ASCII, 'delay',
+registry.Float(1.0, _("""Set the time delay betwen lines""")))
