@@ -380,7 +380,7 @@ class ASCII(callbacks.Plugin):
                 headers = {'X-Auth-Token':apikey}
                 post_response = requests.post(url='https://api.paste.ee/v1/pastes', json=payload, headers=headers)
                 response = post_response.json()
-                irc.reply(response['link'])
+                irc.reply(response['link'].replace('/p/', '/r/'))
             except:
                 irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
     img = wrap(img,[getopts({'cols':'int', 'invert':'', 'fast':'', 'slow':'', 'slower':'', 'slowest':'', 'insane':'', '16':''}), ('text')])
@@ -497,7 +497,7 @@ class ASCII(callbacks.Plugin):
                 headers = {'X-Auth-Token':apikey}
                 post_response = requests.post(url='https://api.paste.ee/v1/pastes', json=payload, headers=headers)
                 response = post_response.json()
-                irc.reply(response['link'])
+                irc.reply(response['link'].replace('/p/', '/r/'))
             except:
                 irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
     ansi = wrap(ansi, [getopts({'cols':'int', 'invert':'', 'fast':'', 'slow':'', 'slower':'', 'slowest':'', 'insane':'', '16':''}), ('text')])
@@ -585,7 +585,7 @@ class ASCII(callbacks.Plugin):
                     headers = {'X-Auth-Token':apikey}
                     post_response = requests.post(url='https://api.paste.ee/v1/pastes', json=payload, headers=headers)
                     response = post_response.json()
-                    irc.reply(response['link'])
+                    irc.reply(response['link'].replace('/p/', '/r/'))
                 except:
                     irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
         else:
@@ -660,7 +660,7 @@ class ASCII(callbacks.Plugin):
                     headers = {'X-Auth-Token':apikey}
                     post_response = requests.post(url='https://api.paste.ee/v1/pastes', json=payload, headers=headers)
                     response = post_response.json()
-                    irc.reply(response['link'])
+                    irc.reply(response['link'].replace('/p/', '/r/'))
                 except:
                     irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
         else:
