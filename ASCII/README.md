@@ -1,6 +1,7 @@
 [![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=T8E56M6SP9JH2)
 
-#ASCII Art Plugin
+#ASCII Art Plugin<br>
+Convert text to ASCII art or image URLs to ASCII/ANSI art. S
 
 Requires Limnoria https://github.com/ProgVal/Limnoria and Python3
 
@@ -11,7 +12,7 @@ Configure the delay between lines when outputting ASCII. Setting configurable pe
 config channel plugins.ascii.delay 0.5 (set a delay of 0.5 seconds between lines, default 1.0)
 ```
 
-Convert text to ASCII art or image URLs to ASCII/ANSI art. Support for the Paste.ee API to save art conversions for later use.
+Support for the Paste.ee API to save art conversions for later use.
 Get an API key from https://paste.ee/account/api (FREE. Not required to use plugin, disabled by default).
 ```
 config plugins.ascii.pasteAPI <PASTE.EE_API_KEY_HERE> (set paste.ee API key)
