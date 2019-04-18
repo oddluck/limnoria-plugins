@@ -36,4 +36,4 @@ conf.registerChannelValue(ASCII, 'delay',
 registry.Float(1.0, _("""Set the time delay betwen lines""")))
 
 conf.registerChannelValue(ASCII, 'randWait',
-registry.CommaSeparatedListOfStrings(["Please be patient while I render the image into ASCII characters and colorize the output, Please be patient while I render the image into ASCII characters and colorize the output]", _("""Comma seperated list of wait messages""")))
+registry.CommaSeparatedListOfStrings(["Please be patient while I render the image into ASCII characters and colorize the output, Please be patient while I render the image into ASCII characters and colorize the output"], _("""Comma seperated list of wait messages""")))
