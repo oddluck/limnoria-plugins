@@ -23,6 +23,7 @@ import re
 import pexpect
 import urllib
 import time
+import random as random
 
 try:
     from supybot.i18n import PluginInternationalization
@@ -324,7 +325,8 @@ class ASCII(callbacks.Plugin):
             os.remove(filename)
         except:
             pass
-        waitmsg = self.registryValue('waitMessage', msg.args[0])
+        waitmsgs = self.registryValue("randWait", msg.args[0])
+        waitmsg = random.choice(waitmsgs)
         irc.reply(waitmsg)
         # store dimensions
         W, H = image.size[0], image.size[1]
@@ -447,7 +449,8 @@ class ASCII(callbacks.Plugin):
             os.remove(filename)
         except:
             pass
-        waitmsg = self.registryValue('waitMessage', msg.args[0])
+        waitmsgs = self.registryValue("randWait", msg.args[0])
+        waitmsg = random.choice(waitmsgs)
         irc.reply(waitmsg)
         # store dimensions
         W, H = image.size[0], image.size[1]
