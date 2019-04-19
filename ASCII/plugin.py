@@ -546,7 +546,7 @@ class ASCII(callbacks.Plugin):
             for line in file.text.splitlines():
                 if line.strip():
                     time.sleep(delay)
-                    irc.reply(line, prefixNick = False)
+                    irc.reply(line, prefixNick = False, noLengthCheck=True)
         else:
             irc.reply("Unexpected file type or link format")
     scroll = wrap(scroll, [getopts({'delay':'float'}), ('text')])
