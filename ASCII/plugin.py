@@ -746,6 +746,8 @@ class ASCII(callbacks.Plugin):
         for line in output.splitlines():
             if line.endswith('\x03'):
                 line = line[:-1]
+            if line.endswith('\x03\x03  '):
+                line = line[:-4]
             if self.registryValue('pasteEnable', msg.args[0]):
                 paste += line + "\n"
             if not line.strip():
