@@ -763,4 +763,12 @@ class ASCII(callbacks.Plugin):
         irc.replySuccess()
     cq = wrap(cq)
 
+    def fonts(self, irc, msg, args):
+        """
+        List fonts in the tdfiglet font directory.
+        """
+        reply = ", ".join(sorted(os.listdir("/usr/local/share/tdfiglet/fonts/")))
+        irc.reply(reply, prefixNick=False)
+    fonts = wrap(fonts)
+
 Class = ASCII
