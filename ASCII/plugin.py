@@ -175,12 +175,12 @@ class ASCII(callbacks.Plugin):
                          data = requests.get("https://artii.herokuapp.com/make?text={0}&font={1}".format(word.strip(), font))
                          for line in data.text.splitlines():
                              if line.strip():
-                                 irc.reply(ircutils.mircColor(line, color1, color2), prefixNick=False)
+                                 irc.reply(ircutils.mircColor(line, color1, color2), prefixNick=False, private=False)
              else:
                  data = requests.get("https://artii.herokuapp.com/make?text={0}&font={1}".format(text, font))
                  for line in data.text.splitlines():
                      if line.strip():
-                         irc.reply(ircutils.mircColor(line, color1, color2), prefixNick=False)
+                         irc.reply(ircutils.mircColor(line, color1, color2), prefixNick=False, private=False)
         elif 'font' not in optlist:
             if words:
                  for word in words:
@@ -188,12 +188,12 @@ class ASCII(callbacks.Plugin):
                          data = requests.get("https://artii.herokuapp.com/make?text={0}&font=univers".format(word.strip()))
                          for line in data.text.splitlines():
                              if line.strip():
-                                 irc.reply(ircutils.mircColor(line, color1, color2), prefixNick=False)
+                                 irc.reply(ircutils.mircColor(line, color1, color2), prefixNick=False, private=False)
             else:
                 data = requests.get("https://artii.herokuapp.com/make?text={0}&font=univers".format(text))
                 for line in data.text.splitlines():
                     if line.strip():
-                        irc.reply(ircutils.mircColor(line, color1, color2), prefixNick=False)
+                        irc.reply(ircutils.mircColor(line, color1, color2), prefixNick=False, private=False)
 
     ascii = wrap(ascii, [getopts({'font':'text', 'color':'text'}), ('text')])
 
@@ -381,7 +381,7 @@ class ASCII(callbacks.Plugin):
             if self.registryValue('pasteEnable', msg.args[0]):
                 paste += line + "\n"
             #time.sleep(delay)
-            irc.reply(line, prefixNick=False, noLengthCheck=True)
+            irc.reply(line, prefixNick=False, noLengthCheck=True, private=False)
         if self.registryValue('pasteEnable', msg.args[0]):
             try:
                 apikey = self.registryValue('pasteAPI')
@@ -389,7 +389,7 @@ class ASCII(callbacks.Plugin):
                 headers = {'X-Auth-Token':apikey}
                 post_response = requests.post(url='https://api.paste.ee/v1/pastes', json=payload, headers=headers)
                 response = post_response.json()
-                irc.reply(response['link'].replace('/p/', '/r/'))
+                irc.reply(response['link'].replace('/p/', '/r/'), private=False)
             except:
                 return
                 #irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
@@ -506,7 +506,7 @@ class ASCII(callbacks.Plugin):
             if self.registryValue('pasteEnable', msg.args[0]):
                 paste += line + "\n"
             #time.sleep(delay)
-            irc.reply(line, prefixNick=False, noLengthCheck=True)
+            irc.reply(line, prefixNick=False, noLengthCheck=True, private=False)
         if self.registryValue('pasteEnable', msg.args[0]):
             try:
                 apikey = self.registryValue('pasteAPI')
@@ -514,7 +514,7 @@ class ASCII(callbacks.Plugin):
                 headers = {'X-Auth-Token':apikey}
                 post_response = requests.post(url='https://api.paste.ee/v1/pastes', json=payload, headers=headers)
                 response = post_response.json()
-                irc.reply(response['link'].replace('/p/', '/r/'))
+                irc.reply(response['link'].replace('/p/', '/r/'), private=False)
             except:
                 return
                 #irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
@@ -548,7 +548,7 @@ class ASCII(callbacks.Plugin):
             for line in file.text.splitlines():
                 if line.strip():
                     #time.sleep(delay)
-                    irc.reply(line, prefixNick = False, noLengthCheck=True)
+                    irc.reply(line, prefixNick = False, noLengthCheck=True, private=False)
         else:
             irc.reply("Unexpected file type or link format")
     scroll = wrap(scroll, [getopts({'delay':'float'}), ('text')])
@@ -606,7 +606,7 @@ class ASCII(callbacks.Plugin):
                     paste += line + "\n"
                 if line.strip():
                     #time.sleep(delay)
-                    irc.reply(line, prefixNick = False, noLengthCheck=True)
+                    irc.reply(line, prefixNick = False, noLengthCheck=True, private=False)
             if self.registryValue('pasteEnable', msg.args[0]):
                 try:
                     apikey = self.registryValue('pasteAPI')
@@ -614,7 +614,7 @@ class ASCII(callbacks.Plugin):
                     headers = {'X-Auth-Token':apikey}
                     post_response = requests.post(url='https://api.paste.ee/v1/pastes', json=payload, headers=headers)
                     response = post_response.json()
-                    irc.reply(response['link'].replace('/p/', '/r/'))
+                    irc.reply(response['link'].replace('/p/', '/r/'), private=False)
                 except:
                     return
                     #irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
@@ -687,7 +687,7 @@ class ASCII(callbacks.Plugin):
                     paste += line + "\n"
                 if line.strip():
                     #time.sleep(delay)
-                    irc.reply(line, prefixNick = False, noLengthCheck=True)
+                    irc.reply(line, prefixNick = False, noLengthCheck=True, private=False)
             if self.registryValue('pasteEnable', msg.args[0]):
                 try:
                     apikey = self.registryValue('pasteAPI')
@@ -695,7 +695,7 @@ class ASCII(callbacks.Plugin):
                     headers = {'X-Auth-Token':apikey}
                     post_response = requests.post(url='https://api.paste.ee/v1/pastes', json=payload, headers=headers)
                     response = post_response.json()
-                    irc.reply(response['link'].replace('/p/', '/r/'))
+                    irc.reply(response['link'].replace('/p/', '/r/'), private=False)
                 except:
                     return
                     #irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
@@ -748,7 +748,7 @@ class ASCII(callbacks.Plugin):
                 paste += line + "\n"
             if not line.strip():
                 #time.sleep(delay)
-                irc.reply('\xa0', prefixNick = False, noLengthCheck=True)
+                irc.reply('\xa0', prefixNick = False, noLengthCheck=True, private=False)
             else:
                 #time.sleep(delay)
                 irc.reply(line, prefixNick = False, noLengthCheck=True, private=False)
