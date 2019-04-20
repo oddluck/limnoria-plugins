@@ -778,7 +778,7 @@ class ASCII(callbacks.Plugin):
         List fonts in the tdfiglet font directory.
         """
         reply = ", ".join(sorted(os.listdir("/usr/local/share/tdfiglet/fonts/")))
-        irc.reply(reply, prefixNick=False)
+        irc.reply(reply, prefixNick=False, private=True, notice=True)
     fonts = wrap(fonts)
 
 Class = ASCII
