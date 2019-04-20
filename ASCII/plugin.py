@@ -709,6 +709,8 @@ class ASCII(callbacks.Plugin):
         if 'f' in optlist:
             f = optlist.get('f')
             opts += '-f {0} '.format(f)
+        else:
+            opts += '-r '
         if 'j' in optlist:
             j = optlist.get('j')
             opts += '-j {0} '.format(j)
