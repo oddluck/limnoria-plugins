@@ -751,7 +751,7 @@ class ASCII(callbacks.Plugin):
                 irc.reply('\xa0', prefixNick = False, noLengthCheck=True)
             else:
                 #time.sleep(delay)
-                irc.reply(line, prefixNick = False, noLengthCheck=True)
+                irc.reply(line, prefixNick = False, noLengthCheck=True, private=False)
         if self.registryValue('pasteEnable', msg.args[0]):
             try:
                 apikey = self.registryValue('pasteAPI')
@@ -759,7 +759,7 @@ class ASCII(callbacks.Plugin):
                 headers = {'X-Auth-Token':apikey}
                 post_response = requests.post(url='https://api.paste.ee/v1/pastes', json=payload, headers=headers)
                 response = post_response.json()
-                irc.reply(response['link'].replace('/p/', '/r/'))
+                irc.reply(response['link'].replace('/p/', '/r/'), private=False)
             except:
                 return
                 #irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
