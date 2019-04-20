@@ -738,12 +738,14 @@ class ASCII(callbacks.Plugin):
             irc.reply("Error. Have you installed tdfiglet? https://github.com/tat3r/tdfiglet")
             return
         paste = ""
+        output = output.decode().replace('\r\r\n', '\r\n').strip('\r\n')
         for line in output.splitlines():
-            line = line.decode()
             if self.registryValue('pasteEnable', msg.args[0]):
                 paste += line + "\n"
-            if line.strip():
+            if not line.strip():
                 #time.sleep(delay)
+                irc.reply('\xa0', prefixNick = False, noLengthCheck=True)
+            else:
                 irc.reply(line, prefixNick = False, noLengthCheck=True)
         if self.registryValue('pasteEnable', msg.args[0]):
             try:
