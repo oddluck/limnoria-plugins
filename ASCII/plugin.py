@@ -742,7 +742,7 @@ class ASCII(callbacks.Plugin):
             irc.reply("Error. Have you installed tdfiglet? https://github.com/tat3r/tdfiglet", private=False, notice=False)
             return
         paste = ""
-        output = output.decode().replace('\r\r\n', '\r\n').replace('\x03\x03', '').strip('\r\n')
+        output = output.decode().replace('\r\r\n', '\r\n')
         for line in output.splitlines():
             if line.endswith('\x03'):
                 line = line[:-1]
