@@ -391,7 +391,8 @@ class ASCII(callbacks.Plugin):
                 response = post_response.json()
                 irc.reply(response['link'].replace('/p/', '/r/'))
             except:
-                irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
+                return
+                #irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
     img = wrap(img,[getopts({'cols':'int', 'invert':'', 'fast':'', 'slow':'', 'slower':'', 'slowest':'', 'insane':'', '16':'', 'delay':'float'}), ('text')])
 
     def ansi(self, irc, msg, args, optlist, url):
@@ -515,7 +516,8 @@ class ASCII(callbacks.Plugin):
                 response = post_response.json()
                 irc.reply(response['link'].replace('/p/', '/r/'))
             except:
-                irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
+                return
+                #irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
     ansi = wrap(ansi, [getopts({'cols':'int', 'invert':'', 'fast':'', 'slow':'', 'slower':'', 'slowest':'', 'insane':'', '16':'', 'delay':'float'}), ('text')])
 
     def fontlist(self, irc, msg, args):
@@ -614,7 +616,8 @@ class ASCII(callbacks.Plugin):
                     response = post_response.json()
                     irc.reply(response['link'].replace('/p/', '/r/'))
                 except:
-                    irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
+                    return
+                    #irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
         else:
             irc.reply("Unexpected file type or link format")
     a2m = wrap(a2m, [getopts({'l':'int', 'r':'int', 't':'int', 'w':'int', 'delay':'float'}), ('text')])
@@ -694,7 +697,8 @@ class ASCII(callbacks.Plugin):
                     response = post_response.json()
                     irc.reply(response['link'].replace('/p/', '/r/'))
                 except:
-                    irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
+                    return
+                    #irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
         else:
             irc.reply("Unexpected file type or link format")
     p2u = wrap(p2u, [getopts({'b':'int', 'f':'text', 'p':'text', 's':'int', 't':'int', 'w':'int', 'delay':'float'}), ('text')])
@@ -746,6 +750,7 @@ class ASCII(callbacks.Plugin):
                 #time.sleep(delay)
                 irc.reply('\xa0', prefixNick = False, noLengthCheck=True)
             else:
+                #time.sleep(delay)
                 irc.reply(line, prefixNick = False, noLengthCheck=True)
         if self.registryValue('pasteEnable', msg.args[0]):
             try:
@@ -756,7 +761,8 @@ class ASCII(callbacks.Plugin):
                 response = post_response.json()
                 irc.reply(response['link'].replace('/p/', '/r/'))
             except:
-                irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
+                return
+                #irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
     tdf = wrap(tdf, [getopts({'f':'text', 'j':'text', 'w':'int', 'e':'text', 'r':'', 'delay':'float'}), ('text')])
 
     def cq(self, irc, msg, args):
