@@ -313,7 +313,7 @@ class ASCII(callbacks.Plugin):
         if r.headers["content-type"] in image_formats:
             response = requests.get(url, headers=header)
         else:
-            irc.reply("Invalid file type.")
+            irc.reply("Invalid file type.", private=False)
             return
         if response.status_code == 200:
             with open("{0}".format(filename), 'wb') as f:
@@ -327,7 +327,7 @@ class ASCII(callbacks.Plugin):
             pass
         waitmsgs = self.registryValue("randWait", msg.args[0])
         waitmsg = random.choice(waitmsgs)
-        irc.reply(waitmsg)
+        irc.reply(waitmsg, private=False)
         # store dimensions
         W, H = image.size[0], image.size[1]
         # compute width of tile
@@ -438,7 +438,7 @@ class ASCII(callbacks.Plugin):
         if r.headers["content-type"] in image_formats:
             response = requests.get(url, headers=header)
         else:
-            irc.reply("Invalid file type.")
+            irc.reply("Invalid file type.", private=False)
             return
         if response.status_code == 200:
             with open("{0}".format(filename), 'wb') as f:
@@ -452,7 +452,7 @@ class ASCII(callbacks.Plugin):
             pass
         waitmsgs = self.registryValue("randWait", msg.args[0])
         waitmsg = random.choice(waitmsgs)
-        irc.reply(waitmsg)
+        irc.reply(waitmsg, private=False)
         # store dimensions
         W, H = image.size[0], image.size[1]
         # compute width of tile
@@ -526,7 +526,7 @@ class ASCII(callbacks.Plugin):
         """
         fontlist = requests.get("https://artii.herokuapp.com/fonts_list")
         response = sorted(fontlist.text.split('\n'))
-        irc.reply(str(response).replace('\'', '').replace('[', '').replace(']', ''))
+        irc.reply(str(response).replace('\'', '').replace('[', '').replace(']', ''), notice=True, Private=True)
     fontlist = wrap(fontlist)
 
     def scroll(self, irc, msg, args, optlist, url):
@@ -542,7 +542,7 @@ class ASCII(callbacks.Plugin):
             url = re.sub("https://paste.ee/p/", "https://paste.ee/r/", url)
         file = requests.get(url)
         if "<!DOCTYPE html>" in file.text:
-            irc.reply("Error: ansi2irc requires a text file as input.")
+            irc.reply("Error: ansi2irc requires a text file as input." private=False)
             return
         elif url.endswith(".txt") or url.startswith("https://pastebin.com/raw/") or url.startswith("https://paste.ee/r/"):
             for line in file.text.splitlines():
