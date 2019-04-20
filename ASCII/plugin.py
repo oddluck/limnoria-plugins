@@ -542,7 +542,7 @@ class ASCII(callbacks.Plugin):
             url = re.sub("https://paste.ee/p/", "https://paste.ee/r/", url)
         file = requests.get(url)
         if "<!DOCTYPE html>" in file.text:
-            irc.reply("Error: ansi2irc requires a text file as input." private=False)
+            irc.reply("Error: ansi2irc requires a text file as input.", private=False)
             return
         elif url.endswith(".txt") or url.startswith("https://pastebin.com/raw/") or url.startswith("https://paste.ee/r/"):
             for line in file.text.splitlines():
