@@ -380,7 +380,7 @@ class ASCII(callbacks.Plugin):
         for line in output:
             if self.registryValue('pasteEnable', msg.args[0]):
                 paste += line + "\n"
-            time.sleep(delay)
+            #time.sleep(delay)
             irc.reply(line, prefixNick=False, noLengthCheck=True)
         if self.registryValue('pasteEnable', msg.args[0]):
             try:
@@ -504,7 +504,7 @@ class ASCII(callbacks.Plugin):
         for line in output:
             if self.registryValue('pasteEnable', msg.args[0]):
                 paste += line + "\n"
-            time.sleep(delay)
+            #time.sleep(delay)
             irc.reply(line, prefixNick=False, noLengthCheck=True)
         if self.registryValue('pasteEnable', msg.args[0]):
             try:
@@ -545,7 +545,7 @@ class ASCII(callbacks.Plugin):
         elif url.endswith(".txt") or url.startswith("https://pastebin.com/raw/") or url.startswith("https://paste.ee/r/"):
             for line in file.text.splitlines():
                 if line.strip():
-                    time.sleep(delay)
+                    #time.sleep(delay)
                     irc.reply(line, prefixNick = False, noLengthCheck=True)
         else:
             irc.reply("Unexpected file type or link format")
@@ -603,7 +603,7 @@ class ASCII(callbacks.Plugin):
                 if self.registryValue('pasteEnable', msg.args[0]):
                     paste += line + "\n"
                 if line.strip():
-                    time.sleep(delay)
+                    #time.sleep(delay)
                     irc.reply(line, prefixNick = False, noLengthCheck=True)
             if self.registryValue('pasteEnable', msg.args[0]):
                 try:
@@ -683,7 +683,7 @@ class ASCII(callbacks.Plugin):
                 if self.registryValue('pasteEnable', msg.args[0]):
                     paste += line + "\n"
                 if line.strip():
-                    time.sleep(delay)
+                    #time.sleep(delay)
                     irc.reply(line, prefixNick = False, noLengthCheck=True)
             if self.registryValue('pasteEnable', msg.args[0]):
                 try:
@@ -698,6 +698,62 @@ class ASCII(callbacks.Plugin):
         else:
             irc.reply("Unexpected file type or link format")
     p2u = wrap(p2u, [getopts({'b':'int', 'f':'text', 'p':'text', 's':'int', 't':'int', 'w':'int', 'delay':'float'}), ('text')])
+
+
+    def tdf(self, irc, msg, args, optlist, text):
+        """[--f] [--j] [--w] [--e] [--r] [--delay] <text>
+        tdfiglet. https://github.com/tat3r/tdfiglet
+        """
+        optlist = dict(optlist)
+        opts = ''
+        if 'f' in optlist:
+            f = optlist.get('f')
+            opts += '-f {0} '.format(f)
+        if 'j' in optlist:
+            j = optlist.get('j')
+            opts += '-j {0} '.format(j)
+        if 'w' in optlist:
+            w = optlist.get('w')
+            opts += '-w {0} '.format(w)
+        else:
+            opts += '-w 80 '
+        if 'e' in optlist:
+            e = optlist.get('e')
+            opts += '-e {0} '.format(e)
+        if 'r' in optlist:
+            opts += '-r '
+        if 'delay' in optlist:
+            delay = optlist.get('delay')
+        else:
+            delay = self.registryValue('delay', msg.args[0])
+        try:
+            output = pexpect.run('tdfiglet -c m {0} {1}'.format(opts.strip(), text))
+            try:
+                os.remove(filename)
+            except:
+                pass
+        except:
+            irc.reply("Error. Have you installed tdfiglet? https://github.com/tat3r/tdfiglet")
+            return
+        paste = ""
+        for line in output.splitlines():
+            line = line.decode()
+            if self.registryValue('pasteEnable', msg.args[0]):
+                paste += line + "\n"
+            if line.strip():
+                #time.sleep(delay)
+                irc.reply(line, prefixNick = False, noLengthCheck=True)
+        if self.registryValue('pasteEnable', msg.args[0]):
+            try:
+                apikey = self.registryValue('pasteAPI')
+                payload = {'description':text,'sections':[{'contents':paste}]}
+                headers = {'X-Auth-Token':apikey}
+                post_response = requests.post(url='https://api.paste.ee/v1/pastes', json=payload, headers=headers)
+                response = post_response.json()
+                irc.reply(response['link'].replace('/p/', '/r/'))
+            except:
+                irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
+    tdf = wrap(tdf, [getopts({'f':'text', 'j':'text', 'w':'int', 'e':'text', 'r':'', 'delay':'float'}), ('text')])
 
     def cq(self, irc, msg, args):
         """
