@@ -744,10 +744,8 @@ class ASCII(callbacks.Plugin):
         paste = ""
         output = output.decode().replace('\r\r\n', '\r\n').replace('\x03\x03', '\x0F')
         for line in output.splitlines():
-            if line.endswith('\x03'):
-                line = line[:-1]
-            if line.endswith('\x0F  '):
-                line = line[:-3]
+            if line.endswith('\x0F  \x03'):
+                line = line[:-4]
             if self.registryValue('pasteEnable', msg.args[0]):
                 paste += line + "\n"
             if not line.strip():
