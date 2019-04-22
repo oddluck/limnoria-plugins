@@ -768,7 +768,7 @@ class ASCII(callbacks.Plugin):
 
     def wttr(self, irc, msg, args, optlist, location):
         """[--delay] <location>
-        Play ASCII/ANSI art files from web links
+        Get weather from wttr.in for <location>
         """
         optlist = dict(optlist)
         if 'delay' in optlist:
