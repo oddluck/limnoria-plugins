@@ -766,6 +766,23 @@ class ASCII(callbacks.Plugin):
                 #irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
     tdf = wrap(tdf, [getopts({'f':'text', 'j':'text', 'w':'int', 'e':'text', 'r':'', 'delay':'float'}), ('text')])
 
+    def wttr(self, irc, msg, args, optlist, location):
+        """[--delay] <location>
+        Play ASCII/ANSI art files from web links
+        """
+        optlist = dict(optlist)
+        if 'delay' in optlist:
+            delay = optlist.get('delay')
+        else:
+            delay = self.registryValue('delay', msg.args[0])
+            file = requests.get("http://wttr.in/{0}".format(location))
+            output = re.sub('(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]', '', file.text)
+            for line in output.splitlines()[:-1]:
+                if line.strip():
+                    #time.sleep(delay)
+                    irc.reply(line, prefixNick = False, noLengthCheck=True, private=False, notice=False)
+    wttr = wrap(wttr, [getopts({'delay':'float'}), ('text')])
+    
     def cq(self, irc, msg, args):
         """
         Clear the queue
