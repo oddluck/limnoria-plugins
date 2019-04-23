@@ -135,7 +135,7 @@ class ASCII(callbacks.Plugin):
             (143, 57, 2):'05',
             (92, 53, 102):'06',
             (206, 92, 0):'07',
-            (196, 160, 0):'08',
+            (255, 255, 0):'08',
             (115, 210, 22):'09',
             (17, 168, 121):'10',
             (88, 161, 157):'11',
@@ -768,7 +768,7 @@ class ASCII(callbacks.Plugin):
     tdf = wrap(tdf, [getopts({'f':'text', 'j':'text', 'w':'int', 'e':'text', 'r':'', 'delay':'float'}), ('text')])
 
     def wttr(self, irc, msg, args, optlist, location):
-        """[--delay] <location>
+        """[--delay] [--16] <location>
         Get weather from wttr.in for <location>
         """
         optlist = dict(optlist)
@@ -776,12 +776,18 @@ class ASCII(callbacks.Plugin):
             delay = optlist.get('delay')
         else:
             delay = self.registryValue('delay', msg.args[0])
+        if '16' in optlist:
+            self.colors = 16
+            speed = 'slower'
+        else:
+            self.colors = 83
+            speed = 'fastest'
         file = requests.get("http://wttr.in/{0}".format(location))
         output = file.text
         for i in range(0, 256):
             j = '%03d' % i
-            output = re.sub('\x1b\[38;5;{0}m|\[38;5;{0};\d+m'.format(j), '\x03{0}'.format(self.getAverageC(x256.to_rgb(int(j)), 'fastest')), output)
-            output = re.sub('\x1b\[38;5;{0}m|\[38;5;{0};\d+m'.format(i), '\x03{0}'.format(self.getAverageC(x256.to_rgb(int(i)), 'fastest')), output)
+            output = re.sub('\x1b\[38;5;{0}m|\[38;5;{0};\d+m'.format(j), '\x03{0}'.format(self.getAverageC(x256.to_rgb(int(j)), speed)), output)
+            output = re.sub('\x1b\[38;5;{0}m|\[38;5;{0};\d+m'.format(i), '\x03{0}'.format(self.getAverageC(x256.to_rgb(int(i)), speed)), output)
         output = output.replace('\x1b[0m', '\x0F')
         output = re.sub('(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]', '', output)
         paste = ""
@@ -800,7 +806,7 @@ class ASCII(callbacks.Plugin):
                 irc.reply(response['link'].replace('/p/', '/r/'), private=False, notice=False)
             except:
                 return
-    wttr = wrap(wttr, [getopts({'delay':'float'}), ('text')])
+    wttr = wrap(wttr, [getopts({'delay':'float', '16':''}), ('text')])
     
     def cq(self, irc, msg, args):
         """
