@@ -1,6 +1,6 @@
 [![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=T8E56M6SP9JH2)
 
-too much new sruff to detail: wttr (ascii weather) tdf (tdfiglets) read command help text.
+too much new stuff to detail: wttr (ascii weather) tdf (tdfiglets) read command help text.
 
 <b>ASCII Art Plugin</b><br>
 Convert text to ASCII art or image URLs to ASCII/ANSI art.
