@@ -24,6 +24,7 @@ import pexpect
 import urllib
 import time
 import random as random
+from x256 import x256
 
 try:
     from supybot.i18n import PluginInternationalization
@@ -775,12 +776,30 @@ class ASCII(callbacks.Plugin):
             delay = optlist.get('delay')
         else:
             delay = self.registryValue('delay', msg.args[0])
-            file = requests.get("http://wttr.in/{0}".format(location))
-            output = re.sub('(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]', '', file.text)
-            for line in output.splitlines()[:-1]:
-                if line.strip():
-                    #time.sleep(delay)
-                    irc.reply(line, prefixNick = False, noLengthCheck=True, private=False, notice=False)
+        file = requests.get("http://wttr.in/{0}".format(location))
+        output = file.text
+        for i in range(0, 256):
+            j = '%03d' % i
+            output = re.sub('\x1b\[38;5;{0}m|\[38;5;{0};\d+m'.format(j), '\x03{0}'.format(self.getAverageC(x256.to_rgb(int(j)), 'fastest')), output)
+            output = re.sub('\x1b\[38;5;{0}m|\[38;5;{0};\d+m'.format(i), '\x03{0}'.format(self.getAverageC(x256.to_rgb(int(i)), 'fastest')), output)
+        output = output.replace('\x1b[0m', '\x0F')
+        output = re.sub('(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]', '', output)
+        paste = ""
+        for line in output.splitlines()[:-1]:
+            if line.strip():
+                paste += line + "\n"
+                #time.sleep(delay)
+                irc.reply(line, prefixNick = False, noLengthCheck=True, private=False, notice=False)
+        if self.registryValue('pasteEnable', msg.args[0]):
+            try:
+                apikey = self.registryValue('pasteAPI')
+                payload = {'description':location,'sections':[{'contents':paste}]}
+                headers = {'X-Auth-Token':apikey}
+                post_response = requests.post(url='https://api.paste.ee/v1/pastes', json=payload, headers=headers)
+                response = post_response.json()
+                irc.reply(response['link'].replace('/p/', '/r/'), private=False, notice=False)
+            except:
+                return
     wttr = wrap(wttr, [getopts({'delay':'float'}), ('text')])
     
     def cq(self, irc, msg, args):
