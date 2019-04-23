@@ -789,6 +789,9 @@ class ASCII(callbacks.Plugin):
             output = re.sub('\x1b\[38;5;{0}m|\[38;5;{0};\d+m'.format(j), '\x03{0}'.format(self.getAverageC(x256.to_rgb(int(j)), speed)), output)
             output = re.sub('\x1b\[38;5;{0}m|\[38;5;{0};\d+m'.format(i), '\x03{0}'.format(self.getAverageC(x256.to_rgb(int(i)), speed)), output)
         output = output.replace('\x1b[0m', '\x0F')
+        output = output.replace('\x03\x03', '\x03')
+        output = output.replace('\x1b', '')
+        output = output.replace('[1m', '')
         output = re.sub('(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]', '', output)
         paste = ""
         for line in output.splitlines()[:-1]:
