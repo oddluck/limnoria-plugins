@@ -796,8 +796,12 @@ class ASCII(callbacks.Plugin):
         output = output.replace('\x0F\x03', '\x03')
         paste = ""
         for line in output.splitlines():
-            if line.strip() and not line.startswith("Follow"):
-                line = line.strip('\x0F')
+            line = line.strip('\x0F')
+            if not line.strip():
+                paste += line + "\n"
+                #time.sleep(delay)
+                irc.reply('\xa0', prefixNick = False, noLengthCheck=True, private=False, notice=False)
+            elif not line.startswith("Follow"):
                 paste += line + "\n"
                 #time.sleep(delay)
                 irc.reply(line, prefixNick = False, noLengthCheck=True, private=False, notice=False)
