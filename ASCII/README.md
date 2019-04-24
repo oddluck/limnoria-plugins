@@ -1,6 +1,5 @@
 [![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=T8E56M6SP9JH2)
 
-too much new stuff to detail: wttr (ascii weather) tdf (tdfiglets) read command help text.
 
 <b>ASCII Art Plugin</b><br>
 Convert text to ASCII art or image URLs to ASCII/ANSI art.
@@ -9,9 +8,9 @@ Requires Limnoria https://github.com/ProgVal/Limnoria and Python3
 
 pip install -r requirements.txt
 
-Configure the delay between lines when outputting ASCII. Setting configurable per channel.
+ASCII Weather from wttr.in
 ```
-config channel plugins.ascii.delay 0.5 (set a delay of 0.5 seconds between lines, default 1.0)
+wttr <location>
 ```
 
 Support for the Paste.ee API to save art conversions for later use.
@@ -57,3 +56,8 @@ a2m command requires A2M https://github.com/tat3r/a2m (optional. disable command
 p2u <url>
 ```
 p2u command requires p2u https://git.trollforge.org/p2u/about/ (optional. disable command if not installing p2u.)
+```
+tdf [-f <font>] <text> (select font with -f <fontname>)
+fonts (list of figlet fonts)
+```
+tdf command requires tdfiglet https://github.com/tat3r/tdfiglet (optional. disable command if not installing tdfiglet.)
