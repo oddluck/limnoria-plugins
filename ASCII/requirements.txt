@@ -5,3 +5,4 @@ pillow
 colour-science
 fake-useragent
 pexpect
+x256
