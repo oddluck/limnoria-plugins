@@ -801,7 +801,7 @@ class ASCII(callbacks.Plugin):
                 paste += line + "\n"
                 #time.sleep(delay)
                 irc.reply('\xa0', prefixNick = False, noLengthCheck=True, private=False, notice=False)
-            elif not line.startswith("Follow"):
+            elif line.strip() and not line.startswith("Follow"):
                 paste += line + "\n"
                 #time.sleep(delay)
                 irc.reply(line, prefixNick = False, noLengthCheck=True, private=False, notice=False)
