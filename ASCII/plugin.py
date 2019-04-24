@@ -768,8 +768,8 @@ class ASCII(callbacks.Plugin):
     tdf = wrap(tdf, [getopts({'f':'text', 'j':'text', 'w':'int', 'e':'text', 'r':'', 'delay':'float'}), ('text')])
 
     def wttr(self, irc, msg, args, optlist, location):
-        """[--delay] [--16] <location>
-        Get weather from wttr.in for <location>
+        """[--delay] [--16] [--99] <location>
+        ASCII weather report from wttr.in for <location>. --16 for 16 colors (default). --99 for extended color.
         """
         optlist = dict(optlist)
         if 'delay' in optlist:
@@ -779,9 +779,12 @@ class ASCII(callbacks.Plugin):
         if '16' in optlist:
             self.colors = 16
             speed = 'slower'
-        else:
+        elif '99' in optlist:
             self.colors = 83
             speed = 'fastest'
+        else:
+            self.colors = 16
+            speed = 'slower'
         file = requests.get("http://wttr.in/{0}".format(location))
         output = file.text
         for i in range(0, 256):
@@ -789,13 +792,12 @@ class ASCII(callbacks.Plugin):
             output = re.sub('\x1b\[38;5;{0}m|\[38;5;{0};\d+m'.format(j), '\x03{0}'.format(self.getAverageC(x256.to_rgb(int(j)), speed)), output)
             output = re.sub('\x1b\[38;5;{0}m|\[38;5;{0};\d+m'.format(i), '\x03{0}'.format(self.getAverageC(x256.to_rgb(int(i)), speed)), output)
         output = output.replace('\x1b[0m', '\x0F')
-        output = output.replace('\x03\x03', '\x03')
-        output = output.replace('\x1b', '')
-        output = output.replace('[1m', '')
-        output = re.sub('(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]', '', output)
+        output = re.sub('\x1b|\x9b|\[\d+m', '', output)
+        output = output.replace('\x0F\x03', '\x03')
         paste = ""
         for line in output.splitlines():
             if line.strip() and not line.startswith("Follow"):
+                line = line.strip('\x0F')
                 paste += line + "\n"
                 #time.sleep(delay)
                 irc.reply(line, prefixNick = False, noLengthCheck=True, private=False, notice=False)
@@ -809,7 +811,7 @@ class ASCII(callbacks.Plugin):
                 irc.reply(response['link'].replace('/p/', '/r/'), private=False, notice=False)
             except:
                 return
-    wttr = wrap(wttr, [getopts({'delay':'float', '16':''}), ('text')])
+    wttr = wrap(wttr, [getopts({'delay':'float', '16':'', '99':''}), ('text')])
     
     def cq(self, irc, msg, args):
         """
