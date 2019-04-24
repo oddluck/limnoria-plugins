@@ -794,8 +794,8 @@ class ASCII(callbacks.Plugin):
         output = output.replace('[1m', '')
         output = re.sub('(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]', '', output)
         paste = ""
-        for line in output.splitlines()[:-1]:
-            if line.strip():
+        for line in output.splitlines():
+            if line.strip() and not line.startswith("Follow"):
                 paste += line + "\n"
                 #time.sleep(delay)
                 irc.reply(line, prefixNick = False, noLengthCheck=True, private=False, notice=False)
