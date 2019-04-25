@@ -794,6 +794,10 @@ class ASCII(callbacks.Plugin):
         output = output.replace('\x1b[0m', '\x0F')
         output = re.sub('\x1b|\x9b|\[\d+m', '', output)
         output = output.replace('\x0F\x03', '\x03')
+        for i in range(0, 99):
+            if i < 17:
+                i = '%02d' % i
+            output = re.sub('(?<=\x03{0}.)\x03{0}'.format(i), '', output)
         paste = ""
         for line in output.splitlines():
             line = line.strip('\x0F')
