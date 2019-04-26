@@ -272,7 +272,7 @@ class ASCII(callbacks.Plugin):
             delta_e = delta_E_CMC(c1, c2)
         elif speed == 'slowest':
             delta_e = delta_E_CIE2000(c1, c2)
-        else:
+        elif speed == 'insane':
             delta_e = delta_E_DIN99(c1, c2)
         return delta_e
 
@@ -285,7 +285,9 @@ class ASCII(callbacks.Plugin):
             self.colors = 16
         else:
             self.colors = 83
-        if 'fast' in optlist:
+        if 'faster' in optlist:
+            speed = 'faster'
+        elif 'fast' in optlist:
             speed = 'fast'
         elif 'slow' in optlist:
             speed = 'slow'
@@ -406,7 +408,7 @@ class ASCII(callbacks.Plugin):
             except:
                 return
                 #irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
-    img = wrap(img,[getopts({'w':'int', 'invert':'', 'fast':'', 'slow':'', 'slower':'', 'slowest':'', 'insane':'', '16':'', 'delay':'float', 'dither':''}), ('text')])
+    img = wrap(img,[getopts({'w':'int', 'invert':'', 'fast':'', 'faster':'', 'slow':'', 'slower':'', 'slowest':'', 'insane':'', '16':'', 'delay':'float', 'dither':''}), ('text')])
 
     def ansi(self, irc, msg, args, optlist, url):
         """[--w <width>] [--16] <url>
@@ -417,7 +419,9 @@ class ASCII(callbacks.Plugin):
             self.colors = 16
         else:
             self.colors = 83
-        if 'fast' in optlist:
+        if 'faster' in optlist:
+            speed = 'faster'
+        elif 'fast' in optlist:
             speed = 'fast'
         elif 'slow' in optlist:
             speed = 'slow'
@@ -538,7 +542,7 @@ class ASCII(callbacks.Plugin):
             except:
                 return
                 #irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
-    ansi = wrap(ansi, [getopts({'w':'int', 'invert':'', 'fast':'', 'slow':'', 'slower':'', 'slowest':'', 'insane':'', '16':'', 'delay':'float', 'dither':''}), ('text')])
+    ansi = wrap(ansi, [getopts({'w':'int', 'invert':'', 'fast':'', 'faster':'', 'slow':'', 'slower':'', 'slowest':'', 'insane':'', '16':'', 'delay':'float', 'dither':''}), ('text')])
 
     def fontlist(self, irc, msg, args):
         """
