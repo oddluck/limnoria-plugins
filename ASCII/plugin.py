@@ -333,9 +333,6 @@ class ASCII(callbacks.Plugin):
             os.remove(filename)
         except:
             pass
-        waitmsgs = self.registryValue("randWait", msg.args[0])
-        waitmsg = random.choice(waitmsgs)
-        irc.reply(waitmsg, private=False, notice=False)
         # store dimensions
         W, H = image.size[0], image.size[1]
         # compute width of tile
@@ -467,9 +464,6 @@ class ASCII(callbacks.Plugin):
             os.remove(filename)
         except:
             pass
-        waitmsgs = self.registryValue("randWait", msg.args[0])
-        waitmsg = random.choice(waitmsgs)
-        irc.reply(waitmsg, private=False, notice=False)
         # store dimensions
         W, H = image.size[0], image.size[1]
         # compute width of tile
