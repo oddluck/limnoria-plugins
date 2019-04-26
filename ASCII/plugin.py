@@ -279,7 +279,7 @@ class ASCII(callbacks.Plugin):
         return delta_e
 
     def img(self, irc, msg, args, optlist, url):
-        """[--cols <number of columns>] [--16] [--fast | --slow | --slower] [--invert] [--delay] <url>
+        """[--w <width>] [--16] <url>
         Converts image to ASCII art. --16 for 16 colors. --invert to invert luminance character map. Set speed to vary color difference algorithm.
         """
         optlist = dict(optlist)
@@ -298,9 +298,9 @@ class ASCII(callbacks.Plugin):
         elif 'insane' in optlist:
             speed = 'insane'
         else:
-            speed = 'faster'
-        if 'cols' in optlist:
-            cols = optlist.get('cols')
+            speed = 'slower'
+        if 'w' in optlist:
+            cols = optlist.get('w')
         else:
             cols = 100
         if 'invert' in optlist:
@@ -401,10 +401,10 @@ class ASCII(callbacks.Plugin):
             except:
                 return
                 #irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
-    img = wrap(img,[getopts({'cols':'int', 'invert':'', 'fast':'', 'slow':'', 'slower':'', 'slowest':'', 'insane':'', '16':'', 'delay':'float'}), ('text')])
+    img = wrap(img,[getopts({'w':'int', 'invert':'', 'fast':'', 'slow':'', 'slower':'', 'slowest':'', 'insane':'', '16':'', 'delay':'float'}), ('text')])
 
     def ansi(self, irc, msg, args, optlist, url):
-        """[--cols <number of columns>] [--16] [--fast | --slow | --slower] [--invert] [--delay] <url>
+        """[--w <width>] [--16] <url>
         Converts image to ANSI art. --16 for 16 colors. --invert to invert luminance character map. Set speed to vary color difference algorithm.
         """
         optlist = dict(optlist)
@@ -423,9 +423,9 @@ class ASCII(callbacks.Plugin):
         elif 'insane' in optlist:
             speed = 'insane'
         else:
-            speed = 'faster'
-        if 'cols' in optlist:
-            cols = optlist.get('cols')
+            speed = 'slower'
+        if 'w' in optlist:
+            cols = optlist.get('w')
         else:
             cols = 80
         if 'invert' in optlist:
@@ -526,7 +526,7 @@ class ASCII(callbacks.Plugin):
             except:
                 return
                 #irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
-    ansi = wrap(ansi, [getopts({'cols':'int', 'invert':'', 'fast':'', 'slow':'', 'slower':'', 'slowest':'', 'insane':'', '16':'', 'delay':'float'}), ('text')])
+    ansi = wrap(ansi, [getopts({'w':'int', 'invert':'', 'fast':'', 'slow':'', 'slower':'', 'slowest':'', 'insane':'', '16':'', 'delay':'float'}), ('text')])
 
     def fontlist(self, irc, msg, args):
         """
@@ -538,7 +538,7 @@ class ASCII(callbacks.Plugin):
     fontlist = wrap(fontlist)
 
     def scroll(self, irc, msg, args, optlist, url):
-        """[--delay] <url>
+        """<url>
         Play ASCII/ANSI art files from web links
         """
         optlist = dict(optlist)
@@ -775,8 +775,8 @@ class ASCII(callbacks.Plugin):
     tdf = wrap(tdf, [getopts({'f':'text', 'j':'text', 'w':'int', 'e':'text', 'r':'', 'delay':'float'}), ('text')])
 
     def wttr(self, irc, msg, args, optlist, location):
-        """[--delay] [--16] [--99] <location>
-        ASCII weather report from wttr.in for <location>. --16 for 16 colors (default). --99 for extended color.
+        """[--16] [--99] <location>
+        ASCII weather report from wttr.in for <location>. --16 for 16 colors.
         """
         optlist = dict(optlist)
         if 'delay' in optlist:
@@ -788,9 +788,9 @@ class ASCII(callbacks.Plugin):
             speed = 'slower'
         elif '99' in optlist:
             self.colors = 83
-            speed = 'fastest'
+            speed = 'slower'
         else:
-            self.colors = 16
+            self.colors = 83
             speed = 'slower'
         file = requests.get("http://wttr.in/{0}".format(location))
         output = file.text
