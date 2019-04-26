@@ -406,7 +406,7 @@ class ASCII(callbacks.Plugin):
             except:
                 return
                 #irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
-    img = wrap(img,[getopts({'w':'int', 'invert':'', 'fast':'', 'slow':'', 'slower':'', 'slowest':'', 'insane':'', '16':'', 'delay':'float'}), ('text')])
+    img = wrap(img,[getopts({'w':'int', 'invert':'', 'fast':'', 'slow':'', 'slower':'', 'slowest':'', 'insane':'', '16':'', 'delay':'float', 'dither':''}), ('text')])
 
     def ansi(self, irc, msg, args, optlist, url):
         """[--w <width>] [--16] <url>
@@ -536,7 +536,7 @@ class ASCII(callbacks.Plugin):
             except:
                 return
                 #irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
-    ansi = wrap(ansi, [getopts({'w':'int', 'invert':'', 'fast':'', 'slow':'', 'slower':'', 'slowest':'', 'insane':'', '16':'', 'delay':'float'}), ('text')])
+    ansi = wrap(ansi, [getopts({'w':'int', 'invert':'', 'fast':'', 'slow':'', 'slower':'', 'slowest':'', 'insane':'', '16':'', 'delay':'float', 'dither':''}), ('text')])
 
     def fontlist(self, irc, msg, args):
         """
