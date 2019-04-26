@@ -42,8 +42,6 @@ class ASCII(callbacks.Plugin):
         self.__parent = super(ASCII, self)
         self.__parent.__init__(irc)
         self.colors = 83
-        self.matches = {}
-        self.matches16 = {}
         self.ircColors= {
             (11.5497, 31.8768, 18.1739):16,
             (17.5866, 15.7066, 25.9892):17,
@@ -358,6 +356,8 @@ class ASCII(callbacks.Plugin):
         image2 = image2.convert('RGB')
         lumamap = np.array(image)
         colormap = np.array(image2)
+        self.matches = {}
+        self.matches16 = {}
         # ascii image is a list of character strings
         aimg = []
         # generate list of dimensions
@@ -488,6 +488,8 @@ class ASCII(callbacks.Plugin):
         image2 = image2.convert('RGB')
         lumamap = np.array(image)
         colormap = np.array(image2)
+        self.matches = {}
+        self.matches16 = {}
         # ascii image is a list of character strings
         aimg = []
         # generate list of dimensions
