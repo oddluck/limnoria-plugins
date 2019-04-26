@@ -352,9 +352,9 @@ class ASCII(callbacks.Plugin):
         image2 = ImageOps.autocontrast(image2)
         image2 = image2.resize((cols, rows), Image.LANCZOS)
         if 'dither' in optlist:
-            image2 = image2.convert('P', dither=Image.FLOYDSTEINBERG, palette=Image.WEB)
+            image2 = image2.convert('P', dither=Image.FLOYDSTEINBERG, palette=Image.ADAPTIVE)
         else:
-            image2 = image2.convert('P', dither=None, palette=Image.WEB)
+            image2 = image2.convert('P', dither=None, palette=Image.ADAPTIVE)
         image2 = image2.convert('RGB')
         lumamap = np.array(image)
         colormap = np.array(image2)
@@ -482,9 +482,9 @@ class ASCII(callbacks.Plugin):
         image2 = ImageOps.autocontrast(image2)
         image2 = image2.resize((cols, rows), Image.LANCZOS)
         if 'dither' in optlist:
-            image2 = image2.convert('P', dither=Image.FLOYDSTEINBERG, palette=Image.WEB)
+            image2 = image2.convert('P', dither=Image.FLOYDSTEINBERG, palette=Image.ADAPTIVE)
         else:
-            image2 = image2.convert('P', dither=None, palette=Image.WEB)
+            image2 = image2.convert('P', dither=None, palette=Image.ADAPTIVE)
         image2 = image2.convert('RGB')
         lumamap = np.array(image)
         colormap = np.array(image2)
