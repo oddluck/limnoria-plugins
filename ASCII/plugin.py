@@ -298,7 +298,7 @@ class ASCII(callbacks.Plugin):
         elif 'insane' in optlist:
             speed = 'insane'
         else:
-            speed = 'slower'
+            speed = 'slowest'
         if 'w' in optlist:
             cols = optlist.get('w')
         else:
@@ -429,7 +429,7 @@ class ASCII(callbacks.Plugin):
         elif 'insane' in optlist:
             speed = 'insane'
         else:
-            speed = 'slower'
+            speed = 'slowest'
         if 'w' in optlist:
             cols = optlist.get('w')
         else:
