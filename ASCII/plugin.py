@@ -351,6 +351,7 @@ class ASCII(callbacks.Plugin):
         image2 = image2.convert('RGB')
         image2 = ImageOps.autocontrast(image2)
         image2 = image2.resize((cols, rows), Image.LANCZOS)
+        image2 = image2.convert('RGB', dither=Image.FLOYDSTEINBERG, palette=Image.WEB)
         lumamap = np.array(image)
         colormap = np.array(image2)
         # ascii image is a list of character strings
@@ -476,6 +477,7 @@ class ASCII(callbacks.Plugin):
         image2 = image2.convert('RGB')
         image2 = ImageOps.autocontrast(image2)
         image2 = image2.resize((cols, rows), Image.LANCZOS)
+        image2 = image2.convert('RGB', dither=Image.FLOYDSTEINBERG, palette=Image.WEB)
         lumamap = np.array(image)
         colormap = np.array(image2)
         # ascii image is a list of character strings
