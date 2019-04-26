@@ -804,6 +804,8 @@ class ASCII(callbacks.Plugin):
         else:
             self.colors = 83
             speed = 'slower'
+        self.matches = {}
+        self.matches16 = {}
         file = requests.get("http://wttr.in/{0}".format(location))
         output = file.text
         for i in range(0, 256):
