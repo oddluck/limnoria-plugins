@@ -42,8 +42,6 @@ class ASCII(callbacks.Plugin):
         self.__parent = super(ASCII, self)
         self.__parent.__init__(irc)
         self.colors = 83
-        self.matches = {}
-        self.matches16 = {}
         self.ircColors= {
             (11.5497, 31.8768, 18.1739):16,
             (17.5866, 15.7066, 25.9892):17,
@@ -205,22 +203,20 @@ class ASCII(callbacks.Plugin):
         Given PIL Image, return average RGB value
         """
         pixel = tuple(pixel)
-        self.matches.setdefault(speed, {})
-        self.matches.setdefault(speed, {})
         if self.colors == 16:
             colors = list(self.colors16.keys())
-            if pixel not in self.matches16[speed]:
+            if pixel not in self.matches16:
                 closest_colors = sorted(colors, key=lambda color: self.distance(self.rgb2lab(color), self.rgb2lab(pixel), speed))
                 closest_color = closest_colors[0]
-                self.matches16[speed][pixel] = self.colors16[closest_color]
-            return self.matches16[speed][pixel]
+                self.matches16[pixel] = self.colors16[closest_color]
+            return self.matches16[pixel]
         else:
             colors = list(self.ircColors.keys())
-            if pixel not in self.matches[speed]:
+            if pixel not in self.matches:
                 closest_colors = sorted(colors, key=lambda color: self.distance(color, self.rgb2lab(pixel), speed))
                 closest_color = closest_colors[0]
-                self.matches[speed][pixel] = self.ircColors[closest_color]
-            return self.matches[speed][pixel]
+                self.matches[pixel] = self.ircColors[closest_color]
+            return self.matches[pixel]
 
     def rgb2lab (self, inputColor) :
         num = 0
@@ -357,6 +353,8 @@ class ASCII(callbacks.Plugin):
         image2 = image2.convert('RGB')
         lumamap = np.array(image)
         colormap = np.array(image2)
+        self.matches = {}
+        self.matches16 = {}
         # ascii image is a list of character strings
         aimg = []
         # generate list of dimensions
@@ -486,6 +484,8 @@ class ASCII(callbacks.Plugin):
         image2 = image2.convert('RGB')
         lumamap = np.array(image)
         colormap = np.array(image2)
+        self.matches = {}
+        self.matches16 = {}
         # ascii image is a list of character strings
         aimg = []
         # generate list of dimensions
@@ -800,6 +800,8 @@ class ASCII(callbacks.Plugin):
         else:
             self.colors = 83
             speed = 'slower'
+        self.matches = {}
+        self.matches16 = {}
         file = requests.get("http://wttr.in/{0}".format(location))
         output = file.text
         for i in range(0, 256):
