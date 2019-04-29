@@ -302,9 +302,9 @@ class ASCII(callbacks.Plugin):
         else:
             cols = 100
         if 'invert' in optlist:
-            gscale = "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\|()1{}[]?-_+~<>i!lI;:,\"^`'."
+            gscale = "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\|()1{}[]?-_+~<>i!lI;:,\"^`'. "
         else:
-            gscale = ".'`^\",:;Il!i><~+_-?][}{1)(|\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$"
+            gscale = " .'`^\",:;Il!i><~+_-?][}{1)(|\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$"
         if 'delay' in optlist:
             delay = optlist.get('delay')
         else:
@@ -371,7 +371,7 @@ class ASCII(callbacks.Plugin):
                 # get average luminance
                 avg = int(np.average(lumamap[j][i]))
                 # look up ascii char
-                gsval = gscale[int((avg*68)/255)]
+                gsval = gscale[int((avg * (len(gscale) - 1))/255)]
                 # get color value
                 color = self.getAverageC(colormap[j][i].tolist(),speed)
                 #color = self.getAverageC(img2,speed)
@@ -502,7 +502,7 @@ class ASCII(callbacks.Plugin):
                 # get average luminance
                 avg = int(np.average(lumamap[j][i]))
                 # look up ascii char
-                gsval = gscale[int((avg*3)/255)]
+                gsval = gscale[int((avg * (len(gscale) - 1))/255)]
                 # get color value
                 color = self.getAverageC(colormap[j][i].tolist(),speed)
                 #color = self.getAverageC(img2,speed)
