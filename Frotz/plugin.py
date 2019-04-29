@@ -59,13 +59,16 @@ class Frotz(callbacks.Plugin):
 
     def output(self, output):
         response = []
-        prompts = ["> >$", ">$", "\*\*\*MORE\*\*\*", "\) \[Hit any key to continue.\]", pexpect.TIMEOUT]
+        prompts = ["> >$", ">$", "\*\*\*MORE\*\*\*", "\) \[Hit any key to continue.\]", "\[Press RETURN or ENTER to begin.\]", "\[Hit any key to continue.\]", pexpect.TIMEOUT]
         output.expect(prompts, timeout=2)
         response = output.before
-        while not output.match.group().decode().endswith(">"):
-            output.sendline()
-            output.expect(prompts, timeout=2)
-            response += output.before
+        try:
+            while not output.match.group().decode().endswith(">"):
+                output.sendline()
+                output.expect(prompts, timeout=2)
+                response += output.before
+        except:
+            pass
         response = response.decode().splitlines()
         return response
 
@@ -138,4 +141,3 @@ class Frotz(callbacks.Plugin):
     games = wrap(games)
 
 Class = Frotz
-
