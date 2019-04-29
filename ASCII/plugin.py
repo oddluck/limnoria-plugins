@@ -699,6 +699,7 @@ class ASCII(callbacks.Plugin):
             paste = ""
             for line in output.splitlines():
                 line = line.decode()
+                line = re.sub('^\x03 ', ' ', line)
                 if self.registryValue('pasteEnable', msg.args[0]):
                     paste += line + "\n"
                 if line.strip():
