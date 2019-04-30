@@ -20,17 +20,15 @@ ProgVal's version that I linked to above.
 
 You will need a working Limnoria bot on Python 2.7 for this to work.
 
-Go into your Limnoria plugin dir, usually ~/supybot/plugins and run:
-
 ```
-git https://github.com/oddluck/limnoria-plugins.git
-cd limnoria-plugins
-mv Tweety /your/bot/plugin/directroy
+load plugindownloader
+install oddluck Tweety
 ```
 
 To install additional requirements, run:
 
 ```
+cd /your/bot/plugin/directory/Tweety
 pip install -r requirements.txt 
 ```
 
