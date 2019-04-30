@@ -23,7 +23,9 @@ You will need a working Limnoria bot on Python 2.7 for this to work.
 Go into your Limnoria plugin dir, usually ~/supybot/plugins and run:
 
 ```
-git clone https://github.com/reticulatingspline/Tweety
+git https://github.com/oddluck/limnoria-plugins.git
+cd limnoria-plugins
+mv Tweety /your/bot/plugin/directroy
 ```
 
 To install additional requirements, run:
