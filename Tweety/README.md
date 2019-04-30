@@ -18,7 +18,7 @@ ProgVal's version that I linked to above.
 
 ## Install
 
-You will need a working Limnoria bot on Python 2.7 for this to work.
+You will need a Limnoria bot on Python 3 for this to work.
 
 ```
 load plugindownloader
