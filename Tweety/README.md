@@ -100,12 +100,3 @@ Load the messageparser plugin:
 /msg <bot> messageparser add global "https?://.*\.?twitter\.com/([^ \t/]+)(?:$|[ \t])" "echo ^ [Tweety twitter --info $1]"
 /msg <bot> messageparser add global "https?://.*\.?twitter\.com/([A-Za-z0-9_]+)/status/([0-9]+)" "echo ^ [Tweety twitter --id $2]"
 ```
-
-## About
-
-All of my plugins are free and open source. When I first started out, one of the main reasons I was
-able to learn was due to other code out there. If you find a bug or would like an improvement, feel
-free to give me a message on IRC or fork and submit a pull request. Many hours do go into each plugin,
-so, if you're feeling generous, I do accept donations via Amazon or browse my [wish list](http://amzn.com/w/380JKXY7P5IKE).
-
-I'm always looking for work, so if you are in need of a custom feature, plugin or something bigger, contact me via GitHub or IRC.
