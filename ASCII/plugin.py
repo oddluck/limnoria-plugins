@@ -42,6 +42,7 @@ class ASCII(callbacks.Plugin):
         self.__parent = super(ASCII, self)
         self.__parent.__init__(irc)
         self.colors = 83
+        self.char = 0
         self.ircColors= {
             (11.5497, 31.8768, 18.1739):16,
             (17.5866, 15.7066, 25.9892):17,
@@ -303,6 +304,8 @@ class ASCII(callbacks.Plugin):
             cols = 100
         if 'invert' in optlist:
             gscale = "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\|()1{}[]?-_+~<>i!lI;:,\"^`'."
+        elif 'chars' in optlist:
+            gscale = optlist.get('chars')
         else:
             gscale = ".'`^\",:;Il!i><~+_-?][}{1)(|\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$"
         if 'delay' in optlist:
@@ -371,7 +374,16 @@ class ASCII(callbacks.Plugin):
                 # get average luminance
                 avg = int(np.average(lumamap[j][i]))
                 # look up ascii char
-                gsval = gscale[int((avg * (len(gscale) - 1))/255)]
+                if 'chars' not in optlist:
+                    gsval = gscale[int((avg * (len(gscale) - 1))/255)]
+                else:
+                    if self.char < len(gscale):
+                        gsval = gscale[self.char]
+                        self.char += 1
+                    else:
+                        self.char = 0
+                        gsval = gscale[self.char]
+                        self.char += 1
                 # get color value
                 color = self.getAverageC(colormap[j][i].tolist(),speed)
                 #color = self.getAverageC(img2,speed)
