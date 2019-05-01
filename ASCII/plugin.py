@@ -415,6 +415,7 @@ class ASCII(callbacks.Plugin):
             except:
                 return
                 #irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
+        self.char = 0
     img = wrap(img,[getopts({'w':'int', 'invert':'', 'fast':'', 'faster':'', 'slow':'', 'slower':'', 'slowest':'', 'insane':'', '16':'', 'delay':'float', 'dither':'', 'chars':'text'}), ('text')])
 
     def ansi(self, irc, msg, args, optlist, url):
