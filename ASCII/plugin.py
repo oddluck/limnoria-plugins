@@ -730,7 +730,7 @@ class ASCII(callbacks.Plugin):
                     #irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
         else:
             irc.reply("Unexpected file type or link format", private=False, notice=False)
-    p2u = wrap(p2u, [getopts({'b':'int', 'f':'text', 'p':'text', 's':'int', 't':'int', 'w':'int', 'delay':'float'}), ('text')])
+    p2u = wrap(p2u, [getopts({'b':'int', 'f':'text', 'p':'text', 's':'int', 't':'int', 'w':'int', 'delay':'float', 'chars':'text'}), ('text')])
 
 
     def tdf(self, irc, msg, args, optlist, text):
