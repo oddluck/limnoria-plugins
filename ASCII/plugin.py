@@ -276,8 +276,10 @@ class ASCII(callbacks.Plugin):
         return delta_e
 
     def img(self, irc, msg, args, optlist, url):
-        """[--w <width>] [--16] <url>
-        Converts image to ASCII art. --16 for 16 colors. --invert to invert luminance character map. Set speed to vary color difference algorithm.
+        """[--w <width>] [--16] [--bg <int>] [--chars <text>] [--invert] <url>
+        Converts image to ASCII art. --16 for 16 colors. --chars <YOURTEXTHERE> 
+        to color text of your choice. --bg <irc color number> set a background color. 
+        --invert to invert the default luma-based character ramp
         """
         optlist = dict(optlist)
         if '16' in optlist:
@@ -312,6 +314,8 @@ class ASCII(callbacks.Plugin):
             delay = optlist.get('delay')
         else:
             delay = self.registryValue('delay', msg.args[0])
+        if 'bg' in optlist:
+            bg = optlist.get('bg')
         path = os.path.dirname(os.path.abspath(__file__))
         filepath = "{0}/tmp".format(path)
         filename = "{0}/{1}".format(filepath, url.split('/')[-1])
@@ -390,7 +394,13 @@ class ASCII(callbacks.Plugin):
                 if color != old_color:
                     old_color = color
                     # append ascii char to string
-                    aimg[j] += "\x03{0}{1}".format(color, gsval)
+                    if 'bg' not in optlist:
+                        aimg[j] += "\x03{0}{1}".format(color, gsval)
+                    else:
+                        if gsval.strip():
+                            aimg[j] += "\x03{0},{1}{2}".format(int(color), int(bg), gsval)
+                        else:
+                            aimg[j] += "\x030,{0} ".format(int(color))
                 else:
                     aimg[j] += "{0}".format(gsval)
         # return txt image
@@ -416,7 +426,7 @@ class ASCII(callbacks.Plugin):
                 return
                 #irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
         self.char = 0
-    img = wrap(img,[getopts({'w':'int', 'invert':'', 'fast':'', 'faster':'', 'slow':'', 'slower':'', 'slowest':'', 'insane':'', '16':'', 'delay':'float', 'dither':'', 'chars':'text'}), ('text')])
+    img = wrap(img,[getopts({'w':'int', 'invert':'', 'fast':'', 'faster':'', 'slow':'', 'slower':'', 'slowest':'', 'insane':'', '16':'', 'delay':'float', 'dither':'', 'chars':'text','bg':'int'}), ('text')])
 
     def ansi(self, irc, msg, args, optlist, url):
         """[--w <width>] [--16] <url>
