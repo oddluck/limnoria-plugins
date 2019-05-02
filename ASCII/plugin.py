@@ -308,6 +308,8 @@ class ASCII(callbacks.Plugin):
             gscale = "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\|()1{}[]?-_+~<>i!lI;:,\"^`'."
         elif 'chars' in optlist:
             gscale = optlist.get('chars')
+            if not gscale.strip():
+                gscale = '\xa0'
         else:
             gscale = ".'`^\",:;Il!i><~+_-?][}{1)(|\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$"
         if 'delay' in optlist:
@@ -397,7 +399,7 @@ class ASCII(callbacks.Plugin):
                     if 'bg' not in optlist:
                         aimg[j] += "\x03{0}{1}".format(color, gsval)
                     else:
-                        if gsval.strip():
+                        if gsval != '\xa0':
                             aimg[j] += "\x03{0},{1}{2}".format(int(color), int(bg), gsval)
                         else:
                             aimg[j] += "\x030,{0} ".format(int(color))
