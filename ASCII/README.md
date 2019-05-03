@@ -26,6 +26,7 @@ Stop the scroll. cq command must be prefixed by a command character. This comman
 ASCII Weather from wttr.in
 ```
 wttr <location>
+wttr moon
 ```
 
 Support for the Paste.ee API to save art conversions for later use.
