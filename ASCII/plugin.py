@@ -43,6 +43,7 @@ class ASCII(callbacks.Plugin):
         self.__parent.__init__(irc)
         self.colors = 83
         self.char = 0
+        self.stopped = {}
         self.ircColors= {
             (11.5497, 31.8768, 18.1739):16,
             (17.5866, 15.7066, 25.9892):17,
@@ -144,6 +145,12 @@ class ASCII(callbacks.Plugin):
             (160, 67, 101):'13',
             (85, 87, 83): '14',
             (136, 137, 133):'15'}
+
+    def doPrivmsg(self, irc, msg):
+        channel = msg.args[0]
+        self.stopped.setdefault(channel, None)
+        if msg.args[1].lower().strip() == 'cq' or msg.args[1].lower().strip() == 'clearqueue' or msg.args[1].lower().strip() == 'stop' or msg.args[1].lower().strip() == 'quit':
+            self.stopped[channel] = True
 
     def ascii(self, irc, msg, args, optlist, text):
         """[--font <font>] [--color <color1,color2>] [<text>]
@@ -411,11 +418,13 @@ class ASCII(callbacks.Plugin):
         del image2
         del colormap
         paste = ""
+        self.stopped[msg.args[0]] = False
         for line in output:
             if self.registryValue('pasteEnable', msg.args[0]):
                 paste += line + "\n"
-            #time.sleep(delay)
-            irc.reply(line, prefixNick=False, noLengthCheck=True, private=False, notice=False)
+            if not self.stopped[msg.args[0]]:
+                time.sleep(delay)
+                irc.reply(line, prefixNick=False, noLengthCheck=True, private=False, notice=False)
         if self.registryValue('pasteEnable', msg.args[0]):
             try:
                 apikey = self.registryValue('pasteAPI')
@@ -543,11 +552,13 @@ class ASCII(callbacks.Plugin):
         del image2
         del colormap
         paste = ""
+        self.stopped[msg.args[0]] = False
         for line in output:
             if self.registryValue('pasteEnable', msg.args[0]):
                 paste += line + "\n"
-            #time.sleep(delay)
-            irc.reply(line, prefixNick=False, noLengthCheck=True, private=False, notice=False)
+            if not self.stopped[msg.args[0]]:
+                time.sleep(delay)
+                irc.reply(line, prefixNick=False, noLengthCheck=True, private=False, notice=False)
         if self.registryValue('pasteEnable', msg.args[0]):
             try:
                 apikey = self.registryValue('pasteAPI')
@@ -575,6 +586,7 @@ class ASCII(callbacks.Plugin):
         Play ASCII/ANSI art files from web links
         """
         optlist = dict(optlist)
+        self.stopped[msg.args[0]] = False
         if 'delay' in optlist:
             delay = optlist.get('delay')
         else:
@@ -587,8 +599,8 @@ class ASCII(callbacks.Plugin):
             return
         elif url.endswith(".txt") or url.startswith("https://pastebin.com/raw/") or url.startswith("https://paste.ee/r/"):
             for line in file.text.splitlines():
-                if line.strip():
-                    #time.sleep(delay)
+                if line.strip() and not self.stopped[msg.args[0]]:
+                    time.sleep(delay)
                     irc.reply(line, prefixNick = False, noLengthCheck=True, private=False, notice=False)
         else:
             irc.reply("Unexpected file type or link format", private=False, notice=False)
@@ -641,12 +653,13 @@ class ASCII(callbacks.Plugin):
                 irc.reply("Error. Have you installed A2M? https://github.com/tat3r/a2m", private=False, notice=False)
                 return
             paste = ""
+            self.stopped[msg.args[0]] = False
             for line in output.splitlines():
                 line = line.decode()
                 if self.registryValue('pasteEnable', msg.args[0]):
                     paste += line + "\n"
-                if line.strip():
-                    #time.sleep(delay)
+                if line.strip() and not self.stopped[msg.args[0]]:
+                    time.sleep(delay)
                     irc.reply(line, prefixNick = False, noLengthCheck=True, private=False, notice=False)
             if self.registryValue('pasteEnable', msg.args[0]):
                 try:
@@ -723,13 +736,14 @@ class ASCII(callbacks.Plugin):
                 irc.reply("Error. Have you installed p2u? https://git.trollforge.org/p2u", private=False, notice=False)
                 return
             paste = ""
+            self.stopped[msg.args[0]] = False
             for line in output.splitlines():
                 line = line.decode()
                 line = re.sub('^\x03 ', ' ', line)
                 if self.registryValue('pasteEnable', msg.args[0]):
                     paste += line + "\n"
-                if line.strip():
-                    #time.sleep(delay)
+                if line.strip() and not self.stopped[msg.args[0]]:
+                    time.sleep(delay)
                     irc.reply(line, prefixNick = False, noLengthCheck=True, private=False, notice=False)
             if self.registryValue('pasteEnable', msg.args[0]):
                 try:
@@ -785,16 +799,17 @@ class ASCII(callbacks.Plugin):
             irc.reply("Error. Have you installed tdfiglet? https://github.com/tat3r/tdfiglet", private=False, notice=False)
             return
         paste = ""
+        self.stopped[msg.args[0]] = False
         output = output.decode().replace('\r\r\n', '\r\n').replace('\x03\x03', '\x0F')
         for line in output.splitlines():
             line = re.sub('\x0F\s+\x03$', '', line)
             if self.registryValue('pasteEnable', msg.args[0]):
                 paste += line + "\n"
-            if not line.strip():
-                #time.sleep(delay)
+            if not line.strip() and not self.stopped[msg.args[0]]:
+                time.sleep(delay)
                 irc.reply('\xa0', prefixNick = False, noLengthCheck=True, private=False, notice=False)
-            else:
-                #time.sleep(delay)
+            elif not self.stopped[msg.args[0]]:
+                time.sleep(delay)
                 irc.reply(line, prefixNick = False, noLengthCheck=True, private=False, notice=False)
         if self.registryValue('pasteEnable', msg.args[0]):
             try:
@@ -843,17 +858,18 @@ class ASCII(callbacks.Plugin):
                 i = '%02d' % i
             output = re.sub('(?<=\x03{0}.)\x03{0}'.format(i), '', output)
         paste = ""
+        self.stopped[msg.args[0]] = False
         for line in output.splitlines():
             line = line.strip('\x0F')
             line = line.replace(' ⚡', '☇ ')
             line = line.replace('⚡', ' ☇ ')
-            if not line.strip():
+            if self.registryValue('pasteEnable', msg.args[0]):
                 paste += line + "\n"
-                #time.sleep(delay)
+            if not line.strip() and not self.stopped[msg.args[0]]:
+                time.sleep(delay)
                 irc.reply('\xa0', prefixNick = False, noLengthCheck=True, private=False, notice=False)
             elif line.strip() and not line.startswith("Follow"):
-                paste += line + "\n"
-                #time.sleep(delay)
+                time.sleep(delay)
                 irc.reply(line, prefixNick = False, noLengthCheck=True, private=False, notice=False)
         if self.registryValue('pasteEnable', msg.args[0]):
             try:
@@ -866,14 +882,6 @@ class ASCII(callbacks.Plugin):
             except:
                 return
     wttr = wrap(wttr, [getopts({'delay':'float', '16':'', '99':''}), ('text')])
-
-    def cq(self, irc, msg, args):
-        """
-        Clear the queue
-        """
-        irc.queue.reset()
-        irc.replySuccess()
-    cq = wrap(cq)
 
     def fonts(self, irc, msg, args):
         """
