@@ -149,7 +149,7 @@ class ASCII(callbacks.Plugin):
     def doPrivmsg(self, irc, msg):
         channel = msg.args[0]
         self.stopped.setdefault(channel, None)
-        if msg.args[1].lower().strip() == 'cq' or msg.args[1].lower().strip() == 'clearqueue' or msg.args[1].lower().strip() == 'stop' or msg.args[1].lower().strip() == 'quit':
+        if msg.args[1].lower().strip()[1:] == 'cq' or msg.args[1].lower().strip()[1:] == 'stop':
             self.stopped[channel] = True
 
     def ascii(self, irc, msg, args, optlist, text):
