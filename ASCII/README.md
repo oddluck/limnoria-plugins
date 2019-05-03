@@ -49,15 +49,20 @@ fontlist (get list of availble <fonts>)
 
 Image URL to ASCII/ANSI Art:
 ```
-img <url> (convert an image <url> to ascii art using euclidian color distance and 99 color palette)
-img --16 <url> (convert image to ascii art using euclidian color distance and 16 color palette)
+img <url> (convert an image <url> to ascii art using 99 color palette)
+img --16 <url> (convert image to ascii art using 16 color palette)
 img --invert <url> (invert the ascii luminance character palette)
+img --chars "TEXT" (convert image to colorized custom text)
+img --bg <0-99> --chars " " (convert image to colorized space block)
+img --bg <0-99> (set a background color)
+img --w <###> (how many columns wide. defauls to 100)
 ```
 ```
-ansi <url> (convert an <url> to ansi block art using euclidian color distance and 99 color palette)
-ansi --16 <url> (convert <url> to ansi block art using euclidian color distance and 16 color palette)
+ansi <url> (convert an <url> to ansi shader blocks using 99 color palette)
+ansi --16 <url> (convert <url> to ansi shader blocks using 16 color palette)
+ansi --w <###> (how many columns wide. defauls to 80)
 ```
-Speed Presets. Deafults to slowest. It's actually pretty fast.
+Speed Presets. Defaults to slowest. It's actually pretty fast.
 ```
 img/ansi --faster <url> (use Euclidean color difference algorithm)
 img/ansi --fast <url> (use cie1976 color difference algorithm)
@@ -65,7 +70,7 @@ img/ansi --slow <url> (use cie1994 color difference algorithm)
 img/ansi --slower <url> (use cieCMC color difference algorithm)
 img/ansi --slowest <url> (use cie2000 color difference algorithm)
 ```
-Different presets will yeild slightly different results, try them if you want. slowest the default
+Different presets will yeild slightly different results, try them if you want. Slowest (the default)
 is usually pretty good.
 
 Scroll ASCII/ANSI Art text files
