@@ -844,6 +844,7 @@ class ASCII(callbacks.Plugin):
         paste = ""
         for line in output.splitlines():
             line = line.strip('\x0F')
+            line = line.replace('  ⚡', '⚡')
             if not line.strip():
                 paste += line + "\n"
                 #time.sleep(delay)
