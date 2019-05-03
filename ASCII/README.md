@@ -8,6 +8,21 @@ Requires Limnoria https://github.com/ProgVal/Limnoria and Python3
 
 pip install -r requirements.txt
 
+```
+config protocols.irc.throttletime 0.0
+config plugins.ascii.delay 0.5
+```
+If you want delays < 1.0 seconds then disable Limnoria's throttling and use this plugin's delay option. 0.5 is 2 lines per second for example. You can also use --delay with commands and override the delay with your own. Default delay config can 
+be set per channel. Set a value that won't get you kicked.
+
+```
+!cq
+@cq
+.cq
+etc.
+```
+Stop the scroll. cq command must be prefixed by a command character. This command can not be renamed.
+
 ASCII Weather from wttr.in
 ```
 wttr <location>
