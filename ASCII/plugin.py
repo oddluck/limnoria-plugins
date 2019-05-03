@@ -149,7 +149,7 @@ class ASCII(callbacks.Plugin):
     def doPrivmsg(self, irc, msg):
         channel = msg.args[0]
         self.stopped.setdefault(channel, None)
-        if msg.args[1].lower().strip()[1:] == 'cq' or msg.args[1].lower().strip()[1:] == 'stop':
+        if msg.args[1].lower().strip()[1:] == 'cq':
             self.stopped[channel] = True
 
     def ascii(self, irc, msg, args, optlist, text):
@@ -890,5 +890,14 @@ class ASCII(callbacks.Plugin):
         reply = ", ".join(sorted(os.listdir("/usr/local/share/tdfiglet/fonts/")))
         irc.reply(reply, prefixNick=False, private=True, notice=True)
     fonts = wrap(fonts)
+    
+    def cq(self, irc, msg, args):
+        """
+        Stop the scroll.
+        """
+        if not self.stopped[msg.args[0]]:
+            self.stopped[msg.args[0]] = True
+            irc.reply("Stopping.", prefixNick=False, private=False, notice=False)
+    cq = wrap(cq)
 
 Class = ASCII
