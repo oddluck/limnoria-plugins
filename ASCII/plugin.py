@@ -622,7 +622,7 @@ class ASCII(callbacks.Plugin):
             delay = optlist.get('delay')
         else:
             delay = self.registryValue('delay', msg.args[0])
-        if url.lower().endswith(".ans") or url.lower().endswith(".asc"):
+        try:
             file = requests.get(url)
             if "<!DOCTYPE html>" in file.text:
                 irc.reply("Error: ansi2irc requires a text file as input.", private=False, notice=False)
@@ -659,8 +659,9 @@ class ASCII(callbacks.Plugin):
                 except:
                     return
                     #irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
-        else:
+        except:
             irc.reply("Unexpected file type or link format", private=False, notice=False)
+            return
     a2m = wrap(a2m, [getopts({'l':'int', 'r':'int', 't':'int', 'w':'int', 'delay':'float'}), ('text')])
 
     def p2u(self, irc, msg, args, optlist, url):
