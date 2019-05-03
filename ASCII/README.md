@@ -27,7 +27,9 @@ ASCII Weather from wttr.in
 ```
 wttr <location>
 wttr moon
+wttr --16 <location>/moon
 ```
+Use --16 for 16 colors. Defaults to 99 color extended.
 
 Support for the Paste.ee API to save art conversions for later use.
 Get an API key from https://paste.ee/account/api (FREE. Not required to use plugin, disabled by default).
@@ -55,23 +57,38 @@ img --invert <url> (invert the ascii luminance character palette)
 ansi <url> (convert an <url> to ansi block art using euclidian color distance and 99 color palette)
 ansi --16 <url> (convert <url> to ansi block art using euclidian color distance and 16 color palette)
 ```
-Speed Presets. Euclidian (the default, no --speed preset) is very fast. The following presets each get progressively slower but color choice should improve with slower presets.
+Speed Presets. Deafults to slowest. It's actually pretty fast.
 ```
+img/ansi --faster <url> (use Euclidean color difference algorithm)
 img/ansi --fast <url> (use cie1976 color difference algorithm)
 img/ansi --slow <url> (use cie1994 color difference algorithm)
 img/ansi --slower <url> (use cieCMC color difference algorithm)
 img/ansi --slowest <url> (use cie2000 color difference algorithm)
 ```
-Scroll ASCII/ANSI Art .TXT or .ANS Files from URL
+Different presets will yeild slightly different results, try them if you want. slowest the default
+is usually pretty good.
+
+Scroll ASCII/ANSI Art text files
 ```
 scroll <url> (playback of ansi/ascii art .txt files from the web)
+```
+
+THE COMMANDS BELOW REQUIRE ADDITIONAL INSTALLS AND ARE OPTIONAL. YOU WILL NEED TO VISIT THE GITHUB
+PAGES BELOW AND INSTALL THE PROGRAMS IF YOU WANT TO USE THESE COMMANDS. 
+
+ANSI Art to IRC converrter:
+```
 a2m <url> (conversion and playback of ansi art .ans files from the web.)
 ```
 a2m command requires A2M https://github.com/tat3r/a2m (optional. disable command if not installing a2m.)
+
+Picture to Unicode
 ```
 p2u <url>
 ```
 p2u command requires p2u https://git.trollforge.org/p2u/about/ (optional. disable command if not installing p2u.)
+
+TDFiglet. Text to tdfiglet
 ```
 tdf [-f <font>] <text> (select font with -f <fontname>)
 fonts (list of figlet fonts)
