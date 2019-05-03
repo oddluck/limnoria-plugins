@@ -52,15 +52,15 @@ Image URL to ASCII/ANSI Art:
 img <url> (convert an image <url> to ascii art using 99 color palette)
 img --16 <url> (convert image to ascii art using 16 color palette)
 img --invert <url> (invert the ascii luminance character palette)
-img --chars "TEXT" (convert image to colorized custom text)
-img --bg <0-99> --chars " " (convert image to colorized space block)
-img --bg <0-99> (set a background color)
-img --w <###> (how many columns wide. defauls to 100)
+img --chars "TEXT" <url> (convert image to colorized custom text)
+img --bg <0-99> --chars " " <url> (convert image to colorized space block)
+img --bg <0-99> <url> (set a background color)
+img --w <###> <url> (how many columns wide. defauls to 100)
 ```
 ```
 ansi <url> (convert an <url> to ansi shader blocks using 99 color palette)
 ansi --16 <url> (convert <url> to ansi shader blocks using 16 color palette)
-ansi --w <###> (how many columns wide. defauls to 80)
+ansi --w <###> <url> (how many columns wide. defauls to 80)
 ```
 Speed Presets. Defaults to slowest. It's actually pretty fast.
 ```
