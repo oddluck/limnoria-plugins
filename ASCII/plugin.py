@@ -594,11 +594,12 @@ class ASCII(callbacks.Plugin):
         if url.startswith("https://paste.ee/p/"):
             url = re.sub("https://paste.ee/p/", "https://paste.ee/r/", url)
         file = requests.get(url)
-        if "<!DOCTYPE html>" in file.text.lstrip().splitlines()[:10]:
+        file = file.text.lstrip().splitlines()
+        if "<!DOCTYPE html>" in file[:10]:
             irc.reply("Error: ansi2irc requires a text file as input.", private=False, notice=False)
             return
         elif url.endswith(".txt") or url.startswith("https://pastebin.com/raw/") or url.startswith("https://paste.ee/r/"):
-            for line in file.text.splitlines():
+            for line in file:
                 if line.strip() and not self.stopped[msg.args[0]]:
                     time.sleep(delay)
                     irc.reply(line, prefixNick = False, noLengthCheck=True, private=False, notice=False)
