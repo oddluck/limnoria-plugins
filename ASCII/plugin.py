@@ -799,7 +799,7 @@ class ASCII(callbacks.Plugin):
             return
         paste = ""
         self.stopped[msg.args[0]] = False
-        output = output.decode().replace('\r\r\n', '\r\n')     
+        output = output.decode().replace('\r\r\n', '\r\n')
         for line in output.splitlines():
             line = re.sub('\x03\x03\s*', '\x0F ', line)
             line = re.sub('\x0F\s*$', '', line)
