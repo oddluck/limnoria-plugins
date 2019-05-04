@@ -802,7 +802,7 @@ class ASCII(callbacks.Plugin):
         output = output.decode().replace('\r\r\n', '\r\n')
         for line in output.splitlines():
             line = re.sub('\x03\x03\s*', '\x0F ', line)
-            line = re.sub('\x0F\s*$', '', line)
+            line = re.sub('\x0F\s*\x03$', '', line)
             if self.registryValue('pasteEnable', msg.args[0]):
                 paste += line + "\n"
             if not line.strip() and not self.stopped[msg.args[0]]:
