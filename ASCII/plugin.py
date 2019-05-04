@@ -760,7 +760,6 @@ class ASCII(callbacks.Plugin):
             irc.reply("Unexpected file type or link format", private=False, notice=False)
     p2u = wrap(p2u, [getopts({'b':'int', 'f':'text', 'p':'text', 's':'int', 't':'int', 'w':'int', 'delay':'float'}), ('text')])
 
-
     def tdf(self, irc, msg, args, optlist, text):
         """[--f] [--j] [--w] [--e] [--r] [--delay] <text>
         tdfiglet. https://github.com/tat3r/tdfiglet
@@ -802,7 +801,7 @@ class ASCII(callbacks.Plugin):
         self.stopped[msg.args[0]] = False
         output = output.decode().replace('\r\r\n', '\r\n').replace('\x03\x03', '')
         for line in output.splitlines():
-            line = re.sub('\x03$', '', line)
+            line = re.sub(' \x03$', '', line)
             if self.registryValue('pasteEnable', msg.args[0]):
                 paste += line + "\n"
             if not line.strip() and not self.stopped[msg.args[0]]:
