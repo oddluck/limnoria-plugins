@@ -768,7 +768,7 @@ class ASCII(callbacks.Plugin):
         opts = ''
         if 'f' in optlist:
             f = optlist.get('f')
-            opts += '-f {0} '.format(f)
+            opts += '-f {0} '.format(f.lower())
         else:
             opts += '-r '
         if 'j' in optlist:
@@ -889,7 +889,7 @@ class ASCII(callbacks.Plugin):
         """
         reply = ", ".join(sorted(os.listdir("/usr/local/share/tdfiglet/fonts/")))
         irc.reply("http://www.roysac.com/thedrawfonts-tdf.html", prefixNick=False, private=True, notice=True)
-        irc.reply(reply, prefixNick=False, private=True, notice=True)
+        irc.reply(reply, prefixNick=False)
     fonts = wrap(fonts)
     
     def cq(self, irc, msg, args):
