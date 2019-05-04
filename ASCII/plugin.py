@@ -801,7 +801,7 @@ class ASCII(callbacks.Plugin):
         self.stopped[msg.args[0]] = False
         output = output.decode().replace('\r\r\n', '\r\n').replace('\x03\x03', '')
         for line in output.splitlines():
-            line = re.sub(' \x03$', '', line)
+            line = re.sub('\x03$', '', line)
             if self.registryValue('pasteEnable', msg.args[0]):
                 paste += line + "\n"
             if not line.strip() and not self.stopped[msg.args[0]]:
