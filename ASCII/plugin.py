@@ -129,22 +129,22 @@ class ASCII(callbacks.Plugin):
             (89.8837, 0.0048, -0.0094):97,
             (100.0, 0.0053, -0.0104):98}
         self.colors16 = {
-            (211, 215, 207):'00',
-            (46, 52, 54):'01',
-            (52, 101, 164):'02',
-            (78, 154, 6):'03',
-            (204, 0, 0):'04',
-            (143, 57, 2):'05',
-            (92, 53, 102):'06',
-            (206, 92, 0):'07',
-            (255, 255, 0):'08',
-            (115, 210, 22):'09',
-            (17, 168, 121):'10',
-            (88, 161, 157):'11',
-            (87, 121, 158):'12',
-            (160, 67, 101):'13',
-            (85, 87, 83): '14',
-            (136, 137, 133):'15'}
+            (85.4811, -2.7938, 3.458):'00',
+            (21.2194, -2.0529, -2.139):'01',
+            (42.3349, 4.648, -38.8664):'02',
+            (56.8252, -45.329, 58.1352):'03',
+            (42.5172, 67.7098, 56.8158):'04',
+            (35.5382, 34.1518, 45.9469):'05',
+            (28.8526, 26.5659, -21.8027):'06',
+            (52.7036, 41.5535, 61.8617):'07',
+            (97.1382, -21.5559, 94.4825):'08',
+            (75.9439, -54.8907, 72.1325):'09',
+            (61.2247, -47.4179, 14.2906):'10',
+            (61.6532, -23.7895, -5.0286):'11',
+            (49.7012, -1.8169, -23.6763):'12',
+            (41.8876, 42.0835, -0.4542):'13',
+            (36.6913, -1.6453, 2.0378): '14',
+            (56.8986, -1.1458, 2.0047):'15'}
 
     def doPrivmsg(self, irc, msg):
         channel = msg.args[0]
@@ -214,7 +214,7 @@ class ASCII(callbacks.Plugin):
         if self.colors == 16:
             colors = list(self.colors16.keys())
             if pixel not in self.matches16:
-                closest_colors = sorted(colors, key=lambda color: self.distance(self.rgb2lab(color), self.rgb2lab(pixel), speed))
+                closest_colors = sorted(colors, key=lambda color: self.distance(color, self.rgb2lab(pixel), speed))
                 closest_color = closest_colors[0]
                 self.matches16[pixel] = self.colors16[closest_color]
             return self.matches16[pixel]
@@ -594,7 +594,7 @@ class ASCII(callbacks.Plugin):
         if url.startswith("https://paste.ee/p/"):
             url = re.sub("https://paste.ee/p/", "https://paste.ee/r/", url)
         file = requests.get(url)
-        if "<!DOCTYPE html>" in file.text:
+        if "<!DOCTYPE html>" in file.text.splitlines()[:10]:
             irc.reply("Error: ansi2irc requires a text file as input.", private=False, notice=False)
             return
         elif url.endswith(".txt") or url.startswith("https://pastebin.com/raw/") or url.startswith("https://paste.ee/r/"):
@@ -636,7 +636,7 @@ class ASCII(callbacks.Plugin):
             delay = self.registryValue('delay', msg.args[0])
         try:
             file = requests.get(url)
-            if "<!DOCTYPE html>" in file.text:
+            if "<!DOCTYPE html>" in file.text.splitlines()[:10]:
                 irc.reply("Error: ansi2irc requires a text file as input.", private=False, notice=False)
                 return
             try:
