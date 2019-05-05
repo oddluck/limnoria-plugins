@@ -884,6 +884,76 @@ class ASCII(callbacks.Plugin):
                 return
     wttr = wrap(wttr, [getopts({'delay':'float', '16':'', '99':''}), ('text')])
 
+    def rate(self, irc, msg, args, optlist, coin):
+        """[--16] [--99] [coin]
+        Crypto exchange rate info from rate.sx http://rate.sx/:help
+        """
+        optlist = dict(optlist)
+        if 'delay' in optlist:
+            delay = optlist.get('delay')
+        else:
+            delay = self.registryValue('delay', msg.args[0])
+        if '16' in optlist:
+            self.colors = 16
+            speed = 'slower'
+        elif '99' in optlist:
+            self.colors = 83
+            speed = 'slower'
+        else:
+            self.colors = 83
+            speed = 'slower'
+        if not coin:
+            coin = ''
+        self.matches = {}
+        self.matches16 = {}
+        file = requests.get("http://rate.sx/{0}".format(coin))
+        output = file.text
+        output = output.replace('\x1b[0m', '\x0F')
+        output = output.replace('\x1b[2m', '')
+        output = output.replace('\x1b(B\x1b[m', '')
+        output = output.replace('\x1b[47m\x1b[30m', '\x031,0')
+        output = output.replace('\x1b[30m', '\x0301')
+        output = output.replace('\x1b[31m', '\x0304')
+        output = output.replace('\x1b[32m', '\x0309')
+        output = output.replace('\x1b[33m', '\x0308')
+        output = output.replace('\x1b[34m', '\x0312')
+        output = output.replace('\x1b[35m', '\x0306')
+        output = output.replace('\x1b[36m', '\x0311')
+        output = output.replace('\x1b[37m', '\x0300')
+        output = output.replace('\x1b[100;30m', '\x0301')
+        for i in range(0,99):
+            i = '%02d' % i
+            output = re.sub('\x1b\[38;5;{0}m'.format(i), '\x03{0}'.format(self.getAverageC(x256.to_rgb(int(i)), speed)), output)
+        for i in range(100,255):
+            output = re.sub('\x1b\[38;5;{0}m'.format(i), '\x03{0}'.format(self.getAverageC(x256.to_rgb(int(i)), speed)), output)
+        paste = ""
+        self.stopped[msg.args[0]] = False
+        for line in output.splitlines():
+            line = line.strip('\x0F')
+            line = re.sub('┐$', '────────┐', line)
+            line = re.sub('┤$', '────────┤', line)
+            line = re.sub('┘$', '────────┘', line)
+            line = re.sub('\(1H\)\x0F\s+│$', '\x0F               │', line)
+            if self.registryValue('pasteEnable', msg.args[0]):
+                paste += line + "\n"
+            if not line.strip() and not self.stopped[msg.args[0]]:
+                time.sleep(delay)
+                irc.reply('\xa0', prefixNick = False, noLengthCheck=True, private=False, notice=False)
+            elif line.strip() and "Follow @igor_chubin" not in line:
+                time.sleep(delay)
+                irc.reply(line, prefixNick = False, noLengthCheck=True, private=False, notice=False)
+        if self.registryValue('pasteEnable', msg.args[0]):
+            try:
+                apikey = self.registryValue('pasteAPI')
+                payload = {'description':coin,'sections':[{'contents':paste}]}
+                headers = {'X-Auth-Token':apikey}
+                post_response = requests.post(url='https://api.paste.ee/v1/pastes', json=payload, headers=headers)
+                response = post_response.json()
+                irc.reply(response['link'].replace('/p/', '/r/'), private=False, notice=False)
+            except:
+                return
+    rate = wrap(rate, [getopts({'delay':'float', '16':'', '99':''}), optional('text')])
+
     def fonts(self, irc, msg, args):
         """
         List fonts in the tdfiglet font directory.
