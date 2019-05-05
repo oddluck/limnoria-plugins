@@ -933,7 +933,7 @@ class ASCII(callbacks.Plugin):
             line = re.sub('┐$', '────────┐', line)
             line = re.sub('┤$', '────────┤', line)
             line = re.sub('┘$', '────────┘', line)
-            line = re.sub('\(1H\)\x0F\s+│$', '\x0F               │', line)
+            line = re.sub('\(1H\)\x0F\s+│$', '(1H)\x0F           │', line)
             if self.registryValue('pasteEnable', msg.args[0]):
                 paste += line + "\n"
             if not line.strip() and not self.stopped[msg.args[0]]:
