@@ -312,13 +312,13 @@ class ASCII(callbacks.Plugin):
         else:
             cols = 100
         if 'invert' in optlist:
-            gscale = "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\|()1{}[]?-_+~<>i!lI;:,\"^`'."
+            gscale = "$@B%&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\|(){}[]?-_+~<>i!lI;:\"^`'."
         elif 'chars' in optlist:
             gscale = optlist.get('chars')
             if not gscale.strip():
                 gscale = '\xa0'
         else:
-            gscale = ".'`^\",:;Il!i><~+_-?][}{1)(|\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$"
+            gscale = ".'`^\":;Il!i><~+_-?][}{)(|\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&%B@$"
         if 'delay' in optlist:
             delay = optlist.get('delay')
         else:
@@ -343,6 +343,10 @@ class ASCII(callbacks.Plugin):
         # open image and convert to grayscale
         image = Image.open(filename).convert('L')
         image2 = Image.open(filename)
+        if image2.mode == 'RGBA':
+            image2 = Image.alpha_composite(Image.new("RGBA", image2.size), image2)
+        if image2.mode != 'RGB':
+            image2 = image2.convert('RGB')
         try:
             os.remove(filename)
         except:
@@ -358,8 +362,6 @@ class ASCII(callbacks.Plugin):
         rows = int(H/h)
         image = ImageOps.autocontrast(image)
         image = image.resize((cols, rows), Image.LANCZOS)
-        image2 = image2.convert('RGBA')
-        image2 = image2.convert('RGB')
         image2 = ImageOps.autocontrast(image2)
         image2 = image2.resize((cols, rows), Image.LANCZOS)
         if 'dither' in optlist:
