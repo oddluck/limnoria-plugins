@@ -886,7 +886,7 @@ class ASCII(callbacks.Plugin):
 
     def rate(self, irc, msg, args, optlist, coin):
         """[--16] [--99] [coin]
-        Crypto exchange rate info from rate.sx http://rate.sx/:help
+        Crypto exchange rate info from rate.sx. http://rate.sx/:help
         """
         optlist = dict(optlist)
         if 'delay' in optlist:
@@ -910,7 +910,6 @@ class ASCII(callbacks.Plugin):
         output = file.text
         output = output.replace('\x1b[0m', '\x0F')
         output = output.replace('\x1b[2m', '')
-        output = output.replace('\x1b(B\x1b[m', '')
         output = output.replace('\x1b[47m\x1b[30m', '\x031,0')
         output = output.replace('\x1b[30m', '\x0301')
         output = output.replace('\x1b[31m', '\x0304')
@@ -920,12 +919,13 @@ class ASCII(callbacks.Plugin):
         output = output.replace('\x1b[35m', '\x0306')
         output = output.replace('\x1b[36m', '\x0311')
         output = output.replace('\x1b[37m', '\x0300')
-        output = output.replace('\x1b[100;30m', '\x0301')
-        for i in range(0,99):
-            i = '%02d' % i
-            output = re.sub('\x1b\[38;5;{0}m'.format(i), '\x03{0}'.format(self.getAverageC(x256.to_rgb(int(i)), speed)), output)
-        for i in range(100,255):
-            output = re.sub('\x1b\[38;5;{0}m'.format(i), '\x03{0}'.format(self.getAverageC(x256.to_rgb(int(i)), speed)), output)
+        if coin.strip():
+            output = output.replace('\x1b(B\x1b[m', '')
+            for i in range(0,99):
+                i = '%02d' % i
+                output = re.sub('\x1b\[38;5;{0}m'.format(i), '\x03{0}'.format(self.getAverageC(x256.to_rgb(int(i)), speed)), output)
+            for i in range(100,255):
+                output = re.sub('\x1b\[38;5;{0}m'.format(i), '\x03{0}'.format(self.getAverageC(x256.to_rgb(int(i)), speed)), output)
         paste = ""
         self.stopped[msg.args[0]] = False
         for line in output.splitlines():
@@ -962,7 +962,7 @@ class ASCII(callbacks.Plugin):
         irc.reply("http://www.roysac.com/thedrawfonts-tdf.html", prefixNick=False)
         irc.reply(reply, prefixNick=False)
     fonts = wrap(fonts)
-    
+
     def cq(self, irc, msg, args):
         """
         Stop the scroll.
