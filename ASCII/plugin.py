@@ -312,13 +312,13 @@ class ASCII(callbacks.Plugin):
         else:
             cols = 100
         if 'invert' in optlist:
-            gscale = "$@B%&WM#*oahkbdpqwmZOQLCJUYXzcvunxrjft/\|(){}[]?-_+~<>i!lI;:\"^`'."
+            gscale = "BBQQQRMggDZEdbPPqKXSVIkUuujJsYLvvvvvrrrriiiiiii......."
         elif 'chars' in optlist:
             gscale = optlist.get('chars')
             if not gscale.strip():
                 gscale = '\xa0'
         else:
-            gscale = ".'`^\":;Il!i><~+_-?][}{)(|\/tfjrxnuvczXYUJCLQOZmwqpdbkhao*#MW&%B@$"
+            gscale = ".......iiiiiiirrrrvvvvvLYsJjuuUkIVSXKqPPbdEZDggMRQQQBB"
         if 'delay' in optlist:
             delay = optlist.get('delay')
         else:
