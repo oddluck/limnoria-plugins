@@ -865,11 +865,12 @@ class ASCII(callbacks.Plugin):
             output = re.sub('\x1b\[38;5;{0}m|\[38;5;{0};\d+m'.format(i), '\x03{0}'.format(self.getAverageC(x256.to_rgb(int(i)), speed)), output)
         output = output.replace('\x1b[0m', '\x0F')
         output = re.sub('\x1b|\x9b|\[\d+m', '', output)
-        output = output.replace('\x0F\x03', '\x03')
         for i in range(0, 99):
             if i < 17:
                 i = '%02d' % i
             output = re.sub('(?<=\x03{0}.)\x03{0}'.format(i), '', output)
+        output = re.sub('\x0F(\s*)\x03', '\g<1>\x03', output)
+        output = re.sub('\x03\d\d(\s+)\x03\d\d', '\g<1>', output)
         paste = ""
         self.stopped[msg.args[0]] = False
         for line in output.splitlines():
@@ -931,6 +932,8 @@ class ASCII(callbacks.Plugin):
         output = output.replace('\x1b[35m', '\x0306')
         output = output.replace('\x1b[36m', '\x0311')
         output = output.replace('\x1b[37m', '\x0300')
+        output = re.sub('\x0F(\s*)\x03', '\g<1>\x03', output)
+        output = re.sub('\x03\d\d(\s*)\x03', '\g<1>\x03', output)
         if coin.strip():
             output = output.replace('\x1b(B\x1b[m', '')
             for i in range(0,99):
@@ -946,6 +949,7 @@ class ASCII(callbacks.Plugin):
             line = re.sub('┤$', '────────┤', line)
             line = re.sub('┘$', '────────┘', line)
             line = re.sub('\(1H\)\x0F\s+│$', '(1H)\x0F           │', line)
+            line = re.sub('^│\x0F', '│', line)
             if self.registryValue('pasteEnable', msg.args[0]):
                 paste += line + "\n"
             if not line.strip() and not self.stopped[msg.args[0]]:
