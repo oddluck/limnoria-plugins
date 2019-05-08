@@ -897,8 +897,8 @@ class ASCII(callbacks.Plugin):
     wttr = wrap(wttr, [getopts({'delay':'float', '16':'', '99':''}), ('text')])
 
     def rate(self, irc, msg, args, optlist, coin):
-        """[--16] [--99] [coin]
-        Crypto exchange rate info from rate.sx. http://rate.sx/:help
+        """[--16] [--sub <text>] [coin]
+        Crypto exchange rate info from rate.sx. http://rate.sx/:help. Use --sub to set subdomain e.g. eur, btc, etc.
         """
         optlist = dict(optlist)
         if 'delay' in optlist:
@@ -914,11 +914,15 @@ class ASCII(callbacks.Plugin):
         else:
             self.colors = 83
             speed = 'slower'
+        if 'sub' in optlist:
+            sub = optlist.get('sub')
+        else:
+            sub = 'usd'
         if not coin:
             coin = ''
         self.matches = {}
         self.matches16 = {}
-        file = requests.get("http://rate.sx/{0}".format(coin))
+        file = requests.get("http://{0}.rate.sx/{1}".format(sub, coin))
         output = file.text
         output = output.replace('\x1b[0m', '\x0F')
         output = output.replace('\x1b[2m', '')
@@ -967,7 +971,7 @@ class ASCII(callbacks.Plugin):
                 irc.reply(response['link'].replace('/p/', '/r/'), private=False, notice=False)
             except:
                 return
-    rate = wrap(rate, [getopts({'delay':'float', '16':'', '99':''}), optional('text')])
+    rate = wrap(rate, [getopts({'delay':'float', '16':'', '99':'', 'sub':'text'}), optional('text')])
 
     def news(self, irc, msg, args, optlist, topic):
         """[--16] [--99] [topic]
