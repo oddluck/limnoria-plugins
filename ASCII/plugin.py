@@ -44,6 +44,7 @@ class ASCII(callbacks.Plugin):
         self.colors = 83
         self.char = 0
         self.stopped = {}
+        self.rgbColors = [(255,255,255), (0,0,0), (0,0,127), (0,147,0), (255,0,0), (127,0,0), (156,0,156), (252,127,0), (255,255,0), (0,252,0), (0,147,147), (0,255,255), (0,0,252), (255,0,255), (127,127,127), (210,210,210), (71,0,0), (71,33,0), (71,71,0), (50,71,0), (0,71,0), (0,71,44), (0,71,71), (0,39,71), (0,0,71), (46,0,71), (71,0,71), (71,0,42), (116,0,0), (116,58,0), (116,116,0), (81,116,0), (0,116,0), (0,116,73), (0,116,116), (0,64,116), (0,0,116), (75,0,116), (116,0,116), (116,0,69), (181,0,0), (181,99,0), (181,181,0), (125,181,0), (0,181,0), (0,181,113), (0,181,181), (0,99,181), (0,0,181), (117,0,181), (181,0,181), (181,0,107), (255,0,0), (255,140,0), (255,255,0), (178,255,0), (0,255,0), (0,255,160), (0,255,255), (0,140,255), (0,0,255), (165,0,255), (255,0,255), (255,0,152), (255,89,89), (255,180,89), (255,255,113), (207,255,96), (111,255,111), (101,255,201), (109,255,255), (89,180,255), (89,89,255), (196,89,255), (255,102,255), (255,89,188), (255,156,156), (255,211,156), (255,255,156), (226,255,156), (156,255,156), (156,255,219), (156,255,255), (156,211,255), (156,156,255), (220,156,255), (255,156,255), (255,148,211), (0,0,0), (19,19,19), (40,40,40), (54,54,54), (77,77,77), (101,101,101), (129,129,129), (159,159,159), (188,188,188), (226,226,226), (255,255,255)]
         self.ircColors= {
             (11.5497, 31.8768, 18.1739):16,
             (17.5866, 15.7066, 25.9892):17,
@@ -283,10 +284,10 @@ class ASCII(callbacks.Plugin):
         return delta_e
 
     def img(self, irc, msg, args, optlist, url):
-        """[--w <width>] [--16] [--bg <int>] [--chars <text>] [--invert] <url>
-        Converts image to ASCII art. --16 for 16 colors. --chars <YOURTEXTHERE> 
-        to color text of your choice. --bg <irc color number> set a background color. 
-        --invert to invert the default luma-based character ramp
+        """[--w <width>] [--16] [--invert] [--chars <text>] [--ramp <text>] [--bg <int>] <url>
+        Converts image to ASCII art. --16 for 16 colors. --invert inverts the default luma-based character ramp.
+        --chars <YOURTEXT> to color text of your choice. --ramp <TEXT> set a custom luma-based character ramp.
+        --bg <0-98> set a background color using irc colors. Images with transparency will be composited onto bg color.
         """
         optlist = dict(optlist)
         if '16' in optlist:
@@ -315,8 +316,8 @@ class ASCII(callbacks.Plugin):
             gscale = "BBQQQRMggDZEdbPPqKXSVIkUuujJsYLvvvvvrrrriiiiiii......."
         elif 'chars' in optlist:
             gscale = optlist.get('chars')
-            if not gscale.strip():
-                gscale = '\xa0'
+        elif 'ramp' in optlist:
+            gscale = optlist.get('ramp')
         else:
             gscale = ".......iiiiiiirrrrvvvvvLYsJjuuUkIVSXKqPPbdEZDggMRQQQBB"
         if 'delay' in optlist:
@@ -325,6 +326,12 @@ class ASCII(callbacks.Plugin):
             delay = self.registryValue('delay', msg.args[0])
         if 'bg' in optlist:
             bg = optlist.get('bg')
+        else:
+            bg = 1
+        if 'chars' not in optlist and 'ramp' not in optlist and bg == 0 or bg == 98:
+            gscale = "BBQQQRMggDZEdbPPqKXSVIkUuujJsYLvvvvvrrrriiiiiii......."
+        if not gscale.strip():
+            gscale = '\xa0'
         path = os.path.dirname(os.path.abspath(__file__))
         filepath = "{0}/tmp".format(path)
         filename = "{0}/{1}".format(filepath, url.split('/')[-1])
@@ -344,7 +351,7 @@ class ASCII(callbacks.Plugin):
         image = Image.open(filename).convert('L')
         image2 = Image.open(filename)
         if image2.mode == 'RGBA':
-            image2 = Image.alpha_composite(Image.new("RGBA", image2.size), image2)
+            image2 = Image.alpha_composite(Image.new("RGBA", image2.size, self.rgbColors[bg] + (255,)), image2)
         if image2.mode != 'RGB':
             image2 = image2.convert('RGB')
         try:
@@ -406,7 +413,10 @@ class ASCII(callbacks.Plugin):
                     old_color = color
                     # append ascii char to string
                     if 'bg' not in optlist:
-                        aimg[j] += "\x03{0}{1}".format(color, gsval)
+                        if gsval != '\xa0':
+                            aimg[j] += "\x03{0}{1}".format(color, gsval)
+                        else:
+                            aimg[j] += "\x030,{0} ".format(int(color))
                     else:
                         if gsval != '\xa0':
                             aimg[j] += "\x03{0},{1}{2}".format(int(color), int(bg), gsval)
@@ -439,7 +449,7 @@ class ASCII(callbacks.Plugin):
                 return
                 #irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
         self.char = 0
-    img = wrap(img,[getopts({'w':'int', 'invert':'', 'fast':'', 'faster':'', 'slow':'', 'slower':'', 'slowest':'', 'insane':'', '16':'', 'delay':'float', 'dither':'', 'chars':'text','bg':'int'}), ('text')])
+    img = wrap(img,[getopts({'w':'int', 'invert':'', 'fast':'', 'faster':'', 'slow':'', 'slower':'', 'slowest':'', 'insane':'', '16':'', 'delay':'float', 'dither':'', 'chars':'text', 'bg':'int', 'ramp':'text'}), ('text')])
 
     def ansi(self, irc, msg, args, optlist, url):
         """[--w <width>] [--16] <url>
