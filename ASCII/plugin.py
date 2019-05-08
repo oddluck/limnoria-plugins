@@ -973,62 +973,6 @@ class ASCII(callbacks.Plugin):
                 return
     rate = wrap(rate, [getopts({'delay':'float', '16':'', '99':'', 'sub':'text'}), optional('text')])
 
-    def news(self, irc, msg, args, optlist, topic):
-        """[--16] [--99] [topic]
-        Return topic or top headlines from getnews.tech
-        """
-        optlist = dict(optlist)
-        if 'delay' in optlist:
-            delay = optlist.get('delay')
-        else:
-            delay = self.registryValue('delay', msg.args[0])
-        if '16' in optlist:
-            self.colors = 16
-            speed = 'slower'
-        elif '99' in optlist:
-            self.colors = 83
-            speed = 'slower'
-        else:
-            self.colors = 83
-            speed = 'slower'
-        if not topic:
-            coin = ''
-        self.matches = {}
-        self.matches16 = {}
-        output = pexpect.run('curl getnews.tech/{0}'.format(topic)).decode()
-        output = output.replace('\x1b[30m', '\x0301')
-        output = output.replace('\x1b[31m', '\x0304')
-        output = output.replace('\x1b[32m', '\x0309')
-        output = output.replace('\x1b[33m', '\x0308')
-        output = output.replace('\x1b[34m', '\x0312')
-        output = output.replace('\x1b[35m', '\x0306')
-        output = output.replace('\x1b[36m', '\x0311')
-        output = output.replace('\x1b[37m', '\x0300')
-        output = output.replace('\x1b[90m', '\x0F')
-        output = re.sub('\x1b\[\d+m', '', output)
-        paste = ""
-        self.stopped[msg.args[0]] = False
-        for line in output.splitlines():
-            if self.registryValue('pasteEnable', msg.args[0]):
-                paste += line + "\n"
-            if not line.strip() and not self.stopped[msg.args[0]]:
-                time.sleep(delay)
-                irc.reply('\xa0', prefixNick = False, noLengthCheck=True, private=False, notice=False)
-            elif line.strip() and not self.stopped[msg.args[0]] and "Follow @igor_chubin" not in line:
-                time.sleep(delay)
-                irc.reply(line, prefixNick = False, noLengthCheck=True, private=False, notice=False)
-        if self.registryValue('pasteEnable', msg.args[0]):
-            try:
-                apikey = self.registryValue('pasteAPI')
-                payload = {'description':topic,'sections':[{'contents':paste}]}
-                headers = {'X-Auth-Token':apikey}
-                post_response = requests.post(url='https://api.paste.ee/v1/pastes', json=payload, headers=headers)
-                response = post_response.json()
-                irc.reply(response['link'].replace('/p/', '/r/'), private=False, notice=False)
-            except:
-                return
-    news = wrap(news, [getopts({'delay':'float', '16':'', '99':''}), optional('text')])
-
     def fonts(self, irc, msg, args):
         """
         List fonts in the tdfiglet font directory.
