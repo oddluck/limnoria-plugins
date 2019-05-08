@@ -31,6 +31,15 @@ wttr --16 <location>/moon
 ```
 Use --16 for 16 colors. Defaults to 99 color extended.
 
+ASCII crypto exchange rates from rate.sx
+```
+rate (get rates in united states dollars)
+rate --sub <currency> (get rates in EUR, USD, BTC, etc.)
+rate <coin> (get a graph showing rate fluctuation)
+rate --sub <currency> <coin> (get graphs with desired currency)
+```
+Use --16 for 16 colors. Defaults to 99 color extended
+
 Support for the Paste.ee API to save art conversions for later use.
 Get an API key from https://paste.ee/account/api (FREE. Not required to use plugin, disabled by default).
 ```
@@ -53,6 +62,7 @@ img <url> (convert an image <url> to ascii art using 99 color palette)
 img --16 <url> (convert image to ascii art using 16 color palette)
 img --invert <url> (invert the ascii luminance character palette)
 img --chars "TEXT" <url> (convert image to colorized custom text)
+img --ramp "TEXT" <url> (use a custom luma ramp e.g. " .-:=+x#%@")
 img --bg <0-99> --chars " " <url> (convert image to colorized space block)
 img --bg <0-99> <url> (set a background color)
 img --w <###> <url> (how many columns wide. defauls to 100)
