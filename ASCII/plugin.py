@@ -870,7 +870,6 @@ class ASCII(callbacks.Plugin):
                 i = '%02d' % i
             output = re.sub('(?<=\x03{0}.)\x03{0}'.format(i), '', output)
         output = re.sub('\x0F(\s*)\x03', '\g<1>\x03', output)
-        output = re.sub('\x03\d\d(\s+)\x03\d\d', '\g<1>', output)
         paste = ""
         self.stopped[msg.args[0]] = False
         for line in output.splitlines():
