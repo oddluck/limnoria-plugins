@@ -1075,6 +1075,28 @@ class ASCII(callbacks.Plugin):
             except:
                 return
     cow = wrap(cow, [getopts({'delay':'float', 'type':'text'}), ('text')])
+    
+    def fortune(self, irc, msg, args, optlist):
+        """
+        Returns a random ASCII fortune
+        """
+        optlist = dict(optlist)
+        if 'delay' in optlist:
+            delay = optlist.get('delay')
+        else:
+            delay = self.registryValue('delay', msg.args[0])
+        data = open("{0}/fortune.txt".format(os.path.dirname(os.path.abspath(__file__))))
+        text = data.read()
+        reply = text.split('%')
+        fortune = random.randrange(0, len(reply))
+        for line in reply[fortune].splitlines():
+            if not line.strip() and not self.stopped[msg.args[0]]:
+                time.sleep(delay)
+                irc.reply('\xa0', prefixNick = False, noLengthCheck=True, private=False, notice=False)
+            elif line.strip() and not self.stopped[msg.args[0]] and "Follow @igor_chubin" not in line:
+                time.sleep(delay)
+                irc.reply(line, prefixNick = False, noLengthCheck=True, private=False, notice=False)
+    fortune = wrap(fortune, [getopts({'delay':'float'})])
 
     def fonts(self, irc, msg, args, optlist):
         """[--toilet]
