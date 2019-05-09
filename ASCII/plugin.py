@@ -1040,17 +1040,22 @@ class ASCII(callbacks.Plugin):
     rate = wrap(rate, [getopts({'delay':'float', '16':'', '99':'', 'sub':'text'}), optional('text')])
     
     def cow(self, irc, msg, args, optlist, text):
-        """<text>
-        Cowsay.
+        """[--delay] [--type <character>] <text>
+        Cowsay
         """
+        optlist = dict(optlist)
         if 'delay' in optlist:
             delay = optlist.get('delay')
         else:
             delay = self.registryValue('delay', msg.args[0])
-        data = requests.get("http://cowsay.morecode.org/say?message={0}&format=json".format(text)).json()
+        if 'type' in optlist:
+            type = optlist.get('type')
+        else:
+            type = 'default'
+        data = requests.get("https://easyapis.soue.tk/api/cowsay?text={0}&type={1}".format(text, type))
         self.stopped[msg.args[0]] = False
         paste = ''
-        for line in data['cow'].splitlines():
+        for line in data.text.splitlines():
             if self.registryValue('pasteEnable', msg.args[0]):
                 paste += line + "\n"
             if not line.strip() and not self.stopped[msg.args[0]]:
@@ -1069,7 +1074,7 @@ class ASCII(callbacks.Plugin):
                 irc.reply(response['link'].replace('/p/', '/r/'), private=False, notice=False)
             except:
                 return
-    cow = wrap(cow, [getopts({'delay':'float'}), ('text')])
+    cow = wrap(cow, [getopts({'delay':'float', 'type':'text'}), ('text')])
 
     def fonts(self, irc, msg, args, optlist):
         """[--toilet]
