@@ -1038,6 +1038,38 @@ class ASCII(callbacks.Plugin):
             except:
                 return
     rate = wrap(rate, [getopts({'delay':'float', '16':'', '99':'', 'sub':'text'}), optional('text')])
+    
+    def cow(self, irc, msg, args, optlist, text):
+        """<text>
+        Cowsay.
+        """
+        if 'delay' in optlist:
+            delay = optlist.get('delay')
+        else:
+            delay = self.registryValue('delay', msg.args[0])
+        data = requests.get("http://cowsay.morecode.org/say?message={0}&format=json".format(text)).json()
+        self.stopped[msg.args[0]] = False
+        paste = ''
+        for line in data['cow'].splitlines():
+            if self.registryValue('pasteEnable', msg.args[0]):
+                paste += line + "\n"
+            if not line.strip() and not self.stopped[msg.args[0]]:
+                time.sleep(delay)
+                irc.reply('\xa0', prefixNick = False, noLengthCheck=True, private=False, notice=False)
+            elif line.strip() and not self.stopped[msg.args[0]] and "Follow @igor_chubin" not in line:
+                time.sleep(delay)
+                irc.reply(line, prefixNick = False, noLengthCheck=True, private=False, notice=False)
+        if self.registryValue('pasteEnable', msg.args[0]):
+            try:
+                apikey = self.registryValue('pasteAPI')
+                payload = {'description':text,'sections':[{'contents':paste}]}
+                headers = {'X-Auth-Token':apikey}
+                post_response = requests.post(url='https://api.paste.ee/v1/pastes', json=payload, headers=headers)
+                response = post_response.json()
+                irc.reply(response['link'].replace('/p/', '/r/'), private=False, notice=False)
+            except:
+                return
+    cow = wrap(cow, [getopts({'delay':'float'}), ('text')])
 
     def fonts(self, irc, msg, args, optlist):
         """[--toilet]
