@@ -1087,7 +1087,7 @@ class ASCII(callbacks.Plugin):
             delay = self.registryValue('delay', msg.args[0])
         data = open("{0}/fortune.txt".format(os.path.dirname(os.path.abspath(__file__))))
         text = data.read()
-        reply = re.split('^%', text)
+        reply = text.split('%\n')
         fortune = random.randrange(0, len(reply))
         for line in reply[fortune].splitlines():
             if not line.strip() and not self.stopped[msg.args[0]]:
