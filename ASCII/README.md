@@ -45,7 +45,7 @@ Return a random fortune entry from http://www.asciiartfarts.com/fortune.txt
 fortune
 ```
 
-Cowsay. Generate a cowsay ascii. choose character with --type.
+Cowsay. Generate a cowsay ascii. choose character with --type. https://easyapis.soue.tk/api/cowsay
 ```
 cow --type <type> <text> (make a cowsay message. type is optional. defaults to cow)
 ```
