@@ -837,6 +837,72 @@ class ASCII(callbacks.Plugin):
                 #irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
     tdf = wrap(tdf, [getopts({'f':'text', 'j':'text', 'w':'int', 'e':'text', 'r':'', 'delay':'float'}), ('text')])
 
+    def toilet(self, irc, msg, args, optlist, text):
+        """[--f fontname] [--F filter1,filter2,etc.] [--w] [--delay] <text>
+        Toilet. -f to select font. -F to select filters. Separate multiple filters with a comma.
+        """
+        optlist = dict(optlist)
+        opts = ''
+        if 'f' in optlist:
+            f = optlist.get('f')
+            opts += '-f {0} '.format(f)
+        if 'F' in optlist:
+            filter = optlist.get('F')         
+            if ',' in filter:
+                filter = filter.split(',')
+                for i in range(len(filter)):
+                    opts += '-F {0} '.format(filter[i])
+            else:
+                opts += '-F {0} '.format(filter)
+        if 'w' in optlist:
+            w = optlist.get('w')
+            opts += '-w {0} '.format(w)
+        elif 'W' in optlist:
+            opts += '-W '
+        else:
+            opts += '-w 80 '
+        if 's' in optlist:
+            opts += '-s '
+        elif 'k' in optlist:
+            opts += '-k '
+        elif 'o' in optlist:
+            opts += '-o '
+        elif 'S' in optlist:
+            opts += '-S '
+        if 'delay' in optlist:
+            delay = optlist.get('delay')
+        else:
+            delay = self.registryValue('delay', msg.args[0])
+        try:
+            output = pexpect.run('toilet --irc {0} {1}'.format(opts.strip(), text))
+        except:
+            irc.reply("Error. Have you installed toilet?", private=False, notice=False)
+            return
+        paste = ""
+        self.stopped[msg.args[0]] = False
+        output = output.decode().replace('\r\r\n', '\r\n')
+        for line in output.splitlines():
+            if self.registryValue('pasteEnable', msg.args[0]):
+                paste += line + "\n"
+            if not line.strip() and not self.stopped[msg.args[0]]:
+                time.sleep(delay)
+                irc.reply('\xa0', prefixNick = False, noLengthCheck=True, private=False, notice=False)
+            elif not self.stopped[msg.args[0]]:
+                time.sleep(delay)
+                irc.reply(line, prefixNick = False, noLengthCheck=True, private=False, notice=False)
+        if self.registryValue('pasteEnable', msg.args[0]):
+            try:
+                apikey = self.registryValue('pasteAPI')
+                payload = {'description':text,'sections':[{'contents':paste}]}
+                headers = {'X-Auth-Token':apikey}
+                post_response = requests.post(url='https://api.paste.ee/v1/pastes', json=payload, headers=headers)
+                response = post_response.json()
+                irc.reply(response['link'].replace('/p/', '/r/'), private=False, notice=False)
+            except:
+                return
+                #irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
+    toilet = wrap(toilet, [getopts({'f':'text', 'F':'text', 's':'', 'S':'', 'k':'', 'w':'int', 'W':'', 'o':'', 'delay':'float'}), ('text')])
+
     def wttr(self, irc, msg, args, optlist, location):
         """[--16] [--99] <location>
         ASCII weather report from wttr.in for <location>. --16 for 16 colors.
@@ -973,14 +1039,19 @@ class ASCII(callbacks.Plugin):
                 return
     rate = wrap(rate, [getopts({'delay':'float', '16':'', '99':'', 'sub':'text'}), optional('text')])
 
-    def fonts(self, irc, msg, args):
+    def fonts(self, irc, msg, args, optlist):
+        """[--toilet]
+        List figlets. Default list are tdf fonts. --toilet for toilet fonts
         """
-        List fonts in the tdfiglet font directory.
-        """
-        reply = ", ".join(sorted(os.listdir("/usr/local/share/tdfiglet/fonts/")))
-        irc.reply("http://www.roysac.com/thedrawfonts-tdf.html", prefixNick=False)
-        irc.reply(reply, prefixNick=False)
-    fonts = wrap(fonts)
+        optlist = dict(optlist)
+        if 'toilet' in optlist:
+            reply = ", ".join(sorted(os.listdir("/usr/share/figlet")))
+            irc.reply(reply, prefixNick=False)
+        else:
+            reply = ", ".join(sorted(os.listdir("/usr/local/share/tdfiglet/fonts/")))
+            irc.reply("http://www.roysac.com/thedrawfonts-tdf.html", prefixNick=False)
+            irc.reply(reply, prefixNick=False)
+    fonts = wrap(fonts, [getopts({'toilet':''})])
 
     def cq(self, irc, msg, args):
         """
