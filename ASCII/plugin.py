@@ -860,7 +860,7 @@ class ASCII(callbacks.Plugin):
         elif 'W' in optlist:
             opts += '-W '
         else:
-            opts += '-w 80 '
+            opts += '-w 100 '
         if 's' in optlist:
             opts += '-s '
         elif 'k' in optlist:
