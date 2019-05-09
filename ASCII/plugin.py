@@ -1078,7 +1078,7 @@ class ASCII(callbacks.Plugin):
     
     def fortune(self, irc, msg, args, optlist):
         """
-        Returns a random ASCII fortune
+        Returns a random ASCII from http://www.asciiartfarts.com/fortune.txt
         """
         optlist = dict(optlist)
         if 'delay' in optlist:
