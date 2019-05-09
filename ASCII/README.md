@@ -23,6 +23,13 @@ etc.
 ```
 Stop the scroll. cq command must be prefixed by a command character. This command can not be renamed.
 
+Support for the Paste.ee API to save art conversions for later use.
+Get an API key from https://paste.ee/account/api (FREE. Not required to use plugin, disabled by default).
+```
+config plugins.ascii.pasteAPI <PASTE.EE_API_KEY_HERE> (set paste.ee API key)
+config channel plugins.ascii.pasteEnable <True/False> (enable/disable paste.ee links)
+```
+
 ASCII Weather from wttr.in
 ```
 wttr <location>
@@ -48,13 +55,6 @@ fortune
 Cowsay. Generate a cowsay ascii. choose character with --type. https://easyapis.soue.tk/api/cowsay
 ```
 cow --type <type> <text> (make a cowsay message. type is optional. defaults to cow)
-```
-
-Support for the Paste.ee API to save art conversions for later use.
-Get an API key from https://paste.ee/account/api (FREE. Not required to use plugin, disabled by default).
-```
-config plugins.ascii.pasteAPI <PASTE.EE_API_KEY_HERE> (set paste.ee API key)
-config channel plugins.ascii.pasteEnable <True/False> (enable/disable paste.ee links)
 ```
 
 Text-to-ASCII Art (split lines with | ex. ascii|art for large fonts):
