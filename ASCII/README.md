@@ -40,6 +40,16 @@ rate --sub <currency> <coin> (get graphs with desired currency)
 ```
 Use --16 for 16 colors. Defaults to 99 color extended
 
+Return a random fortune entry from http://www.asciiartfarts.com/fortune.txt
+```
+fortune
+```
+
+Cowsay. Generate a cowsay ascii. choose character with --type.
+```
+cow --type <type> <text> (make a cowsay message. type is optional. defaults to cow)
+```
+
 Support for the Paste.ee API to save art conversions for later use.
 Get an API key from https://paste.ee/account/api (FREE. Not required to use plugin, disabled by default).
 ```
@@ -109,3 +119,12 @@ tdf [-f <font>] <text> (select font with -f <fontname>)
 fonts (list of figlet fonts)
 ```
 tdf command requires tdfiglet https://github.com/tat3r/tdfiglet (optional. disable command if not installing tdfiglet.)
+
+Toilet. Requires installation of toilet. sudo apt install toilet etc.
+```
+toilet -f <font> -F <filter1,filter2> <text> (do the text to toilet stuff)
+```
+get fonts. looks for fonts in /usr/share/figlet/
+```
+fonts --toilet
+```
