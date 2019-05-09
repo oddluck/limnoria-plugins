@@ -1085,11 +1085,10 @@ class ASCII(callbacks.Plugin):
             delay = optlist.get('delay')
         else:
             delay = self.registryValue('delay', msg.args[0])
-        data = open("{0}/fortune.txt".format(os.path.dirname(os.path.abspath(__file__))))
-        text = data.read()
-        reply = text.split('%\n')
-        fortune = random.randrange(0, len(reply))
-        for line in reply[fortune].splitlines():
+        data = requests.get("http://www.asciiartfarts.com/fortune.txt")
+        fortunes = data.text.split('%\n')
+        fortune = random.randrange(0, len(fortunes))
+        for line in fortunes[fortune].splitlines():
             if not line.strip() and not self.stopped[msg.args[0]]:
                 time.sleep(delay)
                 irc.reply('\xa0', prefixNick = False, noLengthCheck=True, private=False, notice=False)
@@ -1097,7 +1096,7 @@ class ASCII(callbacks.Plugin):
                 time.sleep(delay)
                 irc.reply(line, prefixNick = False, noLengthCheck=True, private=False, notice=False)
     fortune = wrap(fortune, [getopts({'delay':'float'})])
-
+    
     def fonts(self, irc, msg, args, optlist):
         """[--toilet]
         List figlets. Default list are tdf fonts. --toilet for toilet fonts
