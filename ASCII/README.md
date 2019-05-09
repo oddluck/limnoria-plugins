@@ -120,7 +120,7 @@ fonts (list of figlet fonts)
 ```
 tdf command requires tdfiglet https://github.com/tat3r/tdfiglet (optional. disable command if not installing tdfiglet.)
 
-Toilet. Requires installation of toilet. sudo apt install toilet etc.
+Toilet. Requires installation of toilet. sudo apt install toilet etc. (optional as usual)
 ```
 toilet -f <font> -F <filter1,filter2> <text> (do the text to toilet stuff)
 ```
