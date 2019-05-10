@@ -74,21 +74,17 @@ img --invert <url> (invert the ascii luminance character palette)
 img --chars "TEXT" <url> (convert image to colorized custom text)
 img --ramp "TEXT" <url> (use a custom luma ramp e.g. " .-:=+x#%@")
 img --bg <0-99> --chars " " <url> (convert image to colorized space block)
+img --ramp "░▒▓█" <url> (image to colorized shader blocks)
 img --bg <0-99> <url> (set a background color)
 img --w <###> <url> (how many columns wide. defauls to 100)
 ```
-```
-ansi <url> (convert an <url> to ansi shader blocks using 99 color palette)
-ansi --16 <url> (convert <url> to ansi shader blocks using 16 color palette)
-ansi --w <###> <url> (how many columns wide. defauls to 80)
-```
 Speed Presets. Defaults to slowest. It's actually pretty fast.
 ```
-img/ansi --faster <url> (use Euclidean color difference algorithm)
-img/ansi --fast <url> (use cie1976 color difference algorithm)
-img/ansi --slow <url> (use cie1994 color difference algorithm)
-img/ansi --slower <url> (use cieCMC color difference algorithm)
-img/ansi --slowest <url> (use cie2000 color difference algorithm)
+img --faster <url> (use Euclidean color difference algorithm)
+img --fast <url> (use cie1976 color difference algorithm)
+img --slow <url> (use cie1994 color difference algorithm)
+img --slower <url> (use cieCMC color difference algorithm)
+img --slowest <url> (use cie2000 color difference algorithm)
 ```
 Different presets will yeild slightly different results, try them if you want. Slowest (the default)
 is usually pretty good.
