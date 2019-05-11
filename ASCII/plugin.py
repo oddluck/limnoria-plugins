@@ -477,13 +477,11 @@ class ASCII(callbacks.Plugin):
         if "<!DOCTYPE html>" in file[:10]:
             irc.reply("Error: ansi2irc requires a text file as input.", private=False, notice=False)
             return
-        elif url.endswith(".txt") or url.startswith("https://pastebin.com/raw/") or url.startswith("https://paste.ee/r/"):
+        else:
             for line in file:
                 if line.strip() and not self.stopped[msg.args[0]]:
                     time.sleep(delay)
                     irc.reply(line, prefixNick = False, noLengthCheck=True, private=False, notice=False)
-        else:
-            irc.reply("Unexpected file type or link format", private=False, notice=False)
     scroll = wrap(scroll, [getopts({'delay':'float'}), ('text')])
 
     def a2m(self, irc, msg, args, optlist, url):
