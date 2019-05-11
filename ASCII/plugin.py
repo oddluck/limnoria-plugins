@@ -798,11 +798,11 @@ class ASCII(callbacks.Plugin):
             output = re.sub('\x1b\[38;5;{0}m|\[38;5;{0};\d+m'.format(i), '\x03{0}'.format(self.getAverageC(x256.to_rgb(int(i)), speed)), output)
         output = output.replace('\x1b[0m', '\x0F')
         output = re.sub('\x1b|\x9b|\[\d+m', '', output)
+        output = re.sub('\x0F(\s*)\x03', '\g<1>\x03', output)
         for i in range(0, 99):
             if i < 17:
                 i = '%02d' % i
             output = re.sub('(?<=\x03{0}.)\x03{0}'.format(i), '', output)
-        output = re.sub('\x0F(\s*)\x03', '\g<1>\x03', output)
         paste = ""
         self.stopped[msg.args[0]] = False
         for line in output.splitlines():
