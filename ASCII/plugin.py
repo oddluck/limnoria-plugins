@@ -217,7 +217,7 @@ class ASCII(callbacks.Plugin):
         CLIENT_ID = self.registryValue('imgurAPI')
         imgur = pyimgur.Imgur(CLIENT_ID)
         uploaded_image = imgur.upload_image(filepath, title=url)
-        irc.reply(uploaded_image.link)
+        irc.reply(uploaded_image.link, noLengthCheck=True, private=False, notice=False)
     png = wrap(png, [('text')])
 
     def ascii(self, irc, msg, args, optlist, text):
