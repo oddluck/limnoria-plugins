@@ -29,6 +29,9 @@ ASCII = conf.registerPlugin('ASCII')
 conf.registerGlobalValue(ASCII, 'pasteAPI',
 registry.String('', _("""Paste.ee API Key""")))
 
+conf.registerGlobalValue(ASCII, 'imgurAPI',
+registry.String('', _("""Imgur Client ID""")))
+
 conf.registerChannelValue(ASCII, 'pasteEnable',
 registry.Boolean(False, _("""Turns on and off paste.ee support""")))
 
