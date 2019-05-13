@@ -160,6 +160,7 @@ class ASCII(callbacks.Plugin):
                 text = text.decode('utf-8')
         except:
             pass
+        text = text.replace('\t', ' ')
         self.strip_colors_regex = re.compile('(\x03([0-9]{1,2})(,[0-9]{1,2})?)|[\x0f\x02\x1f\x03\x16]').sub
         path = os.path.dirname(os.path.abspath(__file__))
         defaultFont = "{0}/consola.ttf".format(path)
