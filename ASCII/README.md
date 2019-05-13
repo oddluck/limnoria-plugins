@@ -94,7 +94,7 @@ Scroll ASCII/ANSI Art text files
 scroll <url> (playback of ansi/ascii art .txt files from the web)
 ```
 
-Create PNG files from ascii art
+Create PNG images from ascii art text files.
 ```
 png <url>
 png --size 10-99 <url> (set a font size. defaults to 15pt)
