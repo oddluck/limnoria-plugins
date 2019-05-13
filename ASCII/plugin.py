@@ -154,7 +154,7 @@ class ASCII(callbacks.Plugin):
         if msg.args[1].lower().strip()[1:] == 'cq':
             self.stopped[channel] = True
 
-    def renderImage(self, text, size=11, defaultBg = 1, defaultFg = 0):
+    def renderImage(self, text, size=15, defaultBg = 1, defaultFg = 0):
         try:
             if utf8 and not isinstance(text, unicode):
                 text = text.decode('utf-8')
@@ -202,15 +202,28 @@ class ASCII(callbacks.Plugin):
             fg, bg, x = defaultFg, defaultBg, 0
         return image, imageX, imageY
 
-    def png(self, irc, msg, args, url):
-        """<url>
+    def png(self, irc, msg, args, optlist, url):
+        """[--size] [--bg] [--fg] <url>
         Generate PNG from text file
         """
+        optlist = dict(optlist)
+        if 'bg' in optlist:
+            bg = optlist.get('bg')
+        else:
+            bg = 1
+        if 'fg' in optlist:
+            fg = optlist.get('fg')
+        else:
+            fg = 0
+        if 'size' in optlist:
+            size = optlist.get('size')
+        else:
+            size = 15
         if url.startswith("https://paste.ee/p/"):
             url = re.sub("https://paste.ee/p/", "https://paste.ee/r/", url)
         file = requests.get(url)
         file = file.text
-        im, x, y = self.renderImage(file)
+        im, x, y = self.renderImage(file, size, bg, fg)
         path = os.path.dirname(os.path.abspath(__file__))
         filepath = "{0}/tmp/tldr.png".format(path)
         im.save(filepath, "PNG")
@@ -218,7 +231,7 @@ class ASCII(callbacks.Plugin):
         imgur = pyimgur.Imgur(CLIENT_ID)
         uploaded_image = imgur.upload_image(filepath, title=url)
         irc.reply(uploaded_image.link, noLengthCheck=True, private=False, notice=False)
-    png = wrap(png, [('text')])
+    png = wrap(png, [getopts({'bg':'int', 'fg':'int', 'size':'int'}), ('text')])
 
     def ascii(self, irc, msg, args, optlist, text):
         """[--font <font>] [--color <color1,color2>] [<text>]
