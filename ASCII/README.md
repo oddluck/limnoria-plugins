@@ -94,6 +94,18 @@ Scroll ASCII/ANSI Art text files
 scroll <url> (playback of ansi/ascii art .txt files from the web)
 ```
 
+Create PNG files from ascii art
+```
+png <url>
+png --size 10-99 <url> (set a font size. defaults to 15pt)
+png --bg 0-99 <url> (set a background color)
+png --fg 0-99 <url> (set a foreground color)
+```
+Get your imgur Client ID from https://imgur.com/account/settings (FREE).
+```
+config plugins.ascii.imgurAPI <CLIENT_ID_HERE> (set imgur API key)
+```
+
 THE COMMANDS BELOW REQUIRE ADDITIONAL INSTALLS AND ARE OPTIONAL. YOU WILL NEED TO VISIT THE GITHUB
 PAGES BELOW AND INSTALL THE PROGRAMS IF YOU WANT TO USE THESE COMMANDS. 
 
