@@ -14,7 +14,7 @@ import supybot.callbacks as callbacks
 import supybot.ircmsgs as ircmsgs
 import os
 import requests
-from PIL import Image, ImageOps
+from PIL import Image, ImageOps, ImageFont, ImageDraw
 import numpy as np
 import sys, math
 from fake_useragent import UserAgent
@@ -25,6 +25,7 @@ import urllib
 import time
 import random as random
 from x256 import x256
+import pyimgur
 
 try:
     from supybot.i18n import PluginInternationalization
@@ -152,6 +153,72 @@ class ASCII(callbacks.Plugin):
         self.stopped.setdefault(channel, None)
         if msg.args[1].lower().strip()[1:] == 'cq':
             self.stopped[channel] = True
+
+    def renderImage(self, text, size=11, defaultBg = 1, defaultFg = 0):
+        try:
+            if utf8 and not isinstance(text, unicode):
+                text = text.decode('utf-8')
+        except:
+            pass
+        self.strip_colors_regex = re.compile('(\x03([0-9]{1,2})(,[0-9]{1,2})?)|[\x0f\x02\x1f\x03\x16]').sub
+        path = os.path.dirname(os.path.abspath(__file__))
+        defaultFont = "{0}/consola.ttf".format(path)
+        def strip_colors(string):
+            return self.strip_colors_regex('', string)
+        _colorRegex = re.compile('(([0-9]{1,2})(,([0-9]{1,2}))?)')
+        IGNORE_CHRS = ('\x16','\x1f','\x02', '\x03', '\x0f')
+        lineLens = [len(line) for line in strip_colors(text).splitlines()]
+        maxWidth, height = max(lineLens), len(lineLens)
+        font = ImageFont.truetype(defaultFont, size)
+        fontX, fontY = font.getsize('.')
+        imageX, imageY = maxWidth * fontX, height * fontY
+        image = Image.new('RGB', (imageX, imageY), self.rgbColors[defaultBg])
+        draw = ImageDraw.Draw(image)
+        dtext, drect, match, x, y, fg, bg = draw.text, draw.rectangle, _colorRegex.match, 0, 0, defaultFg, defaultBg
+        start = time.time()
+        for text in text.split('\n'):
+            ll, i = len(text), 0
+            while i < ll:
+                chr = text[i]
+                if chr == "\x03":
+                    m = match(text[i+1:i+6])
+                    if m:
+                        i+= len(m.group(1))
+                        fg = int(m.group(2))
+                        if m.group(4) is not None:
+                            bg = int(m.group(4))
+                    else:
+                        bg, fg = defaultBg, defaultFg
+                elif chr == "\x0f":
+                    fg, bg = defaultFg, defaultBg
+                elif chr not in IGNORE_CHRS:
+                    if bg != defaultBg: # bg is not white, render it
+                        drect((x, y, x+fontX, y+fontY), fill=self.rgbColors[bg])
+                    if bg != fg: # text will show, render it. this saves a lot of time!
+                        dtext((x, y), chr, font=font, fill=self.rgbColors[fg])
+                    x += fontX
+                i += 1
+            y += fontY
+            fg, bg, x = defaultFg, defaultBg, 0
+        return image, imageX, imageY
+
+    def png(self, irc, msg, args, url):
+        """<url>
+        Generate PNG from text file
+        """
+        if url.startswith("https://paste.ee/p/"):
+            url = re.sub("https://paste.ee/p/", "https://paste.ee/r/", url)
+        file = requests.get(url)
+        file = file.text
+        im, x, y = self.renderImage(file)
+        path = os.path.dirname(os.path.abspath(__file__))
+        filepath = "{0}/tmp/tldr.png".format(path)
+        im.save(filepath, "PNG")
+        CLIENT_ID = self.registryValue('imgurAPI')
+        imgur = pyimgur.Imgur(CLIENT_ID)
+        uploaded_image = imgur.upload_image(filepath, title=url)
+        irc.reply(uploaded_image.link)
+    png = wrap(png, [('text')])
 
     def ascii(self, irc, msg, args, optlist, text):
         """[--font <font>] [--color <color1,color2>] [<text>]
