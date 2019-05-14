@@ -154,7 +154,7 @@ class ASCII(callbacks.Plugin):
         if msg.args[1].lower().strip()[1:] == 'cq':
             self.stopped[channel] = True
 
-    def renderImage(self, text, size=15, defaultBg = 1, defaultFg = 0):
+    def renderImage(self, text, size=18, defaultBg = 1, defaultFg = 0):
         try:
             if utf8 and not isinstance(text, unicode):
                 text = text.decode('utf-8')
@@ -171,9 +171,9 @@ class ASCII(callbacks.Plugin):
         lineLens = [len(line) for line in strip_colors(text).splitlines()]
         maxWidth, height = max(lineLens), len(lineLens)
         font = ImageFont.truetype(defaultFont, size)
-        fontX, fontY = font.getsize('.')
-        fontY = int(fontY * 1.21)
-        imageX, imageY = maxWidth * fontX, int(height * fontY)
+        fontX, fontY = font.getsize(' ')
+        fontY += 3
+        imageX, imageY = maxWidth * fontX, height * fontY
         image = Image.new('RGB', (imageX, imageY), self.rgbColors[defaultBg])
         draw = ImageDraw.Draw(image)
         dtext, drect, match, x, y, fg, bg = draw.text, draw.rectangle, _colorRegex.match, 0, 0, defaultFg, defaultBg
@@ -205,7 +205,7 @@ class ASCII(callbacks.Plugin):
         return image, imageX, imageY
 
     def png(self, irc, msg, args, optlist, url):
-        """[--size] [--bg] [--fg] <url>
+        """[--bg] [--fg] <url>
         Generate PNG from text file
         """
         optlist = dict(optlist)
@@ -217,15 +217,11 @@ class ASCII(callbacks.Plugin):
             fg = optlist.get('fg')
         else:
             fg = 0
-        if 'size' in optlist:
-            size = optlist.get('size')
-        else:
-            size = 15
         if url.startswith("https://paste.ee/p/"):
             url = re.sub("https://paste.ee/p/", "https://paste.ee/r/", url)
         file = requests.get(url)
         file = file.text
-        im, x, y = self.renderImage(file, size, bg, fg)
+        im, x, y = self.renderImage(file, bg, fg)
         path = os.path.dirname(os.path.abspath(__file__))
         filepath = "{0}/tmp/tldr.png".format(path)
         im.save(filepath, "PNG")
@@ -233,7 +229,7 @@ class ASCII(callbacks.Plugin):
         imgur = pyimgur.Imgur(CLIENT_ID)
         uploaded_image = imgur.upload_image(filepath, title=url)
         irc.reply(uploaded_image.link, noLengthCheck=True, private=False, notice=False)
-    png = wrap(png, [getopts({'bg':'int', 'fg':'int', 'size':'int'}), ('text')])
+    png = wrap(png, [getopts({'bg':'int', 'fg':'int'}), ('text')])
 
     def ascii(self, irc, msg, args, optlist, text):
         """[--font <font>] [--color <color1,color2>] [<text>]
