@@ -2,7 +2,7 @@
 
 
 <b>ASCII Art Plugin</b><br>
-Convert text to ASCII art or image URLs to ASCII/ANSI art.
+Convert text to ASCII art or image URLs to ASCII/ANSI art. Covert ASCII art to PNG. Get ASCII weather, moon phase, and cryptocurrecy rates.
 
 Requires Limnoria https://github.com/ProgVal/Limnoria and Python3
 
