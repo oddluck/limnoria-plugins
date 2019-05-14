@@ -172,6 +172,7 @@ class ASCII(callbacks.Plugin):
         maxWidth, height = max(lineLens), len(lineLens)
         font = ImageFont.truetype(defaultFont, size)
         fontX, fontY = font.getsize(' ')
+        fontX -= 1
         fontY += 3
         imageX, imageY = maxWidth * fontX, height * fontY
         image = Image.new('RGB', (imageX, imageY), self.rgbColors[defaultBg])
