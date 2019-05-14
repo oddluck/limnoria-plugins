@@ -221,7 +221,7 @@ class ASCII(callbacks.Plugin):
             url = re.sub("https://paste.ee/p/", "https://paste.ee/r/", url)
         file = requests.get(url)
         file = file.text
-        im, x, y = self.renderImage(file, bg, fg)
+        im, x, y = self.renderImage(file, 18, bg, fg)
         path = os.path.dirname(os.path.abspath(__file__))
         filepath = "{0}/tmp/tldr.png".format(path)
         im.save(filepath, "PNG")
