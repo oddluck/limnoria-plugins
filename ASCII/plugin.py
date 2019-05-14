@@ -172,7 +172,8 @@ class ASCII(callbacks.Plugin):
         maxWidth, height = max(lineLens), len(lineLens)
         font = ImageFont.truetype(defaultFont, size)
         fontX, fontY = font.getsize('.')
-        imageX, imageY = maxWidth * fontX, height * fontY
+        fontY = int(fontY * 1.21)
+        imageX, imageY = maxWidth * fontX, int(height * fontY)
         image = Image.new('RGB', (imageX, imageY), self.rgbColors[defaultBg])
         draw = ImageDraw.Draw(image)
         dtext, drect, match, x, y, fg, bg = draw.text, draw.rectangle, _colorRegex.match, 0, 0, defaultFg, defaultBg
@@ -225,7 +226,6 @@ class ASCII(callbacks.Plugin):
         file = requests.get(url)
         file = file.text
         im, x, y = self.renderImage(file, size, bg, fg)
-        im = im.resize((int(x * 0.75), y), Image.LANCZOS)
         path = os.path.dirname(os.path.abspath(__file__))
         filepath = "{0}/tmp/tldr.png".format(path)
         im.save(filepath, "PNG")
