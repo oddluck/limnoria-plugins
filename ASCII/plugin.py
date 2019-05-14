@@ -225,6 +225,7 @@ class ASCII(callbacks.Plugin):
         file = requests.get(url)
         file = file.text
         im, x, y = self.renderImage(file, size, bg, fg)
+        im = im.resize((int(x * 0.75), y), Image.LANCZOS)
         path = os.path.dirname(os.path.abspath(__file__))
         filepath = "{0}/tmp/tldr.png".format(path)
         im.save(filepath, "PNG")
