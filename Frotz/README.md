@@ -7,7 +7,7 @@ Uses the dfrotz (dumb frotz) interpreter https://github.com/DavidGriffith/frotz
 git clone https://github.com/DavidGriffith/frotz<br>
 cd frotz<br>
 make dumb<br>
-make install_dumb<br>
+sudo make install_dumb<br>
 
 config plugins.frotz.dfrotzPath (path_to_dfrotz_binary) (default /usr/local/bin/dfrotz)
 Looks for games in ./games/ directory
