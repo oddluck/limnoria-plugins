@@ -31,6 +31,7 @@ config channel plugins.ascii.pasteEnable <True/False> (enable/disable paste.ee l
 ```
 
 ASCII Weather from wttr.in
+![Image of Wttr Command Output](https://i.imgur.com/Ld6zl0W.png)
 ```
 wttr <location>
 wttr moon
@@ -39,6 +40,7 @@ wttr --16 <location>/moon
 Use --16 for 16 colors. Defaults to 99 color extended.
 
 ASCII crypto exchange rates from rate.sx
+![Image of Rate Command Output](https://i.imgur.com/tuYTQbw.png)
 ```
 rate (get rates in united states dollars)
 rate --sub <currency> (get rates in EUR, USD, BTC, etc.)
@@ -53,6 +55,7 @@ fortune
 ```
 
 Cowsay. Generate a cowsay ascii. choose character with --type. https://easyapis.soue.tk/api/cowsay
+![Image of Cow Command Output](https://i.imgur.com/H7nUJ4w.png)
 ```
 cow --type <type> <text> (make a cowsay message. type is optional. defaults to cow)
 ```
@@ -67,6 +70,7 @@ fontlist (get list of availble <fonts>)
 ```
 
 Image URL to ASCII/ANSI Art:
+![Image of Img Command Output](https://i.imgur.com/MbdajhH.png)
 ```
 img <url> (convert an image <url> to ascii art using 99 color palette)
 img --16 <url> (convert image to ascii art using 16 color palette)
