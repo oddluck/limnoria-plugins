@@ -886,13 +886,14 @@ class ASCII(callbacks.Plugin):
             line = line.strip('\x0F')
             line = line.replace(' ⚡', '☇ ')
             line = line.replace('⚡', ' ☇ ')
-            if self.registryValue('pasteEnable', msg.args[0]):
             if not line.strip() and not self.stopped[msg.args[0]]:
-                paste += line + "\n"
+                if self.registryValue('pasteEnable', msg.args[0]):
+                    paste += line + "\n"
                 time.sleep(delay)
                 irc.reply('\xa0', prefixNick = False, noLengthCheck=True, private=False, notice=False)
             elif line.strip() and not self.stopped[msg.args[0]] and not line.startswith("Follow"):
-                paste += line + "\n"
+                if self.registryValue('pasteEnable', msg.args[0]):
+                    paste += line + "\n"
                 time.sleep(delay)
                 irc.reply(line, prefixNick = False, noLengthCheck=True, private=False, notice=False)
         if self.registryValue('pasteEnable', msg.args[0]):
@@ -964,13 +965,14 @@ class ASCII(callbacks.Plugin):
             line = re.sub('┘$', '────────┘', line)
             line = re.sub('\(1H\)\x0F\s+│$', '(1H)\x0F           │', line)
             line = re.sub('^│\x0F', '│', line)
-            if self.registryValue('pasteEnable', msg.args[0]):
             if not line.strip() and not self.stopped[msg.args[0]]:
-                paste += line + "\n"
+                if self.registryValue('pasteEnable', msg.args[0]):
+                    paste += line + "\n"
                 time.sleep(delay)
                 irc.reply('\xa0', prefixNick = False, noLengthCheck=True, private=False, notice=False)
             elif line.strip() and not self.stopped[msg.args[0]] and "Follow @igor_chubin" not in line:
-                paste += line + "\n"
+                if self.registryValue('pasteEnable', msg.args[0]):
+                    paste += line + "\n"
                 time.sleep(delay)
                 irc.reply(line, prefixNick = False, noLengthCheck=True, private=False, notice=False)
         if self.registryValue('pasteEnable', msg.args[0]):
