@@ -960,11 +960,6 @@ class ASCII(callbacks.Plugin):
         self.stopped[msg.args[0]] = False
         for line in output.splitlines():
             line = line.strip('\x0F')
-            line = re.sub('┐$', '────────┐', line)
-            line = re.sub('┤$', '────────┤', line)
-            line = re.sub('┘$', '────────┘', line)
-            line = re.sub('\(1H\)\x0F\s+│$', '(1H)\x0F           │', line)
-            line = re.sub('^│\x0F', '│', line)
             if not line.strip() and not self.stopped[msg.args[0]]:
                 if self.registryValue('pasteEnable', msg.args[0]):
                     paste += line + "\n"
