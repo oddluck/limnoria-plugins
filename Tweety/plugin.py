@@ -676,7 +676,7 @@ class Tweety(callbacks.Plugin):
                 nick = self._unescape(tweet["user"].get('screen_name'))
                 name = self._unescape(tweet["user"].get('name'))
                 verified = tweet['user'].get('verified')
-		tweetid = tweet.get('id')
+                tweetid = tweet.get('id')
                 relativeTime = self._time_created_at(tweet.get('created_at'))
                 # prepare string to output and send to irc.
                 output = self._outputTweet(irc, msg, nick, name, verified, text, relativeTime, tweetid)
