@@ -670,13 +670,13 @@ class Tweety(callbacks.Plugin):
                 else:
                     irc.reply("ERROR: '{0}' has not tweeted yet.".format(optnick))
                     return
-            tweetid = data[0].get('id')
+            self.since_id['{0}-{1}'.format(optnick, msg.args[0])] = data[0].get('id')
             for tweet in data:  # n+1 tweets found. iterate through each tweet.
                 text = self._unescape(tweet.get('full_text')) or self._unescape(tweet.get('text'))
                 nick = self._unescape(tweet["user"].get('screen_name'))
                 name = self._unescape(tweet["user"].get('name'))
                 verified = tweet['user'].get('verified')
-                self.since_id['{0}-{1}'.format(optnick, msg.args[0])] = tweetid
+		tweetid = tweet.get('id')
                 relativeTime = self._time_created_at(tweet.get('created_at'))
                 # prepare string to output and send to irc.
                 output = self._outputTweet(irc, msg, nick, name, verified, text, relativeTime, tweetid)
