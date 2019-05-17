@@ -87,6 +87,7 @@ class Tweety(callbacks.Plugin):
         self.__parent = super(Tweety, self)
         self.__parent.__init__(irc)
         self.twitterApi = False
+        self.since_id = {}
         if not self.twitterApi:
             self._checkAuthorization()
             
@@ -498,15 +499,17 @@ class Tweety(callbacks.Plugin):
                                      ('text')])
 
     def twitter(self, irc, msg, args, optlist, optnick, opturl):
-        """[--noreply] [--nort] [--num number] <nick> | [--id id] | [--info nick]
+        """[--noreply] [--nort] [--new] [--num number] <nick> | [--id id] | [--info nick]
 
         Returns last tweet or 'number' tweets (max 10). Shows all tweets, including rt and reply.
         To not display replies or RT's, use --noreply or --nort, respectively.
+        Return new tweets since the last time you checked in channel with --new
         Or returns specific tweet with --id 'tweet#'.
         Or returns information on user with --info 'name'.
         Ex: --info @cnn OR --id 337197009729622016 OR --number 3 @drudge
         """
 
+        self.since_id.setdefault('{0}-{1}'.format(optnick, msg.args[0]), None)
         # enforce +voice or above to use command?
         if self.registryValue('requireVoiceOrAbove', msg.args[0]):  # should we check?
             if ircutils.isChannel(msg.args[0]):  # are we in a channel?
@@ -526,6 +529,7 @@ class Tweety(callbacks.Plugin):
                 'nort': False,
                 'noreply': False,
                 'url': False,
+		'new': False,
                 'num': self.registryValue('defaultResults', msg.args[0]),
                 'info': False}
         # handle input optlist.
@@ -539,6 +543,8 @@ class Tweety(callbacks.Plugin):
                     args['nort'] = True
                 if key == 'noreply':
                     args['noreply'] = True
+                if key == 'new':
+                    args['new'] = True
                 if key == 'num':
                     maxresults = self.registryValue('maxResults', msg.args[0])
                     if not (1 <= value <= maxresults):  # make sure it's between what we should output.
@@ -548,14 +554,36 @@ class Tweety(callbacks.Plugin):
                         args['num'] = value
                 if key == 'info':
                     args['info'] = True
-        # handle the three different rest api endpoint urls + twitterArgs dict for options.
+        # handle the four different rest api endpoint urls + twitterArgs dict for options.
         if args['id']:  # -id #.
             apiUrl = 'statuses/show'
             twitterArgs = {'id': optnick, 'include_entities':'false', 'tweet_mode': 'extended'}
         elif args['info']:  # --info.
             apiUrl = 'users/show'
             twitterArgs = {'screen_name': optnick, 'include_entities':'false'}
-        else:  # if not an --id or --info, we're printing from their timeline.
+        elif args['new']:  # --new. 
+            apiUrl = 'statuses/user_timeline'
+            if self.since_id['{0}-{1}'.format(optnick, msg.args[0])]:
+                twitterArgs = {'screen_name': optnick, 'since_id':self.since_id['{0}-{1}'.format(optnick, msg.args[0])], 'count': args['num'], 'tweet_mode': 'extended'}
+                if args['nort']:  # show retweets?
+                    twitterArgs['include_rts'] = 'false'
+                else:  # default is to show retweets.
+                    twitterArgs['include_rts'] = 'true'
+                if args['noreply']:  # show replies?
+                    twitterArgs['exclude_replies'] = 'true'
+                else:  # default is to NOT exclude replies.
+                    twitterArgs['exclude_replies'] = 'false'
+            else:
+                twitterArgs = {'screen_name': optnick, 'count': args['num'], 'tweet_mode': 'extended'}
+                if args['nort']:  # show retweets?
+                    twitterArgs['include_rts'] = 'false'
+                else:  # default is to show retweets.
+                    twitterArgs['include_rts'] = 'true'
+                if args['noreply']:  # show replies?
+                    twitterArgs['exclude_replies'] = 'true'
+                else:  # default is to NOT exclude replies.
+                    twitterArgs['exclude_replies'] = 'false'               
+        else:  # if not an --id --info, or --new we're printing from their timeline.
             apiUrl = 'statuses/user_timeline'
             twitterArgs = {'screen_name': optnick, 'count': args['num'], 'tweet_mode': 'extended'}
             if args['nort']:  # show retweets?
@@ -637,14 +665,18 @@ class Tweety(callbacks.Plugin):
             return
         else:  # this will display tweets/a user's timeline. can be n+1 tweets.
             if len(data) == 0:  # no tweets found.
-                irc.reply("ERROR: '{0}' has not tweeted yet.".format(optnick))
-                return
+                if args['new']:
+                    return
+                else:
+                    irc.reply("ERROR: '{0}' has not tweeted yet.".format(optnick))
+                    return
+            tweetid = data[0].get('id')
             for tweet in data:  # n+1 tweets found. iterate through each tweet.
                 text = self._unescape(tweet.get('full_text')) or self._unescape(tweet.get('text'))
                 nick = self._unescape(tweet["user"].get('screen_name'))
                 name = self._unescape(tweet["user"].get('name'))
                 verified = tweet['user'].get('verified')
-                tweetid = tweet.get('id')
+                self.since_id['{0}-{1}'.format(optnick, msg.args[0])] = tweetid
                 relativeTime = self._time_created_at(tweet.get('created_at'))
                 # prepare string to output and send to irc.
                 output = self._outputTweet(irc, msg, nick, name, verified, text, relativeTime, tweetid)
@@ -655,6 +687,7 @@ class Tweety(callbacks.Plugin):
                                       'info':'',
                                       'id':'',
                                       'url':'',
+                                      'new':'',
                                       'num':('int')}), ('somethingWithoutSpaces'), optional('somethingWithoutSpaces')])
 
 Class = Tweety
