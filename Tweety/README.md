@@ -81,6 +81,16 @@ Optional: There are some config variables that can be set for the bot. They main
 
 ## Extras
 
+Return new tweets since the last time you checked in channel with --new
+```
+twitter --new <nick>
+```
+Schudule a repeating feed of Tweets from a user
+```
+load scheduler
+repeat 300 "twitter --new <nick>"
+```
+
 Want the bot to function like others do parsing out Twitter links and displaying? (Thanks to Hoaas)
 
 ```
