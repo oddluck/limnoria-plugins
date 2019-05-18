@@ -88,7 +88,8 @@ twitter --new <twitter_nick>
 Schudule a repeating feed of Tweets from a user. Same options as usual apply, just use --new to only return new tweets.
 ```
 load scheduler
-scheduler repeat <name> <seconds> "echo [twitter --new --num <number> <twitter_nick>]"
+scheduler repeat <name> <seconds> "echo [tweety twitter --new --num <number> <twitter_nick>]" # add repeating command
+schduler remove <name> # remove the repeating command
 ```
 
 Want the bot to function like others do parsing out Twitter links and displaying? (Thanks to Hoaas)
