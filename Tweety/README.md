@@ -88,7 +88,7 @@ twitter --new <nick>
 Schudule a repeating feed of Tweets from a user
 ```
 load scheduler
-repeat 300 "twitter --new <nick>"
+scheduler repeat <name> <seconds> "echo [twitter --new <twitter_nick>]"
 ```
 
 Want the bot to function like others do parsing out Twitter links and displaying? (Thanks to Hoaas)
