@@ -995,8 +995,7 @@ class ASCII(callbacks.Plugin):
         self.stopped[msg.args[0]] = False
         for line in output.splitlines():
             line = line.strip('\x0F')
-            line = line.replace(' ⚡', '☇ ')
-            line = line.replace('⚡', ' ☇ ')
+            line = line.replace('⚡', '☇☇')
             if not line.strip() and not self.stopped[msg.args[0]]:
                 if self.registryValue('pasteEnable', msg.args[0]):
                     paste += line + "\n"
