@@ -472,10 +472,11 @@ class ASCII(callbacks.Plugin):
         return delta_e
 
     def img(self, irc, msg, args, optlist, url):
-        """[--w <width>] [--16] [--invert] [--chars <text>] [--ramp <text>] [--bg <int>] <url>
+        """[--w <width>] [--16] [--invert] [--chars <text>] [--ramp <text>] [--bg <int>] [--nocolor]<url>
         Converts image to ASCII art. --16 for 16 colors. --invert inverts the default luma-based character ramp.
         --chars <YOURTEXT> to color text of your choice. --ramp <TEXT> set a custom luma-based character ramp.
         --bg <0-98> set a background color using irc colors. Images with transparency will be composited onto bg color.
+        --nocolor for a greyscale character map only.
         """
         optlist = dict(optlist)
         if '16' in optlist:
@@ -501,13 +502,13 @@ class ASCII(callbacks.Plugin):
         else:
             cols = 100
         if 'invert' in optlist:
-            gscale = "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\|()1{}[]?-_+~<>i!lI;:\"^`'."
+            gscale = "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\|()1{}[]?-_+~<>i!lI;:\"^`'. "
         elif 'chars' in optlist:
             gscale = optlist.get('chars')
         elif 'ramp' in optlist:
             gscale = optlist.get('ramp')
         else:
-            gscale = ".'`^\":;Il!i><~+_-?][}{1)(|\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$"
+            gscale = " .'`^\":;Il!i><~+_-?][}{1)(|\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$"
         if 'delay' in optlist:
             delay = optlist.get('delay')
         else:
@@ -517,7 +518,9 @@ class ASCII(callbacks.Plugin):
         else:
             bg = 1
         if 'chars' not in optlist and 'ramp' not in optlist and bg == 0 or bg == 98:
-            gscale = "BBQQQRMggDZEdbPPqKXSVIkUuujJsYLvvvvvrrrriiiiiii......."
+            gscale = "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\|()1{}[]?-_+~<>i!lI;:\"^`'. "
+        if 'nocolor' in optlist and 'chars' in optlist:
+            return
         if not gscale.strip():
             gscale = '\xa0'
         path = os.path.dirname(os.path.abspath(__file__))
@@ -537,11 +540,12 @@ class ASCII(callbacks.Plugin):
                 f.write(response.content)
         # open image and convert to grayscale
         image = Image.open(filename).convert('L')
-        image2 = Image.open(filename)
-        if image2.mode == 'RGBA':
-            image2 = Image.alpha_composite(Image.new("RGBA", image2.size, self.rgbColors[bg] + (255,)), image2)
-        if image2.mode != 'RGB':
-            image2 = image2.convert('RGB')
+        if 'nocolor' not in optlist:
+            image2 = Image.open(filename)
+            if image2.mode == 'RGBA':
+                image2 = Image.alpha_composite(Image.new("RGBA", image2.size, self.rgbColors[bg] + (255,)), image2)
+            if image2.mode != 'RGB':
+                image2 = image2.convert('RGB')
         try:
             os.remove(filename)
         except:
@@ -557,17 +561,18 @@ class ASCII(callbacks.Plugin):
         rows = int(H/h)
         image = ImageOps.autocontrast(image)
         image = image.resize((cols, rows), Image.LANCZOS)
-        image2 = ImageOps.autocontrast(image2)
-        image2 = image2.resize((cols, rows), Image.LANCZOS)
-        if 'dither' in optlist:
-            image2 = image2.convert('P', dither=Image.FLOYDSTEINBERG, palette=Image.ADAPTIVE)
-        else:
-            image2 = image2.convert('P', dither=None, palette=Image.ADAPTIVE)
-        image2 = image2.convert('RGB')
+        if 'nocolor' not in optlist:
+            image2 = ImageOps.autocontrast(image2)
+            image2 = image2.resize((cols, rows), Image.LANCZOS)
+            if 'dither' in optlist:
+                image2 = image2.convert('P', dither=Image.FLOYDSTEINBERG, palette=Image.ADAPTIVE)
+            else:
+                image2 = image2.convert('P', dither=None, palette=Image.ADAPTIVE)
+            image2 = image2.convert('RGB')
+            colormap = np.array(image2)
+            self.matches = {}
+            self.matches16 = {}
         lumamap = np.array(image)
-        colormap = np.array(image2)
-        self.matches = {}
-        self.matches16 = {}
         # ascii image is a list of character strings
         aimg = []
         # generate list of dimensions
@@ -595,34 +600,40 @@ class ASCII(callbacks.Plugin):
                         gsval = gscale[self.char]
                         self.char += 1
                 # get color value
-                color = self.getAverageC(colormap[j][i].tolist(),speed)
-                if color != old_color:
-                    old_color = color
-                    # append ascii char to string
-                    if 'bg' not in optlist:
-                        if gsval != '\xa0':
-                            if gsval.isdigit():
-                                aimg[j] += "\x03{0}{1}".format(color, gsval)
+                if 'nocolor' not in optlist:
+                    color = self.getAverageC(colormap[j][i].tolist(),speed)
+                    if color != old_color:
+                        old_color = color
+                        # append ascii char to string
+                        if 'bg' not in optlist:
+                            if gsval != '\xa0':
+                                if gsval.isdigit():
+                                    aimg[j] += "\x03{0}{1}".format(color, gsval)
+                                else:
+                                    aimg[j] += "\x03{0}{1}".format(int(color), gsval)
                             else:
-                                aimg[j] += "\x03{0}{1}".format(int(color), gsval)
+                                aimg[j] += "\x030,{0} ".format(int(color))
                         else:
-                            aimg[j] += "\x030,{0} ".format(int(color))
+                            if gsval != '\xa0':
+                                if gsval.isdigit():
+                                    newbg = "{:02d}".format(int(bg))
+                                    aimg[j] += "\x03{0},{1}{2}".format(int(color), newbg, gsval)
+                                else:
+                                    aimg[j] += "\x03{0},{1}{2}".format(int(color), int(bg), gsval)
+                            else:
+                                aimg[j] += "\x030,{0} ".format(int(color))
                     else:
-                        if gsval != '\xa0':
-                            if gsval.isdigit():
-                                newbg = "{:02d}".format(int(bg))
-                                aimg[j] += "\x03{0},{1}{2}".format(int(color), newbg, gsval)
-                            else:
-                                aimg[j] += "\x03{0},{1}{2}".format(int(color), int(bg), gsval)
-                        else:
-                            aimg[j] += "\x030,{0} ".format(int(color))
+                        aimg[j] += "{0}".format(gsval)
                 else:
                     aimg[j] += "{0}".format(gsval)
         # return txt image
         output = aimg
         del image
-        del image2
-        del colormap
+        try:
+            del image2
+            del colormap
+        except:
+            pass
         paste = ""
         self.stopped[msg.args[0]] = False
         for line in output:
@@ -643,7 +654,7 @@ class ASCII(callbacks.Plugin):
                 return
                 #irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
         self.char = 0
-    img = wrap(img,[getopts({'w':'int', 'invert':'', 'fast':'', 'faster':'', 'slow':'', 'slower':'', 'slowest':'', 'insane':'', '16':'', 'delay':'float', 'dither':'', 'chars':'text', 'bg':'int', 'ramp':'text'}), ('text')])
+    img = wrap(img,[getopts({'w':'int', 'invert':'', 'fast':'', 'faster':'', 'slow':'', 'slower':'', 'slowest':'', 'insane':'', '16':'', 'delay':'float', 'dither':'', 'chars':'text', 'bg':'int', 'ramp':'text', 'nocolor':''}), ('text')])
 
     def fontlist(self, irc, msg, args):
         """
