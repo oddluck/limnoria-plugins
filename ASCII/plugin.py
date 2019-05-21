@@ -26,6 +26,7 @@ import time
 import random as random
 from x256 import x256
 import pyimgur
+import operator
 
 try:
     from supybot.i18n import PluginInternationalization
@@ -384,7 +385,7 @@ class ASCII(callbacks.Plugin):
         """
         pixel = tuple(pixel)
         if self.colors == 16:
-            colors = sorted(list(self.ircColors.keys()))[:15]
+            colors = list(self.ircColors.keys())[:16]
             if pixel not in self.matches:
                 closest_colors = sorted(colors, key=lambda color: self.distance(color, self.rgb2lab(pixel), speed))
                 closest_color = closest_colors[0]
