@@ -239,23 +239,6 @@ class ASCII(callbacks.Plugin):
             (65.4912, 0.0036, -0.0074):95,
             (76.2461, 0.0044, -0.0083):96,
             (89.8837, 0.0048, -0.0094):97}
-        self.colors16 = {
-            (85.4811, -2.7938, 3.458):'00',
-            (21.2194, -2.0529, -2.139):'01',
-            (42.3349, 4.648, -38.8664):'02',
-            (56.8252, -45.329, 58.1352):'03',
-            (42.5172, 67.7098, 56.8158):'04',
-            (35.5382, 34.1518, 45.9469):'05',
-            (28.8526, 26.5659, -21.8027):'06',
-            (52.7036, 41.5535, 61.8617):'07',
-            (97.1382, -21.5559, 94.4825):'08',
-            (75.9439, -54.8907, 72.1325):'09',
-            (61.2247, -47.4179, 14.2906):'10',
-            (61.6532, -23.7895, -5.0286):'11',
-            (49.7012, -1.8169, -23.6763):'12',
-            (41.8876, 42.0835, -0.4542):'13',
-            (36.6913, -1.6453, 2.0378): '14',
-            (56.8986, -1.1458, 2.0047):'15'}
 
     def doPrivmsg(self, irc, msg):
         channel = msg.args[0]
@@ -401,12 +384,12 @@ class ASCII(callbacks.Plugin):
         """
         pixel = tuple(pixel)
         if self.colors == 16:
-            colors = list(self.colors16.keys())
-            if pixel not in self.matches16:
+            colors = list(self.ircColors[:15].keys())
+            if pixel not in self.matches:
                 closest_colors = sorted(colors, key=lambda color: self.distance(color, self.rgb2lab(pixel), speed))
                 closest_color = closest_colors[0]
-                self.matches16[pixel] = self.colors16[closest_color]
-            return self.matches16[pixel]
+                self.matches[pixel] = self.ircColors[closest_color]
+            return self.matches[pixel]
         else:
             colors = list(self.ircColors.keys())
             if pixel not in self.matches:
@@ -586,7 +569,6 @@ class ASCII(callbacks.Plugin):
             image2 = image2.convert('RGB')
             colormap = np.array(image2)
             self.matches = {}
-            self.matches16 = {}
         lumamap = np.array(image)
         # ascii image is a list of character strings
         aimg = []
@@ -1030,7 +1012,6 @@ class ASCII(callbacks.Plugin):
             self.colors = 83
             speed = 'slower'
         self.matches = {}
-        self.matches16 = {}
         file = requests.get("http://wttr.in/{0}".format(location))
         output = file.text
         for i in range(0, 256):
@@ -1096,7 +1077,6 @@ class ASCII(callbacks.Plugin):
         if not coin:
             coin = ''
         self.matches = {}
-        self.matches16 = {}
         file = requests.get("http://{0}.rate.sx/{1}".format(sub, coin))
         output = file.text
         output = output.replace('\x1b[0m', '\x0F')
