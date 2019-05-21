@@ -502,13 +502,13 @@ class ASCII(callbacks.Plugin):
         else:
             cols = 100
         if 'invert' in optlist:
-            gscale = "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\|()1{}[]?-_+~<>i!lI;:\"^`'. "
+            gscale = "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\|()1{}[]?-_+~<>i!lI;:\"^`'."
         elif 'chars' in optlist:
             gscale = optlist.get('chars')
         elif 'ramp' in optlist:
             gscale = optlist.get('ramp')
         else:
-            gscale = " .'`^\":;Il!i><~+_-?][}{1)(|\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$"
+            gscale = ".'`^\":;Il!i><~+_-?][}{1)(|\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$"
         if 'delay' in optlist:
             delay = optlist.get('delay')
         else:
@@ -518,9 +518,13 @@ class ASCII(callbacks.Plugin):
         else:
             bg = 1
         if 'chars' not in optlist and 'ramp' not in optlist and bg == 0 or bg == 98:
-            gscale = "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\|()1{}[]?-_+~<>i!lI;:\"^`'. "
+            gscale = "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\|()1{}[]?-_+~<>i!lI;:\"^`'."
         if 'nocolor' in optlist and 'chars' in optlist:
             return
+        elif 'nocolor' in optlist and 'invert' in optlist:
+            gscale = "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\|()1{}[]?-_+~<>i!lI;:,\"^`'. "
+        elif 'nocolor' in optlist and 'ramp' not in optlist:
+            gscale = " .'`^\",:;Il!i><~+_-?][}{1)(|\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$"
         if not gscale.strip():
             gscale = '\xa0'
         path = os.path.dirname(os.path.abspath(__file__))
