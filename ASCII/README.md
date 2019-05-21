@@ -34,9 +34,14 @@ ASCII Weather from wttr.in
 ```
 wttr <location>
 wttr moon
-wttr --16 <location>/moon
+wttr --16 (use 16 colors. Default)
+wttr --99 (use 99 colors)
+wttr <location>?u (use imperial units, degrees F, miles, etc.)
+wttr <location>?m (use metric units, degrees C, km, etc.)
+wttr <location>?<1-3> (number of days to forecast)
 ```
-![Image of Wttr Command Output](https://i.imgur.com/Ld6zl0W.png)
+![Image of Wttr Command Output](https://i.imgur.com/o0kf25O.png)
+![Image of Wttr Command Output](https://i.imgur.com/mTHJfuI.png)
 Use --16 for 16 colors. Defaults to 99 color extended.
 
 ASCII crypto exchange rates from rate.sx
