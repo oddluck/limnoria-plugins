@@ -997,8 +997,14 @@ class ASCII(callbacks.Plugin):
     toilet = wrap(toilet, [getopts({'f':'text', 'F':'text', 's':'', 'S':'', 'k':'', 'w':'int', 'W':'', 'o':'', 'delay':'float'}), ('text')])
 
     def wttr(self, irc, msg, args, optlist, location):
-        """[--16] [--99] <location>
-        ASCII weather report from wttr.in for <location>. --16 for 16 colors.
+        """[--16] [--99] <location/moon>
+        ASCII weather report from wttr.in for <location>. 
+        --16 for 16 colors. Default
+        --99 for 99 colors.
+        Get moon phase with 'wttr moon'.
+        <location>?u (use imperial units).
+        <location>?m (metric).
+        <location>?<1-3> (number of days)
         """
         optlist = dict(optlist)
         if 'delay' in optlist:
@@ -1007,13 +1013,13 @@ class ASCII(callbacks.Plugin):
             delay = self.registryValue('delay', msg.args[0])
         if '16' in optlist:
             self.colors = 16
-            speed = 'slower'
+            speed = 'slowest'
         elif '99' in optlist:
-            self.colors = 83
-            speed = 'slower'
+            self.colors = 93
+            speed = 'slowest'
         else:
-            self.colors = 83
-            speed = 'slower'
+            self.colors = 16
+            speed = 'slowest'
         self.matches = {}
         file = requests.get("http://wttr.in/{0}".format(location))
         output = file.text
@@ -1056,8 +1062,11 @@ class ASCII(callbacks.Plugin):
     wttr = wrap(wttr, [getopts({'delay':'float', '16':'', '99':''}), ('text')])
 
     def rate(self, irc, msg, args, optlist, coin):
-        """[--16] [--sub <text>] [coin]
+        """[--16] [--99] [--sub <text>] [coin]
         Crypto exchange rate info from rate.sx. http://rate.sx/:help. Use --sub to set subdomain e.g. eur, btc, etc.
+        Get a graph with [coin] e.g. 'rate btc'.
+        --16 for 16 colors. Default.
+        --99 for 99 colors.
         """
         optlist = dict(optlist)
         if 'delay' in optlist:
@@ -1066,13 +1075,13 @@ class ASCII(callbacks.Plugin):
             delay = self.registryValue('delay', msg.args[0])
         if '16' in optlist:
             self.colors = 16
-            speed = 'slower'
+            speed = 'slowest'
         elif '99' in optlist:
-            self.colors = 83
-            speed = 'slower'
+            self.colors = 93
+            speed = 'slowest'
         else:
-            self.colors = 83
-            speed = 'slower'
+            self.colors = 16
+            speed = 'slowest'
         if 'sub' in optlist:
             sub = optlist.get('sub')
         else:
