@@ -26,7 +26,6 @@ import time
 import random as random
 from x256 import x256
 import pyimgur
-import operator
 
 try:
     from supybot.i18n import PluginInternationalization
