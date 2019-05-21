@@ -617,7 +617,7 @@ class ASCII(callbacks.Plugin):
                 # get color value
                 if 'nocolor' not in optlist:
                     color = self.getAverageC(colormap[j][i].tolist(),speed)
-                    if color != old_color:
+                    if color != old_color and gsval != ' ':
                         old_color = color
                         # append ascii char to string
                         if 'bg' not in optlist:
