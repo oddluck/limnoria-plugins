@@ -70,7 +70,7 @@ fontlist (get list of availble <fonts>)
 ```
 
 Image URL to ASCII/ANSI Art:
-![Image of Img Command Output](https://i.imgur.com/MbdajhH.png)
+![Image of Img Command Output](https://i.imgur.com/KEdIPWO.png)
 ```
 img <url> (convert an image <url> to ascii art using 99 color palette)
 img --16 <url> (convert image to ascii art using 16 color palette)
