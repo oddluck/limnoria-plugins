@@ -501,13 +501,13 @@ class ASCII(callbacks.Plugin):
         else:
             cols = 100
         if 'invert' in optlist:
-            gscale = "BBQQQRMggDZEdbPPqKXSVIkUuujJsYLvvvvvrrrriiiiiii......."
+            gscale = "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\|()1{}[]?-_+~<>i!lI;:\"^`'."
         elif 'chars' in optlist:
             gscale = optlist.get('chars')
         elif 'ramp' in optlist:
             gscale = optlist.get('ramp')
         else:
-            gscale = ".......iiiiiiirrrrvvvvvLYsJjuuUkIVSXKqPPbdEZDggMRQQQBB"
+            gscale = ".'`^\":;Il!i><~+_-?][}{1)(|\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$"
         if 'delay' in optlist:
             delay = optlist.get('delay')
         else:
@@ -609,7 +609,11 @@ class ASCII(callbacks.Plugin):
                             aimg[j] += "\x030,{0} ".format(int(color))
                     else:
                         if gsval != '\xa0':
-                            aimg[j] += "\x03{0},{1}{2}".format(int(color), int(bg), gsval)
+                            if gsval.isdigit():
+                                newbg = "{:02d}".format(int(bg))
+                                aimg[j] += "\x03{0},{1}{2}".format(int(color), newbg, gsval)
+                            else:
+                                aimg[j] += "\x03{0},{1}{2}".format(int(color), int(bg), gsval)
                         else:
                             aimg[j] += "\x030,{0} ".format(int(color))
                 else:
@@ -902,7 +906,7 @@ class ASCII(callbacks.Plugin):
             f = optlist.get('f')
             opts += '-f {0} '.format(f)
         if 'F' in optlist:
-            filter = optlist.get('F')         
+            filter = optlist.get('F')
             if ',' in filter:
                 filter = filter.split(',')
                 for i in range(len(filter)):
@@ -1091,7 +1095,7 @@ class ASCII(callbacks.Plugin):
             except:
                 return
     rate = wrap(rate, [getopts({'delay':'float', '16':'', '99':'', 'sub':'text'}), optional('text')])
-    
+
     def cow(self, irc, msg, args, optlist, text):
         """[--delay] [--type <character>] <text>
         Cowsay
@@ -1128,7 +1132,7 @@ class ASCII(callbacks.Plugin):
             except:
                 return
     cow = wrap(cow, [getopts({'delay':'float', 'type':'text'}), ('text')])
-    
+
     def fortune(self, irc, msg, args, optlist):
         """
         Returns a random ASCII from http://www.asciiartfarts.com/fortune.txt
@@ -1149,7 +1153,7 @@ class ASCII(callbacks.Plugin):
                 time.sleep(delay)
                 irc.reply(line, prefixNick = False, noLengthCheck=True, private=False, notice=False)
     fortune = wrap(fortune, [getopts({'delay':'float'})])
-    
+
     def fonts(self, irc, msg, args, optlist):
         """[--toilet]
         List figlets. Default list are tdf fonts. --toilet for toilet fonts
@@ -1174,4 +1178,3 @@ class ASCII(callbacks.Plugin):
     cq = wrap(cq)
 
 Class = ASCII
-
