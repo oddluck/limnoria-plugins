@@ -1013,13 +1013,24 @@ class ASCII(callbacks.Plugin):
             delay = self.registryValue('delay', msg.args[0])
         if '16' in optlist:
             self.colors = 16
-            speed = 'slowest'
         elif '99' in optlist:
             self.colors = 93
-            speed = 'slowest'
         else:
             self.colors = 16
+        if 'faster' in optlist:
+            speed = 'faster'
+        elif 'fast' in optlist:
+            speed = 'fast'
+        elif 'slow' in optlist:
+            speed = 'slow'
+        elif 'slower' in optlist:
+            speed = 'slower'
+        elif 'slowest' in optlist:
             speed = 'slowest'
+        elif 'insane' in optlist:
+            speed = 'insane'
+        else:
+            speed = 'slower'
         self.matches = {}
         file = requests.get("http://wttr.in/{0}".format(location))
         output = file.text
@@ -1059,7 +1070,7 @@ class ASCII(callbacks.Plugin):
                 irc.reply(response['link'].replace('/p/', '/r/'), private=False, notice=False)
             except:
                 return
-    wttr = wrap(wttr, [getopts({'delay':'float', '16':'', '99':''}), ('text')])
+    wttr = wrap(wttr, [getopts({'delay':'float', '16':'', '99':'', 'fast':'', 'faster':'', 'slow':'', 'slower':'', 'slowest':'', 'insane':''}), ('text')])
 
     def rate(self, irc, msg, args, optlist, coin):
         """[--16] [--99] [--sub <text>] [coin]
@@ -1075,13 +1086,24 @@ class ASCII(callbacks.Plugin):
             delay = self.registryValue('delay', msg.args[0])
         if '16' in optlist:
             self.colors = 16
-            speed = 'slowest'
         elif '99' in optlist:
             self.colors = 93
-            speed = 'slowest'
         else:
             self.colors = 16
+        if 'faster' in optlist:
+            speed = 'faster'
+        elif 'fast' in optlist:
+            speed = 'fast'
+        elif 'slow' in optlist:
+            speed = 'slow'
+        elif 'slower' in optlist:
+            speed = 'slower'
+        elif 'slowest' in optlist:
             speed = 'slowest'
+        elif 'insane' in optlist:
+            speed = 'insane'
+        else:
+            speed = 'slower'
         if 'sub' in optlist:
             sub = optlist.get('sub')
         else:
@@ -1135,7 +1157,7 @@ class ASCII(callbacks.Plugin):
                 irc.reply(response['link'].replace('/p/', '/r/'), private=False, notice=False)
             except:
                 return
-    rate = wrap(rate, [getopts({'delay':'float', '16':'', '99':'', 'sub':'text'}), optional('text')])
+    rate = wrap(rate, [getopts({'delay':'float', '16':'', '99':'', 'sub':'text', 'fast':'', 'faster':'', 'slow':'', 'slower':'', 'slowest':'', 'insane':''}), optional('text')])
 
     def cow(self, irc, msg, args, optlist, text):
         """[--delay] [--type <character>] <text>
