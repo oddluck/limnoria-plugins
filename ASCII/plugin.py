@@ -597,17 +597,23 @@ class ASCII(callbacks.Plugin):
                     color = self.getAverageC(colormap[j][i].tolist(), speed)
                     old_color = color
                     if 'bg' not in optlist:
-                        if gsval.isdigit():
-                            color = "{:02d}".format(int(color))
-                            aimg[j] += "\x03{0}{1}".format(color, gsval)
+                        if gsval != '\xa0':
+                            if gsval.isdigit():
+                                color = "{:02d}".format(int(color))
+                                aimg[j] += "\x03{0}{1}".format(color, gsval)
+                            else:
+                                aimg[j] += "\x03{0}{1}".format(int(color), gsval)
                         else:
-                            aimg[j] += "\x03{0}{1}".format(int(color), gsval)
+                            aimg[j] += "\x030,{0} ".format(int(color))
                     else:
-                        if gsval.isdigit():
-                            newbg = "{:02d}".format(int(bg))
-                            aimg[j] += "\x03{0},{1}{2}".format(int(color), newbg, gsval)
+                        if gsval != '\xa0':
+                            if gsval.isdigit():
+                                newbg = "{:02d}".format(int(bg))
+                                aimg[j] += "\x03{0},{1}{2}".format(int(color), newbg, gsval)
+                            else:
+                                aimg[j] += "\x03{0},{1}{2}".format(int(color), int(bg), gsval)
                         else:
-                            aimg[j] += "\x03{0},{1}{2}".format(int(color), int(bg), gsval)
+                            aimg[j] += "\x030,{0} ".format(int(color))
                 elif 'nocolor' not in optlist and gsval != ' ':
                     color = self.getAverageC(colormap[j][i].tolist(), speed)
                     if color != old_color:
