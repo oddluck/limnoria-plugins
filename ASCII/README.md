@@ -70,7 +70,6 @@ fontlist (get list of availble <fonts>)
 ```
 
 Image URL to ASCII/ANSI Art:
-![Image of Img Command Output](https://i.imgur.com/KEdIPWO.png)
 ```
 img <url> (convert an image <url> to ascii art using 99 color palette)
 img --16 <url> (convert image to ascii art using 16 color palette)
@@ -82,6 +81,12 @@ img --ramp "░▒▓█" <url> (image to colorized shader blocks)
 img --bg <0-99> <url> (set a background color)
 img --w <###> <url> (how many columns wide. defauls to 100)
 ```
+Here are some images using 99 color default output:
+![Image of Img Command Output](https://i.imgur.com/KEdIPWO.png)
+^ output of img https://i.imgur.com/aF9wihd.jpg (image command with default settings)
+![Image of Img Command Output](https://i.imgur.com/2BSUjnw.png)
+^ output of img --chars " " https://i.imgur.com/aF9wihd.jpg (image command with space character)
+
 Speed Presets. Defaults to slowest. It's actually pretty fast.
 ```
 img --faster <url> (use Euclidean color difference algorithm)
