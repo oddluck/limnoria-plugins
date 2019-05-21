@@ -530,6 +530,8 @@ class ASCII(callbacks.Plugin):
             gscale = "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\|()1{}[]?-_+~<>i!lI;:\"^`'."
         if 'nocolor' in optlist and 'chars' in optlist:
             return
+        elif 'nocolor' in optlist and bg == 0 or bg == 98:
+            gscale = "@%#*+=-:. "
         elif 'nocolor' in optlist and 'invert' in optlist:
             gscale = "@%#*+=-:. "
         elif 'nocolor' in optlist and 'ramp' not in optlist:
