@@ -615,8 +615,9 @@ class ASCII(callbacks.Plugin):
                         gsval = gscale[self.char]
                         self.char += 1
                 # get color value
-                if 'nocolor' not in optlist and gsval == ' ' and i == 0:
+                if 'nocolor' not in optlist and i == 0:
                     color = self.getAverageC(colormap[j][i].tolist(), speed)
+                    old_color = color
                     if 'bg' not in optlist:
                         aimg[j] += "\x03{0}{1}".format(int(color), gsval)
                     else:
