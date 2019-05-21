@@ -31,22 +31,22 @@ config channel plugins.ascii.pasteEnable <True/False> (enable/disable paste.ee l
 ```
 
 ASCII Weather from wttr.in
-![Image of Wttr Command Output](https://i.imgur.com/Ld6zl0W.png)
 ```
 wttr <location>
 wttr moon
 wttr --16 <location>/moon
 ```
+![Image of Wttr Command Output](https://i.imgur.com/Ld6zl0W.png)
 Use --16 for 16 colors. Defaults to 99 color extended.
 
 ASCII crypto exchange rates from rate.sx
-![Image of Rate Command Output](https://i.imgur.com/tuYTQbw.png)
 ```
 rate (get rates in united states dollars)
 rate --sub <currency> (get rates in EUR, USD, BTC, etc.)
 rate <coin> (get a graph showing rate fluctuation)
 rate --sub <currency> <coin> (get graphs with desired currency)
 ```
+![Image of Rate Command Output](https://i.imgur.com/tuYTQbw.png)
 Use --16 for 16 colors. Defaults to 99 color extended
 
 Return a random fortune entry from http://www.asciiartfarts.com/fortune.txt
@@ -55,9 +55,16 @@ fortune
 ```
 
 Cowsay. Generate a cowsay ascii. choose character with --type. https://easyapis.soue.tk/api/cowsay
-![Image of Cow Command Output](https://i.imgur.com/H7nUJ4w.png)
 ```
 cow --type <type> <text> (make a cowsay message. type is optional. defaults to cow)
+ ________
+< cowsay >
+ --------
+        \   ^__^
+         \  (oo)\_______
+            (__)\       )\/\
+                ||----w |
+                ||     ||
 ```
 
 Text-to-ASCII Art (split lines with | ex. ascii|art for large fonts):
@@ -67,6 +74,14 @@ ascii --font <font> <text> (to use chosen <font>)
 ascii --color <color> <text> (to set a foreground <color>)
 ascii --color <color1,color2> <text> (to set a foreground/background <color>)
 fontlist (get list of availble <fonts>)
+
+                                   88  88  
+                                   ""  ""  
+,adPPYYba,  ,adPPYba,   ,adPPYba,  88  88  
+""     `Y8  I8[    ""  a8"     ""  88  88  
+,adPPPPP88   `"Y8ba,   8b          88  88  
+88,    ,88  aa    ]8I  "8a,   ,aa  88  88  
+`"8bbdP"Y8  `"YbbdP"'   `"Ybbd8"'  88  88  
 ```
 
 Image URL to ASCII/ANSI Art:
