@@ -41,8 +41,7 @@ wttr <location>?m (use metric units, degrees C, km, etc.)
 wttr <location>?<1-3> (number of days to forecast)
 ```
 ![Image of Wttr Command Output](https://i.imgur.com/o0kf25O.png)
-![Image of Wttr Command Output](https://i.imgur.com/mTHJfuI.png)
-Use --16 for 16 colors. Defaults to 99 color extended.
+![Image of Wttr Command Output](https://i.imgur.com/mTHJfuI.png)<br>
 
 ASCII crypto exchange rates from rate.sx
 ```
@@ -52,7 +51,6 @@ rate <coin> (get a graph showing rate fluctuation)
 rate --sub <currency> <coin> (get graphs with desired currency)
 ```
 ![Image of Rate Command Output](https://i.imgur.com/tuYTQbw.png)
-Use --16 for 16 colors. Defaults to 99 color extended
 
 Return a random fortune entry from http://www.asciiartfarts.com/fortune.txt
 ```
