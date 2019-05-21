@@ -615,8 +615,8 @@ class ASCII(callbacks.Plugin):
                         gsval = gscale[self.char]
                         self.char += 1
                 # get color value
-                if 'nocolor' not in optlist and gsval != ' ':
-                    color = self.getAverageC(colormap[j][i].tolist(),speed)
+                if 'nocolor' not in optlist and gsval != ' ' and i != 0:
+                    color = self.getAverageC(colormap[j][i].tolist(), speed)
                     if color != old_color:
                         old_color = color
                         # append ascii char to string
@@ -639,6 +639,12 @@ class ASCII(callbacks.Plugin):
                                 aimg[j] += "\x030,{0} ".format(int(color))
                     else:
                         aimg[j] += "{0}".format(gsval)
+                elif 'nocolor' not in optlist and gsval == ' ' and i == 0:
+                    color = self.getAverageC(colormap[j][i].tolist(), speed)
+                    if 'bg' not in optlist:
+                        aimg[j] += "\x03{0}{1}".format(int(color), gsval)
+                    else:
+                        aimg[j] += "\x03{0},{1}{2}".format(int(color), int(bg), gsval)
                 else:
                     aimg[j] += "{0}".format(gsval)
         # return txt image
