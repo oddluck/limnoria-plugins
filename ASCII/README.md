@@ -101,9 +101,9 @@ img --w <###> <url> (how many columns wide. defauls to 100)
 img --nocolor <url> (text only greyscale character ramp output)
 ```
 Here are some images using 99 color default output:
-![Image of Img Command Output](https://i.imgur.com/eOQAzTo.png)
+![Image of Img Command Output](https://i.imgur.com/eOQAzTo.png)<br>
 ^ output of img https://i.imgur.com/aF9wihd.jpg (image command with default settings)
-![Image of Img Command Output](https://i.imgur.com/2BSUjnw.png)
+![Image of Img Command Output](https://i.imgur.com/2BSUjnw.png)<br>
 ^ output of img --chars " " https://i.imgur.com/aF9wihd.jpg (image command with space character)
 ```
 ***************+*++++++++++++++++++++++++++++++++++++++=++=++========================---------------
@@ -200,6 +200,9 @@ Picture to Unicode
 ```
 p2u <url>
 ```
+![Image of p2u command](https://i.imgur.com/CBarBzz.png)<br>
+^ Output of p2u https://i.imgur.com/aF9wihd.jpg
+
 p2u command requires p2u https://git.trollforge.org/p2u/about/ (optional. disable command if not installing p2u.)
 
 TDFiglet. Text to tdfiglet
@@ -207,6 +210,7 @@ TDFiglet. Text to tdfiglet
 tdf [-f <font>] <text> (select font with -f <fontname>)
 fonts (list of figlet fonts)
 ```
+![image of tdf commad](https://i.imgur.com/Jctpbno.png)<br>
 tdf command requires tdfiglet https://github.com/tat3r/tdfiglet (optional. disable command if not installing tdfiglet.)
 
 Toilet. Requires installation of toilet. sudo apt install toilet etc. (optional as usual)
@@ -217,3 +221,4 @@ get fonts. looks for fonts in /usr/share/figlet/
 ```
 fonts --toilet
 ```
+![Image of toilet command](https://i.imgur.com/dJChPnj.png)
