@@ -384,7 +384,7 @@ class ASCII(callbacks.Plugin):
         """
         pixel = tuple(pixel)
         if self.colors == 16:
-            colors = list(self.ircColors.keys())[:15]
+            colors = sorted(list(self.ircColors.keys()))[:15]
             if pixel not in self.matches:
                 closest_colors = sorted(colors, key=lambda color: self.distance(color, self.rgb2lab(pixel), speed))
                 closest_color = closest_colors[0]
