@@ -472,17 +472,21 @@ class ASCII(callbacks.Plugin):
         return delta_e
 
     def img(self, irc, msg, args, optlist, url):
-        """[--w <width>] [--16] [--invert] [--chars <text>] [--ramp <text>] [--bg <int>] [--nocolor]<url>
-        Converts image to ASCII art. --16 for 16 colors. --invert inverts the default luma-based character ramp.
-        --chars <YOURTEXT> to color text of your choice. --ramp <TEXT> set a custom luma-based character ramp.
-        --bg <0-98> set a background color using irc colors. Images with transparency will be composited onto bg color.
-        --nocolor for a greyscale character map only.
+        """[--w <width>] [--16] [--chars <text>] [--ramp <text>] [--bg <0-98>] [--invert] [--nocolor] <url>
+        Converts image to ASCII art.
+        --w set width. Default 100
+        --16 for 16 colors. Default 99.
+        --invert inverts default ramp.
+        --chars <TEXT> color text. 
+        --ramp <TEXT> set ramp. e.g. ".:-=+*#%@"
+        --bg <0-98> set background.
+        --nocolor text only greyscale.
         """
         optlist = dict(optlist)
         if '16' in optlist:
             self.colors = 16
         else:
-            self.colors = 83
+            self.colors = 93
         if 'faster' in optlist:
             speed = 'faster'
         elif 'fast' in optlist:
@@ -522,9 +526,9 @@ class ASCII(callbacks.Plugin):
         if 'nocolor' in optlist and 'chars' in optlist:
             return
         elif 'nocolor' in optlist and 'invert' in optlist:
-            gscale = "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\|()1{}[]?-_+~<>i!lI;:,\"^`'. "
+            gscale = "@%#*+=-:. "
         elif 'nocolor' in optlist and 'ramp' not in optlist:
-            gscale = " .'`^\",:;Il!i><~+_-?][}{1)(|\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$"
+            gscale = " .:-=+*#%@"
         if not gscale.strip():
             gscale = '\xa0'
         path = os.path.dirname(os.path.abspath(__file__))
