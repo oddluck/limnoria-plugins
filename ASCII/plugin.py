@@ -472,14 +472,15 @@ class ASCII(callbacks.Plugin):
         return delta_e
 
     def img(self, irc, msg, args, optlist, url):
-        """[--w <width>] [--16] [--chars <text>] [--ramp <text>] [--bg <0-98>] [--invert] [--nocolor] <url>
+        """[--w <width>] [--16] [--chars <text>] [--ramp <text>] [--bg <0-98>] [--fg <0-99>] [--invert] [--nocolor] <url>
         Converts image to ASCII art.
         --w set width. Default 100
         --16 for 16 colors. Default 99.
         --invert inverts default ramp.
         --chars <TEXT> color text. 
         --ramp <TEXT> set ramp. e.g. ".:-=+*#%@"
-        --bg <0-98> set background.
+        --bg <0-98> set background color.
+        --fg <0-99> set foreground color.
         --nocolor text only greyscale.
         """
         optlist = dict(optlist)
@@ -521,6 +522,10 @@ class ASCII(callbacks.Plugin):
             bg = optlist.get('bg')
         else:
             bg = 1
+        if 'fg' in optlist:
+            fg = optlist.get('fg')
+        else:
+            fg = 99
         if 'chars' not in optlist and 'ramp' not in optlist and bg == 0 or bg == 98:
             gscale = "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\|()1{}[]?-_+~<>i!lI;:\"^`'."
         if 'nocolor' in optlist and 'chars' in optlist:
@@ -645,6 +650,15 @@ class ASCII(callbacks.Plugin):
         paste = ""
         self.stopped[msg.args[0]] = False
         for line in output:
+            if 'nocolor' in optlist and 'fg' in optlist and 'bg' in optlist:
+                newbg = "{:02d}".format(int(bg))
+                line = "\x03{0},{1}{2}".format(int(fg), newbg, line)
+            elif 'nocolor' in optlist and 'fg' in optlist:
+                newfg = "{:02d}".format(int(fg))
+                line = "\x03{0}{1}".format(newfg, line)
+            elif 'nocolor' in optlist and 'bg' in optlist:
+                newbg = "{:02d}".format(int(bg))
+                line = "\x0399,{0}{1}".format(newbg, line)
             if self.registryValue('pasteEnable', msg.args[0]):
                 paste += line + "\n"
             if not self.stopped[msg.args[0]]:
@@ -662,7 +676,7 @@ class ASCII(callbacks.Plugin):
                 return
                 #irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
         self.char = 0
-    img = wrap(img,[getopts({'w':'int', 'invert':'', 'fast':'', 'faster':'', 'slow':'', 'slower':'', 'slowest':'', 'insane':'', '16':'', 'delay':'float', 'dither':'', 'chars':'text', 'bg':'int', 'ramp':'text', 'nocolor':''}), ('text')])
+    img = wrap(img,[getopts({'w':'int', 'invert':'', 'fast':'', 'faster':'', 'slow':'', 'slower':'', 'slowest':'', 'insane':'', '16':'', 'delay':'float', 'dither':'', 'chars':'text', 'bg':'int', 'fg':'int', 'ramp':'text', 'nocolor':''}), ('text')])
 
     def fontlist(self, irc, msg, args):
         """
