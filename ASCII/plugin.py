@@ -329,6 +329,8 @@ class ASCII(callbacks.Plugin):
         Text to ASCII art
         """
         channel = ircutils.toLower(channel)
+        if not irc.isChannel(channel):
+            channel = msg.nick
         channel = msg.args[0]
         optlist = dict(optlist)
         font = None
@@ -463,6 +465,8 @@ class ASCII(callbacks.Plugin):
         --nocolor text only greyscale.
         """
         channel = ircutils.toLower(channel)
+        if not irc.isChannel(channel):
+            channel = msg.nick
         optlist = dict(optlist)
         if '16' in optlist:
             self.colors = 16
@@ -695,6 +699,8 @@ class ASCII(callbacks.Plugin):
         Play ASCII/ANSI art files from web links
         """
         channel = ircutils.toLower(channel)
+        if not irc.isChannel(channel):
+            channel = msg.nick
         optlist = dict(optlist)
         self.stopped[msg.args[0]] = False
         if 'delay' in optlist:
@@ -720,6 +726,8 @@ class ASCII(callbacks.Plugin):
         Convert ANSI files to IRC formatted text. https://github.com/tat3r/a2m
         """
         channel = ircutils.toLower(channel)
+        if not irc.isChannel(channel):
+            channel = msg.nick
         optlist = dict(optlist)
         opts = ''
         if 'l' in optlist:
@@ -792,6 +800,8 @@ class ASCII(callbacks.Plugin):
         Picture to Unicode. https://git.trollforge.org/p2u/about/
         """
         channel = ircutils.toLower(channel)
+        if not irc.isChannel(channel):
+            channel = msg.nick
         optlist = dict(optlist)
         opts = ''
         if 'b' in optlist:
@@ -876,6 +886,8 @@ class ASCII(callbacks.Plugin):
         tdfiglet. https://github.com/tat3r/tdfiglet
         """
         channel = ircutils.toLower(channel)
+        if not irc.isChannel(channel):
+            channel = msg.nick
         optlist = dict(optlist)
         opts = ''
         if 'f' in optlist:
@@ -941,6 +953,8 @@ class ASCII(callbacks.Plugin):
         Toilet. -f to select font. -F to select filters. Separate multiple filters with a comma.
         """
         channel = ircutils.toLower(channel)
+        if not irc.isChannel(channel):
+            channel = msg.nick
         optlist = dict(optlist)
         opts = ''
         if 'f' in optlist:
@@ -1014,6 +1028,8 @@ class ASCII(callbacks.Plugin):
         <location>?<1-3> (number of days)
         """
         channel = ircutils.toLower(channel)
+        if not irc.isChannel(channel):
+            channel = msg.nick
         optlist = dict(optlist)
         if 'delay' in optlist:
             delay = optlist.get('delay')
@@ -1088,6 +1104,8 @@ class ASCII(callbacks.Plugin):
         --99 for 99 colors.
         """
         channel = ircutils.toLower(channel)
+        if not irc.isChannel(channel):
+            channel = msg.nick
         optlist = dict(optlist)
         if 'delay' in optlist:
             delay = optlist.get('delay')
@@ -1173,6 +1191,8 @@ class ASCII(callbacks.Plugin):
         Cowsay
         """
         channel = ircutils.toLower(channel)
+        if not irc.isChannel(channel):
+            channel = msg.nick
         optlist = dict(optlist)
         if 'delay' in optlist:
             delay = optlist.get('delay')
@@ -1211,6 +1231,8 @@ class ASCII(callbacks.Plugin):
         Returns a random ASCII from http://www.asciiartfarts.com/fortune.txt
         """
         channel = ircutils.toLower(channel)
+        if not irc.isChannel(channel):
+            channel = msg.nick
         optlist = dict(optlist)
         if 'delay' in optlist:
             delay = optlist.get('delay')
