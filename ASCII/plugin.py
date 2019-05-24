@@ -1233,7 +1233,7 @@ class ASCII(callbacks.Plugin):
                 reply = ", ".join(sorted(os.listdir("/usr/local/share/tdfiglet/fonts/")))
                 irc.reply("http://www.roysac.com/thedrawfonts-tdf.html", prefixNick=False)
                 irc.reply(reply, prefixNick=False)
-            except:
+            except FileNotFoundError:
                 reply = ", ".join(sorted(os.listdir("/usr/share/figlet")))
                 irc.reply(reply, prefixNick=False)
             except:
