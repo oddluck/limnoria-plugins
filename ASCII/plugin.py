@@ -362,7 +362,7 @@ class ASCII(callbacks.Plugin):
                  data = requests.get("https://artii.herokuapp.com/make?text={0}&font={1}".format(text, font))
                  for line in data.text.splitlines():
                      if line.strip():
-                         irc.reply(ircutils.mircColor(line, color1, color2), prefixNick=False, private=False, notice=False)
+                         irc.reply(ircutils.mircColor(line, color1, color2), prefixNick=False, private=False, notice=False, to=channel)
         elif 'font' not in optlist:
             if words:
                  for word in words:
@@ -370,12 +370,12 @@ class ASCII(callbacks.Plugin):
                          data = requests.get("https://artii.herokuapp.com/make?text={0}&font=univers".format(word.strip()))
                          for line in data.text.splitlines():
                              if line.strip():
-                                 irc.reply(ircutils.mircColor(line, color1, color2), prefixNick=False, private=False, notice=False)
+                                 irc.reply(ircutils.mircColor(line, color1, color2), prefixNick=False, private=False, notice=False, to=channel)
             else:
                 data = requests.get("https://artii.herokuapp.com/make?text={0}&font=univers".format(text))
                 for line in data.text.splitlines():
                     if line.strip():
-                        irc.reply(ircutils.mircColor(line, color1, color2), prefixNick=False, private=False, notice=False)
+                        irc.reply(ircutils.mircColor(line, color1, color2), prefixNick=False, private=False, notice=False, to=channel)
 
     ascii = wrap(ascii, ['channel', getopts({'font':'text', 'color':'text'}), ('text')])
 
@@ -666,7 +666,7 @@ class ASCII(callbacks.Plugin):
                 paste += line + "\n"
             if not self.stopped[msg.args[0]]:
                 time.sleep(delay)
-                irc.reply(line, prefixNick=False, noLengthCheck=True, private=False, notice=False)
+                irc.reply(line, prefixNick=False, noLengthCheck=True, private=False, notice=False, to=channel)
         if self.registryValue('pasteEnable', msg.args[0]):
             try:
                 apikey = self.registryValue('pasteAPI')
@@ -674,7 +674,7 @@ class ASCII(callbacks.Plugin):
                 headers = {'X-Auth-Token':apikey}
                 post_response = requests.post(url='https://api.paste.ee/v1/pastes', json=payload, headers=headers)
                 response = post_response.json()
-                irc.reply(response['link'].replace('/p/', '/r/'), private=False, notice=False)
+                irc.reply(response['link'].replace('/p/', '/r/'), private=False, notice=False, to=channel)
             except:
                 return
                 #irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
@@ -706,13 +706,13 @@ class ASCII(callbacks.Plugin):
         file = requests.get(url)
         file = file.text.lstrip().splitlines()
         if "<!DOCTYPE html>" in file[:10]:
-            irc.reply("Error: ansi2irc requires a text file as input.", private=False, notice=False)
+            irc.reply("Error: ansi2irc requires a text file as input.", private=False, notice=False, to=channel)
             return
         else:
             for line in file:
                 if line.strip() and not self.stopped[msg.args[0]]:
                     time.sleep(delay)
-                    irc.reply(line, prefixNick = False, noLengthCheck=True, private=False, notice=False)
+                    irc.reply(line, prefixNick = False, noLengthCheck=True, private=False, notice=False, to=channel)
     scroll = wrap(scroll, ['channel', getopts({'delay':'float'}), ('text')])
 
     def a2m(self, irc, msg, args, channel, optlist, url):
@@ -770,7 +770,7 @@ class ASCII(callbacks.Plugin):
                     paste += line + "\n"
                 if line.strip() and not self.stopped[msg.args[0]]:
                     time.sleep(delay)
-                    irc.reply(line, prefixNick = False, noLengthCheck=True, private=False, notice=False)
+                    irc.reply(line, prefixNick = False, noLengthCheck=True, private=False, notice=False, to=channel)
             if self.registryValue('pasteEnable', msg.args[0]):
                 try:
                     apikey = self.registryValue('pasteAPI')
@@ -778,7 +778,7 @@ class ASCII(callbacks.Plugin):
                     headers = {'X-Auth-Token':apikey}
                     post_response = requests.post(url='https://api.paste.ee/v1/pastes', json=payload, headers=headers)
                     response = post_response.json()
-                    irc.reply(response['link'].replace('/p/', '/r/'), private=False, notice=False)
+                    irc.reply(response['link'].replace('/p/', '/r/'), private=False, notice=False, to=channel)
                 except:
                     return
                     #irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
@@ -855,7 +855,7 @@ class ASCII(callbacks.Plugin):
                     paste += line + "\n"
                 if line.strip() and not self.stopped[msg.args[0]]:
                     time.sleep(delay)
-                    irc.reply(line, prefixNick = False, noLengthCheck=True, private=False, notice=False)
+                    irc.reply(line, prefixNick = False, noLengthCheck=True, private=False, notice=False, to=channel)
             if self.registryValue('pasteEnable', msg.args[0]):
                 try:
                     apikey = self.registryValue('pasteAPI')
@@ -863,7 +863,7 @@ class ASCII(callbacks.Plugin):
                     headers = {'X-Auth-Token':apikey}
                     post_response = requests.post(url='https://api.paste.ee/v1/pastes', json=payload, headers=headers)
                     response = post_response.json()
-                    irc.reply(response['link'].replace('/p/', '/r/'), private=False, notice=False)
+                    irc.reply(response['link'].replace('/p/', '/r/'), private=False, notice=False, to=channel)
                 except:
                     return
                     #irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
@@ -919,10 +919,10 @@ class ASCII(callbacks.Plugin):
                 paste += line + "\n"
             if not line.strip() and not self.stopped[msg.args[0]]:
                 time.sleep(delay)
-                irc.reply('\xa0', prefixNick = False, noLengthCheck=True, private=False, notice=False)
+                irc.reply('\xa0', prefixNick = False, noLengthCheck=True, private=False, notice=False, to=channel)
             elif not self.stopped[msg.args[0]]:
                 time.sleep(delay)
-                irc.reply(line, prefixNick = False, noLengthCheck=True, private=False, notice=False)
+                irc.reply(line, prefixNick = False, noLengthCheck=True, private=False, notice=False, to=channel)
         if self.registryValue('pasteEnable', msg.args[0]):
             try:
                 apikey = self.registryValue('pasteAPI')
@@ -930,7 +930,7 @@ class ASCII(callbacks.Plugin):
                 headers = {'X-Auth-Token':apikey}
                 post_response = requests.post(url='https://api.paste.ee/v1/pastes', json=payload, headers=headers)
                 response = post_response.json()
-                irc.reply(response['link'].replace('/p/', '/r/'), private=False, notice=False)
+                irc.reply(response['link'].replace('/p/', '/r/'), private=False, notice=False, to=channel)
             except:
                 return
                 #irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
@@ -986,10 +986,10 @@ class ASCII(callbacks.Plugin):
                 paste += line + "\n"
             if not line.strip() and not self.stopped[msg.args[0]]:
                 time.sleep(delay)
-                irc.reply('\xa0', prefixNick = False, noLengthCheck=True, private=False, notice=False)
+                irc.reply('\xa0', prefixNick = False, noLengthCheck=True, private=False, notice=False, to=channel)
             elif not self.stopped[msg.args[0]]:
                 time.sleep(delay)
-                irc.reply(line, prefixNick = False, noLengthCheck=True, private=False, notice=False)
+                irc.reply(line, prefixNick = False, noLengthCheck=True, private=False, notice=False, to=channel)
         if self.registryValue('pasteEnable', msg.args[0]):
             try:
                 apikey = self.registryValue('pasteAPI')
@@ -997,7 +997,7 @@ class ASCII(callbacks.Plugin):
                 headers = {'X-Auth-Token':apikey}
                 post_response = requests.post(url='https://api.paste.ee/v1/pastes', json=payload, headers=headers)
                 response = post_response.json()
-                irc.reply(response['link'].replace('/p/', '/r/'), private=False, notice=False)
+                irc.reply(response['link'].replace('/p/', '/r/'), private=False, notice=False, to=channel)
             except:
                 return
                 #irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
@@ -1062,12 +1062,12 @@ class ASCII(callbacks.Plugin):
                 if self.registryValue('pasteEnable', msg.args[0]):
                     paste += line + "\n"
                 time.sleep(delay)
-                irc.reply('\xa0', prefixNick = False, noLengthCheck=True, private=False, notice=False)
+                irc.reply('\xa0', prefixNick = False, noLengthCheck=True, private=False, notice=False, to=channel)
             elif line.strip() and not self.stopped[msg.args[0]] and not line.startswith("Follow"):
                 if self.registryValue('pasteEnable', msg.args[0]):
                     paste += line + "\n"
                 time.sleep(delay)
-                irc.reply(line, prefixNick = False, noLengthCheck=True, private=False, notice=False)
+                irc.reply(line, prefixNick = False, noLengthCheck=True, private=False, notice=False, to=channel)
         if self.registryValue('pasteEnable', msg.args[0]):
             try:
                 apikey = self.registryValue('pasteAPI')
@@ -1075,7 +1075,7 @@ class ASCII(callbacks.Plugin):
                 headers = {'X-Auth-Token':apikey}
                 post_response = requests.post(url='https://api.paste.ee/v1/pastes', json=payload, headers=headers)
                 response = post_response.json()
-                irc.reply(response['link'].replace('/p/', '/r/'), private=False, notice=False)
+                irc.reply(response['link'].replace('/p/', '/r/'), private=False, notice=False, to=channel)
             except:
                 return
     wttr = wrap(wttr, ['channel', getopts({'delay':'float', '16':'', '99':'', 'fast':'', 'faster':'', 'slow':'', 'slower':'', 'slowest':'', 'insane':''}), ('text')])
@@ -1150,12 +1150,12 @@ class ASCII(callbacks.Plugin):
                 if self.registryValue('pasteEnable', msg.args[0]):
                     paste += line + "\n"
                 time.sleep(delay)
-                irc.reply('\xa0', prefixNick = False, noLengthCheck=True, private=False, notice=False)
+                irc.reply('\xa0', prefixNick = False, noLengthCheck=True, private=False, notice=False, to=channel)
             elif line.strip() and not self.stopped[msg.args[0]] and "Follow @igor_chubin" not in line:
                 if self.registryValue('pasteEnable', msg.args[0]):
                     paste += line + "\n"
                 time.sleep(delay)
-                irc.reply(line, prefixNick = False, noLengthCheck=True, private=False, notice=False)
+                irc.reply(line, prefixNick = False, noLengthCheck=True, private=False, notice=False, to=channel)
         if self.registryValue('pasteEnable', msg.args[0]):
             try:
                 apikey = self.registryValue('pasteAPI')
@@ -1163,7 +1163,7 @@ class ASCII(callbacks.Plugin):
                 headers = {'X-Auth-Token':apikey}
                 post_response = requests.post(url='https://api.paste.ee/v1/pastes', json=payload, headers=headers)
                 response = post_response.json()
-                irc.reply(response['link'].replace('/p/', '/r/'), private=False, notice=False)
+                irc.reply(response['link'].replace('/p/', '/r/'), private=False, notice=False, to=channel)
             except:
                 return
     rate = wrap(rate, ['channel', getopts({'delay':'float', '16':'', '99':'', 'sub':'text', 'fast':'', 'faster':'', 'slow':'', 'slower':'', 'slowest':'', 'insane':''}), optional('text')])
@@ -1190,10 +1190,10 @@ class ASCII(callbacks.Plugin):
                 paste += line + "\n"
             if not line.strip() and not self.stopped[msg.args[0]]:
                 time.sleep(delay)
-                irc.reply('\xa0', prefixNick = False, noLengthCheck=True, private=False, notice=False)
+                irc.reply('\xa0', prefixNick = False, noLengthCheck=True, private=False, notice=False, to=channel)
             elif line.strip() and not self.stopped[msg.args[0]] and "Follow @igor_chubin" not in line:
                 time.sleep(delay)
-                irc.reply(line, prefixNick = False, noLengthCheck=True, private=False, notice=False)
+                irc.reply(line, prefixNick = False, noLengthCheck=True, private=False, notice=False, to=channel)
         if self.registryValue('pasteEnable', msg.args[0]):
             try:
                 apikey = self.registryValue('pasteAPI')
@@ -1201,7 +1201,7 @@ class ASCII(callbacks.Plugin):
                 headers = {'X-Auth-Token':apikey}
                 post_response = requests.post(url='https://api.paste.ee/v1/pastes', json=payload, headers=headers)
                 response = post_response.json()
-                irc.reply(response['link'].replace('/p/', '/r/'), private=False, notice=False)
+                irc.reply(response['link'].replace('/p/', '/r/'), private=False, notice=False, to=channel)
             except:
                 return
     cow = wrap(cow, ['channel', getopts({'delay':'float', 'type':'text'}), ('text')])
@@ -1222,10 +1222,10 @@ class ASCII(callbacks.Plugin):
         for line in fortunes[fortune].splitlines():
             if not line.strip() and not self.stopped[msg.args[0]]:
                 time.sleep(delay)
-                irc.reply('\xa0', prefixNick = False, noLengthCheck=True, private=False, notice=False)
+                irc.reply('\xa0', prefixNick = False, noLengthCheck=True, private=False, notice=False, to=channel)
             elif line.strip() and not self.stopped[msg.args[0]] and "Follow @igor_chubin" not in line:
                 time.sleep(delay)
-                irc.reply(line, prefixNick = False, noLengthCheck=True, private=False, notice=False)
+                irc.reply(line, prefixNick = False, noLengthCheck=True, private=False, notice=False, to=channel)
     fortune = wrap(fortune, ['channel', getopts({'delay':'float'})])
 
     def fonts(self, irc, msg, args, optlist):
