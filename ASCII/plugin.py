@@ -685,7 +685,7 @@ class ASCII(callbacks.Plugin):
         """
         fontlist = requests.get("https://artii.herokuapp.com/fonts_list")
         response = sorted(fontlist.text.split('\n'))
-        irc.reply(str(response).replace('\'', '').replace('[', '').replace(']', ''), notice=True, Private=True)
+        irc.reply(str(response).replace('\'', '').replace('[', '').replace(']', ''))
     fontlist = wrap(fontlist)
 
     def scroll(self, irc, msg, args, optlist, url):
@@ -1223,12 +1223,21 @@ class ASCII(callbacks.Plugin):
         """
         optlist = dict(optlist)
         if 'toilet' in optlist:
-            reply = ", ".join(sorted(os.listdir("/usr/share/figlet")))
-            irc.reply(reply, prefixNick=False)
+            try:
+                reply = ", ".join(sorted(os.listdir("/usr/share/figlet")))
+                irc.reply(reply, prefixNick=False)
+            except:
+                irc.reply("Sorry, unable to access font directory /usr/share/figlet")
         else:
-            reply = ", ".join(sorted(os.listdir("/usr/local/share/tdfiglet/fonts/")))
-            irc.reply("http://www.roysac.com/thedrawfonts-tdf.html", prefixNick=False)
-            irc.reply(reply, prefixNick=False)
+            try:
+                reply = ", ".join(sorted(os.listdir("/usr/local/share/tdfiglet/fonts/")))
+                irc.reply("http://www.roysac.com/thedrawfonts-tdf.html", prefixNick=False)
+                irc.reply(reply, prefixNick=False)
+            except:
+                reply = ", ".join(sorted(os.listdir("/usr/share/figlet")))
+                irc.reply(reply, prefixNick=False)
+            except:
+                irc.reply("Sorry, unable to access font directories /usr/local/share/tdfiglet/fonts/ or /usr/share/figlet")
     fonts = wrap(fonts, [getopts({'toilet':''})])
 
     def cq(self, irc, msg, args):
