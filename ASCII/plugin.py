@@ -328,9 +328,8 @@ class ASCII(callbacks.Plugin):
         """[<channel>] [--font <font>] [--color <color1,color2>] [<text>]
         Text to ASCII art
         """
-        channel = ircutils.toLower(channel)
-        if not irc.isChannel(channel):
-            channel = msg.nick
+        if not channel:
+            channel = msg.args[0]
         channel = msg.args[0]
         optlist = dict(optlist)
         font = None
@@ -379,7 +378,7 @@ class ASCII(callbacks.Plugin):
                     if line.strip():
                         irc.reply(ircutils.mircColor(line, color1, color2), prefixNick=False, private=False, notice=False, to=channel)
 
-    ascii = wrap(ascii, ['channel', getopts({'font':'text', 'color':'text'}), ('text')])
+    ascii = wrap(ascii, [optional('channel'), getopts({'font':'text', 'color':'text'}), ('text')])
 
     def getAverageC(self, pixel, speed):
         """
@@ -464,9 +463,8 @@ class ASCII(callbacks.Plugin):
         --fg <0-99> set foreground color.
         --nocolor text only greyscale.
         """
-        channel = ircutils.toLower(channel)
-        if not irc.isChannel(channel):
-            channel = msg.nick
+        if not channel:
+            channel = msg.args[0]
         optlist = dict(optlist)
         if '16' in optlist:
             self.colors = 16
@@ -683,7 +681,7 @@ class ASCII(callbacks.Plugin):
                 return
                 #irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
         self.char = 0
-    img = wrap(img,['channel', getopts({'w':'int', 'invert':'', 'fast':'', 'faster':'', 'slow':'', 'slower':'', 'slowest':'', 'insane':'', '16':'', 'delay':'float', 'dither':'', 'chars':'text', 'bg':'int', 'fg':'int', 'ramp':'text', 'nocolor':''}), ('text')])
+    img = wrap(img,[optional('channel'), getopts({'w':'int', 'invert':'', 'fast':'', 'faster':'', 'slow':'', 'slower':'', 'slowest':'', 'insane':'', '16':'', 'delay':'float', 'dither':'', 'chars':'text', 'bg':'int', 'fg':'int', 'ramp':'text', 'nocolor':''}), ('text')])
 
     def fontlist(self, irc, msg, args):
         """
@@ -698,9 +696,8 @@ class ASCII(callbacks.Plugin):
         """[<channel>] <url>
         Play ASCII/ANSI art files from web links
         """
-        channel = ircutils.toLower(channel)
-        if not irc.isChannel(channel):
-            channel = msg.nick
+        if not channel:
+            channel = msg.args[0]
         optlist = dict(optlist)
         self.stopped[msg.args[0]] = False
         if 'delay' in optlist:
@@ -719,15 +716,14 @@ class ASCII(callbacks.Plugin):
                 if line.strip() and not self.stopped[msg.args[0]]:
                     time.sleep(delay)
                     irc.reply(line, prefixNick = False, noLengthCheck=True, private=False, notice=False, to=channel)
-    scroll = wrap(scroll, ['channel', getopts({'delay':'float'}), ('text')])
+    scroll = wrap(scroll, [optional('channel'), getopts({'delay':'float'}), ('text')])
 
     def a2m(self, irc, msg, args, channel, optlist, url):
         """[<channel>] [--l] [--r] [--n] [--p] [--t] [--w] [--delay] <url>
         Convert ANSI files to IRC formatted text. https://github.com/tat3r/a2m
         """
-        channel = ircutils.toLower(channel)
-        if not irc.isChannel(channel):
-            channel = msg.nick
+        if not channel:
+            channel = msg.args[0]
         optlist = dict(optlist)
         opts = ''
         if 'l' in optlist:
@@ -793,15 +789,14 @@ class ASCII(callbacks.Plugin):
         except:
             irc.reply("Unexpected file type or link format", private=False, notice=False)
             return
-    a2m = wrap(a2m, ['channel', getopts({'l':'int', 'r':'int', 't':'int', 'w':'int', 'delay':'float'}), ('text')])
+    a2m = wrap(a2m, [optional('channel'), getopts({'l':'int', 'r':'int', 't':'int', 'w':'int', 'delay':'float'}), ('text')])
 
     def p2u(self, irc, msg, args, channel, optlist, url):
         """[<channel>] [--b] [--f] [--p] [--s] [--t] [--w] [--delay] <url>
         Picture to Unicode. https://git.trollforge.org/p2u/about/
         """
-        channel = ircutils.toLower(channel)
-        if not irc.isChannel(channel):
-            channel = msg.nick
+        if not channel:
+            channel = msg.args[0]
         optlist = dict(optlist)
         opts = ''
         if 'b' in optlist:
@@ -879,15 +874,14 @@ class ASCII(callbacks.Plugin):
                     #irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
         else:
             irc.reply("Unexpected file type or link format", private=False, notice=False)
-    p2u = wrap(p2u, ['channel', getopts({'b':'int', 'f':'text', 'p':'text', 's':'int', 't':'int', 'w':'int', 'delay':'float'}), ('text')])
+    p2u = wrap(p2u, [optional('channel'), getopts({'b':'int', 'f':'text', 'p':'text', 's':'int', 't':'int', 'w':'int', 'delay':'float'}), ('text')])
 
     def tdf(self, irc, msg, args, channel, optlist, text):
         """[<channel>] [--f] [--j] [--w] [--e] [--r] [--delay] <text>
         tdfiglet. https://github.com/tat3r/tdfiglet
         """
-        channel = ircutils.toLower(channel)
-        if not irc.isChannel(channel):
-            channel = msg.nick
+        if not channel:
+            channel = msg.args[0]
         optlist = dict(optlist)
         opts = ''
         if 'f' in optlist:
@@ -946,15 +940,14 @@ class ASCII(callbacks.Plugin):
             except:
                 return
                 #irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
-    tdf = wrap(tdf, ['channel', getopts({'f':'text', 'j':'text', 'w':'int', 'e':'text', 'r':'', 'delay':'float'}), ('text')])
+    tdf = wrap(tdf, [optional('channel'), getopts({'f':'text', 'j':'text', 'w':'int', 'e':'text', 'r':'', 'delay':'float'}), ('text')])
 
     def toilet(self, irc, msg, args, channel, optlist, text):
         """[<channel>] [--f fontname] [--F filter1,filter2,etc.] [--w] [--delay] <text>
         Toilet. -f to select font. -F to select filters. Separate multiple filters with a comma.
         """
-        channel = ircutils.toLower(channel)
-        if not irc.isChannel(channel):
-            channel = msg.nick
+        if not channel:
+            channel = msg.args[0]
         optlist = dict(optlist)
         opts = ''
         if 'f' in optlist:
@@ -1015,7 +1008,7 @@ class ASCII(callbacks.Plugin):
             except:
                 return
                 #irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
-    toilet = wrap(toilet, ['channel', getopts({'f':'text', 'F':'text', 's':'', 'S':'', 'k':'', 'w':'int', 'W':'', 'o':'', 'delay':'float'}), ('text')])
+    toilet = wrap(toilet, [optional('channel'), getopts({'f':'text', 'F':'text', 's':'', 'S':'', 'k':'', 'w':'int', 'W':'', 'o':'', 'delay':'float'}), ('text')])
 
     def wttr(self, irc, msg, args, channel, optlist, location):
         """[<channel>] [--16] [--99] <location/moon>
@@ -1027,9 +1020,8 @@ class ASCII(callbacks.Plugin):
         <location>?m (metric).
         <location>?<1-3> (number of days)
         """
-        channel = ircutils.toLower(channel)
-        if not irc.isChannel(channel):
-            channel = msg.nick
+        if not channel:
+            channel = msg.args[0]
         optlist = dict(optlist)
         if 'delay' in optlist:
             delay = optlist.get('delay')
@@ -1094,7 +1086,7 @@ class ASCII(callbacks.Plugin):
                 irc.reply(response['link'].replace('/p/', '/r/'), private=False, notice=False, to=channel)
             except:
                 return
-    wttr = wrap(wttr, ['channel', getopts({'delay':'float', '16':'', '99':'', 'fast':'', 'faster':'', 'slow':'', 'slower':'', 'slowest':'', 'insane':''}), ('text')])
+    wttr = wrap(wttr, [optional('channel'), getopts({'delay':'float', '16':'', '99':'', 'fast':'', 'faster':'', 'slow':'', 'slower':'', 'slowest':'', 'insane':''}), ('text')])
 
     def rate(self, irc, msg, args, channel, optlist, coin):
         """[<channel>] [--16] [--99] [--sub <text>] [coin]
@@ -1103,9 +1095,8 @@ class ASCII(callbacks.Plugin):
         --16 for 16 colors. Default.
         --99 for 99 colors.
         """
-        channel = ircutils.toLower(channel)
-        if not irc.isChannel(channel):
-            channel = msg.nick
+        if not channel:
+            channel = msg.args[0]
         optlist = dict(optlist)
         if 'delay' in optlist:
             delay = optlist.get('delay')
@@ -1184,15 +1175,14 @@ class ASCII(callbacks.Plugin):
                 irc.reply(response['link'].replace('/p/', '/r/'), private=False, notice=False, to=channel)
             except:
                 return
-    rate = wrap(rate, ['channel', getopts({'delay':'float', '16':'', '99':'', 'sub':'text', 'fast':'', 'faster':'', 'slow':'', 'slower':'', 'slowest':'', 'insane':''}), optional('text')])
+    rate = wrap(rate, [optional('channel'), getopts({'delay':'float', '16':'', '99':'', 'sub':'text', 'fast':'', 'faster':'', 'slow':'', 'slower':'', 'slowest':'', 'insane':''}), optional('text')])
 
     def cow(self, irc, msg, args, channel, optlist, text):
         """[<channel>] [--delay] [--type <character>] <text>
         Cowsay
         """
-        channel = ircutils.toLower(channel)
-        if not irc.isChannel(channel):
-            channel = msg.nick
+        if not channel:
+            channel = msg.args[0]
         optlist = dict(optlist)
         if 'delay' in optlist:
             delay = optlist.get('delay')
@@ -1224,15 +1214,14 @@ class ASCII(callbacks.Plugin):
                 irc.reply(response['link'].replace('/p/', '/r/'), private=False, notice=False, to=channel)
             except:
                 return
-    cow = wrap(cow, ['channel', getopts({'delay':'float', 'type':'text'}), ('text')])
+    cow = wrap(cow, [optional('channel'), getopts({'delay':'float', 'type':'text'}), ('text')])
 
     def fortune(self, irc, msg, args, channel, optlist):
         """[<channel>]
         Returns a random ASCII from http://www.asciiartfarts.com/fortune.txt
         """
-        channel = ircutils.toLower(channel)
-        if not irc.isChannel(channel):
-            channel = msg.nick
+        if not channel:
+            channel = msg.args[0]
         optlist = dict(optlist)
         if 'delay' in optlist:
             delay = optlist.get('delay')
@@ -1248,7 +1237,7 @@ class ASCII(callbacks.Plugin):
             elif line.strip() and not self.stopped[msg.args[0]] and "Follow @igor_chubin" not in line:
                 time.sleep(delay)
                 irc.reply(line, prefixNick = False, noLengthCheck=True, private=False, notice=False, to=channel)
-    fortune = wrap(fortune, ['channel', getopts({'delay':'float'})])
+    fortune = wrap(fortune, [optional('channel'), getopts({'delay':'float'})])
 
     def fonts(self, irc, msg, args, optlist):
         """[--toilet]
