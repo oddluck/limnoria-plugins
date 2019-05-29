@@ -706,16 +706,19 @@ class ASCII(callbacks.Plugin):
             delay = self.registryValue('delay', msg.args[0])
         if url.startswith("https://paste.ee/p/"):
             url = re.sub("https://paste.ee/p/", "https://paste.ee/r/", url)
-        file = requests.get(url)
-        file = file.text.lstrip().splitlines()
-        if "<!DOCTYPE html>" in file[:10]:
-            irc.reply("Error: ansi2irc requires a text file as input.", private=False, notice=False, to=channel)
-            return
+        ua = UserAgent()
+        header = {'User-Agent':str(ua.random)}
+        r = requests.head(url, headers=header)
+        if "text/plain" in r.headers["content-type"]:
+            file = requests.get(url, headers=header)
         else:
-            for line in file:
-                if line.strip() and not self.stopped[msg.args[0]]:
-                    time.sleep(delay)
-                    irc.reply(line, prefixNick = False, noLengthCheck=True, private=False, notice=False, to=channel)
+            irc.reply("Invalid file type.", private=False, notice=False)
+            return
+        file = file.text.lstrip().splitlines()
+        for line in file:
+            if line.strip() and not self.stopped[msg.args[0]]:
+                time.sleep(delay)
+                irc.reply(line, prefixNick = False, noLengthCheck=True, private=False, notice=False, to=channel)
     scroll = wrap(scroll, [optional('channel'), getopts({'delay':'float'}), ('text')])
 
     def a2m(self, irc, msg, args, channel, optlist, url):
@@ -748,47 +751,50 @@ class ASCII(callbacks.Plugin):
             delay = optlist.get('delay')
         else:
             delay = self.registryValue('delay', msg.args[0])
+        ua = UserAgent()
+        header = {'User-Agent':str(ua.random)}
+        r = requests.head(url, headers=header)
         try:
-            file = requests.get(url)
-            if "<!DOCTYPE html>" in file.text.lstrip().splitlines()[:10]:
-                irc.reply("Error: ansi2irc requires a text file as input.", private=False, notice=False)
+            if int(r.headers["content-length"]) > 1000000:
+                irc.reply("Invalid file type.")
                 return
-            try:
+            else:
                 path = os.path.dirname(os.path.abspath(__file__))
                 filepath = "{0}/tmp".format(path)
                 filename = "{0}/{1}".format(filepath, url.split('/')[-1])
                 urllib.request.urlretrieve(url, filename)
-                output = pexpect.run('a2m {0} {1}'.format(opts.strip(), str(filename)))
                 try:
-                    os.remove(filename)
+                    output = pexpect.run('a2m {0} {1}'.format(opts.strip(), str(filename)))
+                    try:
+                        os.remove(filename)
+                    except:
+                        pass
                 except:
-                    pass
-            except:
-                irc.reply("Error. Have you installed A2M? https://github.com/tat3r/a2m", private=False, notice=False)
-                return
-            paste = ""
-            self.stopped[msg.args[0]] = False
-            for line in output.splitlines():
-                line = line.decode()
-                if self.registryValue('pasteEnable', msg.args[0]):
-                    paste += line + "\n"
-                if line.strip() and not self.stopped[msg.args[0]]:
-                    time.sleep(delay)
-                    irc.reply(line, prefixNick = False, noLengthCheck=True, private=False, notice=False, to=channel)
-            if self.registryValue('pasteEnable', msg.args[0]):
-                try:
-                    apikey = self.registryValue('pasteAPI')
-                    payload = {'description':url,'sections':[{'contents':paste}]}
-                    headers = {'X-Auth-Token':apikey}
-                    post_response = requests.post(url='https://api.paste.ee/v1/pastes', json=payload, headers=headers)
-                    response = post_response.json()
-                    irc.reply(response['link'].replace('/p/', '/r/'), private=False, notice=False, to=channel)
-                except:
+                    irc.reply("Error. Have you installed A2M? https://github.com/tat3r/a2m", private=False, notice=False)
                     return
-                    #irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
         except:
-            irc.reply("Unexpected file type or link format", private=False, notice=False)
+            irc.reply("Invalid file type.", private=False, notice=False)
             return
+        paste = ""
+        self.stopped[msg.args[0]] = False
+        for line in output.splitlines():
+            line = line.decode()
+            if self.registryValue('pasteEnable', msg.args[0]):
+                paste += line + "\n"
+            if line.strip() and not self.stopped[msg.args[0]]:
+                time.sleep(delay)
+                irc.reply(line, prefixNick = False, noLengthCheck=True, private=False, notice=False, to=channel)
+        if self.registryValue('pasteEnable', msg.args[0]):
+            try:
+                apikey = self.registryValue('pasteAPI')
+                payload = {'description':url,'sections':[{'contents':paste}]}
+                headers = {'X-Auth-Token':apikey}
+                post_response = requests.post(url='https://api.paste.ee/v1/pastes', json=payload, headers=headers)
+                response = post_response.json()
+                irc.reply(response['link'].replace('/p/', '/r/'), private=False, notice=False, to=channel)
+            except:
+                return
+                irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
     a2m = wrap(a2m, [optional('channel'), getopts({'l':'int', 'r':'int', 't':'int', 'w':'int', 'delay':'float'}), ('text')])
 
     def p2u(self, irc, msg, args, channel, optlist, url):
