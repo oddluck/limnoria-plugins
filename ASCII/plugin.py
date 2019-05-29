@@ -21,7 +21,6 @@ from fake_useragent import UserAgent
 from colour.difference import *
 import re
 import pexpect
-import urllib
 import time
 import random as random
 from x256 import x256
@@ -755,14 +754,12 @@ class ASCII(callbacks.Plugin):
         header = {'User-Agent':str(ua.random)}
         r = requests.head(url, headers=header)
         try:
-            if int(r.headers["content-length"]) > 1000000:
-                irc.reply("Invalid file type.")
-                return
-            else:
+            if "text/plain" in r.headers["content-type"] or "application/octet-stream" in r.headers["content-type"] and int(r.headers["content-length"]) < 1000000:
                 path = os.path.dirname(os.path.abspath(__file__))
                 filepath = "{0}/tmp".format(path)
                 filename = "{0}/{1}".format(filepath, url.split('/')[-1])
-                urllib.request.urlretrieve(url, filename)
+                r = requests.get(url, headers=header)
+                open(filename, 'wb').write(r.content)
                 try:
                     output = pexpect.run('a2m {0} {1}'.format(opts.strip(), str(filename)))
                     try:
@@ -772,8 +769,11 @@ class ASCII(callbacks.Plugin):
                 except:
                     irc.reply("Error. Have you installed A2M? https://github.com/tat3r/a2m", private=False, notice=False)
                     return
+            else:
+                irc.reply("Invalid file type.")
+                return
         except:
-            irc.reply("Invalid file type.", private=False, notice=False)
+            irc.reply("Invalid file type.")
             return
         paste = ""
         self.stopped[msg.args[0]] = False
