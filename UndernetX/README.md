@@ -1,3 +1,5 @@
+Python3 compatible. Forked from https://github.com/IotaSpencer/supyplugins/tree/master/UndernetX
+
 Logs into Undernet's X Service
 
 ## Setup
