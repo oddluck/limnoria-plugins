@@ -421,7 +421,6 @@ class ASCII(callbacks.Plugin):
                 value = value ** ( 0.3333333333333333 )
             else :
                 value = ( 7.787 * value ) + ( 16 / 116 )
-
             XYZ[num] = value
             num = num + 1
         Lab = [0, 0, 0]
@@ -451,15 +450,16 @@ class ASCII(callbacks.Plugin):
         return delta_e
 
     def img(self, irc, msg, args, channel, optlist, url):
-        """[<channel>] [--w <width>] [--16] [--chars <text>] [--ramp <text>] [--bg <0-98>] [--fg <0-99>] [--invert] [--nocolor] <url>
-        Converts image to ASCII art.
-        --w set width. Default 100
-        --16 for 16 colors. Default 99.
-        --invert inverts default ramp.
-        --chars <TEXT> color text. 
-        --ramp <TEXT> set ramp. e.g. ".:-=+*#%@"
-        --bg <0-98> set background color.
-        --fg <0-99> set foreground color.
+        """[<channel>] [--w <int>] [--16] [--block] [--chars <text>] [--ramp <text>] [--bg <0-98>] [--fg <0-99>] [--invert] [--nocolor] <url>
+        Image to ASCII art.
+        --w set width (default 100).
+        --16 for 16 colors (default 99).
+        --block for block art.
+        --chars <TEXT> color text.
+        --ramp <TEXT> set ramp (".:-=+*#%@").
+        --bg <0-98> set bg color.
+        --fg <0-99> set fg color.
+        --invert reverse default ramp.
         --nocolor text only greyscale.
         """
         if not channel:
@@ -517,7 +517,7 @@ class ASCII(callbacks.Plugin):
             gscale = "@%#*+=-:. "
         elif 'nocolor' in optlist and 'ramp' not in optlist:
             gscale = " .:-=+*#%@"
-        if not gscale.strip():
+        if not gscale.strip() or 'block' in optlist:
             gscale = '\xa0'
         path = os.path.dirname(os.path.abspath(__file__))
         filepath = "{0}/tmp".format(path)
@@ -640,7 +640,7 @@ class ASCII(callbacks.Plugin):
                             else:
                                 aimg[j] += "\x030,{0} ".format(int(color))
                     else:
-                        aimg[j] += "{0}".format(gsval)              
+                        aimg[j] += "{0}".format(gsval)
                 else:
                     aimg[j] += "{0}".format(gsval)
         # return txt image
@@ -678,9 +678,9 @@ class ASCII(callbacks.Plugin):
                 irc.reply(response['link'].replace('/p/', '/r/'), private=False, notice=False, to=channel)
             except:
                 return
-                #irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
+                irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
         self.char = 0
-    img = wrap(img,[optional('channel'), getopts({'w':'int', 'invert':'', 'fast':'', 'faster':'', 'slow':'', 'slower':'', 'slowest':'', 'insane':'', '16':'', 'delay':'float', 'dither':'', 'chars':'text', 'bg':'int', 'fg':'int', 'ramp':'text', 'nocolor':''}), ('text')])
+    img = wrap(img,[optional('channel'), getopts({'w':'int', 'invert':'', 'fast':'', 'faster':'', 'slow':'', 'slower':'', 'slowest':'', 'insane':'', '16':'', 'delay':'float', 'dither':'', 'chars':'text', 'bg':'int', 'fg':'int', 'ramp':'text', 'nocolor':'', 'block':''}), ('text')])
 
     def fontlist(self, irc, msg, args):
         """
@@ -693,7 +693,7 @@ class ASCII(callbacks.Plugin):
 
     def scroll(self, irc, msg, args, channel, optlist, url):
         """[<channel>] <url>
-        Play ASCII/ANSI art files from web links
+        Play ASCII/ANSI art text files from web links.
         """
         if not channel:
             channel = msg.args[0]
@@ -877,14 +877,14 @@ class ASCII(callbacks.Plugin):
                     irc.reply(response['link'].replace('/p/', '/r/'), private=False, notice=False, to=channel)
                 except:
                     return
-                    #irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
+                    irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
         else:
             irc.reply("Unexpected file type or link format", private=False, notice=False)
     p2u = wrap(p2u, [optional('channel'), getopts({'b':'int', 'f':'text', 'p':'text', 's':'int', 't':'int', 'w':'int', 'delay':'float'}), ('text')])
 
     def tdf(self, irc, msg, args, channel, optlist, text):
         """[<channel>] [--f] [--j] [--w] [--e] [--r] [--delay] <text>
-        tdfiglet. https://github.com/tat3r/tdfiglet
+        Text to Figlet. Uses tdfiglet: https://github.com/tat3r/tdfiglet. Fonts: http://www.roysac.com/thedrawfonts-tdf.html
         """
         if not channel:
             channel = msg.args[0]
@@ -945,7 +945,7 @@ class ASCII(callbacks.Plugin):
                 irc.reply(response['link'].replace('/p/', '/r/'), private=False, notice=False, to=channel)
             except:
                 return
-                #irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
+                irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
     tdf = wrap(tdf, [optional('channel'), getopts({'f':'text', 'j':'text', 'w':'int', 'e':'text', 'r':'', 'delay':'float'}), ('text')])
 
     def toilet(self, irc, msg, args, channel, optlist, text):
@@ -1013,13 +1013,13 @@ class ASCII(callbacks.Plugin):
                 irc.reply(response['link'].replace('/p/', '/r/'), private=False, notice=False, to=channel)
             except:
                 return
-                #irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
+                irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
     toilet = wrap(toilet, [optional('channel'), getopts({'f':'text', 'F':'text', 's':'', 'S':'', 'k':'', 'w':'int', 'W':'', 'o':'', 'delay':'float'}), ('text')])
 
     def wttr(self, irc, msg, args, channel, optlist, location):
         """[<channel>] [--16] [--99] <location/moon>
-        ASCII weather report from wttr.in for <location>. 
-        --16 for 16 colors. Default
+        ASCII weather report from wttr.in for <location>.
+        --16 for 16 colors (default).
         --99 for 99 colors.
         Get moon phase with 'wttr moon'.
         <location>?u (use imperial units).
@@ -1092,13 +1092,14 @@ class ASCII(callbacks.Plugin):
                 irc.reply(response['link'].replace('/p/', '/r/'), private=False, notice=False, to=channel)
             except:
                 return
+                irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
     wttr = wrap(wttr, [optional('channel'), getopts({'delay':'float', '16':'', '99':'', 'fast':'', 'faster':'', 'slow':'', 'slower':'', 'slowest':'', 'insane':''}), ('text')])
 
     def rate(self, irc, msg, args, channel, optlist, coin):
         """[<channel>] [--16] [--99] [--sub <text>] [coin]
         Crypto exchange rate info from rate.sx. http://rate.sx/:help. Use --sub to set subdomain e.g. eur, btc, etc.
         Get a graph with [coin] e.g. 'rate btc'.
-        --16 for 16 colors. Default.
+        --16 for 16 colors (default).
         --99 for 99 colors.
         """
         if not channel:
@@ -1181,6 +1182,7 @@ class ASCII(callbacks.Plugin):
                 irc.reply(response['link'].replace('/p/', '/r/'), private=False, notice=False, to=channel)
             except:
                 return
+                irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
     rate = wrap(rate, [optional('channel'), getopts({'delay':'float', '16':'', '99':'', 'sub':'text', 'fast':'', 'faster':'', 'slow':'', 'slower':'', 'slowest':'', 'insane':''}), optional('text')])
 
     def cow(self, irc, msg, args, channel, optlist, text):
@@ -1220,6 +1222,7 @@ class ASCII(callbacks.Plugin):
                 irc.reply(response['link'].replace('/p/', '/r/'), private=False, notice=False, to=channel)
             except:
                 return
+                irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
     cow = wrap(cow, [optional('channel'), getopts({'delay':'float', 'type':'text'}), ('text')])
 
     def fortune(self, irc, msg, args, channel, optlist):
@@ -1274,7 +1277,7 @@ class ASCII(callbacks.Plugin):
         """
         if not self.stopped[msg.args[0]]:
             self.stopped[msg.args[0]] = True
-            irc.reply("Stopping.", prefixNick=False, private=False, notice=False)
+            irc.reply("Stopping.")
     cq = wrap(cq)
 
 Class = ASCII
