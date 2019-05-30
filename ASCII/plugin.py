@@ -42,7 +42,6 @@ class ASCII(callbacks.Plugin):
         self.__parent = super(ASCII, self)
         self.__parent.__init__(irc)
         self.colors = 83
-        self.char = 0
         self.stopped = {}
         self.rgbColors = [
             (255,255,255),
@@ -245,6 +244,17 @@ class ASCII(callbacks.Plugin):
         if msg.args[1].lower().strip()[1:] == 'cq':
             self.stopped[channel] = True
 
+    def doPaste(self, description, paste):
+        try:
+            apikey = self.registryValue('pasteAPI')
+            payload = {'description':description,'sections':[{'contents':paste}]}
+            headers = {'X-Auth-Token':apikey}
+            post_response = requests.post(url='https://api.paste.ee/v1/pastes', json=payload, headers=headers)
+            response = post_response.json()
+            return response['link'].replace('/p/', '/r/')
+        except:
+            return "Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api"
+
     def renderImage(self, text, size=18, defaultBg = 1, defaultFg = 0):
         try:
             if utf8 and not isinstance(text, unicode):
@@ -295,6 +305,73 @@ class ASCII(callbacks.Plugin):
             y += fontY
             fg, bg, x = defaultFg, defaultBg, 0
         return image, imageX, imageY
+
+    def getColor(self, pixel, speed):
+        pixel = tuple(pixel)
+        if self.colors == 16:
+            colors = list(self.ircColors.keys())[:16]
+        else:
+            colors = list(self.ircColors.keys())
+        if pixel not in self.matches:
+            closest_colors = sorted(colors, key=lambda color: self.distance(color, self.rgb2lab(pixel), speed))
+            closest_color = closest_colors[0]
+            self.matches[pixel] = self.ircColors[closest_color]
+        return self.matches[pixel]
+
+    def rgb2lab (self, inputColor) :
+        num = 0
+        RGB = [0, 0, 0]
+        for value in inputColor :
+            value = float(value) / 255
+            if value > 0.04045 :
+                value = ( ( value + 0.055 ) / 1.055 ) ** 2.4
+            else :
+                value = value / 12.92
+            RGB[num] = value * 100
+            num = num + 1
+        XYZ = [0, 0, 0,]
+        X = RGB [0] * 0.4124 + RGB [1] * 0.3576 + RGB [2] * 0.1805
+        Y = RGB [0] * 0.2126 + RGB [1] * 0.7152 + RGB [2] * 0.0722
+        Z = RGB [0] * 0.0193 + RGB [1] * 0.1192 + RGB [2] * 0.9505
+        XYZ[ 0 ] = round( X, 4 )
+        XYZ[ 1 ] = round( Y, 4 )
+        XYZ[ 2 ] = round( Z, 4 )
+        XYZ[ 0 ] = float( XYZ[ 0 ] ) / 95.047         # ref_X =  95.047   Observer= 2°, Illuminant= D65
+        XYZ[ 1 ] = float( XYZ[ 1 ] ) / 100.0          # ref_Y = 100.000
+        XYZ[ 2 ] = float( XYZ[ 2 ] ) / 108.883        # ref_Z = 108.883
+        num = 0
+        for value in XYZ :
+            if value > 0.008856 :
+                value = value ** ( 0.3333333333333333 )
+            else :
+                value = ( 7.787 * value ) + ( 16 / 116 )
+            XYZ[num] = value
+            num = num + 1
+        Lab = [0, 0, 0]
+        L = ( 116 * XYZ[ 1 ] ) - 16
+        a = 500 * ( XYZ[ 0 ] - XYZ[ 1 ] )
+        b = 200 * ( XYZ[ 1 ] - XYZ[ 2 ] )
+        Lab [ 0 ] = round( L, 4 )
+        Lab [ 1 ] = round( a, 4 )
+        Lab [ 2 ] = round( b, 4 )
+        return Lab
+
+    def distance(self, c1, c2, speed):
+        if speed == 'faster':
+            (r1,g1,b1) = (c1[0], c1[1], c1[2])
+            (r2,g2,b2) = (c2[0], c2[1], c2[2])
+            delta_e =  math.sqrt((r1 - r2)**2 + (g1 - g2) ** 2 + (b1 - b2) **2)
+        elif speed == 'fast':
+            delta_e = delta_E_CIE1976(c1, c2)
+        elif speed == 'slow':
+            delta_e = delta_E_CIE1994(c1, c2)
+        elif speed == 'slower':
+            delta_e = delta_E_CMC(c1, c2)
+        elif speed == 'slowest':
+            delta_e = delta_E_CIE2000(c1, c2)
+        elif speed == 'insane':
+            delta_e = delta_E_DIN99(c1, c2)
+        return delta_e
 
     def png(self, irc, msg, args, optlist, url):
         """[--bg] [--fg] <url>
@@ -379,75 +456,14 @@ class ASCII(callbacks.Plugin):
 
     ascii = wrap(ascii, [optional('channel'), getopts({'font':'text', 'color':'text'}), ('text')])
 
-    def getAverageC(self, pixel, speed):
+    def fontlist(self, irc, msg, args):
         """
-        Given PIL Image, return average RGB value
+        get list of fonts for text-to-ascii-art
         """
-        pixel = tuple(pixel)
-        if self.colors == 16:
-            colors = list(self.ircColors.keys())[:16]
-        else:
-            colors = list(self.ircColors.keys())
-        if pixel not in self.matches:
-            closest_colors = sorted(colors, key=lambda color: self.distance(color, self.rgb2lab(pixel), speed))
-            closest_color = closest_colors[0]
-            self.matches[pixel] = self.ircColors[closest_color]
-        return self.matches[pixel]
-
-    def rgb2lab (self, inputColor) :
-        num = 0
-        RGB = [0, 0, 0]
-        for value in inputColor :
-            value = float(value) / 255
-            if value > 0.04045 :
-                value = ( ( value + 0.055 ) / 1.055 ) ** 2.4
-            else :
-                value = value / 12.92
-            RGB[num] = value * 100
-            num = num + 1
-        XYZ = [0, 0, 0,]
-        X = RGB [0] * 0.4124 + RGB [1] * 0.3576 + RGB [2] * 0.1805
-        Y = RGB [0] * 0.2126 + RGB [1] * 0.7152 + RGB [2] * 0.0722
-        Z = RGB [0] * 0.0193 + RGB [1] * 0.1192 + RGB [2] * 0.9505
-        XYZ[ 0 ] = round( X, 4 )
-        XYZ[ 1 ] = round( Y, 4 )
-        XYZ[ 2 ] = round( Z, 4 )
-        XYZ[ 0 ] = float( XYZ[ 0 ] ) / 95.047         # ref_X =  95.047   Observer= 2°, Illuminant= D65
-        XYZ[ 1 ] = float( XYZ[ 1 ] ) / 100.0          # ref_Y = 100.000
-        XYZ[ 2 ] = float( XYZ[ 2 ] ) / 108.883        # ref_Z = 108.883
-        num = 0
-        for value in XYZ :
-            if value > 0.008856 :
-                value = value ** ( 0.3333333333333333 )
-            else :
-                value = ( 7.787 * value ) + ( 16 / 116 )
-            XYZ[num] = value
-            num = num + 1
-        Lab = [0, 0, 0]
-        L = ( 116 * XYZ[ 1 ] ) - 16
-        a = 500 * ( XYZ[ 0 ] - XYZ[ 1 ] )
-        b = 200 * ( XYZ[ 1 ] - XYZ[ 2 ] )
-        Lab [ 0 ] = round( L, 4 )
-        Lab [ 1 ] = round( a, 4 )
-        Lab [ 2 ] = round( b, 4 )
-        return Lab
-
-    def distance(self, c1, c2, speed):
-        if speed == 'faster':
-            (r1,g1,b1) = (c1[0], c1[1], c1[2])
-            (r2,g2,b2) = (c2[0], c2[1], c2[2])
-            delta_e =  math.sqrt((r1 - r2)**2 + (g1 - g2) ** 2 + (b1 - b2) **2)
-        elif speed == 'fast':
-            delta_e = delta_E_CIE1976(c1, c2)
-        elif speed == 'slow':
-            delta_e = delta_E_CIE1994(c1, c2)
-        elif speed == 'slower':
-            delta_e = delta_E_CMC(c1, c2)
-        elif speed == 'slowest':
-            delta_e = delta_E_CIE2000(c1, c2)
-        elif speed == 'insane':
-            delta_e = delta_E_DIN99(c1, c2)
-        return delta_e
+        fontlist = requests.get("https://artii.herokuapp.com/fonts_list")
+        response = sorted(fontlist.text.split('\n'))
+        irc.reply(str(response).replace('\'', '').replace('[', '').replace(']', ''))
+    fontlist = wrap(fontlist)
 
     def img(self, irc, msg, args, channel, optlist, url):
         """[<channel>] [--w <int>] [--16] [--block] [--chars <text>] [--ramp <text>] [--bg <0-98>] [--fg <0-99>] [--invert] [--nocolor] <url>
@@ -571,6 +587,7 @@ class ASCII(callbacks.Plugin):
         # ascii image is a list of character strings
         aimg = []
         # generate list of dimensions
+        char = 0
         for j in range(rows):
             y1 = int(j*h)
             y2 = int((j+1)*h)
@@ -587,16 +604,16 @@ class ASCII(callbacks.Plugin):
                 if 'chars' not in optlist:
                     gsval = gscale[int((avg * (len(gscale) - 1))/255)]
                 else:
-                    if self.char < len(gscale):
-                        gsval = gscale[self.char]
-                        self.char += 1
+                    if char < len(gscale):
+                        gsval = gscale[char]
+                        char += 1
                     else:
-                        self.char = 0
-                        gsval = gscale[self.char]
-                        self.char += 1
+                        char = 0
+                        gsval = gscale[char]
+                        char += 1
                 # get color value
                 if 'nocolor' not in optlist and i == 0:
-                    color = self.getAverageC(colormap[j][i].tolist(), speed)
+                    color = self.getColor(colormap[j][i].tolist(), speed)
                     old_color = color
                     if 'bg' not in optlist:
                         if gsval != '\xa0':
@@ -617,7 +634,7 @@ class ASCII(callbacks.Plugin):
                         else:
                             aimg[j] += "\x030,{0} ".format(int(color))
                 elif 'nocolor' not in optlist and gsval != ' ':
-                    color = self.getAverageC(colormap[j][i].tolist(), speed)
+                    color = self.getColor(colormap[j][i].tolist(), speed)
                     if color != old_color:
                         old_color = color
                         # append ascii char to string
@@ -669,27 +686,8 @@ class ASCII(callbacks.Plugin):
                 time.sleep(delay)
                 irc.reply(line, prefixNick=False, noLengthCheck=True, private=False, notice=False, to=channel)
         if self.registryValue('pasteEnable', msg.args[0]):
-            try:
-                apikey = self.registryValue('pasteAPI')
-                payload = {'description':url,'sections':[{'contents':paste}]}
-                headers = {'X-Auth-Token':apikey}
-                post_response = requests.post(url='https://api.paste.ee/v1/pastes', json=payload, headers=headers)
-                response = post_response.json()
-                irc.reply(response['link'].replace('/p/', '/r/'), private=False, notice=False, to=channel)
-            except:
-                return
-                irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
-        self.char = 0
+            irc.reply(self.doPaste(url, paste), private=False, notice=False, to=channel)
     img = wrap(img,[optional('channel'), getopts({'w':'int', 'invert':'', 'fast':'', 'faster':'', 'slow':'', 'slower':'', 'slowest':'', 'insane':'', '16':'', 'delay':'float', 'dither':'', 'chars':'text', 'bg':'int', 'fg':'int', 'ramp':'text', 'nocolor':'', 'block':''}), ('text')])
-
-    def fontlist(self, irc, msg, args):
-        """
-        get list of fonts for text-to-ascii-art
-        """
-        fontlist = requests.get("https://artii.herokuapp.com/fonts_list")
-        response = sorted(fontlist.text.split('\n'))
-        irc.reply(str(response).replace('\'', '').replace('[', '').replace(']', ''))
-    fontlist = wrap(fontlist)
 
     def scroll(self, irc, msg, args, channel, optlist, url):
         """[<channel>] <url>
@@ -785,16 +783,7 @@ class ASCII(callbacks.Plugin):
                 time.sleep(delay)
                 irc.reply(line, prefixNick = False, noLengthCheck=True, private=False, notice=False, to=channel)
         if self.registryValue('pasteEnable', msg.args[0]):
-            try:
-                apikey = self.registryValue('pasteAPI')
-                payload = {'description':url,'sections':[{'contents':paste}]}
-                headers = {'X-Auth-Token':apikey}
-                post_response = requests.post(url='https://api.paste.ee/v1/pastes', json=payload, headers=headers)
-                response = post_response.json()
-                irc.reply(response['link'].replace('/p/', '/r/'), private=False, notice=False, to=channel)
-            except:
-                return
-                irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
+            irc.reply(self.doPaste(url, paste), private=False, notice=False, to=channel)
     a2m = wrap(a2m, [optional('channel'), getopts({'l':'int', 'r':'int', 't':'int', 'w':'int', 'delay':'float'}), ('text')])
 
     def p2u(self, irc, msg, args, channel, optlist, url):
@@ -868,16 +857,7 @@ class ASCII(callbacks.Plugin):
                     time.sleep(delay)
                     irc.reply(line, prefixNick = False, noLengthCheck=True, private=False, notice=False, to=channel)
             if self.registryValue('pasteEnable', msg.args[0]):
-                try:
-                    apikey = self.registryValue('pasteAPI')
-                    payload = {'description':url,'sections':[{'contents':paste}]}
-                    headers = {'X-Auth-Token':apikey}
-                    post_response = requests.post(url='https://api.paste.ee/v1/pastes', json=payload, headers=headers)
-                    response = post_response.json()
-                    irc.reply(response['link'].replace('/p/', '/r/'), private=False, notice=False, to=channel)
-                except:
-                    return
-                    irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
+                irc.reply(self.doPaste(url, paste), private=False, notice=False, to=channel)
         else:
             irc.reply("Unexpected file type or link format", private=False, notice=False)
     p2u = wrap(p2u, [optional('channel'), getopts({'b':'int', 'f':'text', 'p':'text', 's':'int', 't':'int', 'w':'int', 'delay':'float'}), ('text')])
@@ -936,16 +916,7 @@ class ASCII(callbacks.Plugin):
                 time.sleep(delay)
                 irc.reply(line, prefixNick = False, noLengthCheck=True, private=False, notice=False, to=channel)
         if self.registryValue('pasteEnable', msg.args[0]):
-            try:
-                apikey = self.registryValue('pasteAPI')
-                payload = {'description':text,'sections':[{'contents':paste}]}
-                headers = {'X-Auth-Token':apikey}
-                post_response = requests.post(url='https://api.paste.ee/v1/pastes', json=payload, headers=headers)
-                response = post_response.json()
-                irc.reply(response['link'].replace('/p/', '/r/'), private=False, notice=False, to=channel)
-            except:
-                return
-                irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
+            irc.reply(self.doPaste(text, paste), private=False, notice=False, to=channel)
     tdf = wrap(tdf, [optional('channel'), getopts({'f':'text', 'j':'text', 'w':'int', 'e':'text', 'r':'', 'delay':'float'}), ('text')])
 
     def toilet(self, irc, msg, args, channel, optlist, text):
@@ -1004,17 +975,31 @@ class ASCII(callbacks.Plugin):
                 time.sleep(delay)
                 irc.reply(line, prefixNick = False, noLengthCheck=True, private=False, notice=False, to=channel)
         if self.registryValue('pasteEnable', msg.args[0]):
-            try:
-                apikey = self.registryValue('pasteAPI')
-                payload = {'description':text,'sections':[{'contents':paste}]}
-                headers = {'X-Auth-Token':apikey}
-                post_response = requests.post(url='https://api.paste.ee/v1/pastes', json=payload, headers=headers)
-                response = post_response.json()
-                irc.reply(response['link'].replace('/p/', '/r/'), private=False, notice=False, to=channel)
-            except:
-                return
-                irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
+            irc.reply(self.doPaste(text, paste), private=False, notice=False, to=channel)
     toilet = wrap(toilet, [optional('channel'), getopts({'f':'text', 'F':'text', 's':'', 'S':'', 'k':'', 'w':'int', 'W':'', 'o':'', 'delay':'float'}), ('text')])
+
+    def fonts(self, irc, msg, args, optlist):
+        """[--toilet]
+        List figlets. Default list are tdf fonts. --toilet for toilet fonts
+        """
+        optlist = dict(optlist)
+        if 'toilet' in optlist:
+            try:
+                reply = ", ".join(sorted(os.listdir("/usr/share/figlet")))
+                irc.reply(reply, prefixNick=False)
+            except:
+                irc.reply("Sorry, unable to access font directory /usr/share/figlet")
+        else:
+            try:
+                reply = ", ".join(sorted(os.listdir("/usr/local/share/tdfiglet/fonts/")))
+                irc.reply("http://www.roysac.com/thedrawfonts-tdf.html", prefixNick=False)
+                irc.reply(reply, prefixNick=False)
+            except FileNotFoundError:
+                reply = ", ".join(sorted(os.listdir("/usr/share/figlet")))
+                irc.reply(reply, prefixNick=False)
+            except:
+                irc.reply("Sorry, unable to access font directories /usr/local/share/tdfiglet/fonts/ or /usr/share/figlet")
+    fonts = wrap(fonts, [getopts({'toilet':''})])
 
     def wttr(self, irc, msg, args, channel, optlist, location):
         """[<channel>] [--16] [--99] <location/moon>
@@ -1058,8 +1043,8 @@ class ASCII(callbacks.Plugin):
         output = file.text
         for i in range(0, 256):
             j = '%03d' % i
-            output = re.sub('\x1b\[38;5;{0}m|\[38;5;{0};\d+m'.format(j), '\x03{:02d}'.format(self.getAverageC(x256.to_rgb(int(j)), speed)), output)
-            output = re.sub('\x1b\[38;5;{0}m|\[38;5;{0};\d+m'.format(i), '\x03{:02d}'.format(self.getAverageC(x256.to_rgb(int(i)), speed)), output)
+            output = re.sub('\x1b\[38;5;{0}m|\[38;5;{0};\d+m'.format(j), '\x03{:02d}'.format(self.getColor(x256.to_rgb(int(j)), speed)), output)
+            output = re.sub('\x1b\[38;5;{0}m|\[38;5;{0};\d+m'.format(i), '\x03{:02d}'.format(self.getColor(x256.to_rgb(int(i)), speed)), output)
         output = output.replace('\x1b[0m', '\x0F')
         output = re.sub('\x1b|\x9b|\[\d+m', '', output)
         output = re.sub('\x0F(\s*)\x03', '\g<1>\x03', output)
@@ -1083,16 +1068,7 @@ class ASCII(callbacks.Plugin):
                 time.sleep(delay)
                 irc.reply(line, prefixNick = False, noLengthCheck=True, private=False, notice=False, to=channel)
         if self.registryValue('pasteEnable', msg.args[0]):
-            try:
-                apikey = self.registryValue('pasteAPI')
-                payload = {'description':location,'sections':[{'contents':paste}]}
-                headers = {'X-Auth-Token':apikey}
-                post_response = requests.post(url='https://api.paste.ee/v1/pastes', json=payload, headers=headers)
-                response = post_response.json()
-                irc.reply(response['link'].replace('/p/', '/r/'), private=False, notice=False, to=channel)
-            except:
-                return
-                irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
+            irc.reply(self.doPaste(location, paste), private=False, notice=False, to=channel)
     wttr = wrap(wttr, [optional('channel'), getopts({'delay':'float', '16':'', '99':'', 'fast':'', 'faster':'', 'slow':'', 'slower':'', 'slowest':'', 'insane':''}), ('text')])
 
     def rate(self, irc, msg, args, channel, optlist, coin):
@@ -1155,9 +1131,9 @@ class ASCII(callbacks.Plugin):
             output = output.replace('\x1b(B\x1b[m', '')
             for i in range(0,99):
                 i = '%02d' % i
-                output = re.sub('\x1b\[38;5;{0}m'.format(i), '\x03{:02d}'.format(self.getAverageC(x256.to_rgb(int(i)), speed)), output)
+                output = re.sub('\x1b\[38;5;{0}m'.format(i), '\x03{:02d}'.format(self.getColor(x256.to_rgb(int(i)), speed)), output)
             for i in range(100,255):
-                output = re.sub('\x1b\[38;5;{0}m'.format(i), '\x03{:02d}'.format(self.getAverageC(x256.to_rgb(int(i)), speed)), output)
+                output = re.sub('\x1b\[38;5;{0}m'.format(i), '\x03{:02d}'.format(self.getColor(x256.to_rgb(int(i)), speed)), output)
         paste = ""
         self.stopped[msg.args[0]] = False
         for line in output.splitlines():
@@ -1173,16 +1149,7 @@ class ASCII(callbacks.Plugin):
                 time.sleep(delay)
                 irc.reply(line, prefixNick = False, noLengthCheck=True, private=False, notice=False, to=channel)
         if self.registryValue('pasteEnable', msg.args[0]):
-            try:
-                apikey = self.registryValue('pasteAPI')
-                payload = {'description':coin,'sections':[{'contents':paste}]}
-                headers = {'X-Auth-Token':apikey}
-                post_response = requests.post(url='https://api.paste.ee/v1/pastes', json=payload, headers=headers)
-                response = post_response.json()
-                irc.reply(response['link'].replace('/p/', '/r/'), private=False, notice=False, to=channel)
-            except:
-                return
-                irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
+            irc.reply(self.doPaste(coin, paste), private=False, notice=False, to=channel)
     rate = wrap(rate, [optional('channel'), getopts({'delay':'float', '16':'', '99':'', 'sub':'text', 'fast':'', 'faster':'', 'slow':'', 'slower':'', 'slowest':'', 'insane':''}), optional('text')])
 
     def cow(self, irc, msg, args, channel, optlist, text):
@@ -1213,16 +1180,7 @@ class ASCII(callbacks.Plugin):
                 time.sleep(delay)
                 irc.reply(line, prefixNick = False, noLengthCheck=True, private=False, notice=False, to=channel)
         if self.registryValue('pasteEnable', msg.args[0]):
-            try:
-                apikey = self.registryValue('pasteAPI')
-                payload = {'description':text,'sections':[{'contents':paste}]}
-                headers = {'X-Auth-Token':apikey}
-                post_response = requests.post(url='https://api.paste.ee/v1/pastes', json=payload, headers=headers)
-                response = post_response.json()
-                irc.reply(response['link'].replace('/p/', '/r/'), private=False, notice=False, to=channel)
-            except:
-                return
-                irc.reply("Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api")
+            irc.reply(self.doPaste(text, paste), private=False, notice=False, to=channel)
     cow = wrap(cow, [optional('channel'), getopts({'delay':'float', 'type':'text'}), ('text')])
 
     def fortune(self, irc, msg, args, channel, optlist):
@@ -1247,29 +1205,6 @@ class ASCII(callbacks.Plugin):
                 time.sleep(delay)
                 irc.reply(line, prefixNick = False, noLengthCheck=True, private=False, notice=False, to=channel)
     fortune = wrap(fortune, [optional('channel'), getopts({'delay':'float'})])
-
-    def fonts(self, irc, msg, args, optlist):
-        """[--toilet]
-        List figlets. Default list are tdf fonts. --toilet for toilet fonts
-        """
-        optlist = dict(optlist)
-        if 'toilet' in optlist:
-            try:
-                reply = ", ".join(sorted(os.listdir("/usr/share/figlet")))
-                irc.reply(reply, prefixNick=False)
-            except:
-                irc.reply("Sorry, unable to access font directory /usr/share/figlet")
-        else:
-            try:
-                reply = ", ".join(sorted(os.listdir("/usr/local/share/tdfiglet/fonts/")))
-                irc.reply("http://www.roysac.com/thedrawfonts-tdf.html", prefixNick=False)
-                irc.reply(reply, prefixNick=False)
-            except FileNotFoundError:
-                reply = ", ".join(sorted(os.listdir("/usr/share/figlet")))
-                irc.reply(reply, prefixNick=False)
-            except:
-                irc.reply("Sorry, unable to access font directories /usr/local/share/tdfiglet/fonts/ or /usr/share/figlet")
-    fonts = wrap(fonts, [getopts({'toilet':''})])
 
     def cq(self, irc, msg, args):
         """
