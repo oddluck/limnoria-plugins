@@ -388,7 +388,14 @@ class ASCII(callbacks.Plugin):
             fg = 0
         if url.startswith("https://paste.ee/p/"):
             url = re.sub("https://paste.ee/p/", "https://paste.ee/r/", url)
-        file = requests.get(url)
+        ua = UserAgent()
+        header = {'User-Agent':str(ua.random)}
+        r = requests.head(url, headers=header)
+        if "text/plain" in r.headers["content-type"]:
+            file = requests.get(url, headers=header)
+        else:
+            irc.reply("Invalid file type.", private=False, notice=False)
+            return
         file = file.content.decode()
         im, x, y = self.renderImage(file, 18, bg, fg)
         path = os.path.dirname(os.path.abspath(__file__))
