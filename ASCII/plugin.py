@@ -574,7 +574,7 @@ class ASCII(callbacks.Plugin):
                 image2 = image.convert('P', dither=Image.FLOYDSTEINBERG, palette=Image.ADAPTIVE)
             else:
                 image2 = image.convert('P', dither=None, palette=Image.ADAPTIVE)
-            image2 = image.convert('RGB')
+            image2 = image2.convert('RGB')
             colormap = np.array(image2)
             self.matches = {}
         image = image.convert('L')
