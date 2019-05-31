@@ -90,15 +90,16 @@ fontlist (get list of availble <fonts>)
 Image URL to ASCII/ANSI Art:
 ```
 img <url> (convert an image <url> to ascii art using 99 color palette)
+img --w <###> <url> (how many columns wide. defauls to 100)
 img --16 <url> (convert image to ascii art using 16 color palette)
-img --invert <url> (invert the ascii luminance character palette)
 img --block <url> (colored space block art)
 img --chars "TEXT" <url> (convert image to colorized custom text)
-img --ramp "TEXT" <url> (use a custom luma ramp e.g. " .-:=+x#%@")
+img --ramp "TEXT" <url> (use a custom greyscale ramp e.g. " .-:=+x#%@")
 img --ramp "░▒▓█" <url> (image to colorized ansi shader blocks)
-img --bg <0-99> <url> (set a background color)
-img --w <###> <url> (how many columns wide. defauls to 100)
 img --nocolor <url> (text only greyscale character ramp output)
+img --invert <url> (invert the greyscale character ramp)
+img --bg <0-99> <url> (set a background color)
+img --fg <0-99> <url> (set a foreground color)
 ```
 Here are some images using 99 color default output:
 ![Image of Img Command Output](https://i.imgur.com/eOQAzTo.png)<br>
