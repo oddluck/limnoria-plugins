@@ -1035,7 +1035,7 @@ class ASCII(callbacks.Plugin):
             speed = 'slower'
         self.matches = {}
         file = requests.get("http://wttr.in/{0}".format(location))
-        output = file.text
+        output = file.content.decode()
         for i in range(0, 256):
             j = '%03d' % i
             output = re.sub('\x1b\[38;5;{0}m|\[38;5;{0};\d+m'.format(j), '\x03{:02d}'.format(self.getColor(x256.to_rgb(int(j)), speed)), output)
@@ -1108,7 +1108,7 @@ class ASCII(callbacks.Plugin):
             coin = ''
         self.matches = {}
         file = requests.get("http://{0}.rate.sx/{1}".format(sub, coin))
-        output = file.text
+        output = file.content.decode()
         output = output.replace('\x1b[0m', '\x0F')
         output = output.replace('\x1b[2m', '')
         output = output.replace('\x1b[47m\x1b[30m', '\x031,0')
