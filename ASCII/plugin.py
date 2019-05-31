@@ -389,7 +389,7 @@ class ASCII(callbacks.Plugin):
         if url.startswith("https://paste.ee/p/"):
             url = re.sub("https://paste.ee/p/", "https://paste.ee/r/", url)
         file = requests.get(url)
-        file = file.text
+        file = file.content.decode()
         im, x, y = self.renderImage(file, 18, bg, fg)
         path = os.path.dirname(os.path.abspath(__file__))
         filepath = "{0}/tmp/tldr.png".format(path)
@@ -706,8 +706,8 @@ class ASCII(callbacks.Plugin):
         else:
             irc.reply("Invalid file type.", private=False, notice=False)
             return
-        file = file.text.lstrip().splitlines()
-        for line in file:
+        file = file.content.decode()
+        for line in file.splitlines():
             if line.strip() and not self.stopped[msg.args[0]]:
                 time.sleep(delay)
                 irc.reply(line, prefixNick = False, noLengthCheck=True, private=False, notice=False, to=channel)
