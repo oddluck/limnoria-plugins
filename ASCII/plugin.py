@@ -466,7 +466,7 @@ class ASCII(callbacks.Plugin):
     fontlist = wrap(fontlist)
 
     def img(self, irc, msg, args, channel, optlist, url):
-        """[<channel>] [--w <int>] [--16] [--block] [--chars <text>] [--ramp <text>] [--bg <0-98>] [--fg <0-99>] [--invert] [--nocolor] <url>
+        """[<channel>] [--w <int>] [--16] [--block] [--chars <text>] [--ramp <text>] [--bg <0-98>] [--fg <0-99>] [--nocolor] [--invert] <url>
         Image to ASCII art.
         --w set width (default 100).
         --16 for 16 colors (default 99).
@@ -475,8 +475,8 @@ class ASCII(callbacks.Plugin):
         --ramp <TEXT> set ramp (".:-=+*#%@").
         --bg <0-98> set bg color.
         --fg <0-99> set fg color.
-        --invert reverse default ramp.
         --nocolor text only greyscale.
+        --invert inverts ramp.
         """
         if not channel:
             channel = msg.args[0]
@@ -503,9 +503,7 @@ class ASCII(callbacks.Plugin):
             cols = optlist.get('w')
         else:
             cols = 100
-        if 'invert' in optlist:
-            gscale = "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\|()1{}[]?-_+~<>i!lI;:\"^`'."
-        elif 'chars' in optlist:
+        if 'chars' in optlist:
             gscale = optlist.get('chars')
         elif 'ramp' in optlist:
             gscale = optlist.get('ramp')
@@ -523,18 +521,18 @@ class ASCII(callbacks.Plugin):
             fg = optlist.get('fg')
         else:
             fg = 99
-        if 'chars' not in optlist and 'ramp' not in optlist and bg == 0 or bg == 98:
+        if 'chars' not in optlist and 'ramp' not in optlist and 'block' not in optlist and 'nocolor' not in optlist and bg == 0 or bg == 98:
             gscale = "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\|()1{}[]?-_+~<>i!lI;:\"^`'."
         if 'nocolor' in optlist and 'chars' in optlist:
             return
-        elif 'nocolor' in optlist and bg == 0 or bg == 98:
-            gscale = "@%#*+=-:. "
-        elif 'nocolor' in optlist and 'invert' in optlist:
+        elif 'nocolor' in optlist and 'ramp' not in optlist and bg == 0 or bg == 98:
             gscale = "@%#*+=-:. "
         elif 'nocolor' in optlist and 'ramp' not in optlist:
             gscale = " .:-=+*#%@"
         if not gscale.strip() or 'block' in optlist:
             gscale = '\xa0'
+        if 'invert' in optlist and 'chars' not in optlist and gscale != '\xa0':
+            gscale = gscale[::-1]
         path = os.path.dirname(os.path.abspath(__file__))
         filepath = "{0}/tmp".format(path)
         filename = "{0}/{1}".format(filepath, url.split('/')[-1])
