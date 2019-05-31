@@ -549,13 +549,11 @@ class ASCII(callbacks.Plugin):
             with open("{0}".format(filename), 'wb') as f:
                 f.write(response.content)
         # open image and convert to grayscale
-        image = Image.open(filename).convert('L')
-        if 'nocolor' not in optlist:
-            image2 = Image.open(filename)
-            if image2.mode == 'RGBA':
-                image2 = Image.alpha_composite(Image.new("RGBA", image2.size, self.rgbColors[bg] + (255,)), image2)
-            if image2.mode != 'RGB':
-                image2 = image2.convert('RGB')
+        image = Image.open(filename)
+        if image.mode == 'RGBA':
+            image = Image.alpha_composite(Image.new("RGBA", image.size, self.rgbColors[bg] + (255,)), image)
+        if image.mode != 'RGB':
+            image = image.convert('RGB')
         try:
             os.remove(filename)
         except:
@@ -572,15 +570,14 @@ class ASCII(callbacks.Plugin):
         image = ImageOps.autocontrast(image)
         image = image.resize((cols, rows), Image.LANCZOS)
         if 'nocolor' not in optlist:
-            image2 = ImageOps.autocontrast(image2)
-            image2 = image2.resize((cols, rows), Image.LANCZOS)
             if 'dither' in optlist:
-                image2 = image2.convert('P', dither=Image.FLOYDSTEINBERG, palette=Image.ADAPTIVE)
+                image2 = image.convert('P', dither=Image.FLOYDSTEINBERG, palette=Image.ADAPTIVE)
             else:
-                image2 = image2.convert('P', dither=None, palette=Image.ADAPTIVE)
-            image2 = image2.convert('RGB')
+                image2 = image.convert('P', dither=None, palette=Image.ADAPTIVE)
+            image2 = image.convert('RGB')
             colormap = np.array(image2)
             self.matches = {}
+        image = image.convert('L')
         lumamap = np.array(image)
         # ascii image is a list of character strings
         aimg = []
