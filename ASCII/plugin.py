@@ -844,7 +844,7 @@ class ASCII(callbacks.Plugin):
             w = optlist.get('w')
             opts += '-w {0} '.format(w)
         else:
-            opts += '-w 80 '
+            opts += '-w 60 '
         if 'delay' in optlist:
             delay = optlist.get('delay')
         else:
