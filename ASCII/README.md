@@ -91,7 +91,8 @@ Image URL to ASCII/ANSI Art:
 ```
 img <url> (convert an image <url> to ascii art using 99 color palette)
 img --w <###> <url> (how many columns wide. defauls to 100)
-img --16 <url> (convert image to ascii art using 16 color palette)
+img --16 <url> (convert using 16 color palette)
+img --ascii <url> (convert image to colored ascii art)
 img --block <url> (colored space block art)
 img --chars "TEXT" <url> (convert image to colorized custom text)
 img --ramp "TEXT" <url> (use a custom greyscale ramp e.g. " .-:=+x#%@")
@@ -102,10 +103,12 @@ img --bg <0-99> <url> (set a background color)
 img --fg <0-99> <url> (set a foreground color)
 ```
 Here are some images using 99 color default output:
-![Image of Img Command Output](https://i.imgur.com/eOQAzTo.png)<br>
+![Image of Img Command Output](https://i.imgur.com/33tCGXC.png)<br>
 ^ output of img https://i.imgur.com/aF9wihd.jpg (image command with default settings)
 ![Image of Img Command Output](https://i.imgur.com/2BSUjnw.png)<br>
 ^ output of img --block https://i.imgur.com/aF9wihd.jpg (image command with colored space blocks)
+![Image of Img Command Output](https://i.imgur.com/eOQAzTo.png)<br>
+^ output of img --ascii https://i.imgur.com/aF9wihd.jpg (image command with colored space blocks)
 ```
 ***************+*++++++++++++++++++++++++++++++++++++++=++=++========================---------------
 ***********+++++++++++++++++++++++++++++++++++++++++++++++============================--------------
