@@ -613,14 +613,19 @@ class ASCII(callbacks.Plugin):
                     color2 = self.getColor(colormap[j+1][i].tolist(), speed)
                     if color1 == color2:
                         block = " "
-                        color = "\x030,{0}".format(int(color1))
+                        color = "0,{0}".format(int(color1))
                     else:
                         block = "▀"
-                        color = "\x03{0},{1}".format(int(color1), int(color2))
+                        color = "{0},{1}".format(int(color1), int(color2))
                     if color != old_color:
-                        old_color = color
-                        # append char to string
-                        aimg[k] += "{0}{1}".format(color, block)
+                        if block == "▀" and color == "{0},{1}".format(old_color.split(',')[1], old_color.split(',')[0]):
+                            old_color = color
+                            aimg[k] += "▄"
+                        if block == " " and "{0}".format(color.split(',')[1]) == "{0}".format(old_color.split(',')[1]):
+                            aimg[k] += " "
+                        else:
+                            old_color = color
+                            aimg[k] += "\x03{0}{1}".format(color, block)
                     else:
                         aimg[k] += "{0}".format(block)
                 k += 1
