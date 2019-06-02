@@ -616,6 +616,7 @@ class ASCII(callbacks.Plugin):
                         if color1 == color2:
                             gsval = " "
                             color = "0,{0}".format(int(color1))
+                            old_color = color
                         else:
                             gsval = "▀"
                             alt_gsval = "▄"
@@ -633,7 +634,7 @@ class ASCII(callbacks.Plugin):
                             aimg[k] += " "
                         else:
                             aimg[k] += "▀"
-                aimg[k] = re.sub("\x03\d+\,(\d+)(\s+)\x03(\d+)\,\1", "\x03\3\,\1\2", aimg[k])
+                    aimg[k] = re.sub("\x03\d+,{0}(\s+)\x03(\d+),{0}".format(color.split(',')[1]), "\x03\g<2>,{0}\g<1>".format(color.split(',')[1]), aimg[k])
                 k += 1
         elif '1/4' in optlist:
             k = 0
