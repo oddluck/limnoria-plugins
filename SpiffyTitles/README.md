@@ -92,7 +92,7 @@ requires a [developer key](https://code.google.com/apis/youtube/dashboard/gwt/in
 
 `youtubeLogo` - This is the colored text used for {{yt_logo}} in title template strings.
 
-Default value: `\x030,4 ► \x031,0YouTube\x0F`
+Default value: `\x030,4 ► \x031,0YouTube`
 
 `youtubeTitleTemplate` - This is the template used when showing the title of a YouTube video
 
