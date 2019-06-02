@@ -737,7 +737,7 @@ class SpiffyTitles(callbacks.Plugin):
         return duration
 
     def get_youtube_logo(self):
-        yt_logo = self.registryValue("youtubeLogo", dynamic.channel)
+        yt_logo = "{0}\x0F".format(self.registryValue("youtubeLogo", dynamic.channel))
 
         return yt_logo
 
