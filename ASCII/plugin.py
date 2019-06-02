@@ -660,8 +660,6 @@ class ASCII(callbacks.Plugin):
                         gsval = "▌"
                         color = "\x03{0},{1}".format(int(color1), int(color4))
                     else:
-                        col1 = self.getColor(np.average([tuple(colormap[j][i].tolist()), tuple(colormap[j+1][i].tolist())], axis=0).tolist(), speed)
-                        col2 = self.getColor(np.average([tuple(colormap[j][i+1].tolist()), tuple(colormap[j+1][i+1].tolist())], axis=0).tolist(), speed)
                         row1 = self.getColor(np.average([tuple(colormap[j][i].tolist()), tuple(colormap[j][i+1].tolist())], axis=0).tolist(), speed)
                         row2 = self.getColor(np.average([tuple(colormap[j+1][i+1].tolist()), tuple(colormap[j][i+1].tolist())], axis=0).tolist(), speed)
                         if row2 == color1:
@@ -676,30 +674,33 @@ class ASCII(callbacks.Plugin):
                         elif row1 == color4:
                             gsval = "▜"
                             color = "\x03{0},{1}".format(int(row1), int(color2))
-                        elif col1 == color4:
-                            gsval = "▙"
-                            color = "\x03{0},{1}".format(int(col1), int(color3))
-                        elif col1 == color3:
-                            gsval = "▛"
-                            color = "\x03{0},{1}".format(int(col1), int(color4))
-                        elif col2 == color2:
-                            gsval = "▟"
-                            color = "\x03{0},{1}".format(int(col2), int(color1))
-                        elif col2 == color1:
-                            gsval = "▜"
-                            color = "\x03{0},{1}".format(int(col2), int(color2))
                         elif row1 != row2:
                             gsval = "▀"
                             color = "\x03{0},{1}".format(int(row1), int(row2))
-                        elif col1 != col2:
-                            gsval = "▌"
-                            color = "\x03{0},{1}".format(int(col1), int(col2))
                         elif row1 == row2:
                             gsval = " "
                             color = "\x030,{0}".format(int(row1))
-                        elif col1 == col2:
-                            gsval = " "
-                            color = "\x030,{0}".format(int(col1))
+                        else:
+                            col1 = self.getColor(np.average([tuple(colormap[j][i].tolist()), tuple(colormap[j+1][i].tolist())], axis=0).tolist(), speed)
+                            col2 = self.getColor(np.average([tuple(colormap[j][i+1].tolist()), tuple(colormap[j+1][i+1].tolist())], axis=0).tolist(), speed)
+                            if col1 == color4:
+                                gsval = "▙"
+                                color = "\x03{0},{1}".format(int(col1), int(color3))
+                            elif col1 == color3:
+                                gsval = "▛"
+                                color = "\x03{0},{1}".format(int(col1), int(color4))
+                            elif col2 == color2:
+                                gsval = "▟"
+                                color = "\x03{0},{1}".format(int(col2), int(color1))
+                            elif col2 == color1:
+                                gsval = "▜"
+                                color = "\x03{0},{1}".format(int(col2), int(color2))
+                            elif col1 != col2:
+                                gsval = "▌"
+                                color = "\x03{0},{1}".format(int(col1), int(col2))
+                            elif col1 == col2:
+                                gsval = " "
+                                color = "\x030,{0}".format(int(col1))
                     if color != old_color:
                         old_color = color
                         # append char to string
