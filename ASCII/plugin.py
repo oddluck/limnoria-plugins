@@ -541,7 +541,7 @@ class ASCII(callbacks.Plugin):
         if 'w' in optlist:
             cols = optlist.get('w')
         elif 'ascii' not in optlist and 'ramp' not in optlist and 'nocolor' not in optlist and 'chars' not in optlist and 'block' not in optlist and 'w' not in optlist:
-            cols = 80
+            cols = 60
         else:
             cols = 100
         path = os.path.dirname(os.path.abspath(__file__))
