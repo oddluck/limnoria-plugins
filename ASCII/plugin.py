@@ -473,12 +473,13 @@ class ASCII(callbacks.Plugin):
     fontlist = wrap(fontlist)
 
     def img(self, irc, msg, args, channel, optlist, url):
-        """[<channel>] [--w <int>] [--16] [--ascii] [--block] [--chars <text>] [--ramp <text>] [--bg <0-98>] [--fg <0-99>] [--nocolor] [--invert] <url>
+        """[<channel>] [--w <int>] [--16] [--ascii] [--block] [--1/4] [--chars <text>] [--ramp <text>] [--bg <0-98>] [--fg <0-99>] [--nocolor] [--invert] <url>
         Image to ASCII Art.
         --w num columns wide.
         --16 for 16 colors.
         --ascii for color ascii.
         --block for space blcck.
+        --1/4 for 1/4 block
         --chars <TEXT> color text.
         --ramp <TEXT> set ramp (".:-=+*#%@").
         --bg <0-98> set bg.
@@ -542,8 +543,12 @@ class ASCII(callbacks.Plugin):
             cols = optlist.get('w')
         elif 'ascii' not in optlist and 'ramp' not in optlist and 'nocolor' not in optlist and 'chars' not in optlist and 'block' not in optlist and 'w' not in optlist:
             cols = 60
+        elif 'w' not in optlist and '1/4' in optlist:
+            cols = 60
         else:
             cols = 100
+        if '1/4' in optlist:
+            cols = cols *2
         path = os.path.dirname(os.path.abspath(__file__))
         filepath = "{0}/tmp".format(path)
         filename = "{0}/{1}".format(filepath, url.split('/')[-1])
@@ -574,7 +579,7 @@ class ASCII(callbacks.Plugin):
         # compute width of tile
         w = W/cols
         # compute tile height based on aspect ratio and scale
-        if 'ascii' not in optlist and 'ramp' not in optlist and 'nocolor' not in optlist and 'chars' not in optlist and 'block' not in optlist:
+        if 'ascii' not in optlist and 'ramp' not in optlist and 'nocolor' not in optlist and 'chars' not in optlist and 'block' not in optlist and '1/4' not in optlist:
             scale = 1.0
         else:
             scale = 0.5
@@ -597,7 +602,7 @@ class ASCII(callbacks.Plugin):
         aimg = []
         # generate list of dimensions
         char = 0
-        if 'ascii' not in optlist and 'ramp' not in optlist and 'nocolor' not in optlist and 'chars' not in optlist and 'block' not in optlist:
+        if 'ascii' not in optlist and 'ramp' not in optlist and 'nocolor' not in optlist and 'chars' not in optlist and 'block' not in optlist and '1/4' not in optlist:
             k = 0
             for j in range(0, rows - 1, 2):
                 # append an empty string
@@ -618,6 +623,89 @@ class ASCII(callbacks.Plugin):
                         aimg[k] += "{0}{1}".format(color, block)
                     else:
                         aimg[k] += "{0}".format(block)
+                k += 1
+        elif '1/4' in optlist:
+            k = 0
+            for j in range(0, rows - 1, 2):
+                # append an empty string
+                aimg.append("")
+                old_color = None
+                for i in range(0, cols - 1, 2):
+                    color1 = self.getColor(colormap[j][i].tolist(), speed)
+                    color2 = self.getColor(colormap[j+1][i].tolist(), speed)
+                    color3= self.getColor(colormap[j][i+1].tolist(), speed)
+                    color4 = self.getColor(colormap[j+1][i+1].tolist(), speed)
+                    if color1 == color2 and color1 == color3 and color1 == color4:
+                        gsval = " "
+                        color = "\x030,{0}".format(int(color1))
+                    elif color1 == color4 and color2 == color3:
+                        gsval = "▚"
+                        color = "\x03{0},{1}".format(int(color1), int(color2))
+                    elif color1 == color2 and color1 == color3 and color1 != color4:
+                        gsval = "▛"
+                        color = "\x03{0},{1}".format(int(color1), int(color4))
+                    elif color3 == color4 and color2 == color4 and color3 != color1:
+                        gsval = "▟"
+                        color = "\x03{0},{1}".format(int(color2), int(color1))
+                    elif color1 == color2 and color1 == color4 and color1 != color3:
+                        gsval = "▙"
+                        color = "\x03{0},{1}".format(int(color1), int(color3))
+                    elif color1 == color3 and color1 == color4 and color1 != color2:
+                        gsval = "▜"
+                        color = "\x03{0},{1}".format(int(color1), int(color2))
+                    elif color1 == color3 and color2 == color4 and color1 != color2 and color3 != color4:
+                        gsval = "▀"
+                        color = "\x03{0},{1}".format(int(color1), int(color4))
+                    elif color1 == color2 and color3 == color4 and color1 != color3 and color2 != color4:
+                        gsval = "▌"
+                        color = "\x03{0},{1}".format(int(color1), int(color4))
+                    else:
+                        col1 = self.getColor(np.average([tuple(colormap[j][i].tolist()), tuple(colormap[j+1][i].tolist())], axis=0).tolist(), speed)
+                        col2 = self.getColor(np.average([tuple(colormap[j][i+1].tolist()), tuple(colormap[j+1][i+1].tolist())], axis=0).tolist(), speed)
+                        row1 = self.getColor(np.average([tuple(colormap[j][i].tolist()), tuple(colormap[j][i+1].tolist())], axis=0).tolist(), speed)
+                        row2 = self.getColor(np.average([tuple(colormap[j+1][i+1].tolist()), tuple(colormap[j][i+1].tolist())], axis=0).tolist(), speed)
+                        if row2 == color1:
+                            gsval = "▙"
+                            color = "\x03{0},{1}".format(int(row2), int(color3))
+                        elif row1 == color2:
+                            gsval = "▛"
+                            color = "\x03{0},{1}".format(int(row1), int(color4))
+                        elif row2 == color3:
+                            gsval = "▟"
+                            color = "\x03{0},{1}".format(int(row2), int(color1))
+                        elif row1 == color4:
+                            gsval = "▜"
+                            color = "\x03{0},{1}".format(int(row1), int(color2))
+                        elif col1 == color4:
+                            gsval = "▙"
+                            color = "\x03{0},{1}".format(int(col1), int(color3))
+                        elif col1 == color3:
+                            gsval = "▛"
+                            color = "\x03{0},{1}".format(int(col1), int(color4))
+                        elif col2 == color2:
+                            gsval = "▟"
+                            color = "\x03{0},{1}".format(int(col2), int(color1))
+                        elif col2 == color1:
+                            gsval = "▜"
+                            color = "\x03{0},{1}".format(int(col2), int(color2))
+                        elif row1 == row2:
+                            gsval = " "
+                            color = "\x030,{0}".format(int(row1))
+                        elif col1 == col2:
+                            gsval = " "
+                            color = "\x030,{0}".format(int(col1))
+                        elif row1 != row2:
+                            gsval = "▀"
+                            color = "\x03{0},{1}".format(int(row1), int(row2))
+                        elif col1 != col2:
+                            gsval = "▌"
+                            color = "\x03{0},{1}".format(int(col1), int(col2))
+                    if color != old_color:
+                        old_color = color
+                        # append char to string
+                        aimg[k] += "{0}{1}".format(color, gsval)
+                    else:
+                        aimg[k] += "{0}".format(gsval)
                 k += 1
         else:
             for j in range(rows):
@@ -714,7 +802,7 @@ class ASCII(callbacks.Plugin):
                 irc.reply(line, prefixNick=False, noLengthCheck=True, private=False, notice=False, to=channel)
         if self.registryValue('pasteEnable', msg.args[0]):
             irc.reply(self.doPaste(url, paste), private=False, notice=False, to=channel)
-    img = wrap(img,[optional('channel'), getopts({'w':'int', 'invert':'', 'fast':'', 'faster':'', 'slow':'', 'slower':'', 'slowest':'', 'insane':'', '16':'', 'delay':'float', 'dither':'', 'chars':'text', 'bg':'int', 'fg':'int', 'ramp':'text', 'nocolor':'', 'block':'', 'ascii':''}), ('text')])
+    img = wrap(img,[optional('channel'), getopts({'w':'int', 'invert':'', 'fast':'', 'faster':'', 'slow':'', 'slower':'', 'slowest':'', 'insane':'', '16':'', 'delay':'float', 'dither':'', 'chars':'text', 'bg':'int', 'fg':'int', 'ramp':'text', 'nocolor':'', 'block':'', 'ascii':'', '1/4':''}), ('text')])
 
     def scroll(self, irc, msg, args, channel, optlist, url):
         """[<channel>] <url>
