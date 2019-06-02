@@ -80,6 +80,10 @@ conf.registerChannelValue(SpiffyTitles, 'imdbTemplate',
 conf.registerChannelValue(SpiffyTitles, 'coubTemplate',
      registry.String("^ {%if not_safe_for_work %}NSFW{% endif %} [{{channel.title}}] {{title}} :: {{views_count}} views :: {{likes_count}} likes :: {{recoubs_count}} recoubs", _("""Uses Coub API to get additional information about coub.com links""")))
 
+# YouTube Logo
+conf.registerChannelValue(SpiffyTitles, 'youtubeLogo',
+     registry.String("\x030,4 ► \x031,0YouTube\x0F", _("""Logo used with {{yt_logo}} in template""")))
+
 # YouTube template
 conf.registerChannelValue(SpiffyTitles, 'youtubeTitleTemplate',
      registry.String("^ {{yt_logo}} :: {{title}} {%if timestamp%} @ {{timestamp}}{% endif %} :: Duration: {{duration}} :: Views: {{view_count}} uploaded by {{channel_title}} :: {{like_count}} likes :: {{dislike_count}} dislikes :: {{favorite_count}} favorites", _("""Template used for YouTube title responses""")))
