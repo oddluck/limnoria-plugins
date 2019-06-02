@@ -607,7 +607,7 @@ class ASCII(callbacks.Plugin):
             for j in range(0, rows - 1, 2):
                 # append an empty string
                 aimg.append("")
-                old_color = None
+                old_color = "99,99"
                 for i in range(cols):
                     color1 = self.getColor(colormap[j][i].tolist(), speed)
                     color2 = self.getColor(colormap[j+1][i].tolist(), speed)
