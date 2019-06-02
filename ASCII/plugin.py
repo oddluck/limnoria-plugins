@@ -616,7 +616,6 @@ class ASCII(callbacks.Plugin):
                         if color1 == color2:
                             gsval = " "
                             color = "0,{0}".format(int(color1))
-                            old_color = color
                         else:
                             gsval = "▀"
                             alt_gsval = "▄"
