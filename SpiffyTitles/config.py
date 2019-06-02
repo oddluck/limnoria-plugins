@@ -82,7 +82,7 @@ conf.registerChannelValue(SpiffyTitles, 'coubTemplate',
 
 # YouTube Logo
 conf.registerChannelValue(SpiffyTitles, 'youtubeLogo',
-     registry.String("\x030,4 ► \x031,0YouTube\x0F", _("""Logo used with {{yt_logo}} in template""")))
+     registry.String("\x030,4 ► \x031,0YouTube", _("""Logo used with {{yt_logo}} in template""")))
 
 # YouTube template
 conf.registerChannelValue(SpiffyTitles, 'youtubeTitleTemplate',
