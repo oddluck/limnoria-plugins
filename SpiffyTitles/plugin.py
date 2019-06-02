@@ -737,12 +737,7 @@ class SpiffyTitles(callbacks.Plugin):
         return duration
 
     def get_youtube_logo(self):
-        colored_letters = [
-            "%s" % ircutils.mircColor("You", fg="red", bg="white"),
-            "%s" % ircutils.mircColor("Tube", fg="white", bg="red")
-        ]
-
-        yt_logo = "".join(colored_letters)
+        yt_logo = self.registryValue("youtubeLogo", dynamic.channel)
 
         return yt_logo
 
