@@ -611,23 +611,28 @@ class ASCII(callbacks.Plugin):
                 for i in range(cols):
                     color1 = self.getColor(colormap[j][i].tolist(), speed)
                     color2 = self.getColor(colormap[j+1][i].tolist(), speed)
-                    if color1 == color2:
-                        block = " "
-                        color = "0,{0}".format(int(color1))
-                    else:
-                        block = "▀"
-                        color = "{0},{1}".format(int(color1), int(color2))
+                    color = "{0},{1}".format(int(color1), int(color2))
                     if color != old_color:
-                        if block == "▀" and color == "{0},{1}".format(old_color.split(',')[1], old_color.split(',')[0]):
+                        if color1 == color2:
+                            gsval = " "
+                            color = "0,{0}".format(int(color1))
+                        else:
+                            gsval = "▀"
+                            alt_gsval = "▄"
+                            color = "{0},{1}".format(int(color1), int(color2))
+                        if gsval != " " and color == "{0},{1}".format(old_color.split(',')[1], old_color.split(',')[0]):
                             old_color = color
-                            aimg[k] += "▄"
-                        elif block == " " and "{0}".format(color.split(',')[1]) == "{0}".format(old_color.split(',')[1]):
+                            aimg[k] += alt_gsval
+                        elif gsval == " " and "{0}".format(color.split(',')[1]) == "{0}".format(old_color.split(',')[1]):
                             aimg[k] += " "
                         else:
                             old_color = color
-                            aimg[k] += "\x03{0}{1}".format(color, block)
+                            aimg[k] += "\x03{0}{1}".format(color, gsval)
                     else:
-                        aimg[k] += "{0}".format(block)
+                        if color1 == color2:
+                            aimg[k] += " "
+                        else:
+                            aimg[k] += "▀"
                 k += 1
         elif '1/4' in optlist:
             k = 0
