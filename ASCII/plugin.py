@@ -473,21 +473,23 @@ class ASCII(callbacks.Plugin):
     fontlist = wrap(fontlist)
 
     def img(self, irc, msg, args, channel, optlist, url):
-        """[<channel>] [--w <int>] [--16] [--block] [--chars <text>] [--ramp <text>] [--bg <0-98>] [--fg <0-99>] [--nocolor] [--invert] <url>
-        Image to ASCII art.
-        --w set width (default 100).
-        --16 for 16 colors (default 99).
-        --block for block art.
+        """[<channel>] [--w <int>] [--16] [--ascii] [--block] [--chars <text>] [--ramp <text>] [--bg <0-98>] [--fg <0-99>] [--nocolor] [--invert] <url>
+        Image to ASCII Art.
+        --w num columns wide.
+        --16 for 16 colors.
+        --ascii for color ascii.
+        --block for space blcck.
         --chars <TEXT> color text.
         --ramp <TEXT> set ramp (".:-=+*#%@").
-        --bg <0-98> set bg color.
-        --fg <0-99> set fg color.
+        --bg <0-98> set bg.
+        --fg <0-99> set fg.
         --nocolor text only greyscale.
         --invert inverts ramp.
         """
         if not channel:
             channel = msg.args[0]
         optlist = dict(optlist)
+        gscale = ""
         if '16' in optlist:
             self.colors = 16
         else:
@@ -506,16 +508,10 @@ class ASCII(callbacks.Plugin):
             speed = 'insane'
         else:
             speed = 'slowest'
-        if 'w' in optlist:
-            cols = optlist.get('w')
-        else:
-            cols = 100
         if 'chars' in optlist:
             gscale = optlist.get('chars')
         elif 'ramp' in optlist:
             gscale = optlist.get('ramp')
-        else:
-            gscale = ".'`^\":;Il!i><~+_-?][}{1)(|\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$"
         if 'delay' in optlist:
             delay = optlist.get('delay')
         else:
@@ -528,8 +524,10 @@ class ASCII(callbacks.Plugin):
             fg = optlist.get('fg')
         else:
             fg = 99
-        if 'chars' not in optlist and 'ramp' not in optlist and 'block' not in optlist and 'nocolor' not in optlist and bg == 0 or bg == 98:
+        if 'ascii' in optlist and bg == 0 or bg == 98:
             gscale = "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\|()1{}[]?-_+~<>i!lI;:\"^`'."
+        elif 'ascii' in optlist:
+            gscale = ".'`^\":;Il!i><~+_-?][}{1)(|\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$"
         if 'nocolor' in optlist and 'chars' in optlist:
             return
         elif 'nocolor' in optlist and 'ramp' not in optlist and bg == 0 or bg == 98:
@@ -540,6 +538,12 @@ class ASCII(callbacks.Plugin):
             gscale = '\xa0'
         if 'invert' in optlist and 'chars' not in optlist and gscale != '\xa0':
             gscale = gscale[::-1]
+        if 'w' in optlist:
+            cols = optlist.get('w')
+        elif 'ascii' not in optlist and 'ramp' not in optlist and 'nocolor' not in optlist and 'chars' not in optlist and 'block' not in optlist and 'w' not in optlist:
+            cols = 70
+        else:
+            cols = 100
         path = os.path.dirname(os.path.abspath(__file__))
         filepath = "{0}/tmp".format(path)
         filename = "{0}/{1}".format(filepath, url.split('/')[-1])
@@ -570,7 +574,10 @@ class ASCII(callbacks.Plugin):
         # compute width of tile
         w = W/cols
         # compute tile height based on aspect ratio and scale
-        scale = 0.5
+        if 'ascii' not in optlist and 'ramp' not in optlist and 'nocolor' not in optlist and 'chars' not in optlist and 'block' not in optlist:
+            scale = 1.0
+        else:
+            scale = 0.5
         h = w/scale
         # compute number of rows
         rows = int(H/h)
@@ -590,56 +597,51 @@ class ASCII(callbacks.Plugin):
         aimg = []
         # generate list of dimensions
         char = 0
-        for j in range(rows):
-            y1 = int(j*h)
-            y2 = int((j+1)*h)
-            # correct last tile
-            if j == rows-1:
-                y2 = H
-            # append an empty string
-            aimg.append("")
-            old_color = None
-            for i in range(cols):
-                # get average luminance
-                avg = int(np.average(lumamap[j][i]))
-                # look up ascii char
-                if 'chars' not in optlist:
-                    gsval = gscale[int((avg * (len(gscale) - 1))/255)]
-                else:
-                    if char < len(gscale):
-                        gsval = gscale[char]
-                        char += 1
+        if 'ascii' not in optlist and 'ramp' not in optlist and 'nocolor' not in optlist and 'chars' not in optlist and 'block' not in optlist:
+            k = 0
+            for j in range(0, rows - 1, 2):
+                # append an empty string
+                aimg.append("")
+                old_color = None
+                for i in range(cols):
+                    color1 = self.getColor(colormap[j][i].tolist(), speed)
+                    color2 = self.getColor(colormap[j+1][i].tolist(), speed)
+                    if color1 == color2:
+                        block = " "
+                        color = "\x030,{0}".format(int(color1))
                     else:
-                        char = 0
-                        gsval = gscale[char]
-                        char += 1
-                # get color value
-                if 'nocolor' not in optlist and i == 0:
-                    color = self.getColor(colormap[j][i].tolist(), speed)
-                    old_color = color
-                    if 'bg' not in optlist:
-                        if gsval != '\xa0':
-                            if gsval.isdigit():
-                                color = "{:02d}".format(int(color))
-                                aimg[j] += "\x03{0}{1}".format(color, gsval)
-                            else:
-                                aimg[j] += "\x03{0}{1}".format(int(color), gsval)
-                        else:
-                            aimg[j] += "\x030,{0} ".format(int(color))
-                    else:
-                        if gsval != '\xa0':
-                            if gsval.isdigit():
-                                newbg = "{:02d}".format(int(bg))
-                                aimg[j] += "\x03{0},{1}{2}".format(int(color), newbg, gsval)
-                            else:
-                                aimg[j] += "\x03{0},{1}{2}".format(int(color), int(bg), gsval)
-                        else:
-                            aimg[j] += "\x030,{0} ".format(int(color))
-                elif 'nocolor' not in optlist and gsval != ' ':
-                    color = self.getColor(colormap[j][i].tolist(), speed)
+                        block = "▀"
+                        color = "\x03{0},{1}".format(int(color1), int(color2))
                     if color != old_color:
                         old_color = color
-                        # append ascii char to string
+                        # append char to string
+                        aimg[k] += "{0}{1}".format(color, block)
+                    else:
+                        aimg[k] += "{0}".format(block)
+                k += 1
+        else:
+            for j in range(rows):
+                # append an empty string
+                aimg.append("")
+                old_color = None
+                for i in range(cols):
+                    # get average luminance
+                    avg = int(np.average(lumamap[j][i]))
+                    # look up ascii char
+                    if 'chars' not in optlist:
+                        gsval = gscale[int((avg * (len(gscale) - 1))/255)]
+                    else:
+                        if char < len(gscale):
+                            gsval = gscale[char]
+                            char += 1
+                        else:
+                            char = 0
+                            gsval = gscale[char]
+                            char += 1
+                    # get color value
+                    if 'nocolor' not in optlist and i == 0:
+                        color = self.getColor(colormap[j][i].tolist(), speed)
+                        old_color = color
                         if 'bg' not in optlist:
                             if gsval != '\xa0':
                                 if gsval.isdigit():
@@ -658,10 +660,33 @@ class ASCII(callbacks.Plugin):
                                     aimg[j] += "\x03{0},{1}{2}".format(int(color), int(bg), gsval)
                             else:
                                 aimg[j] += "\x030,{0} ".format(int(color))
+                    elif 'nocolor' not in optlist and gsval != ' ':
+                        color = self.getColor(colormap[j][i].tolist(), speed)
+                        if color != old_color:
+                            old_color = color
+                            # append ascii char to string
+                            if 'bg' not in optlist:
+                                if gsval != '\xa0':
+                                    if gsval.isdigit():
+                                        color = "{:02d}".format(int(color))
+                                        aimg[j] += "\x03{0}{1}".format(color, gsval)
+                                    else:
+                                        aimg[j] += "\x03{0}{1}".format(int(color), gsval)
+                                else:
+                                    aimg[j] += "\x030,{0} ".format(int(color))
+                            else:
+                                if gsval != '\xa0':
+                                    if gsval.isdigit():
+                                        newbg = "{:02d}".format(int(bg))
+                                        aimg[j] += "\x03{0},{1}{2}".format(int(color), newbg, gsval)
+                                    else:
+                                        aimg[j] += "\x03{0},{1}{2}".format(int(color), int(bg), gsval)
+                                else:
+                                    aimg[j] += "\x030,{0} ".format(int(color))
+                        else:
+                            aimg[j] += "{0}".format(gsval)
                     else:
                         aimg[j] += "{0}".format(gsval)
-                else:
-                    aimg[j] += "{0}".format(gsval)
         # return txt image
         output = aimg
         del image
@@ -689,7 +714,7 @@ class ASCII(callbacks.Plugin):
                 irc.reply(line, prefixNick=False, noLengthCheck=True, private=False, notice=False, to=channel)
         if self.registryValue('pasteEnable', msg.args[0]):
             irc.reply(self.doPaste(url, paste), private=False, notice=False, to=channel)
-    img = wrap(img,[optional('channel'), getopts({'w':'int', 'invert':'', 'fast':'', 'faster':'', 'slow':'', 'slower':'', 'slowest':'', 'insane':'', '16':'', 'delay':'float', 'dither':'', 'chars':'text', 'bg':'int', 'fg':'int', 'ramp':'text', 'nocolor':'', 'block':''}), ('text')])
+    img = wrap(img,[optional('channel'), getopts({'w':'int', 'invert':'', 'fast':'', 'faster':'', 'slow':'', 'slower':'', 'slowest':'', 'insane':'', '16':'', 'delay':'float', 'dither':'', 'chars':'text', 'bg':'int', 'fg':'int', 'ramp':'text', 'nocolor':'', 'block':'', 'ascii':''}), ('text')])
 
     def scroll(self, irc, msg, args, channel, optlist, url):
         """[<channel>] <url>
