@@ -621,7 +621,7 @@ class ASCII(callbacks.Plugin):
                         if block == "▀" and color == "{0},{1}".format(old_color.split(',')[1], old_color.split(',')[0]):
                             old_color = color
                             aimg[k] += "▄"
-                        if block == " " and "{0}".format(color.split(',')[1]) == "{0}".format(old_color.split(',')[1]):
+                        elif block == " " and "{0}".format(color.split(',')[1]) == "{0}".format(old_color.split(',')[1]):
                             aimg[k] += " "
                         else:
                             old_color = color
