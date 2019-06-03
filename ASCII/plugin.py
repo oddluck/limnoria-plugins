@@ -632,9 +632,11 @@ class ASCII(callbacks.Plugin):
                             aimg[k] += " "
                         else:
                             aimg[k] += "▀"
-                    aimg[k] = re.sub("\x030,{0}(\s+)\x03{1},{0}".format(color2, color1), "\x03{0},{1}\g<1>".format(color1, color2), aimg[k])
-                    aimg[k] = aimg[k].replace("{0}".format(color1), "{0}".format(int(color1)))
-                    aimg[k] = aimg[k].replace("{0}".format(color2), "{0}".format(int(color2)))
+                for i in range(0,98):
+                    i = '%02d' % i
+                    aimg[k] = re.sub("\x030,{0}(\s+)\x03(\d\d),{0}".format(i), "\x03\g<2>,{0}\g<1>".format(i), aimg[k])
+                    aimg[k] = aimg[k].replace("{0}".format(i), "{0}".format(int(i)))
+                    aimg[k] = aimg[k].replace("{0}".format(i), "{0}".format(int(i)))
                 k += 1
         elif '1/4' in optlist:
             k = 0
