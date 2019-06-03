@@ -43,12 +43,6 @@ class ASCII(callbacks.Plugin):
         self.__parent.__init__(irc)
         self.colors = 83
         self.stopped = {}
-        self.matches = {}
-        self.matches['slowest'] = {}
-        self.matches['slower'] = {}
-        self.matches['slow'] = {}
-        self.matches['fast'] = {}
-        self.matches['faster'] = {}
         self.rgbColors = [
             (255,255,255),
             (0,0,0),
@@ -319,12 +313,12 @@ class ASCII(callbacks.Plugin):
         else:
             colors = list(self.ircColors.keys())
         try:
-            return self.matches[speed][pixel]
+            return self.matches[pixel]
         except KeyError:
             closest_colors = sorted(colors, key=lambda color: self.distance(color, self.rgb2lab(pixel), speed))
             closest_color = closest_colors[0]
-            self.matches[speed][pixel] = self.ircColors[closest_color]
-            return self.matches[speed][pixel]
+            self.matches[pixel] = self.ircColors[closest_color]
+            return self.matches[pixel]
 
     def rgb2lab (self, inputColor) :
         num = 0
@@ -603,6 +597,7 @@ class ASCII(callbacks.Plugin):
                 image2 = image2.convert('P', dither=None, palette=Image.ADAPTIVE)
                 image2 = image2.convert('RGB')
             colormap = np.array(image2)
+            self.matches = {}
         image = image.convert('L')
         lumamap = np.array(image)
         # ascii image is a list of character strings
@@ -1177,6 +1172,7 @@ class ASCII(callbacks.Plugin):
             speed = 'slower'
         file = requests.get("http://wttr.in/{0}".format(location))
         output = file.content.decode()
+        self.matches = {}
         for i in range(0, 256):
             j = '%03d' % i
             output = re.sub('\x1b\[38;5;{0}m|\[38;5;{0};\d+m'.format(j), '\x03{:02d}'.format(self.getColor(x256.to_rgb(int(j)), speed)), output)
@@ -1247,6 +1243,7 @@ class ASCII(callbacks.Plugin):
             sub = 'usd'
         if not coin:
             coin = ''
+        self.matches= {}
         file = requests.get("http://{0}.rate.sx/{1}".format(sub, coin))
         output = file.content.decode()
         output = output.replace('\x1b[0m', '\x0F')
