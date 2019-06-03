@@ -14,7 +14,7 @@ import supybot.callbacks as callbacks
 import supybot.ircmsgs as ircmsgs
 import os
 import requests
-from PIL import Image, ImageOps, ImageFont, ImageDraw
+from PIL import Image, ImageOps, ImageFont, ImageDraw, ImageEnhance
 import numpy as np
 import sys, math
 from fake_useragent import UserAgent
@@ -473,13 +473,14 @@ class ASCII(callbacks.Plugin):
     fontlist = wrap(fontlist)
 
     def img(self, irc, msg, args, channel, optlist, url):
-        """[<channel>] [--w <int>] [--16] [--ascii] [--block] [--1/4] [--chars <text>] [--ramp <text>] [--bg <0-98>] [--fg <0-99>] [--nocolor] [--invert] <url>
+        """[<channel>] [--w <int>] [--s] [--16] [--ascii] [--block] [--1/4] [--chars <text>] [--ramp <text>] [--bg <0-98>] [--fg <0-99>] [--nocolor] [--invert] <url>
         Image to ASCII Art.
-        --w num columns wide.
-        --16 for 16 colors.
-        --ascii for color ascii.
-        --block for space blcck.
-        --1/4 for 1/4 block
+        --w columns.
+        --s saturation (1.0).
+        --16 for 16 color.
+        --ascii color ascii.
+        --block space blcck.
+        --1/4 1/4 block
         --chars <TEXT> color text.
         --ramp <TEXT> set ramp (".:-=+*#%@").
         --bg <0-98> set bg.
@@ -549,6 +550,8 @@ class ASCII(callbacks.Plugin):
             cols = 100
         if '1/4' in optlist:
             cols = cols *2
+        if 's' in optlist:
+            s = float(optlist.get('s'))
         path = os.path.dirname(os.path.abspath(__file__))
         filepath = "{0}/tmp".format(path)
         filename = "{0}/{1}".format(filepath, url.split('/')[-1])
@@ -587,9 +590,10 @@ class ASCII(callbacks.Plugin):
         # compute number of rows
         rows = int(H/h)
         image = ImageOps.autocontrast(image)
-        image = image.resize((cols, rows), Image.LANCZOS)
         if 'nocolor' not in optlist:
-            image2 = image
+            image2 = image.resize((cols, rows), Image.LANCZOS)
+            if 's' in optlist:
+                image2 = ImageEnhance.Color(image2).enhance(s)
             if 'dither' in optlist and 'insane' not in optlist:
                 image2 = image2.convert('P', dither=Image.FLOYDSTEINBERG, palette=Image.ADAPTIVE)
                 image2 = image2.convert('RGB')
@@ -598,12 +602,8 @@ class ASCII(callbacks.Plugin):
                 image2 = image2.convert('RGB')
             colormap = np.array(image2)
             self.matches = {}
-        image = image.convert('L')
-        lumamap = np.array(image)
         # ascii image is a list of character strings
         aimg = []
-        # generate list of dimensions
-        char = 0
         if 'ascii' not in optlist and 'ramp' not in optlist and 'nocolor' not in optlist and 'chars' not in optlist and 'block' not in optlist and '1/4' not in optlist:
             k = 0
             for j in range(0, rows - 1, 2):
@@ -725,6 +725,11 @@ class ASCII(callbacks.Plugin):
                         aimg[k] += "{0}".format(gsval)
                 k += 1
         else:
+            image = image.resize((cols, rows), Image.LANCZOS)
+            image = image.convert('L')
+            lumamap = np.array(image)
+            # generate list of dimensions
+            char = 0
             for j in range(rows):
                 # append an empty string
                 aimg.append("")
@@ -819,7 +824,7 @@ class ASCII(callbacks.Plugin):
                 irc.reply(line, prefixNick=False, noLengthCheck=True, private=False, notice=False, to=channel)
         if self.registryValue('pasteEnable', msg.args[0]):
             irc.reply(self.doPaste(url, paste), private=False, notice=False, to=channel)
-    img = wrap(img,[optional('channel'), getopts({'w':'int', 'invert':'', 'fast':'', 'faster':'', 'slow':'', 'slower':'', 'slowest':'', 'insane':'', '16':'', 'delay':'float', 'dither':'', 'chars':'text', 'bg':'int', 'fg':'int', 'ramp':'text', 'nocolor':'', 'block':'', 'ascii':'', '1/4':'', 'max':''}), ('text')])
+    img = wrap(img,[optional('channel'), getopts({'w':'int', 'invert':'', 'fast':'', 'faster':'', 'slow':'', 'slower':'', 'slowest':'', 'insane':'', '16':'', 'delay':'float', 'dither':'', 'chars':'text', 'bg':'int', 'fg':'int', 'ramp':'text', 'nocolor':'', 'block':'', 'ascii':'', '1/4':'', 's':'float'}), ('text')])
 
     def scroll(self, irc, msg, args, channel, optlist, url):
         """[<channel>] <url>
