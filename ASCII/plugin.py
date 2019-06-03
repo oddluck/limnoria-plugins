@@ -621,13 +621,12 @@ class ASCII(callbacks.Plugin):
                             alt_gsval = "▄"
                             color = "{0},{1}".format(int(color1), int(color2))
                         if gsval != " " and color == "{0},{1}".format(old_color.split(',')[1], old_color.split(',')[0]):
-                            old_color = color
                             aimg[k] += alt_gsval
                         elif gsval == " " and "{0}".format(color.split(',')[1]) == "{0}".format(old_color.split(',')[1]):
                             aimg[k] += " "
                         else:
-                            old_color = color
                             aimg[k] += "\x03{0}{1}".format(color, gsval)
+                            old_color = color
                     else:
                         if color1 == color2:
                             aimg[k] += " "
