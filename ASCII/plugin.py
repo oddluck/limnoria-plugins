@@ -632,6 +632,7 @@ class ASCII(callbacks.Plugin):
                             aimg[k] += " "
                         else:
                             aimg[k] += "▀"
+                    aimg[k] = re.sub("\x030,{0}(\s+)\x03{1},{0}".format(color2, color1), "\x03{0},{1}\g<1>".format(color1, color2), aimg[k])
                 k += 1
         elif '1/4' in optlist:
             k = 0
