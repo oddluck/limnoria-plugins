@@ -542,7 +542,7 @@ class ASCII(callbacks.Plugin):
         if 'w' in optlist:
             cols = optlist.get('w')
         elif 'ascii' not in optlist and 'ramp' not in optlist and 'nocolor' not in optlist and 'chars' not in optlist and 'block' not in optlist and 'w' not in optlist:
-            cols = 60
+            cols = 75
         elif 'w' not in optlist and '1/4' in optlist:
             cols = 75
         else:
