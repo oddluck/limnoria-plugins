@@ -43,6 +43,12 @@ class ASCII(callbacks.Plugin):
         self.__parent.__init__(irc)
         self.colors = 83
         self.stopped = {}
+        self.matches = {}
+        self.matches['slowest'] = {}
+        self.matches['slower'] = {}
+        self.matches['slow'] = {}
+        self.matches['fast'] = {}
+        self.matches['faster'] = {}
         self.rgbColors = [
             (255,255,255),
             (0,0,0),
@@ -312,11 +318,13 @@ class ASCII(callbacks.Plugin):
             colors = list(self.ircColors.keys())[:16]
         else:
             colors = list(self.ircColors.keys())
-        if pixel not in self.matches:
+        try:
+            return self.matches[speed][pixel]
+        except KeyError:
             closest_colors = sorted(colors, key=lambda color: self.distance(color, self.rgb2lab(pixel), speed))
             closest_color = closest_colors[0]
-            self.matches[pixel] = self.ircColors[closest_color]
-        return self.matches[pixel]
+            self.matches[speed][pixel] = self.ircColors[closest_color]
+            return self.matches[speed][pixel]
 
     def rgb2lab (self, inputColor) :
         num = 0
@@ -369,8 +377,6 @@ class ASCII(callbacks.Plugin):
             delta_e = delta_E_CMC(c1, c2)
         elif speed == 'slowest':
             delta_e = delta_E_CIE2000(c1, c2)
-        elif speed == 'insane':
-            delta_e = delta_E_DIN99(c1, c2)
         return delta_e
 
     def png(self, irc, msg, args, optlist, url):
@@ -506,7 +512,7 @@ class ASCII(callbacks.Plugin):
         elif 'slowest' in optlist:
             speed = 'slowest'
         elif 'insane' in optlist:
-            speed = 'insane'
+            speed = 'slowest'
         else:
             speed = 'slowest'
         if 'chars' in optlist:
@@ -589,13 +595,14 @@ class ASCII(callbacks.Plugin):
         image = ImageOps.autocontrast(image)
         image = image.resize((cols, rows), Image.LANCZOS)
         if 'nocolor' not in optlist:
-            if 'dither' in optlist:
-                image2 = image.convert('P', dither=Image.FLOYDSTEINBERG, palette=Image.ADAPTIVE)
-            else:
-                image2 = image.convert('P', dither=None, palette=Image.ADAPTIVE)
-            image2 = image2.convert('RGB')
+            image2 = image
+            if 'dither' in optlist and 'insane' not in optlist:
+                image2 = image2.convert('P', dither=Image.FLOYDSTEINBERG, palette=Image.ADAPTIVE)
+                image2 = image2.convert('RGB')
+            elif 'insane' not in optlist:
+                image2 = image2.convert('P', dither=None, palette=Image.ADAPTIVE)
+                image2 = image2.convert('RGB')
             colormap = np.array(image2)
-            self.matches = {}
         image = image.convert('L')
         lumamap = np.array(image)
         # ascii image is a list of character strings
@@ -1168,7 +1175,6 @@ class ASCII(callbacks.Plugin):
             speed = 'insane'
         else:
             speed = 'slower'
-        self.matches = {}
         file = requests.get("http://wttr.in/{0}".format(location))
         output = file.content.decode()
         for i in range(0, 256):
@@ -1241,7 +1247,6 @@ class ASCII(callbacks.Plugin):
             sub = 'usd'
         if not coin:
             coin = ''
-        self.matches = {}
         file = requests.get("http://{0}.rate.sx/{1}".format(sub, coin))
         output = file.content.decode()
         output = output.replace('\x1b[0m', '\x0F')
