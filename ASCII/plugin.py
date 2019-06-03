@@ -544,7 +544,7 @@ class ASCII(callbacks.Plugin):
         elif 'ascii' not in optlist and 'ramp' not in optlist and 'nocolor' not in optlist and 'chars' not in optlist and 'block' not in optlist and 'w' not in optlist:
             cols = 60
         elif 'w' not in optlist and '1/4' in optlist:
-            cols = 60
+            cols = 75
         else:
             cols = 100
         if '1/4' in optlist:
@@ -948,7 +948,7 @@ class ASCII(callbacks.Plugin):
             w = optlist.get('w')
             opts += '-w {0} '.format(w)
         else:
-            opts += '-w 60 '
+            opts += '-w 75 '
         if 'delay' in optlist:
             delay = optlist.get('delay')
         else:
