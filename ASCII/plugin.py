@@ -615,15 +615,16 @@ class ASCII(callbacks.Plugin):
                     if color != old_color:
                         if color1 == color2:
                             gsval = " "
-                            color = "0,{0}".format(color1) 
+                            color = "0,{0}".format(color1)
                         else:
                             gsval = "▀"
                             alt_gsval = "▄"
-                            color = "{0},{1}".format(color1, color2) 
                         if gsval != " " and color == "{0},{1}".format(old_color.split(',')[1], old_color.split(',')[0]):
                             aimg[k] += alt_gsval
-                        elif gsval == " " and "{0}".format(color.split(',')[1]) == "{0}".format(old_color.split(',')[1]):
+                        elif gsval == " " and "{0}".format(color1) == "{0}".format(old_color.split(',')[1]):
                             aimg[k] += " "
+                        elif 'max' in optlist and gsval == " " and "{0}".format(color1) == "{0}".format(old_color.split(',')[0]):
+                            aimg[k] += "█"
                         else:
                             aimg[k] += "\x03{0}{1}".format(color, gsval)
                             old_color = color
@@ -818,7 +819,7 @@ class ASCII(callbacks.Plugin):
                 irc.reply(line, prefixNick=False, noLengthCheck=True, private=False, notice=False, to=channel)
         if self.registryValue('pasteEnable', msg.args[0]):
             irc.reply(self.doPaste(url, paste), private=False, notice=False, to=channel)
-    img = wrap(img,[optional('channel'), getopts({'w':'int', 'invert':'', 'fast':'', 'faster':'', 'slow':'', 'slower':'', 'slowest':'', 'insane':'', '16':'', 'delay':'float', 'dither':'', 'chars':'text', 'bg':'int', 'fg':'int', 'ramp':'text', 'nocolor':'', 'block':'', 'ascii':'', '1/4':''}), ('text')])
+    img = wrap(img,[optional('channel'), getopts({'w':'int', 'invert':'', 'fast':'', 'faster':'', 'slow':'', 'slower':'', 'slowest':'', 'insane':'', '16':'', 'delay':'float', 'dither':'', 'chars':'text', 'bg':'int', 'fg':'int', 'ramp':'text', 'nocolor':'', 'block':'', 'ascii':'', '1/4':'', 'max':''}), ('text')])
 
     def scroll(self, irc, msg, args, channel, optlist, url):
         """[<channel>] <url>
