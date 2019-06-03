@@ -609,8 +609,8 @@ class ASCII(callbacks.Plugin):
                 aimg.append("")
                 old_color = "99,99"
                 for i in range(cols):
-                    color1 = self.getColor(colormap[j][i].tolist(), speed)
-                    color2 = self.getColor(colormap[j+1][i].tolist(), speed)
+                    color1 = '%02d' % self.getColor(colormap[j][i].tolist(), speed)
+                    color2 = '%02d' % self.getColor(colormap[j+1][i].tolist(), speed)
                     color = "{0},{1}".format(int(color1), int(color2))
                     if color != old_color:
                         if color1 == color2:
@@ -633,6 +633,8 @@ class ASCII(callbacks.Plugin):
                         else:
                             aimg[k] += "▀"
                     aimg[k] = re.sub("\x030,{0}(\s+)\x03{1},{0}".format(color2, color1), "\x03{0},{1}\g<1>".format(color1, color2), aimg[k])
+                    aimg[k] = aimg[k].replace("{0}".format(color1), "{0}".format(int(color1)))
+                    aimg[k] = aimg[k].replace("{0}".format(color2), "{0}".format(int(color2)))
                 k += 1
         elif '1/4' in optlist:
             k = 0
