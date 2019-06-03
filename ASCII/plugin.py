@@ -590,9 +590,9 @@ class ASCII(callbacks.Plugin):
         image = image.resize((cols, rows), Image.LANCZOS)
         if 'nocolor' not in optlist:
             if 'dither' in optlist:
-                image2 = image.convert('P', dither=Image.FLOYDSTEINBERG, palette=Image.ADAPTIVE, colors=99)
+                image2 = image.convert('P', dither=Image.FLOYDSTEINBERG, palette=Image.ADAPTIVE)
             else:
-                image2 = image.convert('P', dither=None, palette=Image.ADAPTIVE, colors = 99)
+                image2 = image.convert('P', dither=None, palette=Image.ADAPTIVE)
             image2 = image2.convert('RGB')
             colormap = np.array(image2)
             self.matches = {}
