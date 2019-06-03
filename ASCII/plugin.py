@@ -611,15 +611,15 @@ class ASCII(callbacks.Plugin):
                 for i in range(cols):
                     color1 = '%02d' % self.getColor(colormap[j][i].tolist(), speed)
                     color2 = '%02d' % self.getColor(colormap[j+1][i].tolist(), speed)
-                    color = "{0},{1}".format(int(color1), int(color2))
+                    color = "{0},{1}".format(color1, color2)
                     if color != old_color:
                         if color1 == color2:
                             gsval = " "
-                            color = "0,{0}".format(int(color1))
+                            color = "0,{0}".format(color1) 
                         else:
                             gsval = "▀"
                             alt_gsval = "▄"
-                            color = "{0},{1}".format(int(color1), int(color2))
+                            color = "{0},{1}".format(color1, color2) 
                         if gsval != " " and color == "{0},{1}".format(old_color.split(',')[1], old_color.split(',')[0]):
                             aimg[k] += alt_gsval
                         elif gsval == " " and "{0}".format(color.split(',')[1]) == "{0}".format(old_color.split(',')[1]):
@@ -635,7 +635,8 @@ class ASCII(callbacks.Plugin):
                 for i in range(0,98):
                     i = '%02d' % i
                     aimg[k] = re.sub("\x030,{0}(\s+)\x03(\d\d),{0}".format(i), "\x03\g<2>,{0}\g<1>".format(i), aimg[k])
-                    aimg[k] = aimg[k].replace("{0}".format(i), "{0}".format(int(i)))
+                for i in range(0,98):
+                    i = '%02d' % i
                     aimg[k] = aimg[k].replace("{0}".format(i), "{0}".format(int(i)))
                 k += 1
         elif '1/4' in optlist:
