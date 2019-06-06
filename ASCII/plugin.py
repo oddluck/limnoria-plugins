@@ -1331,6 +1331,7 @@ class ASCII(callbacks.Plugin):
             delay = optlist.get('delay')
         else:
             delay = self.registryValue('delay', msg.args[0])
+        self.stopped[msg.args[0]] = False
         data = requests.get("http://www.asciiartfarts.com/fortune.txt")
         fortunes = data.text.split('%\n')
         fortune = random.randrange(0, len(fortunes))
@@ -1354,6 +1355,7 @@ class ASCII(callbacks.Plugin):
             delay = optlist.get('delay')
         else:
             delay = self.registryValue('delay', msg.args[0])
+        self.stopped[msg.args[0]] = False
         ua = UserAgent()
         header = {'User-Agent':str(ua.random)}
         data = requests.get("https://mircart.org/?s={0}".format(search), headers=header)
