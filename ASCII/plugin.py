@@ -1346,7 +1346,7 @@ class ASCII(callbacks.Plugin):
     fortune = wrap(fortune, [optional('channel'), getopts({'delay':'float'})])
     
     def mircart(self, irc, msg, args, channel, optlist, search):
-        """[<channel>]
+        """[<channel>] (search text)
         Search https://mircart.org/ and scroll first result
         """
         if not channel:
@@ -1371,6 +1371,7 @@ class ASCII(callbacks.Plugin):
             elif line.strip() and not self.stopped[msg.args[0]] and "Follow @igor_chubin" not in line:
                 time.sleep(delay)
                 irc.reply(line, prefixNick = False, noLengthCheck=True, private=False, notice=False, to=channel)
+        irc.reply(url.get('href'))
     mircart = wrap(mircart, [optional('channel'), getopts({'delay':'float'}), ('text')])
 
     def cq(self, irc, msg, args):
