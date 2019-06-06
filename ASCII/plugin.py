@@ -25,6 +25,7 @@ import time
 import random as random
 from x256 import x256
 import pyimgur
+from bs4 import BeautifulSoup
 
 try:
     from supybot.i18n import PluginInternationalization
