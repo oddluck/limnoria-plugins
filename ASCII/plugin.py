@@ -1342,6 +1342,33 @@ class ASCII(callbacks.Plugin):
                 time.sleep(delay)
                 irc.reply(line, prefixNick = False, noLengthCheck=True, private=False, notice=False, to=channel)
     fortune = wrap(fortune, [optional('channel'), getopts({'delay':'float'})])
+    
+    def mircart(self, irc, msg, args, channel, optlist, search):
+        """[<channel>]
+        Search https://mircart.org/ and scroll first result
+        """
+        if not channel:
+            channel = msg.args[0]
+        optlist = dict(optlist)
+        if 'delay' in optlist:
+            delay = optlist.get('delay')
+        else:
+            delay = self.registryValue('delay', msg.args[0])
+        ua = UserAgent()
+        header = {'User-Agent':str(ua.random)}
+        data = requests.get("https://mircart.org/?s={0}".format(search), headers=header)
+        soup = BeautifulSoup(data.text)
+        url = soup.find(href=re.compile(".txt"))
+        data = requests.get(url.get('href'), headers=header)
+        output = data.content.decode()
+        for line in output.splitlines():
+            if not line.strip() and not self.stopped[msg.args[0]]:
+                time.sleep(delay)
+                irc.reply('\xa0', prefixNick = False, noLengthCheck=True, private=False, notice=False, to=channel)
+            elif line.strip() and not self.stopped[msg.args[0]] and "Follow @igor_chubin" not in line:
+                time.sleep(delay)
+                irc.reply(line, prefixNick = False, noLengthCheck=True, private=False, notice=False, to=channel)
+    mircart = wrap(mircart, [optional('channel'), getopts({'delay':'float'}), ('text')])
 
     def cq(self, irc, msg, args):
         """
