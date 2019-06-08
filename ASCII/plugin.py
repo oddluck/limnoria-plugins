@@ -474,7 +474,7 @@ class ASCII(callbacks.Plugin):
     fontlist = wrap(fontlist)
 
     def img(self, irc, msg, args, channel, optlist, url):
-        """[<channel>] [--w <int>] [--s] [--16] [--ascii] [--block] [--1/4] [--chars <text>] [--ramp <text>] [--bg <0-98>] [--fg <0-99>] [--nocolor] [--invert] <url>
+        """[<channel>] [--w <##>] [--s <#.#] [--16] [--ascii] [--block] [--1/4] [--chars <text>] [--ramp <text>] [--bg <0-98>] [--fg <0-98>] [--nocolor] [--invert] <url>
         Image to ASCII Art.
         --w columns.
         --s saturation (1.0).
