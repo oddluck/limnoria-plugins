@@ -37,7 +37,7 @@ Retrieve song lyrics from http://lyrics.wikia.com/. Search powered by Google.
 
 <b>WikiLeaf</b>
 
-Fetch cannabis (marijuana) strain information from https://www.wikileaf.com/. Search powered by Google.
+Broken. WikiLeaf did a redesign that makes scraping more difficult. Sorry. Fetch cannabis (marijuana) strain information from https://www.wikileaf.com/. Search powered by Google.
 
 
 <b>Weed</b>
