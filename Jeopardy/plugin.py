@@ -331,7 +331,7 @@ class Jeopardy(callbacks.Plugin):
             self.show.setdefault(self.id, None)
             self.revealed.setdefault(self.id, None)
             hintPercentage = self.registryValue('hintPercentage', self.channel)
-            divider = int(len(re.sub('[^a-zA-Z0-9]+', '', ans)) * hintPercentage)
+            divider = round(len(re.sub('[^a-zA-Z0-9]+', '', ans)) * hintPercentage)
             blankChar = self.registryValue('blankChar', self.channel)
             blank = re.sub('\w', blankChar, ans)
             if not self.show[self.id]:
@@ -435,7 +435,17 @@ class Jeopardy(callbacks.Plugin):
             num = optlist.get('num')
         else:
             num = self.registryValue('defaultRoundLength', channel)
-        if categories and categories.strip() != 'random':
+        if categories and categories.strip().lower() == 'random':
+            seed = random.randint(0,184) * 100
+            data = requests.get("http://jservice.io/api/categories?count=100&offset={0}".format(int(seed))).json()
+            random.shuffle(data)
+            results = []
+            for item in data:
+                if item['clues_count'] > 9:
+                    results.append(item['id'])
+            if not results:
+                results = item['id']
+        elif categories and categories.strip().lower() != 'random':
             results = []
             categories = categories.strip().split(",")
             for category in categories:
@@ -451,23 +461,10 @@ class Jeopardy(callbacks.Plugin):
                         search = searches[i].get('href').split('/')[-1]
                         if search.isdigit():
                             results.append(search)
-            if results:
-                categories = results
-            else:
+            if not results:
                 irc.reply("Error. Could not find any results for {0}".format(categories))
-        elif categories and categories.strip() == 'random':
-            seed = str(random.randint(0,184) * 100)
-            data = requests.get("http://jservice.io/api/categories?count=100&offset={0}".format(int(seed))).json()
-            random.shuffle(data)
-            results = []
-            for item in data:
-                results.append(item['id'])
-            if results:
-                categories = results
-            else:
-                irc.reply("Error")
         else:
-            categories = 'random'
+            results = 'random'
         channel = ircutils.toLower(channel)
         if channel in self.games:
             if not self.games[channel].active:
@@ -478,14 +475,14 @@ class Jeopardy(callbacks.Plugin):
                 except KeyError:
                     pass
                 irc.reply("This... is... Jeopardy!", prefixNick=False)
-                self.games[channel] = self.Game(irc, channel, num, categories, self)
+                self.games[channel] = self.Game(irc, channel, num, results, self)
             else:
                 self.games[channel].num += num
                 self.games[channel].total += num
                 irc.reply(_('%d questions added to active game!') % num)
         else:
             irc.reply("This... is... Jeopardy!", prefixNick=False)
-            self.games[channel] = self.Game(irc, channel, num, categories, self)
+            self.games[channel] = self.Game(irc, channel, num, results, self)
         irc.noReply()
     start = wrap(start, ['channel', getopts({'num':'int'}), additional('text')])
 
