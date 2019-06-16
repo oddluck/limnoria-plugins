@@ -159,14 +159,16 @@ class Jeopardy(callbacks.Plugin):
                             continue
                 else:
                     n = 0
+                    k = 0
+                    asked = []
                     while n <= self.num:
-                        if n > self.num:
+                        if n > self.num or k > len(self.categories):
                             break
                         for i in range(len(self.categories)):
-                            if n > self.num:
+                            if n > self.num or k > len(self.categories):
                                 break
                             try:
-                                category = int(categories[i])
+                                category = int(self.categories[i])
                                 data = requests.get("http://jservice.io/api/clues?&category={0}".format(category)).json()
                                 cluecount = data[0]['category']['clues_count']
                                 if cluecount > 100:
@@ -181,7 +183,7 @@ class Jeopardy(callbacks.Plugin):
                                     data.extend(requests.get("http://jservice.io/api/clues?&category={0}&offset=500".format(category)).json())
                                 random.shuffle(data)
                                 for item in data:
-                                    if n > self.num:
+                                    if n > self.num or k > len(self.categories):
                                         break
                                     id = item['id']
                                     question = re.sub('<[^<]+?>', '', unidecode(item['question'])).replace('\\', '').strip()
@@ -194,9 +196,11 @@ class Jeopardy(callbacks.Plugin):
                                         points = int(item['value'])
                                     else:
                                         points = self.points
-                                    if len(question) > 1 and airdate and answer and category and points and not invalid and "{0}:{1}".format(self.channel, id) not in history:
+                                    if len(question) > 1 and airdate and answer and category and points and not invalid and "{0}:{1}".format(self.channel, id) not in history and id not in asked:
                                         self.questions.append("{0}:{1}*({2}) [${3}] \x02{4}: {5}\x0F*{6}*{7}".format(self.channel, id, airdate[0], str(points), category, question, answer, points))
+                                        asked.append(id)
                                         n += 1
+                                k += 1
                             except Exception:
                                 pass
                 del data
@@ -403,13 +407,14 @@ class Jeopardy(callbacks.Plugin):
     @internationalizeDocstring
     def start(self, irc, msg, args, channel, optlist, categories):
         """[<channel>] [--num <number of questions>] [<category>, <category#2>, <category#3>, etc.]
-        Starts a game of Jeopardy! Play a round with random questions or select a category by name or number."""
+        Starts a game of Jeopardy! Play a round with random questions or select a category by name or number.
+        Use 'random' to start a round with a random categories."""
         optlist = dict(optlist)
         if 'num' in optlist:
             num = optlist.get('num')
         else:
             num = self.registryValue('defaultRoundLength', channel)
-        if categories:
+        if categories.strip() != 'random':
             results = []
             categories = categories.strip().split(",")
             for category in categories:
@@ -429,6 +434,17 @@ class Jeopardy(callbacks.Plugin):
                 categories = results
             else:
                 irc.reply("Error. Could not find any results for {0}".format(categories))
+        elif categories.strip() == 'random':
+            seed = str(random.randint(0,184) * 100)
+            data = requests.get("http://jservice.io/api/categories?count=100&offset={0}".format(int(seed))).json()
+            random.shuffle(data)
+            results = []
+            for item in data:
+                results.append(item['id'])
+            if results:
+                categories = results
+            else:
+                irc.reply("Error")
         else:
             categories = 'random'
         channel = ircutils.toLower(channel)
