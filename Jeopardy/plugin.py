@@ -365,8 +365,7 @@ class Jeopardy(callbacks.Plugin):
                     self.roundscores[name] = 0
                 self.roundscores[name] += self.p
                 self.unanswered = 0
-                self.reply(_('%s got it! The full answer was: %s. Points: %d') %
-                           (msg.nick, self.a[0], self.scores[name]))
+                self.reply(_("{0} got it! The full answer was: {1}. Points: {2} | Round Score: {3} | Total: {4}".format(msg.nick, self.a[0], self.p, self.roundscores[name], self.scores[name])))
                 schedule.removeEvent('next_%s' % self.channel)
                 self.writeScores()
                 self.newquestion()
