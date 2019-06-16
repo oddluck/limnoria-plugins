@@ -199,9 +199,9 @@ class Jeopardy(callbacks.Plugin):
                                         points = int(item['value'])
                                     else:
                                         points = self.points
-                                    if len(question) > 1 and airdate and answer and category and points and not invalid and "{0}:{1}".format(self.channel, id) not in history and id not in asked:
+                                    if len(question) > 1 and airdate and answer and category and points and not invalid and "{0}:{1}".format(self.channel, id) not in history and question not in asked:
                                         self.questions.append("{0}:{1}*({2}) [${3}] \x02{4}: {5}\x0F*{6}*{7}".format(self.channel, id, airdate[0], str(points), category, question, answer, points))
-                                        asked.append(id)
+                                        asked.append(question)
                                         n += 1
                                 k += 1
                             except Exception:
