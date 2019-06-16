@@ -207,6 +207,7 @@ class Jeopardy(callbacks.Plugin):
                             except Exception:
                                 pass
                 del data
+            self.questions = self.questions[::-1]
             try:
                 schedule.removeEvent('next_%s' % self.channel)
             except KeyError:
