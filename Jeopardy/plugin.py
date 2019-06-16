@@ -46,6 +46,7 @@ import supybot.callbacks as callbacks
 import requests
 import re
 from unidecode import unidecode
+from bs4 import BeautifulSoup
 from supybot.i18n import PluginInternationalization, internationalizeDocstring
 _ = PluginInternationalization('Jeopardy')
 
@@ -93,14 +94,14 @@ class Jeopardy(callbacks.Plugin):
 
 
     class Game:
-        def __init__(self, irc, channel, num, category, plugin):
+        def __init__(self, irc, channel, num, categories, plugin):
             self.rng = random.Random()
             self.rng.seed()
             self.registryValue = plugin.registryValue
             self.irc = irc
             self.channel = channel
             self.num = num
-            self.category = category
+            self.categories = categories
             self.numAsked = 0
             self.hints = 0
             self.games = plugin.games
@@ -130,12 +131,16 @@ class Jeopardy(callbacks.Plugin):
                     history = f.read().splitlines()
                 cluecount = self.num
                 failed = 0
-                if self.category == 'random':
+                if self.categories == 'random':
                     n = 0
                     while n <= self.num:
+                        if n > self.num:
+                            break
                         try:
                             data = requests.get("http://jservice.io/api/random").json()
                             for item in data:
+                                if n > self.num:
+                                    break
                                 id = item['id']
                                 question = re.sub('<[^<]+?>', '', unidecode(item['question'])).replace('\\', '').strip()
                                 airdate = item['airdate'].split('T')
@@ -145,44 +150,55 @@ class Jeopardy(callbacks.Plugin):
                                 points = self.points
                                 if item['value']:
                                     points = int(item['value'])
-                                if question and airdate and answer and category and points and not invalid and "{0}:{1}".format(self.channel, id) not in history:
+                                else:
+                                    points = self.points
+                                if len(question) > 1 and airdate and answer and category and points and not invalid and "{0}:{1}".format(self.channel, id) not in history:
                                     self.questions.append("{0}:{1}*({2}) [${3}] \x02{4}: {5}\x0F*{6}*{7}".format(self.channel, id, airdate[0], str(points), category, question, answer, points))
                                     n += 1
                         except Exception:
                             continue
                 else:
-                    try:
-                        data = requests.get("http://jservice.io/api/clues?&category={0}".format(self.category)).json()
-                        cluecount = data[0]['category']['clues_count']
-                        if cluecount > 100:
-                            data.extend(requests.get("http://jservice.io/api/clues?&category={0}&offset=100".format(self.category)).json())
-                        if cluecount > 200:
-                            data.extend(requests.get("http://jservice.io/api/clues?&category={0}&offset=200".format(self.category)).json())
-                        if cluecount > 300:
-                            data.extend(requests.get("http://jservice.io/api/clues?&category={0}&offset=300".format(self.category)).json())
-                        if cluecount > 400:
-                            data.extend(requests.get("http://jservice.io/api/clues?&category={0}&offset=400".format(self.category)).json())
-                        if cluecount > 500:
-                            data.extend(requests.get("http://jservice.io/api/clues?&category={0}&offset=500".format(self.category)).json())
-                        random.shuffle(data)
-                        n = 0
-                        for item in data:
-                            id = item['id']
-                            question = re.sub('<[^<]+?>', '', unidecode(item['question'])).replace('\\', '').strip()
-                            airdate = item['airdate'].split('T')
-                            answer = re.sub('<[^<]+?>', '', unidecode(item['answer'])).replace('\\', '').strip()
-                            category = unidecode(item['category']['title']).strip().title()
-                            invalid = item['invalid_count']
-                            points = self.points
-                            if item['value']:
-                                points = int(item['value'])
-                            if n >= self.num:
+                    n = 0
+                    while n <= self.num:
+                        if n > self.num:
+                            break
+                        for i in range(len(self.categories)):
+                            if n > self.num:
                                 break
-                            elif question and airdate and answer and category and points and not invalid and "{0}:{1}".format(self.channel, id) not in history:
-                                self.questions.append("{0}:{1}*({2}) [${3}] \x02{4}: {5}\x0F*{6}*{7}".format(self.channel, id, airdate[0], str(points), category, question, answer, points))
-                                n += 1
-                    except Exception:
-                        pass
+                            try:
+                                category = int(categories[i])
+                                data = requests.get("http://jservice.io/api/clues?&category={0}".format(category)).json()
+                                cluecount = data[0]['category']['clues_count']
+                                if cluecount > 100:
+                                    data.extend(requests.get("http://jservice.io/api/clues?&category={0}&offset=100".format(category)).json())
+                                if cluecount > 200:
+                                    data.extend(requests.get("http://jservice.io/api/clues?&category={0}&offset=200".format(category)).json())
+                                if cluecount > 300:
+                                    data.extend(requests.get("http://jservice.io/api/clues?&category={0}&offset=300".format(category)).json())
+                                if cluecount > 400:
+                                    data.extend(requests.get("http://jservice.io/api/clues?&category={0}&offset=400".format(category)).json())
+                                if cluecount > 500:
+                                    data.extend(requests.get("http://jservice.io/api/clues?&category={0}&offset=500".format(category)).json())
+                                random.shuffle(data)
+                                for item in data:
+                                    if n > self.num:
+                                        break
+                                    id = item['id']
+                                    question = re.sub('<[^<]+?>', '', unidecode(item['question'])).replace('\\', '').strip()
+                                    airdate = item['airdate'].split('T')
+                                    answer = re.sub('<[^<]+?>', '', unidecode(item['answer'])).replace('\\', '').strip()
+                                    category = unidecode(item['category']['title']).strip().title()
+                                    invalid = item['invalid_count']
+                                    points = self.points
+                                    if item['value']:
+                                        points = int(item['value'])
+                                    else:
+                                        points = self.points
+                                    if len(question) > 1 and airdate and answer and category and points and not invalid and "{0}:{1}".format(self.channel, id) not in history:
+                                        self.questions.append("{0}:{1}*({2}) [${3}] \x02{4}: {5}\x0F*{6}*{7}".format(self.channel, id, airdate[0], str(points), category, question, answer, points))
+                                        n += 1
+                            except Exception:
+                                pass
                 del data
             if self.registryValue('randomize', channel):
                 random.shuffle(self.questions)
@@ -288,7 +304,7 @@ class Jeopardy(callbacks.Plugin):
                     s = _('%s (%s: %s)') % (s, str(item[0].split(':')[1]), item[1])
                 self.reply(s)
             try:
-                del self.games[self.channel]
+                del self.games[dynamic.channel]
             except KeyError:
                 return
 
@@ -385,19 +401,36 @@ class Jeopardy(callbacks.Plugin):
             return thisrow[len(seq2) - 1]
 
     @internationalizeDocstring
-    def start(self, irc, msg, args, channel, optlist):
-        """[<channel>] [--num <number of questions>] [--cat <category>]
-        Starts a game of Jeopardy! <channel> is only necessary if the message
-        isn't sent in the channel itself."""
+    def start(self, irc, msg, args, channel, optlist, categories):
+        """[<channel>] [--num <number of questions>] [<category>, <category#2>, <category#3>, etc.]
+        Starts a game of Jeopardy! Play a round with random questions or select a category by name or number."""
         optlist = dict(optlist)
         if 'num' in optlist:
             num = optlist.get('num')
         else:
             num = self.registryValue('defaultRoundLength', channel)
-        if 'cat' in optlist:
-            category = optlist.get('cat')
+        if categories:
+            results = []
+            categories = categories.strip().split(",")
+            for category in categories:
+                category = category.strip()
+                if category.isdigit():
+                    results.append(category)
+                else:
+                    url = "http://jservice.io/search?query={0}".format(category)
+                    data = requests.get(url)
+                    soup = BeautifulSoup(data.text)
+                    searches = soup.find_all('a')
+                    for i in range(len(searches)):
+                        search = searches[i].get('href').split('/')[-1]
+                        if search.isdigit():
+                            results.append(search)
+            if results:
+                categories = results
+            else:
+                irc.reply("Error. Could not find any results for {0}".format(categories))
         else:
-            category = 'random'
+            categories = 'random'
         channel = ircutils.toLower(channel)
         if channel in self.games:
             if not self.games[channel].active:
@@ -407,18 +440,17 @@ class Jeopardy(callbacks.Plugin):
                     schedule.removeEvent('new_%s' % channel)
                 except KeyError:
                     pass
-                irc.reply(_('Orphaned Jeopardy! game found and removed.'))
                 irc.reply("This... is... Jeopardy!", prefixNick=False)
-                self.games[channel] = self.Game(irc, channel, num, category, self)
+                self.games[channel] = self.Game(irc, channel, num, categories, self)
             else:
                 self.games[channel].num += num
                 self.games[channel].total += num
                 irc.reply(_('%d questions added to active game!') % num)
         else:
             irc.reply("This... is... Jeopardy!", prefixNick=False)
-            self.games[channel] = self.Game(irc, channel, num, category, self)
+            self.games[channel] = self.Game(irc, channel, num, categories, self)
         irc.noReply()
-    start = wrap(start, ['channel', getopts({'num':'int', 'cat':'int'})])
+    start = wrap(start, ['channel', getopts({'num':'int'}), additional('text')])
 
     @internationalizeDocstring
     def stop(self, irc, msg, args, channel):
