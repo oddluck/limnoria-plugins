@@ -114,6 +114,8 @@ class Jeopardy(callbacks.Plugin):
             self.questions = []
             self.roundscores = {}
             self.unanswered = 0
+            self.show = {}
+            self.revealed = {}
             if self.questionfile != 'jservice.io':
                 f = open(self.questionfile, 'r')
                 line = f.readline()
@@ -181,7 +183,8 @@ class Jeopardy(callbacks.Plugin):
                                     data.extend(requests.get("http://jservice.io/api/clues?&category={0}&offset=400".format(category)).json())
                                 if cluecount > 500:
                                     data.extend(requests.get("http://jservice.io/api/clues?&category={0}&offset=500".format(category)).json())
-                                random.shuffle(data)
+                                if cluecount > 9:
+                                    random.shuffle(data)
                                 for item in data:
                                     if n > self.num or k > len(self.categories):
                                         break
@@ -325,15 +328,26 @@ class Jeopardy(callbacks.Plugin):
         def hint(self):
             self.hints += 1
             ans = self.a[0]
+            self.show.setdefault(self.id, None)
+            self.revealed.setdefault(self.id, None)
             hintPercentage = self.registryValue('hintPercentage', self.channel)
-            divider = int(math.ceil(len(ans) * hintPercentage * self.hints ))
-            if divider == len(ans):
-                divider -= 1
-            show = ans[ : divider]
-            blank = ans[divider : ]
+            divider = int(math.ceil(len(ans) * hintPercentage))
             blankChar = self.registryValue('blankChar', self.channel)
-            blank = re.sub('\w', blankChar, blank)
-            self.reply(_('HINT: %s%s') % (show, blank))
+            blank = re.sub('\w', blankChar, ans)
+            if not self.show[self.id]:
+                self.show[self.id] = list(blank)
+            if not self.revealed[self.id]:
+                self.revealed[self.id] = list(range(len(self.show[self.id])))
+            i = 0
+            while i < divider:
+                try:
+                    rand = self.revealed[self.id].pop(random.choice(self.revealed[self.id]))
+                    if self.show[self.id][rand] == blankChar:
+                        self.show[self.id][rand] = list(ans)[rand]
+                        i += 1
+                except:
+                    continue
+            self.reply(_('HINT: %s') % (''.join(self.show[self.id])))
             self.p = self.p // 2
             def event():
                 self.timedEvent()
@@ -413,7 +427,7 @@ class Jeopardy(callbacks.Plugin):
             num = optlist.get('num')
         else:
             num = self.registryValue('defaultRoundLength', channel)
-        if categories.strip() != 'random':
+        if categories and categories.strip() != 'random':
             results = []
             categories = categories.strip().split(",")
             for category in categories:
@@ -433,7 +447,7 @@ class Jeopardy(callbacks.Plugin):
                 categories = results
             else:
                 irc.reply("Error. Could not find any results for {0}".format(categories))
-        elif categories.strip() == 'random':
+        elif categories and categories.strip() == 'random':
             seed = str(random.randint(0,184) * 100)
             data = requests.get("http://jservice.io/api/categories?count=100&offset={0}".format(int(seed))).json()
             random.shuffle(data)
