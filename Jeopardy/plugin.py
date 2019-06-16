@@ -444,7 +444,7 @@ class Jeopardy(callbacks.Plugin):
                 if item['clues_count'] > 9:
                     results.append(item['id'])
             if not results:
-                results = item['id']
+                results = 'random'
         elif categories and categories.strip().lower() != 'random':
             results = []
             categories = categories.strip().split(",")
