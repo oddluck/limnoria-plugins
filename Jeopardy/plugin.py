@@ -362,16 +362,22 @@ class Jeopardy(callbacks.Plugin):
             channel = msg.args[0]
             correct = False
             for ans in self.a:
-                ans = re.sub('^a |^an |^the ', '', ans).lower()
-                ans = re.sub('[^a-zA-Z0-9]+', '', ans)
-                guess = re.sub('^a |^an |^the ', '', msg.args[1]).lower()
-                guess = re.sub('[^a-zA-Z0-9]+', '', guess)
-                dist = self.DL(guess, ans)
-                flexibility = self.registryValue('flexibility', self.channel)
-                if dist <= len(ans) / flexibility:
+                ans = ans.strip().lower()
+                guess = msg.args[1].strip().lower()
+                if guess == ans:
                     correct = True
-                #if self.registryValue('debug'):
-                #    self.reply('Distance: %d' % dist)
+                else:
+                    answer = re.sub('^a |^an |^the ', '', ans)
+                    answer = re.sub('[^a-zA-Z0-9]+', '', answer)
+                    guess = re.sub('^a |^an |^the ', '', guess)
+                    guess = re.sub('[^a-zA-Z0-9]+', '', guess)
+                if guess == answer:
+                    correct = True
+                else:
+                    dist = self.DL(guess, answer)
+                    flexibility = self.registryValue('flexibility', self.channel)
+                    if dist <= len(answer) / flexibility:
+                        correct = True
             if correct:
                 name = "{0}:{1}".format(channel, msg.nick)
                 if not name in self.scores:
