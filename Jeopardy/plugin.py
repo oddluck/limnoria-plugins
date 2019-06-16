@@ -183,7 +183,7 @@ class Jeopardy(callbacks.Plugin):
                                     data.extend(requests.get("http://jservice.io/api/clues?&category={0}&offset=400".format(category)).json())
                                 if cluecount > 500:
                                     data.extend(requests.get("http://jservice.io/api/clues?&category={0}&offset=500".format(category)).json())
-                                if cluecount > 9:
+                                if self.registryValue('randomize', channel):
                                     random.shuffle(data)
                                 for item in data:
                                     if n > self.num or k > len(self.categories):
@@ -207,8 +207,6 @@ class Jeopardy(callbacks.Plugin):
                             except Exception:
                                 pass
                 del data
-            if self.registryValue('randomize', channel):
-                random.shuffle(self.questions)
             try:
                 schedule.removeEvent('next_%s' % self.channel)
             except KeyError:
