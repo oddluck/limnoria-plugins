@@ -331,7 +331,7 @@ class Jeopardy(callbacks.Plugin):
             self.show.setdefault(self.id, None)
             self.revealed.setdefault(self.id, None)
             hintPercentage = self.registryValue('hintPercentage', self.channel)
-            divider = int(math.ceil(len(ans) * hintPercentage))
+            divider = int(len(re.sub('[^a-zA-Z0-9]+', '', ans)) * hintPercentage)
             blankChar = self.registryValue('blankChar', self.channel)
             blank = re.sub('\w', blankChar, ans)
             if not self.show[self.id]:
@@ -339,14 +339,14 @@ class Jeopardy(callbacks.Plugin):
             if not self.revealed[self.id]:
                 self.revealed[self.id] = list(range(len(self.show[self.id])))
             i = 0
-            while i < divider:
+            while i < divider and len(self.revealed[self.id]) > 1:
                 try:
-                    rand = self.revealed[self.id].pop(random.choice(self.revealed[self.id]))
+                    rand = self.revealed[self.id].pop(random.randint(0,len(self.revealed[self.id])) - 1)
                     if self.show[self.id][rand] == blankChar:
                         self.show[self.id][rand] = list(ans)[rand]
                         i += 1
                 except:
-                    continue
+                    break
             self.reply(_('HINT: %s') % (''.join(self.show[self.id])))
             self.p = self.p // 2
             def event():
