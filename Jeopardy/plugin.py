@@ -366,7 +366,7 @@ class Jeopardy(callbacks.Plugin):
                 ans = re.sub('[^a-zA-Z0-9]+', '', ans)
                 guess = re.sub('^a |^an |^the ', '', msg.args[1]).lower()
                 guess = re.sub('[^a-zA-Z0-9]+', '', guess)
-                dist = self.DL(guess, answer)
+                dist = self.DL(guess, ans)
                 flexibility = self.registryValue('flexibility', self.channel)
                 if dist <= len(ans) / flexibility:
                     correct = True
