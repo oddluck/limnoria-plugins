@@ -1,6 +1,7 @@
 ###
 # Copyright (c) 2010, quantumlemur
 # Copyright (c) 2011, Valentin Lorentz
+# Copyright (c) 2019, oddluck
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
