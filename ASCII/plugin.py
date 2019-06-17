@@ -844,7 +844,7 @@ class ASCII(callbacks.Plugin):
         ua = UserAgent()
         header = {'User-Agent':str(ua.random)}
         r = requests.head(url, headers=header)
-        if "text/plain" in r.headers["content-type"]:
+        if "text/plain" in r.headers["content-type"] and int(r.headers["content-length"]) < 1000000:
             file = requests.get(url, headers=header)
         else:
             irc.reply("Invalid file type.", private=False, notice=False)
