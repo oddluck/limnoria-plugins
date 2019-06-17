@@ -696,6 +696,9 @@ class ASCII(callbacks.Plugin):
                         elif row1 != row2:
                             gsval = "▀"
                             color = "\x03{0},{1}".format(int(row1), int(row2))
+                        elif col1 != col2:
+                            gsval = "▌"
+                            color = "\x03{0},{1}".format(int(row1), int(row2))
                         elif row1 == row2:
                             gsval = " "
                             color = "\x030,{0}".format(int(row1))
@@ -704,6 +707,12 @@ class ASCII(callbacks.Plugin):
                             aimg[k] += "{0}".format(gsval)
                         elif gsval == "▚" and color == "{0},{1}".format(old_color.split(',')[1], old_color.split(',')[0]):
                             gsval = "▞"
+                            aimg[k] += "{0}".format(gsval)
+                        elif gsval == "▀" and color == "{0},{1}".format(old_color.split(',')[1], old_color.split(',')[0]):
+                            gsval = "▄"
+                            aimg[k] += "{0}".format(gsval)
+                        elif gsval == "▌" and color == "{0},{1}".format(old_color.split(',')[1], old_color.split(',')[0]):
+                            gsval = "▐"
                             aimg[k] += "{0}".format(gsval)
                         elif gsval == "▛" and color == "{0},{1}".format(old_color.split(',')[1], old_color.split(',')[0]):
                             gsval = "▟"
