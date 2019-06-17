@@ -427,8 +427,9 @@ class Jeopardy(callbacks.Plugin):
     @internationalizeDocstring
     def start(self, irc, msg, args, channel, optlist, categories):
         """[<channel>] [--num <number of questions>] [<category>, <category#2>, <category#3>, etc.]
-        Starts a game of Jeopardy! Play a round with random questions or select a category by name or number.
-        Use 'random' to start a round with a random categories."""
+        Play a round of Jeopardy! with random questions or select a category by name or number.
+        Use 'random' to start a round with a random category.
+        Use --num to set the number of questions."""
         optlist = dict(optlist)
         if 'num' in optlist:
             num = optlist.get('num')
@@ -517,7 +518,7 @@ class Jeopardy(callbacks.Plugin):
         data = open("{0}/categories.txt".format(os.path.dirname(os.path.abspath(__file__))))
         text = data.read()
         reply = text.splitlines()
-        irc.reply("Vist http://jservice.io/search to search for more categories. Add --cat <id_number> to the start command to select category.")
+        irc.reply("Add category name to the start command to search for categories by name. Add ID# to the start command to manually select a category. http://jservice.io/search")
         irc.reply(str(reply).replace("[", "").replace("]", "").replace("'", ""))
     categories = wrap(categories)
 
