@@ -646,65 +646,65 @@ class ASCII(callbacks.Plugin):
             for j in range(0, rows - 1, 2):
                 # append an empty string
                 aimg.append("")
-                old_color = "\x0399,99"
+                old_color = "99,99"
                 for i in range(0, cols - 1, 2):
-                    color1 = self.getColor(colormap[j][i].tolist(), speed)
-                    color2 = self.getColor(colormap[j+1][i].tolist(), speed)
-                    color3= self.getColor(colormap[j][i+1].tolist(), speed)
-                    color4 = self.getColor(colormap[j+1][i+1].tolist(), speed)
+                    color1 = '%02d' % self.getColor(colormap[j][i].tolist(), speed)
+                    color2 = '%02d' % self.getColor(colormap[j+1][i].tolist(), speed)
+                    color3 = '%02d' % self.getColor(colormap[j][i+1].tolist(), speed)
+                    color4 = '%02d' % self.getColor(colormap[j+1][i+1].tolist(), speed)
                     if color1 == color2 and color1 == color3 and color1 == color4:
                         gsval = " "
-                        color = "\x030,{0}".format(int(color1))
+                        color = "0,{0}".format(color1)
                     elif color1 == color4 and color2 == color3:
                         gsval = "▚"
-                        color = "\x03{0},{1}".format(int(color1), int(color2))
+                        color = "{0},{1}".format(color1, color2)
                     elif color1 == color2 and color1 == color3 and color1 != color4:
                         gsval = "▛"
-                        color = "\x03{0},{1}".format(int(color1), int(color4))
+                        color = "{0},{1}".format(color1, color4)
                     elif color3 == color4 and color2 == color4 and color3 != color1:
                         gsval = "▟"
-                        color = "\x03{0},{1}".format(int(color2), int(color1))
+                        color = "{0},{1}".format(color2, color1)
                     elif color1 == color2 and color1 == color4 and color1 != color3:
                         gsval = "▙"
-                        color = "\x03{0},{1}".format(int(color1), int(color3))
+                        color = "{0},{1}".format(color1, color3)
                     elif color1 == color3 and color1 == color4 and color1 != color2:
                         gsval = "▜"
-                        color = "\x03{0},{1}".format(int(color1), int(color2))
+                        color = "{0},{1}".format(color1, color2)
                     elif color1 == color3 and color2 == color4 and color1 != color2 and color3 != color4:
                         gsval = "▀"
-                        color = "\x03{0},{1}".format(int(color1), int(color4))
+                        color = "{0},{1}".format(color1, color4)
                     elif color1 == color2 and color3 == color4 and color1 != color3 and color2 != color4:
                         gsval = "▌"
-                        color = "\x03{0},{1}".format(int(color1), int(color4))
+                        color = "{0},{1}".format(color1, color4)
                     else:
-                        row1 = self.getColor(np.average([tuple(colormap[j][i].tolist()), tuple(colormap[j][i+1].tolist())], axis=0).tolist(), speed)
-                        row2 = self.getColor(np.average([tuple(colormap[j+1][i+1].tolist()), tuple(colormap[j][i+1].tolist())], axis=0).tolist(), speed)
-                        col1 = self.getColor(np.average([tuple(colormap[j][i].tolist()), tuple(colormap[j+1][i].tolist())], axis=0).tolist(), speed)
-                        col2 = self.getColor(np.average([tuple(colormap[j][i+1].tolist()), tuple(colormap[j+1][i+1].tolist())], axis=0).tolist(), speed)
+                        row1 = '%02d' % self.getColor(np.average([tuple(colormap[j][i].tolist()), tuple(colormap[j][i+1].tolist())], axis=0).tolist(), speed)
+                        row2 = '%02d' % self.getColor(np.average([tuple(colormap[j+1][i+1].tolist()), tuple(colormap[j][i+1].tolist())], axis=0).tolist(), speed)
+                        col1 = '%02d' % self.getColor(np.average([tuple(colormap[j][i].tolist()), tuple(colormap[j+1][i].tolist())], axis=0).tolist(), speed)
+                        col2 = '%02d' % self.getColor(np.average([tuple(colormap[j][i+1].tolist()), tuple(colormap[j+1][i+1].tolist())], axis=0).tolist(), speed)
                         if row2 == color1 and col1 == color4:
                             gsval = "▙"
-                            color = "\x03{0},{1}".format(int(row2), int(color3))
+                            color = "{0},{1}".format(row2, color3)
                         elif row1 == color2 and col1 == color3:
                             gsval = "▛"
-                            color = "\x03{0},{1}".format(int(row1), int(color4))
+                            color = "{0},{1}".format(row1, color4)
                         elif row2 == color3 and col2 == color2:
                             gsval = "▟"
-                            color = "\x03{0},{1}".format(int(row2), int(color1))
+                            color = "{0},{1}".format(row2, color1)
                         elif row1 == color4 and col2 == color1:
                             gsval = "▜"
-                            color = "\x03{0},{1}".format(int(row1), int(color2))
+                            color = "{0},{1}".format(row1, color2)
                         elif row1 == row2:
                             gsval = " "
-                            color = "\x030,{0}".format(int(row1))
+                            color = "0,{0}".format(row1)
                         elif col1 == col2:
                             gsval = " "
-                            color = "\x030,{0}".format(int(col1))
+                            color = "0,{0}".format(col1)
                         elif row1 != row2:
                             gsval = "▀"
-                            color = "\x03{0},{1}".format(int(row1), int(row2))
+                            color = "{0},{1}".format(row1, row2)
                         elif col1 != col2:
                             gsval = "▌"
-                            color = "\x03{0},{1}".format(int(col1), int(col2))
+                            color = "{0},{1}".format(col1, col2)
                     if color != old_color:
                         if gsval == " " and "{0}".format(color.split(',')[1]) == "{0}".format(old_color.split(',')[1]):
                             aimg[k] += "{0}".format(gsval)
@@ -732,9 +732,15 @@ class ASCII(callbacks.Plugin):
                         else:
                             old_color = color
                             # append char to string
-                            aimg[k] += "{0}{1}".format(color, gsval)
+                            aimg[k] += "\x03{0}{1}".format(color, gsval)
                     else:
                         aimg[k] += "{0}".format(gsval)
+                for i in range(0,98):
+                    i = '%02d' % i
+                    aimg[k] = re.sub("\x030,{0}(\s+)\x03(\d\d),{0}".format(i), "\x03\g<2>,{0}\g<1>".format(i), aimg[k])
+                for i in range(0,98):
+                    i = '%02d' % i
+                    aimg[k] = aimg[k].replace("{0}".format(i), "{0}".format(int(i)))
                 k += 1
         else:
             image = image.resize((cols, rows), Image.LANCZOS)
