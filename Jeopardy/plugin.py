@@ -191,6 +191,10 @@ class Jeopardy(callbacks.Plugin):
                                 for item in data:
                                     if n > self.num or k > len(self.categories):
                                         break
+                                    elif self.shuffled and k == len(self.categories):
+                                        self.shuffled = False
+                                        k = 0
+                                        pass
                                     elif self.shuffled and j > self.num * 0.2:
                                         break
                                     id = item['id']
