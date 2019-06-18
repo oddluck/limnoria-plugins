@@ -95,7 +95,7 @@ class Jeopardy(callbacks.Plugin):
 
 
     class Game:
-        def __init__(self, irc, channel, num, categories, plugin):
+        def __init__(self, irc, channel, num, shuffle, categories, plugin):
             self.rng = random.Random()
             self.rng.seed()
             self.registryValue = plugin.registryValue
@@ -117,6 +117,7 @@ class Jeopardy(callbacks.Plugin):
             self.unanswered = 0
             self.show = {}
             self.revealed = {}
+            self.shuffled = shuffle
             if self.questionfile != 'jservice.io':
                 f = open(self.questionfile, 'r')
                 line = f.readline()
@@ -186,8 +187,11 @@ class Jeopardy(callbacks.Plugin):
                                     data.extend(requests.get("http://jservice.io/api/clues?&category={0}&offset=500".format(category)).json())
                                 if self.registryValue('randomize', channel):
                                     random.shuffle(data)
+                                j = 0
                                 for item in data:
                                     if n > self.num or k > len(self.categories):
+                                        break
+                                    elif self.shuffled and j > self.num * 0.2:
                                         break
                                     id = item['id']
                                     question = re.sub('<[^<]+?>', '', unidecode(item['question'])).replace('\\', '').strip()
@@ -204,11 +208,15 @@ class Jeopardy(callbacks.Plugin):
                                         self.questions.append("{0}:{1}*({2}) [${3}] \x02{4}: {5}\x0F*{6}*{7}".format(self.channel, id, airdate[0], str(points), category, question, answer, points))
                                         asked.append(question)
                                         n += 1
+                                        j += 1
                                 k += 1
                             except Exception:
-                                pass
+                                continue
                 del data
-            self.questions = self.questions[::-1]
+            if self.shuffled or self.registryValue('randomize', channel) and self.questionfile != 'jservice.io':
+                random.shuffle(self.questions)
+            else:
+                self.questions = self.questions[::-1]
             try:
                 schedule.removeEvent('next_%s' % self.channel)
             except KeyError:
@@ -427,15 +435,20 @@ class Jeopardy(callbacks.Plugin):
 
     @internationalizeDocstring
     def start(self, irc, msg, args, channel, optlist, categories):
-        """[<channel>] [--num <number of questions>] [<category>, <category#2>, <category#3>, etc.]
+        """[<channel>] [--num <number of questions>] [--shuffle] [<category>, <category#2>, <category#3>, etc.]
         Play a round of Jeopardy! with random questions or select a category by name or number.
         Use 'random' to start a round with a random category.
-        Use --num to set the number of questions."""
+        Use --num to set the number of questions.
+        Use --shuffle to select questions from multiple categories"""
         optlist = dict(optlist)
         if 'num' in optlist:
             num = optlist.get('num')
         else:
             num = self.registryValue('defaultRoundLength', channel)
+        if 'shuffle' in optlist:
+            shuffle = True
+        else:
+            shuffle = False
         if categories and categories.strip().lower() == 'random':
             seed = random.randint(0,184) * 100
             data = requests.get("http://jservice.io/api/categories?count=100&offset={0}".format(int(seed))).json()
@@ -466,6 +479,8 @@ class Jeopardy(callbacks.Plugin):
                 irc.reply("Error. Could not find any results for {0}".format(categories))
         else:
             results = 'random'
+        if results and 'shuffle' in optlist:
+            random.shuffle(results)
         channel = ircutils.toLower(channel)
         if channel in self.games:
             if not self.games[channel].active:
@@ -476,16 +491,16 @@ class Jeopardy(callbacks.Plugin):
                 except KeyError:
                     pass
                 irc.reply("This... is... Jeopardy!", prefixNick=False)
-                self.games[channel] = self.Game(irc, channel, num, results, self)
+                self.games[channel] = self.Game(irc, channel, num, shuffle, results, self)
             else:
                 self.games[channel].num += num
                 self.games[channel].total += num
                 irc.reply(_('%d questions added to active game!') % num)
         else:
             irc.reply("This... is... Jeopardy!", prefixNick=False)
-            self.games[channel] = self.Game(irc, channel, num, results, self)
+            self.games[channel] = self.Game(irc, channel, num, shuffle, results, self)
         irc.noReply()
-    start = wrap(start, ['channel', getopts({'num':'int'}), additional('text')])
+    start = wrap(start, ['channel', getopts({'num':'int', 'shuffle':''}), additional('text')])
 
     @internationalizeDocstring
     def stop(self, irc, msg, args, channel):
