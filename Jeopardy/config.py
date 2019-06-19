@@ -68,8 +68,8 @@ conf.registerChannelValue(Jeopardy, 'hintPercentage',
         should be revealed with each hint""")))
 
 conf.registerChannelValue(Jeopardy, 'flexibility',
-        registry.PositiveInteger(8, _("""The flexibility of the answer
-        checker.  One typo will be allowed for every __ characters.""")))
+        registry.PositiveInteger(80, _("""The flexibility of the answer
+        checker.  Uses fuzzywuzzy ratio 0-100, default 80 means roughly 80% correct.""")))
 
 conf.registerChannelValue(Jeopardy, 'color',
         registry.PositiveInteger(10, _("""The mIRC color to use for questions""")))
