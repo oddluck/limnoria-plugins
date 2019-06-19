@@ -1,4 +1,4 @@
 requests
 unidecode
 beautifulsoup4
-fuzzywuzzy[speedup]
+jellyfish
