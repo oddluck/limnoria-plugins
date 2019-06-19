@@ -48,6 +48,7 @@ import requests
 import re
 from unidecode import unidecode
 from bs4 import BeautifulSoup
+from fuzzywuzzy import fuzz
 from supybot.i18n import PluginInternationalization, internationalizeDocstring
 _ = PluginInternationalization('Jeopardy')
 
@@ -379,16 +380,20 @@ class Jeopardy(callbacks.Plugin):
                 if guess == ans:
                     correct = True
                 elif not correct:
-                    answer = re.sub('^a |^an |^the ', '', ans)
-                    answer = re.sub('[^a-zA-Z0-9]+', '', answer)
-                    guess = re.sub('^a |^an |^the ', '', guess)
-                    guess = re.sub('[^a-zA-Z0-9]+', '', guess)
+                    if len(ans) > 2:
+                        answer = re.sub('^a |^an |^the ', '', ans)
+                        answer = re.sub('[^a-zA-Z0-9]+', '', answer)
+                        guess = re.sub('^a |^an |^the ', '', guess)
+                        guess = re.sub('[^a-zA-Z0-9]+', '', guess)
+                    else:
+                        answer = ans
                 if not correct and guess == answer:
                     correct = True
                 elif not correct:
-                    dist = self.DL(guess, answer)
+                    dist = fuzz.ratio(guess, answer)
                     flexibility = self.registryValue('flexibility', self.channel)
-                    if dist <= len(answer) / flexibility:
+                    #self.reply("guess: {0}, answer: {1}, length: {2}, distance: {3}, flexibility: {4}".format(guess, answer, len(answer), dist, flexibility))
+                    if dist >= flexibility:
                         correct = True
             if correct:
                 name = "{0}:{1}".format(channel, msg.nick)
@@ -417,25 +422,6 @@ class Jeopardy(callbacks.Plugin):
                 f.write('%s %s\n' % (score[0], score[1]))
             f.close()
 
-
-        def DL(self, seq1, seq2):
-            oneago = None
-            thisrow = list(range(1, len(seq2) + 1)) + [0]
-            for x in range(len(seq1)):
-                # Python lists wrap around for negative indices, so put the
-                # leftmost column at the *end* of the list. This matches with
-                # the zero-indexed strings and saves extra calculation.
-                twoago, oneago, thisrow = oneago, thisrow, [0]*len(seq2)+[x+1]
-                for y in range(len(seq2)):
-                    delcost = oneago[y] + 1
-                    addcost = thisrow[y - 1] + 1
-                    subcost = oneago[y - 1] + (seq1[x] != seq2[y])
-                    thisrow[y] = min(delcost, addcost, subcost)
-                    # This block deals with transpositions
-                    if x > 0 and y > 0 and seq1[x] == seq2[y - 1] and \
-                            seq1[x-1] == seq2[y] and seq1[x] != seq2[y]:
-                        thisrow[y] = min(thisrow[y], twoago[y - 2] + 1)
-            return thisrow[len(seq2) - 1]
 
     @internationalizeDocstring
     def start(self, irc, msg, args, channel, optlist, categories):
