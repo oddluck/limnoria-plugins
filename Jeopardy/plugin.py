@@ -48,7 +48,7 @@ import requests
 import re
 from unidecode import unidecode
 from bs4 import BeautifulSoup
-from fuzzywuzzy import fuzz
+import jellyfish
 from supybot.i18n import PluginInternationalization, internationalizeDocstring
 _ = PluginInternationalization('Jeopardy')
 
@@ -375,22 +375,21 @@ class Jeopardy(callbacks.Plugin):
             channel = msg.args[0]
             correct = False
             for ans in self.a:
-                ans = ans.strip().lower()
-                guess = msg.args[1].strip().lower()
+                ans = re.sub('\s+', ' ', ans.strip().lower())
+                guess = re.sub('\s+', ' ', msg.args[1].strip().lower())
                 if guess == ans:
                     correct = True
-                elif not correct:
-                    if len(ans) > 2:
-                        answer = re.sub('^a |^an |^the ', '', ans)
-                        answer = re.sub('[^a-zA-Z0-9]+', '', answer)
-                        guess = re.sub('^a |^an |^the ', '', guess)
-                        guess = re.sub('[^a-zA-Z0-9]+', '', guess)
-                    else:
-                        answer = ans
+                elif not correct and len (ans) > 2:
+                    answer = re.sub('[^a-zA-Z0-9 ]+', '', ans)
+                    answer = re.sub('^a |^an |^the ', '', answer).replace(' ', '')
+                    guess = re.sub('[^a-zA-Z0-9 ]+', '', guess)
+                    guess = re.sub('^a |^an |^the ', '', guess).replace(' ', '')
+                else:
+                    answer = ans
                 if not correct and guess == answer:
                     correct = True
                 elif not correct:
-                    dist = fuzz.ratio(guess, answer)
+                    dist = jellyfish.jaro_winkler(guess, answer)
                     flexibility = self.registryValue('flexibility', self.channel)
                     #self.reply("guess: {0}, answer: {1}, length: {2}, distance: {3}, flexibility: {4}".format(guess, answer, len(answer), dist, flexibility))
                     if dist >= flexibility:
