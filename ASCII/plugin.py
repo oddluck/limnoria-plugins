@@ -622,7 +622,7 @@ class ASCII(callbacks.Plugin):
                         else:
                             gsval = "▀"
                             alt_gsval = "▄"
-                        if gsval != " " and color == "{0},{1}".format(old_color.split(',')[1], old_color.split(',')[0]):
+                        if gsval != " " and color == "{0},{1}".format(old_color.split(',')[1], old_color.split(',')[0]) and 'tops' not in optlist:
                             aimg[k] += alt_gsval
                         elif gsval == " " and "{0}".format(color1) == "{0}".format(old_color.split(',')[1]):
                             aimg[k] += " "
@@ -842,7 +842,7 @@ class ASCII(callbacks.Plugin):
                 irc.reply(line, prefixNick=False, noLengthCheck=True, private=False, notice=False, to=channel)
         if self.registryValue('pasteEnable', msg.args[0]):
             irc.reply(self.doPaste(url, paste), private=False, notice=False, to=channel)
-    img = wrap(img,[optional('channel'), getopts({'w':'int', 'invert':'', 'fast':'', 'faster':'', 'slow':'', 'slower':'', 'slowest':'', 'insane':'', '16':'', 'delay':'float', 'dither':'', 'chars':'text', 'bg':'int', 'fg':'int', 'ramp':'text', 'nocolor':'', 'block':'', 'ascii':'', '1/4':'', 's':'float'}), ('text')])
+    img = wrap(img,[optional('channel'), getopts({'w':'int', 'invert':'', 'fast':'', 'faster':'', 'slow':'', 'slower':'', 'slowest':'', 'insane':'', '16':'', 'delay':'float', 'dither':'', 'chars':'text', 'bg':'int', 'fg':'int', 'ramp':'text', 'nocolor':'', 'block':'', 'ascii':'', '1/4':'', 's':'float', 'tops':''}), ('text')])
 
     def scroll(self, irc, msg, args, channel, optlist, url):
         """[<channel>] <url>
