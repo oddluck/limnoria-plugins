@@ -679,32 +679,45 @@ class ASCII(callbacks.Plugin):
                     else:
                         row1 = '%02d' % self.getColor(np.average([tuple(colormap[j][i].tolist()), tuple(colormap[j][i+1].tolist())], axis=0).tolist(), speed)
                         row2 = '%02d' % self.getColor(np.average([tuple(colormap[j+1][i+1].tolist()), tuple(colormap[j][i+1].tolist())], axis=0).tolist(), speed)
-                        col1 = '%02d' % self.getColor(np.average([tuple(colormap[j][i].tolist()), tuple(colormap[j+1][i].tolist())], axis=0).tolist(), speed)
-                        col2 = '%02d' % self.getColor(np.average([tuple(colormap[j][i+1].tolist()), tuple(colormap[j+1][i+1].tolist())], axis=0).tolist(), speed)
-                        if row2 == color1 and col1 == color4:
+                        if row2 == color1 and row2 != color3:
                             gsval = "▙"
                             color = "{0},{1}".format(row2, color3)
-                        elif row1 == color2 and col1 == color3:
+                        elif row1 == color2 and row1 != color4:
                             gsval = "▛"
                             color = "{0},{1}".format(row1, color4)
-                        elif row2 == color3 and col2 == color2:
+                        elif row2 == color3 and row2 != color1:
                             gsval = "▟"
                             color = "{0},{1}".format(row2, color1)
-                        elif row1 == color4 and col2 == color1:
+                        elif row1 == color4 and row1 != color2:
                             gsval = "▜"
                             color = "{0},{1}".format(row1, color2)
-                        elif row1 == row2:
-                            gsval = " "
-                            color = "0,{0}".format(row1)
-                        elif col1 == col2:
-                            gsval = " "
-                            color = "0,{0}".format(col1)
-                        elif row1 != row2:
-                            gsval = "▀"
-                            color = "{0},{1}".format(row1, row2)
-                        elif col1 != col2:
-                            gsval = "▌"
-                            color = "{0},{1}".format(col1, col2)
+                        else:
+                            col1 = '%02d' % self.getColor(np.average([tuple(colormap[j][i].tolist()), tuple(colormap[j+1][i].tolist())], axis=0).tolist(), speed)
+                            col2 = '%02d' % self.getColor(np.average([tuple(colormap[j][i+1].tolist()), tuple(colormap[j+1][i+1].tolist())], axis=0).tolist(), speed)
+                            if col1 == color4 and col1 != color3:
+                                gsval = "▙"
+                                color = "{0},{1}".format(col1, color3)
+                            elif col1 == color3 and col1 != color4:
+                                gsval = "▛"
+                                color = "{0},{1}".format(col1, color4)
+                            elif col2 == color2 and col2 != color1:
+                                gsval = "▟"
+                                color = "{0},{1}".format(col2, color1)
+                            elif col2 == color1 and col2 != color2:
+                                gsval = "▜"
+                                color = "{0},{1}".format(col2, color2)
+                            elif row1 != row2:
+                                gsval = "▀"
+                                color = "{0},{1}".format(row1, row2)
+                            elif col1 != col2:
+                                gsval = "▌"
+                                color = "{0},{1}".format(col1, col2)
+                            elif row1 == row2:
+                                gsval = " "
+                                color = "0,{0}".format(row1)
+                            elif col1 == col2:
+                                gsval = " "
+                                color = "0,{0}".format(col1)
                     if color != old_color:
                         if gsval == " " and "{0}".format(color.split(',')[1]) == "{0}".format(old_color.split(',')[1]):
                             aimg[k] += "{0}".format(gsval)
