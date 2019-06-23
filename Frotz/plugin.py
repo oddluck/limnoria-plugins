@@ -46,7 +46,7 @@ class Frotz(callbacks.Plugin):
         game_name = input
         self.game.setdefault(channel, None)
         if self.game[channel]:
-            irc.reply("There is a game already in progress on {0}. Please end that game first.".format(channel))
+            irc.reply("There is a game already in progress on {0}. Please stop that game first.".format(channel))
         else:
             irc.reply("Starting {0} on {1}. Please wait...".format(game_name, channel))
             game_file= "{0}{1}".format(self.game_path, game_name)
@@ -96,15 +96,18 @@ class Frotz(callbacks.Plugin):
             channel = msg.nick
         self.game.setdefault(channel, None)
         if self.game[channel]:
-            if self.game[channel].isalive() is True:
-                irc.reply("Stopping Game. Thanks for playing.")
-                self.game[channel].close()
-                self.game[channel].terminate()
-                del self.game[channel]
-            else:
-                irc.reply("No game running in {0}".format(channel))
+            irc.reply("Stopping Game. Thanks for playing.")
         else:
-            irc.reply("No game started in {0}".format(channel))
+            irc.reply("No game running in {0}".format(channel))
+        try:
+            self.game[channel].terminate(force=True)
+            del self.game[channel]
+        except:
+            try:
+                del self.game[channel]
+            except:
+                return
+            return
     stop = wrap(stop)
 
     def z(self, irc, msg, args, input):
@@ -141,3 +144,4 @@ class Frotz(callbacks.Plugin):
     games = wrap(games)
 
 Class = Frotz
+
