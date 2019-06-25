@@ -2,7 +2,6 @@ requests
 numpy
 scipy
 pillow
-colour-science
 fake-useragent
 pexpect
 x256
