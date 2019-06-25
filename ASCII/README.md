@@ -101,6 +101,8 @@ img --nocolor <url> (text only greyscale character ramp output)
 img --invert <url> (invert the greyscale character ramp)
 img --bg <0-99> <url> (set a background color)
 img --fg <0-99> <url> (set a foreground color)
+img --fast <url> (use Euclidean color difference.)
+img --slow <url> (use cie2000 color difference. best quality, default)
 ```
 Here are some images using 99 color default output:
 ![Image of Img Command Output](https://i.imgur.com/33tCGXC.png)<br>
@@ -163,16 +165,6 @@ Here are some images using 99 color default output:
 ```
 ^ Output of img --nocolor --invert https://i.imgur.com/aF9wihd.jpg
 
-Speed Presets. Defaults to slowest. It's actually pretty fast.
-```
-img --faster <url> (use Euclidean color difference algorithm)
-img --fast <url> (use cie1976 color difference algorithm)
-img --slow <url> (use cie1994 color difference algorithm)
-img --slower <url> (use cieCMC color difference algorithm)
-img --slowest <url> (use cie2000 color difference algorithm)
-```
-Different presets will yeild slightly different results, try them if you want. Slowest (the default)
-is usually pretty good.
 
 Scroll ASCII/ANSI Art text files
 ```
