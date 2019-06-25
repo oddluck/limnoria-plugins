@@ -18,7 +18,6 @@ from PIL import Image, ImageOps, ImageFont, ImageDraw, ImageEnhance
 import numpy as np
 import sys, math
 from fake_useragent import UserAgent
-from colour.difference import *
 import re
 import pexpect
 import time
@@ -369,19 +368,65 @@ class ASCII(callbacks.Plugin):
         Lab [ 2 ] = round( b, 4 )
         return Lab
 
+    def cie_de_2000(self, lab1,lab2,k_L=1,k_C=1,k_H=1):
+        L_1_star,a_1_star,b_1_star=lab1
+        L_2_star,a_2_star,b_2_star=lab2
+        C_1_star=np.sqrt(np.power(a_1_star,2)+np.power(b_1_star,2))
+        C_2_star=np.sqrt(np.power(a_2_star,2)+np.power(b_2_star,2))
+        C_bar_star=np.average([C_1_star,C_2_star])
+        G=0.5*(1-np.sqrt(np.power(C_bar_star,7)/(np.power(C_bar_star,7)+np.power(25,7))))
+        a_1_dash=(1+G)*a_1_star
+        a_2_dash=(1+G)*a_2_star
+        C_1_dash=np.sqrt(np.power(a_1_dash,2)+np.power(b_1_star,2))
+        C_2_dash=np.sqrt(np.power(a_2_dash,2)+np.power(b_2_star,2))
+        h_1_dash=np.degrees(np.arctan2(b_1_star,a_1_dash))
+        h_1_dash += (h_1_dash < 0) * 360
+        h_2_dash=np.degrees(np.arctan2(b_2_star,a_2_dash))
+        h_2_dash += (h_2_dash < 0) * 360
+        delta_L_dash=L_2_star-L_1_star
+        delta_C_dash=C_2_dash-C_1_dash
+        delta_h_dash=0.0
+        if(C_1_dash*C_2_dash):
+            if(np.fabs(h_2_dash-h_1_dash)<=180):
+                delta_h_dash=h_2_dash-h_1_dash
+            elif(h_2_dash-h_1_dash>180):
+                delta_h_dash=(h_2_dash-h_1_dash)-360
+            elif(h_2_dash-h_1_dash)<-180:
+                delta_h_dash=(h_2_dash-h_1_dash)+360
+        delta_H_dash=2*np.sqrt(C_1_dash*C_2_dash)*np.sin(np.radians(delta_h_dash)/2.0)
+        L_bar_dash=np.average([L_1_star,L_2_star])
+        C_bar_dash=np.average([C_1_dash,C_2_dash])
+        h_bar_dash=h_1_dash+h_2_dash
+        if(C_1_dash*C_2_dash):
+            if(np.fabs(h_1_dash-h_2_dash)<=180):
+                h_bar_dash=np.average([h_1_dash,h_2_dash])
+            else:
+                if(h_1_dash+h_2_dash)<360:
+                    h_bar_dash=(h_1_dash+h_2_dash+360)/2
+                else:
+                    h_bar_dash=(h_1_dash+h_2_dash-360)/2
+        T=1-0.17*np.cos(np.radians(h_bar_dash-30))+0.24*np.cos(np.radians(2*h_bar_dash))\
+        +0.32*np.cos(np.radians(3*h_bar_dash+6))-0.20*np.cos(np.radians(4*h_bar_dash-63))
+        delta_theta=30 * np.exp(- np.power( (h_bar_dash-275) / 25, 2))
+        R_c=2*np.sqrt( np.power(C_bar_dash,7) / (np.power(C_bar_dash,7)+np.power(25,7)) )
+        S_L=1+((0.015*np.power(L_bar_dash-50,2))/np.sqrt(20+np.power(L_bar_dash-50,2)))
+        S_C=1+0.045*C_bar_dash
+        S_H=1+0.015*C_bar_dash*T
+        R_T=-R_c * np.sin(2*np.radians(delta_theta))
+        delta_e=np.sqrt(np.power(delta_L_dash/(k_L*S_L),2)+\
+            np.power(delta_C_dash/(k_C*S_C),2)+\
+            np.power(delta_H_dash/(k_H*S_H),2)+\
+            R_T*(delta_C_dash/(k_C*S_C))*(delta_H_dash/(k_H*S_H))\
+            )
+        return delta_e
+
     def distance(self, c1, c2, speed):
-        if speed == 'faster':
+        if speed == 'fast':
             (r1,g1,b1) = (c1[0], c1[1], c1[2])
             (r2,g2,b2) = (c2[0], c2[1], c2[2])
             delta_e =  math.sqrt((r1 - r2)**2 + (g1 - g2) ** 2 + (b1 - b2) **2)
-        elif speed == 'fast':
-            delta_e = delta_E_CIE1976(c1, c2)
         elif speed == 'slow':
-            delta_e = delta_E_CIE1994(c1, c2)
-        elif speed == 'slower':
-            delta_e = delta_E_CMC(c1, c2)
-        elif speed == 'slowest':
-            delta_e = delta_E_CIE2000(c1, c2)
+            delta_e = self.cie_de_2000(c1, c2)
         return delta_e
 
     def png(self, irc, msg, args, optlist, url):
@@ -507,20 +552,14 @@ class ASCII(callbacks.Plugin):
             self.colors = 16
         else:
             self.colors = 93
-        if 'faster' in optlist:
-            speed = 'faster'
-        elif 'fast' in optlist:
+        if 'fast' in optlist:
             speed = 'fast'
         elif 'slow' in optlist:
             speed = 'slow'
-        elif 'slower' in optlist:
-            speed = 'slower'
-        elif 'slowest' in optlist:
-            speed = 'slowest'
         elif 'insane' in optlist:
-            speed = 'slowest'
+            speed = 'slow'
         else:
-            speed = 'slowest'
+            speed = 'slow'
         if 'chars' in optlist:
             gscale = optlist.get('chars')
         elif 'ramp' in optlist:
@@ -865,7 +904,7 @@ class ASCII(callbacks.Plugin):
                 irc.reply(line, prefixNick=False, noLengthCheck=True, private=False, notice=False, to=channel)
         if self.registryValue('pasteEnable', msg.args[0]):
             irc.reply(self.doPaste(url, paste), private=False, notice=False, to=channel)
-    img = wrap(img,[optional('channel'), getopts({'w':'int', 'invert':'', 'fast':'', 'faster':'', 'slow':'', 'slower':'', 'slowest':'', 'insane':'', '16':'', 'delay':'float', 'dither':'', 'chars':'text', 'bg':'int', 'fg':'int', 'ramp':'text', 'nocolor':'', 'block':'', 'ascii':'', '1/4':'', 's':'float', 'tops':''}), ('text')])
+    img = wrap(img,[optional('channel'), getopts({'w':'int', 'invert':'', 'fast':'', 'slow':'', 'insane':'', '16':'', 'delay':'float', 'dither':'', 'chars':'text', 'bg':'int', 'fg':'int', 'ramp':'text', 'nocolor':'', 'block':'', 'ascii':'', '1/4':'', 's':'float', 'tops':''}), ('text')])
 
     def scroll(self, irc, msg, args, channel, optlist, url):
         """[<channel>] <url>
@@ -1202,20 +1241,12 @@ class ASCII(callbacks.Plugin):
             self.colors = 93
         else:
             self.colors = 16
-        if 'faster' in optlist:
-            speed = 'faster'
-        elif 'fast' in optlist:
+        if 'fast' in optlist:
             speed = 'fast'
         elif 'slow' in optlist:
             speed = 'slow'
-        elif 'slower' in optlist:
-            speed = 'slower'
-        elif 'slowest' in optlist:
-            speed = 'slowest'
-        elif 'insane' in optlist:
-            speed = 'insane'
         else:
-            speed = 'slower'
+            speed = 'fast'
         file = requests.get("http://wttr.in/{0}".format(location))
         output = file.content.decode()
         self.matches = {}
@@ -1247,7 +1278,7 @@ class ASCII(callbacks.Plugin):
                 irc.reply(line, prefixNick = False, noLengthCheck=True, private=False, notice=False, to=channel)
         if self.registryValue('pasteEnable', msg.args[0]):
             irc.reply(self.doPaste(location, paste), private=False, notice=False, to=channel)
-    wttr = wrap(wttr, [optional('channel'), getopts({'delay':'float', '16':'', '99':'', 'fast':'', 'faster':'', 'slow':'', 'slower':'', 'slowest':'', 'insane':''}), ('text')])
+    wttr = wrap(wttr, [optional('channel'), getopts({'delay':'float', '16':'', '99':'', 'fast':'', 'slow':''}), ('text')])
 
     def rate(self, irc, msg, args, channel, optlist, coin):
         """[<channel>] [--16] [--99] [--sub <text>] [coin]
@@ -1269,20 +1300,12 @@ class ASCII(callbacks.Plugin):
             self.colors = 93
         else:
             self.colors = 16
-        if 'faster' in optlist:
-            speed = 'faster'
-        elif 'fast' in optlist:
+        if 'fast' in optlist:
             speed = 'fast'
         elif 'slow' in optlist:
             speed = 'slow'
-        elif 'slower' in optlist:
-            speed = 'slower'
-        elif 'slowest' in optlist:
-            speed = 'slowest'
-        elif 'insane' in optlist:
-            speed = 'insane'
         else:
-            speed = 'slower'
+            speed = 'fast'
         if 'sub' in optlist:
             sub = optlist.get('sub')
         else:
@@ -1328,7 +1351,7 @@ class ASCII(callbacks.Plugin):
                 irc.reply(line, prefixNick = False, noLengthCheck=True, private=False, notice=False, to=channel)
         if self.registryValue('pasteEnable', msg.args[0]):
             irc.reply(self.doPaste(coin, paste), private=False, notice=False, to=channel)
-    rate = wrap(rate, [optional('channel'), getopts({'delay':'float', '16':'', '99':'', 'sub':'text', 'fast':'', 'faster':'', 'slow':'', 'slower':'', 'slowest':'', 'insane':''}), optional('text')])
+    rate = wrap(rate, [optional('channel'), getopts({'delay':'float', '16':'', '99':'', 'sub':'text', 'fast':'', 'slow':''}), optional('text')])
 
     def cow(self, irc, msg, args, channel, optlist, text):
         """[<channel>] [--delay] [--type <character>] <text>
