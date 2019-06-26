@@ -103,6 +103,7 @@ img --bg <0-99> <url> (set a background color)
 img --fg <0-99> <url> (set a foreground color)
 img --fast <url> (use Euclidean color difference.)
 img --slow <url> (use cie2000 color difference. best quality, default)
+img --dither <url> (dither source image to 256 colors. trades off quality for speed)
 ```
 Here are some images using 99 color default output:
 ![Image of Img Command Output](https://i.imgur.com/33tCGXC.png)<br>
