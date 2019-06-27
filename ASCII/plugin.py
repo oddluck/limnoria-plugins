@@ -41,7 +41,7 @@ class ASCII(callbacks.Plugin):
     def __init__(self, irc):
         self.__parent = super(ASCII, self)
         self.__parent.__init__(irc)
-        self.colors = 83
+        self.colors = 99
         self.stopped = {}
         self.rgbColors = [
             (255,255,255),
@@ -244,7 +244,7 @@ class ASCII(callbacks.Plugin):
             (60.3199, 98.2542, -60.843):13,
             (53.1928, 0.0029, -0.0061):14,
             (84.1985, 0.0045, -0.0089):15}
-        self.colors93= {
+        self.colors99= {
             (100.0, 0.0053, -0.0104):0,
             (0.0, 0.0, 0.0):1,
             (12.8119, 47.2407, -64.3396):2,
@@ -411,8 +411,8 @@ class ASCII(callbacks.Plugin):
         pixel = tuple(pixel)
         if self.colors == 16:
             colors = list(self.colors16.keys())
-        elif self.colors == 93:
-            colors = list(self.colors93.keys())
+        elif self.colors == 99:
+            colors = list(self.colors99.keys())
         else:
             colors = list(self.colors83.keys())
         try:
@@ -422,8 +422,8 @@ class ASCII(callbacks.Plugin):
             closest_color = closest_colors[0]
             if self.colors == 16:
                 self.matches[pixel] = self.colors16[closest_color]
-            elif self.colors == 93:
-                self.matches[pixel] = self.colors93[closest_color]
+            elif self.colors == 99:
+                self.matches[pixel] = self.colors99[closest_color]
             else:
                 self.matches[pixel] = self.colors83[closest_color]
             return self.matches[pixel]
@@ -650,47 +650,55 @@ class ASCII(callbacks.Plugin):
     fontlist = wrap(fontlist)
 
     def img(self, irc, msg, args, channel, optlist, url):
-        """[<channel>] [--w <##>] [--s <#.#] [--16] [--ascii] [--block] [--1/4] [--chars <text>] [--ramp <text>] [--bg <0-98>] [--fg <0-98>] [--nocolor] [--invert] <url>
+        """[<#channel>] [--w <##>] [--s <#.#] [--16] [--99] [--83] [--ascii] [--block] [--1/2] [--1/4] [--chars <text>] [--ramp <text>] [--bg <0-98>] [--fg <0-98>] [--no-color] [--invert] [--dither] [--no-dither] <url>
         Image to ASCII Art.
         --w columns.
         --s saturation (1.0).
-        --16 for 16 color.
+        --16 colors 0-15.
+        --99 colors 0-98.
+        --83 colors 16-98.
         --ascii color ascii.
-        --block space blcck.
-        --1/4 1/4 block
+        --block space block.
+        --1/4 for 1/4 block.
+        --1/2 for 1/2 block
         --chars <TEXT> color text.
         --ramp <TEXT> set ramp (".:-=+*#%@").
         --bg <0-98> set bg.
         --fg <0-99> set fg.
-        --nocolor text only greyscale.
+        --no-color greyscale ascii.
         --invert inverts ramp.
+        --dither to reduce source colors.
+        --no-dither for no color reduction.
         """
         if not channel:
             channel = msg.args[0]
         optlist = dict(optlist)
-        gscale = ""
+        gscale = "\xa0"
         if '16' in optlist:
             self.colors = 16
-        else:
+        elif '83' in optlist:
             self.colors = 83
+        elif '99' in optlist:
+            self.colors = 99
+        else:
+            self.colors = self.registryValue('colors', msg.args[0])
         if 'fast' in optlist:
             speed = 'fast'
         elif 'slow' in optlist:
             speed = 'slow'
         else:
-            speed = 'slow'
-        if 'chars' in optlist:
-            gscale = optlist.get('chars')
-        elif 'ramp' in optlist:
-            gscale = optlist.get('ramp')
+            speed =  self.registryValue('speed', msg.args[0]).lower()
         if 'delay' in optlist:
             delay = optlist.get('delay')
         else:
             delay = self.registryValue('delay', msg.args[0])
-        if 'bg' in optlist and '16' not in optlist:
-            bg = optlist.get('bg')
-            self.colors = 93
-        elif 'bg' in optlist and '16' in optlist:
+        if 'dither' in optlist:
+            dither = True
+        elif 'no-dither' in optlist:
+            dither = False
+        else:
+            dither = self.registryValue('dither', msg.args[0])
+        if 'bg' in optlist:
             bg = optlist.get('bg')
         else:
             bg = 1
@@ -698,30 +706,47 @@ class ASCII(callbacks.Plugin):
             fg = optlist.get('fg')
         else:
             fg = 99
-        if 'ascii' in optlist and bg == 0 or bg == 98:
+        if 'chars' in optlist:
+            type = 'ascii'
+            gscale = optlist.get('chars')
+        elif 'ramp' in optlist:
+            type = 'ascii'
+            gscale = optlist.get('ramp')
+        elif 'ascii' in optlist and bg == 0 or bg == 98:
+            type = 'ascii'
             gscale = "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\|()1{}[]?-_+~<>i!lI;:\"^`'."
         elif 'ascii' in optlist:
+            type = 'ascii'
             gscale = ".'`^\":;Il!i><~+_-?][}{1)(|\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$"
-        if 'nocolor' in optlist and 'chars' in optlist:
-            return
-        elif 'nocolor' in optlist and 'ramp' not in optlist and bg == 0 or bg == 98:
+        elif '1/4' in optlist:
+            type = '1/4'
+        elif '1/2' in optlist:
+            type = '1/2'
+        elif 'block' in optlist:
+            type = 'ascii'
+            gscale = '\xa0'
+        else:
+            type = self.registryValue('imgDefault', msg.args[0]).lower()
+        if 'no-color' in optlist and 'ramp' not in optlist and bg == 0 or bg == 98:
+            type = 'no-color'
             gscale = "@%#*+=-:. "
-        elif 'nocolor' in optlist and 'ramp' not in optlist:
+        elif 'no-color' in optlist and 'ramp' not in optlist:
+            type = 'no-color'
             gscale = " .:-=+*#%@"
-        if not gscale.strip() or 'block' in optlist:
+        elif 'no-color' in optlist and 'chars' not in optlist:
+            type = 'no-color'
+        if not gscale.strip():
             gscale = '\xa0'
         if 'invert' in optlist and 'chars' not in optlist and gscale != '\xa0':
             gscale = gscale[::-1]
         if 'w' in optlist:
             cols = optlist.get('w')
-        elif 'ascii' not in optlist and 'ramp' not in optlist and 'nocolor' not in optlist and 'chars' not in optlist and 'block' not in optlist and 'w' not in optlist:
-            cols = 70
-        elif 'w' not in optlist and '1/4' in optlist:
-            cols = 70
+        elif type == 'ascii' or type == 'no-color' or type == 'block':
+            cols = self.registryValue('asciiWidth', msg.args[0])
         else:
-            cols = 100
-        if '1/4' in optlist:
-            cols = cols *2
+            cols = self.registryValue('blockWidth', msg.args[0])
+        if type == '1/4':
+            cols = cols * 2
         if 's' in optlist:
             s = float(optlist.get('s'))
         path = os.path.dirname(os.path.abspath(__file__))
@@ -754,7 +779,7 @@ class ASCII(callbacks.Plugin):
         # compute width of tile
         w = W/cols
         # compute tile height based on aspect ratio and scale
-        if 'ascii' not in optlist and 'ramp' not in optlist and 'nocolor' not in optlist and 'chars' not in optlist and 'block' not in optlist and '1/4' not in optlist:
+        if type == '1/2':
             scale = 1.0
         else:
             scale = 0.5
@@ -762,20 +787,18 @@ class ASCII(callbacks.Plugin):
         # compute number of rows
         rows = int(H/h)
         image = ImageOps.autocontrast(image)
-        if 'nocolor' not in optlist:
+        if type != 'no-color':
             image2 = image.resize((cols, rows), Image.LANCZOS)
             if 's' in optlist:
                 image2 = ImageEnhance.Color(image2).enhance(s)
-            if 'dither' in optlist:
+            if dither:
                 image2 = image2.convert('P', palette=Image.ADAPTIVE)
                 image2 = image2.convert('RGB')
             colormap = np.array(image2)
             self.matches = {}
         # ascii image is a list of character strings
         aimg = []
-        if 'ascii' not in optlist and 'ramp' not in optlist and 'nocolor' not in optlist and 'chars' not in optlist and 'block' not in optlist and '1/4' not in optlist:
-            if '16' not in optlist:
-                self.colors = 93
+        if type == '1/2':
             k = 0
             for j in range(0, rows - 1, 2):
                 # append an empty string
@@ -811,9 +834,7 @@ class ASCII(callbacks.Plugin):
                     i = '%02d' % i
                     aimg[k] = aimg[k].replace("{0}".format(i), "{0}".format(int(i)))
                 k += 1
-        elif '1/4' in optlist:
-            if '16' not in optlist:
-                self.colors = 93
+        elif type == '1/4':
             k = 0
             for j in range(0, rows - 1, 2):
                 # append an empty string
@@ -928,11 +949,10 @@ class ASCII(callbacks.Plugin):
                     aimg[k] = aimg[k].replace("{0}".format(i), "{0}".format(int(i)))
                 k += 1
         else:
-            if 'block' in optlist and '16' not in optlist:
-                self.colors = 93
-            image = image.resize((cols, rows), Image.LANCZOS)
-            image = image.convert('L')
-            lumamap = np.array(image)
+            if 'chars' not in optlist and gscale != '\xa0':
+                image = image.resize((cols, rows), Image.LANCZOS)
+                image = image.convert('L')
+                lumamap = np.array(image)
             # generate list of dimensions
             char = 0
             for j in range(rows):
@@ -940,12 +960,12 @@ class ASCII(callbacks.Plugin):
                 aimg.append("")
                 old_color = None
                 for i in range(cols):
-                    # get average luminance
-                    avg = int(np.average(lumamap[j][i]))
-                    # look up ascii char
-                    if 'chars' not in optlist:
+                    if 'chars' not in optlist and gscale != '\xa0':
+                        # get average luminance
+                        avg = int(np.average(lumamap[j][i]))
+                        # look up ascii char
                         gsval = gscale[int((avg * (len(gscale) - 1))/255)]
-                    else:
+                    elif 'chars' in optlist and gscale != '\xa0':
                         if char < len(gscale):
                             gsval = gscale[char]
                             char += 1
@@ -953,8 +973,10 @@ class ASCII(callbacks.Plugin):
                             char = 0
                             gsval = gscale[char]
                             char += 1
+                    else:
+                        gsval = '\xa0'
                     # get color value
-                    if 'nocolor' not in optlist and i == 0:
+                    if type != 'no-color' and i == 0:
                         color = self.getColor(colormap[j][i].tolist(), speed)
                         old_color = color
                         if 'bg' not in optlist:
@@ -975,7 +997,7 @@ class ASCII(callbacks.Plugin):
                                     aimg[j] += "\x03{0},{1}{2}".format(int(color), int(bg), gsval)
                             else:
                                 aimg[j] += "\x030,{0} ".format(int(color))
-                    elif 'nocolor' not in optlist and gsval != ' ':
+                    elif type != 'no-color' and gsval != ' ':
                         color = self.getColor(colormap[j][i].tolist(), speed)
                         if color != old_color:
                             old_color = color
@@ -1013,13 +1035,13 @@ class ASCII(callbacks.Plugin):
         paste = ""
         self.stopped[msg.args[0]] = False
         for line in output:
-            if 'nocolor' in optlist and 'fg' in optlist and 'bg' in optlist:
+            if type == 'no-color' and 'fg' in optlist and 'bg' in optlist:
                 newbg = "{:02d}".format(int(bg))
                 line = "\x03{0},{1}{2}".format(int(fg), newbg, line)
-            elif 'nocolor' in optlist and 'fg' in optlist:
+            elif type == 'no-color' and 'fg' in optlist:
                 newfg = "{:02d}".format(int(fg))
                 line = "\x03{0}{1}".format(newfg, line)
-            elif 'nocolor' in optlist and 'bg' in optlist:
+            elif type == 'no-color' and 'bg' in optlist:
                 newbg = "{:02d}".format(int(bg))
                 line = "\x0399,{0}{1}".format(newbg, line)
             if self.registryValue('pasteEnable', msg.args[0]):
@@ -1029,7 +1051,7 @@ class ASCII(callbacks.Plugin):
                 irc.reply(line, prefixNick=False, noLengthCheck=True, private=False, notice=False, to=channel)
         if self.registryValue('pasteEnable', msg.args[0]):
             irc.reply(self.doPaste(url, paste), private=False, notice=False, to=channel)
-    img = wrap(img,[optional('channel'), getopts({'w':'int', 'invert':'', 'fast':'', 'slow':'', '16':'', 'delay':'float', 'dither':'', 'chars':'text', 'bg':'int', 'fg':'int', 'ramp':'text', 'nocolor':'', 'block':'', 'ascii':'', '1/4':'', 's':'float', 'tops':''}), ('text')])
+    img = wrap(img,[optional('channel'), getopts({'w':'int', 'invert':'', 'fast':'', 'slow':'', '16':'', '99':'', '83':'', 'delay':'float', 'dither':'', 'no-dither':'', 'chars':'text', 'bg':'int', 'fg':'int', 'ramp':'text', 'no-color':'', 'block':'', 'ascii':'', '1/4':'', '1/2':'', 's':'float', 'tops':''}), ('text')])
 
     def scroll(self, irc, msg, args, channel, optlist, url):
         """[<channel>] <url>
@@ -1159,7 +1181,8 @@ class ASCII(callbacks.Plugin):
             w = optlist.get('w')
             opts += '-w {0} '.format(w)
         else:
-            opts += '-w 70 '
+            w = self.registryValue('blockWidth', msg.args[0])
+            opts += '-w {0} '.format(w)
         if 'delay' in optlist:
             delay = optlist.get('delay')
         else:
@@ -1363,9 +1386,9 @@ class ASCII(callbacks.Plugin):
         if '16' in optlist:
             self.colors = 16
         elif '99' in optlist:
-            self.colors = 93
+            self.colors = 99
         else:
-            self.colors = 16
+            self.colors = self.registryValue('colors', msg.args[0])
         if 'fast' in optlist:
             speed = 'fast'
         elif 'slow' in optlist:
@@ -1422,9 +1445,9 @@ class ASCII(callbacks.Plugin):
         if '16' in optlist:
             self.colors = 16
         elif '99' in optlist:
-            self.colors = 93
+            self.colors = 99
         else:
-            self.colors = 16
+            self.colors = self.registryValue('colors', msg.args[0])
         if 'fast' in optlist:
             speed = 'fast'
         elif 'slow' in optlist:
