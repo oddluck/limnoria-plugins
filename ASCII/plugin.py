@@ -365,7 +365,7 @@ class ASCII(callbacks.Plugin):
         text = text.replace('\t', ' ')
         self.strip_colors_regex = re.compile('(\x03([0-9]{1,2})(,[0-9]{1,2})?)|[\x0f\x02\x1f\x03\x16]').sub
         path = os.path.dirname(os.path.abspath(__file__))
-        defaultFont = "{0}/hack.ttf".format(path)
+        defaultFont = "{0}/DejaVu.ttf".format(path)
         def strip_colors(string):
             return self.strip_colors_regex('', string)
         _colorRegex = re.compile('(([0-9]{1,2})(,([0-9]{1,2}))?)')
@@ -373,9 +373,8 @@ class ASCII(callbacks.Plugin):
         lineLens = [len(line) for line in strip_colors(text).splitlines()]
         maxWidth, height = max(lineLens), len(lineLens)
         font = ImageFont.truetype(defaultFont, size)
-        fontX, fontY = font.getsize('█')
-        fontX -= 1
-        fontY -= 1
+        fontX = 10
+        fontY = 20
         imageX, imageY = maxWidth * fontX, height * fontY
         image = Image.new('RGB', (imageX, imageY), self.rgbColors[defaultBg])
         draw = ImageDraw.Draw(image)
