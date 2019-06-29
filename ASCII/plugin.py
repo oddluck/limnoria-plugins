@@ -542,9 +542,7 @@ class ASCII(callbacks.Plugin):
 
     def distance(self, c1, c2, speed):
         if speed == 'fast':
-            (r1,g1,b1) = (c1[0], c1[1], c1[2])
-            (r2,g2,b2) = (c2[0], c2[1], c2[2])
-            delta_e =  math.sqrt((r1 - r2)**2 + (g1 - g2) ** 2 + (b1 - b2) **2)
+            delta_e =  math.sqrt((c1[0] - c2[0]) **2 + (c1[1] - c2[1]) ** 2 + (c1[2] - c2[2]) **2)
         elif speed == 'slow':
             delta_e = self.ciede2000(c1, c2)
         return delta_e
