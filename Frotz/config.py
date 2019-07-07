@@ -23,8 +23,13 @@ def configure(advanced):
     # registry as appropriate.
     from supybot.questions import expect, anything, something, yn
     conf.registerPlugin('Frotz', True)
-    
+
 Frotz = conf.registerPlugin('Frotz')
 
 conf.registerGlobalValue(Frotz, 'dfrotzPath',
         registry.String('/usr/local/bin/dfrotz', _("""The path to the dfrotz executable.""")))
+
+conf.registerGlobalValue(Frotz, 'allowPrivate',
+        registry.Boolean('True', _("""Allow games to be played over private message.""")))
+
+Frotz = conf.registerPlugin('Frotz')
