@@ -41,8 +41,11 @@ class Frotz(callbacks.Plugin):
         Load <game_name.z*>.
         """
         channel = msg.args[0]
-        if not irc.isChannel(channel):
+        if not irc.isChannel(channel) and self.registryValue('allowPrivate'):
             channel = msg.nick
+        else:
+            irc.reply("Sorry, this game must be played in channel")
+            return
         game_name = input
         self.game.setdefault(channel, None)
         if self.game[channel]:
@@ -60,7 +63,7 @@ class Frotz(callbacks.Plugin):
     def output(self, output):
         response = []
         prompts = ["> >$", ">$", "\*\*\*MORE\*\*\*", "\) \[Hit any key to continue.\]", "\[Press RETURN or ENTER to begin.\]", "\[Hit any key to continue.\]", pexpect.TIMEOUT]
-        output.expect(prompts, timeout=2)
+        output.expect(prompts, timeout=1)
         response = output.before
         try:
             while not output.match.group().decode().endswith(">"):
@@ -81,7 +84,7 @@ class Frotz(callbacks.Plugin):
         self.game.setdefault(channel, None)
         if self.game[channel]:
             command = msg.args[1]
-            self.game[channel].sendline(command)
+            self.game[channel].sendline(r'{}'.format(command))
             response = self.output(self.game[channel])
             for line in response[1:]:
                 if line.strip() and line.strip() != ".":
@@ -110,7 +113,7 @@ class Frotz(callbacks.Plugin):
             return
     stop = wrap(stop)
 
-    def z(self, irc, msg, args, input):
+    def z(self, irc, msg, args, command):
         """[<input>]
         Send user input or blank line (ENTER/RETURN) to the game.
         """
@@ -118,13 +121,10 @@ class Frotz(callbacks.Plugin):
         if not irc.isChannel(channel):
             channel = msg.nick
         self.game.setdefault(channel, None)
-        if input:
-            command = input.strip()
-        else:
-            command = None
         if self.game[channel]:
             if command:
-                self.game[channel].sendline(command)
+                command = re.sub(r'^.?z', r'', r'{}'.format(msg.args[1])).strip()
+                self.game[channel].sendline(r'{}'.format(command))
             else:
                 self.game[channel].sendline()
             response = self.output(self.game[channel])
@@ -133,7 +133,7 @@ class Frotz(callbacks.Plugin):
                     irc.reply(line, prefixNick=False)
         else:
             irc.reply("No game running in {0}?".format(channel))
-    z = wrap(z, [additional('text')])
+    z = wrap(z, [optional('text')])
 
     def games(self, irc, msg, args):
         """
