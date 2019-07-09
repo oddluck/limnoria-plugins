@@ -22,7 +22,6 @@ import re
 import pexpect
 import time
 import random as random
-from x256 import x256
 import pyimgur
 from bs4 import BeautifulSoup
 
@@ -338,6 +337,58 @@ class ASCII(callbacks.Plugin):
             (65.4912, 0.0036, -0.0074):95,
             (76.2461, 0.0044, -0.0083):96,
             (89.8837, 0.0048, -0.0094):97}
+        self.x256colors99 = [1,5,32,30,2,38,34,96,94,4,56,8,60,13,11,0,1,36,2,48,48,60,32,34,47,47,47,72,3,33,10,59,59,59,44,45,45,46,71,71,9,68,45,69,46,83,56,68,57,57,69,11,28,38,37,49,49,60,30,93,47,72,72,72,31,33,10,59,59,59,43,45,45,46,71,71,9,68,57,69,70,83,56,68,68,57,69,70,5,39,38,49,49,61,41,93,50,50,72,72,30,30,94,84,84,84,43,43,45,46,71,71,43,68,80,81,82,83,55,68,68,80,81,70,40,51,6,50,50,61,41,64,63,50,73,73,30,41,76,87,85,84,42,42,95,96,84,84,55,67,79,81,82,83,55,67,80,80,81,82,40,51,51,50,50,73,41,64,63,75,13,73,53,7,76,87,85,85,42,65,77,76,87,85,42,66,78,78,15,97,55,67,79,79,81,82,4,64,63,63,13,13,7,64,63,75,75,74,53,64,76,87,87,86,65,65,65,76,87,86,8,77,77,77,97,86,8,66,66,78,78,0,1,89,89,90,91,91,92,92,92,93,93,14,94,94,95,95,95,96,96,96,15,97,97,97]
+        self.x256colors16 = [1,5,3,3,2,6,10,15,14,4,9,8,12,13,11,0,1,2,2,2,12,12,3,10,12,12,12,12,3,10,10,10,14,14,3,3,10,10,10,10,9,9,9,11,11,11,9,9,9,9,11,11,5,6,2,12,12,12,3,14,14,12,12,12,3,3,10,14,14,14,3,3,10,10,10,15,9,9,9,11,11,11,9,9,9,9,11,11,5,6,6,6,6,12,14,14,6,6,6,13,3,14,14,14,14,13,3,3,3,11,11,11,9,9,9,11,11,11,9,9,9,9,11,11,5,6,6,6,6,6,7,4,6,13,13,13,7,7,14,14,13,13,8,8,15,15,15,15,8,9,9,15,15,15,9,9,9,9,11,11,4,6,6,6,13,13,7,4,13,13,13,13,7,7,4,13,13,13,8,7,7,15,15,13,8,8,8,15,15,15,8,8,8,9,0,0,4,4,13,13,13,13,7,4,13,13,13,13,7,7,4,13,13,13,7,7,7,15,15,13,8,8,8,15,15,15,8,8,8,8,0,0,1,1,1,1,1,1,1,14,14,14,14,14,14,14,14,14,15,15,15,15,15,15,15,0]
+        self.x256colors83 = [88,28,32,30,36,38,34,96,94,52,56,54,60,62,58,98,88,36,36,48,48,60,32,34,47,47,47,72,32,33,34,59,59,59,44,45,45,46,71,71,44,68,45,69,46,83,56,68,57,57,69,58,28,38,37,49,49,60,30,93,47,72,72,72,31,33,34,59,59,59,43,45,45,46,71,71,56,68,57,69,70,83,56,68,68,57,69,70,28,39,38,49,49,61,41,93,50,50,72,72,30,30,94,84,84,84,43,43,45,46,71,71,43,68,80,81,82,83,55,68,68,80,81,70,40,51,51,50,50,61,41,64,63,50,73,73,30,41,76,87,85,84,42,42,95,96,84,84,55,67,79,81,82,83,55,67,80,80,81,82,40,51,51,50,50,73,41,64,63,75,62,73,53,53,76,87,85,85,42,65,77,76,87,85,42,66,78,78,97,97,55,67,79,79,81,82,52,64,63,63,62,62,52,64,63,75,75,74,53,64,76,87,87,86,65,65,65,76,87,86,54,77,77,77,97,86,54,66,66,78,78,98,88,89,89,90,91,91,92,92,92,93,93,94,94,94,95,95,95,96,96,96,97,97,97,97]
+        self.x16colors = {
+            '30':'01',
+            '31':'04',
+            '32':'03',
+            '33':'08',
+            '34':'02',
+            '35':'06',
+            '36':'10',
+            '37':'15',
+            '30;1':'14',
+            '31;1':'07',
+            '32;1':'09',
+            '33;1':'08',
+            '34;1':'12',
+            '35;1':'13',
+            '36;1':'11',
+            '37;1':'00',
+            '40':'99,01',
+            '41':'99,04',
+            '42':'99,03',
+            '43':'99,08',
+            '44':'99,02',
+            '45':'99,06',
+            '46':'99,10',
+            '47':'99,15',
+            '40;1':'99,14',
+            '41;1':'99,07',
+            '42;1':'99,09',
+            '43;1':'99,08',
+            '44;1':'99,12',
+            '45;1':'99,13',
+            '46;1':'99,11',
+            '47;1':'99,00',
+            '1;30':'14',
+            '1;31':'07',
+            '1;32':'09',
+            '1;33':'08',
+            '1;34':'12',
+            '1;35':'13',
+            '1;36':'11',
+            '1;37':'00',
+            '1;40':'14',
+            '1;41':'07',
+            '1;42':'09',
+            '1;43':'08',
+            '1;44':'12',
+            '1;45':'13',
+            '1;46':'11',
+            '1;47':'00'}
 
     def doPrivmsg(self, irc, msg):
         channel = msg.args[0]
@@ -547,6 +598,29 @@ class ASCII(callbacks.Plugin):
             delta_e = self.ciede2000(c1, c2)
         return delta_e
 
+    def ansi2irc(self, output):
+        if self.colors == 16:
+            colors = self.x256colors16
+        elif self.colors == 99:
+            colors = self.x256colors99
+        else:
+            colors = self.x256colors83
+        output = re.sub('\x1b\[0m', '\x0F', output)
+        output = re.sub('\x1b\[0;', '\x1b', output)
+        output = re.sub('\x1b?[\[;]38;5;(\d+)([m;])', lambda m: '\x03{0}{1}'.format('%02d' % colors[int(m.group(1))], m.group(2).replace('m', '')), output)
+        output = re.sub('\x1b?[\[;]48;5;(\d+)([m;])', lambda m: '\x0399,{0}{1}'.format('%02d%' % colors[int(m.group(1))], m.group(2).replace('m', '')), output)
+        output = re.sub('\x1b?[\[;]0?;?(\d\d|\d\d;1|1;\d\d)([m;])', lambda m: '\x03{0}{1}'.format(self.x16colors[m.group(1)], m.group(2).replace('m', '')), output)
+        output = re.sub('\x0399,(\d\d)\x03(\d\d)', '\x03\g<2>,\g<1>', output)
+        output = re.sub('\x1b\[1m|\x1b\[2m', '\x02', output)
+        output = re.sub('\x1b\[4m', '\x1F', output)
+        output = output.replace('\x1b', '\x03')
+        output = re.sub('\x0F(\s*)\x03', '\g<1>\x03', output)
+        for i in range(0, 99):
+            if i < 10:
+                i = '%02d' % i
+            output = re.sub('(?<=\x03{0}.)\x03{0}'.format(i), '', output)
+        return output
+
     def png(self, irc, msg, args, optlist, url):
         """[--bg] [--fg] <url>
         Generate PNG from text file
@@ -647,7 +721,7 @@ class ASCII(callbacks.Plugin):
     fontlist = wrap(fontlist)
 
     def img(self, irc, msg, args, channel, optlist, url):
-        """[<#channel>] [--w <##>] [--s <#.#] [--16] [--99] [--83] [--ascii] [--block] [--1/2] [--1/4] [--chars <text>] [--ramp <text>] [--bg <0-98>] [--fg <0-98>] [--no-color] [--invert] [--dither] [--no-dither] <url>
+        """[<#channel>] [--delay #.#] [--w <###>] [--s <#.#] [--16] [--99] [--83] [--ascii] [--block] [--1/2] [--1/4] [--chars <text>] [--ramp <text>] [--bg <0-98>] [--fg <0-98>] [--no-color] [--invert] [--dither] [--no-dither] <url>
         Image to ASCII Art.
         --w columns.
         --s saturation (1.0).
@@ -1023,12 +1097,6 @@ class ASCII(callbacks.Plugin):
                         aimg[j] += "{0}".format(gsval)
         # return txt image
         output = aimg
-        del image
-        try:
-            del image2
-            del colormap
-        except:
-            pass
         paste = ""
         self.stopped[msg.args[0]] = False
         for line in output:
@@ -1051,7 +1119,7 @@ class ASCII(callbacks.Plugin):
     img = wrap(img,[optional('channel'), getopts({'w':'int', 'invert':'', 'fast':'', 'slow':'', '16':'', '99':'', '83':'', 'delay':'float', 'dither':'', 'no-dither':'', 'chars':'text', 'bg':'int', 'fg':'int', 'ramp':'text', 'no-color':'', 'block':'', 'ascii':'', '1/4':'', '1/2':'', 's':'float', 'tops':''}), ('text')])
 
     def scroll(self, irc, msg, args, channel, optlist, url):
-        """[<channel>] <url>
+        """[<channel>] [--delay] <url>
         Play ASCII/ANSI art text files from web links.
         """
         if not channel:
@@ -1080,7 +1148,7 @@ class ASCII(callbacks.Plugin):
     scroll = wrap(scroll, [optional('channel'), getopts({'delay':'float'}), ('text')])
 
     def a2m(self, irc, msg, args, channel, optlist, url):
-        """[<channel>] [--l] [--r] [--n] [--p] [--t] [--w] [--delay] <url>
+        """[<channel>] [--delay] [--l] [--r] [--n] [--p] [--t] [--w] <url>
         Convert ANSI files to IRC formatted text. https://github.com/tat3r/a2m
         """
         if not channel:
@@ -1112,6 +1180,7 @@ class ASCII(callbacks.Plugin):
         ua = UserAgent()
         header = {'User-Agent':str(ua.random)}
         r = requests.head(url, headers=header)
+        irc.reply(r.headers)
         try:
             if "text/plain" in r.headers["content-type"] or "application/octet-stream" in r.headers["content-type"] and int(r.headers["content-length"]) < 1000000:
                 path = os.path.dirname(os.path.abspath(__file__))
@@ -1225,8 +1294,14 @@ class ASCII(callbacks.Plugin):
     p2u = wrap(p2u, [optional('channel'), getopts({'b':'int', 'f':'text', 'p':'text', 's':'int', 't':'int', 'w':'int', 'delay':'float'}), ('text')])
 
     def tdf(self, irc, msg, args, channel, optlist, text):
-        """[<channel>] [--f] [--j] [--w] [--e] [--r] [--delay] <text>
-        Text to Figlet. Uses tdfiglet: https://github.com/tat3r/tdfiglet. Fonts: http://www.roysac.com/thedrawfonts-tdf.html
+        """[<channel>] [--f] [--j] [--w] [--e] [--r] [--i][--delay] <text>
+        Text to TheDraw ANSI Fonts. http://www.roysac.com/thedrawfonts-tdf.html
+        --f [font] Specify font file used.
+        --j l|r|c  Justify left, right, or center.  Default is left.
+        --w n      Set screen width.  Default is 80.
+        --c a|m    Color format ANSI or mirc.  Default is ANSI.
+        --i        Print font details.
+        --r        Use random font.
         """
         if not channel:
             channel = msg.args[0]
@@ -1254,12 +1329,10 @@ class ASCII(callbacks.Plugin):
             delay = optlist.get('delay')
         else:
             delay = self.registryValue('delay', msg.args[0])
+        if 'i' in optlist:
+            opts += '-i '
         try:
-            output = pexpect.run('tdfiglet -c m {0} {1}'.format(opts.strip(), text))
-            try:
-                os.remove(filename)
-            except:
-                pass
+            output = pexpect.run('tdfiglet -c m {0} {1}'.format(opts.strip(), r'{}'.format(text)))
         except:
             irc.reply("Error. Have you installed tdfiglet? https://github.com/tat3r/tdfiglet", private=False, notice=False)
             return
@@ -1279,7 +1352,7 @@ class ASCII(callbacks.Plugin):
                 irc.reply(line, prefixNick = False, noLengthCheck=True, private=False, notice=False, to=channel)
         if self.registryValue('pasteEnable', msg.args[0]):
             irc.reply(self.doPaste(text, paste), private=False, notice=False, to=channel)
-    tdf = wrap(tdf, [optional('channel'), getopts({'f':'text', 'j':'text', 'w':'int', 'e':'text', 'r':'', 'delay':'float'}), ('text')])
+    tdf = wrap(tdf, [optional('channel'), getopts({'f':'text', 'j':'text', 'w':'int', 'e':'text', 'r':'', 'i':'', 'delay':'float'}), ('text')])
 
     def toilet(self, irc, msg, args, channel, optlist, text):
         """[<channel>] [--f fontname] [--F filter1,filter2,etc.] [--w] [--delay] <text>
@@ -1395,22 +1468,13 @@ class ASCII(callbacks.Plugin):
         file = requests.get("http://wttr.in/{0}".format(location))
         output = file.content.decode()
         self.matches = {}
-        for i in range(0, 256):
-            j = '%03d' % i
-            output = re.sub('\x1b\[38;5;{0}m|\[38;5;{0};\d+m'.format(j), '\x03{:02d}'.format(self.getColor(x256.to_rgb(int(j)), speed)), output)
-            output = re.sub('\x1b\[38;5;{0}m|\[38;5;{0};\d+m'.format(i), '\x03{:02d}'.format(self.getColor(x256.to_rgb(int(i)), speed)), output)
-        output = output.replace('\x1b[0m', '\x0F')
-        output = re.sub('\x1b|\x9b|\[\d+m', '', output)
-        output = re.sub('\x0F(\s*)\x03', '\g<1>\x03', output)
-        for i in range(0, 99):
-            if i < 17:
-                i = '%02d' % i
-            output = re.sub('(?<=\x03{0}.)\x03{0}'.format(i), '', output)
+        output = self.ansi2irc(output)
+        output = re.sub('⚡', '☇ ', output)
+        output = re.sub('‘‘', '‘ ', output)
         paste = ""
         self.stopped[msg.args[0]] = False
         for line in output.splitlines():
             line = line.strip('\x0F')
-            line = line.replace('⚡', '☇☇')
             if not line.strip() and not self.stopped[msg.args[0]]:
                 if self.registryValue('pasteEnable', msg.args[0]):
                     paste += line + "\n"
@@ -1460,26 +1524,8 @@ class ASCII(callbacks.Plugin):
         self.matches= {}
         file = requests.get("http://{0}.rate.sx/{1}".format(sub, coin))
         output = file.content.decode()
-        output = output.replace('\x1b[0m', '\x0F')
-        output = output.replace('\x1b[2m', '')
-        output = output.replace('\x1b[47m\x1b[30m', '\x031,0')
-        output = output.replace('\x1b[30m', '\x0301')
-        output = output.replace('\x1b[31m', '\x0304')
-        output = output.replace('\x1b[32m', '\x0309')
-        output = output.replace('\x1b[33m', '\x0308')
-        output = output.replace('\x1b[34m', '\x0312')
-        output = output.replace('\x1b[35m', '\x0306')
-        output = output.replace('\x1b[36m', '\x0311')
-        output = output.replace('\x1b[37m', '\x0300')
-        output = re.sub('\x0F(\s*)\x03', '\g<1>\x03', output)
-        output = re.sub('\x03\d\d(\s*)\x03', '\g<1>\x03', output)
-        if coin.strip():
-            output = output.replace('\x1b(B\x1b[m', '')
-            for i in range(0,99):
-                i = '%02d' % i
-                output = re.sub('\x1b\[38;5;{0}m'.format(i), '\x03{:02d}'.format(self.getColor(x256.to_rgb(int(i)), speed)), output)
-            for i in range(100,255):
-                output = re.sub('\x1b\[38;5;{0}m'.format(i), '\x03{:02d}'.format(self.getColor(x256.to_rgb(int(i)), speed)), output)
+        output = self.ansi2irc(output)
+        output = output.replace('\x03(B\x03[m', '')
         paste = ""
         self.stopped[msg.args[0]] = False
         for line in output.splitlines():
