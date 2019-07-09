@@ -3,5 +3,4 @@ numpy
 pillow
 fake-useragent
 pexpect
-x256
 pyimgur
