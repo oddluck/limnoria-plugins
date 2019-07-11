@@ -42,6 +42,7 @@ class ASCII(callbacks.Plugin):
         self.__parent.__init__(irc)
         self.colors = 99
         self.stopped = {}
+        self.old_color = None
         self.rgbColors = [
             (255,255,255),
             (0,0,0),
@@ -357,38 +358,22 @@ class ASCII(callbacks.Plugin):
             '35;1':'13',
             '36;1':'11',
             '37;1':'00',
-            '40':'99,01',
-            '41':'99,04',
-            '42':'99,03',
-            '43':'99,08',
-            '44':'99,02',
-            '45':'99,06',
-            '46':'99,10',
-            '47':'99,15',
-            '40;1':'99,14',
-            '41;1':'99,07',
-            '42;1':'99,09',
-            '43;1':'99,08',
-            '44;1':'99,12',
-            '45;1':'99,13',
-            '46;1':'99,11',
-            '47;1':'99,00',
-            '1;30':'14',
-            '1;31':'07',
-            '1;32':'09',
-            '1;33':'08',
-            '1;34':'12',
-            '1;35':'13',
-            '1;36':'11',
-            '1;37':'00',
-            '1;40':'14',
-            '1;41':'07',
-            '1;42':'09',
-            '1;43':'08',
-            '1;44':'12',
-            '1;45':'13',
-            '1;46':'11',
-            '1;47':'00'}
+            '40':'01',
+            '41':'04',
+            '42':'03',
+            '43':'08',
+            '44':'02',
+            '45':'06',
+            '46':'10',
+            '47':'15',
+            '40;1':'14',
+            '41;1':'07',
+            '42;1':'09',
+            '43;1':'08',
+            '44;1':'12',
+            '45;1':'13',
+            '46;1':'11',
+            '47;1':'00'}
 
     def doPrivmsg(self, irc, msg):
         channel = msg.args[0]
@@ -598,27 +583,116 @@ class ASCII(callbacks.Plugin):
             delta_e = self.ciede2000(c1, c2)
         return delta_e
 
-    def ansi2irc(self, output):
+    def process_ansi(self, ansi):
         if self.colors == 16:
             colors = self.x256colors16
         elif self.colors == 99:
             colors = self.x256colors99
         else:
             colors = self.x256colors83
-        output = re.sub('\x1b\[0m', '\x0F', output)
-        output = re.sub('\x1b\[0;', '\x1b', output)
-        output = re.sub('\x1b?[\[;]38;5;(\d+)([m;])', lambda m: '\x03{0}{1}'.format('%02d' % colors[int(m.group(1))], m.group(2).replace('m', '')), output)
-        output = re.sub('\x1b?[\[;]48;5;(\d+)([m;])', lambda m: '\x0399,{0}{1}'.format('%02d%' % colors[int(m.group(1))], m.group(2).replace('m', '')), output)
-        output = re.sub('\x1b?[\[;]0?;?(\d\d|\d\d;1|1;\d\d)([m;])', lambda m: '\x03{0}{1}'.format(self.x16colors[m.group(1)], m.group(2).replace('m', '')), output)
+        x16color1 = None
+        x16color2 = None
+        x256color1 = None
+        x256color2 = None
+        effect = None
+        ansi = ansi.lower().strip('\x1b[').strip('m').split(';')
+        if len(ansi) > 1:
+            i = 0
+            while i < len(ansi):
+                if i >= len(ansi):
+                    break
+                elif ansi[i]== '0':
+                    effect = 0
+                    i += 1
+                    continue
+                elif ansi[i] == '1':
+                    effect = 1
+                    i += 1
+                    continue
+                elif ansi[i] == '4':
+                    effect = 4
+                    i += 1
+                    continue
+                elif ansi[i] == '2':
+                    effect = 2
+                    i += 1
+                    continue
+                elif int(ansi[i]) > 29 and int(ansi[i]) < 38:
+                    if effect == 1 or ansi[-1] == '1':
+                        x16color2 = self.x16colors['{0};1'.format(ansi[i])]
+                        effect = None
+                        i += 1
+                        continue
+                    else:
+                        x16color2 = self.x16colors[ansi[i]]
+                        i += 1
+                        continue
+                elif int(ansi[i]) > 39 and int(ansi[i]) < 48:
+                    if effect == 1 or ansi[-1] == '1':
+                        x16color2 = self.x16colors['{0};1'.format(ansi[i])]
+                        effect = None
+                        i += 1
+                        continue
+                    else:
+                        x16color2 = self.x16colors[ansi[i]]
+                        i += 1
+                        continue
+                elif ansi[i] == '38':
+                    x256color1 = colors[int(ansi[i+2])]
+                    i += 3
+                    continue
+                elif ansi[i] == '48':
+                    x256color2 = colors[int(ansi[i+2])]
+                    i += 3
+                    continue
+                else:
+                    i += 1
+                    continue
+            if x16color1 and x16color2:
+                color = '\x03{0},{1}'.format(x16color1, x16color2)
+            elif x256color1 and x256color2:
+                color = '\x03{0},{1}'.format('%02d' % x256color1, '%02d' % x256color2)
+            elif x16color1:
+                color = '\x03{0}'.format(x16color1)
+            elif x16color2:
+                color = '\x0399,{0}'.format(x16color2)
+            elif x256color1:
+                color = '\x03{0}'.format('%02d' % x256color1)
+            elif x256color2:
+                color = '\x0399,{0}'.format('%02d' % x256color2)
+            else:
+                color = ''
+            if effect == 1:
+                color += '\x02'
+            if effect == 4:
+                color += '\x1F'
+        elif len(ansi[0]) > 0:
+            if ansi[0] == '0':
+                color = '\x0F'
+            elif ansi[0] == '1' or ansi[0] == '2':
+                color = '\x02'
+            elif ansi[0] == '4':
+                color = '\x1F'
+            elif int(ansi[0]) > 29 and int(ansi[0]) < 38:
+                color = '\x03{0}'.format(self.x16colors[ansi[0]])
+            elif int(ansi[0]) > 39 and int(ansi[0]) < 48:
+                color = '\x0399,{0}'.format(self.x16colors[ansi[0]])
+            elif ansi[0][-1] == 'c':
+                color = ' ' * int(ansi[0][:-1])
+            else:
+                color = ''
+        else:
+            color = ''
+        if color != self.old_color:
+            self.old_color = color
+            return color
+        else:
+            return ''
+
+    def ansi2irc(self, output):
+        output = output.replace('\x1b[0m\x1b', '\x1b')
+        output = re.sub(r'\x1B\[[0-?]*[ -/]*[@-~]', lambda m: self.process_ansi(m.group(0)), output)
         output = re.sub('\x0399,(\d\d)\x03(\d\d)', '\x03\g<2>,\g<1>', output)
-        output = re.sub('\x1b\[1m|\x1b\[2m', '\x02', output)
-        output = re.sub('\x1b\[4m', '\x1F', output)
-        output = output.replace('\x1b', '\x03')
-        output = re.sub('\x0F(\s*)\x03', '\g<1>\x03', output)
-        for i in range(0, 99):
-            if i < 10:
-                i = '%02d' % i
-            output = re.sub('(?<=\x03{0}.)\x03{0}'.format(i), '', output)
         return output
 
     def png(self, irc, msg, args, optlist, url):
@@ -1525,7 +1599,7 @@ class ASCII(callbacks.Plugin):
         file = requests.get("http://{0}.rate.sx/{1}".format(sub, coin))
         output = file.content.decode()
         output = self.ansi2irc(output)
-        output = output.replace('\x03(B\x03[m', '')
+        output = output.replace('\x1b(B', '')
         paste = ""
         self.stopped[msg.args[0]] = False
         for line in output.splitlines():
