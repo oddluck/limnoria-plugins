@@ -503,16 +503,18 @@ class Jeopardy(callbacks.Plugin):
             pass
         try:
             schedule.removeEvent('next_%s' % channel)
-        except KeyError:
-            irc.error(_('No Jeopardy! game started.'))
-        if channel in self.games:
-            if self.games[channel].active:
-                self.games[channel].stop()
-            else:
+        except:
+            pass
+        try:
+            self.games[channel].stop()
+            del self.games[channel]
+            irc.reply(_('Jeopardy! stopped.'))
+        except:
+            try:
                 del self.games[channel]
-                irc.reply(_('Jeopardy! stopped.'))
-        else:
-            irc.noReply()
+                return
+            except:
+                return
     stop = wrap(stop, ['channel'])
 
 
