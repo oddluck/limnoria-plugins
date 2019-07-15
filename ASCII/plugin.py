@@ -1254,7 +1254,6 @@ class ASCII(callbacks.Plugin):
         ua = UserAgent()
         header = {'User-Agent':str(ua.random)}
         r = requests.head(url, headers=header)
-        irc.reply(r.headers)
         try:
             if "text/plain" in r.headers["content-type"] or "application/octet-stream" in r.headers["content-type"] and int(r.headers["content-length"]) < 1000000:
                 path = os.path.dirname(os.path.abspath(__file__))
