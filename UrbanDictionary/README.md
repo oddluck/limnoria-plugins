@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/reticulatingspline/UrbanDictionary.svg?branch=master)](https://travis-ci.org/reticulatingspline/UrbanDictionary)
+Forked from https://github.com/reticulatingspline/UrbanDictionary
 
 # Limnoria plugin for UrbanDictionary
 
