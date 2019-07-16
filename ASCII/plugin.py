@@ -718,7 +718,11 @@ class ASCII(callbacks.Plugin):
         else:
             irc.reply("Invalid file type.", private=False, notice=False)
             return
-        file = file.content.decode()
+        try:
+            file = file.content.decode()
+        except:
+            file = file.content.decode('cp437')
+        file = re.sub('(\x03(\d+).*)\x03,', '\g<1>\x03\g<2>,', file)
         im, x, y = self.renderImage(file, 18, bg, fg)
         path = os.path.dirname(os.path.abspath(__file__))
         filepath = "{0}/tmp/tldr.png".format(path)
