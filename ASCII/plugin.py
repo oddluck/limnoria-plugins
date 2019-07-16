@@ -1282,6 +1282,7 @@ class ASCII(callbacks.Plugin):
             return
         paste = ""
         self.stopped[msg.args[0]] = False
+        output = re.sub('(\x03(\d+).*)\x03,', '\g<1>\x03\g<2>,', output)
         for line in output.splitlines():
             line = line.decode()
             if self.registryValue('pasteEnable', msg.args[0]):
