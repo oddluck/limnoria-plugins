@@ -619,12 +619,12 @@ class ASCII(callbacks.Plugin):
                     continue
                 elif int(ansi[i]) > 29 and int(ansi[i]) < 38:
                     if effect == 1 or ansi[-1] == '1':
-                        x16color2 = self.x16colors['{0};1'.format(ansi[i])]
+                        x16color1 = self.x16colors['{0};1'.format(ansi[i])]
                         effect = None
                         i += 1
                         continue
                     else:
-                        x16color2 = self.x16colors[ansi[i]]
+                        x16color1 = self.x16colors[ansi[i]]
                         i += 1
                         continue
                 elif int(ansi[i]) > 39 and int(ansi[i]) < 48:
