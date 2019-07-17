@@ -41,11 +41,11 @@ class Frotz(callbacks.Plugin):
         Load <game_name.z*>.
         """
         channel = msg.args[0]
-        if not irc.isChannel(channel) and self.registryValue('allowPrivate'):
-            channel = msg.nick
-        else:
+        if not self.registryValue('allowPrivate') and not irc.isChannel(channel):
             irc.reply("Sorry, this game must be played in channel")
             return
+        elif self.registryValue('allowPrivate') and not irc.isChannel(channel):
+            channel = msg.nick
         game_name = input
         self.game.setdefault(channel, None)
         if self.game[channel]:
