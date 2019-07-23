@@ -998,7 +998,7 @@ class ASCII(callbacks.Plugin):
                         old_color1 = color1
                         old_color2 = color2
                         old_char = gsval
-                aimg[k] = re.sub("\x0301,(\d\d)(\s+)\x03(\d\d)([^,])".format(i), "\x03\g<3>,\g<1>\g<2>\g<4>".format(i), aimg[k])
+                aimg[k] = re.sub("\x0301,(\d\d)(\s+)\x03(\d\d)([^,])", "\x03\g<3>,\g<1>\g<2>\g<4>", aimg[k])
                 for i in range(0,98):
                     i = '%02d' % i
                     aimg[k] = aimg[k].replace("{0}".format(i), "{0}".format(int(i)))
