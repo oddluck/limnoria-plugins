@@ -952,33 +952,36 @@ class ASCII(callbacks.Plugin):
             for j in range(0, rows - 1, 2):
                 # append an empty string
                 aimg.append("")
-                old_color = "99,99"
+                old_color1 = "99"
+                old_color2 = "99"
                 for i in range(cols):
                     color1 = '%02d' % self.getColor(colormap[j][i].tolist(), speed)
                     color2 = '%02d' % self.getColor(colormap[j+1][i].tolist(), speed)
-                    color = "{0},{1}".format(color1, color2)
-                    if color != old_color:
-                        if color1 == color2:
-                            gsval = " "
-                            color = "0,{0}".format(color1)
-                        else:
-                            gsval = "▀"
-                            alt_gsval = "▄"
-                        if gsval != " " and color == "{0},{1}".format(old_color.split(',')[1], old_color.split(',')[0]) and 'tops' not in optlist:
-                            aimg[k] += alt_gsval
-                        elif gsval == " " and "{0}".format(color1) == "{0}".format(old_color.split(',')[1]):
-                            aimg[k] += " "
-                        else:
-                            aimg[k] += "\x03{0}{1}".format(color, gsval)
-                            old_color = color
+                    if color1 == color2:
+                        gsval = " "
                     else:
-                        if color1 == color2:
-                            aimg[k] += " "
-                        else:
-                            aimg[k] += "▀"
-                for i in range(0,98):
-                    i = '%02d' % i
-                    aimg[k] = re.sub("\x030,{0}(\s+)\x03(\d\d),{0}".format(i), "\x03\g<2>,{0}\g<1>".format(i), aimg[k])
+                        gsval = "▀"
+                    if color1 == old_color1 and color2 == old_color2:
+                        aimg[k] += gsval
+                    elif gsval == " " and color1 != old_color2:
+                        aimg[k] += "\x0301,{0} ".format(color2)
+                        old_color1 = "01"
+                        old_color2 = color2
+                    elif gsval == " " and color1 == old_color2:
+                        aimg[k] += " "
+                    elif gsval == "▀" and color1 == old_color2 and color2 == old_color1:
+                        aimg[k] += "▄"
+                    elif gsval == "▀" and color1 == old_color2:
+                        aimg[k] += "\x03{0}▄".format(color2)
+                        old_color1 = color2
+                    elif color1 != old_color1 and color2 == old_color2:
+                        aimg[k] += "\x03{0}{1}".format(color1, gsval)
+                        old_color1 = color1
+                    else:
+                        aimg[k] += "\x03{0},{1}{2}".format(color1, color2, gsval)
+                        old_color1 = color1
+                        old_color2 = color2
+                aimg[k] = re.sub("\x0301,(\d\d)(\s+)\x03(\d\d)([^,])".format(i), "\x03\g<3>,\g<1>\g<2>\g<4>".format(i), aimg[k])
                 for i in range(0,98):
                     i = '%02d' % i
                     aimg[k] = aimg[k].replace("{0}".format(i), "{0}".format(int(i)))
