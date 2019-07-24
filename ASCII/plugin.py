@@ -968,27 +968,44 @@ class ASCII(callbacks.Plugin):
                     elif gsval == " " and color1 == old_color2:
                         aimg[k] += " "
                         old_char = gsval
-                    elif gsval == " " and color1 == old_color1 and old_char != '█':
-                        aimg[k] += "█"   
-                        old_char = '█'
                     elif gsval == " " and color1 == old_color1 and old_char == '█':
                         aimg[k] = aimg[k][:-1]
-                        aimg[k] += "\x0301,{0}  ".format(color2)
+                        aimg[k] += "\x0301,{0}  ".format(color1)
                         old_color1 = "01"
+                        old_color2 = color1
+                        old_char = gsval
+                    elif gsval == " " and color1 == old_color1 and old_char == '^█':
+                        aimg[k] = aimg[k][:-4]
+                        aimg[k] += "\x0301,{0}  ".format(color1)
+                        old_color1 = "01"
+                        old_color2 = color1
+                        old_char = gsval
+                    elif gsval != " " and color1 == old_color1 and old_char == '^█' and 'tops' not in optlist:
+                        aimg[k] = aimg[k][:-4]
+                        aimg[k] += "\x03{0},{1} ▄".format(color2, color1)
+                        old_color1 = color2
+                        old_color2 = color1
+                        old_char = '▄'
+                    elif gsval != " " and color2 == old_color1 and old_char == '^█' and 'tops' not in optlist:
+                        aimg[k] = aimg[k][:-4]
+                        aimg[k] += "\x03{0},{1} ▀".format(color1, color2)
+                        old_color1 = color1
                         old_color2 = color2
                         old_char = gsval
+                    elif gsval == " " and color1 == old_color1 and old_char != '█':
+                        aimg[k] += "█"
+                        old_char = '█'
                     elif gsval == " ":
-                        aimg[k] += "\x0301,{0} ".format(color2)
-                        old_color1 = "01"
-                        old_color2 = color2
-                        old_char = gsval
+                        aimg[k] += "\x03{0}█".format(color1)
+                        old_color1 = color1
+                        old_char = '^█'
                     elif gsval == "▀" and color1 == old_color2 and color2 == old_color1 and 'tops' not in optlist:
                         aimg[k] += "▄"
-                        old_char = gsval
+                        old_char = '▄'
                     elif gsval == "▀" and color1 == old_color2 and 'tops' not in optlist:
                         aimg[k] += "\x03{0}▄".format(color2)
                         old_color1 = color2
-                        old_char = gsval
+                        old_char = '▄'
                     elif color1 != old_color1 and color2 == old_color2:
                         aimg[k] += "\x03{0}{1}".format(color1, gsval)
                         old_color1 = color1
