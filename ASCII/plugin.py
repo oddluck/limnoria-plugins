@@ -992,10 +992,10 @@ class ASCII(callbacks.Plugin):
                         old_color1 = color1
                         old_color2 = color2
                         old_char = gsval
-                    elif gsval == " " and color1 == old_color1 and old_char != '█':
+                    elif gsval == " " and color1 == old_color1 and old_char != '█' and 'tops' not in optlist:
                         aimg[k] += "█"
                         old_char = '█'
-                    elif gsval == " ":
+                    elif gsval == " " and 'tops' not in optlist:
                         aimg[k] += "\x03{0}█".format(color1)
                         old_color1 = color1
                         old_char = '^█'
