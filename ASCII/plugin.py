@@ -500,81 +500,52 @@ class ASCII(callbacks.Plugin):
         Lab [ 1 ] = round( a, 4 )
         Lab [ 2 ] = round( b, 4 )
         return Lab
-
-    def ciede2000(self, color1, color2):
-        """
-        Calculates color difference according to the `CIEDE 2000`_ formula. This is
-        the most accurate algorithm currently implemented but also the most complex
-        and slowest. Like CIE1994 it is largely based in CIE L*C*h* space, but with
-        several modifications to account for perceptual uniformity flaws.
-        .. _CIEDE 2000: https://en.wikipedia.org/wiki/Color_difference#CIEDE2000
-        """
-        # See WP article and Sharma 2005 for important implementation notes:
-        # http://www.ece.rochester.edu/~gsharma/ciede2000/ciede2000noteCRNA.pdf
-        #
-        # Yes, there's lots of locals; but this is easiest to understand as it's a
-        # near straight translation of the math
-        # pylint: disable=too-many-locals
-        C_ = (
-            math.sqrt(color1[1] ** 2 + color1[2] ** 2) +
-            math.sqrt(color2[1] ** 2 + color2[2] ** 2)
-        ) / 2
-
-        G = (1 - math.sqrt(C_ ** 7 / (C_ ** 7 + 25 ** 7))) / 2
-        a1_prime = (1 + G) * color1[1]
-        a2_prime = (1 + G) * color2[1]
-        C1_prime = math.sqrt(a1_prime ** 2 + color1[2] ** 2)
-        C2_prime = math.sqrt(a2_prime ** 2 + color2[2] ** 2)
-        L_ = (color1[0] + color2[0]) / 2
-        C_ = (C1_prime + C2_prime) / 2
-        h1 = (
-            0.0 if color1[2] == a1_prime == 0 else
-            math.degrees(math.atan2(color1[2], a1_prime)) % 360
-        )
-        h2 = (
-            0.0 if color2[2] == a2_prime == 0 else
-            math.degrees(math.atan2(color2[2], a2_prime)) % 360
-        )
-        if C1_prime * C2_prime == 0.0:
-            dh = 0.0
-            h_ = h1 + h2
-        elif abs(h1 - h2) <= 180:
-            dh = h2 - h1
-            h_ = (h1 + h2) / 2
-        else:
-            if h2 > h1:
-                dh = h2 - h1 - 360
-            else:
-                dh = h2 - h1 + 360
-            if h1 + h2 >= 360:
-                h_ = (h1 + h2 - 360) / 2
-            else:
-                h_ = (h1 + h2 + 360) / 2
-
-        dL = color2[0] - color1[0]
-        dC = C2_prime - C1_prime
-        dH = 2 * math.sqrt(C1_prime * C2_prime) * math.sin(math.radians(dh / 2))
-        T = (
-            1 -
-            0.17 * math.cos(math.radians(h_ - 30)) +
-            0.24 * math.cos(math.radians(2 * h_)) +
-            0.32 * math.cos(math.radians(3 * h_ + 6)) -
-            0.20 * math.cos(math.radians(4 * h_ - 63))
-        )
-        SL = 1 + (0.015 * (L_ - 50) ** 2) / math.sqrt(20 + (L_ - 50) ** 2)
-        SC = 1 + 0.045 * C_
-        SH = 1 + 0.015 * C_ * T
-        RT = (
-            -2 * math.sqrt(C_ ** 7 / (C_ ** 7 + 25 ** 7)) *
-            math.sin(math.radians(60 * math.exp(-(((h_ - 275) / 25) ** 2))))
-        )
-        delta_e =  math.sqrt(
-            (dL / SL) ** 2 +
-            (dC / SC) ** 2 +
-            (dH / SH) ** 2 +
-            RT * (dC / SC) * (dH / SH)
-        )
-        return delta_e
+    
+    def ciede2000(self, lab1, lab2):
+        """ CIEDE2000 color difference formula. https://peteroupc.github.io/colorgen.html"""
+        dl=lab2[0]-lab1[0]
+        hl=lab1[0]+dl*0.5
+        sqb1=lab1[2]*lab1[2]
+        sqb2=lab2[2]*lab2[2]
+        c1=math.sqrt(lab1[1]*lab1[1]+sqb1)
+        c2=math.sqrt(lab2[1]*lab2[1]+sqb2)
+        hc7=math.pow((c1+c2)*0.5,7)
+        trc=math.sqrt(hc7/(hc7+6103515625))
+        t2=1.5-trc*0.5
+        ap1=lab1[1]*t2
+        ap2=lab2[1]*t2
+        c1=math.sqrt(ap1*ap1+sqb1)
+        c2=math.sqrt(ap2*ap2+sqb2)
+        dc=c2-c1
+        hc=c1+dc*0.5
+        hc7=math.pow(hc,7)
+        trc=math.sqrt(hc7/(hc7+6103515625))
+        h1=math.atan2(lab1[2],ap1)
+        if h1<0:
+          h1=h1+math.pi*2
+        h2=math.atan2(lab2[2],ap2)
+        if h2<0:
+          h2=h2+math.pi*2
+        hdiff=h2-h1
+        hh=h1+h2
+        if abs(hdiff)>math.pi:
+                hh=hh+math.pi*2
+                if h2<=h1:
+                   hdiff=hdiff+math.pi*2
+                else:
+                   hdiff=hdiff-math.pi*2
+        hh=hh*0.5
+        t2=1-0.17*math.cos(hh-math.pi/6)+0.24*math.cos(hh*2)
+        t2=t2+0.32*math.cos(hh*3+math.pi/30)
+        t2=t2-0.2*math.cos(hh*4-math.pi*63/180)
+        dh=2*math.sqrt(c1*c2)*math.sin(hdiff*0.5)
+        sqhl=(hl-50)*(hl-50)
+        fl=dl/(1+(0.015*sqhl/math.sqrt(20+sqhl)))
+        fc=dc/(hc*0.045+1)
+        fh=dh/(t2*hc*0.015+1)
+        dt=30*math.exp(-math.pow(36*hh-55*math.pi,2)/(25*math.pi*math.pi))
+        r=-2*trc*math.sin(2*dt*math.pi/180)
+        return math.sqrt(fl*fl+fc*fc+fh*fh+r*fc*fh)
 
     def distance(self, c1, c2, speed):
         if speed == 'fast':
