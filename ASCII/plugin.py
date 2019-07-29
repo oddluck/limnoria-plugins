@@ -1334,7 +1334,7 @@ class ASCII(callbacks.Plugin):
                 return
         if self.registryValue('pasteEnable', msg.args[0]):
             irc.reply(self.doPaste(url, paste), private=False, notice=False, to=channel)
-    a2m = wrap(a2m, [optional('channel'), getopts({'l':'int', 'r':'int', 't':'int', 'w':'int', 'delay':'float'}), ('text')])
+    a2m = wrap(a2m, [optional('channel'), getopts({'l':'int', 'r':'int', 't':'int', 'w':'int', 'p':'', 'delay':'float'}), ('text')])
 
     def p2u(self, irc, msg, args, channel, optlist, url):
         """[<channel>] [--b] [--f] [--p] [--s] [--t] [--w] [--delay] <url>
