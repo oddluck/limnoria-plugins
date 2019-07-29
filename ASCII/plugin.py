@@ -1280,7 +1280,7 @@ class ASCII(callbacks.Plugin):
         if 'n' in optlist:
             opts += '-n '.format(n)
         if 'p' in optlist:
-            opts += '-p '.format(p)
+            opts += '-p '
         if 't' in optlist:
             t = optlist.get('t')
             opts += '-t {0} '.format(t)
