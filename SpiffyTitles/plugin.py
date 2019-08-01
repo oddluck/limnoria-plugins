@@ -11,7 +11,6 @@ import supybot.ircmsgs as ircmsgs
 import supybot.ircutils as ircutils
 import supybot.callbacks as callbacks
 import supybot.utils as utils
-import humanize
 import re
 import requests
 import urllib
