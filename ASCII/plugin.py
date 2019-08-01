@@ -1302,7 +1302,7 @@ class ASCII(callbacks.Plugin):
                 filepath = "{0}/tmp".format(path)
                 filename = "{0}/{1}".format(filepath, url.split('/')[-1])
                 r = requests.get(url, headers=header)
-                open(filename, 'wb').write(r.content)
+                open(filename, 'wb').write(r.content.replace(b';5;', b';'))
                 try:
                     output = pexpect.run('a2m {0} {1}'.format(opts.strip(), str(filename)))
                     try:
