@@ -7,4 +7,3 @@ requests
 timeout-decorator
 certifi
 pytz
-humanize
