@@ -1256,8 +1256,8 @@ class ASCII(callbacks.Plugin):
         else:
             irc.reply("Invalid file type.", private=False, notice=False)
             return
-        file = file.content.decode()
-        for line in file.splitlines():
+        file = file.content.decode().replace('\r\n','\n')
+        for line in file.split('\n'):
             if line.strip() and not self.stopped[msg.args[0]]:
                 time.sleep(delay)
                 irc.reply(line, prefixNick = False, noLengthCheck=True, private=False, notice=False, to=channel)
