@@ -24,6 +24,7 @@ import time
 import random as random
 import pyimgur
 from bs4 import BeautifulSoup
+import hitherdither
 
 try:
     from supybot.i18n import PluginInternationalization
@@ -450,19 +451,26 @@ class ASCII(callbacks.Plugin):
             colors = list(self.colors99.keys())
         else:
             colors = list(self.colors83.keys())
-        try:
-            return self.matches[pixel]
-        except KeyError:
-            closest_colors = sorted(colors, key=lambda color: self.distance(color, self.rgb2lab(pixel), speed))
-            closest_color = closest_colors[0]
+        if speed != 'dithered':
+            try:
+                return self.matches[pixel]
+            except KeyError:
+                closest_colors = sorted(colors, key=lambda color: self.distance(color, self.rgb2lab(pixel), speed))
+                closest_color = closest_colors[0]
+                if self.colors == 16:
+                    self.matches[pixel] = self.colors16[closest_color]
+                elif self.colors == 99:
+                    self.matches[pixel] = self.colors99[closest_color]
+                else:
+                    self.matches[pixel] = self.colors83[closest_color]
+                return self.matches[pixel]
+        else:
             if self.colors == 16:
-                self.matches[pixel] = self.colors16[closest_color]
+                return self.rgbColors.index(pixel, 0, 15)
             elif self.colors == 99:
-                self.matches[pixel] = self.colors99[closest_color]
+                return self.rgbColors.index(pixel, 0, 98)
             else:
-                self.matches[pixel] = self.colors83[closest_color]
-            return self.matches[pixel]
-
+                return self.rgbColors.index(pixel, 16, 98)
     def rgb2lab (self, inputColor) :
         num = 0
         RGB = [0, 0, 0]
@@ -500,7 +508,7 @@ class ASCII(callbacks.Plugin):
         Lab [ 1 ] = round( a, 4 )
         Lab [ 2 ] = round( b, 4 )
         return Lab
-    
+
     def ciede2000(self, lab1, lab2):
         """ CIEDE2000 color difference formula. https://peteroupc.github.io/colorgen.html"""
         dl=lab2[0]-lab1[0]
@@ -770,7 +778,7 @@ class ASCII(callbacks.Plugin):
     fontlist = wrap(fontlist)
 
     def img(self, irc, msg, args, channel, optlist, url):
-        """[<#channel>] [--delay #.#] [--w <###>] [--s <#.#] [--16] [--99] [--83] [--ascii] [--block] [--1/2] [--1/4] [--chars <text>] [--ramp <text>] [--bg <0-98>] [--fg <0-98>] [--no-color] [--invert] [--dither] [--no-dither] <url>
+        """[<#channel>] [--delay #.#] [--w <###>] [--s <#.#] [--16] [--99] [--83] [--ascii] [--block] [--1/2] [--1/4] [--chars <text>] [--ramp <text>] [--bg <0-98>] [--fg <0-98>] [--no-color] [--invert] <url>
         Image to ASCII Art.
         --w columns.
         --s saturation (1.0).
@@ -787,8 +795,6 @@ class ASCII(callbacks.Plugin):
         --fg <0-99> set fg.
         --no-color greyscale ascii.
         --invert inverts ramp.
-        --dither to reduce source colors.
-        --no-dither for no color reduction.
         """
         if not channel:
             channel = msg.args[0]
@@ -796,12 +802,16 @@ class ASCII(callbacks.Plugin):
         gscale = "\xa0"
         if '16' in optlist:
             self.colors = 16
+            self.palette = hitherdither.palette.Palette([0xFFFFFF, 0x000000, 0x00007F, 0x009300, 0xFF0000, 0x7F0000, 0x9C009C, 0xFC7F00, 0xFFFF00, 0x00FC00, 0x009393, 0x00FFFF, 0x0000FC, 0xFF00FF, 0x7F7F7F])
         elif '83' in optlist:
             self.colors = 83
+            self.palette = hitherdither.palette.Palette([0x00007F, 0x009300, 0x7F0000, 0x9C009C, 0xFC7F00, 0x00FC00, 0x009393, 0x0000FC, 0x7F7F7F, 0xD2D2D2, 0x470000, 0x472100, 0x474700, 0x324700, 0x004700, 0x00472C, 0x004747, 0x002747, 0x000047, 0x2E0047, 0x470047, 0x47002A, 0x740000, 0x743A00, 0x747400, 0x517400, 0x007400, 0x007449, 0x007474, 0x004074, 0x000074, 0x4B0074, 0x740074, 0x740045, 0xB50000, 0xB56300, 0xB5B500, 0x7DB500, 0x00B500, 0x00B571, 0x00B5B5, 0x0063B5, 0x0000B5, 0x7500B5, 0xB500B5, 0xB5006B, 0xFF0000, 0xFF8C00, 0xFFFF00, 0xB2FF00, 0x00FF00, 0x00FFA0, 0x00FFFF, 0x008CFF, 0x0000FF, 0xA500FF, 0xFF00FF, 0xFF0098, 0xFF5959, 0xFFB459, 0xFFFF71, 0xCFFF60, 0x6FFF6F, 0x65FFC9, 0x6DFFFF, 0x59B4FF, 0x5959FF, 0xC459FF, 0xFF66FF, 0xFF59BC, 0xFF9C9C, 0xFFD39C, 0xFFFF9C, 0xE2FF9C, 0x9CFF9C, 0x9CFFDB, 0x9CFFFF, 0x9CD3FF, 0x9C9CFF, 0xDC9CFF, 0xFF9CFF, 0xFF94D3, 0x000000, 0x131313, 0x282828, 0x363636, 0x4D4D4D, 0x656565, 0x818181, 0x9F9F9F, 0xBCBCBC, 0xE2E2E2, 0xFFFFFF])
         elif '99' in optlist:
             self.colors = 99
+            self.palette = hitherdither.palette.Palette([0x00007F, 0x009300, 0x7F0000, 0x9C009C, 0xFC7F00, 0x00FC00, 0x009393, 0x0000FC, 0x7F7F7F, 0xD2D2D2, 0x470000, 0x472100, 0x474700, 0x324700, 0x004700, 0x00472C, 0x004747, 0x002747, 0x000047, 0x2E0047, 0x470047, 0x47002A, 0x740000, 0x743A00, 0x747400, 0x517400, 0x007400, 0x007449, 0x007474, 0x004074, 0x000074, 0x4B0074, 0x740074, 0x740045, 0xB50000, 0xB56300, 0xB5B500, 0x7DB500, 0x00B500, 0x00B571, 0x00B5B5, 0x0063B5, 0x0000B5, 0x7500B5, 0xB500B5, 0xB5006B, 0xFF0000, 0xFF8C00, 0xFFFF00, 0xB2FF00, 0x00FF00, 0x00FFA0, 0x00FFFF, 0x008CFF, 0x0000FF, 0xA500FF, 0xFF00FF, 0xFF0098, 0xFF5959, 0xFFB459, 0xFFFF71, 0xCFFF60, 0x6FFF6F, 0x65FFC9, 0x6DFFFF, 0x59B4FF, 0x5959FF, 0xC459FF, 0xFF66FF, 0xFF59BC, 0xFF9C9C, 0xFFD39C, 0xFFFF9C, 0xE2FF9C, 0x9CFF9C, 0x9CFFDB, 0x9CFFFF, 0x9CD3FF, 0x9C9CFF, 0xDC9CFF, 0xFF9CFF, 0xFF94D3, 0x000000, 0x131313, 0x282828, 0x363636, 0x4D4D4D, 0x656565, 0x818181, 0x9F9F9F, 0xBCBCBC, 0xE2E2E2, 0xFFFFFF])
         else:
             self.colors = self.registryValue('colors', msg.args[0])
+            self.palette = hitherdither.palette.Palette([0x00007F, 0x009300, 0x7F0000, 0x9C009C, 0xFC7F00, 0x00FC00, 0x009393, 0x0000FC, 0x7F7F7F, 0xD2D2D2, 0x470000, 0x472100, 0x474700, 0x324700, 0x004700, 0x00472C, 0x004747, 0x002747, 0x000047, 0x2E0047, 0x470047, 0x47002A, 0x740000, 0x743A00, 0x747400, 0x517400, 0x007400, 0x007449, 0x007474, 0x004074, 0x000074, 0x4B0074, 0x740074, 0x740045, 0xB50000, 0xB56300, 0xB5B500, 0x7DB500, 0x00B500, 0x00B571, 0x00B5B5, 0x0063B5, 0x0000B5, 0x7500B5, 0xB500B5, 0xB5006B, 0xFF0000, 0xFF8C00, 0xFFFF00, 0xB2FF00, 0x00FF00, 0x00FFA0, 0x00FFFF, 0x008CFF, 0x0000FF, 0xA500FF, 0xFF00FF, 0xFF0098, 0xFF5959, 0xFFB459, 0xFFFF71, 0xCFFF60, 0x6FFF6F, 0x65FFC9, 0x6DFFFF, 0x59B4FF, 0x5959FF, 0xC459FF, 0xFF66FF, 0xFF59BC, 0xFF9C9C, 0xFFD39C, 0xFFFF9C, 0xE2FF9C, 0x9CFF9C, 0x9CFFDB, 0x9CFFFF, 0x9CD3FF, 0x9C9CFF, 0xDC9CFF, 0xFF9CFF, 0xFF94D3, 0x000000, 0x131313, 0x282828, 0x363636, 0x4D4D4D, 0x656565, 0x818181, 0x9F9F9F, 0xBCBCBC, 0xE2E2E2, 0xFFFFFF])
         if 'fast' in optlist:
             speed = 'fast'
         elif 'slow' in optlist:
@@ -813,11 +823,10 @@ class ASCII(callbacks.Plugin):
         else:
             delay = self.registryValue('delay', msg.args[0])
         if 'dither' in optlist:
-            dither = True
-        elif 'no-dither' in optlist:
-            dither = False
+            dither = optlist.get('dither')
+            speed = 'dithered'
         else:
-            dither = self.registryValue('dither', msg.args[0])
+            dither = False
         if 'bg' in optlist:
             bg = optlist.get('bg')
         else:
@@ -912,6 +921,9 @@ class ASCII(callbacks.Plugin):
             if 's' in optlist:
                 image2 = ImageEnhance.Color(image2).enhance(s)
             if dither:
+                image2 = hitherdither.diffusion.error_diffusion_dithering(image2, self.palette, method=dither)
+                image2 = image2.convert('RGB')
+            elif 'no-dither' not in optlist:
                 image2 = image2.convert('P', palette=Image.ADAPTIVE)
                 image2 = image2.convert('RGB')
             colormap = np.array(image2)
@@ -1232,7 +1244,7 @@ class ASCII(callbacks.Plugin):
                 irc.reply(line, prefixNick=False, noLengthCheck=True, private=False, notice=False, to=channel)
         if self.registryValue('pasteEnable', msg.args[0]):
             irc.reply(self.doPaste(url, paste), private=False, notice=False, to=channel)
-    img = wrap(img,[optional('channel'), getopts({'w':'int', 'invert':'', 'fast':'', 'slow':'', '16':'', '99':'', '83':'', 'delay':'float', 'dither':'', 'no-dither':'', 'chars':'text', 'bg':'int', 'fg':'int', 'ramp':'text', 'no-color':'', 'block':'', 'ascii':'', '1/4':'', '1/2':'', 's':'float', 'tops':''}), ('text')])
+    img = wrap(img,[optional('channel'), getopts({'w':'int', 'invert':'', 'fast':'', 'slow':'', '16':'', '99':'', '83':'', 'delay':'float', 'dither':'text', 'no-dither':'', 'chars':'text', 'bg':'int', 'fg':'int', 'ramp':'text', 'no-color':'', 'block':'', 'ascii':'', '1/4':'', '1/2':'', 's':'float', 'tops':''}), ('text')])
 
     def scroll(self, irc, msg, args, channel, optlist, url):
         """[<channel>] [--delay] <url>
