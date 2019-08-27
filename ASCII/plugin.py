@@ -930,7 +930,7 @@ class ASCII(callbacks.Plugin):
                 image2 = hitherdither.diffusion.error_diffusion_dithering(image2, self.palette, method=dither)
                 image2 = image2.convert('RGB')
             elif quantize:
-                image2 = image2.quantize(method=1, dither=None)
+                image2 = image2.quantize(dither=None)
                 image2 = image2.convert('RGB')
             colormap = np.array(image2)
             self.matches = {}
