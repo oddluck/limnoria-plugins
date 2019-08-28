@@ -1610,7 +1610,6 @@ class ASCII(callbacks.Plugin):
             speed = 'fast'
         file = requests.get("http://wttr.in/{0}".format(location))
         output = file.content.decode()
-        self.matches = {}
         output = self.ansi2irc(output)
         output = re.sub('⚡', '☇ ', output)
         output = re.sub('‘‘', '‘ ', output)
@@ -1664,7 +1663,6 @@ class ASCII(callbacks.Plugin):
             sub = 'usd'
         if not coin:
             coin = ''
-        self.matches= {}
         file = requests.get("http://{0}.rate.sx/{1}".format(sub, coin))
         output = file.content.decode()
         output = self.ansi2irc(output)
