@@ -107,11 +107,11 @@ img --quantize <url> (quantize source image to 256 colors. trades off quality fo
 img --no-quantize <url> (don't quantize source to 256 colors)
 ```
 Here are some images using 99 color default output:
-![Image of Img Command Output](https://i.imgur.com/33tCGXC.png)<br>
+![Image of Img Command Output](https://i.imgur.com/NrMaQdg.png)<br>
 ^ output of img https://i.imgur.com/aF9wihd.jpg (image command with default settings)
-![Image of Img Command Output](https://i.imgur.com/2BSUjnw.png)<br>
+![Image of Img Command Output](https://i.imgur.com/ydNaDKc.png)<br>
 ^ output of img --block https://i.imgur.com/aF9wihd.jpg (image command with colored space blocks)
-![Image of Img Command Output](https://i.imgur.com/eOQAzTo.png)<br>
+![Image of Img Command Output](https://i.imgur.com/Q2lsg3H.png)<br>
 ^ output of img --ascii https://i.imgur.com/aF9wihd.jpg (image command with colored space blocks)
 ```
 ***************+*++++++++++++++++++++++++++++++++++++++=++=++========================---------------
