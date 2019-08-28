@@ -927,7 +927,11 @@ class ASCII(callbacks.Plugin):
         rows = int(H/h)
         image = ImageOps.autocontrast(image)
         if type != 'no-color':
-            image2 = image.resize((cols, rows), Image.LANCZOS)
+            if 'resize' in optlist:
+                resize = optlist.get('resize')
+                image2 = image.resize((cols, rows), resize)
+            else:
+                image2 = image.resize((cols, rows), Image.LANCZOS)
             if 's' in optlist:
                 image2 = ImageEnhance.Color(image2).enhance(s)
             if dither:
@@ -1255,7 +1259,7 @@ class ASCII(callbacks.Plugin):
                 irc.reply(line, prefixNick=False, noLengthCheck=True, private=False, notice=False, to=channel)
         if self.registryValue('pasteEnable', msg.args[0]):
             irc.reply(self.doPaste(url, paste), private=False, notice=False, to=channel)
-    img = wrap(img,[optional('channel'), getopts({'w':'int', 'invert':'', 'fast':'', 'slow':'', '16':'', '99':'', '83':'', 'delay':'float', 'dither':'text', 'quantize':'', 'no-quantize':'', 'chars':'text', 'bg':'int', 'fg':'int', 'ramp':'text', 'no-color':'', 'block':'', 'ascii':'', '1/4':'', '1/2':'', 's':'float', 'tops':''}), ('text')])
+    img = wrap(img,[optional('channel'), getopts({'w':'int', 'invert':'', 'fast':'', 'slow':'', '16':'', '99':'', '83':'', 'delay':'float', 'resize':'int', 'dither':'text', 'quantize':'', 'no-quantize':'', 'chars':'text', 'bg':'int', 'fg':'int', 'ramp':'text', 'no-color':'', 'block':'', 'ascii':'', '1/4':'', '1/2':'', 's':'float', 'tops':''}), ('text')])
 
     def scroll(self, irc, msg, args, channel, optlist, url):
         """[<channel>] [--delay] <url>
