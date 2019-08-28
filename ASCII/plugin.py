@@ -471,7 +471,7 @@ class ASCII(callbacks.Plugin):
                 return self.rgbColors.index(pixel, 0, 98)
             else:
                 return self.rgbColors.index(pixel, 16, 98)
-	def rgb2lab (self, inputColor) :
+    def rgb2lab (self, inputColor) :
         try:
             return self.labmatches[inputColor]
         except:
