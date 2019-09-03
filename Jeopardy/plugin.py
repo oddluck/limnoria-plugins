@@ -127,13 +127,11 @@ class Jeopardy(callbacks.Plugin):
                     line = f.readline()
                 f.close()
             else:
-                self.historyfile = self.registryValue('historyFile')
-                if not os.path.exists(self.historyfile):
-                    f = open(self.historyfile, 'w')
-                    f.write('Nothing:Nothing\n')
-                    f.close()
-                with open(self.historyfile) as f:
-                    history = f.read().splitlines()
+                try:
+                    self.history.setdefault(self.channel, default=[])
+                except:
+                    self.history = {}
+                    self.history.setdefault(self.channel, [])
                 cluecount = self.num
                 failed = 0
                 if self.categories == 'random':
@@ -157,7 +155,7 @@ class Jeopardy(callbacks.Plugin):
                                     points = int(item['value'])
                                 else:
                                     points = self.points
-                                if len(question) > 1 and airdate and answer and category and points and not invalid and "{0}:{1}".format(self.channel, id) not in history:
+                                if len(question) > 1 and airdate and answer and category and points and not invalid and "{0}:{1}".format(self.channel, id) not in self.history[self.channel]:
                                     self.questions.append("{0}:{1}*({2}) [${3}] \x02{4}: {5}\x0F*{6}*{7}".format(self.channel, id, airdate[0], str(points), category, question, answer, points))
                                     n += 1
                         except Exception:
@@ -209,7 +207,7 @@ class Jeopardy(callbacks.Plugin):
                                         points = int(item['value'])
                                     else:
                                         points = self.points
-                                    if len(question) > 1 and airdate and answer and category and points and not invalid and "{0}:{1}".format(self.channel, id) not in history and question not in asked:
+                                    if len(question) > 1 and airdate and answer and category and points and not invalid and "{0}:{1}".format(self.channel, id) not in self.history[self.channel] and question not in asked:
                                         self.questions.append("{0}:{1}*({2}) [${3}] \x02{4}: {5}\x0F*{6}*{7}".format(self.channel, id, airdate[0], str(points), category, question, answer, points))
                                         asked.append(question)
                                         n += 1
@@ -277,9 +275,7 @@ class Jeopardy(callbacks.Plugin):
                 blank = re.sub('\w', blankChar, ans)
                 self.reply("HINT: {0}".format(blank))
                 if self.id:
-                    f = open(self.historyfile, 'a')
-                    f.write("{0}\n".format(self.id))
-                    f.close()
+                    self.history[self.channel].append(self.id)
                 def event():
                     self.timedEvent()
                 timeout = self.registryValue('timeout', self.channel)
@@ -466,6 +462,7 @@ class Jeopardy(callbacks.Plugin):
                             results.append(search)
             if not results:
                 irc.reply("Error. Could not find any results for {0}".format(categories))
+                return
         else:
             results = 'random'
         if results and 'shuffle' in optlist:
