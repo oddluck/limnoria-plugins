@@ -391,20 +391,20 @@ def vehicleCount(companies):
 
 def companyValue(company):
     value = loan = income = cargo = 0
-            try:
-                value += company.economy.history[0]['companyValue']
-            except:
-                value = 0
-            try:
-                loan += company.economy.currentLoan
-            except:
-                loan = 0
-            try:
-                income += company.economy.income
-            except:
-                income = 0
-            try:
-                cargo += company.economy.deliveredCargo
-            except:
-                cargo = 0
+        try:
+            value += company.economy.history[0]['companyValue']
+        except:
+            value = 0
+        try:
+            loan += company.economy.currentLoan
+        except:
+            loan = 0
+        try:
+            income += company.economy.income
+        except:
+            income = 0
+        try:
+            cargo += company.economy.deliveredCargo
+        except:
+            cargo = 0
     return (value, loan, income, cargo)
