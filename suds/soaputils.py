@@ -24,13 +24,13 @@ import logging
 import logging.handlers
 import os.path
 import re
-import urllib.request, urllib.error, urllib.parse
+import urllib2
 import requests
 import sys
 import json
 from datetime import datetime, timedelta
 
-from .enums import *
+from enums import *
 from libottdadmin2.enums import Colour, Action, DestType, ClientID
 from libottdadmin2.packets.admin import AdminRcon, AdminChat
 from libottdadmin2.trackingclient import MappingObject
@@ -161,7 +161,7 @@ def getConnection(connections, channels, source, serverID = None):
     serverID = serverID and serverID.lower() or 'default'
     
     if not conn:
-        for c in connections.values():
+        for c in connections.itervalues():
             if c.ID == serverID:
                 conn = c
 
@@ -209,7 +209,7 @@ def checkIP(irc, conn, client, whitelist, checkedDict):
     # learner's note: you can't just do iteritems() into a del because you'll get a RuntimeError exception when
     # the dictionary changes size during the loop
     cutoff = datetime.utcnow() - timedelta(days=1)
-    checkedDict = { k:v for k,v in checkedDict.items() if v.get('timestamp') < cutoff }
+    checkedDict = { k:v for k,v in checkedDict.iteritems() if v.get('timestamp') < cutoff }
 
     if client.hostname not in checkedDict \
     or not checkedDict.get(client.hostname, {}).get('message', False):
@@ -306,7 +306,7 @@ def playercount(conn):
     if conn.serverinfo.dedicated:
         clients -= 1 # deduct server-client for dedicated servers
     players = 0
-    for client in list(conn.clients.values()):
+    for client in conn.clients.values():
         if not client.play_as == 255:
             players += 1
     spectators = clients - players
@@ -381,7 +381,7 @@ def refreshConnection(connections, registeredConnections, conn):
 
 def vehicleCount(companies):
     rail = road = water = air = 0
-    for company in list(companies.values()):
+    for company in companies.values():
         if not company.id == 255:
                 rail += company.vehicles.train
                 road += (company.vehicles.lorry + company.vehicles.bus)

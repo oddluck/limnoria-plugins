@@ -21,7 +21,6 @@ lets the bot communicate with openttd via its adminport, and to control same
 
 import supybot
 import supybot.world as world
-import importlib
 
 # Use this for the version of this plugin.  You may wish to put a CVS keyword
 # in here if you're keeping the plugin in CVS or some similar system.
@@ -37,18 +36,18 @@ __contributors__ = {}
 # This is a url where the most recent plugin package can be downloaded.
 __url__ = 'https://github.com/luaduck/suds'
 
-from . import config
-from . import enums
-from . import soaputils
-from . import soapclient
+import config
+import enums
+import soaputils
+import soapclient
 import libottdadmin2
-from . import plugin
-importlib.reload(config)
-importlib.reload(enums)
-importlib.reload(soaputils)
-importlib.reload(soapclient)
-importlib.reload(libottdadmin2)
-importlib.reload(plugin)
+import plugin
+reload(config)
+reload(enums)
+reload(soaputils)
+reload(soapclient)
+reload(libottdadmin2)
+reload(plugin)
 
 # In case we're being reloaded.
 # Add more reloads here if you add third-party modules and want them to be
