@@ -393,7 +393,7 @@ def companyValue(companies):
     value = loan = income = deliveredCargo = 0
     for company in companies.values():
         if not company.id == 255:
-                value += company.economy.history[0].companyValue
+                value += company.economy.history.companyValue
                 loan += company.economy.currentLoan
                 income += company.economy.income
                 cargo += company.economy.deliveredCargo
