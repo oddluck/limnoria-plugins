@@ -394,7 +394,7 @@ def companyValue(companies):
     for company in companies.values():
         if not company.id == 255:
             try:
-                value += company.economy.history[0].value
+                value += company.economy.history[0].companyValue
             except:
                 value = 0
             try:
