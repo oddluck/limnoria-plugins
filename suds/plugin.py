@@ -1317,10 +1317,10 @@ class Suds(callbacks.Plugin):
             return
 
         if conn.companies.values():
-            irc.reply(text)
             for company in conn.companies.values():
                 text = 'Company: %s Value: %d, Loan: %d, Income: %d, Delivered Cargo: %d' %\
                 company.name, utils.companyValue(company)
+                irc.reply(text)
         else:
             irc.reply('There are currently no companies in existence. '\
                 'Without companies, there cannot be an economy')
