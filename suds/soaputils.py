@@ -409,5 +409,4 @@ def companyValue(companies):
                 cargo += company.economy.delivered
             except:
                 cargo = 0
-    return (value, loan, i
-            ncome, deliveredCargo)
+    return (value, loan, income, cargo)
