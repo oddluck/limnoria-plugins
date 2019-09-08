@@ -21,7 +21,7 @@ import supybot.callbacks as callbacks
 
 from datetime import datetime
 import os.path
-import queue
+import Queue
 import random
 import socket
 from subprocess import Popen, PIPE, CalledProcessError
@@ -29,9 +29,9 @@ import sys
 import threading
 import time
 
-from . import soaputils as utils
-from .soapclient import SoapClient
-from .enums import *
+import soaputils as utils
+from soapclient import SoapClient
+from enums import *
 
 from libottdadmin2.trackingclient import poll, POLLIN, POLLOUT, POLLERR, POLLHUP, POLLPRI, POLL_MOD
 from libottdadmin2.constants import *
@@ -71,7 +71,7 @@ class Suds(callbacks.Plugin):
         self.ipdict = dict()
 
     def die(self):
-        for conn in self.connections.values():
+        for conn in self.connections.itervalues():
             try:
                 if conn.connectionstate == ConnectionState.CONNECTED:
                     conn.connectionstate = ConnectionState.DISCONNECTING
@@ -370,7 +370,7 @@ class Suds(callbacks.Plugin):
         if source == irc.nick.lower():
             source = msg.nick
         conn = None
-        for c in self.connections.values():
+        for c in self.connections.itervalues():
             if (firstWord.lower() == c.channel.lower()
                     or firstWord.lower() == c.ID.lower()):
                 conn = c
@@ -454,7 +454,7 @@ class Suds(callbacks.Plugin):
 
     def _rcvClientJoin(self, connChan, client):
         conn = self.connections.get(connChan)
-        if not conn or isinstance(client, int):
+        if not conn or isinstance(client, (long, int)):
             return
         irc = conn.irc
 
@@ -486,7 +486,7 @@ class Suds(callbacks.Plugin):
                 '{servername}': conn.serverinfo.name,
                 '{serverversion}': conn.serverinfo.version}
             for line in welcome:
-                for word, newword in replacements.items():
+                for word, newword in replacements.iteritems():
                     line = line.replace(word, newword)
                 conn.send_packet(AdminChat,
                     action = Action.CHAT_CLIENT,
@@ -514,7 +514,7 @@ class Suds(callbacks.Plugin):
             return
         irc = conn.irc
 
-        if not isinstance(client, int):
+        if not isinstance(client, (long, int)):
             if errorcode:
                 reason = '%s' % utils.getQuitReasonFromNumber(errorcode)
             else:
@@ -588,7 +588,7 @@ class Suds(callbacks.Plugin):
                     companyparticipants = []
                     companyID = client.play_as
                     companyclients = 0
-                    for c in list(conn.clients.values()):
+                    for c in conn.clients.values():
                         if client.play_as == companyID:
                             companyclients+1
                     if (companyclients > 1):
@@ -617,7 +617,7 @@ class Suds(callbacks.Plugin):
                         conn.logger.debug('>>--DEBUG--<< Sending rcon: %s' % command)
                         conn.send_packet(AdminRcon, command = command)
         elif action == Action.COMPANY_JOIN or action == Action.COMPANY_NEW:
-            if not isinstance(client, int):
+            if not isinstance(client, (long, int)):
                 company = conn.companies.get(client.play_as)
                 if action == Action.COMPANY_JOIN:
                     text = ('*** %s has joined company #%d' %
@@ -906,7 +906,7 @@ class Suds(callbacks.Plugin):
             'irc':irc,
             'succestext':None,
             'command':command,
-            'results':queue.Queue()
+            'results':Queue.Queue()
         })
         conn.rconResults[conn.rconNick] = resultdict
         conn.logger.debug('>>--DEBUG--<< Sending rcon: %s' % command)
@@ -1026,7 +1026,7 @@ class Suds(callbacks.Plugin):
                 'irc':irc,
                 'succestext':None,
                 'command':command,
-                'results':queue.Queue()
+                'results':Queue.Queue()
             })
             conn.rconResults[conn.rconNick] = resultdict
             conn.logger.debug('>>--DEBUG--<< Sending rcon: %s' % command)
@@ -1061,7 +1061,7 @@ class Suds(callbacks.Plugin):
                 'irc':irc,
                 'succestext':None,
                 'command':command,
-                'results':queue.Queue()
+                'results':Queue.Queue()
             })
             conn.rconResults[conn.rconNick] = resultdict
             conn.logger.debug('>>--DEBUG--<< Sending rcon: %s' % command)
@@ -1096,7 +1096,7 @@ class Suds(callbacks.Plugin):
                 'irc':irc,
                 'succestext':'Rescan completed',
                 'command':command,
-                'results':queue.Queue()
+                'results':Queue.Queue()
             })
             conn.rconResults[conn.rconNick] = resultdict
             conn.logger.debug('>>--DEBUG--<< Sending rcon: %s' % command)
@@ -1128,7 +1128,7 @@ class Suds(callbacks.Plugin):
                 'irc':irc,
                 'succestext':None,
                 'command':command,
-                'results':queue.Queue()
+                'results':Queue.Queue()
             })
             conn.rconResults[conn.rconNick] = resultdict
             conn.logger.debug('>>--DEBUG--<< Sending rcon: %s' % command)
@@ -1294,7 +1294,7 @@ class Suds(callbacks.Plugin):
             irc.reply('Not connected!!', prefixNick = False)
             return
 
-        if list(conn.companies.values()):
+        if conn.companies.values():
             text = 'Total vehicles per type: Rail: %d, Road: %d, Water: %d, Air: %d' %\
                 utils.vehicleCount(conn.companies)
             irc.reply(text)
@@ -1375,8 +1375,8 @@ class Suds(callbacks.Plugin):
             irc.reply('Not connected!!', prefixNick = False)
             return
 
-        if list(conn.companies.values()):
-            for company in list(conn.companies.values()):
+        if conn.companies.values():
+            for company in conn.companies.values():
                 if not company.id == 255:
                     companyColour = utils.getColourNameFromNumber(company.colour)
                     companyFounded = 'Founded in %d' % company.startyear
@@ -1422,7 +1422,7 @@ class Suds(callbacks.Plugin):
         if isOp:
             spectators = []
             players = []
-            for client in list(conn.clients.values()):
+            for client in conn.clients.values():
                 if client.play_as == 255:
                     if conn.serverinfo.dedicated and client.id == 1:
                         pass

@@ -16,13 +16,13 @@
 ###
 
 import logging
-import queue
+import Queue
 
 from libottdadmin2.trackingclient import TrackingAdminClient
 from libottdadmin2.event import Event
 from libottdadmin2.enums import UpdateType, UpdateFrequency
 
-from .enums import RconStatus, ConnectionState
+from enums import RconStatus, ConnectionState
 
 class SoapEvents(object):
     def __init__(self):
@@ -72,7 +72,7 @@ class SoapClient(TrackingAdminClient):
         self.logger = logging.getLogger('Soap-%s' % self.ID)
         self.logger.setLevel(logging.INFO)
 
-        self.rconCommands = queue.Queue()
+        self.rconCommands = Queue.Queue()
         self.rconNick = None
         self.rconResults = {}
         self.rconState = RconStatus.IDLE
@@ -141,7 +141,7 @@ class SoapClient(TrackingAdminClient):
         self.soapEvents.clientquit(self.channel, client, errorcode)
 
     def _rcvChat(self, **kwargs):
-        data = dict(list(kwargs.items()))
+        data = dict(kwargs.items())
         data['connChan'] = self.channel
         self.soapEvents.chat(**data)
 
@@ -155,7 +155,7 @@ class SoapClient(TrackingAdminClient):
         self.soapEvents.console(self.channel, origin, message)
 
     def _rcvCmdLogging(self, **kwargs):
-        data = dict(list(kwargs.items()))
+        data = dict(kwargs.items())
         data['connChan'] = self.channel
         self.soapEvents.cmdlogging(**data)
 
