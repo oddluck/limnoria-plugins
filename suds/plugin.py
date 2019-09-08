@@ -1302,29 +1302,6 @@ class Suds(callbacks.Plugin):
             irc.reply('There are currently no companies in existence. '\
                 'Without companies, there cannot be vehicles')
     vehicles = wrap(vehicles, [optional('text')])
-
-    def economy(self, irc, msg, args, serverID):
-        """ [Server ID or channel]
-        Gives company economic info
-        """
-
-        source, conn = self._ircCommandInit(irc, msg, serverID, False)
-        if not conn:
-            return
-
-        if conn.connectionstate != ConnectionState.CONNECTED:
-            irc.reply('Not connected!!', prefixNick = False)
-            return
-
-        if conn.companies.values():
-            for company in conn.companies.values():
-                if not company.id == 255:
-                    text = '%s | Value: %d, Loan: %d, Income: %d, Delivered Cargo: %d' % (company.name, utils.companyValue(company))
-                    irc.reply(text)
-        else:
-            irc.reply('There are currently no companies in existence. '\
-                'Without companies, there cannot be an economy')
-    economy = wrap(economy, [optional('text')])
     
     def revision(self, irc, msg, args, serverID):
         """ [Server ID or channel]
@@ -1403,14 +1380,19 @@ class Suds(callbacks.Plugin):
                 if not company.id == 255:
                     companyColour = utils.getColourNameFromNumber(company.colour)
                     companyFounded = 'Founded in %d' % company.startyear
-                    companyVehicles = 'Vehicles owned: %d Trains, %s Roadvehicles, %s Ships and %s Aeroplanes' % (
+                    companyVehicles = 'Vehicles owned: %d Trains, %s Roadvehicles, %s Ships and %s Aeroplanes.' % (
                         company.vehicles.train,
                         company.vehicles.lorry + company.vehicles.bus,
                         company.vehicles.ship,
                         company.vehicles.plane)
-                    text = 'Company \'%d\' (%s): %s, %s, %s' % (
+                    companyEconomy = 'Value: %d, Loan: %d, Income: %d, Delivered Cargo: %d' % (
+                        company.economy.history[0]['companyValue'],
+                        company.economy.currentLoan,
+                        company.economy.income,
+                        company.economy.deliveredCargo)
+                    text = 'Company \'%d\' (%s): %s, %s, %s %s' % (
                         company.id+1, companyColour, company.name,
-                        companyFounded, companyVehicles)
+                        companyFounded, companyVehicles, companyEconomy)
                     if company.ai:
                         text = 'AI ' + text
                     irc.reply(text)
