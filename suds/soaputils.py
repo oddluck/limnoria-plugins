@@ -389,12 +389,10 @@ def vehicleCount(companies):
                 air += company.vehicles.plane
     return (rail, road, water, air)
 
-def companyValue(companies):
+def companyValue(company):
     value = loan = income = cargo = 0
-    for company in companies.values():
-        if not company.id == 255:
             try:
-                value += company.economy.history[0].companyValue
+                value += company.economy.history[0]['companyValue']
             except:
                 value = 0
             try:
