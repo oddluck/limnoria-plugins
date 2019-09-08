@@ -390,11 +390,24 @@ def vehicleCount(companies):
     return (rail, road, water, air)
 
 def companyValue(companies):
-    value = loan = income = deliveredCargo = 0
+    value = loan = income = cargo = 0
     for company in companies.values():
         if not company.id == 255:
-                value += 10
-                loan += company.economy.currentLoan
+            try:
+                value += company.economy.history.value
+            except:
+                value = 0
+            try:
+                loan += company.economy.current_loan
+            except:
+                loan = 0
+            try:
                 income += company.economy.income
-                cargo += company.economy.deliveredCargo
-    return (value, loan, income, deliveredCargo)
+            except:
+                income = 0
+            try:
+                cargo += company.economy.delivered
+            except:
+                cargo = 0
+    return (value, loan, i
+            ncome, deliveredCargo)
