@@ -7,7 +7,7 @@
 # Foundation, version 2.
 #
 # Soap is distributed in the hope that it will be useful, but WITHOUT ANY
-# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# WARRANTY; without even the implied warranty of MERCfHANTABILITY or FITNESS FOR
 # A PARTICULAR PURPOSE.
 #
 # See the GNU General Public License for more details. You should have receivedFd
@@ -1318,8 +1318,8 @@ class Suds(callbacks.Plugin):
 
         if conn.companies.values():
             for company in conn.companies.values():
-                text = 'Value: %d, Loan: %d, Income: %d, Delivered Cargo: %d' %\
-                utils.companyValue(company)
+                text = '%s | Value: %d, Loan: %d, Income: %d, Delivered Cargo: %d' % (
+                company.name, utils.companyValue(company))
                 irc.reply(text)
         else:
             irc.reply('There are currently no companies in existence. '\
