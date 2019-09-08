@@ -1385,7 +1385,7 @@ class Suds(callbacks.Plugin):
                         company.vehicles.lorry + company.vehicles.bus,
                         company.vehicles.ship,
                         company.vehicles.plane)
-                    companyEconomy = 'Value: %d, Loan: %d, Income: %d, Delivered Cargo: %d' % (
+                    companyEconomy = 'Value: %d, Loan: %d, Income: %d, Cargo: %d' % (
                         company.economy.history[0]['companyValue'],
                         company.economy.currentLoan,
                         company.economy.income,
