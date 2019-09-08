@@ -1319,8 +1319,7 @@ class Suds(callbacks.Plugin):
         if conn.companies.values():
             for company in conn.companies.values():
                 if not company.id == 255:
-                    text = '%s | Value: %d, Loan: %d, Income: %d, Delivered Cargo: %d' % (
-                    company.name, utils.companyValue(company))
+                    text = '%s | Value: %d, Loan: %d, Income: %d, Delivered Cargo: %d' % (company.name, utils.companyValue(company))
                     irc.reply(text)
         else:
             irc.reply('There are currently no companies in existence. '\
