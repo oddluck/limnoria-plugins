@@ -10,7 +10,7 @@
 # WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
 # A PARTICULAR PURPOSE.
 #
-# See the GNU General Public License for more details. You should have received
+# See the GNU General Public License for more details. You should have receivedFd
 # a copy of the GNU General Public License along with Soap. If not, see
 # <http://www.gnu.org/licenses/>.
 ###
@@ -1318,8 +1318,8 @@ class Suds(callbacks.Plugin):
 
         if conn.companies.values():
             for company in conn.companies.values():
-                text = 'Company: %s Value: %d, Loan: %d, Income: %d, Delivered Cargo: %d' %\
-                company.name, utils.companyValue(company)
+                text = 'Value: %d, Loan: %d, Income: %d, Delivered Cargo: %d' %\
+                utils.companyValue(company)
                 irc.reply(text)
         else:
             irc.reply('There are currently no companies in existence. '\
