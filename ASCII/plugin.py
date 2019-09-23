@@ -673,8 +673,7 @@ class ASCII(callbacks.Plugin):
             return ''
 
     def ansi2irc(self, output):
-        output = output.replace('\x1b(B\x1b[m', '')
-        output = output.replace('\x1b(B\x1b[m', '')
+        output = output.replace('\x1b(B\x1b[m', '\x1b[0m')
         output = output.replace('\x1b\x1b', '\x1b')
         output = re.sub(r'\x1B\[[0-?]*[ -/]*[@-~]', lambda m: self.process_ansi(m.group(0)), output)
         output = re.sub('\x0399,(\d\d)\x03(\d\d)', '\x03\g<2>,\g<1>', output)
