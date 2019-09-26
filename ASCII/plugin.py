@@ -931,11 +931,11 @@ class ASCII(callbacks.Plugin):
         if type != 'no-color':
             if 'resize' in optlist:
                 resize = optlist.get('resize')
-                image2 = image.resize((cols, rows), resize)
             else:
-                image2 = image.resize((cols, rows), Image.LANCZOS)
+                resize = self.registryValue('resize', msg.args[0])
             if 's' in optlist:
                 image2 = ImageEnhance.Color(image2).enhance(s)
+            image2 = image.resize((cols, rows), resize)
             if dither:
                 image2 = hitherdither.diffusion.error_diffusion_dithering(image2, self.palette, method=dither)
                 image2 = image2.convert('RGB')
