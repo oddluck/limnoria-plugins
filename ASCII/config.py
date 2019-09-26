@@ -41,6 +41,9 @@ registry.Float(1.0, _("""Set the time delay betwen lines. Not currently implemen
 conf.registerChannelValue(ASCII, 'quantize',
 registry.Boolean(False, _("""Enable quantizing to 256 colors before rendering. Results in much faster rendering at a slight decrease in quality. Default: False""")))
 
+conf.registerChannelValue(ASCII, 'resize',
+registry.Integer(3, _("""Set the resize algorithm. 0 = nearest, 1 = lanczos, 2 = bilinear, 3 = bicubic, 4 = box, 5 = hamming""")))
+
 conf.registerChannelValue(ASCII, 'speed',
 registry.String('Slow', _("""Set the speed of the color rendering. 'Slow' (default) to use CIEDE2000 color difference. 'Fast' to use Euclidean color difference.""")))
 
