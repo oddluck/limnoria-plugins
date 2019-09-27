@@ -933,9 +933,9 @@ class ASCII(callbacks.Plugin):
                 resize = optlist.get('resize')
             else:
                 resize = self.registryValue('resize', msg.args[0])
+            image2 = image.resize((cols, rows), resize)
             if 's' in optlist:
                 image2 = ImageEnhance.Color(image2).enhance(s)
-            image2 = image.resize((cols, rows), resize)
             if dither:
                 image2 = hitherdither.diffusion.error_diffusion_dithering(image2, self.palette, method=dither)
                 image2 = image2.convert('RGB')
