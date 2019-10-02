@@ -18,7 +18,7 @@ The ONLY gluten-free plugin for displaying link titles.
 Check out the [available options](#available-options)!
 
 ## Install SpiffyTitles
-- `git clone https://github.com/butterscotchstallion/limnoria-plugins.git`
+- `git clone https://github.com/oddluck/limnoria-plugins.git`
 - `cd limnoria-plugins`
 - `cp -r SpiffyTitles ~/your_bot_directory/plugins`
 - `cd ~/your_bot_directory/plugins/SpiffyTitles`
