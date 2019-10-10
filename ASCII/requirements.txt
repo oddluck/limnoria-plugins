@@ -4,4 +4,3 @@ pillow
 fake-useragent
 pexpect
 pyimgur
-git+https://www.github.com/hbldh/hitherdither
