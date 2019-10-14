@@ -776,7 +776,7 @@ class ASCII(callbacks.Plugin):
     fontlist = wrap(fontlist)
 
     def img(self, irc, msg, args, channel, optlist, url):
-        """[<#channel>] [--delay #.#] [--w <###>] [--s <#.#] [--16] [--99] [--83] [--ascii] [--block] [--1/2] [--1/4] [--chars <text>] [--ramp <text>] [--bg <0-98>] [--fg <0-98>] [--no-color] [--invert] <url>
+        """[<#channel>] [--delay #.#] [--w <###>] [--s <#.#] [--16] [--99] [--83] [--ascii] [--block] [--1/2] [--chars <text>] [--ramp <text>] [--bg <0-98>] [--fg <0-98>] [--no-color] [--invert] <url>
         Image to ASCII Art.
         --w columns.
         --s saturation (1.0).
@@ -785,7 +785,6 @@ class ASCII(callbacks.Plugin):
         --83 colors 16-98.
         --ascii color ascii.
         --block space block.
-        --1/4 for 1/4 block.
         --1/2 for 1/2 block
         --chars <TEXT> color text.
         --ramp <TEXT> set ramp (".:-=+*#%@").
@@ -842,8 +841,6 @@ class ASCII(callbacks.Plugin):
         elif 'ascii' in optlist:
             type = 'ascii'
             gscale = ".'`^\":;Il!i><~+_-?][}{1)(|\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$"
-        elif '1/4' in optlist:
-            type = '1/4'
         elif '1/2' in optlist:
             type = '1/2'
         elif 'block' in optlist:
@@ -869,8 +866,6 @@ class ASCII(callbacks.Plugin):
             cols = self.registryValue('asciiWidth', msg.args[0])
         else:
             cols = self.registryValue('blockWidth', msg.args[0])
-        if type == '1/4':
-            cols = cols * 2
         if 's' in optlist:
             s = float(optlist.get('s'))
         path = os.path.dirname(os.path.abspath(__file__))
@@ -1030,120 +1025,6 @@ class ASCII(callbacks.Plugin):
                     i = '%02d' % i
                     aimg[k] = aimg[k].replace("{0}".format(i), "{0}".format(int(i)))
                 k += 1
-        elif type == '1/4':
-            k = 0
-            for j in range(0, rows - 1, 2):
-                # append an empty string
-                aimg.append("")
-                old_color = "99,99"
-                for i in range(0, cols - 1, 2):
-                    color1 = '%02d' % self.getColor(colormap[j][i].tolist(), speed)
-                    color2 = '%02d' % self.getColor(colormap[j+1][i].tolist(), speed)
-                    color3 = '%02d' % self.getColor(colormap[j][i+1].tolist(), speed)
-                    color4 = '%02d' % self.getColor(colormap[j+1][i+1].tolist(), speed)
-                    if color1 == color2 and color1 == color3 and color1 == color4:
-                        gsval = " "
-                        color = "0,{0}".format(color1)
-                    elif color1 == color4 and color2 == color3:
-                        gsval = "▚"
-                        color = "{0},{1}".format(color1, color2)
-                    elif color1 == color2 and color1 == color3 and color1 != color4:
-                        gsval = "▛"
-                        color = "{0},{1}".format(color1, color4)
-                    elif color3 == color4 and color2 == color4 and color3 != color1:
-                        gsval = "▟"
-                        color = "{0},{1}".format(color2, color1)
-                    elif color1 == color2 and color1 == color4 and color1 != color3:
-                        gsval = "▙"
-                        color = "{0},{1}".format(color1, color3)
-                    elif color1 == color3 and color1 == color4 and color1 != color2:
-                        gsval = "▜"
-                        color = "{0},{1}".format(color1, color2)
-                    elif color1 == color3 and color2 == color4 and color1 != color2 and color3 != color4:
-                        gsval = "▀"
-                        color = "{0},{1}".format(color1, color4)
-                    elif color1 == color2 and color3 == color4 and color1 != color3 and color2 != color4:
-                        gsval = "▌"
-                        color = "{0},{1}".format(color1, color4)
-                    else:
-                        row1 = '%02d' % self.getColor(np.average([tuple(colormap[j][i].tolist()), tuple(colormap[j][i+1].tolist())], axis=0).tolist(), speed)
-                        row2 = '%02d' % self.getColor(np.average([tuple(colormap[j+1][i+1].tolist()), tuple(colormap[j][i+1].tolist())], axis=0).tolist(), speed)
-                        if row2 == color1 and row2 != color3:
-                            gsval = "▙"
-                            color = "{0},{1}".format(row2, color3)
-                        elif row1 == color2 and row1 != color4:
-                            gsval = "▛"
-                            color = "{0},{1}".format(row1, color4)
-                        elif row2 == color3 and row2 != color1:
-                            gsval = "▟"
-                            color = "{0},{1}".format(row2, color1)
-                        elif row1 == color4 and row1 != color2:
-                            gsval = "▜"
-                            color = "{0},{1}".format(row1, color2)
-                        else:
-                            col1 = '%02d' % self.getColor(np.average([tuple(colormap[j][i].tolist()), tuple(colormap[j+1][i].tolist())], axis=0).tolist(), speed)
-                            col2 = '%02d' % self.getColor(np.average([tuple(colormap[j][i+1].tolist()), tuple(colormap[j+1][i+1].tolist())], axis=0).tolist(), speed)
-                            if col1 == color4 and col1 != color3:
-                                gsval = "▙"
-                                color = "{0},{1}".format(col1, color3)
-                            elif col1 == color3 and col1 != color4:
-                                gsval = "▛"
-                                color = "{0},{1}".format(col1, color4)
-                            elif col2 == color2 and col2 != color1:
-                                gsval = "▟"
-                                color = "{0},{1}".format(col2, color1)
-                            elif col2 == color1 and col2 != color2:
-                                gsval = "▜"
-                                color = "{0},{1}".format(col2, color2)
-                            elif row1 != row2:
-                                gsval = "▀"
-                                color = "{0},{1}".format(row1, row2)
-                            elif col1 != col2:
-                                gsval = "▌"
-                                color = "{0},{1}".format(col1, col2)
-                            elif row1 == row2:
-                                gsval = " "
-                                color = "0,{0}".format(row1)
-                            elif col1 == col2:
-                                gsval = " "
-                                color = "0,{0}".format(col1)
-                    if color != old_color:
-                        if gsval == " " and "{0}".format(color.split(',')[1]) == "{0}".format(old_color.split(',')[1]):
-                            aimg[k] += "{0}".format(gsval)
-                        elif gsval == "▚" and color == "{0},{1}".format(old_color.split(',')[1], old_color.split(',')[0]):
-                            gsval = "▞"
-                            aimg[k] += "{0}".format(gsval)
-                        elif gsval == "▀" and color == "{0},{1}".format(old_color.split(',')[1], old_color.split(',')[0]):
-                            gsval = "▄"
-                            aimg[k] += "{0}".format(gsval)
-                        elif gsval == "▌" and color == "{0},{1}".format(old_color.split(',')[1], old_color.split(',')[0]):
-                            gsval = "▐"
-                            aimg[k] += "{0}".format(gsval)
-                        elif gsval == "▛" and color == "{0},{1}".format(old_color.split(',')[1], old_color.split(',')[0]):
-                            gsval = "▟"
-                            aimg[k] += "{0}".format(gsval)
-                        elif gsval == "▟" and color == "{0},{1}".format(old_color.split(',')[1], old_color.split(',')[0]):
-                            gsval = "▛"
-                            aimg[k] += "{0}".format(gsval)
-                        elif gsval == "▜" and color == "{0},{1}".format(old_color.split(',')[1], old_color.split(',')[0]):
-                            gsval = "▙"
-                            aimg[k] += "{0}".format(gsval)
-                        elif gsval == "▙" and color == "{0},{1}".format(old_color.split(',')[1], old_color.split(',')[0]):
-                            gsval = "▜"
-                            aimg[k] += "{0}".format(gsval)
-                        else:
-                            old_color = color
-                            # append char to string
-                            aimg[k] += "\x03{0}{1}".format(color, gsval)
-                    else:
-                        aimg[k] += "{0}".format(gsval)
-                for i in range(0,98):
-                    i = '%02d' % i
-                    aimg[k] = re.sub("\x030,{0}(\s+)\x03(\d\d),{0}".format(i), "\x03\g<2>,{0}\g<1>".format(i), aimg[k])
-                for i in range(0,98):
-                    i = '%02d' % i
-                    aimg[k] = aimg[k].replace("{0}".format(i), "{0}".format(int(i)))
-                k += 1
         else:
             if 'chars' not in optlist and gscale != '\xa0':
                 image = image.resize((cols, rows), Image.LANCZOS)
@@ -1241,7 +1122,7 @@ class ASCII(callbacks.Plugin):
                 irc.reply(line, prefixNick=False, noLengthCheck=True, private=False, notice=False, to=channel)
         if self.registryValue('pasteEnable', msg.args[0]):
             irc.reply(self.doPaste(url, paste), private=False, notice=False, to=channel)
-    img = wrap(img,[optional('channel'), getopts({'w':'int', 'invert':'', 'fast':'', 'slow':'', '16':'', '99':'', '83':'', 'delay':'float', 'resize':'int', 'quantize':'', 'no-quantize':'', 'chars':'text', 'bg':'int', 'fg':'int', 'ramp':'text', 'no-color':'', 'block':'', 'ascii':'', '1/4':'', '1/2':'', 's':'float', 'tops':''}), ('text')])
+    img = wrap(img,[optional('channel'), getopts({'w':'int', 'invert':'', 'fast':'', 'slow':'', '16':'', '99':'', '83':'', 'delay':'float', 'resize':'int', 'quantize':'', 'no-quantize':'', 'chars':'text', 'bg':'int', 'fg':'int', 'ramp':'text', 'no-color':'', 'block':'', 'ascii':'', '1/2':'', 's':'float', 'tops':''}), ('text')])
 
     def scroll(self, irc, msg, args, channel, optlist, url):
         """[<channel>] [--delay] <url>
