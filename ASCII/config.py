@@ -58,3 +58,9 @@ registry.Integer(70, _("""Set the default column width for 1/2 and 1/4 block art
 
 conf.registerChannelValue(ASCII, 'colors',
 registry.Integer(99, _("""Set the default number of colors to use. Options are 16 for colors 0-15 only, 83 for colors 16-98 only, and 99 (default) to use all available colors""")))
+
+conf.registerChannelValue(ASCII, 'fg',
+registry.Integer(99, _("""Set the default foreground color for ascii art images. 0-98. 99 is disabled (default)""")))
+
+conf.registerChannelValue(ASCII, 'bg',
+registry.Integer(99, _("""Set the default background color for ascii art images. 0-98. 99 is disabled (default)""")))
