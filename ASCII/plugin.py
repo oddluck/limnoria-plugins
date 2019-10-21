@@ -824,11 +824,11 @@ class ASCII(callbacks.Plugin):
         if 'bg' in optlist:
             bg = optlist.get('bg')
         else:
-            bg = 99
+            bg = self.registryValue('bg', msg.args[0])
         if 'fg' in optlist:
             fg = optlist.get('fg')
         else:
-            fg = 99
+            fg = self.registryValue('fg', msg.args[0])
         if 'chars' in optlist:
             type = 'ascii'
             gscale = optlist.get('chars')
