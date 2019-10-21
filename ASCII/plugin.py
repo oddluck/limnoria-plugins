@@ -1063,11 +1063,11 @@ class ASCII(callbacks.Plugin):
                             aimg[j] += "\x030,{0} ".format(int(color))
                     elif type == 'no-color' and i == 0:
                         if bg != 99 and fg != 99:
-                            aimg[j] += "\x03{0}{1}{2}".format("{:02d}".format(int(fg)), "{:02d}".format(int(bg)), gsval)
+                            aimg[j] += "\x03{0},{1}{2}".format("{:02d}".format(int(fg)), "{:02d}".format(int(bg)), gsval)
                         elif fg != 99:
                             aimg[j] += "\x03{0}{1}".format("{:02d}".format(int(fg)), gsval)
                         elif bg != 99:
-                            aimg[j] += "\x03{0}{1}{2}".format("{:02d}".format(int(fg)), "{:02d}".format(int(bg)), gsval)
+                            aimg[j] += "\x03{0},{1}{2}".format("{:02d}".format(int(fg)), "{:02d}".format(int(bg)), gsval)
                     elif type != 'no-color' and gsval != ' ':
                         color = self.getColor(colormap[j][i].tolist(), speed)
                         if color != old_color:
