@@ -824,7 +824,7 @@ class ASCII(callbacks.Plugin):
         if 'bg' in optlist:
             bg = optlist.get('bg')
         else:
-            bg = 1
+            bg = 99
         if 'fg' in optlist:
             fg = optlist.get('fg')
         else:
@@ -905,12 +905,11 @@ class ASCII(callbacks.Plugin):
         h = w/scale
         # compute number of rows
         rows = int(H/h)
-        #image = ImageOps.autocontrast(image)
+        if 'resize' in optlist:
+            resize = optlist.get('resize')
+        else:
+            resize = self.registryValue('resize', msg.args[0])
         if type != 'no-color':
-            if 'resize' in optlist:
-                resize = optlist.get('resize')
-            else:
-                resize = self.registryValue('resize', msg.args[0])
             image2 = image.resize((cols, rows), resize)
             if 's' in optlist:
                 image2 = ImageEnhance.Color(image2).enhance(s)
@@ -1027,7 +1026,7 @@ class ASCII(callbacks.Plugin):
                 k += 1
         else:
             if 'chars' not in optlist and gscale != '\xa0':
-                image = image.resize((cols, rows), Image.LANCZOS)
+                image = image.resize((cols, rows), resize)
                 image = image.convert('L')
                 lumamap = np.array(image)
             # generate list of dimensions
@@ -1056,7 +1055,24 @@ class ASCII(callbacks.Plugin):
                     if type != 'no-color' and i == 0:
                         color = self.getColor(colormap[j][i].tolist(), speed)
                         old_color = color
-                        if 'bg' not in optlist:
+                        if bg != 99:
+                            color = "{0},{1}".format(color, "{:02d}".format(int(bg)))
+                        if gsval != '\xa0':
+                            aimg[j] += "\x03{0}{1}".format(color, gsval)
+                        else:
+                            aimg[j] += "\x030,{0} ".format(int(color))
+                    elif type == 'no-color' and i == 0:
+                        if bg != 99 and fg != 99:
+                            aimg[j] += "\x03{0}{1}{2}".format("{:02d}".format(int(fg)), "{:02d}".format(int(bg)), gsval)
+                        elif fg != 99:
+                            aimg[j] += "\x03{0}{1}".format("{:02d}".format(int(fg)), gsval)
+                        elif bg != 99:
+                            aimg[j] += "\x03{0}{1}{2}".format("{:02d}".format(int(fg)), "{:02d}".format(int(bg)), gsval)
+                    elif type != 'no-color' and gsval != ' ':
+                        color = self.getColor(colormap[j][i].tolist(), speed)
+                        if color != old_color:
+                            old_color = color
+                            # append ascii char to string
                             if gsval != '\xa0':
                                 if gsval.isdigit():
                                     color = "{:02d}".format(int(color))
@@ -1066,55 +1082,13 @@ class ASCII(callbacks.Plugin):
                             else:
                                 aimg[j] += "\x030,{0} ".format(int(color))
                         else:
-                            if gsval != '\xa0':
-                                if gsval.isdigit():
-                                    newbg = "{:02d}".format(int(bg))
-                                    aimg[j] += "\x03{0},{1}{2}".format(int(color), newbg, gsval)
-                                else:
-                                    aimg[j] += "\x03{0},{1}{2}".format(int(color), int(bg), gsval)
-                            else:
-                                aimg[j] += "\x030,{0} ".format(int(color))
-                    elif type != 'no-color' and gsval != ' ':
-                        color = self.getColor(colormap[j][i].tolist(), speed)
-                        if color != old_color:
-                            old_color = color
-                            # append ascii char to string
-                            if 'bg' not in optlist:
-                                if gsval != '\xa0':
-                                    if gsval.isdigit():
-                                        color = "{:02d}".format(int(color))
-                                        aimg[j] += "\x03{0}{1}".format(color, gsval)
-                                    else:
-                                        aimg[j] += "\x03{0}{1}".format(int(color), gsval)
-                                else:
-                                    aimg[j] += "\x030,{0} ".format(int(color))
-                            else:
-                                if gsval != '\xa0':
-                                    if gsval.isdigit():
-                                        newbg = "{:02d}".format(int(bg))
-                                        aimg[j] += "\x03{0},{1}{2}".format(int(color), newbg, gsval)
-                                    else:
-                                        aimg[j] += "\x03{0},{1}{2}".format(int(color), int(bg), gsval)
-                                else:
-                                    aimg[j] += "\x030,{0} ".format(int(color))
-                        else:
                             aimg[j] += "{0}".format(gsval)
                     else:
                         aimg[j] += "{0}".format(gsval)
-        # return txt image
         output = aimg
         paste = ""
         self.stopped[msg.args[0]] = False
         for line in output:
-            if type == 'no-color' and 'fg' in optlist and 'bg' in optlist:
-                newbg = "{:02d}".format(int(bg))
-                line = "\x03{0},{1}{2}".format(int(fg), newbg, line)
-            elif type == 'no-color' and 'fg' in optlist:
-                newfg = "{:02d}".format(int(fg))
-                line = "\x03{0}{1}".format(newfg, line)
-            elif type == 'no-color' and 'bg' in optlist:
-                newbg = "{:02d}".format(int(bg))
-                line = "\x0399,{0}{1}".format(newbg, line)
             if self.registryValue('pasteEnable', msg.args[0]):
                 paste += line + "\n"
             if not self.stopped[msg.args[0]]:
