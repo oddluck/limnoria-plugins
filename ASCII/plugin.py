@@ -886,7 +886,11 @@ class ASCII(callbacks.Plugin):
         # open image and convert to grayscale
         image = Image.open(filename)
         if image.mode == 'RGBA':
-            image = Image.alpha_composite(Image.new("RGBA", image.size, self.rgbColors[bg] + (255,)), image)
+            if bg == 99:
+                newbg = 0
+            else:
+                newbg = bg
+            image = Image.alpha_composite(Image.new("RGBA", image.size, self.rgbColors[newbg] + (255,)), image)
         if image.mode != 'RGB':
             image = image.convert('RGB')
         try:
