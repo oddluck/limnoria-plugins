@@ -887,7 +887,7 @@ class ASCII(callbacks.Plugin):
         image = Image.open(filename)
         if image.mode == 'RGBA':
             if bg == 99:
-                newbg = 0
+                newbg = 1
             else:
                 newbg = bg
             image = Image.alpha_composite(Image.new("RGBA", image.size, self.rgbColors[newbg] + (255,)), image)
