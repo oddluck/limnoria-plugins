@@ -795,6 +795,9 @@ class ASCII(callbacks.Plugin):
         """
         if not channel:
             channel = msg.args[0]
+        if channel != msg.args[0] and not ircdb.checkCapability(msg.prefix, 'admin'):
+            irc.errorNoCapability('admin')
+            return
         optlist = dict(optlist)
         gscale = "\xa0"
         if '16' in optlist:
@@ -1108,6 +1111,9 @@ class ASCII(callbacks.Plugin):
         """
         if not channel:
             channel = msg.args[0]
+        if channel != msg.args[0] and not ircdb.checkCapability(msg.prefix, 'admin'):
+            irc.errorNoCapability('admin')
+            return
         optlist = dict(optlist)
         self.stopped[msg.args[0]] = False
         if 'delay' in optlist:
@@ -1137,6 +1143,9 @@ class ASCII(callbacks.Plugin):
         """
         if not channel:
             channel = msg.args[0]
+        if channel != msg.args[0] and not ircdb.checkCapability(msg.prefix, 'admin'):
+            irc.errorNoCapability('admin')
+            return
         optlist = dict(optlist)
         opts = ''
         if 'l' in optlist:
@@ -1210,6 +1219,9 @@ class ASCII(callbacks.Plugin):
         """
         if not channel:
             channel = msg.args[0]
+        if channel != msg.args[0] and not ircdb.checkCapability(msg.prefix, 'admin'):
+            irc.errorNoCapability('admin')
+            return
         optlist = dict(optlist)
         opts = ''
         if 'b' in optlist:
@@ -1293,6 +1305,9 @@ class ASCII(callbacks.Plugin):
         """
         if not channel:
             channel = msg.args[0]
+        if channel != msg.args[0] and not ircdb.checkCapability(msg.prefix, 'admin'):
+            irc.errorNoCapability('admin')
+            return
         optlist = dict(optlist)
         opts = ''
         if 'f' in optlist:
@@ -1348,6 +1363,9 @@ class ASCII(callbacks.Plugin):
         """
         if not channel:
             channel = msg.args[0]
+        if channel != msg.args[0] and not ircdb.checkCapability(msg.prefix, 'admin'):
+            irc.errorNoCapability('admin')
+            return
         optlist = dict(optlist)
         opts = ''
         if 'f' in optlist:
@@ -1436,6 +1454,9 @@ class ASCII(callbacks.Plugin):
         """
         if not channel:
             channel = msg.args[0]
+        if channel != msg.args[0] and not ircdb.checkCapability(msg.prefix, 'admin'):
+            irc.errorNoCapability('admin')
+            return
         optlist = dict(optlist)
         if 'delay' in optlist:
             delay = optlist.get('delay')
@@ -1485,6 +1506,9 @@ class ASCII(callbacks.Plugin):
         """
         if not channel:
             channel = msg.args[0]
+        if channel != msg.args[0] and not ircdb.checkCapability(msg.prefix, 'admin'):
+            irc.errorNoCapability('admin')
+            return
         optlist = dict(optlist)
         if 'delay' in optlist:
             delay = optlist.get('delay')
@@ -1536,6 +1560,9 @@ class ASCII(callbacks.Plugin):
         """
         if not channel:
             channel = msg.args[0]
+        if channel != msg.args[0] and not ircdb.checkCapability(msg.prefix, 'admin'):
+            irc.errorNoCapability('admin')
+            return
         optlist = dict(optlist)
         if 'delay' in optlist:
             delay = optlist.get('delay')
@@ -1567,6 +1594,9 @@ class ASCII(callbacks.Plugin):
         """
         if not channel:
             channel = msg.args[0]
+        if channel != msg.args[0] and not ircdb.checkCapability(msg.prefix, 'admin'):
+            irc.errorNoCapability('admin')
+            return
         optlist = dict(optlist)
         if 'delay' in optlist:
             delay = optlist.get('delay')
@@ -1591,6 +1621,9 @@ class ASCII(callbacks.Plugin):
         """
         if not channel:
             channel = msg.args[0]
+        if channel != msg.args[0] and not ircdb.checkCapability(msg.prefix, 'admin'):
+            irc.errorNoCapability('admin')
+            return
         optlist = dict(optlist)
         if 'delay' in optlist:
             delay = optlist.get('delay')
