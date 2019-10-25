@@ -1056,7 +1056,7 @@ class ASCII(callbacks.Plugin):
                     else:
                         gsval = '\xa0'
                     # get color value
-                    if type != 'no-color' and i == 0:
+                    if type != 'no-color' and type != 'block' and i == 0:
                         color = self.getColor(colormap[j][i].tolist(), speed)
                         old_color = color
                         if bg != 99:
