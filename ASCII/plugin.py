@@ -10,6 +10,7 @@ import supybot.utils as utils
 from supybot.commands import *
 import supybot.plugins as plugins
 import supybot.ircutils as ircutils
+import supybot.ircdb as ircdb
 import supybot.callbacks as callbacks
 import supybot.ircmsgs as ircmsgs
 import os
