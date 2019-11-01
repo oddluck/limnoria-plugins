@@ -85,7 +85,10 @@ class TimeBomb(callbacks.Plugin):
             self.responded = False
             self.rng = random.Random()
             self.rng.seed()
-
+            try:
+                self.command_char = conf.supybot.reply.whenAddressedBy.chars()[0]
+            except KeyError:
+                self.command_char = ''
             if self.debug:
                 self.irc.reply('I just created a bomb in {}'.format(channel))
 
@@ -95,8 +98,7 @@ class TimeBomb(callbacks.Plugin):
             schedule.addEvent(detonate, time.time() + self.detonateTime, '{}_bomb'.format(self.channel))
             s = 'stuffs a bomb down {}\'s pants. The timer is set for {} seconds! There are {} wires. They are: {}.'.format(self.victim, self.detonateTime, len(wires), utils.str.commaAndify(wires))
             self.irc.queueMsg(ircmsgs.action(self.channel, s))
-            command_char = conf.supybot.reply.whenAddressedBy.chars()[0]
-            self.irc.queueMsg(ircmsgs.privmsg(self.channel, "{}, try to defuse the bomb using the command: '{}cutwire \x02color\x02'".format(self.victim, command_char)))
+            self.irc.queueMsg(ircmsgs.privmsg(self.channel, "{}, try to defuse the bomb using the command: '{}cutwire \x02color\x02'".format(self.victim, self.command_char)))
 
             if self.victim == irc.nick:
                 time.sleep(1)
@@ -329,7 +331,7 @@ class TimeBomb(callbacks.Plugin):
                         if time.time() - item[1] < self.registryValue('idleTime', channel) * 60 and item[0] in irc.state.channels[channel].users and self._canBomb(irc, channel, msg.nick, item[0], False):
                             nicks.append(item[0])
                     except StopIteration:
-                        irc.reply('hey quantumlemur, something funny happened... I got a StopIteration exception')
+                        irc.reply('Something funny happened... I got a StopIteration exception')
                     count += 1
                 if len(nicks) == 1 and nicks[0] == msg.nick:
                     nicks = []
