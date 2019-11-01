@@ -95,7 +95,8 @@ class TimeBomb(callbacks.Plugin):
             schedule.addEvent(detonate, time.time() + self.detonateTime, '{}_bomb'.format(self.channel))
             s = 'stuffs a bomb down {}\'s pants. The timer is set for {} seconds! There are {} wires. They are: {}.'.format(self.victim, self.detonateTime, len(wires), utils.str.commaAndify(wires))
             self.irc.queueMsg(ircmsgs.action(self.channel, s))
-            self.irc.queueMsg(ircmsgs.privmsg(self.channel, "{}, try to defuse the bomb using the command '{}cutwire \x02color\x02'".format(self.victim, conf.supybot.reply.whenAddressedBy.chars())))
+            command_char = conf.supybot.reply.whenAddressedBy.chars()[0]
+            self.irc.queueMsg(ircmsgs.privmsg(self.channel, "{}, try to defuse the bomb using the command '{}cutwire \x02color\x02'".format(self.victim, command_char)))
 
             if self.victim == irc.nick:
                 time.sleep(1)
