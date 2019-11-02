@@ -70,7 +70,7 @@ class Fun(callbacks.Plugin):
         """
 
         channel = msg.args[0]
-        data = requests.get("http://randomuselessfact.appspot.com/random.json?language=en").json()
+        data = requests.get("https://uselessfacts.jsph.pl/random.json?language=en").json()
         irc.reply(data['text'])
 
     useless = wrap(useless)
