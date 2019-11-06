@@ -1331,10 +1331,11 @@ class SpiffyTitles(callbacks.Plugin):
             log.error("SpiffyTitles missing schema. Retrying with %s" % (url_wschema))
             info = urlparse(url_wschema)
             domain = info.netloc
-            if not self.is_ignored_domain(domain, dynamic.channel):
-                return self.get_source_by_url(url_wschema)
-            else:
+            is_ignored = self.is_ignored_domain(domain, dynamic.channel)
+            if is_ignored:
                 return
+            else:
+                return self.get_source_by_url(url_wschema)
         except requests.exceptions.Timeout as e:
             log.error("SpiffyTitles Timeout: %s" % (str(e)))
 
