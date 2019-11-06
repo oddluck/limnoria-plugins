@@ -1330,9 +1330,7 @@ class SpiffyTitles(callbacks.Plugin):
             url_wschema = "http://%s" % (url)
             log.error("SpiffyTitles missing schema. Retrying with %s" % (url_wschema))
             info = urlparse(url_wschema)
-            domain = info.netloc
-            is_ignored = self.is_ignored_domain(domain, dynamic.channel)
-            if is_ignored:
+            if self.is_ignored_domain(info.netloc, dynamic.channel):
                 return
             else:
                 return self.get_source_by_url(url_wschema)
