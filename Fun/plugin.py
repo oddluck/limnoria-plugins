@@ -269,6 +269,6 @@ class Fun(callbacks.Plugin):
         reply = text.splitlines()
         excuse = random.randrange(0, len(reply))
         irc.reply(reply[excuse])
-    mitch = wrap(mitch)
+    chuck = wrap(chuck)
 
 Class = Fun
