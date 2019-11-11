@@ -248,5 +248,16 @@ class Fun(callbacks.Plugin):
         except:
             self.log.exception("Error fetching URL")
     catgif = wrap(catgif)
+    
+    def mitch(self, irc, msg, args):
+        """
+        Mitch (Hedberg) Jokes
+        """
+        data = open("{0}/mitch_hedberg.txt".format(os.path.dirname(os.path.abspath(__file__))))
+        text = data.read()
+        reply = text.splitlines()
+        excuse = random.randrange(0, len(reply))
+        irc.reply(reply[excuse])
+    mitch = wrap(mitch)
 
 Class = Fun
