@@ -1,5 +1,5 @@
 # Fun
-Limnoria plugin to return piglatin translation, play rock-paper-scissors. random; joke, cat fact, cat .gif, dev excuse, bofh excuse, useless fact, corporate buzzwords, startup idea, insult, mitch hedberg joke, chuck norris joke, or advice from various APIs.
+Limnoria plugin to return piglatin translation, play rock-paper-scissors. random; joke, cat fact, cat .gif, dev excuse, bofh excuse, useless fact, corporate buzzwords, startup idea, insult, mitch hedberg joke, chuck norris joke, or advice from various APIsand text files.
 
 
 requirements: limnoria (obviously) python 3, requests, html, arrr, bs4
