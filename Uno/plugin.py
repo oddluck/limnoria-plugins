@@ -240,15 +240,10 @@ class Uno(callbacks.Plugin):
         if card=='Wild Draw 4':
             turnplayer=list(self.game[table]['players'].keys())[self.game[table]['turn']]
             if 'Wild Draw 4' in self.game[table]['players'][turnplayer]['hand']:
-                if 'Wild' in discard:
-                    # can't play it, because wild draw 4 is black and color of last card
-                    # played is black (going by the letter of the rules).
-                    return False
-                else:
-                    discardcolor=discard.split(' ',1)[0]
-                    for c in self.game[table]['players'][turnplayer]['hand']:
-                        if discardcolor in c:
-                            return False
+                discardcolor=discard.split(' ',1)[0]
+                for c in self.game[table]['players'][turnplayer]['hand']:
+                    if discardcolor in c:
+                        return False
             return True
             
         unocolors=['Blue','Green','Red','Yellow']
@@ -676,9 +671,6 @@ class Uno(callbacks.Plugin):
             if text.lower()=='draw':
                 if self.game[table]['players'][nick].get('hasdrawn')==True:
                     irc.reply('You have already drawn a card.')
-                    return
-                if novalid==False:
-                    irc.reply("You can't draw because you have a card you can play")
                     return
                 else:
                     # Draw a card
