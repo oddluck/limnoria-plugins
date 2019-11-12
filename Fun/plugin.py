@@ -251,7 +251,7 @@ class Fun(callbacks.Plugin):
     
     def mitch(self, irc, msg, args):
         """
-        Mitch (Hedberg) Jokes
+        Mitch Hedberg Jokes
         """
         data = open("{0}/mitch_hedberg.txt".format(os.path.dirname(os.path.abspath(__file__))))
         text = data.read()
@@ -262,7 +262,7 @@ class Fun(callbacks.Plugin):
     
     def chuck(self, irc, msg, args):
         """
-        Mitch (Hedberg) Jokes
+        Chuck Norris Jokes
         """
         data = open("{0}/chuck_norris.txt".format(os.path.dirname(os.path.abspath(__file__))))
         text = data.read()
