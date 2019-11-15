@@ -66,10 +66,13 @@ class Geo(callbacks.Plugin):
             ip = stuff
         else:
             irc.reply("invalid nick or hostname/ip {0}".format(stuff))
-        res = reader.city(ip)
-        if res:
-            irc.reply('%s, %s, %s' % (res.city.name, res.subdivisions.most_specific.name, res.country.name ))
-        else:
+        try:
+            res = reader.city(ip)
+            if res:
+                irc.reply('%s, %s, %s' % (res.city.name, res.subdivisions.most_specific.name, res.country.name ))
+            else:
+                irc.reply("No results found")
+        except:
             irc.reply("No results found")
     geo = wrap(geo, ['text'])
 
