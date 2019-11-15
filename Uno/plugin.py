@@ -672,6 +672,9 @@ class Uno(callbacks.Plugin):
                 if self.game[table]['players'][nick].get('hasdrawn')==True:
                     irc.reply('You have already drawn a card.')
                     return
+                if novalid==False:
+                    irc.reply("You can't draw because you have a card you can play")
+                    return
                 else:
                     # Draw a card
                     c=self.game[table]['deck'].pop(random.randint(0,len(self.game[table]['deck'])-1))
