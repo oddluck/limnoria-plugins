@@ -62,6 +62,8 @@ class Geo(callbacks.Plugin):
             except:
                 irc.reply("Invalid nick/hostname {0}".format(stuff))
                 return
+        elif utils.net.isIP(stuff):
+            ip = stuff
         else:
             irc.reply("invalid nick or hostname/ip {0}".format(stuff))
         res = reader.city(ip)
