@@ -36,7 +36,7 @@ class Lyrics(callbacks.Plugin):
             irc.reply("Lyric searches must be formatted as artist, song name")
             return
         lyrics = pylyrics3.get_song_lyrics(lyric[0].strip(), lyric[1].strip())
-        if lyrics != 'None':
+        if lyrics and lyrics != 'None':
             lyrics = re.sub('(?<!\.|\!|\?)\s\\n', '.', lyrics).replace(" \n", "")
             irc.reply(lyrics)
         else:
