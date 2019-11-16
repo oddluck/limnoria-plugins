@@ -264,8 +264,12 @@ class Uno(callbacks.Plugin):
         return False
 
     def _uno_draw_card(self, table, player):
-        card=self.game[table]['deck'].pop(random.randint(0,len(self.game[table]['deck'])-1))
-        self.game[table]['players'][player]['hand'].append(card)
+        if len(self.game[table]['deck']) > 1:
+            card=self.game[table]['deck'].pop(random.randint(0,len(self.game[table]['deck'])-1))
+            self.game[table]['players'][player]['hand'].append(card)
+        else:
+            card=self.game[table]['deck'].pop(0)
+            self.game[table]['players'][player]['hand'].append(card)
         if len(self.game[table]['deck'])==0:
             self.game[table]['deck']=self.game[table]['discard']
             self.game[table]['discard']=[]
