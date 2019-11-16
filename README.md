@@ -33,16 +33,12 @@ Play interactive fiction games such as the Infocom classics Zork, The Hitchhiker
 
 <b>Lyrics</b>
 
-Retrieve song lyrics from http://lyrics.wikia.com/. Search powered by Google.
+Retrieve song lyrics from http://lyrics.wikia.com/.
 
 
 <b>Weed</b>
 
 Fetches cannabis (marijuana) strain information from the strain api https://strainapi.evanbusse.com/
-
-<b>WikiLeaf</b>
-
-<B>This plugin is currently broken. WikiLeaf did a redesign that makes scraping more difficult. Sorry.</b> Fetch cannabis (marijuana) strain information from https://www.wikileaf.com/. Search powered by Google.
 
 
 <b>Uno</b>
