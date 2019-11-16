@@ -31,7 +31,7 @@ class Lyrics(callbacks.Plugin):
         Get song lyrics from Lyrics Wiki. Format searches as artist, song name
         """
         if ',' in lyric:
-            lyric = lyric.split(',')
+            lyric = lyric.split(',', 1)
         else:
             irc.reply("Lyric searches must be formatted as artist, song name")
             return
