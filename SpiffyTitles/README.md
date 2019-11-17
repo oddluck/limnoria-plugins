@@ -9,7 +9,7 @@ The ONLY gluten-free plugin for displaying link titles.
 - Configurable template so you can decide how titles are displayed and what they say
 - Additional information about [Youtube](https://youtube.com) videos
 - Additional information about [imgur](https://imgur.com) links
-- Additional information about [imdb](https://imdb.com) links
+- Additional information about [IMDB](https://imdb.com) links
 - Article extracts from [Wikipedia](https://en.wikipedia.org) links
 - Rate limiting to mitigate abuse
 - Configurable white/black list to control where titles are disabled
