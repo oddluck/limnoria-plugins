@@ -87,7 +87,7 @@ class TimeBomb(callbacks.Plugin):
             self.rng.seed()
             try:
                 self.command_char = conf.supybot.reply.whenAddressedBy.chars()[0]
-            except KeyError:
+            except:
                 self.command_char = ''
             if self.debug:
                 self.irc.reply('I just created a bomb in {}'.format(channel))
