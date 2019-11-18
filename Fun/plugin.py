@@ -272,12 +272,12 @@ class Fun(callbacks.Plugin):
     chuck = wrap(chuck)
     
     def rot(self, irc, msg, args, text):
-        "Encode text with ROT13"
+        "<text> Encode text with ROT13"
         irc.reply(codecs.encode(text, "rot_13"))
     rot = wrap(rot, ['text'])
 
     def unrot(self, irc, msg, args, text):
-        "Decode ROT13 text"
+        "<text> Decode ROT13 text"
         irc.reply(codecs.decode(text, "rot_13"))
     unrot = wrap(unrot, ['text'])
 
