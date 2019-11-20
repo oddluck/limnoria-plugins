@@ -271,6 +271,17 @@ class Fun(callbacks.Plugin):
         irc.reply(reply[excuse])
     chuck = wrap(chuck)
     
+    def rodney(self, irc, msg, args):
+        """
+        Rodney Dangerfield Jokes
+        """
+        data = open("{0}/rodney_dangerfield.txt".format(os.path.dirname(os.path.abspath(__file__))))
+        text = data.read()
+        reply = text.splitlines()
+        excuse = random.randrange(0, len(reply))
+        irc.reply(reply[excuse])
+    rodney = wrap(rodney)
+    
     def rot(self, irc, msg, args, text):
         """<text>
         Encode text with ROT13
