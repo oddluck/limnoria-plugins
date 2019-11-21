@@ -1027,7 +1027,7 @@ class ASCII(callbacks.Plugin):
                             old_char = gsval
                         else:
                             old_char = '^^▀'
-                aimg[k] = re.sub("\x03\d\d,(\d\d\s+\x03)|\x03\d\d,(\d\d\s+)$", "\x0301,\g<1>", aimg[k])
+                #aimg[k] = re.sub("\x03\d\d,(\d\d\s+\x03)|\x03\d\d,(\d\d\s+)$", "\x0301,\g<1>", aimg[k])
                 aimg[k] = re.sub("\x0301,(\d\d)(\s+)\x03(\d\d)([^,])", "\x03\g<3>,\g<1>\g<2>\g<4>", aimg[k])
                 for i in range(0,98):
                     i = '%02d' % i
