@@ -1616,7 +1616,7 @@ class ASCII(callbacks.Plugin):
                 time.sleep(delay)
                 irc.reply(line, prefixNick = False, noLengthCheck=True, private=False, notice=False, to=channel)
     fortune = wrap(fortune, [optional('channel'), getopts({'delay':'float'})])
-    
+
     def mircart(self, irc, msg, args, channel, optlist, search):
         """[<channel>] (search text)
         Search https://mircart.org/ and scroll first result
