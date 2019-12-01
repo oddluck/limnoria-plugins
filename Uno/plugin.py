@@ -190,13 +190,13 @@ class Uno(callbacks.Plugin):
             else:
                 if self.channeloptions['use_colors']==True:
                     if 'Red' in topcard:
-                        topcardcolor = ircutils.mircColor(topcard, 'red', None)
+                        topcardcolor = ircutils.mircColor(topcard, 'red', 'black')
                     elif 'Blue' in topcard:
-                        topcardcolor = ircutils.mircColor(topcard, 'light blue', None)
+                        topcardcolor = ircutils.mircColor(topcard, 'light blue', 'black')
                     elif 'Green' in topcard:
-                        topcardcolor = ircutils.mircColor(topcard, 'green', None)
+                        topcardcolor = ircutils.mircColor(topcard, 'light green', 'black')
                     else:
-                        topcardcolor = ircutils.mircColor(topcard, 'yellow', None)
+                        topcardcolor = ircutils.mircColor(topcard, 'yellow', 'black')
                     txt="It is %s's turn. The top card is %s." % (nick, topcardcolor)
                     txt=txt.replace("s's","s'")
                     irc.reply(txt, to=channel)
@@ -204,15 +204,15 @@ class Uno(callbacks.Plugin):
                     yourhandcolor = []
                     for i in range (len(yourhand)):
                         if 'Red' in yourhand[i]:
-                            yourhandcolor.append(ircutils.mircColor(yourhand[i], 'red', None))
+                            yourhandcolor.append(ircutils.mircColor(yourhand[i], 'red', 'black'))
                         elif 'Green' in yourhand[i]:
-                            yourhandcolor.append(ircutils.mircColor(yourhand[i], 'green', None))
+                            yourhandcolor.append(ircutils.mircColor(yourhand[i], 'light green', 'black'))
                         elif 'Blue' in yourhand[i]:
-                            yourhandcolor.append(ircutils.mircColor(yourhand[i], 'light blue', None))
+                            yourhandcolor.append(ircutils.mircColor(yourhand[i], 'light blue', 'black'))
                         elif 'Yellow' in yourhand[i]:
-                            yourhandcolor.append(ircutils.mircColor(yourhand[i], 'yellow', None))
+                            yourhandcolor.append(ircutils.mircColor(yourhand[i], 'yellow', 'black'))
                         else:
-                            yourhandcolor.append(ircutils.mircColor(yourhand[i], None, None))
+                            yourhandcolor.append(ircutils.mircColor(yourhand[i], None, 'black'))
                     yourhandcolor = utils.str.commaAndify(yourhandcolor)
                     txt='It is your turn. The top card is %s. You have %s cards (%s). %s. To play a card, use the "uno play" command.' % (topcardcolor, ncards, yourhandcolor, opponent_cards)
                     if self.channeloptions['use_notice']==True:
@@ -235,12 +235,15 @@ class Uno(callbacks.Plugin):
 
     def _uno_is_valid_play(self, table, card, discard):
         if card=='Wild':
-            # Wild draw 4 is always a valid play for now
+            # Wild is always a valid play for now
             return True
         if card=='Wild Draw 4':
             turnplayer=list(self.game[table]['players'].keys())[self.game[table]['turn']]
             if 'Wild Draw 4' in self.game[table]['players'][turnplayer]['hand']:
-                discardcolor=discard.split(' ',1)[0]
+                if 'Wild' not in discard:
+                    discardcolor=discard.split(' ',1)[0]
+                else:
+                    discardcolor=discard.split('(',2)[1].strip(')')
                 for c in self.game[table]['players'][turnplayer]['hand']:
                     if discardcolor in c:
                         return False
@@ -580,13 +583,13 @@ class Uno(callbacks.Plugin):
                 card='%s (%s)' % (card, self.game[table]['wildcolor'])
             if self.channeloptions['use_colors']==True:
                 if 'Red' in card:
-                    cardcolor = ircutils.mircColor(card, 'red', None)
+                    cardcolor = ircutils.mircColor(card, 'red', 'black')
                 elif 'Blue' in card:
-                    cardcolor = ircutils.mircColor(card, 'light blue', None)
+                    cardcolor = ircutils.mircColor(card, 'light blue', 'black')
                 elif 'Green' in card:
-                    cardcolor = ircutils.mircColor(card, 'green', None)
+                    cardcolor = ircutils.mircColor(card, 'light green', 'black')
                 else:
-                    cardcolor = ircutils.mircColor(card, 'yellow', None)
+                    cardcolor = ircutils.mircColor(card, 'yellow', 'black')
                 irc.reply('%s played %s (%s cards left in hand).' % (nick, cardcolor, ncards), to=channel)
             else:
                 irc.reply('%s played %s (%s cards left in hand).' % (nick, card, ncards), to=channel)
@@ -761,13 +764,13 @@ class Uno(callbacks.Plugin):
                 card='%s (%s)' % (card, self.game[table]['wildcolor'])
             if self.channeloptions['use_colors']==True:
                 if 'Red' in card:
-                    cardcolor = ircutils.mircColor(card, 'red', None)
+                    cardcolor = ircutils.mircColor(card, 'red', 'black')
                 elif 'Blue' in card:
-                    cardcolor = ircutils.mircColor(card, 'light blue', None)
+                    cardcolor = ircutils.mircColor(card, 'light blue', 'black')
                 elif 'Green' in card:
-                    cardcolor = ircutils.mircColor(card, 'green', None)
+                    cardcolor = ircutils.mircColor(card, 'light green', 'black')
                 else:
-                    cardcolor = ircutils.mircColor(card, 'yellow', None)
+                    cardcolor = ircutils.mircColor(card, 'yellow', 'black')
                 if self.game[table]['players'][nick].get('hasdrawn')==True:
                     irc.reply("%s draws a card, and plays it; It's a %s (%s cards left in hand)." % (nick, cardcolor, ncards), to=channel)
                     self.game[table]['players'][nick]['hasdrawn']=False
