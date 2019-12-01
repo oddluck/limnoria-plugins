@@ -61,6 +61,13 @@ conf.registerChannelValue(Markovgen, 'probability',
 conf.registerChannelValue(Markovgen, 'stripRelayedNick',
     registry.Boolean(True, _("""Determines whether the bot will strip
     strings like <XXX> at the beginning of messages.""")))
+conf.registerChannelValue(Markovgen, 'ignorePattern',
+    registry.Regexp("", _("""Mesages matching this pattern will be ignored.""")))
+conf.registerChannelValue(Markovgen, 'stripPattern',
+    registry.Regexp("", _("""Text matching this pattern will be stripped.""")))
+conf.registerChannelValue(Markovgen, 'stripURL',
+    registry.Boolean(True, _("""Determines whether the bot will strip
+    URLs from messages.""")))
 
 conf.registerGroup(Markovgen, 'onNick')
 conf.registerChannelValue(Markovgen.onNick, 'probability',
@@ -70,6 +77,5 @@ conf.registerChannelValue(Markovgen.onNick, 'replaceNick',
     registry.Boolean(True, _("""Determine whether the bot will replace its
     nick by the original author's when replying to a message containing
     its nick.""")))
-
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
