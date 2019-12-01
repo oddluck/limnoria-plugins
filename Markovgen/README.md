@@ -8,3 +8,5 @@ plugins.Markovgen.stripPattern (set regex patterns for the bot to strip)
 
 plugins.Markovgen.stripURL (determine if the bot will strip URLs)
 
+plugins.Markovgen.ignoreNicks (list of nicks to ignore)
+
