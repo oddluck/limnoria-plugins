@@ -140,6 +140,8 @@ class Markovgen(callbacks.Plugin):
             return
         if not self.registryValue('enable', channel):
             return
+        if self.registryValue('ignoreCommands', channel) and callbacks.addressed(irc.nick, msg):
+            return
         match = False
         ignore = self.registryValue("ignorePattern", channel)
         strip = self.registryValue("stripPattern", channel)
@@ -152,6 +154,8 @@ class Markovgen(callbacks.Plugin):
             log.debug("Markovgen: nick %s in ignoreNicks for %s" % (msg.nick, channel))
             return
         m = self._get_markov(irc, channel)
+        if self.registryValue('stripFormatting', channel):
+            message = ircutils.stripFormatting(message)
         if strip:
             match = re.findall(strip, message)
             if match:
