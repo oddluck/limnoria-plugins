@@ -10,3 +10,6 @@ plugins.Markovgen.stripURL (determine if the bot will strip URLs)
 
 plugins.Markovgen.ignoreNicks (list of nicks to ignore)
 
+plugins.Markovgen.ignoreCommands (ignore commands sent to the bot)
+
+plugins.Markovgen.stripFormatting (strip bold, underline, and color from messages)
