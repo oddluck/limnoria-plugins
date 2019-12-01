@@ -145,7 +145,7 @@ class Markovgen(callbacks.Plugin):
         if pattern:
             match = re.search(pattern, message)
             if match:
-                log.debug("Markovgen: title %s matches ignorePattern for %s" %
+                log.debug("Markovgen: message %s matches ignorePattern for %s" %
                           (input, channel))
                 return
         m = self._get_markov(irc, channel)
