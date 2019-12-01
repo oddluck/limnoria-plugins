@@ -1,2 +1,5 @@
-Insert a description of your plugin here, with any notes, etc. about 
-using it.
+Forked from: https://github.com/ProgVal/Supybot-plugins/tree/master/Markovgen
+
+Additions:
+
+config plugins.Markovgen.IgnorePattern (set regex patterns for the bot to ignore)
