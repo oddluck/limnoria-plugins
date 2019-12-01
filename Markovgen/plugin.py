@@ -148,6 +148,9 @@ class Markovgen(callbacks.Plugin):
             if match:
                 log.debug("Markovgen: %s matches ignorePattern for %s" % (message, channel))
                 return
+        if msg.nick.lower() in self.registryValue('ignoreNicks', channel):
+            log.debug("Markovgen: nick %s in ignoreNicks for %s" % (msg.nick, channel))
+            return
         m = self._get_markov(irc, channel)
         if strip:
             match = re.findall(strip, message)
