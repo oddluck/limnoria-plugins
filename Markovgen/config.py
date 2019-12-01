@@ -68,6 +68,8 @@ conf.registerChannelValue(Markovgen, 'stripPattern',
 conf.registerChannelValue(Markovgen, 'stripURL',
     registry.Boolean(True, _("""Determines whether the bot will strip
     URLs from messages.""")))
+conf.registerChannelValue(Markovgen, 'ignoreNicks',
+    registry.SpaceSeparatedListOfStrings([], _("""A list of nicks to be ignored by the bot""")))
 
 conf.registerGroup(Markovgen, 'onNick')
 conf.registerChannelValue(Markovgen.onNick, 'probability',
