@@ -243,7 +243,7 @@ class Uno(callbacks.Plugin):
                 if 'Wild' not in discard:
                     discardcolor=discard.split(' ',1)[0]
                 else:
-                    discardcolor=discard.split('(',2)[1].strip(')')
+                    discardcolor=self.game[table].get('wildcolor')
                 for c in self.game[table]['players'][turnplayer]['hand']:
                     if discardcolor in c:
                         return False
