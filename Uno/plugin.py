@@ -734,7 +734,7 @@ class Uno(callbacks.Plugin):
                 card=[c for c in validwild if c.lower()==text.lower()]
                 if len(card)!=0:
                     card=card[0].rsplit(' ',1)
-                    self.game[table]['wildcolor']=card[1]
+                    newcolor=card[1]
                     card=[card[0]]
             else:
                 if card[0]=='Wild' or card[0]=='Wild Draw 4':
@@ -762,6 +762,7 @@ class Uno(callbacks.Plugin):
             self.game[table]['discard'].append(card)
             ncards=len(self.game[table]['players'][nick]['hand'])            
             if 'Wild' in card:
+                self.game[table]['wildcolor']=newcolor
                 card='%s (%s)' % (card, self.game[table]['wildcolor'])
             if self.channeloptions['use_colors']==True:
                 if 'Red' in card:
