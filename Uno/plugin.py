@@ -233,20 +233,19 @@ class Uno(callbacks.Plugin):
         else:
             pass
 
-    def _uno_is_valid_play(self, table, card, discard):
+    def _uno_is_valid_play(self, table, card, discard, wildcolor):
         if card=='Wild':
             # Wild is always a valid play for now
             return True
         if card=='Wild Draw 4':
             turnplayer=list(self.game[table]['players'].keys())[self.game[table]['turn']]
-            if 'Wild Draw 4' in self.game[table]['players'][turnplayer]['hand']:
-                if 'Wild' not in discard:
-                    discardcolor=discard.split(' ',1)[0]
-                else:
-                    discardcolor=self.game[table].get('wildcolor')
-                for c in self.game[table]['players'][turnplayer]['hand']:
-                    if discardcolor in c:
-                        return False
+            if 'Wild' not in discard:
+                discardcolor=discard.split(' ',1)[0]
+            else:
+                discardcolor=wildcolor
+            for c in self.game[table]['players'][turnplayer]['hand']:
+                if discardcolor in c:
+                    return False
             return True
             
         unocolors=['Blue','Green','Red','Yellow']
@@ -548,16 +547,17 @@ class Uno(callbacks.Plugin):
         
         nick=list(self.game[table]['players'].keys())[self.game[table]['turn']]
         discard=self.game[table]['discard'][-1]
+        wildcolor = self.game[table].get('wildcolor')
         novalid=True
         for c in self.game[table]['players'][nick]['hand']:
-            if self._uno_is_valid_play(table, c, discard)==True:
+            if self._uno_is_valid_play(table, c, discard, wildcolor)==True:
                 novalid=False
         if novalid==True:
             # draw a card
             card=self._uno_draw_card(table, nick)
             self.game[table]['players'][nick]['hasdrawn']=True
             
-            if self._uno_is_valid_play(table, card, discard)==True:
+            if self._uno_is_valid_play(table, card, discard, wildcolor)==True:
                 # always play the card if possible
                 ncards=len(self.game[table]['players'][nick]['hand'])
                 irc.reply("%s draws a card, and plays it; It's a %s (%s cards left in hand)." % (nick, card, ncards), to=channel)
@@ -570,7 +570,7 @@ class Uno(callbacks.Plugin):
                 card=''
         else:
             # pick a random card
-            playablecards=[c for c in self.game[table]['players'][nick]['hand'] if self._uno_is_valid_play(table, c, discard)==True or 'Wild' in c]
+            playablecards=[c for c in self.game[table]['players'][nick]['hand'] if self._uno_is_valid_play(table, c, discard, wildcolor)==True or 'Wild' in c]
             card=random.choice(playablecards)
             if card=='Wild' or card=='Wild Draw 4':
                 # Just do dumb blind color choice
@@ -669,10 +669,11 @@ class Uno(callbacks.Plugin):
             text=text.strip()
             
             discard=self.game[table]['discard'][-1]
+            wildcolor=self.game[table].get('wildcolor')
             novalid=True
             
             for c in self.game[table]['players'][nick]['hand']:
-                if self._uno_is_valid_play(table, c, discard)==True:
+                if self._uno_is_valid_play(table, c, discard, wildcolor)==True:
                     novalid=False
             
             if text.lower()=='draw':
@@ -686,7 +687,7 @@ class Uno(callbacks.Plugin):
                     # Draw a card
                     c=self.game[table]['deck'].pop(random.randint(0,len(self.game[table]['deck'])-1))
                     self.game[table]['players'][nick]['hand'].append(c)
-                    if self._uno_is_valid_play(table, c, discard)==True:
+                    if self._uno_is_valid_play(table, c, discard, wildcolor)==True:
                         self.reply(irc, 'You draw a %s from the draw pile. You can choose not to play this card using "%suno play done"' % (c, self.prefixChar), to=nick, notice=True, private=True)
                         self.game[table]['players'][nick]['hasdrawn']=True
                         return
@@ -752,7 +753,7 @@ class Uno(callbacks.Plugin):
                 return
             
             # check for illegal move
-            if self._uno_is_valid_play(table, card, discard)==False:
+            if self._uno_is_valid_play(table, card, discard, wildcolor)==False:
                 irc.reply("You can't play that card.")
                 return
             
