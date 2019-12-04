@@ -14,7 +14,7 @@ import importlib
 # in here if you're keeping the plugin in CVS or some similar system.
 __version__ = ""
 
-__author__ = supybot.Author('SpiderDave', 'SpiderDave', 'https://github.com/SpiderDave/spidey-supybot-plugins')
+__author__ = supybot.Author('SpiderDave', 'SpiderDave', '')
 __maintainer__ = getattr(supybot.authors, 'oddluck',
                          supybot.Author('oddluck', 'oddluck', 'oddluck@riseup.net'))
 
