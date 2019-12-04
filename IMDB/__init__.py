@@ -18,7 +18,7 @@ __version__ = ""
 
 # XXX Replace this with an appropriate author or supybot.Author instance.
 __author__ = supybot.Author('butterscotchstallion', 'butterscotchstallion',
-                            'https://github.com/butterscotchstallion/limnoria-plugins/')
+                            '')
 __maintainer__ = getattr(supybot.authors, 'oddluck',
                          supybot.Author('oddluck', 'oddluck', 'oddluck@riseup.net'))
 
