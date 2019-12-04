@@ -46,13 +46,15 @@ __version__ = ""
 # XXX Replace this with an appropriate author or supybot.Author instance.
 __author__ = supybot.Author('quantumlemur', 'quantumlemur',
                             'quantumlemur@users.sourceforge.net')
+__maintainer__ = getattr(supybot.authors, 'oddluck',
+                         supybot.Author('oddluck', 'oddluck', 'oddluck@riseup.net'))
 
 # This is a dictionary mapping supybot.Author instances to lists of
 # contributions.
 __contributors__ = {}
 
 # This is a url where the most recent plugin package can be downloaded.
-__url__ = ''  # 'http://supybot.com/Members/yourname/TimeBomb/download'
+__url__ = 'https://github.com/oddluck/limnoria-plugins/'
 
 from . import config
 from . import plugin
