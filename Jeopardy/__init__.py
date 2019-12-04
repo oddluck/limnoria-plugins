@@ -1,5 +1,5 @@
 ###
-# Copyright (c) 2010, quantumlemur
+# Copyright (c) 2019, oddluck
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -41,18 +41,19 @@ import supybot.world as world
 __version__ = ""
 
 # XXX Replace this with an appropriate author or supybot.Author instance.
-__author__ = supybot.Author('quantumlemur', 'quantumlemur',
-                            'quantumlemur@users.sourceforge.net')
-__maintainer__ = getattr(supybot.authors, 'oddluck',
-                         supybot.Author('oddluck', 'oddluck', 'oddluck@riseup.net'))
+__author__ = supybot.Author('oddluck', 'oddluck',
+                            'oddluck@riseup.net')
 
 # This is a dictionary mapping supybot.Author instances to lists of
 # contributions.
-if not hasattr(supybot.authors, 'progval'):
+if not hasattr(supybot.authors, 'progval') or hasattr(supybot.authors, 'quantumlemur'):
     supybot.authors.progval = supybot.Author('Valentin Lorentz', 'ProgVal',
                                              'progval@gmail.com')
-__contributors__ = {supybot.authors.progval: ['code enhancement'],
-                    __maintainer__:          ['Jeopardy! stuff', 'lots more']}
+    supybot.authors.quantumlemur = supybot.Author('quantumlemur', 'quantumlemur',
+                                                  'quantumlemur@users.sourceforge.net')
+__contributors__ = {supybot.authors.quantumlemur: ['original plugin base']
+                    supybot.authors.progval:      ['code enhancement'],
+                    __author__:                   ['Jeopardy! stuff', 'lots more']}
 
 # This is a url where the most recent plugin package can be downloaded.
 __url__ = 'https://github.com/oddluck/limnoria-plugins/'
