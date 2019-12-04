@@ -22,7 +22,6 @@ __author__ = supybot.Author('butterscotchstallion', 'butterscotchstallion',
 __maintainer__ = getattr(supybot.authors, 'oddluck',
                          supybot.Author('oddluck', 'oddluck', 'oddluck@riseup.net'))
 
-
 # This is a dictionary mapping supybot.Author instances to lists of
 # contributions.
 __contributors__ = {}
