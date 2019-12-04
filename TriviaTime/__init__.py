@@ -15,18 +15,20 @@ import imp
 
 # Use this for the version of this plugin.  You may wish to put a CVS keyword
 # in here if you're keeping the plugin in CVS or some similar system.
-__version__ = "v1.3.2"
+__version__ = ""
 
 # XXX Replace this with an appropriate author or supybot.Author instance.
 __author__ = supybot.Author('Tanner', 'tann',
                                 'tann@trivialand.org')
+__maintainer__ = getattr(supybot.authors, 'oddluck',
+                         supybot.Author('oddluck', 'oddluck', 'oddluck@riseup.net'))
 
 # This is a dictionary mapping supybot.Author instances to lists of
 # contributions.
-__contributors__ = {'rootcoma', 'Th0masR0ss', 'brrr'}
+__contributors__ = {'oddluck', 'rootcoma', 'Th0masR0ss', 'brrr'}
 
 # This is a url where the most recent plugin package can be downloaded.
-__url__ = 'https://github.com/tannn/TriviaTime/tree/master'
+__url__ = 'https://github.com/oddluck/limnoria-plugins/'
 
 from . import config
 from . import plugin
