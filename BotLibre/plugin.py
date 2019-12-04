@@ -1,5 +1,5 @@
 ###
-# Copyright (c) 2015, Michael Daniel Telatynski <postmaster@webdevguru.co.uk>
+# Copyright (c) 2019, oddluck <oddluck@riseup.net>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
