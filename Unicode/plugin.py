@@ -43,7 +43,8 @@ HEADERS = dict(ua = 'Zoia/1.0 (Supybot/0.83; Unicode Plugin; http://code4lib.org
 class Unicode(callbacks.Plugin):
 
     def unicode(self, irc, msg, args, query):
-      """[query] - Look up unicode character details
+      """[character]
+      Look up unicode character details
       """
       url = "http://unicodelookup.com/lookup?"
       url = url + urlencode({'q' : query, 'o' : 0})
@@ -60,7 +61,7 @@ class Unicode(callbacks.Plugin):
       except ValueError:
         irc.reply('No unicode characters matching /' + query + '/ found.')
 
-    unicode = unicode(unicode, ['text'])
+    unicode = wrap(unicode, ['text'])
 
 Class = Unicode
 
