@@ -52,8 +52,7 @@ if not hasattr(supybot.authors, 'progval') or not hasattr(supybot.authors, 'quan
     supybot.authors.quantumlemur = supybot.Author('quantumlemur', 'quantumlemur',
                                                   'quantumlemur@users.sourceforge.net')
 __contributors__ = {supybot.authors.quantumlemur: ['original plugin base'],
-                    supybot.authors.progval:      ['code enhancement'],
-                    __author__:                   ['Jeopardy! stuff', 'lots more']}
+                    supybot.authors.progval:      ['code enhancement']}
 
 # This is a url where the most recent plugin package can be downloaded.
 __url__ = 'https://github.com/oddluck/limnoria-plugins/'
