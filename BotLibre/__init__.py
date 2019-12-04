@@ -30,7 +30,7 @@
 
 """
 Enables the bot to respond to humans via the
-Cleverbot AI through the BotLibre API.
+BotLibre API.
 """
 
 import supybot
