@@ -51,7 +51,7 @@ if not hasattr(supybot.authors, 'progval') or hasattr(supybot.authors, 'quantuml
                                              'progval@gmail.com')
     supybot.authors.quantumlemur = supybot.Author('quantumlemur', 'quantumlemur',
                                                   'quantumlemur@users.sourceforge.net')
-__contributors__ = {supybot.authors.quantumlemur: ['original plugin base']
+__contributors__ = {supybot.authors.quantumlemur: ['original plugin base'],
                     supybot.authors.progval:      ['code enhancement'],
                     __author__:                   ['Jeopardy! stuff', 'lots more']}
 
