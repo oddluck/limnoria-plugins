@@ -46,7 +46,7 @@ __author__ = supybot.Author('oddluck', 'oddluck',
 
 # This is a dictionary mapping supybot.Author instances to lists of
 # contributions.
-if not hasattr(supybot.authors, 'progval') or hasattr(supybot.authors, 'quantumlemur'):
+if not hasattr(supybot.authors, 'progval') or not hasattr(supybot.authors, 'quantumlemur'):
     supybot.authors.progval = supybot.Author('Valentin Lorentz', 'ProgVal',
                                              'progval@gmail.com')
     supybot.authors.quantumlemur = supybot.Author('quantumlemur', 'quantumlemur',
