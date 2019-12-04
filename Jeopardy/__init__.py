@@ -38,21 +38,24 @@ import supybot.world as world
 
 # Use this for the version of this plugin.  You may wish to put a CVS keyword
 # in here if you're keeping the plugin in CVS or some similar system.
-__version__ = "1.0"
+__version__ = ""
 
 # XXX Replace this with an appropriate author or supybot.Author instance.
 __author__ = supybot.Author('quantumlemur', 'quantumlemur',
-                'quantumlemur@users.sourceforge.net')
+                            'quantumlemur@users.sourceforge.net')
+__maintainer__ = getattr(supybot.authors, 'oddluck',
+                         supybot.Author('oddluck', 'oddluck', 'oddluck@riseup.net'))
 
 # This is a dictionary mapping supybot.Author instances to lists of
 # contributions.
 if not hasattr(supybot.authors, 'progval'):
     supybot.authors.progval = supybot.Author('Valentin Lorentz', 'ProgVal',
-                                            'progval@gmail.com')
-    __contributors__ = {supybot.authors.progval: ['code enhancement']}
+                                             'progval@gmail.com')
+__contributors__ = {supybot.authors.progval: ['code enhancement'],
+                    __maintainer__:          ['Jeopardy! stuff', 'lots more']}
 
 # This is a url where the most recent plugin package can be downloaded.
-__url__ = '' # 'http://supybot.com/Members/yourname/Trivia/download'
+__url__ = 'https://github.com/oddluck/limnoria-plugins/'
 
 from . import config
 from . import plugin
