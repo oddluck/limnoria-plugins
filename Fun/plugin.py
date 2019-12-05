@@ -16,6 +16,7 @@ import requests
 from bs4 import BeautifulSoup
 import codecs
 import os
+import collections
 
 try:
     from supybot.i18n import PluginInternationalization
@@ -282,7 +283,7 @@ class Fun(callbacks.Plugin):
         excuse = random.randrange(0, len(reply))
         irc.reply(reply[excuse])
     rodney = wrap(rodney)
-    
+
     def rot(self, irc, msg, args, text):
         """<text>
         Encode text with ROT13
@@ -296,5 +297,115 @@ class Fun(callbacks.Plugin):
         """
         irc.reply(codecs.decode(text, "rot_13"))
     unrot = wrap(unrot, ['text'])
+
+    def coin(self, irc, msg, args, optcoin):
+        """[coin]
+        Fetches current values for a given coin
+        """
+        coin_url = 'https://min-api.cryptocompare.com/data/pricemultifull?fsyms={coins}&tsyms=USD'
+        coins = []
+        coins.append(optcoin)
+        coins_str = ','.join(c.upper() for c in coins)
+        coin_data = requests.get(coin_url.format(coins=coins_str))
+        coin_data = coin_data.json()
+        if 'RAW' not in coin_data:
+            irc.reply('ERROR: no coin found for {}'.format(optcoin))
+            return
+        output = []
+        tmp = {}
+        data = coin_data['RAW']
+        data2 = collections.OrderedDict.fromkeys(sorted(data))
+        for k,v in data.items():
+            data2.update({k: v})
+        output = self._parseCoins(data2, optcoin)
+        irc.reply(' | '.join(t for t in output))
+        return
+    coin = wrap(coin, ['text'])
+
+    def coins(self, irc, msg, args, optcoin):
+        """
+        Fetches current values for top 10 coins (+ dogecoin) trading by volume
+        """
+        volm_url = 'https://min-api.cryptocompare.com/data/top/totalvol?limit=10&tsym=USD'
+        coin_url = 'https://min-api.cryptocompare.com/data/pricemultifull?fsyms={coins}&tsyms=USD'
+        volm_data = requests.get(volm_url).json()
+        coins = []
+        for thing in volm_data['Data']:
+            name = thing['CoinInfo']['Name']
+            coins.append(name)
+        coins.append('DOGE')
+        coins_str = ','.join(c for c in coins)
+        coin_data = requests.get(coin_url.format(coins=coins_str))
+        coin_data = coin_data.json()
+        output = []
+        tmp = {}
+        data = coin_data['RAW']
+        tmp['BTC'] = data.pop('BTC')
+        data2 = collections.OrderedDict.fromkeys(sorted(data))
+        for k,v in data.items():
+            data2.update({k: v})
+        data2.update(tmp)
+        data2.move_to_end('BTC', last=False)
+        output = self._parseCoins(data2, optcoin)
+        irc.reply(' | '.join(t for t in output))
+        return
+    coins = wrap(coins, [optional('somethingWithoutSpaces')])
+
+    def _parseCoins(self, data, optmarket=None):
+
+        ticker = []
+
+        def _humifyCap(cap):
+            if not cap:
+                return cap
+            if cap > 1000000000000:
+                cap = cap / 1000000000000
+                cap = '${:.2f}T'.format(cap)
+                return cap
+            elif cap > 1000000000:
+                cap = cap / 1000000000
+                cap = '${:.2f}B'.format(cap)
+            elif cap > 1000000:
+                cap = cap / 1000000
+                cap = '${:.2f}M'.format(cap)
+            else:
+                cap = '${:.2f}'.format(cap)
+                return cap
+            return cap
+
+        for symbol in data:
+            name = symbol
+            name = ircutils.bold(name)
+            symbol = data[symbol]['USD']
+            current_price = symbol['PRICE']
+            change = symbol['CHANGEDAY']
+            pct_change = symbol['CHANGEPCTDAY']
+            high24 = '${:g}'.format(symbol['HIGH24HOUR'])
+            low24 = '${:g}'.format(symbol['LOW24HOUR'])
+            mcap = _humifyCap(symbol['MKTCAP'])
+            if 0 < pct_change < 0.5:
+                change = ircutils.mircColor('+{:g}'.format(change), 'yellow')
+                pct_change = ircutils.mircColor('+{:.2g}%'.format(pct_change), 'yellow')
+            elif pct_change >= 0.5:
+                change = ircutils.mircColor('+{:g}'.format(change), 'green')
+                pct_change = ircutils.mircColor('+{:.2g}%'.format(pct_change), 'green')
+            elif 0 > pct_change > -0.5:
+                change = ircutils.mircColor('{:g}'.format(change), 'orange')
+                pct_change = ircutils.mircColor('{:.2g}%'.format(pct_change), 'orange')
+            elif pct_change <= -0.5:
+                change = ircutils.mircColor('{:g}'.format(change), 'red')
+                pct_change = ircutils.mircColor('{:.2g}%'.format(pct_change), 'red')
+            else:
+                change = '{:g}'.format(change)
+                pct_change = '{:g}%'.format(pct_change)
+            string = '{} ${:g} {} ({})'.format(name, current_price, change, pct_change)
+            if optmarket:
+                if optmarket.lower() in name.lower():
+                    string += ' :: \x02Market Cap:\x02 {} | \x0224hr High:\x02 {} | \x0224hr Low:\x02 {}'.format(
+                        mcap, ircutils.mircColor(high24, 'green'), ircutils.mircColor(low24, 'red'))
+                    ticker.append(string)
+            else:
+                ticker.append(string)
+        return ticker
 
 Class = Fun
