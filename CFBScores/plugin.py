@@ -12,7 +12,7 @@ import json
 import html
 from bs4 import BeautifulSoup
 import re
-
+import os
 from supybot import utils, plugins, ircutils, callbacks, schedule
 from supybot.commands import *
 try:
@@ -41,7 +41,7 @@ class CFBScores(callbacks.Plugin):
         self._current_week = 0
         self._cfb_byes = {}
         
-        with open("abbrv.json", 'r') as json_file:
+        with open("{0}/abbrv.json".format(os.path.dirname(os.path.abspath(__file__))), 'r') as json_file:
             self.abbrv = json.load(json_file)
             
         if not self.abbrv:
