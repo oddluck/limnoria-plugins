@@ -8,13 +8,16 @@ Requires Limnoria, obviously. Additional requirements in readmes or requirements
 
 gitlab mirror: https://gitlab.com/oddluck/limnoria-plugins
 
+
 <b>ASCII</b>
 
 Plugin to turn text and images into ASCII/ANSI Art. ASCII weather forecasts and moon phases. Also supports scrolling IRC ASCII .txt and ANSI .ans/.asc files. Convert ascii art text files to PNG. Additional (optional) support for; TDFiglet, Picture to Unicode (p2u), ANSI to IRC (a2m), and toilet.
 
+
 <b>BotLibre</b>
 
 Plugin to interface with the Bot Libre chat API.
+
 
 <b>Jeopardy</b>
 
@@ -23,7 +26,7 @@ Fork of Trivia with option to use jservice.io (156,800+ Jeopardy! questions) as 
 
 <b>Fun</b>
 
-Return a random; joke, cat fact, cat .gif, dev excuse, bofh excuse, useless fact, corporate buzzwords, startup idea, insult, or advice from various APIs. Also piglatin translation and play rock-paper-scissors. 
+Return a random; joke, cat fact, cat .gif, dev excuse, bofh excuse, useless fact, corporate buzzwords, startup idea, insult, or advice from various APIs. Also piglatin translation and play rock-paper-scissors. Plus more. 
 
 
 <b>Frotz</b>
@@ -63,11 +66,6 @@ The classic game of IRC DuckHunt. Top scores/times per channel. Lots of stats, e
 <b>TimeBomb</b>
 
 The classic game of IRC TimeBomb.
-
-
-<b>MUD/Telnet</b>
-
-MUD/Telnet client. Use Telnet and/or Play Multi User Dungeon text games with others over IRC. Multi-user support, play with IRC friends. Or just make changes to your router or whatever.
 
 
 <b>Unicode</b>
