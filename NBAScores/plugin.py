@@ -27,7 +27,7 @@ import supybot.ircutils as ircutils
 import supybot.callbacks as callbacks
 try:
     from supybot.i18n import PluginInternationalization
-    _ = PluginInternationalization('NBA')
+    _ = PluginInternationalization('NBAScores')
 except ImportError:
     # Placeholder that allows to run the plugin on a bot
     # without the i18n module
@@ -40,7 +40,7 @@ import json
 import pytz
 from xml.etree import ElementTree
 
-class NBA(callbacks.Plugin):
+class NBAScores(callbacks.Plugin):
     """Get scores from NBA.com."""
 
     _ENDPOINT_BASE_URL = 'https://data.nba.net'
@@ -63,7 +63,7 @@ class NBA(callbacks.Plugin):
                                 'BKN', 'POR', 'GSW', 'LAC', 'WAS'))
 
     def __init__(self, irc):
-        self.__parent = super(NBA, self)
+        self.__parent = super(NBAScores, self)
         self.__parent.__init__(irc)
 
         self._http = httplib2.Http('.cache')
@@ -131,7 +131,7 @@ class NBA(callbacks.Plugin):
     nba = wrap(nba, [optional('somethingWithoutSpaces'),
                      optional('somethingWithoutSpaces')])
 
-    def tv(self, irc, msg, args, team):
+    def nbatv(self, irc, msg, args, team):
         """[<TTT>]
 
         Given a team, if there is a game scheduled for today,
@@ -154,9 +154,9 @@ class NBA(callbacks.Plugin):
         broadcasters_string = self._broadcastersToString(game['tv_broadcasters'])
         irc.reply('{} on: {}'.format(game_string, broadcasters_string))
 
-    tv = wrap(tv, ['somethingWithoutSpaces'])
+    nbatv = wrap(nbatv, ['somethingWithoutSpaces'])
 
-    def next(self, irc, msg, args, n, team, team2):
+    def nbanext(self, irc, msg, args, n, team, team2):
         """[<n>] <TTT> [<TTT>]
 
         Get the next <n> games (1 by default; max. 10) for a given team
@@ -205,11 +205,11 @@ class NBA(callbacks.Plugin):
             irc.reply(self._upcomingGameToString(game))
 
 
-    next = wrap(next, [optional('positiveInt'),
+    nbanext = wrap(nbanext, [optional('positiveInt'),
                        'somethingWithoutSpaces',
                        optional('somethingWithoutSpaces')])
 
-    def last(self, irc, msg, args, n, team, team2):
+    def nbalast(self, irc, msg, args, n, team, team2):
         """[<n>] <TTT> [<TTT>]
 
         Get the last <n> games (1 by default; max. 10) for a given team
@@ -259,7 +259,7 @@ class NBA(callbacks.Plugin):
             irc.reply(self._pastGameToString(game))
 
 
-    last = wrap(last, [optional('positiveInt'),
+    nbalast = wrap(nbalast, [optional('positiveInt'),
                        'somethingWithoutSpaces',
                        optional('somethingWithoutSpaces')])
 
@@ -814,6 +814,6 @@ class NBA(callbacks.Plugin):
         return url
 
 
-Class = NBA
+Class = NBAScores
 
 # vim:set shiftwidth=4 softtabstop=4 expandtab textwidth=79:

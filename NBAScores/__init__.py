@@ -28,30 +28,49 @@
 
 ###
 
-import supybot.conf as conf
-import supybot.registry as registry
-try:
-    from supybot.i18n import PluginInternationalization
-    _ = PluginInternationalization('NBA')
-except:
-    # Placeholder that allows to run the plugin on a bot
-    # without the i18n module
-    _ = lambda x: x
+"""
+NBAScores: Get scores from NBA.com
+"""
 
+import supybot
+import supybot.world as world
 
-def configure(advanced):
-    # This will be called by supybot to configure this module.  advanced is
-    # a bool that specifies whether the user identified themself as an advanced
-    # user or not.  You should effect your configuration by manipulating the
-    # registry as appropriate.
-    from supybot.questions import expect, anything, something, yn
-    conf.registerPlugin('NBA', True)
+# Use this for the version of this plugin.  You may wish to put a CVS keyword
+# in here if you're keeping the plugin in CVS or some similar system.
+__version__ = ""
 
+# XXX Replace this with an appropriate author or supybot.Author instance.
+__author__ = supybot.Author('Santiago Gil', 'santigl', '')
+__maintainer__ = getattr(supybot.authors, 'oddluck',
+                         supybot.Author('oddluck', 'oddluck', 'oddluck@riseup.net'))
 
-NBA = conf.registerPlugin('NBA')
-# This is where your configuration variables (if any) should go.  For example:
-# conf.registerGlobalValue(NBA, 'someConfigVariableName',
-#     registry.Boolean(False, _("""Help for someConfigVariableName.""")))
+# This is a dictionary mapping supybot.Author instances to lists of
+# contributions.
+if not hasattr(supybot.authors, 'cottongin') or not hasattr(supybot.authors, 'santigl'):
+    supybot.authors.cottongin = supybot.Author('cottongin', 'cottongin',
+                                               'cottongin@cottongin.club')
+    supybot.authors.santigl = supybot.Author('Santiago Gil', 'santigl', '')
+    
+__contributors__ = {supybot.authors.santigl:   ['original plugin base'],
+                    supybot.authors.cottongin: ['code enhancement']}
+
+# This is a url where the most recent plugin package can be downloaded.
+__url__ = 'https://github.com/oddluck/limnoria-plugins/'
+
+from . import config
+from . import plugin
+from imp import reload
+# In case we're being reloaded.
+reload(config)
+reload(plugin)
+# Add more reloads here if you add third-party modules and want them to be
+# reloaded when this plugin is reloaded.  Don't forget to import them as well!
+
+if world.testing:
+    from . import test
+
+Class = plugin.Class
+configure = config.configure
 
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
