@@ -1,0 +1,1 @@
+Fetches CFB scores
