@@ -11,7 +11,7 @@ from supybot import utils, plugins, ircutils, callbacks, schedule, conf
 from supybot.commands import *
 try:
     from supybot.i18n import PluginInternationalization
-    _ = PluginInternationalization('Soccer')
+    _ = PluginInternationalization('SoccerScores')
 except ImportError:
     # Placeholder that allows to run the plugin on a bot
     # without the i18n module
@@ -23,12 +23,12 @@ import pendulum
 import pickle
 
 
-class Soccer(callbacks.Plugin):
+class SoccerScores(callbacks.Plugin):
     """Fetches soccer scores and other information"""
     threaded = True
     
     def __init__(self, irc):
-        self.__parent = super(Soccer, self)
+        self.__parent = super(SoccerScores, self)
         self.__parent.__init__(irc)
         
         self.PICKLEFILE = conf.supybot.directories.data.dirize("soccer-leagues.db")
@@ -144,7 +144,7 @@ class Soccer(callbacks.Plugin):
             
         if not league:
             irc.reply('ERROR: You must provide a league via --league <league>')
-            doc = irc.getCallback('Soccer').soccer.__doc__ 
+            doc = irc.getCallback('SoccerScores').soccer.__doc__ 
             doclines = doc.splitlines()
             s = '%s' % (doclines.pop(0))
             if doclines:
@@ -318,7 +318,7 @@ class Soccer(callbacks.Plugin):
         
 
 
-Class = Soccer
+Class = SoccerScores
 
 
 # vim:set shiftwidth=4 softtabstop=4 expandtab textwidth=79:

@@ -8,7 +8,7 @@
 from supybot import conf, registry
 try:
     from supybot.i18n import PluginInternationalization
-    _ = PluginInternationalization('Soccer')
+    _ = PluginInternationalization('SoccerScores')
 except:
     # Placeholder that allows to run the plugin on a bot
     # without the i18n module
@@ -21,10 +21,10 @@ def configure(advanced):
     # user or not.  You should effect your configuration by manipulating the
     # registry as appropriate.
     from supybot.questions import expect, anything, something, yn
-    conf.registerPlugin('Soccer', True)
+    conf.registerPlugin('SoccerScores', True)
 
 
-Soccer = conf.registerPlugin('Soccer')
+Soccer = conf.registerPlugin('SoccerScores')
 # This is where your configuration variables (if any) should go.  For example:
 # conf.registerGlobalValue(Soccer, 'someConfigVariableName',
 #     registry.Boolean(False, _("""Help for someConfigVariableName.""")))

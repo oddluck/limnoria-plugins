@@ -9,7 +9,7 @@ from supybot.test import *
 
 
 class SoccerTestCase(PluginTestCase):
-    plugins = ('Soccer',)
+    plugins = ('SoccerScores',)
 
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
