@@ -43,6 +43,7 @@ from supybot.commands import *
 import supybot.plugins as plugins
 import supybot.ircutils as ircutils
 import supybot.callbacks as callbacks
+import supybot.log as log
 try:
     from supybot.i18n import PluginInternationalization
     _ = PluginInternationalization('Markovgen')
@@ -139,7 +140,35 @@ class Markovgen(callbacks.Plugin):
             return
         if not self.registryValue('enable', channel):
             return
+        if self.registryValue('ignoreCommands', channel) and callbacks.addressed(irc.nick, msg):
+            return
+        match = False
+        ignore = self.registryValue("ignorePattern", channel)
+        strip = self.registryValue("stripPattern", channel)
+        if ignore:
+            match = re.search(ignore, message)
+            if match:
+                log.debug("Markovgen: %s matches ignorePattern for %s" % (message, channel))
+                return
+        if msg.nick.lower() in self.registryValue('ignoreNicks', channel):
+            log.debug("Markovgen: nick %s in ignoreNicks for %s" % (msg.nick, channel))
+            return
         m = self._get_markov(irc, channel)
+        if self.registryValue('stripFormatting', channel):
+            message = ircutils.stripFormatting(message)
+        if strip:
+            match = re.findall(strip, message)
+            if match:
+                for x in match:
+                    message = message.replace(x, '')
+                    message = re.sub('\s+', ' ', message)
+                    log.debug("Markovgen: %s matches stripPattern for %s. New message text: %s" % (x, channel, message))
+        if self.registryValue('stripURL', channel):
+            new_message = re.sub(r'(?i)\b((?:[a-z][\w-]+:(?:/{1,3}|[a-z0-9%])|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:\'".,<>?«»“”‘’]))', '', message)
+            new_message = re.sub('\s+', ' ', new_message)
+            if new_message != message:
+                log.debug("Markovgen: url(s) stripped from message for %s. New message text: %s" % (channel, new_message))
+                message = new_message
         if self.registryValue('stripRelayedNick', channel):
             message = MATCH_MESSAGE_STRIPNICK.match(message).group('message')
         m.feed(message)
