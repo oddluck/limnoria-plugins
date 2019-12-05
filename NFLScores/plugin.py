@@ -13,7 +13,7 @@ from supybot import utils, plugins, ircutils, callbacks
 from supybot.commands import *
 try:
     from supybot.i18n import PluginInternationalization
-    _ = PluginInternationalization('NFLScores2')
+    _ = PluginInternationalization('NFLScores')
 except ImportError:
     # Placeholder that allows to run the plugin on a bot
     # without the i18n module
@@ -42,7 +42,7 @@ def getValidDateFmt(irc, msg, args, state):
         del args[0]
 addConverter('validDate', getValidDateFmt)
 
-class NFLScores2(callbacks.Plugin):
+class NFLScores(callbacks.Plugin):
     """Fetches scores and game information from NFL.com"""
     threaded = True
 
@@ -512,7 +512,7 @@ class NFLScores2(callbacks.Plugin):
         return ircutils.underline(string)        
         
 
-Class = NFLScores2
+Class = NFLScores
 
 
 # vim:set shiftwidth=4 softtabstop=4 expandtab textwidth=79:

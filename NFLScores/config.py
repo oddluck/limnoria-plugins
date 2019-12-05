@@ -8,7 +8,7 @@
 from supybot import conf, registry
 try:
     from supybot.i18n import PluginInternationalization
-    _ = PluginInternationalization('NFLScores2')
+    _ = PluginInternationalization('NFLScores')
 except:
     # Placeholder that allows to run the plugin on a bot
     # without the i18n module
@@ -21,12 +21,12 @@ def configure(advanced):
     # user or not.  You should effect your configuration by manipulating the
     # registry as appropriate.
     from supybot.questions import expect, anything, something, yn
-    conf.registerPlugin('NFLScores2', True)
+    conf.registerPlugin('NFLScores', True)
 
 
-NFLScores2 = conf.registerPlugin('NFLScores2')
+NFLScores = conf.registerPlugin('NFLScores')
 # This is where your configuration variables (if any) should go.  For example:
-# conf.registerGlobalValue(NFLScores2, 'someConfigVariableName',
+# conf.registerGlobalValue(NFLScores, 'someConfigVariableName',
 #     registry.Boolean(False, _("""Help for someConfigVariableName.""")))
 
 
