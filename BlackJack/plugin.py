@@ -222,14 +222,16 @@ class BlackJack(callbacks.Plugin):
         game_name = "game_%s" % player
         # Checks if player has any chips.
         chips = self._playerChips(player)
+        chipsClass = Chips()
         # If this is True player is already playing blackjack and only one game is allowed per player.
         if self._isScheduled(game_name):
             irc.reply("You can play only one instance of the game in same time.")
         # If player does not have chips he can't play, logical.
         if chips == "NoChipsFile" or chips == False or chips == None:
-            chipsClass = Chips()
             chipsClass._addChips(player, stake)
             chips = stake
+        elif stake > chips:
+            chipsClass._addChips(player, stake - chips)
         if stake >= self.minStake and stake <= self.maxStake and stake <= chips:
             # Now is good time to add new player and actually start a game.
             self._addNewPlayer(player, stake)
