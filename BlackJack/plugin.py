@@ -31,6 +31,7 @@ import supybot.schedule as schedule
 import json
 import random
 import time
+import os
 
 import supybot.utils as utils
 from supybot.commands import *
@@ -322,7 +323,7 @@ class BlackJack(callbacks.Plugin):
 class Chips():
     def __init__(self):
         try:
-            with open("G:\\supybot\\plugins\\BlackJack\\local\\chips.json", "r") as chipsFile:
+            with open("{0}/local/chips.json".format(os.path.dirname(os.path.abspath(__file__))), "r") as chipsFile:
                 self.players = json.load(chipsFile)
         except:
             self.players = False
@@ -358,7 +359,7 @@ class Chips():
                 self._saveChips()
                 
     def _saveChips(self):
-        with open("G:\\supybot\\plugins\\BlackJack\\local\\chips.json", "w") as chips:
+        with open("{0}/local/chips.json".format(os.path.dirname(os.path.abspath(__file__))), "w") as chips:
             json.dump(self.players, chips, indent=4)
     
     
