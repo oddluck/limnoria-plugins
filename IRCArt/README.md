@@ -4,8 +4,8 @@
 Try the plugin out in #ircart on EFnet. irc://irc.efnet.org/#ircart
 
 
-<b>ASCII Art Plugin</b><br>
-Convert text to ASCII art or image URLs to ASCII/ANSI art. Covert ASCII art to PNG. Get ASCII weather, moon phase, and cryptocurrecy rates.
+<b>IRCArt Plugin</b><br>
+Convert text to figlet fonts or image URLs to ASCII/ANSI art. Covert IRC art to PNG. Get weather, moon phase, and cryptocurrecy rates.
 
 Requires Limnoria https://github.com/ProgVal/Limnoria and Python3
 
