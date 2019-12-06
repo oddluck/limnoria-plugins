@@ -17,28 +17,28 @@ import re
 
 try:
     from supybot.i18n import PluginInternationalization
-    _ = PluginInternationalization('Infocom')
+    _ = PluginInternationalization('TextAdventures')
 except ImportError:
     # Placeholder that allows to run the plugin on a bot
     # without the i18n module
     _ = lambda x: x
 
-class Frotz(callbacks.Plugin):
+class TextAdventures(callbacks.Plugin):
     """
-    Play Infocom (Interactive Fiction, Z_machine) Games.
+    Play Text Adventure Games (Infocom, Interactive Fiction, Z-Machine) .
     """
     threaded = True
 
     def __init__(self, irc):
-        self.__parent = super(Frotz, self)
+        self.__parent = super(TextAdventures, self)
         self.__parent.__init__(irc)
         self.game = {}
         self.game_path = "{0}/games/".format(os.path.dirname(os.path.abspath(__file__)))
-        self.binary = self.registryValue('dfrotzPath')
+        self.binary = self.registryValue('dFrotzPath')
 
-    def load(self, irc, msg, args, input):
+    def open(self, irc, msg, args, input):
         """<game_name>
-        Load <game_name.z*>.
+        Open <game_name.z*>.
         """
         channel = msg.args[0]
         if not self.registryValue('allowPrivate') and not irc.isChannel(channel):
@@ -53,12 +53,12 @@ class Frotz(callbacks.Plugin):
         else:
             irc.reply("Starting {0} on {1}. Please wait...".format(game_name, channel))
             game_file= "{0}{1}".format(self.game_path, game_name)
-            self.game[channel] = pexpect.spawn("{0} -S 0 {1}".format(self.binary, game_file))
+            self.game[channel] = pexpect.spawn("{0} -m -S 0 {1}".format(self.binary, game_file))
             response = self.output(self.game[channel])
             for line in response:
                 if line.strip() and line.strip() != ".":
                     irc.reply(line, prefixNick=False)
-    load = wrap(load, ['text'])
+    open = wrap(open, ['text'])
 
     def output(self, output):
         response = []
@@ -90,9 +90,9 @@ class Frotz(callbacks.Plugin):
                 if line.strip() and line.strip() != ".":
                     irc.reply(line, prefixNick=False)
 
-    def stop(self, irc, msg, args):
+    def end(self, irc, msg, args):
         """
-        Stop game.
+        End text adventure game.
         """
         channel = msg.args[0]
         if not irc.isChannel(channel):
@@ -111,7 +111,7 @@ class Frotz(callbacks.Plugin):
             except:
                 return
             return
-    stop = wrap(stop)
+    end = wrap(end)
 
     def z(self, irc, msg, args, command):
         """[<input>]
@@ -143,5 +143,5 @@ class Frotz(callbacks.Plugin):
         irc.reply(reply, prefixNick=False)
     games = wrap(games)
 
-Class = Frotz
+Class = TextAdventures
 

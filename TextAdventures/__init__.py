@@ -6,7 +6,7 @@
 ###
 
 """
-Frotz: Play interactive fiction games
+TextAdventures: Play interactive fiction games
 """
 
 import supybot
@@ -40,5 +40,5 @@ if world.testing:
     from . import test
 
 Class = plugin.Class
-Frotz = config.Frotz
+TextAdventures = config.TextAdventures
 

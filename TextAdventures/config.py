@@ -9,7 +9,7 @@ import supybot.conf as conf
 import supybot.registry as registry
 try:
     from supybot.i18n import PluginInternationalization
-    _ = PluginInternationalization('Frotz')
+    _ = PluginInternationalization('TextAdventures')
 except:
     # Placeholder that allows to run the plugin on a bot
     # without the i18n module
@@ -22,14 +22,14 @@ def configure(advanced):
     # user or not.  You should effect your configuration by manipulating the
     # registry as appropriate.
     from supybot.questions import expect, anything, something, yn
-    conf.registerPlugin('Frotz', True)
+    conf.registerPlugin('TextAdventures', True)
 
-Frotz = conf.registerPlugin('Frotz')
+TextAdventures = conf.registerPlugin('TextAdventures')
 
-conf.registerGlobalValue(Frotz, 'dfrotzPath',
+conf.registerGlobalValue(TextAdventures, 'dfrotzPath',
         registry.String('/usr/local/bin/dfrotz', _("""The path to the dfrotz executable.""")))
 
-conf.registerGlobalValue(Frotz, 'allowPrivate',
+conf.registerGlobalValue(TextAdventures, 'allowPrivate',
         registry.Boolean('True', _("""Allow games to be played over private message.""")))
 
-Frotz = conf.registerPlugin('Frotz')
+TextAdventures = conf.registerPlugin('TextAdventures')
