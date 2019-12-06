@@ -198,6 +198,7 @@ class BlackJack(callbacks.Plugin):
         if player in self.players.keys():
             if self.players[player]["score"] == 21 and self.players[player]["bankScore"] != 21:
                 self._playerWins(irc, player, True)
+                self.players[player]["waitingAction"] = False
             elif self.players[player]["bankScore"] == 21 and self.players[player]["score"] != 21:
                 self._bankWins(irc, player)
             else:
@@ -224,16 +225,16 @@ class BlackJack(callbacks.Plugin):
         if self._isScheduled(game_name):
             irc.reply("You can play only one instance of the game in same time.")
         # If player does not have chips he can't play, logical.
-        elif chips == "NoChipsFile" or chips == False or chips == None:
-            irc.reply("You can't play blackjack because you don't have enough chips. If you think this is some mistake notify admins.")
+        if chips == "NoChipsFile" or chips == False or chips == None:
+            chipsClass = Chips()
+            chipsClass._addChips(player, stake)
+            chips = stake
+        if stake >= self.minStake and stake <= self.maxStake and stake <= chips:
+            # Now is good time to add new player and actually start a game.
+            self._addNewPlayer(player, stake)
+            self._startNewGame(irc, player)
         else:
-            # If player has enough chips to backup his stake we can start a game.
-            if stake >= self.minStake and stake <= self.maxStake and stake <= chips:
-                # Now is good time to add new player and actually start a game.
-                self._addNewPlayer(player, stake)
-                self._startNewGame(irc, player)
-            else:
-                irc.reply("Something is wrong with your stake, maybe it's too high or too low, or maybe you don't have enough chips.")
+            irc.reply("Something is wrong with your stake, maybe it's too high or too low, or maybe you don't have enough chips.")
     blackjack = wrap(blackjack, ["int"])
     
     def _startNewGame(self, irc, player):
@@ -365,3 +366,4 @@ Class = BlackJack
 
 
 # vim:set shiftwidth=4 softtabstop=4 expandtab textwidth=79:
+
