@@ -1488,14 +1488,11 @@ class ASCII(callbacks.Plugin):
         self.stopped[msg.args[0]] = False
         for line in output.splitlines():
             line = line.strip('\x0F')
-            if not line.strip() and not self.stopped[msg.args[0]]:
-                if self.registryValue('pasteEnable', msg.args[0]):
-                    paste += line + "\n"
-                time.sleep(delay)
-                irc.reply('\xa0', prefixNick = False, noLengthCheck=True, private=False, notice=False, to=channel)
-            elif line.strip() and not self.stopped[msg.args[0]] and not line.startswith("Follow"):
-                if self.registryValue('pasteEnable', msg.args[0]):
-                    paste += line + "\n"
+            if not line.strip():
+                line = '\xa0'
+            if self.registryValue('pasteEnable', msg.args[0]) and not line.startswith("Follow"):
+                paste += line + "\n"
+            if line.strip() and not self.stopped[msg.args[0]] and not line.startswith("Follow"):
                 time.sleep(delay)
                 irc.reply(line, prefixNick = False, noLengthCheck=True, private=False, notice=False, to=channel)
         if self.registryValue('pasteEnable', msg.args[0]):
