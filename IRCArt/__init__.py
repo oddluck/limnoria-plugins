@@ -6,7 +6,7 @@
 ###
 
 """
-ASCII: Uses API to retrieve information
+IRCArt: Make IRC Art
 """
 
 import supybot

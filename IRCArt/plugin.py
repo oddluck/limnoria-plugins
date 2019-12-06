@@ -28,18 +28,18 @@ from bs4 import BeautifulSoup
 
 try:
     from supybot.i18n import PluginInternationalization
-    _ = PluginInternationalization('Weed')
+    _ = PluginInternationalization('IRCArt')
 except ImportError:
     # Placeholder that allows to run the plugin on a bot
     # without the i18n module
     _ = lambda x: x
 
-class ASCII(callbacks.Plugin):
-    """Uses API to retrieve information"""
+class IRCArt(callbacks.Plugin):
+    """IRCArt: Make IRC Art"""
     threaded = True
 
     def __init__(self, irc):
-        self.__parent = super(ASCII, self)
+        self.__parent = super(IRCArt, self)
         self.__parent.__init__(irc)
         self.colors = 99
         self.stopped = {}
@@ -711,9 +711,9 @@ class ASCII(callbacks.Plugin):
         irc.reply(uploaded_image.link, noLengthCheck=True, private=False, notice=False)
     png = wrap(png, [getopts({'bg':'int', 'fg':'int'}), ('text')])
 
-    def ascii(self, irc, msg, args, channel, optlist, text):
+    def artii(self, irc, msg, args, channel, optlist, text):
         """[<channel>] [--font <font>] [--color <color1,color2>] [<text>]
-        Text to ASCII art
+        Text to ASCII figlet fonts using the artii API
         """
         if not channel:
             channel = msg.args[0]
@@ -765,11 +765,11 @@ class ASCII(callbacks.Plugin):
                     if line.strip():
                         irc.reply(ircutils.mircColor(line, color1, color2), prefixNick=False, private=False, notice=False, to=channel)
 
-    ascii = wrap(ascii, [optional('channel'), getopts({'font':'text', 'color':'text'}), ('text')])
+    artii = wrap(artii, [optional('channel'), getopts({'font':'text', 'color':'text'}), ('text')])
 
     def fontlist(self, irc, msg, args):
         """
-        get list of fonts for text-to-ascii-art
+        Get list of artii figlet fonts.
         """
         fontlist = requests.get("https://artii.herokuapp.com/fonts_list")
         response = sorted(fontlist.text.split('\n'))
@@ -778,7 +778,7 @@ class ASCII(callbacks.Plugin):
 
     def img(self, irc, msg, args, channel, optlist, url):
         """[<#channel>] [--delay #.#] [--w <###>] [--s <#.#] [--16] [--99] [--83] [--ascii] [--block] [--1/2] [--chars <text>] [--ramp <text>] [--bg <0-98>] [--fg <0-98>] [--no-color] [--invert] <url>
-        Image to ASCII Art.
+        Image to IRC art.
         --w columns.
         --s saturation (1.0).
         --16 colors 0-15.
@@ -1112,7 +1112,7 @@ class ASCII(callbacks.Plugin):
 
     def scroll(self, irc, msg, args, channel, optlist, url):
         """[<channel>] [--delay] <url>
-        Play ASCII/ANSI art text files from web links.
+        Play IRC art files from web links.
         """
         if not channel:
             channel = msg.args[0]
@@ -1364,7 +1364,7 @@ class ASCII(callbacks.Plugin):
 
     def toilet(self, irc, msg, args, channel, optlist, text):
         """[<channel>] [--f fontname] [--F filter1,filter2,etc.] [--w] [--delay] <text>
-        Toilet. -f to select font. -F to select filters. Separate multiple filters with a comma.
+        Text to toilet figlets. -f to select font. -F to select filters. Separate multiple filters with a comma.
         """
         if not channel:
             channel = msg.args[0]
@@ -1449,7 +1449,7 @@ class ASCII(callbacks.Plugin):
 
     def wttr(self, irc, msg, args, channel, optlist, location):
         """[<channel>] [--16] [--99] <location/moon>
-        ASCII weather report from wttr.in for <location>.
+        IRC art weather report from wttr.in for <location>.
         --16 for 16 colors (default).
         --99 for 99 colors.
         Get moon phase with 'wttr moon'.
@@ -1592,7 +1592,7 @@ class ASCII(callbacks.Plugin):
 
     def fortune(self, irc, msg, args, channel, optlist):
         """[<channel>]
-        Returns a random ASCII from http://www.asciiartfarts.com/fortune.txt
+        Returns random art fortune from http://www.asciiartfarts.com/fortune.txt
         """
         if not channel:
             channel = msg.args[0]
@@ -1658,4 +1658,4 @@ class ASCII(callbacks.Plugin):
             irc.reply("Stopping.")
     cq = wrap(cq)
 
-Class = ASCII
+Class = IRCArt
