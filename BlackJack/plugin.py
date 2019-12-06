@@ -232,6 +232,7 @@ class BlackJack(callbacks.Plugin):
             chips = stake
         elif stake > chips:
             chipsClass._addChips(player, stake - chips)
+            chips = stake
         if stake >= self.minStake and stake <= self.maxStake and stake <= chips:
             # Now is good time to add new player and actually start a game.
             self._addNewPlayer(player, stake)
