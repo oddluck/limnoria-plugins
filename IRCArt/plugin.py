@@ -691,7 +691,7 @@ class IRCArt(callbacks.Plugin):
         ua = UserAgent()
         header = {'User-Agent':str(ua.random)}
         r = requests.head(url, headers=header)
-        if "text/plain" in r.headers["content-type"]:
+        if "text/plain" in r.headers["content-type"] or url.startswith('https://paste.ee/r/'):
             file = requests.get(url, headers=header)
         else:
             irc.reply("Invalid file type.", private=False, notice=False)
