@@ -1,6 +1,6 @@
 __author__ = 'Bear'
 
-from cah import *
+from .cah import *
 
 def test_cards_will_be_unique(deck=None, player_list = None):
     """
@@ -10,7 +10,7 @@ def test_cards_will_be_unique(deck=None, player_list = None):
         deck=Deck()
     if player_list is None:
         player_list = {'one': PlayerHand(deck),'two': PlayerHand(deck) }
-    for value in player_list.values():
+    for value in list(player_list.values()):
         for card in value.card_list:
             assert card.text not in deck.answerDb
 
@@ -27,7 +27,7 @@ def test_card_parsing(deck=None):
 def test_game():
     game = Game(['Bear','Swim', 'Jazz'])
     test_cards_will_be_unique(deck=game.deck, player_list= game.players)
-    for player in game.players.keys():
+    for player in list(game.players.keys()):
         hand = game.players[player]
         test_player_hand(hand)
     test_round_advancement(game)
@@ -42,16 +42,16 @@ def test_round_advancement(game=None):
     while round < game.round_limit:
         bot_gets = game.next_round()
         assert isinstance(bot_gets, dict)
-        assert bot_gets.has_key('question')
-        assert game.has_key('question')
-        assert bot_gets.has_key('hands')
+        assert 'question' in bot_gets
+        assert 'question' in game
+        assert 'hands' in bot_gets
         test_end_round(game)
 
 def build_end_round_data(game):
-    winner = choice(game.players.keys())
+    winner = choice(list(game.players.keys()))
     cards_played = {}
     #Get random cards from player's hand to satisfy the question card
-    for player in game.players.keys():
+    for player in list(game.players.keys()):
         player_cards = game.players[player].card_list[:game.question.answers]
         cards_played[player] = player_cards #player_cards is a deque object -> tuple(list,maxlen)
     return {'winner': winner, 'cards_played': cards_played}
@@ -63,13 +63,13 @@ def test_end_round(game=None):
         game.question.answers = 2
     fake_end_round = build_end_round_data(game)
     game.end_round(fake_end_round['winner'],fake_end_round['cards_played'])
-    for player in game.players.keys():
+    for player in list(game.players.keys()):
         assert len(game.players[player].card_list) == 5
         if isinstance(fake_end_round['cards_played'][player], Card):
             fake_end_round['cards_played'][player] = list(fake_end_round['cards_played'][player])
         for card in fake_end_round['cards_played'][player]:
             assert card not in game.players[player].card_list
-    assert game.score.has_key(fake_end_round['winner'])
+    assert fake_end_round['winner'] in game.score
 
 
 def test_player_hand(hand=None):

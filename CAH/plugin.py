@@ -39,7 +39,7 @@ from random import randint
 
 import operator 
 
-from cah import Game, base_directory, card_folder, blank_format
+from .cah import Game, base_directory, card_folder, blank_format
 
 import time
 import os
@@ -108,7 +108,7 @@ class Cah(callbacks.Plugin):
 
         def _findHighScore(self, scores):
             highscore = []
-            for nick, score in scores.iteritems():
+            for nick, score in scores.items():
                 if len(highscore) == 0:
                     highscore.append([nick, score])
                 elif highscore[0][1] < score:
@@ -126,10 +126,10 @@ class Cah(callbacks.Plugin):
             ties = []
             winningCanidate = []
             canidatesById = []
-            for nick in self.cardsPlayed.keys():
+            for nick in list(self.cardsPlayed.keys()):
                 canidatesById.append(nick)
 
-            for canidateNumber, count in votes.iteritems():
+            for canidateNumber, count in votes.items():
                 canidate = canidatesById[int(canidateNumber)]
                 count = int(count)
                 if len(winningCanidate) == 0:
@@ -203,9 +203,9 @@ class Cah(callbacks.Plugin):
                 #scores = []
                 winner = None
                 formattedScores = []
-                print cah.score
+                print(cah.score)
                 winner = self._findHighScore(cah.score)
-                for name, score in cah.score.iteritems():
+                for name, score in cah.score.items():
                     formattedScores.append("%s: %d" % (name, score))
                 self._msg(channel, "Game Over! %s is the Winner!  Scores: %s " % (winner[0][0], ", ".join(formattedScores)))
 
@@ -249,7 +249,7 @@ class Cah(callbacks.Plugin):
                 game = self
                 game.voting = False
                 winner = self._tallyVotes(game.votes)
-                print winner
+                print(winner)
                 game.game.end_round(winner[0][0], self.cardsPlayed)
                 game.voted = []
                 game._msg(self.channel, "%s wins the round!" % ircutils.bold(winner[0][0]))

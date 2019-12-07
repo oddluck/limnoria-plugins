@@ -1,7 +1,7 @@
 from random import choice
 import os
 import json
-import test
+from . import test
 
 # Settings you change
 card_folder = 'cards'
@@ -70,7 +70,7 @@ class Card(object):
         self.id = id
         self.type = type
         self.text = text
-        for key, value in kwargs.iteritems():
+        for key, value in kwargs.items():
             setattr(self, key, value)
     def __str__(self):
         return self.text
@@ -104,7 +104,7 @@ class Game(object):
 
     def end_round(self, winner_name, cards_played):
         self.score_keeping(winner_name)
-        for player in cards_played.keys():
+        for player in list(cards_played.keys()):
             if isinstance(cards_played[player], Card):
                 cards_played[player] = [cards_played[player]]
             for card in cards_played[player]:
@@ -112,9 +112,9 @@ class Game(object):
             self.players[player].deal_hand(self.deck)
 
     def score_keeping(self, player_name):
-        if not self.players.has_key(player_name):
+        if player_name not in self.players:
             raise NameError
-        if self.score.has_key(player_name):
+        if player_name in self.score:
             self.score[player_name] += 1
         else:
             self.score[player_name] = 1
@@ -122,10 +122,10 @@ class Game(object):
     def cardSubmit(self):
         for player in self.players:
             cardInput = None
-            cardRange = range(5)
+            cardRange = list(range(5))
             while cardInput not in cardRange:
                 try:
-                    cardInput = int(raw_input('%s Pick a Card: ' % player)) - 1
+                    cardInput = int(input('%s Pick a Card: ' % player)) - 1
                 except ValueError:
                     pass
 
@@ -151,25 +151,25 @@ class PlayerHand(object):
         return card_text
 
     def showHand(self):
-            print '%s' % self.text_list()
+            print('%s' % self.text_list())
 
 
 
 
 if __name__=="__main__":
     game = Game(['Bear','Swim', 'Jazz'])
-    print "\nGame started with the following players: %s \n" % game.players.keys()
+    print("\nGame started with the following players: %s \n" % list(game.players.keys()))
     round = game.next_round()
-    print "The first question is: %s \n" % game.question.text
+    print("The first question is: %s \n" % game.question.text)
 
-    print "Swim's hand the easy way:"
+    print("Swim's hand the easy way:")
     game.players['Swim'].showHand()
 
-    print "\nJazz's hand in a weird way"
+    print("\nJazz's hand in a weird way")
     round['hands']['Jazz'].showHand()
 
-    print "\nBear's hand the hard way:"
+    print("\nBear's hand the hard way:")
     for index, card in enumerate(game.players['Bear'].card_list):
-        print '%s: %s' % (index + 1, card.text)
+        print('%s: %s' % (index + 1, card.text))
 
-    print "\nEnd the round by picking a random cards amd winner: %s" % str(test.build_end_round_data(game))
+    print("\nEnd the round by picking a random cards amd winner: %s" % str(test.build_end_round_data(game)))
