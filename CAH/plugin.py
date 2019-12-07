@@ -46,8 +46,8 @@ import os
 import re
 
 class CAH(callbacks.Plugin):
-    """Add the help for "@plugin help CAH" here
-    This should describe *how* to use this plugin."""
+    """Cards Against Humanity"""
+
     threaded = True
 
     def __init__(self, irc):
@@ -79,31 +79,30 @@ class CAH(callbacks.Plugin):
       
         def _msg(self, recip, msg):
             self.irc.queueMsg(ircmsgs.privmsg(recip,msg))
+
+        def _notice(self, recip, msg):
+            self.irc.queueMsg(ircmsgs.notice(recip,msg))
         
         def _printBlackCard(self, recip):
-            response = "Question: %s"
             cah = self.game
-            self._msg(recip, ircutils.mircColor(response % cah.question.text, bg="black", fg="white"))
+            self._msg(recip, "Black Card: \x02\x030,1%s\x0F" % (cah.question.text))
 
         def _msgHandToPlayer(self, nick):
-            response = "Your cards: %s  Please respond with @playcard [channel if in pm] <number> [number]"
             enumeratedHand = []
             cah = self.game
             for position, card in enumerate(cah.players[nick].card_list):
-                enumeratedHand.append("%s: %s " % (position + 1, ircutils.bold(card.text)))
-            self._printBlackCard(nick)
-            self._msg(nick, ircutils.mircColor(response % ', '.join(enumeratedHand), bg="white", fg="black"))
+                enumeratedHand.append("\x02\x031,00%s: %s\x0F" % (position + 1, card.text))
+            self._notice(nick, "White Cards: %s  Please respond with playcard <number> [number]" % (', '.join(enumeratedHand)))
 
         def _displayPlayedCards(self):
             channel = self.channel
-            responseTemplate = "%s: (%s)"
             responses = []
             response = "%s"
             for count, nick in enumerate(self.cardsPlayed.keys()):
                 cardText = []
-                cards = ", ".join([ircutils.bold(card.text) for card in self.cardsPlayed[nick]])
-                responses.append(responseTemplate % (count + 1, cards))
-            response = ";  ".join(responses)
+                cards = ", ".join([card.text for card in self.cardsPlayed[nick]])
+                responses.append("\x02\x031,00%s: %s\x0F" % (count + 1, cards))
+            response = ", ".join(responses)
             self._msg(channel, "Played White cards: %s" % response)
 
         def _findHighScore(self, scores):
@@ -192,7 +191,7 @@ class CAH(callbacks.Plugin):
                 self._printBlackCard(self.channel)
                 for nick in self.players:
                     self._msgHandToPlayer(nick)
-                self._msg(channel, "The white cards have been PMed to the players, you have 60 seconds to choose.")
+                self._msg(channel, "The white cards have been sent to players, you have 60 seconds to choose.")
                 self.acceptingWhiteCards = True
                 #TODO: do we need a round flag?
                 schedule.addEvent(self.endround, time.time() + 60, "round_%s" % channel)
@@ -236,7 +235,7 @@ class CAH(callbacks.Plugin):
             game.votes = {}
             game.voted = []
             game.voting = True
-            self._msg(channel, "Please Vote on your favorite. @votecard <number> to vote, the entire channel can vote.")
+            self._msg(channel, "Please Vote on your favorite. votecard <number> to vote, the entire channel can vote.")
             schedule.addEvent(self.stopcardvote, time.time() + 60, "vote_%s" % channel)
             
 
@@ -319,7 +318,7 @@ class CAH(callbacks.Plugin):
         if channel in self.games:
             irc.reply("There is a game running currently.")
         else:
-            irc.reply("Who wants to play IRC Aganst Humanity? To play reply with: @playing", prefixNick=False)
+            irc.reply("Who wants to play IRC Aganst Humanity? To play reply with: playing", prefixNick=False)
             self.games[channel] = self.CAHGame(irc, channel, numrounds)
             self.games[channel].initGame()
 
