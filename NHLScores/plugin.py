@@ -96,8 +96,6 @@ class NHLScores(callbacks.Plugin):
                 team = 'all'
                 date = None
             else:
-                if optional_team.upper() == 'GNJD':
-                    optional_team = 'njd'
                 date = self._checkDateInput(optional_team)
                 #print("2")
                 if date: # and len(date) != 3:
@@ -330,8 +328,6 @@ class NHLScores(callbacks.Plugin):
         """Extract all relevant fields from NHL.com's json
         and return a list of games."""
         games = []
-        if team.upper() == "GNJD":
-            team = 'NJD'
         if json['totalGames'] == 0:
             return games
         games.append(json['dates'][0]['date'])
@@ -439,8 +435,8 @@ class NHLScores(callbacks.Plugin):
         "MEM @ CLE 07:00 PM ET" (a game that has not started yet),
         "HOU 132 GSW 127 F OT2" (a game that ended and went to 2 overtimes),
         "POR 36 LAC 42 8:01 Q2" (a game in progress)."""
-        away_team = 'GNJD' if 'NJD' in game['away_team'] else game['away_team']
-        home_team = 'GNJD' if 'NJD' in game['home_team'] else game['home_team']
+        away_team = game['away_team']
+        home_team = game['home_team']
         if game['period'] == 0: # The game hasn't started yet
             starting_time = game['starting_time'] \
                             if not game['starting_time_TBD'] \
@@ -495,8 +491,8 @@ class NHLScores(callbacks.Plugin):
         "MEM @ CLE 07:00 PM ET" (a game that has not started yet),
         "HOU 132 GSW 127 F OT2" (a game that ended and went to 2 overtimes),
         "POR 36 LAC 42 8:01 Q2" (a game in progress)."""
-        away_team = 'GNJD' if 'NJD' in game['away_team'] else game['away_team']
-        home_team = 'GNJD' if 'NJD' in game['home_team'] else game['home_team']
+        away_team = game['away_team']
+        home_team = game['home_team']
         if game['period'] == 0: # The game hasn't started yet
             starting_time = game['starting_time'] \
                             if not game['starting_time_TBD'] \
