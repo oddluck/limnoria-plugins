@@ -37,10 +37,10 @@ def configure(advanced):
     # user or not.  You should effect your configuration by manipulating the
     # registry as appropriate.
     from supybot.questions import expect, anything, something, yn
-    conf.registerPlugin('Cah', True)
+    conf.registerPlugin('CAH', True)
 
 
-Cah = conf.registerPlugin('Cah')
+CAH = conf.registerPlugin('CAH')
 # This is where your configuration variables (if any) should go.  For example:
 # conf.registerGlobalValue(Cah, 'someConfigVariableName',
 #     registry.Boolean(False, """Help for someConfigVariableName."""))

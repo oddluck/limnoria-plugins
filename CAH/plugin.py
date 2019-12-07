@@ -45,17 +45,17 @@ import time
 import os
 import re
 
-class Cah(callbacks.Plugin):
-    """Add the help for "@plugin help Cah" here
+class CAH(callbacks.Plugin):
+    """Add the help for "@plugin help CAH" here
     This should describe *how* to use this plugin."""
     threaded = True
 
     def __init__(self, irc):
-        self.__parent = super(Cah, self)
+        self.__parent = super(CAH, self)
         self.__parent.__init__(irc)
         self.games = {}
 
-    class CahGame(object):
+    class CAHGame(object):
         """docstring for Game"""
         def __init__(self, irc, channel, numrounds = 5):
             self.irc = irc
@@ -271,10 +271,10 @@ class Cah(callbacks.Plugin):
                 schedule.removeEvent("start_game_%s" % self.channel)
             except:
                 pass  
-    Class = CahGame
+    Class = CAHGame
 
     ###### CHANNEL COMMANDS ######
-    def forcestartgame(self, irc, msg, args):
+    def forcestart(self, irc, msg, args):
         channel = ircutils.toLower(msg.args[0])
         if channel in self.games:
             try:        
@@ -320,7 +320,7 @@ class Cah(callbacks.Plugin):
             irc.reply("There is a game running currently.")
         else:
             irc.reply("Who wants to play IRC Aganst Humanity? To play reply with: @playing", prefixNick=False)
-            self.games[channel] = self.CahGame(irc, channel, numrounds)
+            self.games[channel] = self.CAHGame(irc, channel, numrounds)
             self.games[channel].initGame()
 
     def addcard(self, irc, msg, args):
@@ -343,7 +343,7 @@ class Cah(callbacks.Plugin):
         with open(path, 'w') as file_handle:
             file_handle.writelines([text])
 
-    def scah(self, irc, msg, args):
+    def stopcah(self, irc, msg, args):
         channel = ircutils.toLower(msg.args[0])
         if channel in self.games:
             self.games[channel].close()
@@ -415,7 +415,7 @@ class Cah(callbacks.Plugin):
     ###### END CHANNEL COMMANDS ######
 
     
-Class = Cah
+Class = CAH
 
 
 # vim:set shiftwidth=4 softtabstop=4 expandtab textwidth=79:
