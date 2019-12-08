@@ -14,7 +14,7 @@ Looks for games in ./games/ directory
 
 usage:
 
-frotz load <game name> ex. frotz load zork1.z5 - loads game
+open <game name> ex. open zork1.z5 - loads game
   
 Game will process channel messages as commands while a game is running.
   
@@ -22,9 +22,9 @@ z <command> ex. z open mailbox, z look - send command manually
 
 z <no input> - sends a blank line equivalent to [RETURN]/[ENTER] when needed
   
-frotz stop - ends the game
+end - ends the game
 
-frotz games - lists contents of ./games/ directory
+games - lists contents of ./games/ directory
 
 one game allowed to run per channel/pm. will prompt you to stop running games before allowing a new one to be started.
 this limits the number of potential child dfrotz processes and keeps this simpler in terms of routing the right game data
