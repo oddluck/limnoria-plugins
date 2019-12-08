@@ -49,7 +49,11 @@ class Geo(callbacks.Plugin):
             except:
                 irc.reply("Update failed.")
             return
-        if stuff.lower() in (nick.lower() for nick in list(irc.state.channels[channel].users)):
+        if not irc.isChannel(channel):
+            private = True
+        else:
+            private = False
+        if not private and stuff.lower() in (nick.lower() for nick in list(irc.state.channels[channel].users)):
             try:
                 stuff = irc.state.nickToHostmask(stuff).split('@')[1]
                 ip = socket.gethostbyname(stuff)
