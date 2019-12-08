@@ -5,8 +5,8 @@ from . import test
 
 # Settings you change
 card_folder = 'cards'
-answer_cards_file_names = ['answer_cards', 'custom_answer_cards']
-question_cards_file_name = ['question_cards', 'question_cards1', 'question_cards2', 'custom_question_cards']
+answer_cards_file_names = ['answer_main', 'custom_answer_cards']
+question_cards_file_name = ['question_main', 'custom_question_cards']
 blank_format = '__________'
 
 # Settings that are used
