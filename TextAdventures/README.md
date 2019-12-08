@@ -14,7 +14,7 @@ Looks for games in ./games/ directory
 
 usage:
 
-open <game name> ex. open zork1.z5 - loads game
+adventure <game name> ex. adventure zork1.z5 - starts game
   
 Game will process channel messages as commands while a game is running.
   

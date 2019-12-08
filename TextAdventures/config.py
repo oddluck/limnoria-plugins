@@ -32,4 +32,8 @@ conf.registerGlobalValue(TextAdventures, 'dfrotzPath',
 conf.registerGlobalValue(TextAdventures, 'allowPrivate',
         registry.Boolean('True', _("""Allow games to be played over private message.""")))
 
+conf.registerGlobalValue(TextAdventures, 'requireCommand',
+        registry.Boolean('False', _("""Require game input to be sent via command. Disables 
+        monitoring of chanel messages for game input.""")))
+
 TextAdventures = conf.registerPlugin('TextAdventures')

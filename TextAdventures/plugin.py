@@ -36,7 +36,7 @@ class TextAdventures(callbacks.Plugin):
         self.game_path = "{0}/games/".format(os.path.dirname(os.path.abspath(__file__)))
         self.binary = self.registryValue('dFrotzPath')
 
-    def open(self, irc, msg, args, input):
+    def adventure(self, irc, msg, args, input):
         """<game_name>
         Open <game_name.z*>.
         """
@@ -58,7 +58,7 @@ class TextAdventures(callbacks.Plugin):
             for line in response:
                 if line.strip() and line.strip() != ".":
                     irc.reply(line, prefixNick=False)
-    open = wrap(open, ['text'])
+    adventure = wrap(adventure, ['text'])
 
     def output(self, output):
         response = []
@@ -77,18 +77,21 @@ class TextAdventures(callbacks.Plugin):
 
     def doPrivmsg(self, irc, msg):
         channel = msg.args[0]
-        if callbacks.addressed(irc.nick, msg):
+        if irc.isChannel(channel) and callbacks.addressed(irc.nick, msg):
             return
         if not irc.isChannel(channel):
             channel = msg.nick
-        self.game.setdefault(channel, None)
-        if self.game[channel]:
-            command = msg.args[1]
-            self.game[channel].sendline(r'{}'.format(command))
-            response = self.output(self.game[channel])
-            for line in response[1:]:
-                if line.strip() and line.strip() != ".":
-                    irc.reply(line, prefixNick=False)
+        if not self.registryValue('requireCommand') or not irc.isChannel(msg.args[0]):
+            self.game.setdefault(channel, None)
+            if self.game[channel]:
+                command = msg.args[1]
+                self.game[channel].sendline(r'{}'.format(command))
+                response = self.output(self.game[channel])
+                for line in response[1:]:
+                    if line.strip() and line.strip() != ".":
+                        irc.reply(line, prefixNick=False)
+        else:
+            return
 
     def end(self, irc, msg, args):
         """
