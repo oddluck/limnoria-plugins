@@ -33,7 +33,7 @@ from supybot.commands import *
 import supybot.plugins as plugins
 import supybot.ircutils as ircutils
 import supybot.callbacks as callbacks
-
+import os
 import supybot.ircmsgs as ircmsgs
 import supybot.ircdb as ircdb
 import random
@@ -42,23 +42,20 @@ try:
 except:
   import json as simplejson
 
-class Rpg(callbacks.Plugin):
-  '''A text based RPG for IRC channels. Requires the user to be registered 
-  with supybot to use it. all commands are prefixed with rpg. Command list:
-  rpgmove rpgstats rpgrun rpgnew rpgloc rpgviewarea'''
-  threaded = True
-
-  class rpg(callbacks.Commands):
-
-    gameChannel='##TPTRPG'
+class RPG(callbacks.Plugin):
+    '''A text based RPG for IRC channels. Requires the user to be registered 
+    with supybot to use it. all commands are prefixed with rpg. Command list:
+    rpgmove rpgstats rpgrun rpgnew rpgloc rpgviewarea'''
+    threaded = True
     playerData=mapData=mapInfo=monsterData=itemData={}
-    consolechannel = '##sgoutput'
-    filepath = '/home/antb/StewieGriffin/plugins/Rpg/'
+    consolechannel = None
+    filepath = "{0}/".format(os.path.dirname(os.path.abspath(__file__)))
 
 #########################
 ###   Game Commands   ###
 #########################
-    def rpgReloadData(self,irc,msg,args):
+    def reloaddata(self,irc,msg,args):
+        """Reload RPG data. """
         if not ircdb.users.getUser(msg.prefix)._checkCapability('admin'):
             irc.error('Only people with \'Admin\' can do that.')
             return
@@ -70,9 +67,10 @@ class Rpg(callbacks.Plugin):
                 self.monsterData = simplejson.load(f)
             self._getItemsFile()
             irc.replySuccess()
-    reloaddata = wrap(rpgReloadData)
+    reloaddata = wrap(reloaddata)
 
-    def rpgGenMap(self,irc,msg,args,width,height):
+    def genmap(self,irc,msg,args,width,height):
+        """Generate map."""
         if not ircdb.users.getUser(msg.prefix)._checkCapability('owner'):
             irc.error('Only people with \'Admin\' can do that.')
             return
@@ -86,7 +84,6 @@ class Rpg(callbacks.Plugin):
                 except:
                     irc.error('Invalid arguments given.')
                     return
-
             random.seed()
             seed=random.random()
             random.seed(seed)
@@ -95,9 +92,7 @@ class Rpg(callbacks.Plugin):
             #          # is wall  : is boss  ~ is item  . is nothing.
             rand = {}
             terrainmap = ''
-
             self._sendDbg(irc,'Generating new usermap..')
-
             x = -1
             while x < width:
                 terrainline=''
@@ -124,31 +119,24 @@ class Rpg(callbacks.Plugin):
                     else:
                         terrainline+=terrain[rand[4]]
                 terrainmap+=terrainline+'\n'
-
             data = {'width':width,'height':height,'homeY':(height/2),'homeX':int(width/2),'homeLoc':int((height/2)+((width/2)*(width+2))),'desc':'Random Generation.'}
-
             with open(self.filepath+'mapData.txt','w') as f:
                 simplejson.dump(data,f)
             self._saveMapData(terrainmap)
             irc.replySuccess('Map regeneration')
             self._sendDbg(irc,'Map created and saved to map.txt, info saved to mapData.txt')
-
             playerData=self.playerData
             for player in playerData:
                 playerData[player]['Loc']=(height/2)+((width/2)*(width+2))
             self._savePlayerData(playerData)
             self._sendDbg(irc,'Players relocated successfully.')
             irc.replySuccess('Players Relocated to Home')
+    genmap = wrap(genmap,[optional('somethingWithoutSpaces'),optional('somethingWithoutSpaces')])
 
-#            if (self.serverUrl)
- #               submit = utils.web.getUrl(self.serverUrl+"?m=%s&w=%i&h=%&hm=%i&hy=%i
-            
-    genmap = wrap(rpgGenMap,[optional('somethingWithoutSpaces'),optional('somethingWithoutSpaces')])
-
-    def rpgStats(self,irc,msg,args):
+    def stats(self,irc,msg,args):
+        """Get player stats."""
         player = self._checkPlayer(irc,msg)
         playerData = self.playerData[player]
-
         level = playerData['Lvl']
         exp = playerData['Exp']
         next = self._getNextLevelXp(player)
@@ -161,23 +149,21 @@ class Rpg(callbacks.Plugin):
         deaths = playerData['Deaths']
         hp = playerData['HP']
         mhp = playerData['MHP']
-
         weapon = playerData['Item']['rArm']['Name']
         helmet = playerData['Item']['Head']['Name']
         shield = playerData['Item']['lArm']['Name']
         armour = playerData['Item']['Torso']['Name']
-
         irc.reply('%s is at Level %i with %i experience; %i is \
 needed for the next level. You have %i/%i HP. \
 Your base attack is %i and is boosted to %i by your %s Sword. Your base \
 defence is %i, boosted to %i with your %s Helmet and %s Armour. Your %s \
 Shield gives you a %i%s chance to block attacks. Your Luck \
 rating is %i. You have died %i times.\
-'%(player,level,exp,next,hp,mhp,baseAtk,totalAtk,weapon,baseDef,totalDef,helmet,armour,shield,block,'%',luck,deaths)
-                )
-    stats = wrap(rpgStats)
+'%(player,level,exp,next,hp,mhp,baseAtk,totalAtk,weapon,baseDef,totalDef,helmet,armour,shield,block,'%',luck,deaths)        )
+    stats = wrap(stats)
 
-    def rpgNew(self,irc,msg,args):
+    def newplayer(self,irc,msg,args):
+        """Create new RPG player."""
         player = self._checkPlayer(irc,msg,1)
         playerData = self.playerData
 
@@ -198,17 +184,16 @@ rating is %i. You have died %i times.\
         playerData[player]['Deaths'] = 0
         playerData[player]['Loc']=self.mapInfo['homeLoc']
         playerData[player]['force']=False
-
         self._sendDbg(irc,player+' has been reset/created')
         self._savePlayerData(playerData)
-        self.rpgStats(irc,msg,args)
-    new = wrap(rpgNew)
+        self.stats(irc,msg,args)
+    newplayer = wrap(newplayer)
 
-    def rpgLocation(self,irc,msg,args):
+    def location(self,irc,msg,args):
+        """Get player location"""
         player = self._checkPlayer(irc,msg)
         location = self.playerData[player]['Loc']
         mapInfo = self.mapInfo
-
         x=0
         while True:
             if location > mapInfo['width']:
@@ -218,14 +203,14 @@ rating is %i. You have died %i times.\
                 break
         y = location
         irc.reply('You are located at (%i,%i). Home is at (%i,%i)'%(x,y,self.mapInfo['homeX'],self.mapInfo['homeY']))
-    loc = wrap(rpgLocation)
+    location = wrap(location)
 
-    def rpgViewArea(self,irc,msg,args):
+    def look(self,irc,msg,args):
+        """Look aroun."""
         player = self._checkPlayer(irc,msg)
         location = self.playerData[player]['Loc']
         mapData = self.mapData
         mapInfo = self.mapInfo
-
         area = []
         area += mapData[location-(mapInfo['width']+3)]
         area += mapData[location-(mapInfo['width']+2)]
@@ -235,7 +220,6 @@ rating is %i. You have died %i times.\
         area += mapData[location+(mapInfo['width']+1)]
         area += mapData[location+(mapInfo['width']+2)]
         area += mapData[location+(mapInfo['width']+3)]
-
         for x in area:
             line = area.index(x)
             if x is '.':
@@ -248,13 +232,13 @@ rating is %i. You have died %i times.\
                 area[line]='Boss'
             elif x is '@':
                 area[line]='Home'
-
         irc.reply('NW: %s - N: %s - NE: %s - W: %s - E: %s - SW: %s - S: %s - SE: %s\
                     '%(area[0],area[1],area[2],area[3],area[4],area[5],area[6],area[7])
                  )
-    viewarea=wrap(rpgViewArea)
+    look=wrap(look)
 
-    def rpgforcebattle(self,irc,msg,args):
+    def forcebattle(self,irc,msg,args):
+        """Force battle nex turn."""
         player=self._checkPlayer(irc,msg)
         if self.playerData[player]['force']:
             self.playerData[player]['force']=False
@@ -262,19 +246,20 @@ rating is %i. You have died %i times.\
         else:
             self.playerData[player]['force']=True
             irc.reply('%s will enter a monster battle on their next turn.'%player.capitalize(),prefixNick=False)
-    forcebattle=wrap(rpgforcebattle)
+    forcebattle=wrap(forcebattle)
 
-    def rpgmove(self,irc,msg,args,direction,number):
+    def move(self,irc,msg,args,direction,number):
+        """[direction] [number]
+        Move [direction] [number].
+        """
         player = self._checkPlayer(irc,msg)
         playerData = self.playerData
         mapData = self.mapData
         mapInfo = self.mapInfo
         direction = direction.upper()
-
         try: number = int(number)
         except: number = 1
         if number == 0: number=1
-       
         x = 0
         while x < number:
           if direction == 'NW':
@@ -335,15 +320,12 @@ rating is %i. You have died %i times.\
                   self._savePlayerData(playerData)
           else:
               irc.error("Move failed. you gave %s as a direction. %s"%(direction,str(type(direction))))
-
           if mapData[playerData[player]['Loc']] is '~':
               self._genItem(player,2)
 #              mapData[playerData[player]['Loc']]='.'
               self._saveMapData()
-
           elif mapData[playerData[player]['Loc']] is ':':
               self._doBattle(irc,player,2,msg.nick)
-
           elif mapData[playerData[player]['Loc']] is '.':
               if playerData[player]['force'] is True:
                   self._sendDbg(irc,"Battle Forced")
@@ -352,35 +334,23 @@ rating is %i. You have died %i times.\
                   self._savePlayerData(playerData)
               elif int(random.random()*100) < 5:
                   self._doBattle(irc,player,1,msg.nick)
-
           elif mapData[playerData[player]['Loc']] is '@':
               playerData[player]['HP']=playerData[player]['MHP']
 #              irc.reply("Your health has been restored.")
               irc.queueMsg(ircmsgs.IrcMsg('NOTICE {0} :Your health has been restored.'.format(msg.nick)))
               self._savePlayerData(playerData)
           x+=1
-
-    move = wrap(rpgmove,['somethingWithoutSpaces',optional('int')])
-
+    move = wrap(move,['somethingWithoutSpaces',optional('int')])
 
 ############################
 ###   Engine functions   ###
 ############################
     def _checkPlayer(self,irc,msg,new=0):
-        if (msg.args[0] != self.gameChannel):
-            if msg.nick in irc.state.channels[self.gameChannel].users:
-                irc.error('That command cannot be sent in this channel. Please try again in %s'%self.gameChannel)
-            else:
-                irc.error('You need to join %s and use that command there.'%self.gameChannel)
-                irc.queueMsg(ircmsgs.invite(msg.nick, self.gameChannel))
-            return None
-
         try:
             player = str(ircdb.users.getUser(msg.prefix))
             player = player.split('name=\"')[1].split('\",')[0]
         except KeyError:
             irc.errorNotRegistered()
-
         try:
              test=self.playerData[player]
         except:
@@ -410,7 +380,7 @@ rating is %i. You have died %i times.\
     def _getMapInfo(self):
         with open(self.filepath+'mapData.txt','r') as f:
             self.mapInfo = simplejson.load(f)
-    
+
     def _getItemsFile(self):
         with open(self.filepath+'items.txt','r') as f:
             self.itemData = simplejson.load(f)
@@ -459,7 +429,6 @@ rating is %i. You have died %i times.\
                 monster['HP']-=playerAtk
                 if monster['HP'] <=0:
                     return player
-
         winner = None
         while winner is None:
             battleData['rounds']+=1
@@ -471,19 +440,14 @@ rating is %i. You have died %i times.\
                 winner = _doPlayer()
                 if winner is None:
                     winner = _doMonster()
-
         if winner is player:
             self._playerWin(irc,player,monster,playerData)
         else:
             self._playerDead(irc,player,monster,playerData)
-
-
-
         bDataString='Battle lasted %i rounds, you scored %i hits, %i were critical and %i were evaded attacks. %s made %i attacks, %i were critical and %i were blocked.\
                      '%(battleData['rounds'],battleData['player']['atks'],battleData['player']['crits'],battleData['monster']['evades'],monster['Name'],battleData['monster']['atks'],battleData['monster']['crits'],battleData['player']['blocks'])
         irc.queueMsg(ircmsgs.IrcMsg('NOTICE {0} :{1}'.format(nick,bDataString)))
 #        irc.reply(bDataString,prefixNick=False)
-
 
     def _playerDead(self,irc,player,monster,playerData):
         #irc.reply('OOOOOOH YOU JUST GOT PWNT! - You\'ve been sent back home and fully healed. Luckily theres no penalties for dying.')
@@ -529,7 +493,6 @@ rating is %i. You have died %i times.\
                     playerData[player]['Torso']['Power']=itemWon['power']
                     playerData[player]['Torso']['Name']=itemWon['name']
                     better = True
-
             if better:
                 winString+=' its better than your old %s %s, so you discard it and equip the %s %s\
                             '%(oldEquip['Name'],itemWon['item'].capitalize(),itemWon['name'],itemWon['item'].capitalize())
@@ -539,17 +502,14 @@ rating is %i. You have died %i times.\
             self._savePlayerData(playerData)
         irc.reply(winString,prefixNick=False)
 
-
     def _genItem(self,player,level=1):
         playerData = self.playerData
         itemData = self.itemData
         genChance=(100-playerData[player]['Luc'])/(level+1)
         itemType=int(random.random()*3)
         itemToReturn = possibleItem = {}
-
         if itemType is 0: #Sword
             possibleItem['item']='sword'
-
             itemBase = False
             while itemBase is False:
                 possibleItem=itemData['swords'][int(random.random()*len(itemData['swords']))]
@@ -564,7 +524,6 @@ rating is %i. You have died %i times.\
                 possibleItem['item']='helmet'
             elif itemType is 3: #Torso
                 possibleItem['item']='armour'
-
             itemBase = False
             while itemBase is False:
                 possibleItem=itemData['defence'][int(random.random()*len(itemData['defence']))]
@@ -572,16 +531,14 @@ rating is %i. You have died %i times.\
                     itemBase=possibleItem
                     itemToReturn['name']=possibleItem[0]
                     itemToReturn['power']=int((random.random()*(possibleItem[2]-possibleItem[1]))+possibleItem[1])
-
         itemBoost = False
         while itemBoost is False:
             booster = itemData['modifiers'][random.randint(0,len(itemData['modifiers'])-1)]
-            print booster
+            print(booster)
             if genChance < booster:
                 itemBoost = booster;
                 itemToReturn['name']='%s %s'%(booster[0],itemToReturn['name'])
                 itemToReturn['power']=itemToReturn['power']*(random.random()*(booster[2]-booster[1]))+booster[1]
-
         return itemToReturn
 
     def _genMonster(self,player):
@@ -629,6 +586,7 @@ rating is %i. You have died %i times.\
         pLvl = self.playerData[player]['Lvl']
         return (levelBaseXp*pLvl)+((levelBaseXp*pLvl)/2)
 
-Class = Rpg
+Class = RPG
 
 # vim:set shiftwidth=4 softtabstop=4 expandtab textwidth=79:
+

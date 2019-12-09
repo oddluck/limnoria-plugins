@@ -1,1 +1,1 @@
-{"homeX": 25, "homeY": 25, "height": 50, "width": 50, "homeLoc": 1325, "desc": "Random Generation."}
+{"width": 52, "height": 52, "homeY": 26.0, "homeX": 26, "homeLoc": 1430, "desc": "Random Generation."}
