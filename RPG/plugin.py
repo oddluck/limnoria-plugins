@@ -321,9 +321,12 @@ rating is %i. You have died %i times.\
           else:
               irc.error("Move failed. you gave %s as a direction. %s"%(direction,str(type(direction))))
           if mapData[playerData[player]['Loc']] is '~':
-              self._genItem(player,2)
-#              mapData[playerData[player]['Loc']]='.'
-              self._saveMapData()
+              itemFound = self._genItem(player,2)
+              changedMap = list(mapData)
+              changedMap[playerData[player]['Loc']]='.'
+              mapData = "".join(changedMap)
+              self._saveMapData(mapData)
+              irc.reply("You found a %s %s!" % (itemFound['name'], itemFound['item'].capitalize()))
           elif mapData[playerData[player]['Loc']] is ':':
               self._doBattle(irc,player,2,msg.nick)
           elif mapData[playerData[player]['Loc']] is '.':
@@ -451,7 +454,7 @@ rating is %i. You have died %i times.\
 
     def _playerDead(self,irc,player,monster,playerData):
         #irc.reply('OOOOOOH YOU JUST GOT PWNT! - You\'ve been sent back home and fully healed. Luckily theres no penalties for dying.')
-        irc.queueMsg(ircmsgs.IrcMsg('NOTICE {0}: OOOOOOH YOU JUST GOT PWNT! - You\'ve been sent back home and fully healed. Luckily theres no penalties for dying.'.format(msg.nick)))
+        irc.reply('{0} HAS BEEN SLAIN! - You\'ve been sent back home and fully healed. Luckily there\'s no penalties for dying.'.format(player))
         playerData[player]['HP'] = playerData[player]['MHP']
         playerData[player]['Loc'] = self.mapInfo['homeLoc']
         playerData[player]['Deaths']+=1
@@ -535,7 +538,7 @@ rating is %i. You have died %i times.\
         while itemBoost is False:
             booster = itemData['modifiers'][random.randint(0,len(itemData['modifiers'])-1)]
             print(booster)
-            if genChance < booster:
+            if genChance < booster[3]:
                 itemBoost = booster;
                 itemToReturn['name']='%s %s'%(booster[0],itemToReturn['name'])
                 itemToReturn['power']=itemToReturn['power']*(random.random()*(booster[2]-booster[1]))+booster[1]
