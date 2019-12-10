@@ -62,7 +62,7 @@ class TextAdventures(callbacks.Plugin):
 
     def output(self, output):
         response = []
-        prompts = ["\n> >", "\n>\r\n>", "\n>", "\n\)", pexpect.TIMEOUT]
+        prompts = ["\n> >", "\n>", "\n\)", pexpect.TIMEOUT]
         output.expect(prompts, timeout=1)
         response = output.before 
         response = response.decode().splitlines()
