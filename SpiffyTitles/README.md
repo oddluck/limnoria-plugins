@@ -10,6 +10,7 @@ The ONLY gluten-free plugin for displaying link titles.
 - Additional information about [Youtube](https://youtube.com) videos
 - Additional information about [imgur](https://imgur.com) links
 - Additional information about [IMDB](https://imdb.com) links
+- Additional information about [Twitch](https://twitch.tv) links
 - Article extracts from [Wikipedia](https://en.wikipedia.org) links
 - Rate limiting to mitigate abuse
 - Configurable white/black list to control where titles are disabled
@@ -130,6 +131,19 @@ Queries the [OMDB API](http://www.omdbapi.com) to get additional information abo
 `imdbTemplate` - This is the template used for [IMDB](http://imdb.com) links
 
 Default value: `^ {{Title}} ({{Year}}, {{Country}}) - Rating: {{imdbRating}} ::  {{Plot}}`
+
+
+### Twitch handler
+Queries the [Twitch API](https://dev.twitch.tv/) to get additional information about [Twitch](http://twitch.tv) links
+
+`twitchAPI` - Set your Twitch Client_ID here. Obtain at https://dev.twitch.tv/dashboard/apps/create (free)
+
+`twitchHandlerEnabled` - Whether to show additional information about [Twitch](http://twitch.tv) links
+
+`twitchTemplate` - This is the template used for [twitch](http://twitch.tv) links
+
+Default value: `^ {{display_name}} {%if live%}:: {{title}} :: (LIVE) [{{game_name}}] :: Started: {{started_at}} :: Stream Viewers: {{stream_viewers}}{%endif%}{%if description%}:: {{description}}{%endif%} :: Total Viewers: {{total_viewers}}`
+
 
 ### imgur handler
 
