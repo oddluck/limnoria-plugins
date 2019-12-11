@@ -136,16 +136,28 @@ Default value: `^ {{Title}} ({{Year}}, {{Country}}) - Rating: {{imdbRating}} :: 
 ### Twitch handler
 Queries the [Twitch API](https://dev.twitch.tv/) to get additional information about [Twitch](http://twitch.tv) links
 
-`twitchAPI` - Set your Twitch Client_ID here. Obtain at https://dev.twitch.tv/dashboard/apps/create (free)
+`twitch.twitchAPI` - Set your Twitch Client_ID here. Obtain at https://dev.twitch.tv/dashboard/apps/create (free)
 (You can use http://localhost for the OAuth Redirect URL, you just need to generate a Client_ID)
 
 `twitchHandlerEnabled` - Whether to show additional information about [Twitch](http://twitch.tv) links
 
-`twitchLogo` - This is the colored text used for {{twitch_logo}} in title template strings.
+`twitch.twitchLogo` - This is the colored text used for {{twitch_logo}} in title template strings.
 
-`twitchTemplate` - This is the template used for [twitch](http://twitch.tv) links
+'twitch.channelTemplate' - Template for channel links
 
-Default value: "^ {{twitch_logo}} :: {{display_name}} {%if live%}:: (LIVE) {%if game_name%}[{{game_name}}] {%endif%}:: {{title}} :: Started: {{started_at}} :: Stream Viewers: {{stream_viewers}} {%endif%}{%if description%}:: {{description}} {%endif%}:: Total Viewers: {{total_viewers}}"
+ "^ {{twitch_logo}} :: {{display_name}} {%if description%}:: {{description}} {%endif%}:: Viewers: {{view_count}}"
+ 
+ 'twitch.streamTemplate' - Template for live stream links
+ 
+"^ {{twitch_logo}} :: {{display_name}} :: (LIVE) {%if game_name%}[{{game_name}}] {%endif%}{%if title%}:: {{title}} {%endif%}:: Created: {{created_at}} :: Viewers: {{view_count}} {%if description%}:: {{description}} {%endif%}"
+
+'twitch.videoTemplate' - Template for video links
+
+"^ {{twitch_logo}} :: {{display_name}} {%if title%}:: {{title}} {%endif%}}:: Duration: {{duration}} :: Created: {{created_at}} {%if description%}:: {{description}} {%endif%}:: Viewers: {{view_count}}"
+   
+'twitch.clipTemplate' - Template for clip links
+
+ "^ {{twitch_logo}} :: {{display_name}} :: (LIVE) {%if game_name%}[{{game_name}}] {%endif%}{%if title%}:: {{title}} {%endif%}:: Created: {{created_at}} :: Viewers: {{view_count}} {%if description%}:: {{description}} {%endif%}"
 
 
 ### imgur handler
