@@ -52,6 +52,9 @@ conf.registerChannelValue(SpiffyTitles, 'imgurHandlerEnabled',
 
 conf.registerChannelValue(SpiffyTitles, 'imdbHandlerEnabled',
      registry.Boolean(True, _("""Whether to add additional information about IMDB links""")))
+     
+conf.registerChannelValue(SpiffyTitles, 'twitchHandlerEnabled',
+     registry.Boolean(True, _("""Whether to add additional information about Twitch links""")))
 
 # URL regex
 conf.registerGlobalValue(SpiffyTitles, 'urlRegularExpression',
@@ -65,13 +68,21 @@ conf.registerChannelValue(SpiffyTitles, 'useBold',
 conf.registerChannelValue(SpiffyTitles, 'defaultTitleTemplate',
      registry.String("{% if redirect %}(REDIRECT) {% endif %}^ {{title}}", _("""Template used for default title responses""")))
 
+#Twitch API Key
+conf.registerGlobalValue(SpiffyTitles, 'twitchAPI',
+     registry.String('', _("""Twitch API Client_ID""")))
+     
+# Twitch template
+conf.registerChannelValue(SpiffyTitles, 'twitchTemplate',
+     registry.String("^ {{display_name}} {%if live%}:: {{title}} :: (LIVE) [{{game_name}}] :: Started: {{started_at}} :: Stream Viewers: {{stream_viewers}}{%endif%}{%if description%}:: {{description}}{%endif%} :: Total Viewers: {{total_viewers}}", _("""Twitch title template""")))
+
 #OMDB API Key
 conf.registerGlobalValue(SpiffyTitles, 'omdbAPI',
      registry.String('', _("""OMDB API Key""")))
 
 # imdb template
 conf.registerChannelValue(SpiffyTitles, 'imdbTemplate',
-     registry.String("^ {{Title}} ({{Year}}, {{Country}}) - Rating: {{imdbRating}} ::  {{Plot}}", _("""Uses http://www.omdbapi.com to provide additional information about IMDB links""")))
+     registry.String("^ {{Title}} ({{Year}}, {{Country}}) - Rating: {{imdbRating}} ::  {{Plot}}", _("""IMDB title template""")))
 
 # alternative imdb template:
 #                     ^ {{Title}} ({{Year}} - {{Director}}) :: [i:{{imdbRating}} r:{{tomatoMeter}} m:{{Metascore}}] {{Plot}}
