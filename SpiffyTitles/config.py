@@ -68,17 +68,26 @@ conf.registerChannelValue(SpiffyTitles, 'useBold',
 conf.registerChannelValue(SpiffyTitles, 'defaultTitleTemplate',
      registry.String("{% if redirect %}(REDIRECT) {% endif %}^ {{title}}", _("""Template used for default title responses""")))
 
+conf.registerGroup(SpiffyTitles, 'twitch')
 #Twitch API Key
-conf.registerGlobalValue(SpiffyTitles, 'twitchAPI',
+conf.registerGlobalValue(SpiffyTitles.twitch, 'clientID',
      registry.String('', _("""Twitch API Client_ID""")))
 
 # Twitch Logo
-conf.registerChannelValue(SpiffyTitles, 'twitchLogo',
+conf.registerChannelValue(SpiffyTitles.twitch, 'twitchLogo',
      registry.String("\x030,6💬twitch", _("""Logo used with {{twitch_logo}} in template""")))
 
-# Twitch template
-conf.registerChannelValue(SpiffyTitles, 'twitchTemplate',
-     registry.String("^ {{twitch_logo}} :: {{display_name}} {%if live%}:: (LIVE) {%if game_name%}[{{game_name}}] {%endif%}{%if title%}:: {{title}} {%endif%}:: Started: {{started_at}} :: Stream Viewers: {{stream_viewers}} {%endif%}{%if description%}:: {{description}} {%endif%}:: Total Viewers: {{total_viewers}}", _("""Twitch title template""")))
+conf.registerChannelValue(SpiffyTitles.twitch, 'channelTemplate',
+     registry.String("^ {{twitch_logo}} :: {{display_name}} {%if description%}:: {{description}} {%endif%}:: Viewers: {{view_count}}", _("""twitch.tv channel template""")))
+
+conf.registerChannelValue(SpiffyTitles.twitch, 'streamTemplate',
+     registry.String("^ {{twitch_logo}} :: {{display_name}} :: (LIVE) {%if game_name%}[{{game_name}}] {%endif%}{%if title%}:: {{title}} {%endif%}:: Created: {{created_at}} :: Viewers: {{view_count}} {%if description%}:: {{description}} {%endif%}", _("""twitch.tv stream template""")))
+
+conf.registerChannelValue(SpiffyTitles.twitch, 'videoTemplate',
+     registry.String("^ {{twitch_logo}} :: {{display_name}} {%if title%}:: {{title}} {%endif%}}:: Duration: {{duration}} :: Created: {{created_at}} {%if description%}:: {{description}} {%endif%}:: Viewers: {{view_count}}", _("""twitch.tv video template""")))
+
+conf.registerChannelValue(SpiffyTitles.twitch, 'clipTemplate',
+     registry.String("^ {{twitch_logo}} :: {{display_name}} :: (LIVE) {%if game_name%}[{{game_name}}] {%endif%}{%if title%}:: {{title}} {%endif%}:: Created: {{created_at}} :: Viewers: {{view_count}} {%if description%}:: {{description}} {%endif%}", _("""twitch.tv clip template""")))
 
 #OMDB API Key
 conf.registerGlobalValue(SpiffyTitles, 'omdbAPI',
