@@ -854,7 +854,7 @@ class SpiffyTitles(callbacks.Plugin):
                 items = stream["data"][0]
                 title = items["title"]
                 live = True
-                if int(items["game_id"]):
+                if items["game_id"]:
                         game_id = items["game_id"]
                         get_game = requests.get("https://api.twitch.tv/helix/games?id={}".format(game_id), timeout=10, headers=headers)
                         game_data = json.loads(get_game.text)
