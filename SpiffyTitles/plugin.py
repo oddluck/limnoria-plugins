@@ -750,6 +750,15 @@ class SpiffyTitles(callbacks.Plugin):
             yt_logo = "{0}\x0F".format(self.registryValue("youtubeLogo", dynamic.channel))
             
         return yt_logo
+        
+    def get_twitch_logo(self):
+        use_bold = self.registryValue("useBold", dynamic.channel)
+        if use_bold:
+            twitch_logo = "{0}\x0F\x02".format(self.registryValue("twitchLogo", dynamic.channel))
+        else:
+            twitch_logo = "{0}\x0F".format(self.registryValue("twitchLogo", dynamic.channel))
+            
+        return twitch_logo
 
     def get_total_seconds_from_duration(self, input):
         """
@@ -868,6 +877,7 @@ class SpiffyTitles(callbacks.Plugin):
                 total_viewers = items["view_count"]
         else:
             log.error("SpiffyTitles Twitch User API %s - %s" % (request_user.status_code, request_user.text))
+        twitch_logo = self.get_twitch_logo()
         compiled_template = twitch_template.render({
                         "title": title,
                         "display_name": display_name,
@@ -876,7 +886,8 @@ class SpiffyTitles(callbacks.Plugin):
                         "started_at": started_at,
                         "game_name": game_name,
                         "total_viewers": total_viewers,
-                        "stream_viewers": stream_viewers})
+                        "stream_viewers": stream_viewers,
+                        "twitch_logo": twitch_logo})
         result = compiled_template
         if result is not None:
             return result
