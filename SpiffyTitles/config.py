@@ -78,7 +78,7 @@ conf.registerChannelValue(SpiffyTitles, 'twitchLogo',
 
 # Twitch template
 conf.registerChannelValue(SpiffyTitles, 'twitchTemplate',
-     registry.String("^ {{twitch_logo}} :: {{display_name}} {%if live%}:: (LIVE) {%if game_name%}[{{game_name}}] {%endif%}:: {{title}} :: Started: {{started_at}} :: Stream Viewers: {{stream_viewers}} {%endif%}{%if description%}:: {{description}} {%endif%}:: Total Viewers: {{total_viewers}}", _("""Twitch title template""")))
+     registry.String("^ {{twitch_logo}} :: {{display_name}} {%if live%}:: (LIVE) {%if game_name%}[{{game_name}}] {%endif%}{%if title%}:: {{title}} {%endif%}:: Started: {{started_at}} :: Stream Viewers: {{stream_viewers}} {%endif%}{%if description%}:: {{description}} {%endif%}:: Total Viewers: {{total_viewers}}", _("""Twitch title template""")))
 
 #OMDB API Key
 conf.registerGlobalValue(SpiffyTitles, 'omdbAPI',
