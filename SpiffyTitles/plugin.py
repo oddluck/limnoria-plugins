@@ -72,6 +72,7 @@ class SpiffyTitles(callbacks.Plugin):
         self.add_dailymotion_handlers()
         self.add_wikipedia_handlers()
         self.add_reddit_handlers()
+        self.add_twitch_handlers()
 
     def add_dailymotion_handlers(self):
         self.handlers["www.dailymotion.com"] = self.handler_dailymotion
@@ -492,6 +493,12 @@ class SpiffyTitles(callbacks.Plugin):
             log.debug("SpiffyTitles: serving link from cache: %s" % (url))
             return cached_link
 
+    def add_twitch_handlers(self):
+        """
+        Enables meta info about IMDB links through the OMDB API
+        """
+        self.handlers["twitch.tv"] = self.handler_twitch
+        
     def add_imdb_handlers(self):
         """
         Enables meta info about IMDB links through the OMDB API
@@ -807,6 +814,75 @@ class SpiffyTitles(callbacks.Plugin):
                     return title_template
         else:
             log.debug("SpiffyTitles: default handler fired but doing nothing because disabled")
+
+    def handler_twitch(self, url, info, channel):
+        """
+        Handles twitch.tv links, querying the Twitch API for additional info
+        Typical Twitch URL: 
+        """
+        apikey = self.registryValue('twitchAPI')
+        headers = {'Client-ID': apikey}
+        result = None
+        if not self.registryValue("twitchHandlerEnabled", channel=channel):
+            log.debug("SpiffyTitles: Twitch handler disabled. Falling back to default handler.")
+            return self.handler_default(url, channel)
+        twitch_template = Template(self.registryValue("twitchTemplate"))
+        url = url.split("?")[0]
+        twitch_id = url.split("/")[-1].rstrip("/")
+        stream_url = "https://api.twitch.tv/helix/streams?user_login=%s" % (twitch_id)
+        user_url = "https://api.twitch.tv/helix/users?login=%s" % (twitch_id)
+        request_stream = requests.get(stream_url, timeout=10, headers=headers)
+        request_user = requests.get(user_url, timeout=10, headers=headers)
+        title, live, game_name, stream_viewers, total_viewers, started_at, display_name, description = "", "", "", "", "", "", "", ""
+        if request_stream.status_code == requests.codes.ok:
+            stream = json.loads(request_stream.text)
+            log.debug("SpiffyTitles: Twitch stream data: %s" % (stream))
+            result = None
+            no_stream = "Error" in request_stream
+            if no_stream or not stream["data"]:
+                log.debug("SpiffyTitles: Twitch stream error for %s" % (stream_url))
+            else:
+                items = stream["data"][0]
+                title = items["title"]
+                live = True
+                if int(items["game_id"]):
+                        game_id = items["game_id"]
+                        get_game = requests.get("https://api.twitch.tv/helix/games?id={}".format(game_id), timeout=10, headers=headers)
+                        game_data = json.loads(get_game.text)
+                        game_name = game_data["data"][0]["name"]
+                stream_viewers = items["viewer_count"]
+                started_at = items["started_at"]
+        else:
+            log.error("SpiffyTitles Twitch Stream API %s - %s" % (request_stream.status_code, request_stream.text))
+        if request_user.status_code == requests.codes.ok:
+            user_data = json.loads(request_user.text)
+            log.debug("SpiffyTitles: Twitch user data: %s" % (user_data))
+            result = None
+            no_user = "Error" in request_user
+            if no_user or not user_data["data"]:
+                log.debug("SpiffyTitles: Twitch user error for %s" % (user_url))
+            else:
+                items = user_data["data"][0]
+                display_name = items["display_name"]
+                description = items["description"]
+                total_viewers = items["view_count"]
+        else:
+            log.error("SpiffyTitles Twitch User API %s - %s" % (request_user.status_code, request_user.text))
+        compiled_template = twitch_template.render({
+                        "title": title,
+                        "display_name": display_name,
+                        "description": description,
+                        "live": live,
+                        "started_at": started_at,
+                        "game_name": game_name,
+                        "total_viewers": total_viewers,
+                        "stream_viewers": stream_viewers})
+        result = compiled_template
+        if result is not None:
+            return result
+        else:
+            log.debug("SpiffyTitles: Twitch handler failed. calling default handler")
+            return self.handler_default(url, channel)
 
     def handler_imdb(self, url, info, channel):
         """
