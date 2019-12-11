@@ -24,6 +24,7 @@ import random
 import json
 import cgi
 import datetime
+import time
 from jinja2 import Template
 from datetime import timedelta
 import timeout_decorator
@@ -860,7 +861,7 @@ class SpiffyTitles(callbacks.Plugin):
                         game_data = json.loads(get_game.text)
                         game_name = game_data["data"][0]["name"]
                 stream_viewers = items["viewer_count"]
-                started_at = items["started_at"]
+                started_at = self._time_created_at(items["started_at"])
         else:
             log.error("SpiffyTitles Twitch Stream API %s - %s" % (request_stream.status_code, request_stream.text))
         if request_user.status_code == requests.codes.ok:
@@ -894,6 +895,31 @@ class SpiffyTitles(callbacks.Plugin):
         else:
             log.debug("SpiffyTitles: Twitch handler failed. calling default handler")
             return self.handler_default(url, channel)
+
+    def _time_created_at(self, s):
+        """
+        Return relative time delta between now and s (dt string).
+        """
+
+        try:  # timeline's created_at Tue May 08 10:58:49 +0000 2012
+            ddate = time.strptime(s, "%Y-%m-%dT%H:%M:%SZ")[:-2]
+        except ValueError:
+            try:  # search's created_at Thu, 06 Oct 2011 19:41:12 +0000
+                ddate = time.strptime(s, "%a, %d %b %Y %H:%M:%S +0000")[:-2]
+            except ValueError:
+                return s
+        # do the math
+        d = datetime.datetime.now() - datetime.datetime(*ddate, tzinfo=None)
+        # now parse and return.
+        if d.days:
+            rel_time = "{:1d}d ago".format(abs(d.days))
+        elif d.seconds > 3600:
+            rel_time = "{:.1f}h ago".format(round((abs(d.seconds) / 3600),1))
+        elif 60 <= d.seconds < 3600:
+            rel_time = "{:.1f}m ago".format(round((abs(d.seconds) / 60),1))
+        else:
+            rel_time = "%ss ago" % (abs(d.seconds))
+        return rel_time
 
     def handler_imdb(self, url, info, channel):
         """
