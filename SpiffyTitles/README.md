@@ -137,6 +137,7 @@ Default value: `^ {{Title}} ({{Year}}, {{Country}}) - Rating: {{imdbRating}} :: 
 Queries the [Twitch API](https://dev.twitch.tv/) to get additional information about [Twitch](http://twitch.tv) links
 
 `twitchAPI` - Set your Twitch Client_ID here. Obtain at https://dev.twitch.tv/dashboard/apps/create (free)
+(You can use http://localhost for the OAuth Redirect URL, you just need to generate a Client_ID)
 
 `twitchHandlerEnabled` - Whether to show additional information about [Twitch](http://twitch.tv) links
 
