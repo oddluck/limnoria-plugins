@@ -141,11 +141,11 @@ Queries the [Twitch API](https://dev.twitch.tv/) to get additional information a
 
 `twitchHandlerEnabled` - Whether to show additional information about [Twitch](http://twitch.tv) links
 
-`twitchTemplate` - This is the template used for [twitch](http://twitch.tv) links
-
 `twitchLogo` - This is the colored text used for {{twitch_logo}} in title template strings.
 
-Default value: "^ {{display_name}} {%if live%}:: {{title}} :: (LIVE) {%if game_name%}[{{game_name}}] {%endif%}:: Started: {{started_at}} :: Stream Viewers: {{stream_viewers}} {%endif%}{%if description%}:: {{description}} {%endif%}:: Total Viewers: {{total_viewers}}"
+`twitchTemplate` - This is the template used for [twitch](http://twitch.tv) links
+
+Default value: "^ {{twitch_logo}} :: {{display_name}} {%if live%}:: (LIVE) {%if game_name%}[{{game_name}}] {%endif%}:: {{title}} :: Started: {{started_at}} :: Stream Viewers: {{stream_viewers}} {%endif%}{%if description%}:: {{description}} {%endif%}:: Total Viewers: {{total_viewers}}"
 
 
 ### imgur handler
