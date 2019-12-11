@@ -142,7 +142,7 @@ Queries the [Twitch API](https://dev.twitch.tv/) to get additional information a
 
 `twitchTemplate` - This is the template used for [twitch](http://twitch.tv) links
 
-Default value: `^ {{display_name}} {%if live%}:: {{title}} :: (LIVE) [{{game_name}}] :: Started: {{started_at}} :: Stream Viewers: {{stream_viewers}}{%endif%}{%if description%}:: {{description}}{%endif%} :: Total Viewers: {{total_viewers}}`
+Default value: ^ {{display_name}} {%if live%}:: {{title}} :: (LIVE) {%if game_name%}[{{game_name}}] {%endif%}:: Started: {{started_at}} :: Stream Viewers: {{stream_viewers}}{%endif%}{%if description%}:: {{description}}{%endif%} :: Total Viewers: {{total_viewers}}
 
 
 ### imgur handler
