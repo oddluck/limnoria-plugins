@@ -836,7 +836,7 @@ class SpiffyTitles(callbacks.Plugin):
         title, live, game_name, stream_viewers, total_viewers, started_at, display_name, description = "", "", "", "", "", "", "", ""
         if request_stream.status_code == requests.codes.ok:
             stream = json.loads(request_stream.text)
-            log.debug("SpiffyTitles: Twitch stream data: %s" % (stream))
+            #log.debug("SpiffyTitles: Twitch stream data: %s" % (stream))
             result = None
             no_stream = "Error" in request_stream
             if no_stream or not stream["data"]:
@@ -856,7 +856,7 @@ class SpiffyTitles(callbacks.Plugin):
             log.error("SpiffyTitles Twitch Stream API %s - %s" % (request_stream.status_code, request_stream.text))
         if request_user.status_code == requests.codes.ok:
             user_data = json.loads(request_user.text)
-            log.debug("SpiffyTitles: Twitch user data: %s" % (user_data))
+            #log.debug("SpiffyTitles: Twitch user data: %s" % (user_data))
             result = None
             no_user = "Error" in request_user
             if no_user or not user_data["data"]:
