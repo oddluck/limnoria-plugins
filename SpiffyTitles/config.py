@@ -71,10 +71,14 @@ conf.registerChannelValue(SpiffyTitles, 'defaultTitleTemplate',
 #Twitch API Key
 conf.registerGlobalValue(SpiffyTitles, 'twitchAPI',
      registry.String('', _("""Twitch API Client_ID""")))
-     
+
+# Twitch Logo
+conf.registerChannelValue(SpiffyTitles, 'twitchLogo',
+     registry.String("\x030,6💬twitch", _("""Logo used with {{twitch_logo}} in template""")))
+
 # Twitch template
 conf.registerChannelValue(SpiffyTitles, 'twitchTemplate',
-     registry.String("^ {{display_name}} {%if live%}:: {{title}} :: (LIVE) {%if game_name%}[{{game_name}}] {%endif%}:: Started: {{started_at}} :: Stream Viewers: {{stream_viewers}} {%endif%}{%if description%}:: {{description}} {%endif%}:: Total Viewers: {{total_viewers}}", _("""Twitch title template""")))
+     registry.String("^ {{twitch_logo}} {{display_name}} {%if live%}:: {{title}} :: (LIVE) {%if game_name%}[{{game_name}}] {%endif%}:: Started: {{started_at}} :: Stream Viewers: {{stream_viewers}} {%endif%}{%if description%}:: {{description}} {%endif%}:: Total Viewers: {{total_viewers}}", _("""Twitch title template""")))
 
 #OMDB API Key
 conf.registerGlobalValue(SpiffyTitles, 'omdbAPI',
@@ -219,3 +223,4 @@ conf.registerChannelValue(SpiffyTitles.reddit, 'userTemplate',
 
 conf.registerChannelValue(SpiffyTitles.reddit, 'maxChars',
                         registry.Integer(400, _("""Length of response (title/extract will be cut to fit).""")))
+
