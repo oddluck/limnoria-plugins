@@ -14,6 +14,7 @@ import supybot.utils as utils
 import re
 import requests
 import urllib
+import sys
 try:
     from urllib import urlencode
     from urlparse import urlparse, parse_qsl
@@ -755,9 +756,9 @@ class SpiffyTitles(callbacks.Plugin):
     def get_twitch_logo(self):
         use_bold = self.registryValue("useBold", dynamic.channel)
         if use_bold:
-            twitch_logo = "{0}\x0F\x02".format(self.registryValue("twitchLogo", dynamic.channel))
+            twitch_logo = "{0}\x0F\x02".format(self.registryValue("twitch.twitchLogo", dynamic.channel))
         else:
-            twitch_logo = "{0}\x0F".format(self.registryValue("twitchLogo", dynamic.channel))
+            twitch_logo = "{0}\x0F".format(self.registryValue("twitch.twitchLogo", dynamic.channel))
             
         return twitch_logo
 
@@ -825,76 +826,190 @@ class SpiffyTitles(callbacks.Plugin):
         else:
             log.debug("SpiffyTitles: default handler fired but doing nothing because disabled")
 
-    def handler_twitch(self, url, info, channel):
+    def handler_twitch(self, url, domain, channel):
         """
-        Handles twitch.tv links, querying the Twitch API for additional info
-        Typical Twitch URL: 
+        Queries twitch API for additional information about twitch links.
+        This handler is for (www.)twitch.tv
         """
-        apikey = self.registryValue('twitchAPI')
-        headers = {'Client-ID': apikey}
-        result = None
-        if not self.registryValue("twitchHandlerEnabled", channel=channel):
-            log.debug("SpiffyTitles: Twitch handler disabled. Falling back to default handler.")
+        twitch_client_id = self.registryValue("twitch.clientID")
+        twitch_handler_enabled = self.registryValue("twitchHandlerEnabled", channel=channel)
+        if not twitch_handler_enabled or not twitch_client_id:
             return self.handler_default(url, channel)
-        twitch_template = Template(self.registryValue("twitchTemplate"))
-        url = url.split("?")[0]
-        twitch_id = url.split("/")[-1].rstrip("/")
-        stream_url = "https://api.twitch.tv/helix/streams?user_login=%s" % (twitch_id)
-        user_url = "https://api.twitch.tv/helix/users?login=%s" % (twitch_id)
-        request_stream = requests.get(stream_url, timeout=10, headers=headers)
-        request_user = requests.get(user_url, timeout=10, headers=headers)
-        title, live, game_name, stream_viewers, total_viewers, started_at, display_name, description = "", "", "", "", "", "", "", ""
-        if request_stream.status_code == requests.codes.ok:
-            stream = json.loads(request_stream.text)
-            #log.debug("SpiffyTitles: Twitch stream data: %s" % (stream))
-            result = None
-            no_stream = "Error" in request_stream
-            if no_stream or not stream["data"]:
-                log.debug("SpiffyTitles: Twitch stream error for %s" % (stream_url))
-            else:
-                items = stream["data"][0]
-                title = items["title"]
-                live = True
-                if items["game_id"]:
-                        game_id = items["game_id"]
-                        get_game = requests.get("https://api.twitch.tv/helix/games?id={}".format(game_id), timeout=10, headers=headers)
-                        game_data = json.loads(get_game.text)
-                        game_name = game_data["data"][0]["name"]
-                stream_viewers = items["viewer_count"]
-                started_at = self._time_created_at(items["started_at"])
-        else:
-            log.error("SpiffyTitles Twitch Stream API %s - %s" % (request_stream.status_code, request_stream.text))
-        if request_user.status_code == requests.codes.ok:
-            user_data = json.loads(request_user.text)
-            #log.debug("SpiffyTitles: Twitch user data: %s" % (user_data))
-            result = None
-            no_user = "Error" in request_user
-            if no_user or not user_data["data"]:
-                log.debug("SpiffyTitles: Twitch user error for %s" % (user_url))
-            else:
-                items = user_data["data"][0]
-                display_name = items["display_name"]
-                description = items["description"]
-                total_viewers = items["view_count"]
-        else:
-            log.error("SpiffyTitles Twitch User API %s - %s" % (request_user.status_code, request_user.text))
-        twitch_logo = self.get_twitch_logo()
-        compiled_template = twitch_template.render({
-                        "title": title,
-                        "display_name": display_name,
-                        "description": description,
-                        "live": live,
-                        "started_at": started_at,
-                        "game_name": game_name,
-                        "total_viewers": total_viewers,
-                        "stream_viewers": stream_viewers,
-                        "twitch_logo": twitch_logo})
-        result = compiled_template
-        if result is not None:
-            return result
-        else:
-            log.debug("SpiffyTitles: Twitch handler failed. calling default handler")
+        self.log.debug("SpiffyTitles: calling twitch handler for %s" % (url))
+        patterns = {
+            "video": {
+                "pattern": r"^http(s)?:\/\/(www\.|go\.|player\.)?twitch\.tv\/(videos/|\?video=v)(?P<video_id>[0-9]+)",
+                "url": "https://api.twitch.tv/helix/videos?id={video_id}"
+            },
+            "clip": {
+                "pattern": r"http(s)?:\/\/clips\.twitch\.tv\/(?P<clip>.+)$",
+                "url": "https://api.twitch.tv/helix/clips?id={clip}"
+            },
+            "channel": {
+                "pattern": r"^http(s)?:\/\/(www\.|go\.)?twitch\.tv\/(?P<channel_name>[^\/]+)",
+                "url": "https://api.twitch.tv/helix/streams?user_login={channel_name}"
+            }
+        }
+        for name in patterns:
+            match = re.search(patterns[name]['pattern'], url)
+            if match:
+                link_type = name
+                link_info = match.groupdict()
+                data_url = patterns[name]['url'].format(**link_info)
+                break
+        if not match:
+            self.log.debug("SpiffyTitles: twitch - no title found.")
             return self.handler_default(url, channel)
+        agent = self.get_user_agent()
+        headers = {
+            "Client-ID": twitch_client_id
+        }
+        self.log.debug("SpiffyTitles: twitch - requesting %s" % (data_url))
+        request = requests.get(data_url, timeout=10, headers=headers)
+        ok = request.status_code == requests.codes.ok
+        data = {}
+        extract = ""
+        if ok:
+            response = json.loads(request.text)
+            if response:
+                self.log.debug("SpiffyTitles: twitch - got response:\n%s" % (response))
+                if 'error' in response:
+                    return "[ Twitch ] - Error!"
+                try:
+                    if link_type == "channel":
+                        self.log.debug("SpiffyTitles: Twitch: link_type is channel")
+                        if 'data' in response and response['data']:
+                            self.log.debug("SpiffyTitles: Twitch: Got data[0]")
+                            data = response['data'][0]
+                            link_type = 'stream'
+                        else:
+                            self.log.debug("SpiffyTitles: Twitch: No data[0]")
+                        data_url = 'https://api.twitch.tv/helix/users?login={channel_name}'.format(**link_info)
+                        request = requests.get(data_url, timeout=10, headers=headers)
+                        ok = request.status_code == requests.codes.ok
+                        user_data = {}
+                        if not ok:
+                            self.log.error("SpiffyTitles: twitch HTTP %s: %s" % (request.status_code, request.text))
+                        else:
+                            response = json.loads(request.text)
+                            if not response:
+                                self.log.error("SpiffyTitles: Error parsing Twitch JSON response")
+                            else:
+                                if 'error' in response:
+                                    self.log.error("SpiffyTitles: twitch - error in JSON response")
+                                    return self.handler_default(url, channel)
+                                try:
+                                    user_data = response['data'][0]
+                                    display_name = user_data['display_name']
+                                    description = user_data['description']
+                                    view_count = user_data['view_count']
+                                except KeyError as e:
+                                    self.log.error("SpiffyTitles: KeyError parsing Twitch.TV JSON response: %s" % (str(e)))
+                    elif link_type == "video":
+                        data = response
+                    elif link_type == 'clip':
+                        data = response
+                except KeyError as e:
+                    self.log.error("SpiffyTitles: KeyError parsing Twitch.TV JSON response: %s" % (str(e)))
+                if data or user_data:
+                    self.log.debug("SpiffyTitles: twitch - Got data '%s'" % (data))
+                    twitch_template = self.get_template(''.join(["twitch.", link_type, "Template"]), channel)
+                    twitch_logo = self.get_twitch_logo()
+                    if not twitch_template:
+                        self.log.debug("SpiffyTitles - twitch: bad template for %s" % (link_type))
+                        reply = "[ Twitch.TV ] - Got data, but template was bad"
+                    elif link_type == 'stream':
+                        display_name = data['user_name']
+                        game_id = data['game_id']
+                        game_name = game_id
+                        title = data['title']
+                        view_count = data['viewer_count']
+                        created_at = self._time_created_at(data['started_at'])
+                        if game_id:
+                            get_game = requests.get("https://api.twitch.tv/helix/games?id={}".format(game_id), timeout=10, headers=headers)
+                            game_data = json.loads(get_game.text)
+                            game_name = game_data["data"][0]["name"]
+                        template_vars = {
+                            "display_name": display_name,
+                            "game_name": game_name,
+                            "title": title,
+                            "view_count": view_count,
+                            "description": description,
+                            "created_at": created_at,
+                            "twitch_logo": twitch_logo
+                        }
+                        reply = twitch_template.render(template_vars)
+                    elif link_type == 'clip':
+                        data = response['data'][0]
+                        display_name = data['broadcaster_name']
+                        game_id = data['game_id']
+                        game_name = game_id
+                        title = data['title']
+                        view_count = data['view_count']
+                        created_at = self._time_created_at(data['created_at'])
+                        if game_id:
+                            get_game = requests.get("https://api.twitch.tv/helix/games?id={}".format(game_id), timeout=10, headers=headers)
+                            game_data = json.loads(get_game.text)
+                            game_name = game_data["data"][0]["name"]
+                        template_vars = {
+                            "display_name": display_name,
+                            "game_name": game_name,
+                            "title": title,
+                            "view_count": view_count,
+                            "description": description,
+                            "created_at": created_at,
+                            "twitch_logo": twitch_logo
+                        }
+                        reply = twitch_template.render(template_vars)
+                    elif link_type == 'video':
+                        data = response['data'][0]
+                        display_name = data['user_name']
+                        data_url = 'https://api.twitch.tv/helix/users?login={}'.format(display_name)
+                        request = requests.get(data_url, timeout=10, headers=headers)
+                        ok = request.status_code == requests.codes.ok
+                        user_data = {}
+                        if not ok:
+                            self.log.error("SpiffyTitles: twitch HTTP %s: %s" % (request.status_code, request.text))
+                        else:
+                            response = json.loads(request.text)
+                            if not response:
+                                self.log.error("SpiffyTitles: Error parsing Twitch JSON response")
+                            else:
+                                if 'error' in response:
+                                    self.log.error("SpiffyTitles: twitch - error in JSON response")
+                                    return self.handler_default(url, channel)
+                                try:
+                                    user_data = response['data'][0]
+                                    display_name = user_data['display_name']
+                                    description = user_data['description']
+                                    view_count = user_data['view_count']
+                                except KeyError as e:
+                                    self.log.error("SpiffyTitles: KeyError parsing Twitch.TV JSON response: %s" % (str(e)))
+                        display_name = data['user_name']
+                        title = data['title']
+                        view_count = data['view_count']
+                        created_at = self._time_created_at(data['created_at'])
+                        duration = data['duration']
+                        template_vars = {
+                            "display_name": display_name,
+                            "title": title,
+                            "view_count": view_count,
+                            "created_at": created_at,
+                            "description": description,
+                            "duration": duration,
+                            "twitch_logo": twitch_logo
+                        }
+                        reply = twitch_template.render(template_vars)
+                    else:
+                        template_vars = {
+                            "display_name": display_name,
+                            "description": description,
+                            "view_count": view_count,
+                            "twitch_logo": twitch_logo
+                        }
+                        reply = twitch_template.render(template_vars)
+                    self.log.debug("SpiffyTitles: twitch - reply = '%s'" % (reply))
+                    return reply
 
     def _time_created_at(self, s):
         """
@@ -1547,5 +1662,17 @@ class SpiffyTitles(callbacks.Plugin):
                       (mask, required_capability))
 
         return has_cap
+
+    def get_template(self, handler_template, channel):
+        """
+        Returns the requested template object.
+        """
+        if sys.version_info[0] >= 3:
+            template = Template(self.registryValue(handler_template,
+                                                   channel=channel))
+        else:
+            template = Template(self.registryValue(handler_template,
+                                                   channel=channel).decode("utf-8"))
+        return template
 
 Class = SpiffyTitles
