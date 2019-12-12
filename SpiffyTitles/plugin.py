@@ -92,6 +92,35 @@ class SpiffyTitles(callbacks.Plugin):
         self.handlers["reddit.com"] = self.handler_reddit
         self.handlers["www.reddit.com"] = self.handler_reddit
 
+    def add_twitch_handlers(self):
+        """
+        Enables meta info about IMDB links through the OMDB API
+        """
+        self.handlers["twitch.tv"] = self.handler_twitch
+        self.handlers["www.twitch.tv"] = self.handler_twitch
+        self.handlers["go.twitch.tv"] = self.handler_twitch
+        self.handlers["clips.twitch.tv"] = self.handler_twitch
+        
+    def add_imdb_handlers(self):
+        """
+        Enables meta info about IMDB links through the OMDB API
+        """
+        self.handlers["imdb.com"] = self.handler_imdb
+
+    def add_youtube_handlers(self):
+        """
+        Adds handlers for Youtube videos. The handler is matched based on the
+        domain used in the URL.
+        """
+        self.handlers["youtube.com"] = self.handler_youtube
+        self.handlers["youtu.be"] = self.handler_youtube
+    
+    def add_imgur_handlers(self):
+        # Images mostly
+        self.handlers["i.imgur.com"] = self.handler_imgur_image
+        # Albums, galleries, etc
+        self.handlers["imgur.com"] = self.handler_imgur
+    
     def handler_dailymotion(self, url, info, channel):
         """
         Handles dailymotion links
@@ -263,13 +292,6 @@ class SpiffyTitles(callbacks.Plugin):
             return self.handler_default(url, channel)
         else:
             return title
-
-    def add_imgur_handlers(self):
-        # Images mostly
-        self.handlers["i.imgur.com"] = self.handler_imgur_image
-
-        # Albums, galleries, etc
-        self.handlers["imgur.com"] = self.handler_imgur
 
     def initialize_imgur_client(self, channel):
         """
@@ -494,26 +516,6 @@ class SpiffyTitles(callbacks.Plugin):
         else:
             log.debug("SpiffyTitles: serving link from cache: %s" % (url))
             return cached_link
-
-    def add_twitch_handlers(self):
-        """
-        Enables meta info about IMDB links through the OMDB API
-        """
-        self.handlers["twitch.tv"] = self.handler_twitch
-        
-    def add_imdb_handlers(self):
-        """
-        Enables meta info about IMDB links through the OMDB API
-        """
-        self.handlers["imdb.com"] = self.handler_imdb
-
-    def add_youtube_handlers(self):
-        """
-        Adds handlers for Youtube videos. The handler is matched based on the
-        domain used in the URL.
-        """
-        self.handlers["youtube.com"] = self.handler_youtube
-        self.handlers["youtu.be"] = self.handler_youtube
 
     def is_channel_allowed(self, channel):
         """
