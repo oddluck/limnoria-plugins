@@ -147,15 +147,15 @@ Queries the [Twitch API](https://dev.twitch.tv/) to get additional information a
 
 Default value: `^ {{twitch_logo}} :: {{display_name}} {%if description%}:: {{description}} {%endif%}:: Viewers: {{view_count}}`
 
-`'twitch.streamTemplate'` - Template for live stream links
+`twitch.streamTemplate` - Template for live stream links
 
 Default value: `^ {{twitch_logo}} :: {{display_name}} :: (LIVE) {%if game_name%}[{{game_name}}] {%endif%}{%if title%}:: {{title}} {%endif%}:: Created: {{created_at}} :: Viewers: {{view_count}} {%if description%}:: {{description}} {%endif%}`
 
-`'twitch.videoTemplate'` - Template for video links
+`twitch.videoTemplate` - Template for video links
 
 Default value: `^ {{twitch_logo}} :: {{display_name}} {%if title%}:: {{title}} {%endif%}}:: Duration: {{duration}} :: Created: {{created_at}} {%if description%}:: {{description}} {%endif%}:: Viewers: {{view_count}}`
    
-`'twitch.clipTemplate'` - Template for clip links
+`twitch.clipTemplate` - Template for clip links
 
 Default value: `^ {{twitch_logo}} :: {{display_name}} {%if game_name%}:: [{{game_name}}] {%endif%}{%if title%}:: {{title}} {%endif%}:: Created: {{created_at}} :: Viewers: {{view_count}} {%if description%}:: {{description}} {%endif%}"`
 
