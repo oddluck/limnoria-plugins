@@ -81,13 +81,13 @@ conf.registerChannelValue(SpiffyTitles.twitch, 'channelTemplate',
      registry.String("^ {{twitch_logo}} :: {{display_name}} {%if description%}:: {{description}} {%endif%}:: Viewers: {{view_count}}", _("""twitch.tv channel template""")))
 
 conf.registerChannelValue(SpiffyTitles.twitch, 'streamTemplate',
-     registry.String("^ {{twitch_logo}} :: {{display_name}} :: (LIVE) {%if game_name%}[{{game_name}}] {%endif%}{%if title%}:: {{title}} {%endif%}:: Created: {{created_at}} :: Viewers: {{view_count}} {%if description%}:: {{description}} {%endif%}", _("""twitch.tv stream template""")))
+     registry.String("^ {{twitch_logo}} :: {{display_name}} :: (LIVE) {%if game_name%}[{{game_name}}] {%endif%}{%if title%}:: {{title}} {%endif%}:: Created: {{created_at}} :: Viewers: {{view_count}} {%if description%}:: {{description}}{%endif%}", _("""twitch.tv stream template""")))
 
 conf.registerChannelValue(SpiffyTitles.twitch, 'videoTemplate',
      registry.String("^ {{twitch_logo}} :: {{display_name}} {%if title%}:: {{title}} {%endif%}}:: Duration: {{duration}} :: Created: {{created_at}} {%if description%}:: {{description}} {%endif%}:: Viewers: {{view_count}}", _("""twitch.tv video template""")))
 
 conf.registerChannelValue(SpiffyTitles.twitch, 'clipTemplate',
-     registry.String("^ {{twitch_logo}} :: {{display_name}} :: (LIVE) {%if game_name%}[{{game_name}}] {%endif%}{%if title%}:: {{title}} {%endif%}:: Created: {{created_at}} :: Viewers: {{view_count}} {%if description%}:: {{description}} {%endif%}", _("""twitch.tv clip template""")))
+     registry.String("^ {{twitch_logo}} :: {{display_name}} {%if game_name%}:: [{{game_name}}] {%endif%}{%if title%}:: {{title}} {%endif%}:: Created: {{created_at}} :: Viewers: {{view_count}} {%if description%}:: {{description}}{%endif%}", _("""twitch.tv clip template""")))
 
 #OMDB API Key
 conf.registerGlobalValue(SpiffyTitles, 'omdbAPI',
