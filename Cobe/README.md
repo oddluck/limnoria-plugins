@@ -1,7 +1,7 @@
 Cobe
 ===============
 
-This is a plugin for Supybot that allows your bot to use [Cobe](https://github.com/pteichman/cobe)
+This is a plugin for Limnoria that allows your bot to use [Cobe](https://github.com/HubbeKing/cobe)
 
 A description of cobe: http://teichman.org/blog/2011/02/cobe.html
 
