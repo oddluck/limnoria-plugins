@@ -1,3 +1,5 @@
+Forked from https://github.com/waratte/supybot/tree/master/Cobe
+
 Cobe
 ===============
 
