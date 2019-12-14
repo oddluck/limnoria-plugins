@@ -22,6 +22,7 @@ import supybot.plugins as plugins
 import supybot.ircutils as ircutils
 import supybot.callbacks as callbacks
 from bs4 import BeautifulSoup
+import os
 
 class OAuthApi:
     """OAuth class to work with Twitter v1.1 API."""
@@ -290,24 +291,12 @@ class Tweety(callbacks.Plugin):
         """<location>
         Use Yahoo's API to look-up a WOEID.
         """
-
-        query = "SELECT * FROM geo.places WHERE text='%s'" % lookup
-        params = {"q": query,
-                  "format":"json",
-                  "diagnostics":"false",
-                  "env":"store://datatables.org/alltableswithkeys" }
-        # everything in try/except block incase it breaks.
-        try:
-            data = requests.get('http://woeid.rosselliot.co.nz/lookup/{0}'.format(lookup))
-            if not data:  # http fetch breaks.
-                irc.reply("ERROR")
-                return
-            soup = BeautifulSoup(data.text)
-            woeid = soup.find("td", class_='woeid').getText()
-            return woeid
-        except Exception as err:
-            self.log.error("ERROR: Failed looking up WOEID for '{0}' :: {1}".format(lookup, err))
-            return None
+        woeidlist = open('{0}/woeidList.json'.format(os.path.dirname(os.path.abspath(__file__))))
+        data = json.loads(woeidlist.read())
+        if not data:
+            irc.reply("ERROR opening woeidList.json")
+            return
+        return next((item["woeid"] for item in data if lookup.lower() in item["name"].lower()), None)
 
     ####################
     # PUBLIC FUNCTIONS #
