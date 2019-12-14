@@ -107,9 +107,13 @@ class Cobe(callbacks.Plugin):
 
     def _learn(self, irc, msg, channel, text, probability):
         """Internal method for learning phrases."""
+        text = text.strip()                         # Strip whitespace from beginning and the end of the string.
+        if len(text) > 1:
+            # So we don't get an error if the text is too small
+            text = text[0].upper() + text[1:]       # Capitalize first letter of the string.
+        text = utils.str.normalizeWhitespace(text)  # Normalize the whitespace in the string.
         if os.path.exists(self._getBrainDirectoryForChannel(channel)):
             # Does this channel have a directory for the brain file stored and does this file exist?
-            text = self._cleanText(text)
             if text and len(text) > 1 and not text.isspace():
                 self.log.debug("Learning: {0}".format(text))
                 cobeBrain = Brain(self._getBrainDirectoryForChannel(channel))
@@ -118,7 +122,6 @@ class Cobe(callbacks.Plugin):
                     self._reply(irc, msg, channel, text)
         else: # Nope, let's make it!
             subprocess.getoutput('{0} {1}'.format(self._doCommand(channel), 'init'))
-            text = self._cleanText(text)
             if text and len(text) > 1 and not text.isspace():
                 self.log.debug("Learning: {0}".format(text))
                 cobeBrain = Brain(self._getBrainDirectoryForChannel(channel))
@@ -151,22 +154,23 @@ class Cobe(callbacks.Plugin):
         (channel, message) = msg.args
         if callbacks.addressed(irc.nick, msg) or ircmsgs.isCtcp(msg) or not irc.isChannel(channel) or not self.registryValue('enable', channel):
             return
-        match = False
-        ignore = self.registryValue("ignorePattern", channel)
-        strip = self.registryValue("stripPattern", channel)
-        if ignore:
-            match = re.search(ignore, message)
-            if match:
-                log.debug("Cobe: %s matches ignorePattern for %s" % (message, channel))
-                return
         if msg.nick.lower() in self.registryValue('ignoreNicks', channel):
             log.debug("Cobe: nick %s in ignoreNicks for %s" % (msg.nick, channel))
             return
         if ircmsgs.isAction(msg):
             # If the message was an action...we'll learn it anyways!
             message = ircmsgs.unAction(msg)
+        match = False
+        ignore = self.registryValue("ignorePattern", channel)
+        strip = self.registryValue("stripPattern", channel)
+        message = ircutils.stripFormatting(message)
         if self.registryValue('stripRelayedNick', channel):
             message = MATCH_MESSAGE_STRIPNICK.match(message).group('message')
+        if ignore:
+            match = re.search(ignore, message)
+            if match:
+                log.debug("Cobe: %s matches ignorePattern for %s" % (message, channel))
+                return
         if strip:
             match = re.findall(strip, message)
             if match:
