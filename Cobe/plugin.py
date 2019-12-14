@@ -107,6 +107,28 @@ class Cobe(callbacks.Plugin):
 
     def _learn(self, irc, msg, channel, text, probability):
         """Internal method for learning phrases."""
+        match = False
+        ignore = self.registryValue("ignorePattern", channel)
+        strip = self.registryValue("stripPattern", channel)
+        text = ircutils.stripFormatting(text)
+        if self.registryValue('stripRelayedNick', channel):
+            text = MATCH_text_STRIPNICK.match(text).group('text')
+        if ignore:
+            match = re.search(ignore, text)
+            if match:
+                log.debug("Cobe: %s matches ignorePattern for %s" % (text, channel))
+                return
+        if strip:
+            match = re.findall(strip, text)
+            if match:
+                for x in match:
+                    text = text.replace(x, '')
+                    log.debug("Cobe: %s matches stripPattern for %s. New text text: %s" % (x, channel, text))
+        if self.registryValue('stripURL', channel):
+            new_text = re.sub(r'(?i)\b((?:[a-z][\w-]+:(?:/{1,3}|[a-z0-9%])|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:\'".,<>?«»“”‘’]))', '', text)
+            if new_text != text:
+                log.debug("Cobe: url(s) stripped from text for %s. New text text: %s" % (channel, new_text))
+                text = new_text
         text = text.strip()                         # Strip whitespace from beginning and the end of the string.
         if len(text) > 1:
             # So we don't get an error if the text is too small
@@ -160,29 +182,6 @@ class Cobe(callbacks.Plugin):
         if ircmsgs.isAction(msg):
             # If the message was an action...we'll learn it anyways!
             message = ircmsgs.unAction(msg)
-        match = False
-        ignore = self.registryValue("ignorePattern", channel)
-        strip = self.registryValue("stripPattern", channel)
-        message = ircutils.stripFormatting(message)
-        if self.registryValue('stripRelayedNick', channel):
-            message = MATCH_MESSAGE_STRIPNICK.match(message).group('message')
-        if ignore:
-            match = re.search(ignore, message)
-            if match:
-                log.debug("Cobe: %s matches ignorePattern for %s" % (message, channel))
-                return
-        if strip:
-            match = re.findall(strip, message)
-            if match:
-                for x in match:
-                    message = message.replace(x, '')
-                    message = re.sub('\s+', ' ', message)
-                    log.debug("Cobe: %s matches stripPattern for %s. New message text: %s" % (x, channel, message))
-        if self.registryValue('stripURL', channel):
-            new_message = re.sub(r'(?i)\b((?:[a-z][\w-]+:(?:/{1,3}|[a-z0-9%])|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:\'".,<>?«»“”‘’]))', '', message)
-            if new_message != message:
-                log.debug("Cobe: url(s) stripped from message for %s. New message text: %s" % (channel, new_message))
-                message = new_message
         if irc.nick.lower() in message.lower():
             # Were we addressed in the channel?
             probability = self.registryValue('probabilityWhenAddressed', channel)
