@@ -112,7 +112,7 @@ class Cobe(callbacks.Plugin):
         strip = self.registryValue("stripPattern", channel)
         text = ircutils.stripFormatting(text)
         if self.registryValue('stripRelayedNick', channel):
-            text = MATCH_text_STRIPNICK.match(text).group('text')
+            text = MATCH_text_STRIPNICK.match(text).group('message')
         if ignore:
             match = re.search(ignore, text)
             if match:
