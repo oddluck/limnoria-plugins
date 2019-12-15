@@ -35,6 +35,9 @@ registry.String('', _("""Imgur Client ID""")))
 conf.registerChannelValue(IRCArt, 'pasteEnable',
 registry.Boolean(False, _("""Turns on and off paste.ee support""")))
 
+conf.registerChannelValue(IRCArt, 'showStats',
+registry.Boolean(False, _("""Turns on and off showing render stats.""")))
+
 conf.registerChannelValue(IRCArt, 'delay',
 registry.Float(1.0, _("""Set the time delay betwen lines. Not currently implemented.""")))
 

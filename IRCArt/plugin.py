@@ -44,6 +44,7 @@ class IRCArt(callbacks.Plugin):
         self.colors = 99
         self.stopped = {}
         self.old_color = None
+        self.source_colors = 0
         self.rgbColors = [
             (255,255,255),
             (0,0,0),
@@ -445,15 +446,15 @@ class IRCArt(callbacks.Plugin):
 
     def getColor(self, pixel, speed):
         pixel = tuple(pixel)
-        if self.colors == 16:
-            colors = list(self.colors16.keys())
-        elif self.colors == 99:
-            colors = list(self.colors99.keys())
-        else:
-            colors = list(self.colors83.keys())
         try:
             return self.matches[pixel]
         except KeyError:
+            if self.colors == 16:
+                colors = list(self.colors16.keys())
+            elif self.colors == 99:
+                colors = list(self.colors99.keys())
+            else:
+                colors = list(self.colors83.keys())
             closest_colors = sorted(colors, key=lambda color: self.distance(color, self.rgb2lab(pixel), speed))
             closest_color = closest_colors[0]
             if self.colors == 16:
@@ -462,8 +463,9 @@ class IRCArt(callbacks.Plugin):
                 self.matches[pixel] = self.colors99[closest_color]
             else:
                 self.matches[pixel] = self.colors83[closest_color]
+            self.source_colors += 1
             return self.matches[pixel]
-            
+
     def rgb2lab (self, inputColor) :
         try:
             return self.labmatches[inputColor]
@@ -888,6 +890,8 @@ class IRCArt(callbacks.Plugin):
             with open("{0}".format(filename), 'wb') as f:
                 f.write(response.content)
         # open image and convert to grayscale
+        start_time = time.time()
+        self.source_colors = 0
         image = Image.open(filename)
         if image.mode == 'RGBA':
             if bg == 99:
@@ -1100,12 +1104,17 @@ class IRCArt(callbacks.Plugin):
         output = aimg
         paste = ""
         self.stopped[msg.args[0]] = False
+        end_time = time.time()
         for line in output:
             if self.registryValue('pasteEnable', msg.args[0]):
                 paste += line + "\n"
             if not self.stopped[msg.args[0]]:
                 time.sleep(delay)
                 irc.reply(line, prefixNick=False, noLengthCheck=True, private=False, notice=False, to=channel)
+        if self.registryValue('showStats', msg.args[0]):
+            longest = len(max(output, key=len).encode('utf-8'))
+            render_time = "{0:.2f}".format(end_time - start_time)
+            irc.reply("[Source Colors: {0}, Render Time: {1} seconds, Longest Line: {2} bytes]".format(self.source_colors, render_time, longest), prefixNick=False)
         if self.registryValue('pasteEnable', msg.args[0]):
             irc.reply(self.doPaste(url, paste), private=False, notice=False, to=channel)
     img = wrap(img,[optional('channel'), getopts({'w':'int', 'invert':'', 'fast':'', 'slow':'', '16':'', '99':'', '83':'', 'delay':'float', 'resize':'int', 'quantize':'', 'no-quantize':'', 'chars':'text', 'bg':'int', 'fg':'int', 'ramp':'text', 'no-color':'', 'block':'', 'ascii':'', '1/2':'', 's':'float', 'tops':''}), ('text')])
