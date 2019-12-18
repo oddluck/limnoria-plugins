@@ -326,7 +326,7 @@ class Cobe(callbacks.Plugin):
                 irc.error(_("No text to reply to!"), Raise=True)
         else:
             irc.error(_("Improper channel given!"), Raise=True)
-    respond = wrap(respond, [('checkCapability', 'admin'), additional('channel'), 'text'])
+    respond = wrap(respond, [additional('channel'), 'text'])
 
 Class = Cobe
 
