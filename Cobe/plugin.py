@@ -56,7 +56,7 @@ import supybot.log as log
 
 # Custom modules imported
 try:
-    from cobe_hubbot.brain import Brain
+    from cobe_hubbot.sqlite_brain import SQLiteBrain
 except ImportError:
     raise callbacks.Error('You need to install cobe for this plugin to work!')
 
@@ -146,7 +146,7 @@ class Cobe(callbacks.Plugin):
             # Does this channel have a directory for the brain file stored and does this file exist?
             if text:
                 self.log.debug("Learning: {0}".format(text))
-                cobeBrain = Brain(self._getBrainDirectoryForChannel(channel))
+                cobeBrain = SQLiteBrain(self._getBrainDirectoryForChannel(channel))
                 cobeBrain.learn(text)
                 if random.randint(0, 10000) <= probability:
                     self._reply(irc, msg, channel, text)
@@ -154,14 +154,14 @@ class Cobe(callbacks.Plugin):
             subprocess.getoutput('{0} {1}'.format(self._doCommand(channel), 'init'))
             if text:
                 self.log.debug("Learning: {0}".format(text))
-                cobeBrain = Brain(self._getBrainDirectoryForChannel(channel))
+                cobeBrain = SQLiteBrain(self._getBrainDirectoryForChannel(channel))
                 cobeBrain.learn(text)
                 if random.randint(0, 10000) <= probability:
                     self._reply(irc, msg, channel, text)
 
     def _reply(self, irc, msg, channel, text):
         """Send a response to text"""
-        cobeBrain = Brain(self._getBrainDirectoryForChannel(channel))
+        cobeBrain = SQLiteBrain(self._getBrainDirectoryForChannel(channel))
         response = cobeBrain.reply(text)
         response = self._strip_nick(irc, msg, response)
         for i in range(response.lower().count(self.magicnick.lower())):
@@ -243,7 +243,7 @@ class Cobe(callbacks.Plugin):
                 text = self._cleanText(text)
                 if text and len(text) > 1 and not text.isspace():
                     irc.reply("Learning text: {0}".format(text))
-                    cobeBrain = Brain(self._getBrainDirectoryForChannel(channel))
+                    cobeBrain = SQLiteBrain(self._getBrainDirectoryForChannel(channel))
                     cobeBrain.learn(text)
                 else:
                     irc.error(_("No text to learn!"), Raise=True)
@@ -255,14 +255,14 @@ class Cobe(callbacks.Plugin):
                 text = self._cleanText(text)
                 if text and len(text) > 1 and not text.isspace():
                     irc.reply("Learning text: {0}".format(text))
-                    cobeBrain = Brain(self._getBrainDirectoryForChannel(channel))
+                    cobeBrain = SQLiteBrain(self._getBrainDirectoryForChannel(channel))
                     cobeBrain.learn(text)
         elif os.path.exists(self._getBrainDirectoryForChannel(channel)) and irc.isChannel(channel): 
             # We are in a channel! Does the brain file exist and are we supplied a channel?
             text = self._cleanText(text)
             if text and len(text) > 1 and not text.isspace():
                 irc.reply("Learning text: {0}".format(text))
-                cobeBrain = Brain(self._getBrainDirectoryForChannel(channel))
+                cobeBrain = SQLiteBrain(self._getBrainDirectoryForChannel(channel))
                 cobeBrain.learn(text)
             else:
                 irc.error(_("No text to learn!"), Raise=True)
@@ -274,7 +274,7 @@ class Cobe(callbacks.Plugin):
             text = self._cleanText(text)
             if text and len(text) > 1 and not text.isspace():
                 irc.reply("Learning text: {0}".format(text))
-                cobeBrain = Brain(self._getBrainDirectoryForChannel(channel))
+                cobeBrain = SQLiteBrain(self._getBrainDirectoryForChannel(channel))
                 cobeBrain.learn(text)
         else:
             irc.error(_("Improper channel given!"), Raise=True)
@@ -310,7 +310,7 @@ class Cobe(callbacks.Plugin):
                     else:
                         line = self._cleanText(line)
                     if line:
-                        cobeBrain = Brain(self._getBrainDirectoryForChannel(channel))
+                        cobeBrain = SQLiteBrain(self._getBrainDirectoryForChannel(channel))
                         cobeBrain.learn(line)
                         lines += 1
                     else:
@@ -334,7 +334,7 @@ class Cobe(callbacks.Plugin):
                     else:
                         line = self._cleanText(line)
                     if line:
-                        cobeBrain = Brain(self._getBrainDirectoryForChannel(channel))
+                        cobeBrain = SQLiteBrain(self._getBrainDirectoryForChannel(channel))
                         cobeBrain.learn(line)
                         lines += 1
                     else:
@@ -355,7 +355,7 @@ class Cobe(callbacks.Plugin):
                 else:
                     line = self._cleanText(line)
                 if line:
-                    cobeBrain = Brain(self._getBrainDirectoryForChannel(channel))
+                    cobeBrain = SQLiteBrain(self._getBrainDirectoryForChannel(channel))
                     cobeBrain.learn(line)
                     lines +=1
                 else:
@@ -379,7 +379,7 @@ class Cobe(callbacks.Plugin):
                 else:
                     line = self._cleanText(line)
                 if line:
-                    cobeBrain = Brain(self._getBrainDirectoryForChannel(channel))
+                    cobeBrain = SQLiteBrain(self._getBrainDirectoryForChannel(channel))
                     cobeBrain.learn(line)
                     lines += 1
                 else:
@@ -401,7 +401,7 @@ class Cobe(callbacks.Plugin):
                 # Does this channel have a brain file?
                     text = self._cleanText(text)
                     if text and len(text) > 1 and not text.isspace():
-                        cobeBrain = Brain(self._getBrainDirectoryForChannel(channel))
+                        cobeBrain = SQLiteBrain(self._getBrainDirectoryForChannel(channel))
                         response = cobeBrain.reply(text)
                         irc.reply(response)
                     else:
@@ -413,7 +413,7 @@ class Cobe(callbacks.Plugin):
                 subprocess.getoutput('{0} {1}'.format(self._doCommand(channel), 'init'))
                 text = self._cleanText(text)
                 if text and len(text) > 1 and not text.isspace():
-                    cobeBrain = Brain(self._getBrainDirectoryForChannel(channel))
+                    cobeBrain = SQLiteBrain(self._getBrainDirectoryForChannel(channel))
                     response = cobeBrain.reply(text)
                     irc.reply(response)
                 else:
@@ -423,7 +423,7 @@ class Cobe(callbacks.Plugin):
             text = self._cleanText(text)
             if text and len(text) > 1 and not text.isspace():
 
-                cobeBrain = Brain(self._getBrainDirectoryForChannel(channel))
+                cobeBrain = SQLiteBrain(self._getBrainDirectoryForChannel(channel))
                 response = cobeBrain.reply(text)
                 irc.reply(response)
 
@@ -437,7 +437,7 @@ class Cobe(callbacks.Plugin):
             text = self._cleanText(text)
             if text and len(text) > 1 and not text.isspace():
                 irc.reply("Learning text: {0}".format(text))
-                cobeBrain = Brain(self._getBrainDirectoryForChannel(channel))
+                cobeBrain = SQLiteBrain(self._getBrainDirectoryForChannel(channel))
                 cobeBrain.learn(text)
             else:
                 irc.error(_("No text to reply to!"), Raise=True)

@@ -1,2 +1,1 @@
-cython
-git+https://github.com/HubbeKing/cobe.git
+git+https://github.com/oddluck/cobe.git
