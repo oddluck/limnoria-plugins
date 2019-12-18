@@ -33,6 +33,7 @@ import time
 import os
 import re
 import subprocess
+import requests
 
 import supybot.utils as utils
 from supybot.commands import *
@@ -105,8 +106,7 @@ class Cobe(callbacks.Plugin):
         text = utils.str.normalizeWhitespace(text)  # Normalize the whitespace in the string.
         return text
 
-    def _learn(self, irc, msg, channel, text, probability):
-        """Internal method for learning phrases."""
+    def _processText(self, channel, text):
         match = False
         ignore = self.registryValue("ignorePattern", channel)
         strip = self.registryValue("stripPattern", channel)
@@ -134,9 +134,17 @@ class Cobe(callbacks.Plugin):
             # So we don't get an error if the text is too small
             text = text[0].upper() + text[1:]       # Capitalize first letter of the string.
         text = utils.str.normalizeWhitespace(text)  # Normalize the whitespace in the string.
+        if text and len(text) > 1 and not text.isspace():
+            return text
+        else:
+            return None
+
+    def _learn(self, irc, msg, channel, text, probability):
+        """Internal method for learning phrases."""
+        text = self._processText(channel, text)  # Run text ignores/strips/cleanup.
         if os.path.exists(self._getBrainDirectoryForChannel(channel)):
             # Does this channel have a directory for the brain file stored and does this file exist?
-            if text and len(text) > 1 and not text.isspace():
+            if text:
                 self.log.debug("Learning: {0}".format(text))
                 cobeBrain = Brain(self._getBrainDirectoryForChannel(channel))
                 cobeBrain.learn(text)
@@ -144,7 +152,7 @@ class Cobe(callbacks.Plugin):
                     self._reply(irc, msg, channel, text)
         else: # Nope, let's make it!
             subprocess.getoutput('{0} {1}'.format(self._doCommand(channel), 'init'))
-            if text and len(text) > 1 and not text.isspace():
+            if text:
                 self.log.debug("Learning: {0}".format(text))
                 cobeBrain = Brain(self._getBrainDirectoryForChannel(channel))
                 cobeBrain.learn(text)
@@ -271,6 +279,115 @@ class Cobe(callbacks.Plugin):
         else:
             irc.error(_("Improper channel given!"), Raise=True)
     teach = wrap(teach, [('checkCapability', 'admin'), additional('channel'), 'text'])
+
+    def text(self, irc, msg, args, channel, optlist, url):
+        """[<channel>] [--process] <url>
+        Imports text from a URL. If the channel is not given, the current channel is used. Use --process
+        to process text with ignore/strip options set in plugin configs.
+        """
+        optlist = dict(optlist)
+        lines = 0
+        if 'process' in optlist:
+            process = True
+        else:
+            process = False
+        if not channel: # Did the user enter in a channel? If not, set the current channel
+            channel = msg.args[0]
+        if not irc.isChannel(msg.args[0]) and irc.isChannel(channel):
+            # Are we in a channel and is the channel supplied a channel?
+            if os.path.exists(self._getBrainDirectoryForChannel(channel)):
+                # Does this channel have a brain file?
+                r = requests.head(url)
+                if "text/plain" in r.headers["content-type"]:
+                    file = requests.get(url)
+                else:
+                    irc.reply("Invalid file type.", private=False, notice=False)
+                    return
+                text = file.content.decode().replace('\r\n','\n')
+                for line in text.split('\n'):
+                    if process:
+                        line = self._processText(channel,line)
+                    else:
+                        line = self._cleanText(line)
+                    if line:
+                        cobeBrain = Brain(self._getBrainDirectoryForChannel(channel))
+                        cobeBrain.learn(line)
+                        lines += 1
+                    else:
+                        continue
+                irc.reply("{0} lines added to brain file for channel {1}.".format(lines, channel))
+            else:
+                # Nope, create one!
+                self.log.info("Non-existent brainfile in {0}!".format(channel))
+                self.log.info("Creating a brainfile now in {0}".format(self._getBrainDirectoryForChannel(channel)))
+                subprocess.getoutput('{0} {1}'.format(self._doCommand(channel), 'init'))
+                r = requests.head(url)
+                if "text/plain" in r.headers["content-type"]:
+                    file = requests.get(url)
+                else:
+                    irc.reply("Invalid file type.", private=False, notice=False)
+                    return
+                text = file.content.decode().replace('\r\n','\n')
+                for line in text.split('\n'):
+                    if process:
+                        line = self._processText(channel, line)
+                    else:
+                        line = self._cleanText(line)
+                    if line:
+                        cobeBrain = Brain(self._getBrainDirectoryForChannel(channel))
+                        cobeBrain.learn(line)
+                        lines += 1
+                    else:
+                        continue
+                irc.reply("{0} lines added to brain file for channel {1}.".format(lines, channel))
+        elif os.path.exists(self._getBrainDirectoryForChannel(channel)) and irc.isChannel(channel): 
+            # We are in a channel! Does the brain file exist and are we supplied a channel?
+            r = requests.head(url)
+            if "text/plain" in r.headers["content-type"]:
+                file = requests.get(url)
+            else:
+                irc.reply("Invalid file type.", private=False, notice=False)
+                return
+            text = file.content.decode().replace('\r\n','\n')
+            for line in text.split('\n'):
+                if process:
+                    line = self._processText(channel, line)
+                else:
+                    line = self._cleanText(line)
+                if line:
+                    cobeBrain = Brain(self._getBrainDirectoryForChannel(channel))
+                    cobeBrain.learn(line)
+                    lines +=1
+                else:
+                    continue
+            irc.reply("{0} lines added to brain file for channel {1}.".format(lines, channel))
+        elif not os.path.exists(self._getBrainDirectoryForChannel(channel)) and irc.isChannel(channel):
+            # Nope, create one!
+            self.log.info("Non-existent brainfile in {0}!".format(channel))
+            self.log.info("Creating a brainfile now in {0}".format(self._getBrainDirectoryForChannel(channel)))
+            subprocess.getoutput('{0} {1}'.format(self._doCommand(channel), 'init'))
+            r = requests.head(url)
+            if "text/plain" in r.headers["content-type"]:
+                file = requests.get(url)
+            else:
+                irc.reply("Invalid file type.", private=False, notice=False)
+                return
+            text = file.content.decode().replace('\r\n','\n')
+            for line in text.split('\n'):
+                if process:
+                    line = self._processText(channel, line)
+                else:
+                    line = self._cleanText(line)
+                if line:
+                    cobeBrain = Brain(self._getBrainDirectoryForChannel(channel))
+                    cobeBrain.learn(line)
+                    lines += 1
+                else:
+                    continue
+            irc.reply("{0} lines added to brain file for channel {1}.".format(lines, channel))
+        else:
+            irc.error(_("Improper channel given!"), Raise=True)
+    text = wrap(text, [additional('channel'), getopts({'process':''}), 'text'])
 
     def respond(self, irc, msg, args, channel, text):
         """[<channel>] <text>
