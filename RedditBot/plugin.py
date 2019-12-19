@@ -210,9 +210,8 @@ class RedditBot(callbacks.Plugin):
                 # We will only take 3 properties, the timestamp, subreddit and comment body.
                 self.latest_timestamp = item["created_utc"]
                 # We clean the greater-than and less-than and zero-width html code.
-                body = item["body"].replace("&gt;", ">").replace(
-                    "&lt;", "<").replace("&amp;#x200B", " ")
-                body = fix_text(body)
+                body = fix_text(item["body"])
+                body = re.sub("\(|\)|\[|\]|\{|\}|\*|\"", "", body)
                 body = self.capsents(body)
                 self.comments_list.append(
                     [body])
