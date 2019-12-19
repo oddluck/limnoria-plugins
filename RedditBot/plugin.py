@@ -11,6 +11,7 @@ import supybot.plugins as plugins
 import supybot.ircutils as ircutils
 import supybot.callbacks as callbacks
 import supybot.ircmsgs as ircmsgs
+import supybot.log as log
 import os
 import csv
 import time
@@ -19,6 +20,8 @@ import pickle
 import requests
 import random
 import re
+from nltk.tokenize import sent_tokenize
+from ftfy import fix_text
 
 try:
     from supybot.i18n import PluginInternationalization
@@ -36,6 +39,7 @@ class RedditBot(callbacks.Plugin):
         self.__parent = super(RedditBot, self)
         self.__parent.__init__(irc)
         self.stopwords = self.add_extra_words()
+        self.model = {}
         self.MATCH_MESSAGE_STRIPNICK = re.compile('^(<[^ ]+> )?(?P<message>.*)$')
 
     def add_extra_words(self):
@@ -177,6 +181,12 @@ class RedditBot(callbacks.Plugin):
                 break
         return final_sentence
 
+    def capsents(self, user_sentences):
+        sents = sent_tokenize(user_sentences)
+        capitalized_sents = [sent.capitalize() for sent in sents]
+        joined_ = ' '.join(capitalized_sents)
+        return joined_
+
     def create_csv(self, subreddit, latest_timestamp=None):
         """
         Downloads the subreddit comments, 500 at a time.
@@ -199,46 +209,43 @@ class RedditBot(callbacks.Plugin):
             for item in data["data"]:
                 # We will only take 3 properties, the timestamp, subreddit and comment body.
                 self.latest_timestamp = item["created_utc"]
-                pub_time = datetime.fromtimestamp(
-                    self.latest_timestamp).strftime("%H:%M:%S")
-                pub_date = datetime.fromtimestamp(
-                    self.latest_timestamp).strftime("%Y-%m-%d")
-                sub = item["subreddit"]
                 # We clean the greater-than and less-than and zero-width html code.
                 body = item["body"].replace("&gt;", ">").replace(
                     "&lt;", "<").replace("&amp;#x200B", " ")
+                body = fix_text(body)
+                body = self.capsents(body)
                 self.comments_list.append(
-                    [pub_time, pub_date, sub, body])
+                    [body])
             del data
             return self.comments_list
 
     def create_model(self, subreddits):
-        """Reads the specified .csv file(s) and creates a training model from them.   
+        """Reads the specified .csv file(s) and creates a training model from them.
         It is important to note that we merge all comments into a big string.
         This is to broaden the number of outcomes.
         """
         for csv_file in subreddits:
             # We iterate the .csv row by row.
-            for row in csv.DictReader(open("{0}/data/{1}.csv".format(os.path.dirname(os.path.abspath(__file__)), csv_file.lower()), "r")):
-                # We skip empty comments.
-                if len(row["body"]) == 0:
-                    continue
+            for row in csv.reader(open("{0}/data/{1}.csv".format(os.path.dirname(os.path.abspath(__file__)), csv_file.lower()), "r")):
                 # Remove unnecessary whitespaces.
-                row["body"] = row["body"].strip()
+                row = row[0].strip()
+                # We skip empty comments.
+                if len(row) == 0:
+                    continue
                 # To improve results we ensure all comments end with a period.
                 ends_with_punctuation = False
                 for char in [".", "?", "!"]:
-                    if row["body"][-1] == char:
+                    if row[-1] == char:
                         ends_with_punctuation = True
                         break
                 if not ends_with_punctuation:
-                    row["body"] = row["body"] + "."
+                    row = row + "."
                 if len(self.allowed_subreddits) == 0:
-                    self.comments_list.append(row["body"])
+                    self.comments_list.append(row)
                 else:
                     # We check if the subreddit comment is in our allowed subreddits list.
                     if row["subreddit"].lower() in self.allowed_subreddits:
-                        self.comments_list.append(row["body"])
+                        self.comments_list.append(row)
         # We separate each comment into words.
         words_list = " ".join(self.comments_list).split()
         for index, _ in enumerate(words_list):
@@ -259,14 +266,12 @@ class RedditBot(callbacks.Plugin):
 
     def doPrivmsg(self, irc, msg):
         (channel, message) = msg.args
+        channel = channel.lower()
         if callbacks.addressed(irc.nick, msg) or ircmsgs.isCtcp(msg) or not irc.isChannel(channel) or not self.registryValue('enable', channel):
             return
         if msg.nick.lower() in self.registryValue('ignoreNicks', channel):
             log.debug("RedditBot: nick %s in ignoreNicks for %s" % (msg.nick, channel))
             return
-        if ircmsgs.isAction(msg):
-            # If the message was an action...we'll learn it anyways!
-            message = ircmsgs.unAction(msg)
         if irc.nick.lower() in message.lower():
             # Were we addressed in the channel?
             message = re.sub(re.escape(irc.nick), '', message, re.IGNORECASE)
@@ -278,18 +283,28 @@ class RedditBot(callbacks.Plugin):
         #    removenicks = '|'.join(item + '\W.*?\s' for item in irc.state.channels[channel].users)
         #    text = re.sub(r'' + removenicks + '', 'MAGIC_NICK', text)
         message = self.processText(channel, message)  # Run text ignores/strips/cleanup.
-        if message and random.random() < probability:
-            model = self.read_model("{0}/data/{1}.pickle".format(os.path.dirname(os.path.abspath(__file__)), channel.lower()))
-            new_comment = self.generate_comment(model=model, order=2,
-                                       number_of_sentences=2,
-                                       initial_prefix=self.get_prefix_with_context(model, message))
-            irc.reply(new_comment, prefixNick=False)
+        if message and random.random() < probability and os.path.exists("{0}/data/{1}.pickle".format(os.path.dirname(os.path.abspath(__file__)), channel)):
+            try:
+                new_comment = self.generate_comment(model=self.model[channel], order=2,
+                                               number_of_sentences=2,
+                                               initial_prefix=self.get_prefix_with_context(self.model[channel], message))
+            except KeyError:
+                self.model[channel] = self.read_model("{0}/data/{1}.pickle".format(os.path.dirname(os.path.abspath(__file__)), channel))
+                new_comment = self.generate_comment(model=self.model[channel], order=2,
+                                               number_of_sentences=2,
+                                               initial_prefix=self.get_prefix_with_context(self.model[channel], message))
+            except:
+                return
+            new_comment = self.capsents(new_comment)
+            if new_comment and len(new_comment) > 1 and not new_comment.isspace():
+                irc.reply(new_comment, prefixNick=False)
 
     def processText(self, channel, text):
         match = False
         ignore = self.registryValue("ignorePattern", channel)
         strip = self.registryValue("stripPattern", channel)
         text = ircutils.stripFormatting(text)
+        text = fix_text(text)
         if self.registryValue('stripRelayedNick', channel):
             text = self.MATCH_MESSAGE_STRIPNICK.match(text).group('message')
         if ignore:
@@ -309,10 +324,8 @@ class RedditBot(callbacks.Plugin):
                 log.debug("RedditBot: url(s) stripped from text for %s. New text text: %s" % (channel, new_text))
                 text = new_text
         text = text.strip()                         # Strip whitespace from beginning and the end of the string.
-        if len(text) > 1:
-            # So we don't get an error if the text is too small
-            text = text[0].upper() + text[1:]       # Capitalize first letter of the string.
         text = utils.str.normalizeWhitespace(text)  # Normalize the whitespace in the string.
+        text = self.capsents(text)
         if text and len(text) > 1 and not text.isspace():
             return text
         else:
@@ -330,8 +343,6 @@ class RedditBot(callbacks.Plugin):
             data = []
             writer = csv.writer(open("{0}/data/{1}.csv".format(os.path.dirname(os.path.abspath(__file__)), subreddit),
                                      "w", newline="", encoding="utf-8"))
-            # Adding headers.
-            writer.writerow(["time", "date", "subreddit", "body"])
             irc.reply("Downloading:", subreddit)
             tries = 0
             while len(data) <= self.max_comments:
@@ -344,13 +355,14 @@ class RedditBot(callbacks.Plugin):
             del data
             del self.comments_list
     csv = wrap(csv, ['text'])
-    
-    def model(self, irc, msg, args, channel, subreddits):
+
+    def csv2model(self, irc, msg, args, channel, subreddits):
         """[channel] [subreddit_1] [subreddit_2] [subreddit_3] [...etc.]
         Load subreddit comment csv files inro your conversational model
         """
         if not channel:
             channel = msg.args[0]
+        channel = channel.lower()
         self.allowed_subreddits = []
         self.word_dictionary = {}
         self.comments_list = []
@@ -358,21 +370,32 @@ class RedditBot(callbacks.Plugin):
         subreddits = subreddits.lower().strip().split(' ')
         # We save the dict as a pickle so we can reuse it on the bot script.
         data = self.create_model(subreddits)
-        with open("{0}/data/{1}.pickle".format(os.path.dirname(os.path.abspath(__file__)), channel.lower()), "wb") as model_file:
+        with open("{0}/data/{1}.pickle".format(os.path.dirname(os.path.abspath(__file__)), channel), "wb") as model_file:
             pickle.dump(data, model_file)
             irc.reply("Modeled {0} comments from {1}".format(len(data), subreddits))
         del data
         del self.word_dictionary
         del self.comments_list
-    model = wrap(model, [optional('channel'), 'text'])
-    
+    csv2model = wrap(csv2model, [optional('channel'), 'text'])
+
     def seddit(self, irc, msg, args, channel, text):
         """[channel] <text>
         Respomd to <text> using channel conversational model
         """
         if not channel:
             channel = msg.args[0]
-        model = self.read_model("{0}/data/{1}.pickle".format(os.path.dirname(os.path.abspath(__file__)), channel.lower()))
+        channel = channel.lower()
+        try:
+            new_comment = self.generate_comment(model=self.model[channel], order=2,
+                                           number_of_sentences=2,
+                                           initial_prefix=self.get_prefix_with_context(self.model[channel], text))
+        except KeyError:
+            self.model[channel] = self.read_model("{0}/data/{1}.pickle".format(os.path.dirname(os.path.abspath(__file__)), channel))
+            new_comment = self.generate_comment(model=self.model[channel], order=2,
+                                           number_of_sentences=2,
+                                           initial_prefix=self.get_prefix_with_context(self.model[channel], text))
+        except:
+            return
         #model_keys = list(model.keys())
         # Basic random.
         #new_comment = generate_comment(model=model, order=2,
@@ -382,12 +405,7 @@ class RedditBot(callbacks.Plugin):
         #new_comment = generate_comment(model=model, order=2,
         #                               number_of_sentences=2,
         #                               initial_prefix=get_prefix(model))
-        # Context-aware.
-        new_comment = self.generate_comment(model=model, order=2,
-                                       number_of_sentences=2,
-                                       initial_prefix=self.get_prefix_with_context(model, text))
         irc.reply(new_comment, prefixNick=False)
     seddit = wrap(seddit, [optional('channel'), 'text'])
-    
-Class = RedditBot
 
+Class = RedditBot

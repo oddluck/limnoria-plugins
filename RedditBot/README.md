@@ -1,3 +1,7 @@
+needs nltk and punkt installed
+
+nltk.download('punkt')
+
 This plugin downloads comment data from subreddits to generate chat replies via markov chains.
 
 ```redditbot csv [subreddit1] [subreddit2] [etc.]``` - download data from subreddits as csv files

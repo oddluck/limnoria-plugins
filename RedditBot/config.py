@@ -44,3 +44,5 @@ conf.registerChannelValue(RedditBot, 'probability',
     registry.Probability(0, _("""Determines the percent of messages the bot will answer. 0.0 - 1.0""")))
 conf.registerChannelValue(RedditBot, 'probabilityWhenAddressed',
     registry.Probability(0, _("""Determines the percent of messages adressed to the bot the bot will answer, 0.0 - 1.0""")))
+conf.registerChannelValue(RedditBot, 'responseDelay',
+    registry.Boolean(False, _("""Delay responding for 2 to 4 seconds in order to seem more human?""")))
