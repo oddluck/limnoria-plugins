@@ -6,7 +6,7 @@ This plugin downloads comment data from subreddits to generate chat replies via 
 
 ```redditbot csv [subreddit1] [subreddit2] [etc.]``` - download data from subreddits as csv files
 
-```redditbot model [channel] [subreddit1] [subreddit2] [etc.]``` - generate channel markov model from subreddit csv files
+```redditbot csv2model [channel] [subreddit1] [subreddit2] [etc.]``` - generate channel markov model from subreddit csv files
 
 ```config channel [channel] plugins.redditbot.enable``` - Enable RedditBot for the channel
 
