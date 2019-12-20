@@ -18,7 +18,6 @@ import requests
 import random
 import re
 import json
-from nltk.tokenize import sent_tokenize
 import markovify
 import spacy
 from ftfy import fix_text
