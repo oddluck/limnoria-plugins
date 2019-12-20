@@ -9,7 +9,7 @@ from supybot.test import *
 
 
 class AdviceTestCase(PluginTestCase):
-    plugins = ('RedditBot',)
+    plugins = ('Markovify',)
 
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:

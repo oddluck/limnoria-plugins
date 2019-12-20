@@ -6,7 +6,7 @@
 ###
 
 """
-RedditBot: Miscellaneous "RedditBot" Commands
+Markovify: Miscellaneous "Markovify" Commands
 """
 
 import supybot
