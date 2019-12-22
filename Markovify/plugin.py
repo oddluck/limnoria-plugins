@@ -331,9 +331,9 @@ class Markovify(callbacks.Plugin):
             tries = 0
             gen = api.search_comments(subreddit=subreddit, filter=['body'], limit=max_comments)
             if gen:
-                irc.reply("Retrieved {0} comments from r/{1}.".format(count, subreddit))
                 data = list(gen)
                 count = len(data)
+                irc.reply("Retrieved {0} comments from r/{1}.".format(count, subreddit))
                 for line in data:
                     line = line.body.strip()
                     if '[removed]' in line:
