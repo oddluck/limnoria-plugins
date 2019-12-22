@@ -1,0 +1,4 @@
+requests
+markovify
+spacy
+ftfy
