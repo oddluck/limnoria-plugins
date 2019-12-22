@@ -298,11 +298,6 @@ class Markovify(callbacks.Plugin):
                 for x in match:
                     text = text.replace(x, '')
                     log.debug("Markovify: %s matches stripPattern for %s. New text text: %s" % (x, channel, text))
-        if self.registryValue('stripURL', channel):
-            new_text = re.sub(r'(?i)\b((?:[a-z][\w-]+:(?:/{1,3}|[a-z0-9%])|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:\'".,<>?«»“”‘’]))', '', text)
-            if new_text != text:
-                log.debug("Markovify: url(s) stripped from text for %s. New text text: %s" % (channel, new_text))
-                text = new_text
         ends_with_punctuation = False
         if not text.strip() or text.isspace():
             return
@@ -359,7 +354,7 @@ class Markovify(callbacks.Plugin):
                 return
             self.save_corpus(channel)
             irc.reply("Added {0} comments from r/{1} to corpus for channel {2}.".format(count, subreddit, channel))
-            del data, text
+            del gen, data, text
             gc.collect()
     subreddit = wrap(subreddit, [additional('channel'), getopts({'num':'int'}), 'text'])
 
@@ -396,7 +391,7 @@ class Markovify(callbacks.Plugin):
         self.add_text(channel, text)
         irc.reply("{0} lines added to brain file for channel {1}.".format(lines, channel))
         self.save_corpus(channel)
-        del data
+        del data, text
         gc.collect()
     text = wrap(text, [additional('channel'), getopts({'process':''}), 'text'])
 
