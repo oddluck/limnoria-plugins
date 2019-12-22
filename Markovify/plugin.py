@@ -381,6 +381,7 @@ class Markovify(callbacks.Plugin):
             return
         data = fix_text(file.content.decode())
         lines = 0
+        text = ""
         for line in data.split('\n'):
             if process:
                 line = self.processText(channel,line)
