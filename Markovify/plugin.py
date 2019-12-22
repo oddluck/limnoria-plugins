@@ -392,7 +392,7 @@ class Markovify(callbacks.Plugin):
                 continue
         self.add_text(channel, text)
         irc.reply("{0} lines added to brain file for channel {1}.".format(lines, channel))
-        del data
+        del data, text
         gc.collect()
     text = wrap(text, [additional('channel'), getopts({'process':''}), 'text'])
 
