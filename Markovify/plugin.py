@@ -13,18 +13,17 @@ import supybot.callbacks as callbacks
 import supybot.ircmsgs as ircmsgs
 import supybot.log as log
 import supybot.conf as conf
-from itertools import chain
 import os
 import requests
 import random
 import re
 import json
+import gc
+from itertools import chain
 import markovify
 import spacy
-from psaw import PushshiftAPI
 from ftfy import fix_text
 from nltk.tokenize import sent_tokenize
-import gc
 
 try:
     from supybot.i18n import PluginInternationalization
