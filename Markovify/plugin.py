@@ -218,7 +218,7 @@ class Markovify(callbacks.Plugin):
             response = re.sub(' ([.!?,;:]) ', '\g<1> ', response)
             response = re.sub(' ([.!?,])$', '\g<1>', response)
             response = re.sub('([.?!,])(?=[^\s])', '\g<1> ', response)
-            response - response.replace(' - ', '-')
+            response = response.replace(' - ', '-')
             return response
         else:
             return None
