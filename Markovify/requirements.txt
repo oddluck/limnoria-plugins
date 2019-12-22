@@ -3,3 +3,4 @@ markovify
 spacy
 ftfy
 nltk
+psaw
