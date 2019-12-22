@@ -299,7 +299,8 @@ class Markovify(callbacks.Plugin):
                     text = text.replace(x, '')
                     log.debug("Markovify: %s matches stripPattern for %s. New text text: %s" % (x, channel, text))
         ends_with_punctuation = False
-        if not text.strip() or text.isspace():
+        text = text.strip()
+        if not text or not len(text) > 1:
             return
         for char in [".", "?", "!"]:
             if text.endswith(char):
@@ -307,7 +308,7 @@ class Markovify(callbacks.Plugin):
                 break
         if not ends_with_punctuation:
             text = text + "."
-        if text and len(text) > 1 and not text.isspace():
+        if text and len(text) > 2:
             return text
         else:
             return None
@@ -330,14 +331,14 @@ class Markovify(callbacks.Plugin):
             tries = 0
             gen = api.search_comments(subreddit=subreddit, filter=['body'], limit=max_comments)
             if gen:
+                irc.reply("Retrieved {0} comments from r/{1}.".format(count, subreddit))
                 data = list(gen)
                 count = len(data)
-                irc.reply("Retrieved {0} comments from r/{1}.".format(count, subreddit))
                 for line in data:
-                    line = line.body
-                    if not line.strip() or line.isspace():
-                        continue
+                    line = line.body.strip()
                     if '[removed]' in line:
+                        continue
+                    if not line or not len(line) > 1:
                         continue
                     ends_with_punctuation = False
                     for char in [".", "?", "!"]:
@@ -346,7 +347,7 @@ class Markovify(callbacks.Plugin):
                             break
                     if not ends_with_punctuation:
                         line = line + "."
-                    if len(line.strip()) > 1:
+                    if len(line) > 2:
                         text += " {}".format(line)
                 self.add_text(channel, text)
             else:
