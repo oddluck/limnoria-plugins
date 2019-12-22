@@ -211,7 +211,7 @@ class Markovify(callbacks.Plugin):
 
     def get_response(self, channel):
         try:
-            response = self.model[channel].make_sentence()
+            response = self.model[channel].make_short_sentence(450)
         except KeyError:
             file = self.directory.dirize(channel.lower() + "/markov.json")
             try:
@@ -220,7 +220,7 @@ class Markovify(callbacks.Plugin):
                     self.model[channel] = POSifiedText.from_json(jsondata)
             except:
                 return
-            response = self.model[channel].make_sentence()
+            response = self.model[channel].make_short_sentence(450)
         except:
             return
         if response and len(response) > 1 and not response.isspace():
