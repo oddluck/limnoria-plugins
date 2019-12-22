@@ -172,7 +172,7 @@ class POSifiedText(markovify.Text):
         return sentence
 
 class Markovify(callbacks.Plugin):
-    """Generates chat replies using subreddit comments"""
+    """Generates chat replies with markov"""
     threaded = True
 
     def __init__(self, irc):
@@ -312,52 +312,6 @@ class Markovify(callbacks.Plugin):
             return text
         else:
             return None
-
-    def subreddit(self, irc, msg, args, channel, optlist, subreddits):
-        """[channel] [--num ####] <subreddit_1> [subreddit_2] [subreddit_3] [...etc.]
-        Load subreddit comments into channel corpus.
-        """
-        if not channel:
-            channel = msg.args[0]
-        channel = channel.lower()
-        optlist = dict(optlist)
-        if 'num' in optlist:
-            max_comments = optlist.get('num')
-        else:
-            max_comments = 500
-        for subreddit in subreddits.lower().strip().split(' '):
-            self.latest_timestamp = None
-            text = ""
-            tries = 0
-            gen = api.search_comments(subreddit=subreddit, filter=['body'], limit=max_comments)
-            if gen:
-                data = list(gen)
-                count = len(data)
-                irc.reply("Retrieved {0} comments from r/{1}.".format(count, subreddit))
-                for line in data:
-                    line = line.body.strip()
-                    if '[removed]' in line:
-                        continue
-                    if not line or not len(line) > 1:
-                        continue
-                    ends_with_punctuation = False
-                    for char in [".", "?", "!"]:
-                        if line.endswith(char):
-                            ends_with_punctuation = True
-                            break
-                    if not ends_with_punctuation:
-                        line = line + "."
-                    if len(line) > 2:
-                        text += " {}".format(line)
-                self.add_text(channel, text)
-            else:
-                irc.reply("Error fetching data from r/{}".format(subreddit))
-                return
-            self.save_corpus(channel)
-            irc.reply("Added {0} comments from r/{1} to corpus for channel {2}.".format(count, subreddit, channel))
-            del gen, data, text
-            gc.collect()
-    subreddit = wrap(subreddit, [additional('channel'), getopts({'num':'int'}), 'text'])
 
     def text(self, irc, msg, args, channel, optlist, url):
         """[channel] [--process] <url>
