@@ -191,10 +191,7 @@ class Markovify(callbacks.Plugin):
         text = self.capsents(text)
         text = self.expand_contractions(text)
         if self.registryValue('stripURL', channel):
-            new_text = re.sub(r'(?i)\b((?:[a-z][\w-]+:(?:/{1,3}|[a-z0-9%])|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:\'".,<>?«»“”‘’]))', '', text)
-            if new_text != text:
-                log.debug("Markovify: url(s) stripped from text for %s. New text text: %s" % (channel, new_text))
-                text = new_text
+            text = re.sub(r'(?i)\b((?:[a-z][\w-]+:(?:/{1,3}|[a-z0-9%])|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:\'".,<>?«»“”‘’]))', '', text)
         text = re.sub("(^')|('$)|\s'|'\s|[\"(\(\)\[\])]", "", text)
         text = re.sub('<[^<]+?>', '', text)
         text = fix_text(text)
@@ -334,7 +331,7 @@ class Markovify(callbacks.Plugin):
             return None
 
     def subreddit(self, irc, msg, args, channel, optlist, subreddits):
-        """[channel] [--num <###>] <subreddit_1> [subreddit_2] [subreddit_3] [...etc.]
+        """[channel] <subreddit_1> [subreddit_2] [subreddit_3] [...etc.]
         Load subreddit comments into channel corpus.
         """
         if not channel:
@@ -349,16 +346,10 @@ class Markovify(callbacks.Plugin):
             self.latest_timestamp = None
             irc.reply("Attempting to retrieve last {0} comments from r/{1}".format(max_comments, subreddit))
             self.count = 0
-            data = self._subreddit(subreddit, self.latest_timestamp)
             text = ""
             tries = 0
-            self.count = 0
             data = []
-            while self.count < max_comments:
-                if tries > 20:
-                    break
-                data.extend(self._subreddit(subreddit, self.latest_timestamp))
-                tries += 1
+            data.extend(self._subreddit(subreddit, self.latest_timestamp))
             if data:
                 for line in data:
                     if not line.strip() or line.isspace():
@@ -381,8 +372,8 @@ class Markovify(callbacks.Plugin):
     subreddit = wrap(subreddit, [additional('channel'), getopts({'num':'int'}), 'text'])
 
     def text(self, irc, msg, args, channel, optlist, url):
-        """[channel] <url>
-        Load text file into channel corpus.
+        """[channel] [--process] <url>
+        Load text file into channel corpus. use --process to clean text like chat logs.
         """
         if not channel:
             channel = msg.args[0]
