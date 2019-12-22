@@ -182,6 +182,7 @@ class Markovify(callbacks.Plugin):
 
     def save_corpus(self, channel):
         file = self.directory.dirize(channel.lower() + "/markov.json")
+        os.makedirs(file.strip('/markov.json'), exist_ok=True)
         with open(file, 'w') as outfile:
             jsondata = self.model[channel].to_json()
             json.dump(jsondata, outfile)
@@ -411,6 +412,7 @@ class Markovify(callbacks.Plugin):
             lines += 1
         self.add_text(channel, text)
         irc.reply("{0} lines added to brain file for channel {1}.".format(lines, channel))
+        self.save_corpus(channel)
         del data
         gc.collect()
     text = wrap(text, [additional('channel'), getopts({'process':''}), 'text'])
