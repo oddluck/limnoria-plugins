@@ -181,8 +181,8 @@ class Markovify(callbacks.Plugin):
         self.MATCH_MESSAGE_STRIPNICK = re.compile('^(<[^ ]+> )?(?P<message>.*)$')
 
     def save_corpus(self, channel):
-        file = self.directory.dirize(channel.lower() + "/markov.json")
-        os.makedirs(file.strip('/markov.json'), exist_ok=True)
+        file = self.directory.dirize(channel + "/markov.json")
+        os.makedirs(self.directory.dirize(channel), exist_ok=True)
         with open(file, 'w') as outfile:
             jsondata = self.model[channel].to_json()
             json.dump(jsondata, outfile)
