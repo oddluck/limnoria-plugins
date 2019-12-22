@@ -22,6 +22,7 @@ import json
 import markovify
 import spacy
 from ftfy import fix_text
+from nltk.tokenize import sent_tokenize
 import gc
 
 try:
@@ -186,8 +187,16 @@ class Markovify(callbacks.Plugin):
             json.dump(jsondata, outfile)
 
     def add_text(self, channel, text):
+        text = self.capsents(text)
         text = self.expand_contractions(text)
+        if self.registryValue('stripURL', channel):
+            new_text = re.sub(r'(?i)\b((?:[a-z][\w-]+:(?:/{1,3}|[a-z0-9%])|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:\'".,<>?«»“”‘’]))', '', text)
+            if new_text != text:
+                log.debug("Markovify: url(s) stripped from text for %s. New text text: %s" % (channel, new_text))
+                text = new_text
         text = re.sub("(^')|('$)|\s'|'\s|[\"(\(\)\[\])]", "", text)
+        text = re.sub('<[^<]+?>', '', text)
+        text = fix_text(text)
         try:
             self.model[channel] = markovify.combine(models=[self.model[channel], POSifiedText(text, retain_original=False)])
         except KeyError:
@@ -223,6 +232,12 @@ class Markovify(callbacks.Plugin):
         else:
             return None
 
+    def capsents(self, user_sentences):
+        sents = sent_tokenize(user_sentences)
+        capitalized_sents = [sent.capitalize() for sent in sents]
+        joined_ = ' '.join(capitalized_sents)
+        return joined_
+
     def expand_contractions(self, text, contraction_mapping=CONTRACTION_MAP):
         contractions_pattern = re.compile('({})'.format('|'.join(contraction_mapping.keys())),
                                           flags=re.IGNORECASE|re.DOTALL)
@@ -251,7 +266,7 @@ class Markovify(callbacks.Plugin):
             data = response.json()
             self.count += len(data["data"])
             self.latest_timestamp = data['data'][-1]["created_utc"]
-            data = [fix_text(item['body']) for item in data["data"]]
+            data = [item['body'] for item in data["data"]]
             return data
 
     def doPrivmsg(self, irc, msg):
@@ -281,7 +296,6 @@ class Markovify(callbacks.Plugin):
         self.save_corpus(channel)
 
     def processText(self, channel, text):
-        text = fix_text(text)
         match = False
         ignore = self.registryValue("ignorePattern", channel)
         strip = self.registryValue("stripPattern", channel)
@@ -305,8 +319,10 @@ class Markovify(callbacks.Plugin):
                 log.debug("Markovify: url(s) stripped from text for %s. New text text: %s" % (channel, new_text))
                 text = new_text
         ends_with_punctuation = False
+        if not text.strip() or text.isspace():
+            return
         for char in [".", "?", "!"]:
-            if text[-1] == char:
+            if text.endswith(char):
                 ends_with_punctuation = True
                 break
         if not ends_with_punctuation:
@@ -322,7 +338,7 @@ class Markovify(callbacks.Plugin):
         """
         if not channel:
             channel = msg.args[0]
-        channel = msg.args[0].lower()
+        channel = channel.lower()
         optlist = dict(optlist)
         if 'num' in optlist:
             max_comments = optlist.get('num')
@@ -344,11 +360,13 @@ class Markovify(callbacks.Plugin):
                 tries += 1
             if data:
                 for line in data:
+                    if not line.strip() or line.isspace():
+                        continue
                     if '[removed]' in line:
                         continue
                     ends_with_punctuation = False
                     for char in [".", "?", "!"]:
-                        if line[-1] == char:
+                        if line.endswith(char):
                             ends_with_punctuation = True
                             break
                     if not ends_with_punctuation:
@@ -367,7 +385,7 @@ class Markovify(callbacks.Plugin):
         """
         if not channel:
             channel = msg.args[0]
-        channel = msg.args[0].lower()
+        channel = channel.lower()
         optlist = dict(optlist)
         if 'process' in optlist:
             process = True
@@ -379,20 +397,21 @@ class Markovify(callbacks.Plugin):
         else:
             irc.reply("Invalid file type.", private=False, notice=False)
             return
-        data = fix_text(file.content.decode())
+        data = file.content.decode()
         lines = 0
         text = ""
         for line in data.split('\n'):
-            if process:
-                line = self.processText(channel,line)
-            if line.strip():
-                text += " {}".format(line)
-                lines += 1
-            else:
+            if not line.strip() or line.isspace():
                 continue
+            if process:
+                line = self.processText(channel, line)
+            if not line or not line.strip() or line.isspace():
+                continue
+            text += " {}".format(line)
+            lines += 1
         self.add_text(channel, text)
         irc.reply("{0} lines added to brain file for channel {1}.".format(lines, channel))
-        del data, text
+        del data
         gc.collect()
     text = wrap(text, [additional('channel'), getopts({'process':''}), 'text'])
 

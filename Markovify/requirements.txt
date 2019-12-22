@@ -2,3 +2,4 @@ requests
 markovify
 spacy
 ftfy
+nltk
