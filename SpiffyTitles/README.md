@@ -10,6 +10,7 @@ The ONLY gluten-free plugin for displaying link titles.
 - Additional information about [Youtube](https://youtube.com) videos
 - Additional information about [imgur](https://imgur.com) links
 - Additional information about [IMDB](https://imdb.com) links
+- Additional information about [Reddit](https://reddit.com/) links
 - Additional information about [Twitch](https://twitch.tv) links
 - Additional information about [vimeo](https://vimeo.com) links
 - Additional information about [DailyMotion](https://dailymotion.com) links
@@ -260,7 +261,7 @@ Default value: "^ {{extract}}"
 
 `wikipedia.maxChars` - Extract will be cut to this length (including '...').
 
-Default value: 240
+Default value: 400
 
 `wikipedia.removeParentheses` - Whether to remove parenthesized text from output.
 
