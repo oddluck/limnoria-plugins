@@ -52,17 +52,17 @@ Almost all of the below options can be customized per-channel.
 
 Example:
 
-`!config channel ##example-channel-one supybot.plugins.SpiffyTitles.defaultTitleTemplate "^ {{title}}"`
+`!config channel ##example-channel-one supybot.plugins.SpiffyTitles.default.template "^ {{title}}"`
 
-`!config channel ##example-channel-two supybot.plugins.SpiffyTitles.defaultTitleTemplate ":: {{title}}"`
+`!config channel ##example-channel-two supybot.plugins.SpiffyTitles.default.template ":: {{title}}"`
 
 This means that you can change whether a handler is enabled, or what the template looks like for any channel.
 
 ### Default handler
 
-`defaultHandlerEnabled` - Whether to show additional information about links that aren't handled elsewhere. You'd really only want to disable this if all of the other handlers were enabled. In this scenario, the bot would only show information for websites with custom handlers, like Youtube, IMDB, and imgur.
+`default.enabled` - Whether to show additional information about links that aren't handled elsewhere. You'd really only want to disable this if all of the other handlers were enabled. In this scenario, the bot would only show information for websites with custom handlers, like Youtube, IMDB, and imgur.
 
-`defaultTitleTemplate` - This is the template used when showing the title of a link.
+`default.template` - This is the template used when showing the title of a link.
 
 Default value: `^ {{title}}`
 
@@ -85,18 +85,18 @@ requires a [developer key](https://code.google.com/apis/youtube/dashboard/gwt/in
 
 - You may specify allowed IPs but be aware that this setting seems to cache. It is easier to test using the URL listed in the console to verify requests from that machine are working.
 - Make sure the YouTube API is enabled in [the developer console](https://developers.google.com/console/help/#activatingapis).
-- Set the key: `!config supybot.plugins.SpiffyTitles.youtubeDeveloperKey your_developer_key_here`
+- Set the key: `!config supybot.plugins.SpiffyTitles.youtube.developerKey your_developer_key_here`
 - Observe the logs to check for errors
 
 ### Youtube handler options
 
-`youtubeHandlerEnabled` - Whether to show additional information about Youtube links
+`youtube.enabled` - Whether to show additional information about Youtube links
 
-`youtubeLogo` - This is the colored text used for {{yt_logo}} in title template strings.
+`youtube.logo` - This is the colored text used for {{yt_logo}} in title template strings.
 
 Default value: `\x030,4 ► \x031,0YouTube`
 
-`youtubeTitleTemplate` - This is the template used when showing the title of a YouTube video
+`youtube.template` - This is the template used when showing the title of a YouTube video
 
 Default value: `^ {{yt_logo}} :: {{title}} {%if timestamp%} @ {{timestamp}}{% endif %} :: Duration: {{duration}} :: Views: {{view_count}} uploaded by {{channel_title}} :: {{like_count}} likes :: {{dislike_count}} dislikes :: {{favorite_count}} favorites`
 
@@ -124,14 +124,34 @@ Tip: You can use irc colors colors in your templates, but be sure to quote the v
 ### imdb handler
 Queries the [OMDB API](http://www.omdbapi.com) to get additional information about [IMDB](http://imdb.com) links
 
-`omdbAPI` - Set your OMDB API key here (free) https://www.omdbapi.com/apikey.aspx
+`imdb.omdbAPI` - Set your OMDB API key here (free) https://www.omdbapi.com/apikey.aspx
 
-`imdbHandlerEnabled` - Whether to show additional information about [IMDB](http://imdb.com) links
+`imdb.enabled` - Whether to show additional information about [IMDB](http://imdb.com) links
 
-`imdbTemplate` - This is the template used for [IMDB](http://imdb.com) links
+`imdb.template` - This is the template used for [IMDB](http://imdb.com) links
 
-Default value: `^ {{Title}} ({{Year}}, {{Country}}) - Rating: {{imdbRating}} ::  {{Plot}}`
+Default value: `^ {{imdb_logo}} :: {{title}} ({{year}}, {{country}} [{{rated}}], {{genre}}, {{runtime}}) ::  IMDB: {{imdb_rating}} MC: {{metascore}} :: {{plot}}`
 
+### Available variables for IMDB template ###
+
+Variable       | Description
+---------------|------------
+imdb_logo      | Colored IMDB logo
+title          | Movie title
+year           | Release year
+country        | Country
+director       | Director
+plot           | Plot
+imdb_id        | IMDB tile ID#
+imdb_rating    | IMDB rating
+metascore      | Metacritic score
+released       | Release date
+genre          | Genre
+awards         | Awards won
+actors         | Actors
+rated          | Rating
+runtime        | Runtime
+writer         | Writer
 
 ### Twitch handler
 Queries the [Twitch API](https://dev.twitch.tv/) to get additional information about [Twitch](http://twitch.tv) links
@@ -139,9 +159,9 @@ Queries the [Twitch API](https://dev.twitch.tv/) to get additional information a
 `twitch.clientID` - Set your Twitch Client_ID here. Obtain at https://dev.twitch.tv/dashboard/apps/create (free)
 (You can use http://localhost for the OAuth Redirect URL, you just need to generate a Client_ID)
 
-`twitchHandlerEnabled` - Whether to show additional information about [Twitch](http://twitch.tv) links
+`twitch.enabled` - Whether to show additional information about [Twitch](http://twitch.tv) links
 
-`twitch.twitchLogo` - This is the colored text used for {{twitch_logo}} in title template strings.
+`twitch.logo` - This is the colored text used for {{twitch_logo}} in title template strings.
 
 `twitch.channelTemplate'` - Template for channel links
 
@@ -162,7 +182,7 @@ Default value: `^ {{twitch_logo}} :: {{display_name}} {%if game_name%}:: [{{game
 
 ### imgur handler
 
-`imgurTemplate` - This is the template used when showing information about an [imgur](https://imgur.com) link.
+`imgur.imagetemplate` - This is the template used when showing information about an [imgur](https://imgur.com) link.
 
 Default value
 
@@ -172,7 +192,7 @@ Example output:
 
     ^ [pics] He really knows nothing... :: image/jpeg 700x1575 178.8KiB :: 809 views :: safe for work
 
-`imgurAlbumTemplate` - This is the template used when showing information about an imgur album link.
+`imgur.albumTemplate` - This is the template used when showing information about an imgur album link.
 
 Default value
 
@@ -188,9 +208,9 @@ Example output:
 - Select "OAuth 2 authorization without a callback URL"
 - Once registered, set your client id and client secret
 
-    `!config supybot.plugins.SpiffyTitles.imgurClientID`
+    `!config supybot.plugins.SpiffyTitles.imgur.clientID`
     
-    `!config supybot.plugins.SpiffyTitles.imgurClientSecret`
+    `!config supybot.plugins.SpiffyTitles.imgur.clientSecret`
 
 ### Notes on the imgur handler
 
@@ -201,27 +221,27 @@ in the above example, [please open an issue!](https://github.com/butterscotchsta
 
 ### coub handler
 
-`coubTemplate` - Template for [coub](http://coub.com) links.
+`coub.template` - Template for [coub](http://coub.com) links.
 
 Default value: `^ {%if not_safe_for_work %}NSFW{% endif %} [{{channel.title}}] {{title}} :: {{views_count}} views :: {{likes_count}} likes :: {{recoubs_count}} recoubs`
 
-`coubHandlerEnabled` - Whether to enable additional information about coub videos.
+`coub.enabled` - Whether to enable additional information about coub videos.
 
 ### vimeo handler
 
-`vimeoTitleTemplate` - Template for [vimeo](https://vimeo.com) links.
+`vimeo.template` - Template for [vimeo](https://vimeo.com) links.
 
 Default value: `^ {{title}} :: Duration: {{duration}} :: {{stats_number_of_plays}} plays :: {{stats_number_of_comments}} comments`
 
-`vimeoHandlerEnabled` - Whether to enable additional information about vimeo videos.
+`vimeo.enabled` - Whether to enable additional information about vimeo videos.
 
 ### dailymotion handler
 
-`dailymotionVideoTitleTemplate` - Template for [dailymotion](https://www.dailymotion.com) links.
+`dailymotion.template` - Template for [dailymotion](https://www.dailymotion.com) links.
 
 Default value: `^ [{{ownerscreenname}}] {{title}} :: Duration: {{duration}} :: {{views_total}} views`
 
-`dailymotionHandlerEnabled` - Whether to enable additional information about dailymotion videos.
+`dailymotion.enabled` - Whether to enable additional information about dailymotion videos.
 
 ### wikipedia handler
 
@@ -339,7 +359,7 @@ A: Some configuration values were previously global. Simply restart your bot to 
 
 Q: How can I only show information about certain links?
 
-A: You can use the settings `defaultHandlerEnabled`, `youtubeHandlerEnabled`, `imgurHandlerEnabled`, and `imdbHandlerEnabled` to choose which links you want to show information about.
+A: You can use the settings `default.enabled`, `youtube.enabled`, `imgur.enabled`, `twitch.enabled`, and `imdb.enabled` to choose which links you want to show information about.
 
 Q: Why not use the [Web](https://github.com/ProgVal/Limnoria/tree/master/plugins/Web) plugin?
 
