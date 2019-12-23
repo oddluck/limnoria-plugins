@@ -58,7 +58,7 @@ class SpiffyTitles(callbacks.Plugin):
         self.__parent.__init__(irc)
 
         self.wall_clock_timeout = self.registryValue("wallClockTimeoutInSeconds")
-        self.default_handler_enabled = self.registryValue("defaultHandlerEnabled")
+        self.default_handler_enabled = self.registryValue("default.enabled")
 
         self.add_handlers()
 
@@ -94,7 +94,7 @@ class SpiffyTitles(callbacks.Plugin):
 
     def add_twitch_handlers(self):
         """
-        Enables meta info about IMDB links through the OMDB API
+        Enables meta info about Twitch links through the Twitch API
         """
         self.handlers["twitch.tv"] = self.handler_twitch
         self.handlers["www.twitch.tv"] = self.handler_twitch
@@ -125,7 +125,7 @@ class SpiffyTitles(callbacks.Plugin):
         """
         Handles dailymotion links
         """
-        dailymotion_handler_enabled = self.registryValue("dailymotionHandlerEnabled",
+        dailymotion_handler_enabled = self.registryValue("dailymotion.enabled",
                                                          channel=channel)
         log.debug("SpiffyTitles: calling dailymotion handler for %s" % url)
         title = None
@@ -154,7 +154,7 @@ class SpiffyTitles(callbacks.Plugin):
                     if response is not None and "title" in response:
                         video = response
                         dailymotion_template = \
-                            Template(self.registryValue("dailymotionVideoTitleTemplate",
+                            Template(self.registryValue("dailymotion.template",
                                                         channel=channel))
                         video["views_total"] = "{:,}".format(int(video["views_total"]))
                         video["duration"] = self.get_duration_from_seconds(video["duration"])
@@ -179,7 +179,7 @@ class SpiffyTitles(callbacks.Plugin):
         """
         Handles Vimeo links
         """
-        vimeo_handler_enabled = self.registryValue("vimeoHandlerEnabled", channel=channel)
+        vimeo_handler_enabled = self.registryValue("vimeo.enabled", channel=channel)
         log.debug("SpiffyTitles: calling vimeo handler for %s" % url)
         title = None
         video_id = None
@@ -208,7 +208,7 @@ class SpiffyTitles(callbacks.Plugin):
 
                     if response is not None and "title" in response[0]:
                         video = response[0]
-                        vimeo_template = Template(self.registryValue("vimeoTitleTemplate",
+                        vimeo_template = Template(self.registryValue("vimeo.template",
                                                   channel=channel))
 
                         """
@@ -247,7 +247,7 @@ class SpiffyTitles(callbacks.Plugin):
         """
         Handles coub.com links
         """
-        coub_handler_enabled = self.registryValue("coubHandlerEnabled", channel=channel)
+        coub_handler_enabled = self.registryValue("coub.enabled", channel=channel)
         log.debug("SpiffyTitles: calling coub handler for %s" % url)
         title = None
 
@@ -274,7 +274,7 @@ class SpiffyTitles(callbacks.Plugin):
 
                 if response:
                     video = response
-                    coub_template = Template(self.registryValue("coubTemplate"))
+                    coub_template = Template(self.registryValue("coub.template"))
 
                     video["likes_count"] = "{:,}".format(int(video["likes_count"]))
                     video["recoubs_count"] = "{:,}".format(int(video["recoubs_count"]))
@@ -299,9 +299,9 @@ class SpiffyTitles(callbacks.Plugin):
         imgur API client
         """
         if self.imgur_client is None:
-            imgur_client_id = self.registryValue("imgurClientID")
-            imgur_client_secret = self.registryValue("imgurClientSecret")
-            imgur_handler_enabled = self.registryValue("imgurHandlerEnabled", channel=channel)
+            imgur_client_id = self.registryValue("imgur.clientID")
+            imgur_client_secret = self.registryValue("imgur.clientSecret")
+            imgur_handler_enabled = self.registryValue("imgur.enabled", channel=channel)
 
             if imgur_handler_enabled and imgur_client_id and imgur_client_secret:
                 log.debug("SpiffyTitles: enabling imgur handler")
@@ -618,8 +618,8 @@ class SpiffyTitles(callbacks.Plugin):
         Uses the Youtube API to provide additional meta data about
         Youtube Video links posted.
         """
-        youtube_handler_enabled = self.registryValue("youtubeHandlerEnabled", channel=channel)
-        developer_key = self.registryValue("youtubeDeveloperKey")
+        youtube_handler_enabled = self.registryValue("youtube.enabled", channel=channel)
+        developer_key = self.registryValue("youtube.developerKey")
 
         if not youtube_handler_enabled:
             return None
@@ -631,7 +631,7 @@ class SpiffyTitles(callbacks.Plugin):
 
         log.debug("SpiffyTitles: calling Youtube handler for %s" % (url))
         video_id = self.get_video_id_from_url(url, domain)
-        yt_template = Template(self.registryValue("youtubeTitleTemplate", channel=channel))
+        yt_template = Template(self.registryValue("youtube.template", channel=channel))
         title = ""
 
         if video_id:
@@ -749,20 +749,29 @@ class SpiffyTitles(callbacks.Plugin):
     def get_youtube_logo(self):
         use_bold = self.registryValue("useBold", dynamic.channel)
         if use_bold:
-            yt_logo = "{0}\x0F\x02".format(self.registryValue("youtubeLogo", dynamic.channel))
+            yt_logo = "{0}\x0F\x02".format(self.registryValue("youtube.logo", dynamic.channel))
         else:
-            yt_logo = "{0}\x0F".format(self.registryValue("youtubeLogo", dynamic.channel))
+            yt_logo = "{0}\x0F".format(self.registryValue("youtube.logo", dynamic.channel))
             
         return yt_logo
         
     def get_twitch_logo(self):
         use_bold = self.registryValue("useBold", dynamic.channel)
         if use_bold:
-            twitch_logo = "{0}\x0F\x02".format(self.registryValue("twitch.twitchLogo", dynamic.channel))
+            twitch_logo = "{0}\x0F\x02".format(self.registryValue("twitch.logo", dynamic.channel))
         else:
-            twitch_logo = "{0}\x0F".format(self.registryValue("twitch.twitchLogo", dynamic.channel))
+            twitch_logo = "{0}\x0F".format(self.registryValue("twitch.logo", dynamic.channel))
             
         return twitch_logo
+        
+    def get_imdb_logo(self):
+        use_bold = self.registryValue("useBold", dynamic.channel)
+        if use_bold:
+            imdb_logo = "{0}\x0F\x02".format(self.registryValue("imdb.logo", dynamic.channel))
+        else:
+            imdb_logo = "{0}\x0F".format(self.registryValue("imdb.logo", dynamic.channel))
+            
+        return imdb_logo
 
     def get_total_seconds_from_duration(self, input):
         """
@@ -812,10 +821,10 @@ class SpiffyTitles(callbacks.Plugin):
         """
         Default handler for websites
         """
-        default_handler_enabled = self.registryValue("defaultHandlerEnabled", channel=channel)
+        default_handler_enabled = self.registryValue("default.enabled", channel=channel)
         if default_handler_enabled:
             log.debug("SpiffyTitles: calling default handler for %s" % (url))
-            default_template = Template(self.registryValue("defaultTitleTemplate", channel=channel))
+            default_template = Template(self.registryValue("default.template", channel=channel))
             (html, is_redirect) = self.get_source_by_url(url)
 
             if html is not None and html:
@@ -835,7 +844,7 @@ class SpiffyTitles(callbacks.Plugin):
         """
         url = url.split("?")[0]
         twitch_client_id = self.registryValue("twitch.clientID")
-        twitch_handler_enabled = self.registryValue("twitchHandlerEnabled", channel=channel)
+        twitch_handler_enabled = self.registryValue("twitch.enabled", channel=channel)
         if not twitch_handler_enabled or not twitch_client_id:
             return self.handler_default(url, channel)
         self.log.debug("SpiffyTitles: calling twitch handler for %s" % (url))
@@ -1061,11 +1070,11 @@ class SpiffyTitles(callbacks.Plugin):
 
         Typical IMDB URL: http://www.imdb.com/title/tt2467372/
         """
-        apikey = self.registryValue('omdbAPI')
+        apikey = self.registryValue('imdb.omdbAPI')
         headers = self.get_headers()
         result = None
 
-        if not self.registryValue("imdbHandlerEnabled", channel=channel):
+        if not self.registryValue("imdb.enabled", channel=channel):
             log.debug("SpiffyTitles: IMDB handler disabled. Falling back to default handler.")
 
             return self.handler_default(url, channel)
@@ -1085,14 +1094,33 @@ class SpiffyTitles(callbacks.Plugin):
                 if request.status_code == requests.codes.ok:
                     response = json.loads(request.text)
                     result = None
-                    imdb_template = Template(self.registryValue("imdbTemplate"))
+                    imdb_template = Template(self.registryValue("imdb.template"))
                     not_found = "Error" in response
                     unknown_error = response["Response"] != "True"
 
                     if not_found or unknown_error:
                         log.debug("SpiffyTitles: OMDB error for %s" % (omdb_url))
                     else:
-                        result = imdb_template.render(response)
+                        template_vars = {
+                            "title": response["Title"],
+                            "year": response["Year"],
+                            "country": response["Country"],
+                            "director": response["Director"],
+                            "plot": response["Plot"],
+                            "imdb_id": response["imdbID"],
+                            "imdb_rating": response["imdbRating"],
+                            "tomatoMeter": response["tomatoMeter"],
+                            "metascore": response["Metascore"],
+                            "released": response["Released"],
+                            "genre": response["Genre"],
+                            "awards": response["Awards"],
+                            "actors": response["Actors"],
+                            "rated": response["Rated"],
+                            "runtime": response["Runtime"],
+                            "writer": response["Writer"],
+                            "imdb_logo": self.get_imdb_logo()
+                        }
+                        result = imdb_template.render(template_vars)
                 else:
                     log.error("SpiffyTitles OMDB API %s - %s" % (request.status_code, request.text))
 
@@ -1377,7 +1405,7 @@ class SpiffyTitles(callbacks.Plugin):
                     album = self.imgur_client.get_album(album_id)
 
                     if album:
-                        album_template = self.registryValue("imgurAlbumTemplate", channel=channel)
+                        album_template = self.registryValue("imgur.template", channel=channel)
                         imgur_album_template = Template(album_template)
                         compiled_template = imgur_album_template.render({
                             "title": album.title,
@@ -1431,7 +1459,7 @@ class SpiffyTitles(callbacks.Plugin):
                     image = self.imgur_client.get_image(image_id)
 
                     if image:
-                        channel_template = self.registryValue("imgurTemplate", channel=channel)
+                        channel_template = self.registryValue("imgur.template", channel=channel)
                         imgur_template = Template(channel_template)
                         readable_file_size = self.get_readable_file_size(image.size)
                         compiled_template = imgur_template.render({
@@ -1695,3 +1723,4 @@ class SpiffyTitles(callbacks.Plugin):
         return template
 
 Class = SpiffyTitles
+
