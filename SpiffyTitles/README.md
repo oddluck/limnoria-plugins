@@ -137,7 +137,7 @@ Default value: `^ {{imdb_logo}} :: {{title}} ({{year}}, {{country}} [{{rated}}],
 
 `imdb.logo` - This is the logo text used for imdb_logo in the template
 
-Default value: `\x031,8IMDB`
+Default value: `\x031,8IMDb`
 
 ### Available variables for IMDB template ###
 
