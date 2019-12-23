@@ -96,13 +96,14 @@ class Jeopardy(callbacks.Plugin):
 
 
     class Game:
-        def __init__(self, irc, channel, num, shuffle, categories, plugin):
+        def __init__(self, irc, channel, num, hints, shuffle, categories, plugin):
             self.rng = random.Random()
             self.rng.seed()
             self.registryValue = plugin.registryValue
             self.irc = irc
             self.channel = channel
             self.num = num
+            self.numHints = hints
             self.categories = categories
             self.numAsked = 0
             self.hints = 0
@@ -271,16 +272,16 @@ class Jeopardy(callbacks.Plugin):
                     a1, a2, a3 = re.match("(.*)\((.*)\)(.*)", self.a[0]).groups()
                     self.a.append(a1 + a3)
                     self.a.append(a2)
-                blankChar = self.registryValue('blankChar', self.channel)
-                blank = re.sub('\w', blankChar, ans)
-                self.reply("HINT: {0}".format(blank))
+                if self.numHints > 0:
+                    blankChar = self.registryValue('blankChar', self.channel)
+                    blank = re.sub('\w', blankChar, ans)
+                    self.reply("HINT: {0}".format(blank))
                 if self.id:
                     self.history[self.channel].append(self.id)
                 def event():
                     self.timedEvent()
                 timeout = self.registryValue('timeout', self.channel)
-                numHints = self.registryValue('numHints', self.channel)
-                eventTime = time.time() + timeout / (numHints + 1)
+                eventTime = time.time() + timeout / (self.numHints + 1)
                 if self.active:
                     schedule.addEvent(event, eventTime, 'next_%s' % self.channel)
             if self.numAsked > 1:
@@ -326,7 +327,7 @@ class Jeopardy(callbacks.Plugin):
 
 
         def timedEvent(self):
-            if self.hints >= self.registryValue('numHints', self.channel):
+            if self.hints >= self.numHints:
                 self.reply(_('No one got the answer! It was: %s') % self.a[0])
                 self.unanswered += 1
                 self.newquestion()
@@ -361,8 +362,7 @@ class Jeopardy(callbacks.Plugin):
             def event():
                 self.timedEvent()
             timeout = self.registryValue('timeout', self.channel)
-            numHints = self.registryValue('numHints', self.channel)
-            eventTime = time.time() + timeout / (numHints + 1)
+            eventTime = time.time() + timeout / (self.numHints + 1)
             if self.active:
                 schedule.addEvent(event, eventTime, 'next_%s' % self.channel)
 
@@ -420,11 +420,12 @@ class Jeopardy(callbacks.Plugin):
 
     @internationalizeDocstring
     def start(self, irc, msg, args, channel, optlist, categories):
-        """[<channel>] [--num <number of questions>] [--shuffle] [<category>, <category#2>, <category#3>, etc.]
-        Play a round of Jeopardy! with random questions or select a category by name or number.
-        Use 'random' to start a round with a random category.
+        """[<channel>] [--num <number of questions>] [--no-hints] [--random-category] [--shuffle] [<category1>, <category2>, <category3>, etc.]
+        Play a round of Jeopardy! with random questions or select a category by name/number.
+        Use --no-hints to disable showing answer hints for the round.
+        Use --random-category to start a round with a randomly selected category.
         Use --num to set the number of questions.
-        Use --shuffle to select questions from multiple categories"""
+        Use --shuffle to randomize questions from manually selected categories."""
         optlist = dict(optlist)
         if 'num' in optlist:
             num = optlist.get('num')
@@ -434,7 +435,11 @@ class Jeopardy(callbacks.Plugin):
             shuffle = True
         else:
             shuffle = False
-        if categories and categories.strip().lower() == 'random':
+        if 'no-hints' in optlist:
+            hints = 0
+        else:
+            hints = self.registryValue('numHints', channel)
+        if 'random-category' in optlist:
             seed = random.randint(0,184) * 100
             data = requests.get("http://jservice.io/api/categories?count=100&offset={0}".format(int(seed))).json()
             random.shuffle(data)
@@ -444,7 +449,7 @@ class Jeopardy(callbacks.Plugin):
                     results.append(item['id'])
             if not results:
                 results = 'random'
-        elif categories and categories.strip().lower() != 'random':
+        elif categories:
             results = []
             categories = categories.strip().split(",")
             for category in categories:
@@ -477,16 +482,16 @@ class Jeopardy(callbacks.Plugin):
                 except KeyError:
                     pass
                 irc.reply("This... is... Jeopardy!", prefixNick=False)
-                self.games[channel] = self.Game(irc, channel, num, shuffle, results, self)
+                self.games[channel] = self.Game(irc, channel, num, hints, shuffle, results, self)
             else:
                 self.games[channel].num += num
                 self.games[channel].total += num
                 irc.reply(_('%d questions added to active game!') % num)
         else:
             irc.reply("This... is... Jeopardy!", prefixNick=False)
-            self.games[channel] = self.Game(irc, channel, num, shuffle, results, self)
+            self.games[channel] = self.Game(irc, channel, num, hints, shuffle, results, self)
         irc.noReply()
-    start = wrap(start, ['channel', getopts({'num':'int', 'shuffle':''}), additional('text')])
+    start = wrap(start, ['channel', getopts({'num':'int',  'no-hints':'', 'shuffle':'', 'random-category':''}), additional('text')])
 
     @internationalizeDocstring
     def stop(self, irc, msg, args, channel):
@@ -531,3 +536,4 @@ Class = Jeopardy
 
 
 # vim:set shiftwidth=4 softtabstop=4 expandtab textwidth=79:
+
