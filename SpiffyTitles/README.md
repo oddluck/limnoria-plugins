@@ -135,6 +135,10 @@ Queries the [OMDB API](http://www.omdbapi.com) to get additional information abo
 
 Default value: `^ {{imdb_logo}} :: {{title}} ({{year}}, {{country}} [{{rated}}], {{genre}}, {{runtime}}) ::  IMDB: {{imdb_rating}} MC: {{metascore}} :: {{plot}}`
 
+`imdb.logo` - This is the logo text used for imdb_logo in the template
+
+Default value: `\x031,8IMDB`
+
 ### Available variables for IMDB template ###
 
 Variable       | Description
