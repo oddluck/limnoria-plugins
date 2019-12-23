@@ -224,7 +224,7 @@ Example output:
 - If there is a problem reaching the API the default handler will be used as a fallback. See logs for details.
 - The API seems to report information on the originally uploaded image and not other formats
 - If you see something from [the imgur api](https://api.imgur.com/models/image) that you want and is not available
-in the above example, [please open an issue!](https://github.com/butterscotchstallion/limnoria-plugins/issues/new)
+in the above example, [please open an issue!](https://github.com/oddluck/limnoria-plugins/issues/new)
 
 ### coub handler
 
@@ -379,7 +379,7 @@ A: I couldn't get this to work on my system and it has a lot of features I didn'
 
 Q: It doesn't work for me. What can I do?
 
-A: [Open an issue](https://github.com/butterscotchstallion/limnoria-plugins/issues/new) and include at minimum the following:
+A: [Open an issue](https://github.com/oddluck/limnoria-plugins/issues/new) and include at minimum the following:
 
 - Brief description of the problem
 - Any errors that were logged (Look for the ones prefixed "SpiffyTitles")
