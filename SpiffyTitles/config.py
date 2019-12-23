@@ -266,7 +266,7 @@ conf.registerGlobalValue(SpiffyTitles.imdb, 'omdbAPI',
 
 # IMDB Logo
 conf.registerChannelValue(SpiffyTitles.imdb, 'logo',
-     registry.String("\x031,8IMDB", _("""Logo used with {{imdb_logo}} in template""")))
+     registry.String("\x031,8IMDb", _("""Logo used with {{imdb_logo}} in template""")))
 
 # IMDB template
 conf.registerChannelValue(SpiffyTitles.imdb, 'template',
