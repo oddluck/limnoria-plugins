@@ -359,7 +359,7 @@ A: Some configuration values were previously global. Simply restart your bot to 
 
 Q: How can I only show information about certain links?
 
-A: You can use the settings `default.enabled`, `youtube.enabled`, `imgur.enabled`, `twitch.enabled`, and `imdb.enabled` to choose which links you want to show information about.
+A: You can use the settings `default.enabled`, `youtube.enabled`, `imgur.enabled`, `twitch.enabled`, `dailymotion.enabled`, `wikipedia.enabled`, `coub.enabled`, `vimeo.enabled`, and `imdb.enabled` to choose which links you want to show information about.
 
 Q: Why not use the [Web](https://github.com/ProgVal/Limnoria/tree/master/plugins/Web) plugin?
 
