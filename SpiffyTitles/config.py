@@ -120,7 +120,7 @@ conf.registerChannelValue(SpiffyTitles.wikipedia, 'ignoreSectionLinks',
     registry.Boolean(True, _("""Ignore links to specific article sections.""")))
 
 conf.registerChannelValue(SpiffyTitles.wikipedia, 'maxChars',
-    registry.Integer(240, _("""Extract will be cut to this length (including '...').""")))
+    registry.Integer(400, _("""Extract will be cut to this length (including '...').""")))
 
 # Remove parenthesized text from output.
 conf.registerChannelValue(SpiffyTitles.wikipedia, 'removeParentheses',
