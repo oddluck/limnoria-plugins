@@ -28,7 +28,7 @@ def configure(advanced):
 IMDB = conf.registerPlugin('IMDB')
 
 conf.registerGlobalValue(IMDB, 'template',
-     registry.String("$title ($year, $country, [$rated], $genre, $runtime) | IMDB: $imdbRating MC: $metascore% | $plot | Director: $director | Writer: $writer | Actors: $actors | http://imdb.com/title/$imdbID", _("""Template for the output of a search query.""")))
+     registry.String("\x02\x031,8 IMDb \x03 | $title ($year, $country, [$rated], $genre, $runtime) | IMDB: $imdbRating MC: $metascore% | $plot | Director: $director | Writer: $writer | Actors: $actors | http://imdb.com/title/$imdbID", _("""Template for the output of a search query.""")))
 
 # alternative template:
 #                     $title ($year - $director) :: [i:$imdbRating r:$tomatoMeter m:$metascore] $plot :: http://imdb.com/title/$imdbID
