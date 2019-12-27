@@ -38,9 +38,9 @@ class WebParser():
 
 	def prepareStatusString(self, site_name, status, status_headers, breakpoints, line_headers):
 		# Specify look and feel
-		status_states = ["Down","Up","Iffy"]
-		status_symbols = ["Ⓧ","✓","◯"]
-		status_colours = [chr(3)+"04",chr(3)+"03",chr(3)+"07"]
+		status_states = ["Down","Up","Iffy","Mean"]
+		status_symbols = ["Ⓧ","✓","◯","💩"]
+		status_colours = [chr(3)+"04",chr(3)+"03",chr(3)+"07",chr(3)+"05"]
 
 		# Prepare output status message
 		outStr = [line_headers[0]]
@@ -130,7 +130,7 @@ class Trackers(callbacks.Plugin):
 
 		content = WebParser().getWebData(irc,url)
 
-		status = [content["Website"], content["API"], content["TrackerHTTP"], content["TrackerHTTPS"], content["IRC"], content["CableGuy"], content["Barney"], 2]
+		status = [content["Website"], content["API"], content["TrackerHTTP"], content["TrackerHTTPS"], content["IRC"], content["CableGuy"], content["Barney"], 3]
 		status_headers = ["Site","API","Tracker","Tracker SSL","IRC","IRC Id","IRC Announce","kenyz"]
 		breakpoints = [0]
 		line_headers = [""]
