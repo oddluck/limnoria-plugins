@@ -25,3 +25,5 @@ geo <nick/host/ip> (geolocate <nick> (must be in channel) <host>, or <ip> addres
 ```
 geo update (force update of geoip database)
 ```
+
+If you wish to manually update the geoip database, plugin looks for the file at <bot_directory>/data/geo/GeoLite2-City.mmdb
