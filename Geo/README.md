@@ -6,6 +6,18 @@ Requires GeoIP2-python:
 ```
 pip install geoip2
 ```
+
+Requires a MaxMind license key to update the database.
+```
+Sign up for a MaxMind account at https://www.maxmind.com/en/geolite2/signup
+```
+```
+Create a license key at https://www.maxmind.com/en/accounts/current/license-key
+```
+```
+config plugins.geo.licenseKey <Your_Key_Here>
+```
+
 Usage:
 ```
 geo <nick/host/ip> (geolocate <nick> (must be in channel) <host>, or <ip> address

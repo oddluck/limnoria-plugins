@@ -115,7 +115,8 @@ class Geo(callbacks.Plugin):
 
     def getfile(self):
         """grabs the data file"""
-        u='https://geolite.maxmind.com/download/geoip/database/GeoLite2-City.tar.gz'
+        license = self.registryValue('licenseKey')
+        u='https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-City&license_key={}&suffix=tar.gz'.format(license)
         f = '%s%sgeo%sGeoLite2-City.tar.gz' % (conf.supybot.directories.data(), os.sep, os.sep)
         f2 = '%s%sgeo%sGeoLite2-City.tar' % (conf.supybot.directories.data(), os.sep, os.sep)
         self.make_sure_path_exists(r'%s%sgeo' % (conf.supybot.directories.data(),os.sep))

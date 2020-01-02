@@ -22,4 +22,8 @@ Geo = conf.registerPlugin('Geo')
 conf.registerGlobalValue(Geo, 'datalastupdated',
     registry.PositiveInteger(1, """An integer representing the time since epoch the .dat file was last updated."""))
 
+conf.registerGlobalValue(Geo, 'licenseKey',
+    registry.String('', """MaxMind license key."""))
+
+
 # vim:set shiftwidth=4 softtabstop=4 expandtab textwidth=79:
