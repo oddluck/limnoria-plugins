@@ -120,6 +120,7 @@ class Jeopardy(callbacks.Plugin):
             self.show = {}
             self.revealed = {}
             self.shuffled = shuffle
+            self.answered = False
             if self.questionfile != 'jservice.io':
                 f = open(self.questionfile, 'r')
                 line = f.readline()
@@ -268,6 +269,7 @@ class Jeopardy(callbacks.Plugin):
                 self.reply(_('\x03%s#%d of %d: %s') % (color, self.numAsked,
                                                 self.total, self.q))
                 ans = self.a[0]
+                self.answered = False
                 if "(" in self.a[0]:
                     a1, a2, a3 = re.match("(.*)\((.*)\)(.*)", self.a[0]).groups()
                     self.a.append(a1 + a3)
@@ -293,8 +295,9 @@ class Jeopardy(callbacks.Plugin):
                 schedule.addEvent(next_question, delayTime, 'new_%s' % self.channel)
 
         def stop(self):
-            self.reply(_('Jeopardy! stopping.'))
-            self.active = False
+            if self.active:
+                self.reply(_('Jeopardy! stopping.'))
+                self.active = False
             try:
                 schedule.removeEvent('next_%s' % self.channel)
                 schedule.removeEvent('new_%s' % self.channel)
@@ -328,7 +331,10 @@ class Jeopardy(callbacks.Plugin):
 
         def timedEvent(self):
             if self.hints >= self.numHints:
+                self.answered = True
                 self.reply(_('No one got the answer! It was: %s') % self.a[0])
+                if self.num == 0:
+                    self.reply(_('Jeopardy! stopping.'))
                 self.unanswered += 1
                 self.newquestion()
             else:
@@ -368,41 +374,45 @@ class Jeopardy(callbacks.Plugin):
 
 
         def answer(self, msg):
-            channel = msg.args[0]
-            correct = False
-            for ans in self.a:
-                ans = re.sub('\s+', ' ', ans.strip().lower())
-                guess = re.sub('\s+', ' ', msg.args[1].strip().lower())
-                if guess == ans:
-                    correct = True
-                elif not correct and len (ans) > 2:
-                    answer = re.sub('[^a-zA-Z0-9 ]+', '', ans)
-                    answer = re.sub('^a |^an |^the ', '', answer).replace(' ', '')
-                    guess = re.sub('[^a-zA-Z0-9 ]+', '', guess)
-                    guess = re.sub('^a |^an |^the ', '', guess).replace(' ', '')
-                else:
-                    answer = ans
-                if not correct and guess == answer:
-                    correct = True
-                elif not correct:
-                    dist = jellyfish.jaro_winkler(guess, answer)
-                    flexibility = self.registryValue('flexibility', self.channel)
-                    #self.reply("guess: {0}, answer: {1}, length: {2}, distance: {3}, flexibility: {4}".format(guess, answer, len(answer), dist, flexibility))
-                    if dist >= flexibility:
+            if not self.answered:
+                channel = msg.args[0]
+                correct = False
+                for ans in self.a:
+                    ans = re.sub('\s+', ' ', ans.strip().lower())
+                    guess = re.sub('\s+', ' ', msg.args[1].strip().lower())
+                    if guess == ans:
                         correct = True
-            if correct:
-                name = "{0}:{1}".format(channel, msg.nick)
-                if not name in self.scores:
-                    self.scores[name] = 0
-                self.scores[name] += self.p
-                if not name in self.roundscores:
-                    self.roundscores[name] = 0
-                self.roundscores[name] += self.p
-                self.unanswered = 0
-                self.reply(_("{0} got it! The full answer was: {1}. Points: {2} | Round Score: {3} | Total: {4}".format(msg.nick, self.a[0], self.p, self.roundscores[name], self.scores[name])))
-                schedule.removeEvent('next_%s' % self.channel)
-                self.writeScores()
-                self.newquestion()
+                    elif not correct and len (ans) > 2:
+                        answer = re.sub('[^a-zA-Z0-9 ]+', '', ans)
+                        answer = re.sub('^a |^an |^the ', '', answer).replace(' ', '')
+                        guess = re.sub('[^a-zA-Z0-9 ]+', '', guess)
+                        guess = re.sub('^a |^an |^the ', '', guess).replace(' ', '')
+                    else:
+                        answer = ans
+                    if not correct and guess == answer:
+                        correct = True
+                    elif not correct:
+                        dist = jellyfish.jaro_winkler(guess, answer)
+                        flexibility = self.registryValue('flexibility', self.channel)
+                        #self.reply("guess: {0}, answer: {1}, length: {2}, distance: {3}, flexibility: {4}".format(guess, answer, len(answer), dist, flexibility))
+                        if dist >= flexibility:
+                            correct = True
+                if correct:
+                    self.answered = True
+                    name = "{0}:{1}".format(channel, msg.nick)
+                    if not name in self.scores:
+                        self.scores[name] = 0
+                    self.scores[name] += self.p
+                    if not name in self.roundscores:
+                        self.roundscores[name] = 0
+                    self.roundscores[name] += self.p
+                    self.unanswered = 0
+                    self.reply(_("{0} got it! The full answer was: {1}. Points: {2} | Round Score: {3} | Total: {4}".format(msg.nick, self.a[0], self.p, self.roundscores[name], self.scores[name])))
+                    schedule.removeEvent('next_%s' % self.channel)
+                    self.writeScores()
+                    self.newquestion()
+            else:
+                    self.newquestion()
 
 
         def reply(self, s):
