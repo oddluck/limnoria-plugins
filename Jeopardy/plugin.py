@@ -295,9 +295,8 @@ class Jeopardy(callbacks.Plugin):
                 schedule.addEvent(next_question, delayTime, 'new_%s' % self.channel)
 
         def stop(self):
-            if self.active:
-                self.reply(_('Jeopardy! stopping.'))
-                self.active = False
+            self.reply(_('Jeopardy! stopping.'))
+            self.active = False
             try:
                 schedule.removeEvent('next_%s' % self.channel)
                 schedule.removeEvent('new_%s' % self.channel)
@@ -331,11 +330,9 @@ class Jeopardy(callbacks.Plugin):
 
         def timedEvent(self):
             if self.hints >= self.numHints:
-                self.answered = True
                 self.reply(_('No one got the answer! It was: %s') % self.a[0])
-                if self.num == 0:
-                    self.reply(_('Jeopardy! stopping.'))
                 self.unanswered += 1
+                self.answered = True
                 self.newquestion()
             else:
                 self.hint()
@@ -398,7 +395,6 @@ class Jeopardy(callbacks.Plugin):
                         if dist >= flexibility:
                             correct = True
                 if correct:
-                    self.answered = True
                     name = "{0}:{1}".format(channel, msg.nick)
                     if not name in self.scores:
                         self.scores[name] = 0
@@ -408,10 +404,9 @@ class Jeopardy(callbacks.Plugin):
                     self.roundscores[name] += self.p
                     self.unanswered = 0
                     self.reply(_("{0} got it! The full answer was: {1}. Points: {2} | Round Score: {3} | Total: {4}".format(msg.nick, self.a[0], self.p, self.roundscores[name], self.scores[name])))
+                    self.answered = True
                     schedule.removeEvent('next_%s' % self.channel)
                     self.writeScores()
-                    self.newquestion()
-            else:
                     self.newquestion()
 
 
