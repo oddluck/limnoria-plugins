@@ -1,5 +1,7 @@
 Forked from https://github.com/butterscotchstallion/limnoria-plugins/tree/master/SpiffyTitles
 
+If you're coming from another fork of SpiffyTitles, please note that some config variables have changed in this version, everything is now grouped by handler; spiffytitles.default, spiffytitles.youtube, spiffytitles.imdb, etc.
+
 # SpiffyTitles #
 
 The ONLY gluten-free plugin for displaying link titles.
