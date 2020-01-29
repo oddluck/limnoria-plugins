@@ -307,8 +307,6 @@ class Jeopardy(callbacks.Plugin):
             for i in range(0, len(self.roundscores)):
                 item = next(scores)
                 sorted.append(item)
-            def cmp(a, b):
-                return b[1] - a[1]
             sorted.sort(key=lambda item: item[1], reverse=True)
             max = 3
             if len(sorted) < max:
@@ -316,8 +314,6 @@ class Jeopardy(callbacks.Plugin):
                 #self.reply('max: %d.  len: %d' % (max, len(sorted)))
             s = _('Top finishers:')
             if max > 0:
-                recipients = []
-                maxp = sorted[0][1]
                 for i in range(0, max):
                     item = sorted[i]
                     s = _('%s (%s: %s)') % (s, str(item[0].split(':')[1]), item[1])
@@ -536,6 +532,59 @@ class Jeopardy(callbacks.Plugin):
         irc.reply(str(reply).replace("[", "").replace("]", "").replace("'", ""))
     categories = wrap(categories)
 
+
+    def stats(self, irc, msg, args, channel, optlist, nick):
+        """[--top <int>] [<nick>]
+        Returns Jeopardy! player stats.
+        """
+        optlist = dict(optlist)
+        if not channel:
+            channel = msg.args[0].lower()
+        if 'top' in optlist:
+            top = optlist.get('top')
+        else:
+            top = 5
+        scores = {}
+        if nick:
+            f = open(self.scorefile, 'r')
+            line = f.readline()
+            while line:
+                (name, score) = line.split(' ')
+                if name.startswith(channel):
+                    scores[name] = int(score.strip('\r\n'))
+                line = f.readline()
+            f.close()
+            name = "{0}:{1}".format(channel, nick)
+            try:
+                total = scores[name]
+                irc.reply("Total score for {0} in {1}: {2}".format(nick, channel, total), prefixNick=False)
+            except KeyError:
+                irc.reply("No scores found for {0} in {1}".format(nick, channel), prefixNick=False)
+        else:
+            f = open(self.scorefile, 'r')
+            line = f.readline()
+            while line:
+                (name, score) = line.split(' ')
+                name = name.split(':')
+                if name[0] == channel:
+                    name = name[1]
+                    scores[name] = int(score.strip('\r\n'))
+                line = f.readline()
+            f.close()
+            sorted_x = []
+            sorted_x = sorted(scores.items(), key=lambda kv: kv[1], reverse=True)
+            if len(sorted_x) < top:
+                top = len(sorted_x)
+            if top > 0:
+                totals = ""
+                for i in range(0, top):
+                    item = sorted_x[i]
+                    totals += "#{0} ({1}: {2}), ".format(i+1, item[0], item[1])
+                irc.reply("Top {0} Jeopardy! players for {1}:".format(top, channel), prefixNick=False)
+                irc.reply(totals.strip(', '), prefixNick=False)
+            else:
+                return
+    stats = wrap(stats, ['channel', getopts({'top':'int'}), additional('text')])
 
 Class = Jeopardy
 
