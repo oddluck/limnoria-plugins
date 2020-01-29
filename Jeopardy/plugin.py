@@ -534,8 +534,9 @@ class Jeopardy(callbacks.Plugin):
 
 
     def stats(self, irc, msg, args, channel, optlist, nick):
-        """[--top <int>] [<nick>]
-        Returns Jeopardy! player stats.
+        """[channel] [--top <int>] [<nick>]
+        Returns Jeopardy! player stats. Supply a nick to get stats for a specific player. Use --top to set number of players to list.
+        Defaults to current channel and top 5 players if no options given.
         """
         optlist = dict(optlist)
         if not channel:
