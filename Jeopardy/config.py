@@ -90,6 +90,10 @@ conf.registerGlobalValue(Jeopardy, 'questionFile',
         registry.String('jservice.io', _("""Use jservice.io for Jeopardy! Or, the
         path to the questions file. If it doesn't exist, it will be created.""")))
 
+conf.registerGlobalValue(Jeopardy, 'jserviceUrl',
+        registry.String('http://jservice.io', _("""Set an alternate URL where
+        jservice can be accessed at, for example a locally run jservice instance.""")))
+
 conf.registerChannelValue(Jeopardy, 'defaultRoundLength',
         registry.PositiveInteger(10, _("""The default number of questions to
         be asked in a round.""")))

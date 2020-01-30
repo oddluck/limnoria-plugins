@@ -64,6 +64,8 @@ class Jeopardy(callbacks.Plugin):
         self.games = {}
         self.scores = {}
         questionfile = self.registryValue('questionFile')
+        global jserviceUrl
+        jserviceUrl = self.registryValue('jserviceUrl').strip('/')
         if not os.path.exists(questionfile) and questionfile != 'jservice.io':
             f = open(questionfile, 'w')
             f.write(('If you\'re seeing this question, it means that the '
@@ -142,7 +144,7 @@ class Jeopardy(callbacks.Plugin):
                         if n > self.num:
                             break
                         try:
-                            data = requests.get("http://jservice.io/api/random").json()
+                            data = requests.get("{0}/api/random".format(jserviceUrl)).json()
                             for item in data:
                                 if n > self.num:
                                     break
@@ -174,18 +176,18 @@ class Jeopardy(callbacks.Plugin):
                                 break
                             try:
                                 category = int(self.categories[i])
-                                data = requests.get("http://jservice.io/api/clues?&category={0}".format(category)).json()
+                                data = requests.get("{0}/api/clues?&category={1}".format(jserviceUrl, category)).json()
                                 cluecount = data[0]['category']['clues_count']
                                 if cluecount > 100:
-                                    data.extend(requests.get("http://jservice.io/api/clues?&category={0}&offset=100".format(category)).json())
+                                    data.extend(requests.get("{0}/api/clues?&category={1}&offset=100".format(jserviceUrl, category)).json())
                                 if cluecount > 200:
-                                    data.extend(requests.get("http://jservice.io/api/clues?&category={0}&offset=200".format(category)).json())
+                                    data.extend(requests.get("{0}/api/clues?&category={1}&offset=200".format(jserviceUrl, category)).json())
                                 if cluecount > 300:
-                                    data.extend(requests.get("http://jservice.io/api/clues?&category={0}&offset=300".format(category)).json())
+                                    data.extend(requests.get("{0}/api/clues?&category={1}&offset=300".format(jserviceUrl, category)).json())
                                 if cluecount > 400:
-                                    data.extend(requests.get("http://jservice.io/api/clues?&category={0}&offset=400".format(category)).json())
+                                    data.extend(requests.get("(0}/api/clues?&category={1}&offset=400".format(jserviceUrl, category)).json())
                                 if cluecount > 500:
-                                    data.extend(requests.get("http://jservice.io/api/clues?&category={0}&offset=500".format(category)).json())
+                                    data.extend(requests.get("{0}/api/clues?&category={1}&offset=500".format(jserviceUrl, category)).json())
                                 if self.registryValue('randomize', channel):
                                     random.shuffle(data)
                                 j = 0
@@ -451,7 +453,7 @@ class Jeopardy(callbacks.Plugin):
             hints = self.registryValue('numHints', channel)
         if 'random-category' in optlist:
             seed = random.randint(0,184) * 100
-            data = requests.get("http://jservice.io/api/categories?count=100&offset={0}".format(int(seed))).json()
+            data = requests.get("{0}/api/categories?count=100&offset={1}".format(jserviceUrl, int(seed))).json()
             random.shuffle(data)
             results = []
             for item in data:
@@ -467,7 +469,7 @@ class Jeopardy(callbacks.Plugin):
                 if category.isdigit():
                     results.append(category)
                 else:
-                    url = "http://jservice.io/search?query={0}".format(category)
+                    url = "{0}/search?query={1}".format(jserviceUrl, category)
                     data = requests.get(url)
                     soup = BeautifulSoup(data.text)
                     searches = soup.find_all('a')
