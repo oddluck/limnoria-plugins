@@ -267,8 +267,9 @@ class Jeopardy(callbacks.Plugin):
             color = self.registryValue('color', self.channel)
             def next_question():
                 global question
-                question = "\x03{0}#{1} of {2}: {3}".format(color, self.numAsked, self.total, self.q)
-                self.reply(question)
+                question = {}
+                question[self.channel] = "\x03{0}#{1} of {2}: {3}".format(color, self.numAsked, self.total, self.q)
+                self.reply(question[self.channel])
                 ans = self.a[0]
                 self.answered = False
                 if "(" in self.a[0]:
@@ -604,8 +605,7 @@ class Jeopardy(callbacks.Plugin):
         channel = ircutils.toLower(msg.args[0])
         if channel in self.games:
             if self.games[channel].active:
-                color = self.registryValue('color', channel)
-                irc.reply(question)
+                irc.reply(question[channel])
             else:
                 return
         else:
