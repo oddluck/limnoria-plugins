@@ -434,7 +434,7 @@ class Jeopardy(callbacks.Plugin):
         Use --shuffle to randomize questions from manually selected categories."""
         if not channel:
             channel = ircutils.toLower(msg.args[0])
-        if self.registryValue('requireOps', channel) and msg.nick not in irc.state.channels[channel].ops:
+        if self.registryValue('requireOps', channel) and msg.nick not in irc.state.channels[channel].ops and not ircdb.checkCapability(msg.prefix, 'admin'):
             return
         if not self.registryValue('enabled', channel):
             return
@@ -511,7 +511,7 @@ class Jeopardy(callbacks.Plugin):
         message isn't sent in the channel itself."""
         if not channel:
             channel = ircutils.toLower(msg.args[0])
-        if self.registryValue('requireOps', channel) and msg.nick not in irc.state.channels[channel].ops:
+        if self.registryValue('requireOps', channel) and msg.nick not in irc.state.channels[channel].ops and not ircdb.checkCapability(msg.prefix, 'admin'):
             return
         try:
             schedule.removeEvent('new_%s' % channel)
