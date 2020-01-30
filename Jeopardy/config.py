@@ -67,6 +67,10 @@ conf.registerChannelValue(Jeopardy, 'hintPercentage',
         registry.Probability(0.25, _("""The fraction of the answer that
         should be revealed with each hint""")))
 
+conf.registerChannelValue(Jeopardy, 'hintReduction',
+        registry.Probability(0.5, _("""The percentage by which to reduce points
+        with each hint reveal""")))
+
 conf.registerChannelValue(Jeopardy, 'flexibility',
         registry.Float(0.92, _("""The minimum flexibility of the answer
         checker. Uses jaro-winkler distance, 1.0 is identical""")))
@@ -97,6 +101,14 @@ conf.registerGlobalValue(Jeopardy, 'questionFileSeparator',
 conf.registerChannelValue(Jeopardy, 'randomize',
         registry.Boolean('True', _("""This will determine whether or not the
         bot will randomize the questions.""")))
+
+conf.registerChannelValue(Jeopardy, 'requireOps',
+        registry.Boolean('False', _("""This will determine whether or not the
+        user must be a channel operator to start/stop the game.""")))
+
+conf.registerChannelValue(Jeopardy, 'enabled',
+        registry.Boolean('True', _("""This will determine whether or not the
+        game is enabled for a given channel""")))
 
 conf.registerChannelValue(Jeopardy, 'defaultPointValue',
         registry.PositiveInteger(500, _("""The default point value for questions if

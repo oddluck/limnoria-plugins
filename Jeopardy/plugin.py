@@ -91,7 +91,7 @@ class Jeopardy(callbacks.Plugin):
             return
         if callbacks.addressed(irc.nick, msg):
             return
-        if channel in self.games:
+        if self.registryValue('enabled', channel) and channel in self.games:
             self.games[channel].answer(msg)
 
 
@@ -252,7 +252,7 @@ class Jeopardy(callbacks.Plugin):
             if q[0].startswith('#'):
                 self.id = q[0]
                 self.q = q[1]
-                self.a = [q[2]] 
+                self.a = [q[2]]
                 if q[3]:
                     self.p = int(q[3])
                 else:
@@ -266,8 +266,9 @@ class Jeopardy(callbacks.Plugin):
                     self.p = self.points
             color = self.registryValue('color', self.channel)
             def next_question():
-                self.reply(_('\x03%s#%d of %d: %s') % (color, self.numAsked,
-                                                self.total, self.q))
+                global question
+                question = "\x03{0}#{1} of {2}: {3}".format(color, self.numAsked, self.total, self.q)
+                self.reply(question)
                 ans = self.a[0]
                 self.answered = False
                 if "(" in self.a[0]:
@@ -340,6 +341,7 @@ class Jeopardy(callbacks.Plugin):
             self.show.setdefault(self.id, None)
             self.revealed.setdefault(self.id, None)
             hintPercentage = self.registryValue('hintPercentage', self.channel)
+            reduction = self.registryValue('hintReduction', self.channel)
             divider = round(len(re.sub('[^a-zA-Z0-9]+', '', ans)) * hintPercentage)
             blankChar = self.registryValue('blankChar', self.channel)
             blank = re.sub('\w', blankChar, ans)
@@ -357,7 +359,7 @@ class Jeopardy(callbacks.Plugin):
                 except:
                     break
             self.reply(_('HINT: %s') % (''.join(self.show[self.id])))
-            self.p = self.p // 2
+            self.p = int(self.p * reduction)
             def event():
                 self.timedEvent()
             timeout = self.registryValue('timeout', self.channel)
@@ -427,6 +429,12 @@ class Jeopardy(callbacks.Plugin):
         Use --random-category to start a round with a randomly selected category.
         Use --num to set the number of questions.
         Use --shuffle to randomize questions from manually selected categories."""
+        if not channel:
+            channel = ircutils.toLower(msg.args[0])
+        if self.registryValue('requireOps', channel) and msg.nick not in irc.state.channels[channel].ops:
+            return
+        if not self.registryValue('enabled', channel):
+            return
         optlist = dict(optlist)
         if 'num' in optlist:
             num = optlist.get('num')
@@ -473,7 +481,6 @@ class Jeopardy(callbacks.Plugin):
             results = 'random'
         if results and 'shuffle' in optlist:
             random.shuffle(results)
-        channel = ircutils.toLower(channel)
         if channel in self.games:
             if not self.games[channel].active:
                 del self.games[channel]
@@ -499,7 +506,10 @@ class Jeopardy(callbacks.Plugin):
         """[<channel>]
         Stops a running game of Jeopardy!. <channel> is only necessary if the
         message isn't sent in the channel itself."""
-        channel = ircutils.toLower(channel)
+        if not channel:
+            channel = ircutils.toLower(msg.args[0])
+        if self.registryValue('requireOps', channel) and msg.nick not in irc.state.channels[channel].ops:
+            return
         try:
             schedule.removeEvent('new_%s' % channel)
         except KeyError:
@@ -534,8 +544,9 @@ class Jeopardy(callbacks.Plugin):
 
 
     def stats(self, irc, msg, args, channel, optlist, nick):
-        """[--top <int>] [<nick>]
-        Returns Jeopardy! player stats.
+        """[channel] [--top <int>] [<nick>]
+        Returns Jeopardy! player stats. Supply a nick to get stats for a specific player. Use --top to set number of players to list.
+        Defaults to current channel and top 5 players if no options given.
         """
         optlist = dict(optlist)
         if not channel:
@@ -585,6 +596,21 @@ class Jeopardy(callbacks.Plugin):
             else:
                 return
     stats = wrap(stats, ['channel', getopts({'top':'int'}), additional('text')])
+
+    def question(self, irc, msg, args):
+        """
+        Display the currently active question
+        """
+        channel = ircutils.toLower(msg.args[0])
+        if channel in self.games:
+            if self.games[channel].active:
+                color = self.registryValue('color', channel)
+                irc.reply(question)
+            else:
+                return
+        else:
+            return
+    question = wrap(question)
 
 Class = Jeopardy
 
