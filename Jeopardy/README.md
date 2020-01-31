@@ -4,7 +4,7 @@ Come play in ##Jeopardy on Freenode. irc://chat.freenode.net/##Jeopardy
 
 Fork of Trivia (https://github.com/ProgVal/Supybot-plugins/tree/master/Trivia) with option to use http://jservice.io (150K+ Jeopardy! questions, more if run locally) as trivia source plus additional features such as category selection, question history, and improved scoring and answer checking.
 
-To run a local instance (385K+ questions) install my jservice fork from here https://github.com/oddluck/jService then point `plugins.jeopardy.jserviceUrl` to your own URL.
+To run a local instance (190K+ questions) install my jservice fork from here https://github.com/oddluck/jService then point `plugins.jeopardy.jserviceUrl` to your own URL.
 
 ```
 start --num (int) <category> (optionally specify number of questions or category name or ID#)
