@@ -14,7 +14,7 @@ Description
 Instructions
 
     You need to install cobe first for this plugin to work. After doing that, just place the Cobe folder into your plugin
-    folder ( or run "install waratte Cobe" if you have the PluginDownloader plugin) and "load Cobe". 
+    folder and "load Cobe". 
     
     The default options in the config file are set to ensure that the bot does not talk on its own without 
     someone mentioning it. Take care, because the bot could easily go crazy if you set the wrong options. ;)
