@@ -64,6 +64,7 @@ class Jeopardy(callbacks.Plugin):
         self.games = {}
         self.scores = {}
         questionfile = self.registryValue('questionFile')
+        self.noHints = False
         global jserviceUrl
         jserviceUrl = self.registryValue('jserviceUrl').strip('/')
         if not os.path.exists(questionfile) and questionfile != 'jservice.io':
@@ -270,6 +271,8 @@ class Jeopardy(callbacks.Plugin):
             def next_question():
                 global question
                 question = {}
+                global hint
+                hint = {}
                 question[self.channel] = "\x03{0}#{1} of {2}: {3}".format(color, self.numAsked, self.total, self.q)
                 self.reply(question[self.channel])
                 ans = self.a[0]
@@ -281,7 +284,8 @@ class Jeopardy(callbacks.Plugin):
                 if self.numHints > 0:
                     blankChar = self.registryValue('blankChar', self.channel)
                     blank = re.sub('\w', blankChar, ans)
-                    self.reply("HINT: {0}".format(blank))
+                    hint[self.channel] = "HINT: {0}".format(blank)
+                    self.reply(hint[self.channel])
                 if self.id:
                     self.history[self.channel].append(self.id)
                 def event():
@@ -361,7 +365,8 @@ class Jeopardy(callbacks.Plugin):
                         i += 1
                 except:
                     break
-            self.reply(_('HINT: %s') % (''.join(self.show[self.id])))
+            hint[self.channel] = "HINT: {0}".format(''.join(self.show[self.id]))
+            self.reply(_('HINT: %s') % (hint[self.channel]))
             self.p = int(self.p * reduction)
             def event():
                 self.timedEvent()
@@ -449,8 +454,10 @@ class Jeopardy(callbacks.Plugin):
             shuffle = False
         if 'no-hints' in optlist:
             hints = 0
+            self.noHints = True
         else:
             hints = self.registryValue('numHints', channel)
+            self.noHints = False
         if 'random-category' in optlist:
             seed = random.randint(0,184) * 100
             data = requests.get("{0}/api/categories?count=100&offset={1}".format(jserviceUrl, int(seed))).json()
@@ -602,7 +609,7 @@ class Jeopardy(callbacks.Plugin):
 
     def question(self, irc, msg, args):
         """
-        Display the currently active question
+        Repeat the current question.
         """
         channel = ircutils.toLower(msg.args[0])
         if channel in self.games:
@@ -613,6 +620,21 @@ class Jeopardy(callbacks.Plugin):
         else:
             return
     question = wrap(question)
+
+
+    def hint(self, irc, msg, args):
+        """
+        Repeat the latest hint.
+        """
+        channel = ircutils.toLower(msg.args[0])
+        if channel in self.games:
+            if self.games[channel].active and not self.noHints:
+                irc.reply(hint[channel])
+            else:
+                return
+        else:
+            return
+    hint = wrap(hint)
 
 Class = Jeopardy
 
