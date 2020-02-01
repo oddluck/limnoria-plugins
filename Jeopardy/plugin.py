@@ -367,7 +367,7 @@ class Jeopardy(callbacks.Plugin):
                     break
             hint[self.channel] = "HINT: {0}".format(''.join(self.show[self.id]))
             self.reply(hint[self.channel])
-            self.p = int(self.p * reduction)
+            self.p -= int(self.p * reduction)
             def event():
                 self.timedEvent()
             timeout = self.registryValue('timeout', self.channel)
