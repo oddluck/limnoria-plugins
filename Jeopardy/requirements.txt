@@ -1,4 +1,4 @@
 requests
-unidecode
+ftfy
 beautifulsoup4
 jellyfish
