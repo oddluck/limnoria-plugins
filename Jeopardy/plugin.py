@@ -47,7 +47,6 @@ import supybot.callbacks as callbacks
 import requests
 import re
 from ftfy import fix_text
-from unidecode import unidecode
 from bs4 import BeautifulSoup
 import jellyfish
 from supybot.i18n import PluginInternationalization, internationalizeDocstring
@@ -166,8 +165,8 @@ class Jeopardy(callbacks.Plugin):
                                     points = self.points
                                 if len(clue) > 1 and airdate and answer and category and not invalid and id not in self.history[channel]:
                                     q = "#{0}*({1}) [${2}] \x02{3}: {4}\x0F*{5}*{6}".format(id, airdate[0], str(points), category, clue, answer, points)
-                                    q = re.sub('<[^<]+?>', '', fix_text(q)).encode('utf-8').decode('unicode_escape')
-                                    self.questions.append(unidecode(q))
+                                    q = re.sub('<[^<]+?>', '', fix_text(q, normalization='NFKC')).encode('utf-8').decode('unicode_escape')
+                                    self.questions.append(q)
                                     n += 1
                         except Exception:
                             continue
@@ -220,8 +219,8 @@ class Jeopardy(callbacks.Plugin):
                                         points = self.points
                                     if len(clue) > 1 and airdate and answer and category and not invalid and id not in self.history[channel]:
                                         q = "#{0}*({1}) [${2}] \x02{3}: {4}\x0F*{5}*{6}".format(id, airdate[0], str(points), category, clue, answer, points)
-                                        q = re.sub('<[^<]+?>', '', fix_text(q)).encode('utf-8').decode('unicode_escape')
-                                        self.questions.append(unidecode(q))
+                                        q = re.sub('<[^<]+?>', '', fix_text(q, normalization='NFKC')).encode('utf-8').decode('unicode_escape')
+                                        self.questions.append(q)
                                         n += 1
                                         j += 1
                                 k += 1
