@@ -165,7 +165,7 @@ class Jeopardy(callbacks.Plugin):
                                     points = self.points
                                 if len(clue) > 1 and airdate and answer and category and not invalid and id not in self.history[channel]:
                                     q = "#{0}*({1}) [${2}] \x02{3}: {4}\x0F*{5}*{6}".format(id, airdate[0], str(points), category, clue, answer, points)
-                                    q = re.sub('<[^<]+?>', '', fix_text(q)).encode('utf-8').decode('unicode_escape')
+                                    q = re.sub('<[^<]+?>', '', fix_text(q, normalization='NFKC')).encode('utf-8').decode('unicode_escape')
                                     self.questions.append(q)
                                     n += 1
                         except Exception:
@@ -219,7 +219,7 @@ class Jeopardy(callbacks.Plugin):
                                         points = self.points
                                     if len(clue) > 1 and airdate and answer and category and not invalid and id not in self.history[channel]:
                                         q = "#{0}*({1}) [${2}] \x02{3}: {4}\x0F*{5}*{6}".format(id, airdate[0], str(points), category, clue, answer, points)
-                                        q = re.sub('<[^<]+?>', '', fix_text(q)).encode('utf-8').decode('unicode_escape')
+                                        q = re.sub('<[^<]+?>', '', fix_text(q, normalization='NFKC')).encode('utf-8').decode('unicode_escape')
                                         self.questions.append(q)
                                         n += 1
                                         j += 1
