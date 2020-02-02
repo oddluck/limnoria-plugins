@@ -195,8 +195,6 @@ class Jeopardy(callbacks.Plugin):
                                     data.extend(requests.get("(0}/api/clues?&category={1}&offset=400".format(jserviceUrl, category), timeout=5).json())
                                 if cluecount > 500:
                                     data.extend(requests.get("{0}/api/clues?&category={1}&offset=500".format(jserviceUrl, category), timeout=5).json())
-                                if self.registryValue('randomize', channel):
-                                    random.shuffle(data)
                                 j = 0
                                 for item in data:
                                     if n > self.num or k > len(self.categories):
@@ -229,7 +227,7 @@ class Jeopardy(callbacks.Plugin):
                             except Exception:
                                 continue
                 del data
-            if self.shuffled or self.registryValue('randomize', channel) and self.questionfile != 'jservice.io':
+            if self.shuffled or self.registryValue('randomize', channel):
                 random.shuffle(self.questions)
             else:
                 self.questions = self.questions[::-1]
@@ -239,7 +237,7 @@ class Jeopardy(callbacks.Plugin):
         def newquestion(self, channel):
             inactiveShutoff = self.registryValue('inactiveShutoff', channel)
             if self.num == 0:
-                self.stop(channel)
+                stopped[channel] = True
             elif self.unanswered > inactiveShutoff and inactiveShutoff > 0:
                 self.reply(channel, 'Seems like no one\'s playing any more.')
                 stopped[channel] = True
@@ -393,8 +391,8 @@ class Jeopardy(callbacks.Plugin):
                 channel = msg.args[0]
                 correct = False
                 for ans in self.a:
-                    ans = re.sub('\s+', ' ', ans.strip().lower())
-                    guess = re.sub('\s+', ' ', msg.args[1].strip().lower())
+                    ans = " ".join(ans.strip()).lower()
+                    guess = " ".join(msg.args[1]).strip().lower()
                     if guess == ans:
                         correct = True
                     elif not correct and len (ans) > 2:
