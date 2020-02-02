@@ -46,7 +46,7 @@ import supybot.schedule as schedule
 import supybot.callbacks as callbacks
 import requests
 import re
-from unidecode import unidecode
+from ftfy import fix_text
 from bs4 import BeautifulSoup
 import jellyfish
 from supybot.i18n import PluginInternationalization, internationalizeDocstring
@@ -117,7 +117,6 @@ class Jeopardy(callbacks.Plugin):
             self.questionfile = self.registryValue('questionFile')
             self.points = self.registryValue('defaultPointValue')
             self.total = num
-            self.active = True
             self.questions = []
             self.roundscores = requests.structures.CaseInsensitiveDict()
             self.unanswered = 0
@@ -140,30 +139,34 @@ class Jeopardy(callbacks.Plugin):
                     self.history = {}
                     self.history.setdefault(channel, [])
                 cluecount = self.num
-                failed = 0
                 if self.categories == 'random':
                     n = 0
                     while n <= self.num:
                         if n > self.num:
                             break
                         try:
-                            data = requests.get("{0}/api/random".format(jserviceUrl)).json()
+                            if jserviceUrl == 'http://jservice.io':
+                                data = requests.get("{0}/api/random".format(jserviceUrl), timeout=5).json()
+                            else:
+                                data = requests.get("{0}/api/random?count={1}".format(jserviceUrl, self.num + 5), timeout=5).json()
                             for item in data:
                                 if n > self.num:
                                     break
                                 id = item['id']
-                                question = re.sub('<[^<]+?>', '', unidecode(item['question'])).replace('\\', '').strip()
+                                clue = item['question'].strip()
                                 airdate = item['airdate'].split('T')
-                                answer = re.sub('<[^<]+?>', '', unidecode(item['answer'])).replace('\\', '').strip()
-                                category = unidecode(item['category']['title']).strip().title()
+                                answer = item['answer'].strip()
+                                category = item['category']['title'].strip().upper()
                                 invalid = item['invalid_count']
                                 points = self.points
                                 if item['value']:
                                     points = int(item['value'])
                                 else:
                                     points = self.points
-                                if len(question) > 1 and airdate and answer and category and points and not invalid and "{0}:{1}".format(channel, id) not in self.history[channel]:
-                                    self.questions.append("{0}:{1}*({2}) [${3}] \x02{4}: {5}\x0F*{6}*{7}".format(channel, id, airdate[0], str(points), category, question, answer, points))
+                                if len(clue) > 1 and airdate and answer and category and not invalid and id not in self.history[channel]:
+                                    q = "#{0}*({1}) [${2}] \x02{3}: {4}\x0F*{5}*{6}".format(id, airdate[0], str(points), category, clue, answer, points)
+                                    q = re.sub('<[^<]+?>', '', fix_text(q)).encode('utf-8').decode('unicode_escape')
+                                    self.questions.append(q)
                                     n += 1
                         except Exception:
                             continue
@@ -182,15 +185,15 @@ class Jeopardy(callbacks.Plugin):
                                 data = requests.get("{0}/api/clues?&category={1}".format(jserviceUrl, category)).json()
                                 cluecount = data[0]['category']['clues_count']
                                 if cluecount > 100:
-                                    data.extend(requests.get("{0}/api/clues?&category={1}&offset=100".format(jserviceUrl, category)).json())
+                                    data.extend(requests.get("{0}/api/clues?&category={1}&offset=100".format(jserviceUrl, category), timeout=5).json())
                                 if cluecount > 200:
-                                    data.extend(requests.get("{0}/api/clues?&category={1}&offset=200".format(jserviceUrl, category)).json())
+                                    data.extend(requests.get("{0}/api/clues?&category={1}&offset=200".format(jserviceUrl, category), timeout=5).json())
                                 if cluecount > 300:
-                                    data.extend(requests.get("{0}/api/clues?&category={1}&offset=300".format(jserviceUrl, category)).json())
+                                    data.extend(requests.get("{0}/api/clues?&category={1}&offset=300".format(jserviceUrl, category), timeout=5).json())
                                 if cluecount > 400:
-                                    data.extend(requests.get("(0}/api/clues?&category={1}&offset=400".format(jserviceUrl, category)).json())
+                                    data.extend(requests.get("(0}/api/clues?&category={1}&offset=400".format(jserviceUrl, category), timeout=5).json())
                                 if cluecount > 500:
-                                    data.extend(requests.get("{0}/api/clues?&category={1}&offset=500".format(jserviceUrl, category)).json())
+                                    data.extend(requests.get("{0}/api/clues?&category={1}&offset=500".format(jserviceUrl, category), timeout=5).json())
                                 if self.registryValue('randomize', channel):
                                     random.shuffle(data)
                                 j = 0
@@ -204,19 +207,20 @@ class Jeopardy(callbacks.Plugin):
                                     elif self.shuffled and j > self.num * 0.2:
                                         break
                                     id = item['id']
-                                    question = re.sub('<[^<]+?>', '', unidecode(item['question'])).replace('\\', '').strip()
+                                    clue = item['question'].strip()
                                     airdate = item['airdate'].split('T')
-                                    answer = re.sub('<[^<]+?>', '', unidecode(item['answer'])).replace('\\', '').strip()
-                                    category = unidecode(item['category']['title']).strip().title()
+                                    answer = item['answer'].strip()
+                                    category = item['category']['title'].strip().upper()
                                     invalid = item['invalid_count']
                                     points = self.points
                                     if item['value']:
                                         points = int(item['value'])
                                     else:
                                         points = self.points
-                                    if len(question) > 1 and airdate and answer and category and points and not invalid and "{0}:{1}".format(channel, id) not in self.history[channel] and question not in asked:
-                                        self.questions.append("{0}:{1}*({2}) [${3}] \x02{4}: {5}\x0F*{6}*{7}".format(channel, id, airdate[0], str(points), category, question, answer, points))
-                                        asked.append(question)
+                                    if len(clue) > 1 and airdate and answer and category and not invalid and id not in self.history[channel]:
+                                        q = "#{0}*({1}) [${2}] \x02{3}: {4}\x0F*{5}*{6}".format(id, airdate[0], str(points), category, clue, answer, points)
+                                        q = re.sub('<[^<]+?>', '', fix_text(q)).encode('utf-8').decode('unicode_escape')
+                                        self.questions.append(q)
                                         n += 1
                                         j += 1
                                 k += 1
@@ -227,24 +231,20 @@ class Jeopardy(callbacks.Plugin):
                 random.shuffle(self.questions)
             else:
                 self.questions = self.questions[::-1]
-            try:
-                schedule.removeEvent('next_%s' % channel)
-            except KeyError:
-                pass
             self.newquestion(channel)
 
 
         def newquestion(self, channel):
             inactiveShutoff = self.registryValue('inactiveShutoff', channel)
             if self.num == 0:
-                self.active = False
-            elif self.unanswered > inactiveShutoff and inactiveShutoff >= 0:
+                self.stop(channel)
+            elif self.unanswered > inactiveShutoff and inactiveShutoff > 0:
                 self.reply(channel, 'Seems like no one\'s playing any more.')
-                self.active = False
+                stopped[channel] = True
             elif len(self.questions) == 0:
                 self.reply(channel, 'Oops! I ran out of questions!')
-                self.active = False
-            if not self.active or stopped[channel]:
+                stopped[channel] = True
+            if stopped[channel]:
                 self.stop(channel)
                 return
             self.id = None
@@ -254,7 +254,7 @@ class Jeopardy(callbacks.Plugin):
             sep = self.registryValue('questionFileSeparator')
             q = self.questions.pop(len(self.questions)-1).split(sep)
             if q[0].startswith('#'):
-                self.id = q[0]
+                self.id = q[0].strip('#')
                 self.q = q[1]
                 self.a = [q[2]]
                 if q[3]:
@@ -270,41 +270,45 @@ class Jeopardy(callbacks.Plugin):
                     self.p = self.points
             color = self.registryValue('color', channel)
             def next_question():
-                global question
-                question = {}
-                global hint
-                hint = {}
-                question[channel] = "\x03{0}#{1} of {2}: {3}".format(color, self.numAsked, self.total, self.q)
-                self.reply(channel, question[channel])
-                ans = self.a[0]
-                self.answered = False
-                if "(" in self.a[0]:
-                    a1, a2, a3 = re.match("(.*)\((.*)\)(.*)", self.a[0]).groups()
-                    self.a.append(a1 + a3)
-                    self.a.append(a2)
-                if self.numHints > 0:
-                    blankChar = self.registryValue('blankChar', channel)
-                    blank = re.sub('\w', blankChar, ans)
-                    hint[channel] = "HINT: {0}".format(blank)
-                    self.reply(channel, hint[channel])
-                if self.id:
-                    self.history[channel].append(self.id)
-                def event():
-                    self.timedEvent(channel)
-                timeout = self.registryValue('timeout', channel)
-                eventTime = time.time() + timeout / (self.numHints + 1)
-                if self.active:
-                    schedule.addEvent(event, eventTime, 'next_%s' % channel)
+                if not stopped[channel]:
+                    global question
+                    question = {}
+                    global hint
+                    hint = {}
+                    if not self.registryValue('autoRestart', channel):
+                        question[channel] = "\x03{0}#{1} of {2}: {3}".format(color, self.numAsked, self.total, self.q)
+                    else:
+                        question[channel] = "\x03{0}{1}".format(color, self.q)
+                    self.reply(channel, question[channel])
+                    ans = self.a[0]
+                    self.answered = False
+                    if "(" in self.a[0]:
+                        a1, a2, a3 = re.match("(.*)\((.*)\)(.*)", self.a[0]).groups()
+                        self.a.append(a1 + a3)
+                        self.a.append(a2)
+                    if self.numHints > 0:
+                        blankChar = self.registryValue('blankChar', channel)
+                        blank = re.sub('\w', blankChar, ans)
+                        hint[channel] = "HINT: {0}".format(blank)
+                        self.reply(channel, hint[channel])
+                    if self.id:
+                        self.history[channel].append(self.id)
+                    def event():
+                        self.timedEvent(channel)
+                    timeout = self.registryValue('timeout', channel)
+                    eventTime = time.time() + timeout / (self.numHints + 1)
+                    if not stopped[channel]:
+                        schedule.addEvent(event, eventTime, 'next_%s' % channel)
             if self.numAsked > 1:
                 delay = self.registryValue('delay', channel)
                 delayTime = time.time() + delay
             else:
                 delayTime = time.time()
-            if self.active:
+            if not stopped[channel]:
                 schedule.addEvent(next_question, delayTime, 'new_%s' % channel)
 
+
         def stop(self, channel):
-            self.active = False
             try:
                 schedule.removeEvent('next_%s' % channel)
                 schedule.removeEvent('new_%s' % channel)
@@ -319,19 +323,19 @@ class Jeopardy(callbacks.Plugin):
             max = 3
             if len(sorted) < max:
                 max = len(sorted)
-                #self.reply(channel, 'max: {0}.  len: {1}'.format(max, len(sorted)))
-            s = _('Top finishers:')
-            if max > 0:
-                for i in range(0, max):
-                    item = sorted[i]
-                    s = _('%s (%s: %s)') % (s, str(item[0].split(':')[1]), item[1])
-                self.reply(channel, s)
+            if not self.registryValue('autoRestart', channel):
+                s = _('Top finishers:')
+                if max > 0:
+                    for i in range(0, max):
+                        item = sorted[i]
+                        s = _('%s (%s: %s)') % (s, str(item[0].split(':')[1]), item[1])
+                    self.reply(channel, s)
             if self.registryValue('autoRestart', channel) and not stopped[channel]:
                 num = self.registryValue('defaultRoundLength', channel)
                 hints = self.registryValue('numHints', channel)
-                self.reply(channel, "This... is... Jeopardy!")
                 self.__init__(self.irc, channel, num, hints, False, 'random', self)
             else:
+                stopped[channel] = True
                 try:
                     del self.games[channel]
                 except KeyError:
@@ -378,7 +382,7 @@ class Jeopardy(callbacks.Plugin):
                 self.timedEvent(channel)
             timeout = self.registryValue('timeout', channel)
             eventTime = time.time() + timeout / (self.numHints + 1)
-            if self.active:
+            if not stopped[channel]:
                 schedule.addEvent(event, eventTime, 'next_%s' % channel)
 
 
@@ -417,7 +421,11 @@ class Jeopardy(callbacks.Plugin):
                     self.unanswered = 0
                     self.reply(channel, "{0} got it! The full answer was: {1}. Points: {2} | Round Score: {3} | Total: {4}".format(msg.nick, self.a[0], self.p, self.roundscores[name], self.scores[name]))
                     self.answered = True
-                    schedule.removeEvent('next_%s' % channel)
+                    try:
+                        schedule.removeEvent('next_%s' % channel)
+                        schedule.removeEvent('new_%s' % channel)
+                    except KeyError:
+                        pass
                     self.writeScores()
                     self.newquestion(channel)
 
@@ -469,7 +477,7 @@ class Jeopardy(callbacks.Plugin):
                 seed = random.randint(0,184) * 100
             else:
                 seed = random.randint(0,250) * 100
-            data = requests.get("{0}/api/categories?count=100&offset={1}".format(jserviceUrl, int(seed))).json()
+            data = requests.get("{0}/api/categories?count=100&offset={1}".format(jserviceUrl, int(seed)), timeout=5).json()
             random.shuffle(data)
             results = []
             for item in data:
@@ -486,7 +494,7 @@ class Jeopardy(callbacks.Plugin):
                     results.append(category)
                 else:
                     url = "{0}/search?query={1}".format(jserviceUrl, category)
-                    data = requests.get(url)
+                    data = requests.get(url, timeout=5)
                     soup = BeautifulSoup(data.text)
                     searches = soup.find_all('a')
                     for i in range(len(searches)):
@@ -508,14 +516,16 @@ class Jeopardy(callbacks.Plugin):
                     schedule.removeEvent('new_%s' % channel)
                 except KeyError:
                     pass
-                irc.reply("This... is... Jeopardy!", prefixNick=False)
+                if not self.registryValue('autoRestart', channel):
+                    irc.reply("This... is... Jeopardy!", prefixNick=False)
                 self.games[channel] = self.Game(irc, channel, num, hints, shuffle, results, self)
             else:
                 self.games[channel].num += num
                 self.games[channel].total += num
                 irc.reply(_('%d questions added to active game!') % num)
         else:
-            irc.reply("This... is... Jeopardy!", prefixNick=False)
+            if not self.registryValue('autoRestart', channel):
+                irc.reply("This... is... Jeopardy!", prefixNick=False)
             self.games[channel] = self.Game(irc, channel, num, hints, shuffle, results, self)
         irc.noReply()
     start = wrap(start, ['channel', getopts({'num':'int',  'no-hints':'', 'shuffle':'', 'random-category':''}), additional('text')])

@@ -103,15 +103,15 @@ conf.registerGlobalValue(Jeopardy, 'questionFileSeparator',
         answers, and points in your question file.""")))
 
 conf.registerChannelValue(Jeopardy, 'randomize',
-        registry.Boolean('True', _("""This will determine whether or not the
+        registry.Boolean(True, _("""This will determine whether or not the
         bot will randomize the questions.""")))
 
 conf.registerChannelValue(Jeopardy, 'requireOps',
-        registry.Boolean('False', _("""This will determine whether or not the
+        registry.Boolean(False, _("""This will determine whether or not the
         user must be a channel operator to start/stop the game.""")))
 
 conf.registerChannelValue(Jeopardy, 'enabled',
-        registry.Boolean('True', _("""This will determine whether or not the
+        registry.Boolean(True, _("""This will determine whether or not the
         game is enabled for a given channel""")))
 
 conf.registerChannelValue(Jeopardy, 'defaultPointValue',
@@ -119,7 +119,7 @@ conf.registerChannelValue(Jeopardy, 'defaultPointValue',
         no point value is given""")))
 
 conf.registerChannelValue(Jeopardy, 'autoRestart',
-        registry.Boolean('False', _("""Start a new round of random questions after
+        registry.Boolean(False, _("""Start a new round of random questions after
         the current round has ended.""")))
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
