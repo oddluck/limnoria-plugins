@@ -565,7 +565,7 @@ class Jeopardy(callbacks.Plugin):
             top = optlist.get('top')
         else:
             top = 5
-        scores = {}
+        scores = requests.structures.CaseInsensitiveDict()
         if nick:
             f = open(self.scorefile, 'r')
             line = f.readline()
