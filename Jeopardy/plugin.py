@@ -391,11 +391,11 @@ class Jeopardy(callbacks.Plugin):
                 channel = msg.args[0]
                 correct = False
                 for ans in self.a:
-                    ans = " ".join(ans.strip()).lower()
-                    guess = " ".join(msg.args[1]).strip().lower()
+                    ans = " ".join(ans.split()).strip().lower()
+                    guess = " ".join(msg.args[1].split()).strip().lower()
                     if guess == ans:
                         correct = True
-                    elif not correct and len (ans) > 2:
+                    elif not correct and len(ans) > 2:
                         answer = re.sub('[^a-zA-Z0-9 ]+', '', ans)
                         answer = re.sub('^a |^an |^the ', '', answer).replace(' ', '')
                         guess = re.sub('[^a-zA-Z0-9 ]+', '', guess)
