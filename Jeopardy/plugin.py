@@ -125,7 +125,8 @@ class Jeopardy(callbacks.Plugin):
             self.show = {}
             self.revealed = {}
             self.shuffled = shuffle
-            self.answered = False
+            self.correct = False
+            self.answered = 0
             stopped[channel] = False
             if self.questionfile != 'jservice.io':
                 f = open(self.questionfile, 'r')
@@ -238,7 +239,7 @@ class Jeopardy(callbacks.Plugin):
 
         def newquestion(self, channel):
             inactiveShutoff = self.registryValue('inactiveShutoff', channel)
-            if self.num == 0:
+            if self.num == 0 or self.answered == self.total or self.numAsked == self.total:
                 self.stop(channel)
                 return
             elif self.unanswered > inactiveShutoff and inactiveShutoff > 0:
@@ -284,7 +285,7 @@ class Jeopardy(callbacks.Plugin):
                         question[channel] = "\x03{0}{1}".format(color, self.q)
                     self.reply(channel, question[channel])
                     ans = self.a[0]
-                    self.answered = False
+                    self.correct = False
                     if "(" in self.a[0]:
                         a1, a2, a3 = re.match("(.*)\((.*)\)(.*)", self.a[0]).groups()
                         self.a.append(a1 + a3)
@@ -353,7 +354,8 @@ class Jeopardy(callbacks.Plugin):
             if self.hints >= self.numHints:
                 self.reply(channel, 'No one got the answer! It was: {0}'.format(self.a[0]))
                 self.unanswered += 1
-                self.answered = True
+                self.corect = True
+                self.answered += 1
                 self.newquestion(channel)
             else:
                 self.hint(channel)
@@ -394,7 +396,7 @@ class Jeopardy(callbacks.Plugin):
 
 
         def answer(self, msg):
-            if not self.answered:
+            if not self.correct:
                 channel = msg.args[0]
                 correct = False
                 for ans in self.a:
@@ -427,7 +429,8 @@ class Jeopardy(callbacks.Plugin):
                     self.roundscores[name] += self.p
                     self.unanswered = 0
                     self.reply(channel, "{0} got it! The full answer was: {1}. Points: {2} | Round Score: {3} | Total: {4}".format(msg.nick, self.a[0], self.p, self.roundscores[name], self.scores[name]))
-                    self.answered = True
+                    self.correct = True
+                    self.answered += 1
                     try:
                         schedule.removeEvent('next_%s' % channel)
                         schedule.removeEvent('new_%s' % channel)
