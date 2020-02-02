@@ -118,4 +118,8 @@ conf.registerChannelValue(Jeopardy, 'defaultPointValue',
         registry.PositiveInteger(500, _("""The default point value for questions if
         no point value is given""")))
 
+conf.registerChannelValue(Jeopardy, 'autoRestart',
+        registry.Boolean('False', _("""Start a new round of random questions after
+        the current round has ended.""")))
+
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:

@@ -63,6 +63,8 @@ class Jeopardy(callbacks.Plugin):
         self.__parent.__init__(irc)
         self.games = requests.structures.CaseInsensitiveDict()
         self.scores = requests.structures.CaseInsensitiveDict()
+        global stopped
+        stopped = requests.structures.CaseInsensitiveDict()
         questionfile = self.registryValue('questionFile')
         self.noHints = False
         global jserviceUrl
@@ -123,6 +125,7 @@ class Jeopardy(callbacks.Plugin):
             self.revealed = {}
             self.shuffled = shuffle
             self.answered = False
+            stopped[channel] = False
             if self.questionfile != 'jservice.io':
                 f = open(self.questionfile, 'r')
                 line = f.readline()
@@ -241,7 +244,7 @@ class Jeopardy(callbacks.Plugin):
             elif len(self.questions) == 0:
                 self.reply(channel, 'Oops! I ran out of questions!')
                 self.active = False
-            if not self.active:
+            if not self.active or stopped[channel]:
                 self.stop(channel)
                 return
             self.id = None
@@ -301,7 +304,6 @@ class Jeopardy(callbacks.Plugin):
                 schedule.addEvent(next_question, delayTime, 'new_%s' % channel)
 
         def stop(self, channel):
-            self.reply(channel, 'Jeopardy! stopping.')
             self.active = False
             try:
                 schedule.removeEvent('next_%s' % channel)
@@ -324,10 +326,16 @@ class Jeopardy(callbacks.Plugin):
                     item = sorted[i]
                     s = _('%s (%s: %s)') % (s, str(item[0].split(':')[1]), item[1])
                 self.reply(channel, s)
-            try:
-                del self.games[dynamic.channel]
-            except KeyError:
-                return
+            if self.registryValue('autoRestart', channel) and not stopped[channel]:
+                num = self.registryValue('defaultRoundLength', channel)
+                hints = self.registryValue('numHints', channel)
+                self.reply(channel, "This... is... Jeopardy!")
+                self.__init__(self.irc, channel, num, hints, False, 'random', self)
+            else:
+                try:
+                    del self.games[channel]
+                except KeyError:
+                    return
 
 
         def timedEvent(self, channel):
@@ -512,6 +520,7 @@ class Jeopardy(callbacks.Plugin):
         irc.noReply()
     start = wrap(start, ['channel', getopts({'num':'int',  'no-hints':'', 'shuffle':'', 'random-category':''}), additional('text')])
 
+
     @internationalizeDocstring
     def stop(self, irc, msg, args, channel):
         """[<channel>]
@@ -521,24 +530,12 @@ class Jeopardy(callbacks.Plugin):
             channel = msg.args[0]
         if self.registryValue('requireOps', channel) and msg.nick not in irc.state.channels[channel].ops and not ircdb.checkCapability(msg.prefix, 'admin'):
             return
-        try:
-            schedule.removeEvent('new_%s' % channel)
-        except KeyError:
-            pass
-        try:
-            schedule.removeEvent('next_%s' % channel)
-        except:
-            pass
+        stopped[channel] = True
         try:
             self.games[channel].stop(channel)
-            del self.games[channel]
             irc.reply(_('Jeopardy! stopped.'))
         except:
-            try:
-                del self.games[channel]
-                return
-            except:
-                return
+            return
     stop = wrap(stop, ['channel'])
 
 
@@ -607,6 +604,7 @@ class Jeopardy(callbacks.Plugin):
             else:
                 return
     stats = wrap(stats, ['channel', getopts({'top':'int'}), additional('text')])
+
 
     def question(self, irc, msg, args):
         """
