@@ -248,7 +248,6 @@ class Jeopardy(callbacks.Plugin):
                 return
             elif len(self.questions) == 0:
                 self.reply(channel, 'Oops! I ran out of questions!')
-                stopped[channel] = True
                 self.stop(channel)
                 return
             self.id = None
