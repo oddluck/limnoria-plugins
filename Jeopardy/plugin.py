@@ -317,7 +317,11 @@ class Jeopardy(callbacks.Plugin):
                 schedule.removeEvent('new_%s' % channel)
             except KeyError:
                 pass
-            if not self.registryValue('autoRestart', channel):
+            if self.registryValue('autoRestart', channel) and not stopped[channel]:
+                num = self.registryValue('defaultRoundLength', channel)
+                hints = self.registryValue('numHints', channel)
+                self.__init__(self.irc, channel, num, hints, False, 'random', self)
+            else:
                 scores = iter(self.roundscores.items())
                 sorted = []
                 for i in range(0, len(self.roundscores)):
@@ -338,11 +342,6 @@ class Jeopardy(callbacks.Plugin):
                         del self.games[channel]
                     except KeyError:
                         return
-            elif self.registryValue('autoRestart', channel) and not stopped[channel]:
-                num = self.registryValue('defaultRoundLength', channel)
-                hints = self.registryValue('numHints', channel)
-                self.__init__(self.irc, channel, num, hints, False, 'random', self)
-            else:
                 try:
                     del self.games[channel]
                 except KeyError:
@@ -397,28 +396,27 @@ class Jeopardy(callbacks.Plugin):
         def answer(self, msg):
             if not self.correct:
                 channel = msg.args[0]
-                correct = False
                 for ans in self.a:
                     ans = " ".join(ans.split()).strip().lower()
                     guess = " ".join(msg.args[1].split()).strip().lower()
                     if guess == ans:
-                        correct = True
-                    elif not correct and len(ans) > 2:
+                        self.correct = True
+                    elif not self.correct and len(ans) > 2:
                         answer = re.sub('[^a-zA-Z0-9 ]+', '', ans)
                         answer = re.sub('^a |^an |^the ', '', answer).replace(' ', '')
                         guess = re.sub('[^a-zA-Z0-9 ]+', '', guess)
                         guess = re.sub('^a |^an |^the ', '', guess).replace(' ', '')
                     else:
                         answer = ans
-                    if not correct and guess == answer:
-                        correct = True
-                    elif not correct:
+                    if not self.correct and guess == answer:
+                        self.correct = True
+                    elif not self.correct:
                         dist = jellyfish.jaro_winkler(guess, answer)
                         flexibility = self.registryValue('flexibility', channel)
                         #self.reply(channel, "guess: {0}, answer: {1}, length: {2}, distance: {3}, flexibility: {4}".format(guess, answer, len(answer), dist, flexibility))
                         if dist >= flexibility:
-                            correct = True
-                if correct:
+                            self.correct = True
+                if self.correct:
                     name = "{0}:{1}".format(channel, msg.nick)
                     if not name in self.scores:
                         self.scores[name] = 0
