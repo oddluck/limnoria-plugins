@@ -97,7 +97,7 @@ conf.registerChannelValue(ShrinkUrl, 'serviceRotation',
     ShrinkCycle([], _("""If set to a non-empty value, specifies the list of
     services to rotate through for the shrinkSnarfer and outFilter.""")))
 conf.registerChannelValue(ShrinkUrl, 'fetchSpiffyTitle',
-    registry.Boolean(False, _("""Determines whether te bot will fetch URL
-    titles with SpiffyTitles""")))
+    registry.Boolean(False, _("""Determines whether the bot will fetch URL
+    titles with the SpiffyTitles plugin.""")))
 
 # vim:set shiftwidth=4 softtabstop=4 expandtab textwidth=79:
