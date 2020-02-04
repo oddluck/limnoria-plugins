@@ -37,8 +37,10 @@ import supybot.world as world
 
 __version__ = "%%VERSION%%"
 
-__author__ = supybot.authors.jemfinch
-__maintainer__ = supybot.authors.limnoria_core
+__author__ = getattr(supybot.authors, 'jemfinch',
+                     supybot.Author('jemfinch', '', ''))
+__maintainer__ = getattr(supybot.authors, 'oddluck',
+                         supybot.Author('oddluck', 'oddluck', 'oddluck@riseup.net'))
 
 # This is a dictionary mapping supybot.Author instances to lists of
 # contributions.
