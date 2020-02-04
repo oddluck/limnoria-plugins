@@ -1523,7 +1523,7 @@ class SpiffyTitles(callbacks.Plugin):
         """
         Retrieves value of <title> tag from HTML
         """
-        soup = BeautifulSoup(html, "lxml")
+        soup = BeautifulSoup(html)
 
         if soup is not None:
             """
