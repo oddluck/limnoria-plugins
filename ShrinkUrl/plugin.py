@@ -143,15 +143,6 @@ class ShrinkUrl(callbacks.PluginRegexp):
             return
         if self.registryValue('shrinkSnarfer', channel, network):
             url = match.group(0)
-            if self.registryValue("fetchSpiffyTitle", channel):
-                spiffy = irc.getCallback("SpiffyTitles")
-                if spiffy:
-                    try:
-                        result = spiffy.get_title_by_url(url, channel)
-                        if result:
-                            irc.reply(result, prefixNick=False)
-                    except:
-                        log.exception("ShrinkUrl/SpiffyTitles: failed to get title for url %s", url)
             r = self.registryValue('nonSnarfingRegexp', channel, network)
             if r and r.search(url) is not None:
                 self.log.debug('Matched nonSnarfingRegexp: %u', url)
@@ -182,6 +173,15 @@ class ShrinkUrl(callbacks.PluginRegexp):
                 m = irc.reply(s, prefixNick=False)
                 if m is not None:
                     m.tag('shrunken')
+                if self.registryValue("fetchSpiffyTitle", channel):
+                    spiffy = irc.getCallback("SpiffyTitles")
+                    if spiffy:
+                        try:
+                            result = spiffy.get_title_by_url(url, channel)
+                            if result:
+                                irc.reply(result, prefixNick=False)
+                        except:
+                            log.exception("ShrinkUrl/SpiffyTitles: failed to get title for url %s", url)
     shrinkSnarfer = urlSnarfer(shrinkSnarfer)
     shrinkSnarfer.__doc__ = utils.web._httpUrlRe
 
