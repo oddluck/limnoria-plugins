@@ -331,17 +331,17 @@ class Jeopardy(callbacks.Plugin):
                 max = 3
                 if len(sorted) < max:
                     max = len(sorted)
-                    s = _('Top finishers:')
-                    if max > 0:
-                        for i in range(0, max):
-                            item = sorted[i]
-                            s = _('%s (%s: %s)') % (s, str(item[0].split(':')[1]), item[1])
-                        self.reply(channel, s)
-                    stopped[channel] = True
-                    try:
-                        del self.games[channel]
-                    except KeyError:
-                        return
+                s = _('Top finishers:')
+                if max > 0:
+                    for i in range(0, max):
+                        item = sorted[i]
+                        s = _('%s (%s: %s)') % (s, str(item[0].split(':')[1]), item[1])
+                    self.reply(channel, s)
+                stopped[channel] = True
+                try:
+                    del self.games[channel]
+                except KeyError:
+                    return
 
 
         def timedEvent(self, channel):
