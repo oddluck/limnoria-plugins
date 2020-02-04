@@ -1602,6 +1602,8 @@ class SpiffyTitles(callbacks.Plugin):
 
             self.get_source_by_url(url, retries + 1)
         except requests.exceptions.MissingSchema as e:
+            if dynamic.irc.nick.lower() == dynamic.msg.nick.lower():
+                return
             url_wschema = "http://%s" % (url)
             log.error("SpiffyTitles missing schema. Retrying with %s" % (url_wschema))
             info = urlparse(url_wschema)
