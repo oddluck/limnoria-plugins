@@ -147,7 +147,7 @@ class ShrinkUrl(callbacks.PluginRegexp):
                 spiffy = irc.getCallback("SpiffyTitles")
                 if spiffy:
                     try:
-                        result = SpiffyTitles.get_title_by_url(url, channel)
+                        result = spiffy.get_title_by_url(url, channel)
                         if result:
                             irc.reply(result, prefixNick=False)
                     except:
