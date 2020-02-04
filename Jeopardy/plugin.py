@@ -342,10 +342,6 @@ class Jeopardy(callbacks.Plugin):
                         del self.games[channel]
                     except KeyError:
                         return
-                try:
-                    del self.games[channel]
-                except KeyError:
-                    return
 
 
         def timedEvent(self, channel):
