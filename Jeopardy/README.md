@@ -13,9 +13,9 @@ To run a local instance (190K+ questions, can add more questions as episodes con
 ## Commands
 
 ```
-start [--num <int>] [--shuffle] [--no-hints] [category1, category2, etc,]
+start [--num <int>] [--shuffle] [--no-hints] [--random-category] [category1, category2, etc,]
 ```
-Calling the `start` command by itself will yield a round of random questions. Adding category names after the start command will search for specific categories by name. Calling start while a game is running will add additional questions to the queue. Use `--shuffle` to randomize question order. Use `--no-hints` to disable hints for the round.
+Calling the `start` command by itself will yield a round of random questions. Adding category names after the start command will search for specific categories by name. The `--random-category` option will return questions from a randomly selected category. Calling `start` while a game is running will add additional questions to the queue. Use `--shuffle` to randomize question order. Use `--no-hints` to disable hints for the round.
 
 ```
 categories
