@@ -272,7 +272,7 @@ class Jeopardy(callbacks.Plugin):
                 return
             self.id = None
             self.hints = 0
-            self.revealed = 0
+            self.shown = 0
             self.num -= 1
             self.numAsked += 1
             q = self.questions.pop(len(self.questions)-1).split('*')
@@ -399,8 +399,7 @@ class Jeopardy(callbacks.Plugin):
                 self.timedEvent()
             timeout = self.registryValue('timeout', self.channel)
             eventTime = time.time() + timeout / (self.numHints + 1)
-            if self.active:
-                schedule.addEvent(event, eventTime, 'next_%s' % self.channel)
+            schedule.addEvent(event, eventTime, 'next_%s' % self.channel)
 
 
         def answer(self, msg):
@@ -691,10 +690,10 @@ class Jeopardy(callbacks.Plugin):
                 blankChar = self.registryValue('blankChar', channel)
                 blank = re.sub('\w', blankChar, self.games[channel].a[0])
                 irc.reply("HINT: {0}".format(blank), prefixNick=False)
-                if self.games[channel].revealed == 0:
+                if self.games[channel].shown == 0:
                     reduction = self.registryValue('hintReduction', channel)
                     self.games[channel].p -= int(self.games[channel].p * reduction)
-                    self.games[channel].revealed +=1
+                    self.games[channel].shown +=1
             else:
                 return
         else:
