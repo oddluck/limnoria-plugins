@@ -163,7 +163,7 @@ class Jeopardy(callbacks.Plugin):
                                 if len(clue) > 1 and airdate and answer and category and not invalid and id not in self.history:
                                     q = "{0}*({1}) [${2}] \x02{3}: {4}\x0F*{5}*{6}".format(id, airdate, points, category, clue, answer, points)
                                     q = re.sub('<[^<]+?>', '', fix_text(q, normalization='NFKC')).encode('utf-8').decode('unicode_escape')
-                                    q = re.sub('([,;:.!?])(\w)', '\g<1> \g<2>', q)
+                                    q = re.sub('([,;:.!?])(\w)[^.]', '\g<1> \g<2>', q)
                                     q = " ".join(q.split())
                                     self.questions.append(q)
                                     n += 1
@@ -171,7 +171,7 @@ class Jeopardy(callbacks.Plugin):
                                 if len(clue) > 1 and airdate and answer and category and not invalid:
                                     q = "{0}*({1}) [${2}] \x02{3}: {4}\x0F*{5}*{6}".format(id, airdate, points, category, clue, answer, points)
                                     q = re.sub('<[^<]+?>', '', fix_text(q, normalization='NFKC')).encode('utf-8').decode('unicode_escape')
-                                    q = re.sub('([,;:.!?])(\w)', '\g<1> \g<2>', q)
+                                    q = re.sub('([,;:.!?])(\w)[^.]', '\g<1> \g<2>', q)
                                     q = " ".join(q.split())
                                     self.questions.append(q)
                                     n += 1
@@ -228,7 +228,7 @@ class Jeopardy(callbacks.Plugin):
                                     if len(clue) > 1 and airdate and answer and category and not invalid and id not in self.history:
                                         q = "{0}*({1}) [${2}] \x02{3}: {4}\x0F*{5}*{6}".format(id, airdate, points, category, clue, answer, points)
                                         q = re.sub('<[^<]+?>', '', fix_text(q, normalization='NFKC')).encode('utf-8').decode('unicode_escape')
-                                        q = re.sub('([,;:.!?])(\w)', '\g<1> \g<2>', q)
+                                        q = re.sub('([,;:.!?])(\w)[^.]', '\g<1> \g<2>', q)
                                         q = " ".join(q.split())
                                         self.questions.append(q)
                                         n += 1
@@ -237,7 +237,7 @@ class Jeopardy(callbacks.Plugin):
                                     if len(clue) > 1 and airdate and answer and category and not invalid:
                                         q = "{0}*({1}) [${2}] \x02{3}: {4}\x0F*{5}*{6}".format(id, airdate, points, category, clue, answer, points)
                                         q = re.sub('<[^<]+?>', '', fix_text(q, normalization='NFKC')).encode('utf-8').decode('unicode_escape')
-                                        q = re.sub('([,;:.!?])(\w)', '\g<1> \g<2>', q)
+                                        q = re.sub('([,;:.!?])(\w)[^.]', '\g<1> \g<2>', q)
                                         q = " ".join(q.split())
                                         self.questions.append(q)
                                         n += 1
