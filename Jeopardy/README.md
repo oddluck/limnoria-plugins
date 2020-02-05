@@ -37,6 +37,16 @@ hint
 ```
 Repeat the current hint. If game set for no hints, show blanked out answer.
 
+```
+skip
+```
+Skip the current question.
+
+```
+report
+```
+Report the current question as invalid e.g. audio/video based clues.
+
 
 ## Config
 
