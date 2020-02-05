@@ -1,4 +1,7 @@
-Come play in ##Jeopardy on Freenode. irc://chat.freenode.net/##Jeopardy
+**Come play in ##Jeopardy on Freenode.**
+
+irc://chat.freenode.net/##jeopardy
+
 
 ## This... is... Jeopardy!
 
@@ -46,3 +49,8 @@ List the config variables for the game.
 config help plugins.jeopardy.<variable_name>
 ```
 Get information about what game options the variable controls.
+
+
+## Miscellaneous
+
+Score and history files can be found in <bot_directory>/data/jeopardy/
