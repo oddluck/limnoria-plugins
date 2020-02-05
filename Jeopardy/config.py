@@ -76,7 +76,8 @@ conf.registerChannelValue(Jeopardy, 'flexibility',
         checker. Uses jaro-winkler distance, 1.0 is identical""")))
 
 conf.registerChannelValue(Jeopardy, 'color',
-        registry.PositiveInteger(10, _("""The mIRC color to use for questions""")))
+        registry.PositiveInteger(10, _("""The IRC color to use for questions. Valid color
+        values are 0-98. Set 99 to disable""")))
 
 conf.registerChannelValue(Jeopardy, 'inactiveShutoff',
         registry.Integer(5, _("""The number of questions that can go
