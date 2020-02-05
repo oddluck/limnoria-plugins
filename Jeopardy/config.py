@@ -82,14 +82,6 @@ conf.registerChannelValue(Jeopardy, 'inactiveShutoff',
         registry.Integer(5, _("""The number of questions that can go
         unanswered before the game stops automatically.""")))
 
-conf.registerGlobalValue(Jeopardy, 'scoreFile',
-        registry.String('data/JeopardyScores.txt', _("""The path to the scores file.
-        If it doesn't exist, it will be created.""")))
-
-conf.registerGlobalValue(Jeopardy, 'questionFile',
-        registry.String('jservice.io', _("""Use jservice.io for Jeopardy! Or, the
-        path to the questions file. If it doesn't exist, it will be created.""")))
-
 conf.registerGlobalValue(Jeopardy, 'jserviceUrl',
         registry.String('http://jservice.io', _("""Set an alternate URL where
         jservice can be accessed at, for example a locally run jservice instance.""")))
@@ -97,10 +89,6 @@ conf.registerGlobalValue(Jeopardy, 'jserviceUrl',
 conf.registerChannelValue(Jeopardy, 'defaultRoundLength',
         registry.PositiveInteger(10, _("""The default number of questions to
         be asked in a round.""")))
-
-conf.registerGlobalValue(Jeopardy, 'questionFileSeparator',
-        registry.String('*', _("""The separator used between the questions,
-        answers, and points in your question file.""")))
 
 conf.registerChannelValue(Jeopardy, 'randomize',
         registry.Boolean(True, _("""This will determine whether or not the
@@ -122,4 +110,6 @@ conf.registerChannelValue(Jeopardy, 'autoRestart',
         registry.Boolean(False, _("""Start a new round of random questions after
         the current round has ended.""")))
 
-# vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
+conf.registerChannelValue(Jeopardy, 'keepHistory',
+        registry.Boolean(True, _("""Keep a history of previously asked questions per
+        channel and don't repeat them.""")))
