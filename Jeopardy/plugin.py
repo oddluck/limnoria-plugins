@@ -112,20 +112,22 @@ class Jeopardy(callbacks.Plugin):
                 if not os.path.exists(self.historyFile):
                     f = open(self.historyFile, 'w')
                     f.close()
-                f = open(self.historyFile, 'r')
-                lines = f.readlines()
-                for line in lines:
-                    self.history.append(int(line))
-                f.close()
+                if not self.history:
+                    f = open(self.historyFile, 'r')
+                    lines = f.readlines()
+                    for line in lines:
+                        self.history.append(int(line))
+                    f.close()
             if not os.path.exists(self.scoreFile):
                 f = open(self.scoreFile, 'w')
                 f.close()
-            f = open(self.scoreFile, 'r')
-            lines = f.readlines()
-            for line in lines:
-                (name, score) = line.split(' ')
-                self.scores[name] = int(score)
-            f.close()
+            if not self.scores:
+                f = open(self.scoreFile, 'r')
+                lines = f.readlines()
+                for line in lines:
+                    (name, score) = line.split(' ')
+                    self.scores[name] = int(score)
+                f.close()
 
             cluecount = self.num
             if self.categories == 'random':
@@ -585,44 +587,66 @@ class Jeopardy(callbacks.Plugin):
             top = optlist.get('top')
         else:
             top = 5
-        scores = requests.structures.CaseInsensitiveDict()
-        scoreFile = "{0}/jeopardy/scores_{1}.txt".format(conf.supybot.directories.data, channel)
-        if not os.path.exists(scoreFile):
-            return
-        if nick:
-            f = open(scoreFile, 'r')
-            line = f.readline()
-            while line:
-                (name, score) = line.split(' ')
-                scores[name] = int(score.strip('\r\n'))
-                line = f.readline()
-            f.close()
-            try:
-                total = scores[nick]
-                irc.reply("Total score for {0} in {1}: {2}".format(nick, channel, total), prefixNick=False)
-            except KeyError:
-                irc.reply("No scores found for {0} in {1}".format(nick, channel), prefixNick=False)
-        else:
-            f = open(scoreFile, 'r')
-            line = f.readline()
-            while line:
-                (name, score) = line.split(' ')
-                scores[name] = int(score.strip('\r\n'))
-                line = f.readline()
-            f.close()
-            sorted_x = []
-            sorted_x = sorted(scores.items(), key=lambda kv: kv[1], reverse=True)
-            if len(sorted_x) < top:
-                top = len(sorted_x)
-            if top > 0:
-                totals = ""
-                for i in range(0, top):
-                    item = sorted_x[i]
-                    totals += "#{0} ({1}: {2}), ".format(i+1, item[0], item[1])
-                irc.reply("Top {0} Jeopardy! players for {1}:".format(top, channel), prefixNick=False)
-                irc.reply(totals.strip(', '), prefixNick=False)
+        try:
+            if nick:
+                try:
+                    total = self.games[channel].scores[nick]
+                    irc.reply("Total score for {0} in {1}: {2}".format(nick, channel, total), prefixNick=False)
+                except KeyError:
+                    irc.reply("No scores found for {0} in {1}".format(nick, channel), prefixNick=False)
             else:
+                sorted_x = []
+                sorted_x = sorted(self.games[channel].scores.items(), key=lambda kv: kv[1], reverse=True)
+                if len(sorted_x) < top:
+                    top = len(sorted_x)
+                if top > 0:
+                    totals = ""
+                    for i in range(0, top):
+                        item = sorted_x[i]
+                        totals += "#{0} ({1}: {2}), ".format(i+1, item[0], item[1])
+                    irc.reply("Top {0} Jeopardy! players for {1}:".format(top, channel), prefixNick=False)
+                    irc.reply(totals.strip(', '), prefixNick=False)
+                else:
+                    return
+        except KeyError:
+            scores = requests.structures.CaseInsensitiveDict()
+            scoreFile = "{0}/jeopardy/scores_{1}.txt".format(conf.supybot.directories.data, channel)
+            if not os.path.exists(scoreFile):
                 return
+            if nick:
+                f = open(scoreFile, 'r')
+                line = f.readline()
+                while line:
+                    (name, score) = line.split(' ')
+                    scores[name] = int(score.strip('\r\n'))
+                    line = f.readline()
+                f.close()
+                try:
+                    total = scores[nick]
+                    irc.reply("Total score for {0} in {1}: {2}".format(nick, channel, total), prefixNick=False)
+                except KeyError:
+                    irc.reply("No scores found for {0} in {1}".format(nick, channel), prefixNick=False)
+            else:
+                f = open(scoreFile, 'r')
+                line = f.readline()
+                while line:
+                    (name, score) = line.split(' ')
+                    scores[name] = int(score.strip('\r\n'))
+                    line = f.readline()
+                f.close()
+                sorted_x = []
+                sorted_x = sorted(scores.items(), key=lambda kv: kv[1], reverse=True)
+                if len(sorted_x) < top:
+                    top = len(sorted_x)
+                if top > 0:
+                    totals = ""
+                    for i in range(0, top):
+                        item = sorted_x[i]
+                        totals += "#{0} ({1}: {2}), ".format(i+1, item[0], item[1])
+                    irc.reply("Top {0} Jeopardy! players for {1}:".format(top, channel), prefixNick=False)
+                    irc.reply(totals.strip(', '), prefixNick=False)
+                else:
+                    return
     stats = wrap(stats, ['channel', getopts({'top':'int'}), additional('text')])
 
 
