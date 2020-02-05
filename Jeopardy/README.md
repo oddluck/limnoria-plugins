@@ -54,3 +54,5 @@ Get information about what game options the variable controls.
 ## Miscellaneous
 
 Score and history files can be found in <bot_directory>/data/jeopardy/
+
+Forked and significantly modified version of [this plugin](https://github.com/ProgVal/Supybot-plugins/tree/master/Trivia).
