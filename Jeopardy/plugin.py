@@ -89,6 +89,7 @@ class Jeopardy(callbacks.Plugin):
             self.scores = requests.structures.CaseInsensitiveDict()
             self.jserviceUrl = plugin.jserviceUrl
             self.points = self.registryValue('defaultPointValue')
+            self.blankChar = self.registryValue('blankChar', self.channel)
             self.total = num
             self.questions = []
             self.roundscores = requests.structures.CaseInsensitiveDict()
@@ -293,8 +294,7 @@ class Jeopardy(callbacks.Plugin):
                     self.a.append(a1 + a3)
                     self.a.append(a2)
                 if self.numHints > 0:
-                    blankChar = self.registryValue('blankChar', self.channel)
-                    blank = re.sub('\w', blankChar, ans)
+                    blank = re.sub('\w', self.blankChar, ans)
                     self.currentHint = "HINT: {0}".format(blank)
                     self.reply(self.currentHint)
                 if self.id:
@@ -375,8 +375,7 @@ class Jeopardy(callbacks.Plugin):
             hintPercentage = self.registryValue('hintPercentage', self.channel)
             reduction = self.registryValue('hintReduction', self.channel)
             divider = round(len(re.sub('[^a-zA-Z0-9]+', '', ans)) * hintPercentage)
-            blankChar = self.registryValue('blankChar', self.channel)
-            blank = re.sub('\w', blankChar, ans)
+            blank = re.sub('\w', self.blankChar, ans)
             if not self.show[self.id]:
                 self.show[self.id] = list(blank)
             if not self.revealed[self.id]:
@@ -385,7 +384,7 @@ class Jeopardy(callbacks.Plugin):
             while i < divider and len(self.revealed[self.id]) > 1:
                 try:
                     rand = self.revealed[self.id].pop(random.randint(0,len(self.revealed[self.id])) - 1)
-                    if self.show[self.id][rand] == blankChar:
+                    if self.show[self.id][rand] == self.blankChar:
                         self.show[self.id][rand] = list(ans)[rand]
                         i += 1
                 except:
@@ -685,8 +684,7 @@ class Jeopardy(callbacks.Plugin):
             if self.games[channel].active and self.games[channel].numHints > 0:
                 irc.reply("Hint: {0}".format(self.games[channel].currentHint), prefixNick=False)
             elif self.games[channel].active and self.games[channel].numHints == 0:
-                blankChar = self.registryValue('blankChar', channel)
-                blank = re.sub('\w', blankChar, self.games[channel].a[0])
+                blank = re.sub('\w', self.games[channel].blankChar, self.games[channel].a[0])
                 irc.reply("HINT: {0}".format(blank), prefixNick=False)
                 if self.games[channel].shown == 0:
                     reduction = self.registryValue('hintReduction', channel)
