@@ -35,7 +35,7 @@ Repeat the currently active question.
 ```
 hint
 ```
-Repeat the current hint.
+Repeat the current hint. If game set for no hints, show blanked out answer.
 
 
 ## Config
