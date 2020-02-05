@@ -107,7 +107,6 @@ class Jeopardy(callbacks.Plugin):
                 self.color = ''
             else:
                 self.color = "\x03{0}".format(self.color)
-
             self.directory = conf.supybot.directories.data.dirize("jeopardy/")
             self.historyFile = "{0}/history_{1}.txt".format(self.directory, channel)
             self.scoreFile = "{0}/scores_{1}.txt".format(self.directory, channel)
@@ -133,7 +132,6 @@ class Jeopardy(callbacks.Plugin):
                     (name, score) = line.split(' ')
                     self.scores[name] = int(score)
                 f.close()
-
             cluecount = self.num
             if self.categories == 'random':
                 n = 0
@@ -281,7 +279,7 @@ class Jeopardy(callbacks.Plugin):
             self.a = [q[2]]
             self.p = int(q[3])
             def next_question():
-                if not self.active: 
+                if not self.active:
                     return
                 if not self.registryValue('autoRestart', self.channel):
                     self.question = "{0}#{1} of {2}: {3}".format(self.color, self.numAsked, self.total, self.q)
@@ -693,7 +691,7 @@ class Jeopardy(callbacks.Plugin):
                 if self.games[channel].shown == 0:
                     reduction = self.registryValue('hintReduction', channel)
                     self.games[channel].p -= int(self.games[channel].p * reduction)
-                    self.games[channel].shown +=1
+                    self.games[channel].shown += 1
             else:
                 return
         else:
