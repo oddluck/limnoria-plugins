@@ -259,6 +259,7 @@ class Jeopardy(callbacks.Plugin):
                 return
             self.id = None
             self.hints = 0
+            self.revealed = 0
             self.num -= 1
             self.numAsked += 1
             q = self.questions.pop(len(self.questions)-1).split('*')
@@ -544,11 +545,18 @@ class Jeopardy(callbacks.Plugin):
             channel = msg.channel
         if self.registryValue('requireOps', channel) and msg.nick not in irc.state.channels[channel].ops and not ircdb.checkCapability(msg.prefix, 'admin'):
             return
-        try:
-            self.games[channel].active = False
-            self.games[channel].stop()
-            irc.reply(_('Jeopardy! stopped.'))
-        except:
+        if self.games[channel]:
+            if self.games[channel].active:
+                if self.games[channel].correct:
+                    irc.reply("Jeopardy! stopped.")
+                else:
+                    irc.reply("Jeopardy! stopped. (Answer: {0})".format(self.games[channel].a[0]))
+            try:
+                self.games[channel].active = False
+                self.games[channel].stop()
+            except:
+                return
+        else:
             return
     stop = wrap(stop, ['channel'])
 
@@ -625,7 +633,7 @@ class Jeopardy(callbacks.Plugin):
         channel = msg.channel
         if channel in self.games:
             if self.games[channel].active:
-                irc.reply(self.games[channel].question)
+                irc.reply(self.games[channel].question, prefixNick=False)
             else:
                 return
         else:
@@ -635,17 +643,79 @@ class Jeopardy(callbacks.Plugin):
 
     def hint(self, irc, msg, args):
         """
-        Repeat the latest hint.
+        Repeat the latest hint. If game set for no hints, show the blanked out answer.
         """
         channel = msg.channel
         if channel in self.games:
             if self.games[channel].active and self.games[channel].numHints > 0:
-                irc.reply(self.games[channel].currentHint)
+                irc.reply("Hint: {0}".format(self.games[channel].currentHint), prefixNick=False)
+            elif self.games[channel].active and self.games[channel].numHints == 0:
+                blankChar = self.registryValue('blankChar', channel)
+                blank = re.sub('\w', blankChar, self.games[channel].a[0])
+                irc.reply("HINT: {0}".format(blank), prefixNick=False)
+                if self.games[channel].revealed == 0:
+                    reduction = self.registryValue('hintReduction', channel)
+                    self.games[channel].p -= int(self.games[channel].p * reduction)
+                    self.games[channel].revealed +=1
             else:
                 return
         else:
             return
     hint = wrap(hint)
+
+
+    def report(self, irc, msg, args):
+        """
+        Report the current question as invalid and skip to the next one. Only use this command if a question is unanswerable (e.g. audio/video clues)
+        """
+        channel = msg.channel
+        if self.registryValue('requireOps', channel) and msg.nick not in irc.state.channels[channel].ops and not ircdb.checkCapability(msg.prefix, 'admin'):
+            return
+        if channel in self.games:
+            if self.games[channel].active:
+                r = requests.post('{0}/api/invalid'.format(self.jserviceUrl), data = {'id':self.games[channel].id})
+                if r.status_code == 200:
+                    irc.reply('Question successfully reported. (Answer: {0})'.format(self.games[channel].a[0]), prefixNick=False)
+                else:
+                    irc.reply('Error. Question not reported. (Answer: {0})'.format(self.games[channel].a[0]), prefixNick=False)
+                self.games[channel].unanswered = 0
+                self.games[channel].correct = True
+                self.games[channel].answered += 1
+                self.games[channel].newquestion()
+                try:
+                    schedule.removeEvent('next_%s' % channel)
+                except KeyError:
+                    pass
+            else:
+                return
+        else:
+            return
+    report = wrap(report)
+
+
+    def skip(self, irc, msg, args):
+        """
+        Skip the current question.
+        """
+        channel = msg.channel
+        if self.registryValue('requireOps', channel) and msg.nick not in irc.state.channels[channel].ops and not ircdb.checkCapability(msg.prefix, 'admin'):
+            return
+        if channel in self.games:
+            if self.games[channel].active:
+                irc.reply('Skipping question. (Answer: {0})'.format(self.games[channel].a[0]), prefixNick=False)
+                self.games[channel].unanswered = 0
+                self.games[channel].correct = True
+                self.games[channel].answered += 1
+                self.games[channel].newquestion()
+                try:
+                    schedule.removeEvent('next_%s' % channel)
+                except KeyError:
+                    pass
+            else:
+                return
+        else:
+            return
+    skip = wrap(skip)
 
 
 Class = Jeopardy
