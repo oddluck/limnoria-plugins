@@ -25,6 +25,9 @@ __maintainer__ = getattr(supybot.authors, 'oddluck',
 
 # This is a dictionary mapping supybot.Author instances to lists of
 # contributions.
+if not hasattr(supybot.authors, 'loljoho'):
+    supybot.authors.progval =supybot.Author('loljoho', 'loljo',
+                                            'https://github.com/loljoho')
 __contributors__ = {'oddluck', 'loljoho', 'rootcoma', 'Th0masR0ss', 'brrr'}
 
 # This is a url where the most recent plugin package can be downloaded.
