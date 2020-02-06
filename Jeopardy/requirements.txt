@@ -1,4 +1,4 @@
 requests
 ftfy
 beautifulsoup4
-jellyfish
+textdistance[extras]

@@ -47,7 +47,7 @@ import supybot.conf as conf
 import requests
 from ftfy import fix_text
 from bs4 import BeautifulSoup
-import jellyfish
+import textdistance
 from supybot.i18n import PluginInternationalization, internationalizeDocstring
 _ = PluginInternationalization('Jeopardy')
 
@@ -419,7 +419,7 @@ class Jeopardy(callbacks.Plugin):
                     if not self.correct and guess == answer:
                         self.correct = True
                     elif not self.correct:
-                        dist = jellyfish.jaro_winkler(guess, answer)
+                        dist = textdistance.jaro_winkler(guess, answer)
                         flexibility = self.registryValue('flexibility', channel)
                         #self.reply("guess: {0}, answer: {1}, length: {2}, distance: {3}, flexibility: {4}".format(guess, answer, len(answer), dist, flexibility))
                         if dist >= flexibility:
