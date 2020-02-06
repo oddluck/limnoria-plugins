@@ -1,3 +1,10 @@
+# Questions
+storage/
+!storage/db/
+
+# Configurations
+config.php
+
 *.py[cod]
 
 # C extensions

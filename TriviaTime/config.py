@@ -42,7 +42,7 @@ conf.registerChannelValue(TriviaTime.admin, 'file',
 
 # timeout, number of hints, values
 conf.registerChannelValue(TriviaTime.commands, 'extraHint', 
-        registry.NormalizedString(""".""", 
+        registry.NormalizedString("""~""", 
                 """The command to show extra hints and remaining KAOS""")
         )
 
@@ -57,7 +57,7 @@ conf.registerChannelValue(TriviaTime.general, 'globalStats',
         )
 
 conf.registerChannelValue(TriviaTime.hints, 'extraHintTime',
-        registry.Integer(90, 
+        registry.Integer(10,
                 """Number of seconds a user must wait between uses of the extra hint command.""")
         )
         
@@ -72,12 +72,12 @@ conf.registerChannelValue(TriviaTime.general, 'showStats',
         )
 
 conf.registerChannelValue(TriviaTime.skip, 'skipThreshold', 
-        registry.Float(.5, 
+        registry.Float(.50,
                 """Percentage of active players who need to vote for a question to be skipped""")
         )
 
 conf.registerChannelValue(TriviaTime.skip, 'skipActiveTime', 
-        registry.Integer((10*60),
+        registry.Integer((30*60),
                 """Amount of seconds a user is considered active after answering a question""")
         )
 
@@ -87,22 +87,22 @@ conf.registerChannelValue(TriviaTime.skip, 'skipTime',
         )
 
 conf.registerChannelValue(TriviaTime.questions, 'hintTime', 
-        registry.Integer(10, 
+        registry.Integer(15, 
                 """Seconds between hints""")
         )
 
 conf.registerChannelValue(TriviaTime.kaos, 'hintKAOS', 
-        registry.Integer(15, 
+        registry.Integer(20, 
                 """Seconds between KAOS hints""")
         )
 
 conf.registerChannelValue(TriviaTime.general, 'waitTime', 
-        registry.Integer(15, 
+        registry.Integer(20,
                 """Seconds between the end of one question and the start of another""")
         )
 
 conf.registerChannelValue(TriviaTime.voice, 'enableVoice',
-        registry.Boolean(True,
+        registry.Boolean(False,
                 """Voice top players for week, month, and year""")
         )
         
@@ -117,42 +117,42 @@ conf.registerChannelValue(TriviaTime.voice, 'timeoutVoice',
         )
 
 conf.registerChannelValue(TriviaTime.voice, 'numTopToVoice',
-        registry.Integer(10,
+        registry.Integer(25,
                 """The number of top players who are elligible for voice""")
         )
 
 conf.registerChannelValue(TriviaTime.voice, 'minPointsVoiceWeek',
-        registry.Integer(30000,
+        registry.Integer(750,
                 """Points required to be voiced for being top player in the week""")
         )
 
 conf.registerChannelValue(TriviaTime.voice, 'minPointsVoiceMonth',
-        registry.Integer(100000,
+        registry.Integer(5000,
                 """Points required to be voiced for being top player in the month""")
         )
 
 conf.registerChannelValue(TriviaTime.voice, 'minPointsVoiceYear',
-        registry.Integer(5000000,
+        registry.Integer(25000,
                 """Points required to be voiced for being top player in the year""")
         )
 
 conf.registerChannelValue(TriviaTime.kaos, 'payoutKAOS', 
-        registry.Integer(1000, 
+        registry.Integer(10,
                 """Extra points for teamwork on KAOS""")
         )
 
 conf.registerChannelValue(TriviaTime.general, 'timeout', 
-        registry.Integer(600, 
+        registry.Integer(604800, 
                 """Time before game shuts off in seconds""")
         )
 
 conf.registerChannelValue(TriviaTime.questions, 'defaultPoints', 
-        registry.Integer(500, 
+        registry.Integer(10, 
                 """Default points for a correct answer to a normal question""")
         )
 
 conf.registerChannelValue(TriviaTime.kaos, 'defaultKAOS', 
-        registry.Integer(300, 
+        registry.Integer(15, 
                 """Default points for a correct KAOS answer""")
         )
 

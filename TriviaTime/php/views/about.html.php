@@ -1,6 +1,6 @@
     <div class="hero-unit">
         <h1>About TriviaTime</h1>
-        <p>We are <a href="irc://irc.freenode.net/#trivialand">#trivialand</a> on Freenode. Come join us!</p>
+        <p>We are <a href="irc://irc.snoonet.org/#trivia">#trivia</a> on Snoonet. Come join us!</p>
     </div>
     <div class="row">
       <div class="span12">
@@ -11,7 +11,7 @@
     <div class="row">
       <div class="span12">
         <h2>Source</h2>
-        <p>The source code is available on <a target="_blank" href="https://github.com/tannn/TriviaTime">GitHub</a>, be sure to check it out.
+        <p>The source code is available on <a target="_blank" href="https://github.com/oddluck/limnoria-plugins">GitHub</a>, be sure to check it out.
           Fork us and contribute!</p>
       </div>
     </div>
