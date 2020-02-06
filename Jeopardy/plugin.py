@@ -414,8 +414,9 @@ class Jeopardy(callbacks.Plugin):
                         answer = re.sub('^a |^an |^the |^or ', '', answer).replace(' ', '')
                         guess = re.sub('[^a-zA-Z0-9 ]+', '', guess)
                         guess = re.sub('^a |^an |^the |^or ', '', guess).replace(' ', '')
-                    else:
-                        answer = ans
+                    elif not self.correct:
+                        answer = re.sub('[^a-zA-Z0-9 ]+', '', ans).replace(' ', '')
+                        guess = re.sub('[^a-zA-Z0-9 ]+', '', guess).replace(' ', '')
                     if not self.correct and guess == answer:
                         self.correct = True
                     elif not self.correct:
