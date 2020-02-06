@@ -25,16 +25,40 @@ __maintainer__ = getattr(supybot.authors, 'oddluck',
 
 # This is a dictionary mapping supybot.Author instances to lists of
 # contributions.
+if not hasattr(supybot.authors, 'oddluck'):
+    supybot.authors.oddluck = supybot.Author('oddluck', '',
+                                            'oddluck@riseup.net')
+
+if not hasattr(supybot.authors, 'Tanner'):
+    supybot.authors.Tanner = supybot.Author('Tanner', 'tann',
+                                            'tann@trivialand.org')
+
+if not hasattr(supybot.authors, 'rootcoma'):
+    supybot.authors.rootcoma = supybot.Author('rootcoma', '', '')
+
+if not hasattr(supybot.authors, 'Th0masR0ss'):
+    supybot.authors.Th0masR0ss = supybot.Author('Th0masR0ss', '', '')
+
 if not hasattr(supybot.authors, 'loljoho'):
-    supybot.authors.loljoho = supybot.Author('loljoho', 'loljo',
-                                            'https://github.com/loljoho')
-__contributors__ = {'oddluck', 'loljoho', 'rootcoma', 'Th0masR0ss', 'brrr'}
+    supybot.authors.loljoho = supybot.Author('loljoho', '', '')
+
+if not hasattr(supybot.authors, 'brrr'):
+    supybot.authors.brrr = supybot.Author('brrr', '', '')
+
+
+__contributors__ = {
+                    supybot.authors.oddluck:    ['code enhancement'],
+                    supybot.authors.loljoho:    ['code enhancement'],
+                    supybot.authors.brrr:       ['code enhancement'],
+                    supybot.authors.Th0masR0ss: ['code enhancement'],
+                    supybot.authors.rootcoma:   ['code enhancement']}
 
 # This is a url where the most recent plugin package can be downloaded.
 __url__ = 'https://github.com/oddluck/limnoria-plugins/'
 
 from . import config
 from . import plugin
+from imp import reload
 imp.reload(plugin) # In case we're being reloaded.
 # Add more reloads here if you add third-party modules and want them to be
 # reloaded when this plugin is reloaded.  Don't forget to import them as well!
