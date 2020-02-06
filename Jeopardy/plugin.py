@@ -275,9 +275,9 @@ class Jeopardy(callbacks.Plugin):
             self.num -= 1
             self.numAsked += 1
             q = self.questions.pop(len(self.questions)-1).split('*')
-            self.id = q[0].strip('#')
+            self.id = q[0]
             self.q = q[1]
-            self.a = [q[2]]
+            self.a = q[2]
             self.p = int(q[3])
             def next_question():
                 if not self.active:
@@ -287,7 +287,9 @@ class Jeopardy(callbacks.Plugin):
                 else:
                     self.question = "{0}{1}".format(self.color, self.q)
                 self.reply(self.question)
-                ans = self.a[0]
+                self.history.append(int(self.id))
+                ans = re.sub('\(\d of\)', '', self.a)
+                self.a = [ans]
                 self.correct = False
                 if "(" in self.a[0]:
                     a1, a2, a3 = re.match("(.*)\((.*)\)(.*)", self.a[0]).groups()
@@ -297,8 +299,6 @@ class Jeopardy(callbacks.Plugin):
                     blank = re.sub('\w', self.blankChar, ans)
                     self.currentHint = "HINT: {0}".format(blank)
                     self.reply(self.currentHint)
-                if self.id:
-                    self.history.append(int(self.id))
                 def event():
                     self.timedEvent()
                 timeout = self.registryValue('timeout', self.channel)
@@ -411,9 +411,9 @@ class Jeopardy(callbacks.Plugin):
                         self.correct = True
                     elif not self.correct and len(ans) > 2:
                         answer = re.sub('[^a-zA-Z0-9 ]+', '', ans)
-                        answer = re.sub('^a |^an |^the ', '', answer).replace(' ', '')
+                        answer = re.sub('^a |^an |^the |^or ', '', answer).replace(' ', '')
                         guess = re.sub('[^a-zA-Z0-9 ]+', '', guess)
-                        guess = re.sub('^a |^an |^the ', '', guess).replace(' ', '')
+                        guess = re.sub('^a |^an |^the |^or ', '', guess).replace(' ', '')
                     else:
                         answer = ans
                     if not self.correct and guess == answer:
@@ -424,6 +424,10 @@ class Jeopardy(callbacks.Plugin):
                         #self.reply("guess: {0}, answer: {1}, length: {2}, distance: {3}, flexibility: {4}".format(guess, answer, len(answer), dist, flexibility))
                         if dist >= flexibility:
                             self.correct = True
+                        elif dist < flexibility and ',' in self.a[0] or '&' in self.a[0]:
+                            dist = textdistance.jaccard(guess, answer)
+                            if dist >= flexibility:
+                                self.correct = True
                 if self.correct:
                     if not msg.nick in self.scores:
                         self.scores[msg.nick] = 0
