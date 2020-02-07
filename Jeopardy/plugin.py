@@ -104,6 +104,7 @@ class Jeopardy(callbacks.Plugin):
             self.question = ''
             self.currentHint = ''
             self.color = self.registryValue('color', channel)
+
             if self.color > 98:
                 self.color = ''
             else:
@@ -136,6 +137,7 @@ class Jeopardy(callbacks.Plugin):
             cluecount = self.num
             if self.categories == 'random':
                 n = 0
+                asked = []
                 while n <= self.num:
                     if n == self.num:
                         break
@@ -159,20 +161,22 @@ class Jeopardy(callbacks.Plugin):
                             else:
                                 points = self.points
                             if self.registryValue('keepHistory', channel):
-                                if len(clue) > 1 and airdate and answer and category and not invalid and id not in self.history:
+                                if len(clue) > 1 and airdate and answer and category and not invalid and id not in asked and id not in self.history:
                                     q = "{0}*({1}) [${2}] \x02{3}: {4}\x0F*{5}*{6}".format(id, airdate, points, category, clue, answer, points)
                                     q = re.sub('<[^<]+?>', '', fix_text(q, normalization='NFKC')).encode('utf-8').decode('unicode_escape')
-                                    q = re.sub('([,;:.!?])(\w)[^.]', '\g<1> \g<2>', q)
+                                    q = re.sub('([,;:.!?])(\w|\"|\'|\()(?!\.)', '\g<1> \g<2>', q)
                                     q = " ".join(q.split())
                                     self.questions.append(q)
+                                    asked.append(id)
                                     n += 1
                             else:
-                                if len(clue) > 1 and airdate and answer and category and not invalid:
+                                if len(clue) > 1 and airdate and answer and category and not invalid and id not in asked:
                                     q = "{0}*({1}) [${2}] \x02{3}: {4}\x0F*{5}*{6}".format(id, airdate, points, category, clue, answer, points)
                                     q = re.sub('<[^<]+?>', '', fix_text(q, normalization='NFKC')).encode('utf-8').decode('unicode_escape')
-                                    q = re.sub('([,;:.!?])(\w)[^.]', '\g<1> \g<2>', q)
+                                    q = re.sub('([,;:.!?])(\w|\"|\'|\()(?!\.)', '\g<1> \g<2>', q)
                                     q = " ".join(q.split())
                                     self.questions.append(q)
+                                    asked.append(id)
                                     n += 1
                     except Exception:
                         continue
@@ -183,14 +187,14 @@ class Jeopardy(callbacks.Plugin):
                 while n <= self.num:
                     if n == self.num or k > len(self.categories):
                         break
-                    for i in range(len(self.categories)):
+                    for category in self.categories:
                         if n == self.num or k > len(self.categories):
                             break
                         try:
-                            category = int(self.categories[i])
+                            category = int(category)
                             data = requests.get("{0}/api/clues?category={1}".format(self.jserviceUrl, category)).json()
                             cluecount = data[0]['category']['clues_count']
-                            if cluecount < self.num:
+                            if cluecount < self.num and len(self.categories) == 1:
                                 self.num = cluecount
                             if cluecount > 100:
                                 data.extend(requests.get("{0}/api/clues?&category={1}&offset=100".format(self.jserviceUrl, category), timeout=5).json())
@@ -206,11 +210,11 @@ class Jeopardy(callbacks.Plugin):
                             for item in data:
                                 if n == self.num or k > len(self.categories):
                                     break
-                                elif self.shuffled and k == len(self.categories):
-                                    self.shuffled = False
+                                elif shuffle and k == len(self.categories):
+                                    shuffle = False
                                     k = 0
                                     pass
-                                elif self.shuffled and j > self.num * 0.2:
+                                elif shuffle and j >= self.num * 0.2:
                                     break
                                 id = item['id']
                                 clue = item['question'].strip()
@@ -224,21 +228,23 @@ class Jeopardy(callbacks.Plugin):
                                 else:
                                     points = self.points
                                 if self.registryValue('keepHistory', channel):
-                                    if len(clue) > 1 and airdate and answer and category and not invalid and id not in self.history:
+                                    if len(clue) > 1 and airdate and answer and category and not invalid and id not in asked and id not in self.history:
                                         q = "{0}*({1}) [${2}] \x02{3}: {4}\x0F*{5}*{6}".format(id, airdate, points, category, clue, answer, points)
                                         q = re.sub('<[^<]+?>', '', fix_text(q, normalization='NFKC')).encode('utf-8').decode('unicode_escape')
-                                        q = re.sub('([,;:.!?])(\w)[^.]', '\g<1> \g<2>', q)
+                                        q = re.sub('([,;:.!?])(\w|\"|\'|\()(?!\.)', '\g<1> \g<2>', q)
                                         q = " ".join(q.split())
                                         self.questions.append(q)
+                                        asked.append(id)
                                         n += 1
                                         j += 1
                                 else:
-                                    if len(clue) > 1 and airdate and answer and category and not invalid:
+                                    if len(clue) > 1 and airdate and answer and category and not invalid and id not in asked:
                                         q = "{0}*({1}) [${2}] \x02{3}: {4}\x0F*{5}*{6}".format(id, airdate, points, category, clue, answer, points)
                                         q = re.sub('<[^<]+?>', '', fix_text(q, normalization='NFKC')).encode('utf-8').decode('unicode_escape')
-                                        q = re.sub('([,;:.!?])(\w)[^.]', '\g<1> \g<2>', q)
+                                        q = re.sub('([,;:.!?])(\w|\"|\'|\()(?!\.)', '\g<1> \g<2>', q)
                                         q = " ".join(q.split())
                                         self.questions.append(q)
+                                        asked.append(id)
                                         n += 1
                                         j += 1
                             k += 1
