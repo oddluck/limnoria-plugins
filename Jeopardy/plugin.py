@@ -104,7 +104,6 @@ class Jeopardy(callbacks.Plugin):
             self.question = ''
             self.currentHint = ''
             self.color = self.registryValue('color', channel)
-
             if self.color > 98:
                 self.color = ''
             else:
