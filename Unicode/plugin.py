@@ -1,5 +1,6 @@
 ###
 # Copyright (c) 2010, Michael B. Klein
+# Copyright (c) 2020, oddluck
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -34,11 +35,9 @@ import supybot.plugins as plugins
 import supybot.ircutils as ircutils
 import supybot.callbacks as callbacks
 import unicodedata
-import simplejson
+import json
 import supybot.utils.web as web
 from urllib.parse import urlencode, quote
-
-HEADERS = dict(ua = 'Zoia/1.0 (Supybot/0.83; Unicode Plugin; http://code4lib.org/irc)')
 
 class Unicode(callbacks.Plugin):
 
@@ -48,11 +47,11 @@ class Unicode(callbacks.Plugin):
       """
       url = "http://unicodelookup.com/lookup?"
       url = url + urlencode({'q' : query, 'o' : 0})
-      doc = web.getUrl(url, headers=HEADERS)
+      data = web.getUrl(url)
       try:
-        json = simplejson.loads(doc)
+        data = json.loads(data)
         responses = []
-        for result in json['results']:
+        for result in data['results']:
           ucode = result[2].replace('0x','U+')
           name = unicodedata.name('{0}'.format(query))
           responses.append('%s (%s): %s [HTML: %s / Decimal: %s / Hex: %s]' % (ucode, name, result[4], result[3], result[1], result[2]))
@@ -60,7 +59,6 @@ class Unicode(callbacks.Plugin):
         irc.reply(response)
       except ValueError:
         irc.reply('No unicode characters matching /' + query + '/ found.')
-
     unicode = wrap(unicode, ['text'])
 
 Class = Unicode
