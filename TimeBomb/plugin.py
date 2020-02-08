@@ -255,7 +255,7 @@ class TimeBomb(callbacks.Plugin):
         self.setRegistryValue('bombHistory', bombHistory, channel)
 
     def bombsenabled(self, irc, msg, args, channel, value):
-        """[True|False]
+        """[<channel>] <True|False>
         Sets the value of the allowBombs config value for the channel. Restricted to users with the timebombadmin capability.
         """
         statusDescription = 'are currently'
@@ -290,7 +290,7 @@ class TimeBomb(callbacks.Plugin):
     bombsenabled = wrap(bombsenabled, ['channel', optional('somethingWithoutSpaces')])
 
     def duck(self, irc, msg, args, channel):
-        """
+        """[<channel>]
         DUCK! (You'll want to do this if someone throws a bomb back at you.) 
         """
         channel = ircutils.toLower(channel)
@@ -305,7 +305,7 @@ class TimeBomb(callbacks.Plugin):
     duck = wrap(duck, ['channel'])
 
     def randombomb(self, irc, msg, args, channel, nicks):
-        """
+        """[<channel>]
         Bombs a random person in the channel.
         """
         channel = ircutils.toLower(channel)
@@ -384,7 +384,7 @@ class TimeBomb(callbacks.Plugin):
     randombomb = wrap(randombomb, ['channel', any('NickInChannel')])
 
     def timebomb(self, irc, msg, args, channel, victim):
-        """<nick>
+        """[<channel>] <nick>
         Place a bomb down the pants of <nick>.
         """
         channel = ircutils.toLower(channel)
@@ -443,7 +443,7 @@ class TimeBomb(callbacks.Plugin):
     timebomb = wrap(timebomb, ['channel', ('checkChannelCapability', 'timebombs'), 'somethingWithoutSpaces'])
 
     def cutwire(self, irc, msg, args, channel, cutWire):
-        """<color>
+        """[<channel>] <color>
         Will cut the given wire if you've been bombed.
         """
         channel = ircutils.toLower(channel)
@@ -461,7 +461,7 @@ class TimeBomb(callbacks.Plugin):
     cutwire = wrap(cutwire, ['channel', 'something'])
 
     def detonate(self, irc, msg, args, channel):
-        """
+        """[<channel>]
         Detonates the active bomb.
         """
         channel = ircutils.toLower(channel)
@@ -473,10 +473,10 @@ class TimeBomb(callbacks.Plugin):
                 irc.reply('I tried to detonate a bomb in "{}"'.format(channel))
                 irc.reply('List of bombs: {}'.format(", ".join(list(self.bombs.keys()))))
         irc.noReply()
-    detonate = wrap(detonate, [('checkChannelCapability', 'op')])
+    detonate = wrap(detonate, ['channel', ('checkChannelCapability', 'op')])
 
     def defuse(self, irc, msg, args, channel):
-        """
+        """[<channel>]
         Defuses the active bomb (channel ops only).
         """
         channel = ircutils.toLower(channel)
@@ -492,6 +492,6 @@ class TimeBomb(callbacks.Plugin):
         except KeyError:
             pass
             irc.error('There is no active bomb')
-    defuse = wrap(defuse, [('checkChannelCapability', 'op')])
+    defuse = wrap(defuse, ['channel', ('checkChannelCapability', 'op')])
 
 Class = TimeBomb
