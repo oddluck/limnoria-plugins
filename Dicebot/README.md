@@ -1,6 +1,6 @@
 Forked from https://github.com/wRAR/supybot-plugin-Dicebot
 
-Install dependencies: pip3 install -r requirements.txt
+Install dependencies: python3 -m pip install -r requirements.txt
 
 ## Description
 
