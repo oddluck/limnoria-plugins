@@ -1,5 +1,6 @@
 ###
 # Copyright (c) 2010, quantumlemur
+# Copyright (c) 2020, oddluck
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -46,8 +47,9 @@ import supybot.conf as conf
 
 
 class TimeBomb(callbacks.Plugin):
-    """Add the help for "@plugin help TimeBomb" here
-    This should describe *how* to use this plugin."""
+    """
+    Yet another timebomb plugin.
+    """
     threaded = True
 
     def __init__(self, irc):
@@ -90,7 +92,7 @@ class TimeBomb(callbacks.Plugin):
             except:
                 self.command_char = ''
             if self.debug:
-                self.irc.reply('I just created a bomb in {}'.format(channel))
+                self.irc.reply('I just created a bomb in {}.'.format(channel))
 
             def detonate():
                 self.detonate(irc)
@@ -124,16 +126,16 @@ class TimeBomb(callbacks.Plugin):
                 specialWires = True
 
             if self.cutWire.lower() == 'potato' and specialWires:
-                self.irc.queueMsg(ircmsgs.privmsg(self.channel, '{} has turned the bomb into a potato! This has rendered it mostly harmless, and slightly{}.'.format(self.victim, self.goodWire)))
+                self.irc.queueMsg(ircmsgs.privmsg(self.channel, '{} has turned the bomb into a potato! This has rendered it mostly harmless, and slightly {}.'.format(self.victim, self.goodWire)))
                 self.defuse()
             elif self.cutWire.lower() == 'pizza' and specialWires:
-                self.irc.queueMsg(ircmsgs.privmsg(self.channel, '{0} has turned the bomb into a pizza! {0}\'s pants have been ruined by the pizza stuffed into them, but at least they haven\'t exploded.'.format(self.victim)))
+                self.irc.queueMsg(ircmsgs.privmsg(self.channel, '{} has turned the bomb into a pizza! Their pants have been ruined by the pizza stuffed into them, but at least they haven\'t exploded.'.format(self.victim)))
                 self.defuse()
             elif self.goodWire.lower() == self.cutWire.lower():
                 self.irc.queueMsg(ircmsgs.privmsg(self.channel, '{} has cut the {} wire! This has defused the bomb!'.format(self.victim, self.cutWire)))
 
                 if self.victim.lower() != self.sender.lower():
-                    self.irc.queueMsg(ircmsgs.privmsg(self.channel, 'They then quickly rearm the bomb and throw it back at {} with just seconds on the clock!'.format(self.sender)))
+                    self.irc.queueMsg(ircmsgs.privmsg(self.channel, '{} quickly rearms the bomb and throws it back at {} with just seconds on the clock!'.format(self.victim, self.sender)))
                     tmp = self.victim
                     self.victim = self.sender
                     self.sender = tmp
@@ -190,7 +192,7 @@ class TimeBomb(callbacks.Plugin):
     def _canBomb(self, irc, channel, sender, victim, replyError):
         if sender.lower() in self.registryValue('exclusions', channel):
             if replyError:
-                irc.reply('You can\'t timebomb anyone, since you\'re excluded from being timebombed')
+                irc.reply('You can\'t bomb anyone because you\'re excluded from being bombed.')
             return False
 
         if sender not in irc.state.channels[channel].users:
@@ -226,7 +228,7 @@ class TimeBomb(callbacks.Plugin):
         if (totalCount > storeTime *
                 self.registryValue('rateLimitTotal', channel) / 3600):
             if replyError:
-                irc.reply('Sorry, I\'ve stuffed so many timebombs down so many pairs of pants that I\'ve temporarily run out of explosives. You\'ll have to wait.')
+                irc.reply('Sorry, I\'ve stuffed so many timebombs down so many pants that I\'ve temporarily run out of explosives. You\'ll have to wait.')
             return False
 
         if (senderCount > storeTime *
@@ -253,16 +255,16 @@ class TimeBomb(callbacks.Plugin):
         self.setRegistryValue('bombHistory', bombHistory, channel)
 
     def bombsenabled(self, irc, msg, args, channel, value):
-        """[value]
-
-        Sets the value of the allowBombs config value for the channel. Restricted to users with channel timebombadmin capability."""
+        """[True|False]
+        Sets the value of the allowBombs config value for the channel. Restricted to users with the timebombadmin capability.
+        """
         statusDescription = 'are currently'
         if value:
             # tmp = ircdb.channels.getChannel(channel).defaultAllow - problems with multithreading?
             # ircdb.channels.getChannel(channel).defaultAllow = False
             hasCap = ircdb.checkCapability(msg.prefix, 'timebombadmin')
             if (channel == "#powder" or channel == "#powder-dev") and not ircdb.checkCapability(msg.prefix, 'admin'):
-                irc.error('You need the admin capability to do that')
+                irc.error('You need the admin capability to do that.')
                 return
             # ircdb.channels.getChannel(channel).defaultAllow = tmp
 
@@ -271,26 +273,26 @@ class TimeBomb(callbacks.Plugin):
                 try:
                     conf.supybot.plugins.TimeBomb.allowBombs.get(channel).set(value)
                 except registry.InvalidRegistryValue:
-                    irc.error('Value must be either True or False (or On or Off)')
+                    irc.error('Value must be either True or False.')
                     return
                 if self.registryValue('allowBombs', channel) == oldValue:
                     statusDescription = 'were already'
                 else:
                     statusDescription = 'have now been'
             else:
-                irc.error('You need the timebombadmin capability to do that')
+                irc.error('You need the timebombadmin capability to do that.')
                 return
 
         if self.registryValue('allowBombs', channel):
-            irc.reply('TimeBombs {} enabled in{}'.format(statusDescription, channel))
+            irc.reply('TimeBombs {} enabled in {}.'.format(statusDescription, channel))
         else:
-            irc.reply('TimeBombs {} disabled in{}'.format(statusDescription, channel))
-    bombsenabled = wrap(bombsenabled, ['Channel', optional('somethingWithoutSpaces')])
+            irc.reply('TimeBombs {} disabled in {}.'.format(statusDescription, channel))
+    bombsenabled = wrap(bombsenabled, ['channel', optional('somethingWithoutSpaces')])
 
     def duck(self, irc, msg, args, channel):
-        """takes no arguments
-
-        DUCK!"""
+        """
+        DUCK! (You'll want to do this if someone throws a bomb back at you.) 
+        """
         channel = ircutils.toLower(channel)
 
         try:
@@ -300,20 +302,19 @@ class TimeBomb(callbacks.Plugin):
             return
         self.bombs[channel].duck(irc, msg.nick)
         irc.noReply()
-    duck = wrap(duck, ['Channel'])
+    duck = wrap(duck, ['channel'])
 
     def randombomb(self, irc, msg, args, channel, nicks):
-        """takes no arguments
-
-        Bombs a random person in the channel
+        """
+        Bombs a random person in the channel.
         """
         channel = ircutils.toLower(channel)
         if not self.registryValue('allowBombs', channel):
-            irc.reply('TimeBombs aren\'t allowed in this channel. Set plugins.TimeBomb.allowBombs to true if you want them.')
+            irc.reply('TimeBombs aren\'t allowed in this channel. Set plugins.TimeBomb.allowBombs to True if you want them.')
             return
         try:
             if self.bombs[channel].active:
-                irc.reply('There\'s already an active bomb, in{}\'s pants!'.format(self.bombs[channel].victim))
+                irc.reply('There\'s already an active bomb, in {}\'s pants!'.format(self.bombs[channel].victim))
                 return
         except KeyError:
             pass
@@ -334,15 +335,15 @@ class TimeBomb(callbacks.Plugin):
                         if time.time() - item[1] < self.registryValue('idleTime', channel) * 60 and item[0] in irc.state.channels[channel].users and self._canBomb(irc, channel, msg.nick, item[0], False):
                             nicks.append(item[0])
                     except StopIteration:
-                        irc.reply('Something funny happened... I got a StopIteration exception')
+                        irc.reply('Something funny happened... I got a StopIteration exception.')
                     count += 1
                 if len(nicks) == 1 and nicks[0] == msg.nick:
                     nicks = []
             if len(nicks) == 0:
-                irc.reply('Well, no one\'s talked in the past hour, so I guess I\'ll just choose someone from the whole channel')
+                irc.reply('Well, no one\'s talked in the past hour, so I guess I\'ll just choose someone at random.')
                 nicks = list(irc.state.channels[channel].users)
             elif len(nicks) == 2:
-                irc.reply('Well, it\'s just been you two talking recently, so I\'m going to go ahead and just bomb someone at random from the whole channel')
+                irc.reply('Well, it\'s just been you two talking recently, so I\'m going to go ahead and just bomb someone at random.')
                 nicks = list(irc.state.channels[channel].users)
         elif len(nicks) == 0:
             nicks = list(irc.state.channels[channel].users)
@@ -356,7 +357,7 @@ class TimeBomb(callbacks.Plugin):
                 eligibleNicks.append(victim)
 
         if len(eligibleNicks) == 0:
-            irc.reply('I couldn\'t find anyone suitable to randombomb. Maybe everyone here is excluded from being randombombed or has been timebombed too recently.')
+            irc.reply('I couldn\'t find anyone suitable to bomb. Maybe everyone here is excluded from being bombed or has been bombed too recently.')
             return
         #####
         # irc.reply('These people are eligible: {}'.format(utils.str.commaAndify(eligibleNicks)))
@@ -380,25 +381,25 @@ class TimeBomb(callbacks.Plugin):
             irc.noReply()
         except AttributeError:
             pass
-    randombomb = wrap(randombomb, ['Channel', any('NickInChannel')])
+    randombomb = wrap(randombomb, ['channel', any('NickInChannel')])
 
     def timebomb(self, irc, msg, args, channel, victim):
         """<nick>
-
-        For bombing people!"""
+        Place a bomb down the pants of <nick>.
+        """
         channel = ircutils.toLower(channel)
         if not self.registryValue('allowBombs', channel):
             irc.reply('TimeBombs aren\'t allowed in this channel. Set plugins.TimeBomb.allowBombs to true if you want them.')
             return
         try:
             if self.bombs[channel].active:
-                irc.reply('There\'s already an active bomb, in{}\'s pants!'.format(self.bombs[channel].victim))
+                irc.reply('There\'s already an active bomb, in {}\'s pants!'.format(self.bombs[channel].victim))
                 return
         except KeyError:
             pass
 
         if victim.lower() == irc.nick.lower() and not self.registryValue('allowSelfBombs', channel):
-            irc.reply('You really expect me to bomb myself? Stuffing explosives into my own pants isn\'t exactly my idea of fun.')
+            irc.reply('You really expect me to bomb myself? Stuffing explosives down my pants isn\'t exactly my idea of fun.')
             return
         victim = victim.casefold()
         found = False
@@ -411,7 +412,7 @@ class TimeBomb(callbacks.Plugin):
             irc.reply('Error: nick not found.')
             return
         if victim.casefold() in self.registryValue('exclusions', channel):
-            irc.reply('Error: that nick can\'t be timebombed')
+            irc.reply('Error: that nick can\'t be bombed.')
             return
 
         # not (victim == msg.nick and victim == 'mniip') and
@@ -429,22 +430,22 @@ class TimeBomb(callbacks.Plugin):
 
         wires = self.rng.sample(colors, wireCount)
         goodWire = self.rng.choice(wires)
-        self.log.info("TimeBomb: Safewire is {}".format(goodWire))
+        self.log.info("TimeBomb: Safewire is {}.".format(goodWire))
 
         if self.registryValue('debug'):
-            irc.reply('I\'m about to create a bomb in{}'.format(channel))
+            irc.reply('I\'m about to create a bomb in {}.'.format(channel))
 
         # if not (victim == msg.nick and victim == 'mniip'):
         self._logBomb(irc, channel, msg.nick, victim)
         self.bombs[channel] = self.Bomb(irc, victim, wires, detonateTime, goodWire, channel, msg.nick, self.registryValue('showArt', channel), self.registryValue('showCorrectWire', channel), self.registryValue('debug'))
         if self.registryValue('debug'):
-            irc.reply('This message means that I got past the bomb creation line in the timebomb command')
-    timebomb = wrap(timebomb, ['Channel', ('checkChannelCapability', 'timebombs'), 'somethingWithoutSpaces'])
+            irc.reply('This message means that I got past the bomb creation line in the timebomb command.')
+    timebomb = wrap(timebomb, ['channel', ('checkChannelCapability', 'timebombs'), 'somethingWithoutSpaces'])
 
     def cutwire(self, irc, msg, args, channel, cutWire):
-        """<colored wire>
-
-        Will cut the given wire if you've been timebombed."""
+        """<color>
+        Will cut the given wire if you've been bombed.
+        """
         channel = ircutils.toLower(channel)
         try:
             if not self.bombs[channel].active:
@@ -457,12 +458,12 @@ class TimeBomb(callbacks.Plugin):
         except KeyError:
             pass
         irc.noReply()
-    cutwire = wrap(cutwire, ['Channel', 'something'])
+    cutwire = wrap(cutwire, ['channel', 'something'])
 
     def detonate(self, irc, msg, args, channel):
-        """Takes no arguments
-
-        Detonates the active bomb."""
+        """
+        Detonates the active bomb.
+        """
         channel = ircutils.toLower(channel)
         try:
             if self.bombs[channel].active:
@@ -475,9 +476,9 @@ class TimeBomb(callbacks.Plugin):
     detonate = wrap(detonate, [('checkChannelCapability', 'op')])
 
     def defuse(self, irc, msg, args, channel):
-        """Takes no arguments
-
-        Defuses the active bomb (channel ops only)"""
+        """
+        Defuses the active bomb (channel ops only).
+        """
         channel = ircutils.toLower(channel)
         try:
             if self.bombs[channel].active:
@@ -485,16 +486,12 @@ class TimeBomb(callbacks.Plugin):
                     irc.reply('You can\'t defuse a bomb that\'s in your own pants, you\'ll just have to cut a wire and hope for the best.')
                     return
                 self.bombs[channel].defuse()
-                irc.reply('Bomb defused')
+                irc.reply('Bomb defused.')
             else:
-                irc.error('There is no active bomb')
+                irc.error('There is no active bomb.')
         except KeyError:
             pass
             irc.error('There is no active bomb')
     defuse = wrap(defuse, [('checkChannelCapability', 'op')])
 
-
 Class = TimeBomb
-
-
-# vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
