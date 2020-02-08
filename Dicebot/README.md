@@ -1,7 +1,7 @@
 Forked from https://github.com/wRAR/supybot-plugin-Dicebot
 
-Description
-~~~~~~~~~~~
+## Description
+
 Dicebot plugin contains the commands which simulate rolling of dice.
 Though core supybot plugin Games contain 'dice' command, it is very simple and
 is not sufficient for advanced uses, such as online playing of tabletop
@@ -13,8 +13,8 @@ results of rolling each (of 3) die (6-sided): '2, 4, and 4'. This may be
 sufficient for some games, but usually you need more. Here is what this plugin
 can do for you.
 
-Features
-~~~~~~~~
+## Features
+
 1. Sum of dice rolled. Expression form is just '2d6', plugin returns the sum
 of dice values as one number.
 2. Sum of several different dice and some fixed numbers. Expression:
@@ -42,22 +42,22 @@ and a function which parses that expression and returns a string which will be
 displayed.
 10. Also includes basic card deck simulator, see below.
 
-Configuration
-~~~~~~~~~~~~~
+## Configuration
+
 autoRoll (per-channel): whether to roll all expressions seen on the channel
 autoRollInPrivate (global): whether to roll expressions in the queries
 Both settings are off by default, so that bot replies only to explicit !roll.
 
-Deck
-~~~~
+## Deck
+
 Bot has a 54-card deck which it can shuffle (!shuffle command) and from which
 you can draw (!draw or !deal command, with optional number argument if you want
 to draw several cards). Drawn card is removed from the deck, but shuffle
 restores full deck. If the last card is drawn, the deck is automatically
 shuffled before drawing next card.
 
-Thanks
-~~~~~~
+## Thanks
+
 Ur-DnD roleplaying community (#dnd @ RusNet) for games, talking and fun, and
 personally Zuzuzu for describing basic dicebot requirements, which led to
 writing the first version of this plugin in August 2007.
