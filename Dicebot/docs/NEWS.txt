@@ -1,0 +1,30 @@
+1.0
+~~~
+- Port to Python 3.
+
+0.6
+~~~
+- Extended tests for Shadowrun.
+- Support any number of dice and modifiers in the standard roll.
+
+0.5
+~~~
+- Dark Heresy support added.
+- New WoD support added (undocumented and untested, though).
+- Multiroll support for 7th Sea.
+
+0.4
+~~~
+- 7th Sea support added.
+- Basic card deck simulation added.
+- Tests added.
+
+0.3
+~~~
+- Shadowrun 4 support added (see Shadowrun.txt).
+- Multiple expressions per message are now supported.
+
+0.2
+~~~
+- First public release.
+

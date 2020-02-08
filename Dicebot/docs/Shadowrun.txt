@@ -1,0 +1,23 @@
+Shadowrun 4th ed. support
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In SR4 you roll a number of d6 (this number is called a dice pool) and count
+how many dice show 5 or 6, the more the better (SR4 p.54-55). You also need to
+count 1's, because if half or more of the dice show 1, you have a *glitch*
+(some bad game effect). Because you don't need to sum roll results, roll dice
+other than d6 or add some fixed modifiers, SR4 dicer can (and should) be
+simpler and easier to use. So you just say 10#sd (where 10 is your dice pool)
+and bot will show the total hits number and/or a glitch message.
+Also you can declare the use of Edge before a roll (SR4 p.67) to use the Rule
+of Six (SR4, p.56), which means rerolling all 6's, potentially increasing the
+total hits number. This mode is used by saying 10#sdx (x stands for 'eXploding
+dice').
+
+You can make Extended tests by saying i.e. 10,8#sde. Here 10 is the pool size
+and 8 is the threshold. The output will include the number of passes, resulting
+hit number and, in case of glitches, the pass number of the first glitch.
+
+The current version of Shadowrun code will log all the rolled dice values
+(with the DEBUG level), to check the algorithm and for curious players.  This
+may be removed in future versions.
+

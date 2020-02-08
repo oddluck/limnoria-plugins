@@ -1,0 +1,9 @@
+Dark Heresy/Rogue Trader/Deathwatch support
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+DH/RT/DW systems use a d100 die, the result is compared to a target number
+with some modifiers. You can roll a die using 'vs(40)' or 'vs(40+20-10)'
+syntax. Unlimited number of modifiers is supported. The result is displayed as
+the threshold value minus the roll value, so a positive number means success
+and tens digit equals the number of degrees of success/failure.
+You can roll several identical tests using syntax '3vs(30)'.

@@ -1,0 +1,11 @@
+7th Sea RnK support
+~~~~~~~~~~~~~~~~~~~
+There is a special support for RnK mechanics. The base form is '5k2', it shows
+all kept dice and their sum. Exploded dice are shown as result numbers (23 for
+10+10+3, for example). A static modifier may be applied to the total sum using
+'5k2+2' or '5k2-2'. '-' prefix disables explosion of 10's, '+' prefix enables
+printing of unkept dice. If you want to disable explosion and to print unkept
+dice, you can use '-5kk2' ('5kk2' is identical to '+5k2'). Attempts to roll
+and/or keep more than 10 dice are resolved according to Player's Guide,
+wrapping excess dice from unkept to kept and from kept to the static modifier.
+You can roll the same combination several times using, for example, '3#5k2'.
