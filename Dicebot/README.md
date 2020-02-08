@@ -1,5 +1,7 @@
 Forked from https://github.com/wRAR/supybot-plugin-Dicebot
 
+Install dependencies: pip3 install -r requirements.txt
+
 ## Description
 
 Dicebot plugin contains the commands which simulate rolling of dice.
@@ -61,3 +63,7 @@ shuffled before drawing next card.
 Ur-DnD roleplaying community (#dnd @ RusNet) for games, talking and fun, and
 personally Zuzuzu for describing basic dicebot requirements, which led to
 writing the first version of this plugin in August 2007.
+
+## Tests
+
+Run tests: supybot-test Dicebot && pytest
