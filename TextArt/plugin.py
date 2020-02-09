@@ -28,7 +28,7 @@ from bs4 import BeautifulSoup
 
 try:
     from supybot.i18n import PluginInternationalization
-    _ = PluginInternationalization('IRCArt')
+    _ = PluginInternationalization('TextArt')
 except ImportError:
     # Placeholder that allows to run the plugin on a bot
     # without the i18n module
