@@ -66,7 +66,7 @@ class Weed(callbacks.Plugin):
                 flavor1 = data2[0]
                 flavor2 = data2[1]
                 flavor3 = data2[2]
-                response2 = "{0} | {1} | Flavors: {2}, {3}, {4} | {5}".format(name, type, flavor1, flavor2, flavor3, desc)
+                response2 = "{0} | {1} | Flavors: {2}, {3}, {4} | {5}".format(name, type.title(), flavor1, flavor2, flavor3, desc)
                 break
         if  response1 != None:
             irc.reply(response1)
