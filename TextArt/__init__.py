@@ -1,12 +1,12 @@
 ###
-# Copyright (c) 2019 oddluck
+# Copyright (c) 2020 oddluck
 # All rights reserved.
 #
 #
 ###
 
 """
-IRCArt: Make IRC Art
+TextArt: Make IRC Art
 """
 
 import supybot

@@ -1,5 +1,5 @@
 ###
-# Copyright (c) 2019 oddluck
+# Copyright (c) 2020 oddluck
 # All rights reserved.
 #
 #
@@ -34,12 +34,12 @@ except ImportError:
     # without the i18n module
     _ = lambda x: x
 
-class IRCArt(callbacks.Plugin):
-    """IRCArt: Make IRC Art"""
+class TextArt(callbacks.Plugin):
+    """TextArt: Make Text Art"""
     threaded = True
 
     def __init__(self, irc):
-        self.__parent = super(IRCArt, self)
+        self.__parent = super(TextArt, self)
         self.__parent.__init__(irc)
         self.colors = 99
         self.stopped = {}
@@ -1681,4 +1681,4 @@ class IRCArt(callbacks.Plugin):
         irc.reply("\x031,8888\x031,8989\x031,9090\x031,9191\x031,9292\x031,9393\x031,9494\x031,9595\x031,9696\x031,9797\x031,9898\x031,9999", prefixNick=False)
     codes = wrap(codes)
 
-Class = IRCArt
+Class = TextArt
