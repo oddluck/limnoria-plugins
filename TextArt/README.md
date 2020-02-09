@@ -13,7 +13,7 @@ pip install -r requirements.txt
 
 ```
 config protocols.irc.throttletime 0.0
-config plugins.ascii.delay 0.5
+config plugins.TextArt.delay 0.5
 ```
 If you want delays < 1.0 seconds then disable Limnoria's throttling and use this plugin's delay option. 0.5 is 2 lines per second for example. You can also use --delay with commands and override the delay with your own. Default delay config can 
 be set per channel. Set a value that won't get you kicked.
@@ -29,8 +29,8 @@ Stop the scroll. cq command must be prefixed by a command character. This comman
 Support for the Paste.ee API to save art conversions for later use.
 Get an API key from https://paste.ee/account/api (FREE. Not required to use plugin, disabled by default).
 ```
-config plugins.ascii.pasteAPI <PASTE.EE_API_KEY_HERE> (set paste.ee API key)
-config channel plugins.ascii.pasteEnable <True/False> (enable/disable paste.ee links)
+config plugins.TextArt.pasteAPI <PASTE.EE_API_KEY_HERE> (set paste.ee API key)
+config channel plugins.TextArt.pasteEnable <True/False> (enable/disable paste.ee links)
 ```
 
 ASCII Weather from wttr.in
@@ -75,10 +75,10 @@ cow --type <type> <text> (make a cowsay message. type is optional. defaults to c
 
 Text-to-ASCII Art (split lines with | ex. ascii|art for large fonts):
 ```
-ascii <text> (convert <text> to ascii art)
-ascii --font <font> <text> (to use chosen <font>)
-ascii --color <color> <text> (to set a foreground <color>)
-ascii --color <color1,color2> <text> (to set a foreground/background <color>)
+artii <text> (convert <text> to ascii art)
+artii --font <font> <text> (to use chosen <font>)
+artii --color <color> <text> (to set a foreground <color>)
+artii --color <color1,color2> <text> (to set a foreground/background <color>)
 fontlist (get list of availble <fonts>)
 
                                    88  88  
@@ -92,7 +92,7 @@ fontlist (get list of availble <fonts>)
 
 Image URL to ASCII/ANSI Art:
 ```
-img <url> (convert an image <url> to ascii art using 99 color palette)
+img <url> (convert an image <url> to text art using 99 color palette)
 img --w <###> <url> (how many columns wide. defauls to 100)
 img --16 <url> (convert using 16 color palette)
 img --ascii <url> (convert image to colored ascii art)
@@ -185,7 +185,7 @@ png --fg 0-99 <url> (set a foreground color)
 ```
 Get your imgur Client ID from https://imgur.com/account/settings (FREE).
 ```
-config plugins.ascii.imgurAPI <CLIENT_ID_HERE> (set imgur API key)
+config plugins.TextArt.imgurAPI <CLIENT_ID_HERE> (set imgur API key)
 ```
 
 <b>THE COMMANDS BELOW REQUIRE ADDITIONAL INSTALLS AND ARE OPTIONAL. YOU WILL NEED TO VISIT THE GITHUB
