@@ -84,6 +84,7 @@ class TimeBomb(callbacks.Plugin):
             self.showCorrectWire = showCorrectWire
             self.debug = debug
             self.thrown = False
+            self.rethrown = False
             self.responded = False
             self.rng = random.Random()
             self.rng.seed()
@@ -140,13 +141,11 @@ class TimeBomb(callbacks.Plugin):
                     self.victim = self.sender
                     self.sender = tmp
                     self.thrown = True
+                    self.rethrown = True
                     schedule.rescheduleEvent('{}_bomb'.format(self.channel), time.time() + 10)
 
                     if self.victim == irc.nick:
-                        time.sleep(1)
-                        self.irc.queueMsg(ircmsgs.privmsg(self.channel, '@duck'))
-                        time.sleep(1)
-                        self.duck(self.irc, irc.nick)
+                        self.defuse()
                 else:
                     self.defuse()
             else:
@@ -294,9 +293,8 @@ class TimeBomb(callbacks.Plugin):
         DUCK! (You'll want to do this if someone throws a bomb back at you.) 
         """
         channel = ircutils.toLower(channel)
-
         try:
-            if not self.bombs[channel].active:
+            if not self.bombs[channel].active or not self.bombs[channel].rethrown or not ircutils.nickEqual(self.bombs[channel].victim, msg.nick):
                 return
         except KeyError:
             return
@@ -448,7 +446,7 @@ class TimeBomb(callbacks.Plugin):
         """
         channel = ircutils.toLower(channel)
         try:
-            if not self.bombs[channel].active:
+            if not self.bombs[channel].active or self.bombs[channel].rethrown:
                 return
 
             if not ircutils.nickEqual(self.bombs[channel].victim, msg.nick) and not ircdb.checkCapability(msg.prefix, 'admin'):
