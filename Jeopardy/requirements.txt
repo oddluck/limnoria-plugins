@@ -1,4 +1,5 @@
 requests
 ftfy
 beautifulsoup4
+numpy
 textdistance[extras]
