@@ -1663,8 +1663,8 @@ class TextArt(callbacks.Plugin):
         Stop the scroll.
         """
         if not self.stopped[msg.args[0]]:
-            self.stopped[msg.args[0]] = True
             irc.reply("Stopping.")
+        self.stopped[msg.args[0]] = True
     cq = wrap(cq)
 
     def codes(self, irc, msg, args):
@@ -1680,5 +1680,47 @@ class TextArt(callbacks.Plugin):
         irc.reply("\x031,7676\x031,7777\x031,7878\x031,7979\x031,8080\x031,8181\x031,8282\x031,8383\x031,8484\x031,8585\x031,8686\x031,8787", prefixNick=False)
         irc.reply("\x031,8888\x031,8989\x031,9090\x031,9191\x031,9292\x031,9393\x031,9494\x031,9595\x031,9696\x031,9797\x031,9898\x031,9999", prefixNick=False)
     codes = wrap(codes)
+
+    def rainbow(self, irc, msg, args, optlist, channel):
+        """[channel] [--delay <float>]
+        Scroll a rainbow.
+        """
+        if not channel:
+            channel = msg.args[0]
+        if channel != msg.args[0] and not ircdb.checkCapability(msg.prefix, 'admin'):
+            irc.errorNoCapability('admin')
+            return
+        self.stopped[channel] = False
+        if 'delay' in optlist:
+            delay = optlist.get('delay')
+        else:
+            delay = self.registryValue('delay', msg.args[0])
+        indent = 10 # How many spaces to indent.
+        while True: # Main program loop.
+            if self.stopped[channel]:
+                break
+            line = ''
+            line += ' ' * indent
+            line += '\x034###'
+            line += '\x037###'
+            line += '\x038###'
+            line += '\x039###'
+            line += '\x0312###'
+            line += '\x0311###'
+            line += '\x036###'
+            if not self.stopped[channel]:
+                time.sleep(delay)
+                irc.reply(line, prefixNick=False)
+            if random.randint(0, 1) == 0:
+                # Increase the number of spaces:
+                indent = indent + 1
+                if indent > 80:
+                    indent = 80
+            else:
+                # Decrease the number of spaces:
+                indent = indent - 1
+                if indent < 0:
+                    indent = 0
+    rainbow = wrap(rainbow, [optional('channel'), getopts({'delay':'float'})])
 
 Class = TextArt
