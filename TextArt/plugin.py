@@ -1681,9 +1681,9 @@ class TextArt(callbacks.Plugin):
         irc.reply("\x031,8888\x031,8989\x031,9090\x031,9191\x031,9292\x031,9393\x031,9494\x031,9595\x031,9696\x031,9797\x031,9898\x031,9999", prefixNick=False)
     codes = wrap(codes)
 
-    def rainbow(self, irc, msg, args, optlist, channel):
-        """[channel] [--delay <float>]
-        Scroll a rainbow.
+    def rainbow(self, irc, msg, args, channel, optlist):
+        """[channel] [--delay <float>] [--mode <1|2>]
+        Scroll a rainbow. Mode 1 squiggle. Mode 2 zig-zag.
         """
         if not channel:
             channel = msg.args[0]
@@ -1691,11 +1691,22 @@ class TextArt(callbacks.Plugin):
             irc.errorNoCapability('admin')
             return
         self.stopped[channel] = False
+        optlist = dict(optlist)
         if 'delay' in optlist:
             delay = optlist.get('delay')
         else:
-            delay = self.registryValue('delay', msg.args[0])
-        indent = 10 # How many spaces to indent.
+            delay = self.registryValue('delay', channel)
+        if 'mode' in optlist:
+            mode = optlist.get('mode')
+        else:
+            mode = 1
+        if mode > 2 or mode < 1:
+            mode = 1
+        if mode == 1:
+            indent = 10 # How many spaces to indent.
+        else:
+            indent = 0
+        indentIncreasing = True # Whether the indentation is increasing or not.
         while True: # Main program loop.
             if self.stopped[channel]:
                 break
@@ -1711,16 +1722,28 @@ class TextArt(callbacks.Plugin):
             if not self.stopped[channel]:
                 time.sleep(delay)
                 irc.reply(line, prefixNick=False)
-            if random.randint(0, 1) == 0:
+            if mode == 1 and random.randint(0, 1) == 0:
                 # Increase the number of spaces:
                 indent = indent + 1
-                if indent > 80:
-                    indent = 80
-            else:
+                if indent > 60:
+                    indent = 60
+            elif mode == 1:
                 # Decrease the number of spaces:
                 indent = indent - 1
                 if indent < 0:
                     indent = 0
-    rainbow = wrap(rainbow, [optional('channel'), getopts({'delay':'float'})])
+            if mode == 2 and indentIncreasing:
+                # Increase the number of spaces:
+                indent = indent + 1
+                if indent == 60:
+                    # Change direction:
+                    indentIncreasing = False
+            elif mode == 2:
+                # Decrease the number of spaces:
+                indent = indent - 1
+                if indent == 0:
+                    # Change direction:
+                    indentIncreasing = True
+    rainbow = wrap(rainbow, [optional('channel'), getopts({'delay':'float', 'mode':'int'})])
 
 Class = TextArt
