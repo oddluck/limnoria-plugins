@@ -75,10 +75,6 @@ conf.registerChannelValue(Jeopardy, 'flexibility',
         registry.Float(0.92, _("""The minimum flexibility of the answer
         checker. Uses jaro-winkler distance, 1.0 is identical""")))
 
-conf.registerChannelValue(Jeopardy, 'color',
-        registry.PositiveInteger(10, _("""The IRC color to use for questions. Valid color
-        values are 0-98. Set 99 to disable""")))
-
 conf.registerChannelValue(Jeopardy, 'inactiveShutoff',
         registry.Integer(5, _("""The number of questions that can go
         unanswered before the game stops automatically.""")))
@@ -114,3 +110,24 @@ conf.registerChannelValue(Jeopardy, 'autoRestart',
 conf.registerChannelValue(Jeopardy, 'keepHistory',
         registry.Boolean(True, _("""Keep a history of previously asked questions per
         channel and don't repeat them.""")))
+
+conf.registerGroup(Jeopardy, 'template')
+
+conf.registerChannelValue(Jeopardy.template, 'question',
+        registry.String("\x02\x0310#{{number}} of {{total}}: ({{airdate}}) [${{points}}] {% filter upper %}{{category}}{% endfilter %}: {{clue}}",
+        _("""The template used to render questions.""")))
+
+conf.registerChannelValue(Jeopardy.template, 'hint',
+        registry.String("\x02HINT: {{hint}}", _("""The template used to render hints.""")))
+
+conf.registerChannelValue(Jeopardy.template, 'correct',
+        registry.String("\x02{{nick}} got it! The full answer was: {{answer}}. Points: {{points}} | Round Score: {{round}} | Total: {{total}}", 
+        _("""The template used to render correct answer replies.""")))
+
+conf.registerChannelValue(Jeopardy.template, 'skip',
+        registry.String("\x02Skipping question. (Answer: {{answer}})",
+        _("""The template used to render skip replies.""")))
+
+conf.registerChannelValue(Jeopardy.template, 'stop',
+        registry.String("\x02Jeopardy! stopped.{% if answer %} (Answer: {{answer}}){% endif %}",
+        _("""The template used to render stop replies.""")))

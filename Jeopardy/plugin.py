@@ -47,6 +47,7 @@ import supybot.conf as conf
 import requests
 from ftfy import fix_text
 from bs4 import BeautifulSoup
+from jinja2 import Template
 import textdistance
 from supybot.i18n import PluginInternationalization, internationalizeDocstring
 _ = PluginInternationalization('Jeopardy')
@@ -103,11 +104,11 @@ class Jeopardy(callbacks.Plugin):
             self.history = []
             self.question = ''
             self.currentHint = ''
-            self.color = self.registryValue('color', channel)
-            if self.color > 98:
-                self.color = ''
-            else:
-                self.color = "\x03{0}".format(self.color)
+            self.question_template = Template(self.registryValue("template.question", channel))
+            self.hint_template = Template(self.registryValue("template.hint", channel))
+            self.correct_template = Template(self.registryValue("template.correct", channel))
+            self.skip_template = Template(self.registryValue("template.skip", channel))
+            self.stop_template = Template(self.registryValue("template.stop", channel))
             self.directory = conf.supybot.directories.data.dirize("jeopardy/")
             self.historyFile = "{0}/history_{1}.txt".format(self.directory, channel)
             self.scoreFile = "{0}/scores_{1}.txt".format(self.directory, channel)
@@ -152,7 +153,7 @@ class Jeopardy(callbacks.Plugin):
                             clue = item['question'].strip()
                             airdate = item['airdate'].split('T')[0]
                             answer = item['answer'].strip()
-                            category = item['category']['title'].strip().upper()
+                            category = item['category']['title'].strip()
                             invalid = item['invalid_count']
                             points = self.points
                             if item['value']:
@@ -160,9 +161,9 @@ class Jeopardy(callbacks.Plugin):
                             else:
                                 points = self.points
                             if self.registryValue('keepHistory', channel):
-                                if len(clue) > 1 and airdate and answer and category and not invalid and id not in asked and id not in self.history:
-                                    q = "{0}*({1}) [${2}] \x02{3}: {4}\x0F*{5}*{6}".format(id, airdate, points, category, clue, answer, points)
-                                    q = re.sub('<[^<]+?>', '', fix_text(q, normalization='NFKC')).encode('utf-8').decode('unicode_escape')
+                                if clue and airdate and answer and category and not invalid and id not in asked and id not in self.history:
+                                    q = "{0}|{1}|{2}|{3}|{4}|{5}".format(id, airdate, points, category, clue, answer)
+                                    q = re.sub('<[^<]+?>', '', fix_text(q, normalization='NFKC')).replace(r"\'", "'").replace(r'\"', '"')
                                     q = re.sub('([,;:.!?])(\w|\"|\'|\()(?!\.)', '\g<1> \g<2>', q)
                                     q = re.sub('(\$\d+[,.]) (\d+)', '\g<1>\g<2>', q)
                                     q = " ".join(q.split())
@@ -170,9 +171,9 @@ class Jeopardy(callbacks.Plugin):
                                     asked.append(id)
                                     n += 1
                             else:
-                                if len(clue) > 1 and airdate and answer and category and not invalid and id not in asked:
-                                    q = "{0}*({1}) [${2}] \x02{3}: {4}\x0F*{5}*{6}".format(id, airdate, points, category, clue, answer, points)
-                                    q = re.sub('<[^<]+?>', '', fix_text(q, normalization='NFKC')).encode('utf-8').decode('unicode_escape')
+                                if clue and airdate and answer and category and not invalid and id not in asked:
+                                    q = "{0}|{1}|{2}|{3}|{4}|{5}".format(id, airdate, points, category, clue, answer)
+                                    q = re.sub('<[^<]+?>', '', fix_text(q, normalization='NFKC')).replace(r"\'", "'").replace(r'\"', '"')
                                     q = re.sub('([,;:.!?])(\w|\"|\'|\()(?!\.)', '\g<1> \g<2>', q)
                                     q = re.sub('(\$\d+[,.]) (\d+)', '\g<1>\g<2>', q)
                                     q = " ".join(q.split())
@@ -221,7 +222,7 @@ class Jeopardy(callbacks.Plugin):
                                 clue = item['question'].strip()
                                 airdate = item['airdate'].split('T')[0]
                                 answer = item['answer'].strip()
-                                category = item['category']['title'].strip().upper()
+                                category = item['category']['title'].strip()
                                 invalid = item['invalid_count']
                                 points = self.points
                                 if item['value']:
@@ -229,9 +230,9 @@ class Jeopardy(callbacks.Plugin):
                                 else:
                                     points = self.points
                                 if self.registryValue('keepHistory', channel):
-                                    if len(clue) > 1 and airdate and answer and category and not invalid and id not in asked and id not in self.history:
-                                        q = "{0}*({1}) [${2}] \x02{3}: {4}\x0F*{5}*{6}".format(id, airdate, points, category, clue, answer, points)
-                                        q = re.sub('<[^<]+?>', '', fix_text(q, normalization='NFKC')).encode('utf-8').decode('unicode_escape')
+                                    if clue and airdate and answer and category and not invalid and id not in asked and id not in self.history:
+                                        q = "{0}|{1}|{2}|{3}|{4}|{5}".format(id, airdate, points, category, clue, answer)
+                                        q = re.sub('<[^<]+?>', '', fix_text(q, normalization='NFKC')).replace(r"\'", "'").replace(r'\"', '"')
                                         q = re.sub('([,;:.!?])(\w|\"|\'|\()(?!\.)', '\g<1> \g<2>', q)
                                         q = re.sub('(\$\d+[,.]) (\d+)', '\g<1>\g<2>', q)
                                         q = " ".join(q.split())
@@ -240,9 +241,9 @@ class Jeopardy(callbacks.Plugin):
                                         n += 1
                                         j += 1
                                 else:
-                                    if len(clue) > 1 and airdate and answer and category and not invalid and id not in asked:
-                                        q = "{0}*({1}) [${2}] \x02{3}: {4}\x0F*{5}*{6}".format(id, airdate, points, category, clue, answer, points)
-                                        q = re.sub('<[^<]+?>', '', fix_text(q, normalization='NFKC')).encode('utf-8').decode('unicode_escape')
+                                    if clue and airdate and answer and category and not invalid and id not in asked:
+                                        q = "{0}|{1}|{2}|{3}|{4}|{5}".format(id, airdate, points, category, clue, answer)
+                                        q = re.sub('<[^<]+?>', '', fix_text(q, normalization='NFKC')).replace(r"\'", "'").replace(r'\"', '"')
                                         q = re.sub('([,;:.!?])(\w|\"|\'|\()(?!\.)', '\g<1> \g<2>', q)
                                         q = re.sub('(\$\d+[,.]) (\d+)', '\g<1>\g<2>', q)
                                         q = " ".join(q.split())
@@ -267,15 +268,15 @@ class Jeopardy(callbacks.Plugin):
             if not self.active:
                 return
             inactiveShutoff = self.registryValue('inactiveShutoff', self.channel)
-            if self.num == 0 or self.answered == self.total or self.numAsked == self.total:
+            if len(self.questions) == 0:
+                self.reply('Oops! I ran out of questions!')
+                self.stop()
+                return
+            elif self.num == 0 or self.answered == self.total or self.numAsked == self.total:
                 self.stop()
                 return
             elif self.unanswered > inactiveShutoff and inactiveShutoff > 0:
-                self.reply('Seems like no one\'s playing any more.')
-                self.stop()
-                return
-            elif len(self.questions) == 0:
-                self.reply('Oops! I ran out of questions!')
+                self.reply('Seems like no one\'s playing any more. Jeopardy! stopped.')
                 self.stop()
                 return
             self.id = None
@@ -283,18 +284,19 @@ class Jeopardy(callbacks.Plugin):
             self.shown = 0
             self.num -= 1
             self.numAsked += 1
-            q = self.questions.pop(len(self.questions)-1).split('*')
+            q = self.questions.pop(len(self.questions)-1).split('|')
+            question = {}
             self.id = q[0]
-            self.q = q[1]
-            self.a = q[2]
-            self.p = int(q[3])
+            question['airdate'] = q[1]
+            self.p = int(q[2])
+            question['category'] = q[3]
+            question['clue'] = q[4]
+            self.a = q[5]
+            question['points'], question['number'], question['total'] = self.p, self.numAsked, self.total
             def next_question():
                 if not self.active:
                     return
-                if not self.registryValue('autoRestart', self.channel):
-                    self.question = "{0}#{1} of {2}: {3}".format(self.color, self.numAsked, self.total, self.q)
-                else:
-                    self.question = "{0}{1}".format(self.color, self.q)
+                self.question = self.question_template.render(question)
                 self.reply(self.question)
                 self.history.append(int(self.id))
                 ans = re.sub('\(\d of\)', '', self.a)
@@ -306,7 +308,7 @@ class Jeopardy(callbacks.Plugin):
                     self.a.append(a2)
                 if self.numHints > 0:
                     blank = re.sub('\w', self.blankChar, ans)
-                    self.currentHint = "HINT: {0}".format(blank)
+                    self.currentHint = self.hint_template.render(hint = blank)
                     self.reply(self.currentHint)
                 def event():
                     self.timedEvent()
@@ -348,16 +350,16 @@ class Jeopardy(callbacks.Plugin):
                     for i in range(0, max):
                         item = sorted[i]
                         s = _('%s (%s: %s)') % (s, item[0], item[1])
-                    self.reply(s)
+                    self.reply('{0}'.format(s))
                 self.active = False
                 try:
                     del self.games[self.channel].questions, self.games[self.channel].roundscores
-                except KeyError:
+                except:
                     return
             else:
                 try:
                     del self.games[self.channel].questions, self.games[self.channel].roundscores
-                except KeyError:
+                except:
                     return
 
 
@@ -398,7 +400,8 @@ class Jeopardy(callbacks.Plugin):
                         i += 1
                 except:
                     break
-            self.currentHint = "HINT: {0}".format(''.join(self.show[self.id]))
+            hint = "{0}".format(''.join(self.show[self.id]))
+            self.currentHint = self.hint_template.render(hint = hint)
             self.reply(self.currentHint)
             self.p -= int(self.p * reduction)
             def event():
@@ -446,7 +449,8 @@ class Jeopardy(callbacks.Plugin):
                         self.roundscores[msg.nick] = 0
                     self.roundscores[msg.nick] += self.p
                     self.unanswered = 0
-                    self.reply("{0} got it! The full answer was: {1}. Points: {2} | Round Score: {3} | Total: {4}".format(msg.nick, self.a[0], self.p, self.roundscores[msg.nick], self.scores[msg.nick]))
+                    reply = self.correct_template.render(nick = msg.nick, answer = self.a[0], points = self.p, round = self.roundscores[msg.nick], total = self.scores[msg.nick])
+                    self.reply(reply)
                     self.correct = True
                     self.answered += 1
                     try:
@@ -571,12 +575,14 @@ class Jeopardy(callbacks.Plugin):
             channel = msg.channel
         if self.registryValue('requireOps', channel) and msg.nick not in irc.state.channels[channel].ops and not ircdb.checkCapability(msg.prefix, 'admin'):
             return
-        if self.games[channel]:
+        if self.games.get(channel):
             if self.games[channel].active:
                 if self.games[channel].correct:
-                    irc.reply("Jeopardy! stopped.")
+                    reply = self.games[channel].stop_template.render()
+                    irc.reply(reply, prefixNick=False)
                 else:
-                    irc.reply("Jeopardy! stopped. (Answer: {0})".format(self.games[channel].a[0]))
+                    reply = self.games[channel].stop_template.render(answer = self.games[channel].a[0])
+                    irc.reply(reply, prefixNick=False)
             try:
                 self.games[channel].active = False
                 self.games[channel].stop()
@@ -696,10 +702,11 @@ class Jeopardy(callbacks.Plugin):
         channel = msg.channel
         if channel in self.games:
             if self.games[channel].active and self.games[channel].numHints > 0:
-                irc.reply("Hint: {0}".format(self.games[channel].currentHint), prefixNick=False)
+                irc.reply("{0}".format(self.games[channel].currentHint), prefixNick=False)
             elif self.games[channel].active and self.games[channel].numHints == 0:
                 blank = re.sub('\w', self.games[channel].blankChar, self.games[channel].a[0])
-                irc.reply("HINT: {0}".format(blank), prefixNick=False)
+                hint = self.hint_template.render(hint = blank)
+                irc.reply(hint, prefixNick=False)
                 if self.games[channel].shown == 0:
                     reduction = self.registryValue('hintReduction', channel)
                     self.games[channel].p -= int(self.games[channel].p * reduction)
@@ -749,7 +756,8 @@ class Jeopardy(callbacks.Plugin):
             return
         if channel in self.games:
             if self.games[channel].active:
-                irc.reply('Skipping question. (Answer: {0})'.format(self.games[channel].a[0]), prefixNick=False)
+                reply = self.games[channel].skip_template.render(answer = self.games[channel].a[0])
+                irc.reply(reply, prefixNick=False)
                 self.games[channel].unanswered = 0
                 self.games[channel].correct = True
                 self.games[channel].answered += 1
@@ -766,3 +774,4 @@ class Jeopardy(callbacks.Plugin):
 
 
 Class = Jeopardy
+
