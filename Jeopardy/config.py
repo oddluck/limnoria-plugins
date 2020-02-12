@@ -1,6 +1,7 @@
 ###
 # Copyright (c) 2010, quantumlemur
 # Copyright (c) 2011, Valentin Lorentz
+# Copyright (c) 2020, oddluck
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -72,8 +73,8 @@ conf.registerChannelValue(Jeopardy, 'hintReduction',
         with each hint reveal""")))
 
 conf.registerChannelValue(Jeopardy, 'flexibility',
-        registry.Float(0.92, _("""The minimum flexibility of the answer
-        checker. Uses jaro-winkler distance, 1.0 is identical""")))
+        registry.Float(0.92, _("""The minimum similarity of the answer
+        checker. Uses jaro-winkler distance, 1.0 is identical/disabled.""")))
 
 conf.registerChannelValue(Jeopardy, 'inactiveShutoff',
         registry.Integer(5, _("""The number of questions that can go
