@@ -118,20 +118,20 @@ conf.registerChannelValue(Jeopardy, 'useBold',
 conf.registerGroup(Jeopardy, 'template')
 
 conf.registerChannelValue(Jeopardy.template, 'question',
-        registry.String("\x0310#{{number}} of {{total}}: ({{airdate}}) [${{points}}] {{category}}: {{clue}}",
+        registry.String("#{{number}} of {{total}}: \x0313({{airdate}}) \x0309[${{points}}] \x0310\x1f{{category}}\x1f: {{clue}}",
         _("""The template used to render questions.""")))
 
 conf.registerChannelValue(Jeopardy.template, 'hint',
         registry.String("HINT: {{hint}}", _("""The template used to render hints.""")))
 
 conf.registerChannelValue(Jeopardy.template, 'correct',
-        registry.String("{{nick}} got it! The full answer was: {{answer}}. Points: {{points}} | Round Score: {{round}} | Total: {{total}}", 
+        registry.String("\x0313{{nick}}\x03 got it! The full answer was: \x0310{{answer}}\x03. Points: \x0309{{points}}\x03 | Round Score: \x0309{{round}}\x03 | Total: \x0309{{total}}",
         _("""The template used to render correct answer replies.""")))
 
 conf.registerChannelValue(Jeopardy.template, 'skip',
-        registry.String("Skipping question. (Answer: {{answer}})",
+        registry.String("Skipping question. \x0310(Answer: {{answer}})",
         _("""The template used to render skip replies.""")))
 
 conf.registerChannelValue(Jeopardy.template, 'stop',
-        registry.String("Jeopardy! stopped.{% if answer %} (Answer: {{answer}}){% endif %}",
+        registry.String("Jeopardy! stopped.{% if answer %} \x0310(Answer: {{answer}}){% endif %}",
         _("""The template used to render stop replies.""")))

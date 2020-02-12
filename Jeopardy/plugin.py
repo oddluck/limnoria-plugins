@@ -227,7 +227,7 @@ class Jeopardy(callbacks.Plugin):
                                 clue = item['question'].strip()
                                 airdate = item['airdate'].split('T')[0]
                                 answer = item['answer'].strip()
-                                category = item['category']['title'].strip()
+                                category = string.capwords(item['category']['title'])
                                 invalid = item['invalid_count']
                                 points = self.points
                                 if item['value']:
