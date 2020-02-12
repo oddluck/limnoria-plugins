@@ -57,7 +57,7 @@ conf.registerChannelValue(Jeopardy, 'numHints',
         each question""")))
 
 conf.registerChannelValue(Jeopardy, 'delay',
-        registry.Integer(0, _("""The number of seconds to increase the delay
+        registry.Integer(4, _("""The number of seconds to increase the delay
         between questions""")))
 
 conf.registerChannelValue(Jeopardy, 'timeout',
@@ -112,23 +112,26 @@ conf.registerChannelValue(Jeopardy, 'keepHistory',
         registry.Boolean(True, _("""Keep a history of previously asked questions per
         channel and don't repeat them.""")))
 
+conf.registerChannelValue(Jeopardy, 'useBold',
+     registry.Boolean(True, _("""Use bold in replies.""")))
+
 conf.registerGroup(Jeopardy, 'template')
 
 conf.registerChannelValue(Jeopardy.template, 'question',
-        registry.String("\x02\x0310#{{number}} of {{total}}: ({{airdate}}) [${{points}}] {% filter upper %}{{category}}{% endfilter %}: {{clue}}",
+        registry.String("\x0310#{{number}} of {{total}}: ({{airdate}}) [${{points}}] {{category}}: {{clue}}",
         _("""The template used to render questions.""")))
 
 conf.registerChannelValue(Jeopardy.template, 'hint',
-        registry.String("\x02HINT: {{hint}}", _("""The template used to render hints.""")))
+        registry.String("HINT: {{hint}}", _("""The template used to render hints.""")))
 
 conf.registerChannelValue(Jeopardy.template, 'correct',
-        registry.String("\x02{{nick}} got it! The full answer was: {{answer}}. Points: {{points}} | Round Score: {{round}} | Total: {{total}}", 
+        registry.String("{{nick}} got it! The full answer was: {{answer}}. Points: {{points}} | Round Score: {{round}} | Total: {{total}}", 
         _("""The template used to render correct answer replies.""")))
 
 conf.registerChannelValue(Jeopardy.template, 'skip',
-        registry.String("\x02Skipping question. (Answer: {{answer}})",
+        registry.String("Skipping question. (Answer: {{answer}})",
         _("""The template used to render skip replies.""")))
 
 conf.registerChannelValue(Jeopardy.template, 'stop',
-        registry.String("\x02Jeopardy! stopped.{% if answer %} (Answer: {{answer}}){% endif %}",
+        registry.String("Jeopardy! stopped.{% if answer %} (Answer: {{answer}}){% endif %}",
         _("""The template used to render stop replies.""")))

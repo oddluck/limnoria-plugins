@@ -45,6 +45,7 @@ import supybot.schedule as schedule
 import supybot.callbacks as callbacks
 import supybot.conf as conf
 import supybot.log as log
+import string
 import requests
 from ftfy import fix_text
 from bs4 import BeautifulSoup
@@ -157,7 +158,7 @@ class Jeopardy(callbacks.Plugin):
                             clue = item['question'].strip()
                             airdate = item['airdate'].split('T')[0]
                             answer = item['answer'].strip()
-                            category = item['category']['title'].strip()
+                            category = string.capwords(item['category']['title'])
                             invalid = item['invalid_count']
                             points = self.points
                             if item['value']:
@@ -273,14 +274,14 @@ class Jeopardy(callbacks.Plugin):
                 return
             inactiveShutoff = self.registryValue('inactiveShutoff', self.channel)
             if len(self.questions) == 0:
-                self.reply('\x02Oops! I ran out of questions!')
+                self.reply('Oops! I ran out of questions!')
                 self.stop()
                 return
             elif self.num == 0 or self.answered == self.total or self.numAsked == self.total:
                 self.stop()
                 return
             elif self.unanswered > inactiveShutoff and inactiveShutoff > 0:
-                self.reply('\x02Seems like no one\'s playing any more. Jeopardy! stopped.')
+                self.reply('Seems like no one\'s playing any more. Jeopardy! stopped.')
                 self.stop()
                 return
             self.id = None
@@ -355,7 +356,7 @@ class Jeopardy(callbacks.Plugin):
                     for i in range(0, max):
                         item = sorted[i]
                         s = _('%s (%s: %s)') % (s, item[0], item[1])
-                    self.reply('\x02{0}'.format(s))
+                    self.reply('{0}'.format(s))
                 self.active = False
                 try:
                     del self.games[self.channel].questions, self.games[self.channel].roundscores
@@ -372,7 +373,7 @@ class Jeopardy(callbacks.Plugin):
             if not self.active:
                 return
             if self.hints >= self.numHints:
-                self.reply('\x02No one got the answer! It was: {0}'.format(self.a[0]))
+                self.reply('No one got the answer! It was: {0}'.format(self.a[0]))
                 self.unanswered += 1
                 self.corect = True
                 self.answered += 1
@@ -466,7 +467,10 @@ class Jeopardy(callbacks.Plugin):
 
 
         def reply(self, s):
-            self.irc.queueMsg(ircmsgs.privmsg(self.channel, s))
+            if self.registryValue('useBold', self.channel):
+                self.irc.queueMsg(ircmsgs.privmsg(self.channel, ircutils.bold(s)))
+            else:
+                self.irc.queueMsg(ircmsgs.privmsg(self.channel, s))
 
 
         def write(self):
@@ -543,7 +547,10 @@ class Jeopardy(callbacks.Plugin):
                         if search.isdigit():
                             results.append(search)
             if not results:
-                irc.reply("\x02Error. Could not find any results for {0}".format(categories))
+                if self.registryValue('useBold', channel):
+                    irc.reply(ircutils.bold("Error. Could not find any results for {0}".format(categories)), prefixNick = False)
+                else:
+                    irc.reply("Error. Could not find any results for {0}".format(categories), prefixNick = False)
                 return
         else:
             results = 'random'
@@ -556,15 +563,18 @@ class Jeopardy(callbacks.Plugin):
                     schedule.removeEvent('new_%s' % channel)
                 except KeyError:
                     pass
-                irc.reply("\x02This... is... Jeopardy!", prefixNick=False)
+                self.games[channel].reply("This... is... Jeopardy!")
                 self.games[channel] = self.Game(irc, channel, num, hints, shuffle, results, self)
             else:
                 self.games[channel].num += num
                 self.games[channel].total += num
-                irc.reply(_('\x02%d questions added to active game!') % num)
+                self.games[channel].reply(_('%d questions added to active game!') % num)
         else:
             if not self.registryValue('autoRestart', channel):
-                irc.reply("\x02This... is... Jeopardy!", prefixNick=False)
+                if self.registryValue('useBold', channel):
+                    irc.reply(ircutils.bold("This... is... Jeopardy!"), prefixNick = False)
+                else:
+                    irc.reply("This... is... Jeopardy!", prefixNick = False)
             self.games[channel] = self.Game(irc, channel, num, hints, shuffle, results, self)
         irc.noReply()
     start = wrap(start, ['channel', getopts({'num':'int',  'no-hints':'', 'shuffle':'', 'random-category':''}), additional('text')])
@@ -583,10 +593,10 @@ class Jeopardy(callbacks.Plugin):
             if self.games[channel].active:
                 if self.games[channel].correct:
                     reply = self.games[channel].stop_template.render()
-                    irc.reply(reply, prefixNick=False)
+                    self.games[channel].reply(reply)
                 else:
                     reply = self.games[channel].stop_template.render(answer = self.games[channel].a[0])
-                    irc.reply(reply, prefixNick=False)
+                    self.games[channel].reply(reply)
             try:
                 self.games[channel].active = False
                 self.games[channel].stop()
@@ -604,8 +614,12 @@ class Jeopardy(callbacks.Plugin):
         data = open("{0}/categories.txt".format(os.path.dirname(os.path.abspath(__file__))))
         text = data.read()
         reply = text.splitlines()
-        irc.reply("\x02Add category name to the start command to select a category by name.")
-        irc.reply(str(reply).replace("[", "").replace("]", "").replace("'", ""))
+        if self.registryValue('useBold', msg.channel):
+            irc.reply(ircutils.bold("Add category name to the start command to select a category by name."), prefixNick = False)
+            irc.reply(ircutils.bold(", ".join(reply)), prefixNick = False)
+        else:
+            irc.reply("Add category name to the start command to select a category by name.", prefixNick = False)
+            irc.reply(", ".join(reply), prefixNick = False)
     categories = wrap(categories)
 
 
@@ -625,9 +639,9 @@ class Jeopardy(callbacks.Plugin):
             if nick:
                 try:
                     total = self.games[channel].scores[nick]
-                    irc.reply("\x02Total score for {0} in {1}: {2}".format(nick, channel, total), prefixNick=False)
+                    self.games[channel].reply("Total score for {0} in {1}: {2}".format(nick, channel, total))
                 except KeyError:
-                    irc.reply("\x02No scores found for {0} in {1}".format(nick, channel), prefixNick=False)
+                    self.games[channel].reply("No scores found for {0} in {1}".format(nick, channel))
             else:
                 sorted_x = []
                 sorted_x = sorted(self.games[channel].scores.items(), key=lambda kv: kv[1], reverse=True)
@@ -638,8 +652,8 @@ class Jeopardy(callbacks.Plugin):
                     for i in range(0, top):
                         item = sorted_x[i]
                         totals += "#{0} ({1}: {2}), ".format(i+1, item[0], item[1])
-                    irc.reply("\x02Top {0} Jeopardy! players for {1}:".format(top, channel), prefixNick=False)
-                    irc.reply(totals.strip(', '), prefixNick=False)
+                    self.games[channel].reply("Top {0} Jeopardy! players for {1}:".format(top, channel))
+                    self.games[channel].reply(totals.strip(', '))
                 else:
                     return
         except KeyError:
@@ -657,9 +671,9 @@ class Jeopardy(callbacks.Plugin):
                 f.close()
                 try:
                     total = scores[nick]
-                    irc.reply("\x02Total score for {0} in {1}: {2}".format(nick, channel, total), prefixNick=False)
+                    self.games[channel].reply("Total score for {0} in {1}: {2}".format(nick, channel, total))
                 except KeyError:
-                    irc.reply("\x02No scores found for {0} in {1}".format(nick, channel), prefixNick=False)
+                    self.games[channel].reply("No scores found for {0} in {1}".format(nick, channel))
             else:
                 f = open(scoreFile, 'r')
                 line = f.readline()
@@ -677,8 +691,8 @@ class Jeopardy(callbacks.Plugin):
                     for i in range(0, top):
                         item = sorted_x[i]
                         totals += "#{0} ({1}: {2}), ".format(i+1, item[0], item[1])
-                    irc.reply("\x02Top {0} Jeopardy! players for {1}:".format(top, channel), prefixNick=False)
-                    irc.reply(totals.strip(', '), prefixNick=False)
+                    self.games[channel].reply("Top {0} Jeopardy! players for {1}:".format(top, channel))
+                    self.games[channel].reply(totals.strip(', '))
                 else:
                     return
     stats = wrap(stats, ['channel', getopts({'top':'int'}), additional('text')])
@@ -691,7 +705,7 @@ class Jeopardy(callbacks.Plugin):
         channel = msg.channel
         if channel in self.games:
             if self.games[channel].active:
-                irc.reply(self.games[channel].question, prefixNick=False)
+                self.games[channel].reply(self.games[channel].question)
             else:
                 return
         else:
@@ -706,11 +720,11 @@ class Jeopardy(callbacks.Plugin):
         channel = msg.channel
         if channel in self.games:
             if self.games[channel].active and self.games[channel].numHints > 0:
-                irc.reply(self.games[channel].currentHint, prefixNick=False)
+                self.games[channel].reply(self.games[channel].currentHint)
             elif self.games[channel].active and self.games[channel].numHints == 0:
                 blank = re.sub('\w', self.games[channel].blankChar, self.games[channel].a[0])
                 hint = self.hint_template.render(hint = blank)
-                irc.reply(hint, prefixNick=False)
+                self.games[channel].reply(hint)
                 if self.games[channel].shown == 0:
                     reduction = self.registryValue('hintReduction', channel)
                     self.games[channel].p -= int(self.games[channel].p * reduction)
@@ -733,9 +747,9 @@ class Jeopardy(callbacks.Plugin):
             if self.games[channel].active:
                 r = requests.post('{0}/api/invalid'.format(self.jserviceUrl), data = {'id':self.games[channel].id})
                 if r.status_code == 200:
-                    irc.reply('\x02Question successfully reported. (Answer: {0})'.format(self.games[channel].a[0]), prefixNick=False)
+                    self.games[channel].reply('Question successfully reported. (Answer: {0})'.format(self.games[channel].a[0]))
                 else:
-                    irc.reply('\x02Error. Question not reported. (Answer: {0})'.format(self.games[channel].a[0]), prefixNick=False)
+                    self.games[channel].reply('Error. Question not reported. (Answer: {0})'.format(self.games[channel].a[0]))
                 self.games[channel].unanswered = 0
                 self.games[channel].correct = True
                 self.games[channel].answered += 1
@@ -761,7 +775,7 @@ class Jeopardy(callbacks.Plugin):
         if channel in self.games:
             if self.games[channel].active:
                 reply = self.games[channel].skip_template.render(answer = self.games[channel].a[0])
-                irc.reply(reply, prefixNick=False)
+                self.games[channel].reply(reply)
                 self.games[channel].unanswered = 0
                 self.games[channel].correct = True
                 self.games[channel].answered += 1
