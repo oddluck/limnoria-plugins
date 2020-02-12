@@ -723,7 +723,7 @@ class Jeopardy(callbacks.Plugin):
                 self.games[channel].reply(self.games[channel].currentHint)
             elif self.games[channel].active and self.games[channel].numHints == 0:
                 blank = re.sub('\w', self.games[channel].blankChar, self.games[channel].a[0])
-                hint = self.hint_template.render(hint = blank)
+                hint = self.games[channel].hint_template.render(hint = blank)
                 self.games[channel].reply(hint)
                 if self.games[channel].shown == 0:
                     reduction = self.registryValue('hintReduction', channel)
