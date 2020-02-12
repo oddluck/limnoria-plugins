@@ -169,7 +169,7 @@ class Jeopardy(callbacks.Plugin):
                                 if clue and airdate and answer and category and not invalid and id not in asked and id not in self.history[channel]:
                                     q = "{0}|{1}|{2}|{3}|{4}|{5}".format(id, airdate, points, category, clue, answer)
                                     q = re.sub('<[^<]+?>', '', fix_text(q, normalization='NFKC')).replace(r"\'", "'").replace(r'\"', '"')
-                                    q = re.sub('([,;:.!?])(\w|\"|\'|\()(?!\.)', '\g<1> \g<2>', q)
+                                    q = re.sub('([,;:.!?])(\w|\"|\'|\()(?![.\'])', '\g<1> \g<2>', q)
                                     q = re.sub('(\$\d+[,.]) (\d+)', '\g<1>\g<2>', q)
                                     q = " ".join(q.split())
                                     self.questions.append(q)
@@ -179,7 +179,7 @@ class Jeopardy(callbacks.Plugin):
                                 if clue and airdate and answer and category and not invalid and id not in asked:
                                     q = "{0}|{1}|{2}|{3}|{4}|{5}".format(id, airdate, points, category, clue, answer)
                                     q = re.sub('<[^<]+?>', '', fix_text(q, normalization='NFKC')).replace(r"\'", "'").replace(r'\"', '"')
-                                    q = re.sub('([,;:.!?])(\w|\"|\'|\()(?!\.)', '\g<1> \g<2>', q)
+                                    q = re.sub('([,;:.!?])(\w|\"|\'|\()(?![.\'])', '\g<1> \g<2>', q)
                                     q = re.sub('(\$\d+[,.]) (\d+)', '\g<1>\g<2>', q)
                                     q = " ".join(q.split())
                                     self.questions.append(q)
@@ -238,7 +238,7 @@ class Jeopardy(callbacks.Plugin):
                                     if clue and airdate and answer and category and not invalid and id not in asked and id not in self.history[channel]:
                                         q = "{0}|{1}|{2}|{3}|{4}|{5}".format(id, airdate, points, category, clue, answer)
                                         q = re.sub('<[^<]+?>', '', fix_text(q, normalization='NFKC')).replace(r"\'", "'").replace(r'\"', '"')
-                                        q = re.sub('([,;:.!?])(\w|\"|\'|\()(?!\.)', '\g<1> \g<2>', q)
+                                        q = re.sub('([,;:.!?])(\w|\"|\'|\()(?![.\'])', '\g<1> \g<2>', q)
                                         q = re.sub('(\$\d+[,.]) (\d+)', '\g<1>\g<2>', q)
                                         q = " ".join(q.split())
                                         self.questions.append(q)
@@ -249,7 +249,7 @@ class Jeopardy(callbacks.Plugin):
                                     if clue and airdate and answer and category and not invalid and id not in asked:
                                         q = "{0}|{1}|{2}|{3}|{4}|{5}".format(id, airdate, points, category, clue, answer)
                                         q = re.sub('<[^<]+?>', '', fix_text(q, normalization='NFKC')).replace(r"\'", "'").replace(r'\"', '"')
-                                        q = re.sub('([,;:.!?])(\w|\"|\'|\()(?!\.)', '\g<1> \g<2>', q)
+                                        q = re.sub('([,;:.!?])(\w|\"|\'|\()(?![.\'])', '\g<1> \g<2>', q)
                                         q = re.sub('(\$\d+[,.]) (\d+)', '\g<1>\g<2>', q)
                                         q = " ".join(q.split())
                                         self.questions.append(q)
@@ -273,15 +273,15 @@ class Jeopardy(callbacks.Plugin):
             if not self.active:
                 return
             inactiveShutoff = self.registryValue('inactiveShutoff', self.channel)
-            if len(self.questions) == 0:
-                self.reply('Oops! I ran out of questions!')
-                self.stop()
-                return
-            elif self.num == 0 or self.answered == self.total or self.numAsked == self.total:
+            if self.num == 0 or self.answered == self.total or self.numAsked == self.total:
                 self.stop()
                 return
             elif self.unanswered > inactiveShutoff and inactiveShutoff > 0:
                 self.reply('Seems like no one\'s playing any more. Jeopardy! stopped.')
+                self.stop()
+                return
+            elif len(self.questions) == 0:
+                self.reply('Oops! I ran out of questions!')
                 self.stop()
                 return
             self.id = None
@@ -442,9 +442,9 @@ class Jeopardy(callbacks.Plugin):
                         log.debug("Jeopardy: guess: {0}, answer: {1}, length: {2}, distance: {3}, flexibility: {4}".format(guess, answer, len(answer), dist, self.flexibility))
                         if dist >= self.flexibility:
                             self.correct = True
-                        elif dist < flexibility and ',' in self.a[0] or '&' in self.a[0]:
+                        elif dist < self.flexibility and ',' in self.a[0] or '&' in self.a[0]:
                             dist = textdistance.jaccard(guess, answer)
-                            if dist >= flexibility:
+                            if dist >= self.flexibility:
                                 self.correct = True
                 if self.correct:
                     if not msg.nick in self.scores:
