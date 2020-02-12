@@ -23,7 +23,6 @@ except ImportError:
 from bs4 import BeautifulSoup
 import random
 import json
-import cgi
 import datetime
 import time
 from jinja2 import Template
@@ -599,7 +598,7 @@ class SpiffyTitles(callbacks.Plugin):
             if domain == "youtu.be":
                 video_id = path.split("/")[1]
             else:
-                parsed = cgi.parse_qsl(info.query)
+                parsed = parse_qsl(info.query)
                 params = dict(parsed)
 
                 if "v" in params:
