@@ -73,8 +73,8 @@ conf.registerChannelValue(Jeopardy, 'hintReduction',
         with each hint reveal""")))
 
 conf.registerChannelValue(Jeopardy, 'flexibility',
-        registry.Float(0.92, _("""The minimum similarity of the answer
-        checker. Uses jaro-winkler distance, 1.0 is identical/disabled.""")))
+        registry.Float(0.94, _("""The minimum similarity score of the answer checker.
+        Uses jaro-winkler distance, 1.0 is identical/disabled. (Sane values > 0.90)""")))
 
 conf.registerChannelValue(Jeopardy, 'inactiveShutoff',
         registry.Integer(5, _("""The number of questions that can go
