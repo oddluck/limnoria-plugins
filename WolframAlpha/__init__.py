@@ -1,5 +1,6 @@
 ###
 # Copyright (c) 2012-2014, spline
+# Copyright (c) 2020, oddluck
 # All rights reserved.
 #
 #
@@ -19,14 +20,16 @@ import importlib
 __version__ = ""
 
 # XXX Replace this with an appropriate author or supybot.Author instance.
-__author__ = 'reticulatingspline'
+__author__ = supybot.Author('reticulatingspline', 'spline', '')
+__maintainer__ = getattr(supybot.authors, 'oddluck',
+                         supybot.Author('oddluck', 'oddluck', 'oddluck@riseup.net'))
 
 # This is a dictionary mapping supybot.Author instances to lists of
 # contributions.
 __contributors__ = {}
 
 # This is a url where the most recent plugin package can be downloaded.
-__url__ = 'https://github.com/reticulatingspline/WolframAlpha' # 'http://supybot.com/Members/yourname/WolframAlpha/download'
+__url__ = 'https://github.com/oddluck/limnoria-plugins/'
 
 from . import config
 from . import plugin

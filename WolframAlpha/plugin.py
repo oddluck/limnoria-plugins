@@ -1,5 +1,6 @@
 ###
 # Copyright (c) 2012-2014, spline
+# Copyright (c) 2020, oddluck
 # All rights reserved.
 #
 #

@@ -1,5 +1,6 @@
 ###
 # Copyright (c) 2012-2014, spline
+# Copyright (c) 2020, oddluck
 # All rights reserved.
 #
 #
@@ -11,7 +12,7 @@ from supybot.test import *
 
 class WolframAlphaTestCase(PluginTestCase):
     plugins = ('WolframAlpha',)
-    
+
     def testWolframAlpha(self):
         apiKey = os.environ.get('apiKey')
         conf.supybot.plugins.WolframAlpha.apiKey.setValue(apiKey)

@@ -1,6 +1,6 @@
 ###
-# Copyright (c) 2014, SpiderDave
 # Copyright (c) 2016-2017 Ormanya
+# Copyright (c) 2020, oddluck
 # All rights reserved.
 #
 #
