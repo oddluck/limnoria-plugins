@@ -30,27 +30,28 @@
 ###
 
 
-import re
-import os
-import time
-import math
-import random
-import supybot.utils as utils
-import supybot.ircdb as ircdb
+from bs4 import BeautifulSoup
+from ftfy import fix_text
+from jinja2 import Template
 from supybot.commands import *
-import supybot.plugins as plugins
-import supybot.ircmsgs as ircmsgs
-import supybot.ircutils as ircutils
-import supybot.schedule as schedule
+import math
+import os
+import random
+import re
+import requests
+import string
 import supybot.callbacks as callbacks
 import supybot.conf as conf
+import supybot.ircdb as ircdb
+import supybot.ircmsgs as ircmsgs
+import supybot.ircutils as ircutils
 import supybot.log as log
-import string
-import requests
-from ftfy import fix_text
-from bs4 import BeautifulSoup
-from jinja2 import Template
+import supybot.plugins as plugins
+import supybot.schedule as schedule
+import supybot.utils as utils
 import textdistance
+import time
+
 from supybot.i18n import PluginInternationalization, internationalizeDocstring
 _ = PluginInternationalization('Jeopardy')
 
@@ -80,42 +81,45 @@ class Jeopardy(callbacks.Plugin):
 
 
     class Game:
-        def __init__(self, irc, channel, num, hints, shuffle, categories, plugin):
+        def __init__(self, irc, channel, num, hints, timeout, shuffle, categories, restart, plugin):
             self.registryValue = plugin.registryValue
-            self.irc = irc
-            self.channel = channel
-            self.num = num
-            self.numHints = hints
-            self.categories = categories
-            self.numAsked = 0
-            self.hints = 0
-            self.games = plugin.games
-            self.scores = requests.structures.CaseInsensitiveDict()
-            self.jserviceUrl = plugin.jserviceUrl
-            self.points = self.registryValue('defaultPointValue')
-            self.blankChar = self.registryValue('blankChar', self.channel)
-            self.total = num
-            self.questions = []
-            self.roundscores = requests.structures.CaseInsensitiveDict()
-            self.unanswered = 0
-            self.show = {}
-            self.revealed = {}
-            self.shuffled = shuffle
-            self.correct = False
-            self.answered = 0
             self.active = True
-            self.history = plugin.history
-            self.question = ''
-            self.currentHint = ''
-            self.flexibility = self.registryValue('flexibility', channel)
-            self.question_template = Template(self.registryValue("template.question", channel))
-            self.hint_template = Template(self.registryValue("template.hint", channel))
+            self.answered = 0
+            self.blankChar = self.registryValue('blankChar', channel)
+            self.categories = categories
+            self.channel = channel
+            self.correct = False
             self.correct_template = Template(self.registryValue("template.correct", channel))
+            self.currentHint = ''
+            self.directory = conf.supybot.directories.data.dirize("jeopardy/")
+            self.flexibility = self.registryValue('flexibility', channel)
+            self.games = plugin.games
+            self.hint_template = Template(self.registryValue("template.hint", channel))
+            self.hints = 0
+            self.history = plugin.history
+            self.historyFile = "{0}/history_{1}.txt".format(self.directory, channel)
+            self.irc = irc
+            self.jserviceUrl = plugin.jserviceUrl
+            self.num = num
+            self.numAsked = 0
+            self.numClues = num
+            self.numHints = hints
+            self.points = self.registryValue('defaultPointValue')
+            self.question = ''
+            self.question_template = Template(self.registryValue("template.question", channel))
+            self.questions = []
+            self.restart = restart
+            self.revealed = {}
+            self.roundscores = requests.structures.CaseInsensitiveDict()
+            self.scoreFile = "{0}/scores_{1}.txt".format(self.directory, channel)
+            self.scores = requests.structures.CaseInsensitiveDict()
+            self.show = {}
+            self.shuffled = shuffle
             self.skip_template = Template(self.registryValue("template.skip", channel))
             self.stop_template = Template(self.registryValue("template.stop", channel))
-            self.directory = conf.supybot.directories.data.dirize("jeopardy/")
-            self.historyFile = "{0}/history_{1}.txt".format(self.directory, channel)
-            self.scoreFile = "{0}/scores_{1}.txt".format(self.directory, channel)
+            self.timeout = timeout
+            self.total = num
+            self.unanswered = 0
             if not os.path.exists(self.directory):
                 os.makedirs(self.directory)
             if self.registryValue('keepHistory', channel):
@@ -318,9 +322,9 @@ class Jeopardy(callbacks.Plugin):
                     self.reply(self.currentHint)
                 def event():
                     self.timedEvent()
-                timeout = self.registryValue('timeout', self.channel)
-                eventTime = time.time() + timeout / (self.numHints + 1)
-                schedule.addEvent(event, eventTime, 'next_%s' % self.channel)
+                if self.timeout > 0:
+                    eventTime = time.time() + self.timeout / (self.numHints + 1)
+                    schedule.addEvent(event, eventTime, 'next_%s' % self.channel)
             if self.numAsked > 1:
                 delay = self.registryValue('delay', self.channel)
                 delayTime = time.time() + delay
@@ -334,14 +338,13 @@ class Jeopardy(callbacks.Plugin):
             self.write()
             try:
                 schedule.removeEvent('next_%s' % self.channel)
-                schedule.removeEvent('new_%s' % self.channel)
-            except KeyError:
+            except:
                 pass
-            if self.registryValue('autoRestart', self.channel) and self.active:
-                num = self.registryValue('defaultRoundLength', self.channel)
-                hints = self.registryValue('numHints', self.channel)
-                self.__init__(self.irc, self.channel, num, hints, False, 'random', self)
-            elif not self.registryValue('autoRestart', self.channel):
+            try:
+                schedule.removeEvent('new_%s' % self.channel)
+            except:
+                pass
+            if self.registryValue('showScores', self.channel):
                 scores = iter(self.roundscores.items())
                 sorted = []
                 for i in range(0, len(self.roundscores)):
@@ -357,20 +360,14 @@ class Jeopardy(callbacks.Plugin):
                         item = sorted[i]
                         s = _('%s (%s: %s)') % (s, item[0], item[1])
                     self.reply('{0}'.format(s))
-                self.active = False
-                try:
-                    del self.games[self.channel].questions, self.games[self.channel].roundscores
-                except:
-                    return
+            if self.restart and self.active:
+                self.__init__(self.irc, self.channel, self.numClues, self.numHints, self.timeout, False, 'random', self.restart, self)
             else:
-                try:
-                    del self.games[self.channel].questions, self.games[self.channel].roundscores
-                except:
-                    return
+                self.active = False
 
 
         def timedEvent(self):
-            if not self.active:
+            if not self.active or self.timeout == 0:
                 return
             if self.hints >= self.numHints:
                 self.reply('No one got the answer! It was: {0}'.format(self.a[0]))
@@ -384,6 +381,9 @@ class Jeopardy(callbacks.Plugin):
 
         def hint(self):
             if not self.active:
+                return
+            if self.hints >= self.numHints:
+                self.reply(self.currentHint)
                 return
             self.hints += 1
             ans = self.a[0]
@@ -412,9 +412,9 @@ class Jeopardy(callbacks.Plugin):
             self.p -= int(self.p * reduction)
             def event():
                 self.timedEvent()
-            timeout = self.registryValue('timeout', self.channel)
-            eventTime = time.time() + timeout / (self.numHints + 1)
-            schedule.addEvent(event, eventTime, 'next_%s' % self.channel)
+            if self.timeout > 0:
+                eventTime = time.time() + self.timeout / (self.numHints + 1)
+                schedule.addEvent(event, eventTime, 'next_%s' % self.channel)
 
 
         def answer(self, msg):
@@ -459,9 +459,12 @@ class Jeopardy(callbacks.Plugin):
                     self.correct = True
                     self.answered += 1
                     try:
-                        schedule.removeEvent('next_%s' % channel)
-                        schedule.removeEvent('new_%s' % channel)
-                    except KeyError:
+                        schedule.removeEvent('next_%s' % self.channel)
+                    except:
+                        pass
+                    try:
+                        schedule.removeEvent('new_%s' % self.channel)
+                    except:
                         pass
                     self.newquestion()
 
@@ -492,18 +495,27 @@ class Jeopardy(callbacks.Plugin):
 
     @internationalizeDocstring
     def start(self, irc, msg, args, channel, optlist, categories):
-        """[<channel>] [--num <number of questions>] [--no-hints] [--random-category] [--shuffle] [<category1>, <category2>, <category3>, etc.]
-        Play a round of Jeopardy! with random questions or select a category by name/number.
-        Use --no-hints to disable showing answer hints for the round.
-        Use --random-category to start a round with a randomly selected category.
-        Use --num to set the number of questions.
-        Use --shuffle to randomize questions from manually selected categories."""
+        """[channel] [--num <#>] [--timeout <#>] [--hints <#>] [--random] [--shuffle] [--restart] [<category1>, <category2>, etc.]
+        Play Jeopardy! with random questions or search categories by name.
+        --num for number of questions.
+        --hints for number of hints, 0 for none.
+        --timeout for seconds to answer, 0 for no timeout.
+        --random to start a round with a random category.
+        --shuffle to randomize questions from selected categories.
+        --restart to automatically start new rounds after the current round ends."""
         if not channel:
             channel = msg.channel
         if self.registryValue('requireOps', channel) and msg.nick not in irc.state.channels[channel].ops and not ircdb.checkCapability(msg.prefix, 'admin'):
             return
         if not self.registryValue('enabled', channel):
             return
+        if channel in self.games:
+            if self.games[channel].active:
+                if self.registryValue('useBold', channel):
+                    irc.reply(ircutils.bold("There is already a Jeopardy! game running in {0}.".format(channel)))
+                else:
+                    irc.reply("There is already a Jeopardy! game running in {0}.".format(channel))
+                return
         optlist = dict(optlist)
         if 'num' in optlist:
             num = optlist.get('num')
@@ -515,8 +527,18 @@ class Jeopardy(callbacks.Plugin):
             shuffle = False
         if 'no-hints' in optlist:
             hints = 0
+        elif 'hints' in optlist:
+            hints = optlist.get('hints')
         else:
             hints = self.registryValue('numHints', channel)
+        if 'timeout' in optlist:
+            timeout = optlist.get('timeout')
+        else:
+            timeout = self.registryValue('timeout', channel)
+        if 'restart' in optlist:
+            restart = True
+        else:
+            restart = self.registryValue('autoRestart', channel)
         if 'random-category' in optlist:
             if self.jserviceUrl == 'http://jservice.io':
                 seed = random.randint(0,184) * 100
@@ -552,32 +574,17 @@ class Jeopardy(callbacks.Plugin):
                 else:
                     irc.reply("Error. Could not find any results for {0}".format(categories), prefixNick = False)
                 return
+            elif results and 'shuffle' in optlist:
+                random.shuffle(results)
         else:
             results = 'random'
-        if results and 'shuffle' in optlist:
-            random.shuffle(results)
-        if channel in self.games:
-            if not self.games[channel].active:
-                try:
-                    schedule.removeEvent('next_%s' % channel)
-                    schedule.removeEvent('new_%s' % channel)
-                except KeyError:
-                    pass
-                self.games[channel].reply("This... is... Jeopardy!")
-                self.games[channel] = self.Game(irc, channel, num, hints, shuffle, results, self)
-            else:
-                self.games[channel].num += num
-                self.games[channel].total += num
-                self.games[channel].reply(_('%d questions added to active game!') % num)
+        if self.registryValue('useBold', channel):
+            irc.reply(ircutils.bold("This... is... Jeopardy!"), prefixNick = False)
         else:
-            if not self.registryValue('autoRestart', channel):
-                if self.registryValue('useBold', channel):
-                    irc.reply(ircutils.bold("This... is... Jeopardy!"), prefixNick = False)
-                else:
-                    irc.reply("This... is... Jeopardy!", prefixNick = False)
-            self.games[channel] = self.Game(irc, channel, num, hints, shuffle, results, self)
+            irc.reply("This... is... Jeopardy!", prefixNick = False)
+        self.games[channel] = self.Game(irc, channel, num, hints, timeout, shuffle, results, restart, self)
         irc.noReply()
-    start = wrap(start, ['channel', getopts({'num':'int',  'no-hints':'', 'shuffle':'', 'random-category':''}), additional('text')])
+    start = wrap(start, ['channel', getopts({'num':'int', 'hints':'int', 'timeout':'int', 'no-hints':'', 'shuffle':'', 'random':'', 'restart':''}), additional('text')])
 
 
     @internationalizeDocstring
@@ -715,11 +722,14 @@ class Jeopardy(callbacks.Plugin):
 
     def hint(self, irc, msg, args):
         """
-        Repeat the latest hint. If game set for no hints, show the blanked out answer.
+        Show hint. If timeout = 0 force a new hint. If game set for no hints, show the blanked out answer.
+        Otherwise repeat the latest hint.
         """
         channel = msg.channel
         if channel in self.games:
-            if self.games[channel].active and self.games[channel].numHints > 0:
+            if self.games[channel].active and self.games[channel].timeout == 0 and self.games[channel].numHints > 0:
+                self.games[channel].hint()
+            elif self.games[channel].active and self.games[channel].numHints > 0:
                 self.games[channel].reply(self.games[channel].currentHint)
             elif self.games[channel].active and self.games[channel].numHints == 0:
                 blank = re.sub('\w', self.games[channel].blankChar, self.games[channel].a[0])
@@ -792,3 +802,4 @@ class Jeopardy(callbacks.Plugin):
 
 
 Class = Jeopardy
+

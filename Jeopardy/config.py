@@ -61,7 +61,7 @@ conf.registerChannelValue(Jeopardy, 'delay',
         between questions""")))
 
 conf.registerChannelValue(Jeopardy, 'timeout',
-        registry.PositiveInteger(90, _("""The number of seconds to allow for
+        registry.Integer(90, _("""The number of seconds to allow for
         each question""")))
 
 conf.registerChannelValue(Jeopardy, 'hintPercentage',
@@ -114,6 +114,9 @@ conf.registerChannelValue(Jeopardy, 'keepHistory',
 
 conf.registerChannelValue(Jeopardy, 'useBold',
      registry.Boolean(True, _("""Use bold in replies.""")))
+
+conf.registerChannelValue(Jeopardy, 'showScores',
+     registry.Boolean(True, _("""Show scores at the end of the round.""")))
 
 conf.registerGroup(Jeopardy, 'template')
 
