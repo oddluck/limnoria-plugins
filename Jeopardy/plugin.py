@@ -91,6 +91,7 @@ class Jeopardy(callbacks.Plugin):
             self.correct = False
             self.correct_template = Template(self.registryValue("template.correct", channel))
             self.currentHint = ''
+            self.delay = self.registryValue('delay', channel)
             self.directory = conf.supybot.directories.data.dirize("jeopardy/")
             self.flexibility = self.registryValue('flexibility', channel)
             self.games = plugin.games
@@ -326,8 +327,7 @@ class Jeopardy(callbacks.Plugin):
                     eventTime = time.time() + self.timeout / (self.numHints + 1)
                     schedule.addEvent(event, eventTime, 'next_%s' % self.channel)
             if self.numAsked > 1:
-                delay = self.registryValue('delay', self.channel)
-                delayTime = time.time() + delay
+                delayTime = time.time() + self.delay
             else:
                 delayTime = time.time()
             if self.active:
@@ -361,7 +361,10 @@ class Jeopardy(callbacks.Plugin):
                         s = _('%s (%s: %s)') % (s, item[0], item[1])
                     self.reply('{0}'.format(s))
             if self.restart and self.active:
-                self.__init__(self.irc, self.channel, self.numClues, self.numHints, self.timeout, False, 'random', self.restart, self)
+                def event():
+                    self.__init__(self.irc, self.channel, self.numClues, self.numHints, self.timeout, False, 'random', self.restart, self)
+                delayTime = time.time() + self.delay
+                schedule.addEvent(event, delayTime, 'new_%s' % self.channel)
             else:
                 self.active = False
 
