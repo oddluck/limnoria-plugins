@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/reticulatingspline/WolframAlpha.svg?branch=master)](https://travis-ci.org/reticulatingspline/WolframAlpha)
+Forked from https://github.com/ormanya/Supyiel/tree/master/WolframAlpha
 
 # Limnoria plugin for WolframAlpha
 
