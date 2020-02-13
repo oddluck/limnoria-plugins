@@ -15,9 +15,23 @@ To run a local instance (190K+ questions, can add more questions as episodes con
 ## Commands
 
 ```
-start [--num <int>] [--shuffle] [--no-hints] [--random-category] [category1, category2, etc,]
+start [channel] [--num <#>] [--timeout <#>] [--hints <#>] [--random] [--shuffle] [--restart] [<category1>, <category2>, etc.]
 ```
-Calling the `start` command by itself will yield a round of random questions. Adding category names after the start command will search for specific categories by name. The `--random-category` option will return questions from a randomly selected category. Calling `start` while a game is running will add additional questions to the queue. Use `--shuffle` to randomize question order. Use `--no-hints` to disable hints for the round.
+`start` - start a round with random questions
+
+`start <category name>, <category name>` - search for a category by name, separate multiple categories with commas
+
+`--shuffle` - randomize category searches
+
+`--num <# of questions>` - set the number of questions for the round
+
+`--timeout <# of seconds to answer>` - set the time to answer the question, 0 to disable timeout
+
+`--hint <# of hints>` - specify number of hints, 0 to disable them
+
+`--random` - select a category at random
+
+`--restart` - automatically restart a new round when the current round finishes (questions in restarted rounds will be random)
 
 ```
 categories
@@ -37,7 +51,7 @@ Repeat the currently active question.
 ```
 hint
 ```
-Repeat the current hint. If game set for no hints, show blanked out answer.
+Repeat the current hint. If game set for no hints, show blanked out answer. If timeout disabled reveal the next hint.
 
 ```
 skip
