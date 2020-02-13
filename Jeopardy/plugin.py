@@ -316,7 +316,7 @@ class Jeopardy(callbacks.Plugin):
                     a1, a2, a3 = re.match("(.*)\((.*)\)(.*)", self.a[0]).groups()
                     self.a.append(a1 + a3)
                     self.a.append(a2)
-                if self.numHints > 0:
+                if self.numHints > 0 and self.timeout > 0:
                     blank = re.sub('\w', self.blankChar, ans)
                     self.currentHint = self.hint_template.render(hint = blank)
                     self.reply(self.currentHint)
@@ -727,20 +727,21 @@ class Jeopardy(callbacks.Plugin):
         """
         channel = msg.channel
         if channel in self.games:
-            if self.games[channel].active and self.games[channel].timeout == 0 and self.games[channel].numHints > 0:
-                self.games[channel].hint()
-            elif self.games[channel].active and self.games[channel].numHints > 0:
-                self.games[channel].reply(self.games[channel].currentHint)
-            elif self.games[channel].active and self.games[channel].numHints == 0:
-                blank = re.sub('\w', self.games[channel].blankChar, self.games[channel].a[0])
-                hint = self.games[channel].hint_template.render(hint = blank)
-                self.games[channel].reply(hint)
-                if self.games[channel].shown == 0:
-                    reduction = self.registryValue('hintReduction', channel)
-                    self.games[channel].p -= int(self.games[channel].p * reduction)
-                    self.games[channel].shown += 1
-            else:
+            if not self.games[channel].active:
                 return
+        if self.games[channel].numHints > 0 and self.games[channel].timeout > 0:
+            self.games[channel].reply(self.games[channel].currentHint)
+        elif self.games[channel].numHints < 1 or self.games[channel].timeout < 1 and self.games[channel].hints < 1:
+            blank = re.sub('\w', self.games[channel].blankChar, self.games[channel].a[0])
+            hint = self.games[channel].hint_template.render(hint = blank)
+            self.games[channel].reply(hint)
+            self.games[channel].hints += 1
+            if self.games[channel].shown == 0:
+                reduction = self.registryValue('hintReduction', channel)
+                self.games[channel].p -= int(self.games[channel].p * reduction)
+                self.games[channel].shown += 1
+        elif self.games[channel].timeout < 1 and self.games[channel].hints > 0 and self.games[channel].numHints > 0:
+            self.games[channel].hint()
         else:
             return
     hint = wrap(hint)
