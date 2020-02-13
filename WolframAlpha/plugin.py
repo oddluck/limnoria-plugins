@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 ###
 # Copyright (c) 2012-2014, spline
 # All rights reserved.
@@ -110,8 +109,8 @@ class WolframAlpha(callbacks.Plugin):
         if document.attrib['success'] == 'false' and document.attrib['error'] == 'true':
             errormsgs = []
             for error in document.findall('.//error'):
-                errorcode = error.find('code').text.encode('utf-8')
-                errormsg = error.find('msg').text.encode('utf-8')
+                errorcode = error.find('code').text
+                errormsg = error.find('msg').text
                 errormsgs.append("{0} - {1}".format(errorcode, errormsg))
             # log and report to irc if we have these.
             self.log.debug("ERROR processing request for: {0} message: {1}".format(optinput, errormsgs))
@@ -121,13 +120,13 @@ class WolframAlpha(callbacks.Plugin):
         elif document.attrib['success'] == 'false' and document.attrib['error'] == 'false':
             errormsgs = []  # list to contain whatever is there.
             for error in document.findall('.//futuretopic'):
-                errormsg = error.attrib['msg'].encode('utf-8')
+                errormsg = error.attrib['msg']
                 errormsgs.append("FUTURE TOPIC: {0}".format(errormsg))
             for error in document.findall('.//didyoumeans'):
-                errormsg = error.find('didyoumean').text.encode('utf-8')
+                errormsg = error.find('didyoumean').text
                 errormsgs.append("Did you mean? {0}".format(errormsg))
             for error in document.findall('.//tips'):
-                errormsg = error.find('tip').attrib['text'].text.encode('utf-8')
+                errormsg = error.find('tip').attrib['text'].text
                 errormsgs.append("TIPS: {0}".format(errormsg))
             # now output the messages to irc and log.
             self.log.debug("ERROR with input: {0} API returned: {1}".format(optinput, errormsgs))
@@ -140,7 +139,7 @@ class WolframAlpha(callbacks.Plugin):
             outputlist = {}
             # each answer has a different amount of pods.
             for pod in document.findall('.//pod'):
-                title = pod.attrib['title'].encode('utf-8')  # title of it.
+                title = pod.attrib['title']  # title of it.
                 position = int(pod.attrib['position'])  # store pods int when we sort.
                 outputlist[position] = title  # pu
                 for plaintext in pod.findall('.//plaintext'):
@@ -221,20 +220,16 @@ class WolframAlpha(callbacks.Plugin):
 
         # each answer has a different amount of pods.
         for pod in document.findall('.//pod'):
-            title = pod.attrib['title'].encode('utf-8')  # title of it.
+            title = pod.attrib['title']  # title of it.
             if title == "Result":
                 for plaintext in pod.findall('.//plaintext'):
-                    print(plaintext.text)
+                    print((plaintext.text))
 
                     if 'not compatible' in plaintext.text:
                         irc.reply('Conversion from btc to %s not available' % currency)
                     else:
                         converted_amount = plaintext.text.split('(')[0].strip()
-                        if '\:' in converted_amount:
-                            converted_amount = converted_amount.replace('\:','\\u').decode("unicode_escape")
-                        irc.reply('%s%d = %s' % ('\\u0e3f'.decode("unicode_escape"),amount, converted_amount))
-                    
-
+                        irc.reply('%s%d = %s' % ('\u0e3f', amount, converted_amount))
 
     btc = wrap(btc,['float', 'text'])
 
