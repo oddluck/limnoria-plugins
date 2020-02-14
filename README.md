@@ -2,8 +2,15 @@
 
 Limnoria (an IRC bot) plugins I wrote or forked. All working under Python 3. 
 
-repolist oddluck / install oddluck Plugin_Name
+Requires [Limnoria](https://github.com/ProgVal/Limnoria), obviously. Additional requirements in requirements.txt files
 
-Requires Limnoria, obviously. Additional requirements in requirements.txt files
+Plugins assume Python 3.6+, though many may still work with older versions.
+
+Easy installation:
+
+load PluginDownloader<br />
+repolist oddluck<br />
+install oddluck PluginName<br />
+load PluginName<br />
 
 gitlab mirror: https://gitlab.com/oddluck/limnoria-plugins

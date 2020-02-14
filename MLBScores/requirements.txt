@@ -1,6 +1,0 @@
-requests
-httplib2
-limnoria
-pytz
-python_dateutil
-pendulum

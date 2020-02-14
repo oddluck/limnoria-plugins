@@ -1,1 +1,0 @@
-Fetches College Basketball scores
