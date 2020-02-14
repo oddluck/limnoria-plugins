@@ -26,30 +26,30 @@ except ImportError:
 class CFB(callbacks.Plugin):
     """Fetches CFB scores"""
     threaded = True
-    
+
     def __init__(self, irc):
         self.__parent = super(CFB, self)
         self.__parent.__init__(irc)
-        self.CFB_GAMES = self._fetchGames(None, '')
-        
+
         self.SCOREBOARD = ('http://site.api.espn.com/apis/site/v2/sports/'
                            'football/college-football/scoreboard')
-        
+
         self.FUZZY_DAYS = ['yesterday', 'tonight', 'today', 'tomorrow',
                            'sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']
-        
+
         self._current_week = 0
         self._cfb_byes = {}
-        
+
         with open("{0}/abbrv.json".format(os.path.dirname(os.path.abspath(__file__))), 'r') as json_file:
             self.abbrv = json.load(json_file)
-            
+
         if not self.abbrv:
             self.abbrv = requests.get(
             'https://raw.githubusercontent.com/diagonalfish/FootballBotX2/master/abbrv.json')
             self.abbrv = self.abbrv.json()
-        
-            
+
+        self.CFB_GAMES = self._fetchGames(None, '')
+
     @wrap
     def cfbbyes(self, irc, msg, args):
         """Gets teams on bye week for current week"""
@@ -179,9 +179,9 @@ class CFB(callbacks.Plugin):
         games = self._sortGames(games)
         
         reply_string = self._replyAsString(team, games)
-        
-        for string in reply_string:
-            irc.reply(string)
+
+        reply = ' | '.join(reply_string)
+        irc.reply(reply, prefixNick = False)
         
         # reset games cache to current week
         if week:
