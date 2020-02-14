@@ -270,7 +270,6 @@ class CFB(callbacks.Plugin):
                 new_game['odds'] = '{} (O/U: {:.0f})'.format(game['competitions'][0]['odds'][0]['details'], game['competitions'][0]['odds'][0]['overUnder'])
             except Exception as e:
                 new_game['odds'] = ''
-                print(e)
                 
             
             if new_game['status'] == 'in' and not new_game['final']:
@@ -322,7 +321,6 @@ class CFB(callbacks.Plugin):
         half_point = len(games)//2
         
         def _parseScores(away, ascr, home, hscr, arnk, hrnk):
-            print(ascr, arnk, hscr, hrnk)
             if ascr > hscr:
                 astr = '{} {}'.format(self._bold(away), self._bold(ascr))
                 hstr = '{} {}'.format(home, hscr)
@@ -342,7 +340,6 @@ class CFB(callbacks.Plugin):
                 hstr = '{} {}'.format(home, hscr)
                 upset = False
                 
-            print(upset)
             return astr, hstr, upset
         
         if len(games) == 2:
@@ -445,7 +442,6 @@ class CFB(callbacks.Plugin):
                 tmp_strings.append(string)
                 
         
-        print(len(tmp_strings), half_point)        
         if len(tmp_strings) > 1 and half_point >= 6:
             reply_strings.append(' | '.join(string for string in tmp_strings[:half_point]))
             reply_strings.append(' | '.join(string for string in tmp_strings[half_point:]))
