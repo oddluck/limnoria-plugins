@@ -30,6 +30,7 @@ class CFB(callbacks.Plugin):
     def __init__(self, irc):
         self.__parent = super(CFB, self)
         self.__parent.__init__(irc)
+        self.CFB_GAMES = self._fetchGames(None, '')
         
         self.SCOREBOARD = ('http://site.api.espn.com/apis/site/v2/sports/'
                            'football/college-football/scoreboard')
