@@ -39,7 +39,7 @@ from supybot.utils.str import format, ordinal
 import supybot.ircmsgs as ircmsgs
 import supybot.callbacks as callbacks
 
-class Dicebot(callbacks.Plugin):
+class Dice(callbacks.Plugin):
     """This plugin supports rolling the dice using !roll 4d20+3 as well as
     automatically rolling such combinations it sees in the channel (if
     autoRoll option is enabled for that channel) or query (if
@@ -65,7 +65,7 @@ class Dicebot(callbacks.Plugin):
     MAX_ROLLS = 30
 
     def __init__(self, irc):
-        super(Dicebot, self).__init__(irc)
+        super(Dice, self).__init__(irc)
         self.deck = Deck()
 
     def _roll(self, dice, sides, mod=0):
@@ -505,7 +505,7 @@ class Dicebot(callbacks.Plugin):
             text = msg.args[1]
         self._process(irc, text)
 
-Class = Dicebot
+Class = Dice
 
 
 # vim:set shiftwidth=4 tabstop=8 expandtab textwidth=78:

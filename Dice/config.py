@@ -35,14 +35,14 @@ def configure(advanced):
     # a bool that specifies whether the user identified himself as an advanced
     # user or not.  You should effect your configuration by manipulating the
     # registry as appropriate.
-    conf.registerPlugin('Dicebot', True)
+    conf.registerPlugin('Dice', True)
 
 
-Dicebot = conf.registerPlugin('Dicebot')
-conf.registerChannelValue(Dicebot, 'autoRoll',
+Dice = conf.registerPlugin('Dice')
+conf.registerChannelValue(Dice, 'autoRoll',
     registry.Boolean(False, """Determines whether the bot will automatically
     roll the dice it sees in the channel."""))
-conf.registerGlobalValue(Dicebot, 'autoRollInPrivate',
+conf.registerGlobalValue(Dice, 'autoRollInPrivate',
     registry.Boolean(False, """Determines whether the bot will automatically
     roll the dice it sees in private messages."""))
 
