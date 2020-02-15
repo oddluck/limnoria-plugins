@@ -48,15 +48,14 @@ class CFB(callbacks.Plugin):
             'https://raw.githubusercontent.com/diagonalfish/FootballBotX2/master/abbrv.json')
             self.abbrv = self.abbrv.json()
 
-        self.CFB_GAMES = self._fetchGames(None, '')
 
     @wrap
     def cfbbyes(self, irc, msg, args):
         """Gets teams on bye week for current week"""
-        
+
         url = 'https://247sports.com/Article/Schedule-of-bye-weeks-for-college-footballs-top-2018-contenders-120880121/'
         headers = {'User-Agent': 'Mozilla/5.0 (X11; CrOS x86_64 11151.4.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.8 Safari/537.36'}
-        
+
         if not self._cfb_byes:
             data = requests.get(url, headers=headers)
             soup = BeautifulSoup(data.content)
@@ -73,35 +72,34 @@ class CFB(callbacks.Plugin):
                     byes = p.text.split(':')[1].strip()
                     if byes:
                         output[week] = byes
-                        
+
             self._cfb_byes = output
-                
+
         try:
             irc.reply(self._cfb_byes[self._current_week])
             return
         except:
             irc.reply('No teams on bye this week')
             return
-            
-    
+
     @wrap([getopts({'week': 'positiveInt'}), optional('text')])
     def cfbrankings(self, irc, msg, args, optlist, filter_team=None):
         """Fetches CFB Rankings"""
-        
+
         optlist = dict(optlist)
         week = optlist.get('week')
-        
+
         url = 'http://site.api.espn.com/apis/site/v2/sports/football/college-football/rankings'
         if week:
             url += '?weeks={}'.format(week)
-        
+
         try:
             data = requests.get(url)
             data = data.json()
         except:
             irc.reply('Error fetching rankings')
             return
-        
+
         if not week:
             week = ' ' + data['latestWeek']['displayValue']
         else:
@@ -109,15 +107,15 @@ class CFB(callbacks.Plugin):
                 irc.reply("Sorry, I cannot predict the future")
                 return
             week = ' Week {}'.format(week)
-        
+
         rankings = data['rankings'][0]
         self._current_week = week.strip()
         title = data['rankings'][0]['name']
-        
+
         output = []
         for team in rankings['ranks']:
             tmp = '#{0}{3} {1} {2}'
-            
+
             if '+' in team['trend']:
                 trend = self._green(team['trend'])
             elif '-' in team['trend'] and team['trend'] != '-':
@@ -130,7 +128,7 @@ class CFB(callbacks.Plugin):
                 team['recordSummary'],
                 '({})'.format(trend) if trend != '-' else ''
             )
-            
+
             if filter_team:
                 if filter_team.upper() == team['team']['abbreviation']:
                     tmp += ' :: {} points'.format(team['points'])
@@ -138,7 +136,7 @@ class CFB(callbacks.Plugin):
                     break
             else:
                 output.append(tmp)
-                
+
         if filter_team and len(output) == 1:
             irc.reply('{}: {}'.format(title + week, output[0]))
         elif filter_team and not output:
@@ -146,76 +144,70 @@ class CFB(callbacks.Plugin):
         else:
             irc.reply('{}: {}'.format(title + week, ' | '.join(team for team in output[:11])))
             irc.reply('{}'.format(' | '.join(team for team in output[11:])))
-        
+
     @wrap([getopts({'week': 'positiveInt', 'conf': 'positiveInt'}), optional('text')])
     def cfb(self, irc, msg, args, optlist, team=None):
         """[--conf #] [--week #] [<team>]
-        Fetches CFB Scores. Defaults to current week and AP Top 25 teams. 
-        Use --conf # (ESPN league #) to fetch a specific conference. 
-        Use --week # to look up a specific week. 
+        Fetches CFB Scores. Defaults to current week and AP Top 25 teams.
+        Use --conf # (ESPN league #) to fetch a specific conference.
+        Use --week # to look up a specific week.
         """
-        
+
         optlist = dict(optlist)
         week = optlist.get('week')
         conf = optlist.get('conf')
-        
+        games = None
+
         team = self._parseInput(team)
-        
+
         if (conf==80 or conf==81 or conf==35) and not team:
             irc.reply('ERROR: You must provide a team')
             return
-        
-        # override games cache
+
         if week or conf or team == 'today':
-            self.CFB_GAMES = self._fetchGames(team, conf, week)
-        
-        if not self.CFB_GAMES:
-            self.CFB_GAMES = self._fetchGames(team, conf)
-            if not self.CFB_GAMES:
+            games = self._fetchGames(team, conf, week)
+
+        if not games:
+            games = self._fetchGames(team, conf)
+            if not games:
                 irc.reply('No games found')
                 return
-        
-        games = self._parseGames(self.CFB_GAMES, team)
+
+        games = self._parseGames(games, team)
         games = self._sortGames(games)
-        
+
         reply_string = self._replyAsString(team, games)
 
         reply = ' | '.join(reply_string)
         irc.reply(reply, prefixNick = False)
-        
-        # reset games cache to current week
-        if week:
-            self.CFB_GAMES = self._fetchGames(team, conf)
-        elif conf:
-            self.CFB_GAMES = self._fetchGames(team, conf='')
-            
+
     def _parseInput(self, team):
         if not team:
             return None
         else:
             # tbd
             return team
-        
+
     def _fetchGames(self, team, conf="80", week=None):
         team = 'all' if not team else team.upper()
         date = pendulum.now('US/Pacific')
         conf = '' if not conf else conf
-        
+
         url = self.SCOREBOARD + '?groups={}'.format(conf)
         if team != 'all' and team != 'TODAY' and team != 'INP':
             url += '&limit=300'
-            
+
         if week:
             url += '&week={}'.format(week)
-        
+
         games = requests.get(url)
         games = games.json()
-        
+
         games = games['events']
-        
+
         if team != 'all' and team != 'TODAY' and team != 'INP':
             ngames = []
-            
+
             # check abbreviation first
             for game in games:
                 if team == game['competitions'][0]['competitors'][0]['team']['abbreviation'] \
@@ -229,13 +221,13 @@ class CFB(callbacks.Plugin):
                     or team == html.unescape(game['competitions'][0]['competitors'][1]['team']['location']).upper():
                         ngames.append(game)
             return ngames
-                    
-        
+
+
         return games
-    
+
     def _parseGames(self, games, team=None):
         new_games = []
-        
+
         if team:
             if team.lower() != 'all' and team.lower() != 'today' and team.lower() != 'inp':
                 for idx, game in enumerate(games):
@@ -243,7 +235,7 @@ class CFB(callbacks.Plugin):
                     or team.upper() == game['competitions'][0]['competitors'][1]['team']['abbreviation']:
                         games = [games.pop(idx)]
                         break
-        
+
         for game in games:
             date = pendulum.parse(game['date']).in_tz('US/Pacific')
             today = pendulum.today('US/Pacific')
@@ -264,14 +256,15 @@ class CFB(callbacks.Plugin):
             # Rankings
             new_game['home_team_rank'] = game['competitions'][0]['competitors'][0]['curatedRank'].get('current')
             new_game['away_team_rank'] = game['competitions'][0]['competitors'][1]['curatedRank'].get('current')
-            
+
             # Odds
             try:
                 new_game['odds'] = '{} (O/U: {:.0f})'.format(game['competitions'][0]['odds'][0]['details'], game['competitions'][0]['odds'][0]['overUnder'])
             except Exception as e:
                 new_game['odds'] = ''
-                
-            
+                print(e)
+
+
             if new_game['status'] == 'in' and not new_game['final']:
                 new_game['in_progress'] = True
                 try:
@@ -293,7 +286,7 @@ class CFB(callbacks.Plugin):
                     new_game['HT'] = True
                 else:
                     new_game['HT'] = False
-                    
+
             elif new_game['status'] == 'post':
                 new_game['in_progress'] = False
             new_game['broadcasts'] = '{}'.format(', '.join(item['media']['shortName'] for item in game['competitions'][0]['geoBroadcasts']))
@@ -307,20 +300,21 @@ class CFB(callbacks.Plugin):
                     new_games.append(new_game)
             else:
                 new_games.append(new_game)
-            
+
         return new_games
-    
+
     def _sortGames(self, games):
         sorted_games = sorted(games, key=lambda k: k['final'])
-        
+
         return sorted_games
-        
+
     def _replyAsString(self, team, games):
         reply_strings = []
         tmp_strings = []
         half_point = len(games)//2
-        
+
         def _parseScores(away, ascr, home, hscr, arnk, hrnk):
+            print(ascr, arnk, hscr, hrnk)
             if ascr > hscr:
                 astr = '{} {}'.format(self._bold(away), self._bold(ascr))
                 hstr = '{} {}'.format(home, hscr)
@@ -339,17 +333,18 @@ class CFB(callbacks.Plugin):
                 astr = '{} {}'.format(away, ascr)
                 hstr = '{} {}'.format(home, hscr)
                 upset = False
-                
+
+            print(upset)
             return astr, hstr, upset
-        
+
         if len(games) == 2:
             if games[0]['away'] == games[1]['away']:
                 for idx, game in enumerate(games):
                     if game['shortDetail'] == 'Postponed':
                         games.pop(idx)
-                        
+
         single = True if len(games) == 1 else False
-        
+
         for game in games:
             string = ''
             if single:
@@ -440,17 +435,17 @@ class CFB(callbacks.Plugin):
                     if upset:
                         string += ' :: {}'.format(self._orange('UPSET'))
                 tmp_strings.append(string)
-                
-        
+
+        print(len(tmp_strings), half_point)
         if len(tmp_strings) > 1 and half_point >= 6:
             reply_strings.append(' | '.join(string for string in tmp_strings[:half_point]))
             reply_strings.append(' | '.join(string for string in tmp_strings[half_point:]))
         else:
             reply_strings.append(' | '.join(string for string in tmp_strings))
-        
-        
+
+
         return reply_strings
-        
+
     def _red(self, string):
         """Returns a red string."""
         return ircutils.mircColor(string, 'red')
@@ -458,7 +453,7 @@ class CFB(callbacks.Plugin):
     def _yellow(self, string):
         """Returns a yellow string."""
         return ircutils.mircColor(string, 'yellow')
-    
+
     def _orange(self, string):
         return ircutils.mircColor(string, 'orange')
 
