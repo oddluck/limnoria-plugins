@@ -527,10 +527,10 @@ class Jeopardy(callbacks.Plugin):
 
     @internationalizeDocstring
     def start(self, irc, msg, args, channel, optlist, categories):
-        """[channel] [--num <#>] [--no-hints] [--shuffle] [<category1>, <category2>, etc.]
-        Play Jeopardy! with random questions or search categories by name.
+        """[--num <#>] [--no-hints] [--shuffle] [<category1>, <category2>, etc.]
+        Play Jeopardy! with random questions or search/select categories by name.
         --num for number of questions.
-        --no-hints to disable automatic hint replies.
+        --no-hints to disable automatic hint replies (including blanks).
         --shuffle to randomize questions from search results.
         """
         if not channel:
@@ -572,7 +572,6 @@ class Jeopardy(callbacks.Plugin):
         if timeout == 0 or hints == 0:
             showHints = False
             showTime = False
-            showBlank = False
         if 'restart' in optlist:
             restart = True
         else:
