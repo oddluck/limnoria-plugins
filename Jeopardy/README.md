@@ -15,7 +15,7 @@ To run a local instance (190K+ questions, can add more questions as episodes con
 ## Commands
 
 ```
-start [channel] [--num <#>] [--timeout <#>] [--hints <#>] [--random] [--shuffle] [--restart] [<category1>, <category2>, etc.]
+start [channel] [--num <#>] [--timeout <#>] [--hints <#>] [--no-hints] [--random] [--shuffle] [--restart] [<category1>, <category2>, etc.]
 ```
 `start` - start a round with random questions
 
@@ -28,6 +28,8 @@ start [channel] [--num <#>] [--timeout <#>] [--hints <#>] [--random] [--shuffle]
 `--timeout <# of seconds to answer>` - set the time to answer the question, 0 to disable timeout
 
 `--hint <# of hints>` - specify number of hints, 0 to disable them
+
+`--no-hints` - set showHints and showBlank to False
 
 `--random` - select a category at random
 

@@ -800,6 +800,7 @@ class Jeopardy(callbacks.Plugin):
         if channel in self.games:
             if self.games[channel].active:
                 self.games[channel].end()
+                self.games[channel].unanswered -= 1
     skip = wrap(skip)
 
 
