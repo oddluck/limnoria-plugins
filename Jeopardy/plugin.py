@@ -569,9 +569,10 @@ class Jeopardy(callbacks.Plugin):
             timeout = optlist.get('timeout')
         else:
             timeout = self.registryValue('timeout', channel)
-        if timeout == 0:
+        if timeout == 0 or hints == 0:
             showHints = False
             showTime = False
+            showBlank = False
         if 'restart' in optlist:
             restart = True
         else:
