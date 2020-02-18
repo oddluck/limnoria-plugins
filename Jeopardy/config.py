@@ -149,5 +149,5 @@ conf.registerChannelValue(Jeopardy.template, 'stop',
         _("""The template used to render stop replies.""")))
 
 conf.registerChannelValue(Jeopardy.template, 'time',
-        registry.String("{{time}} seconds remaining. [.hint] [.skip] [.stop]",
+        registry.String("{{time}} seconds remaining. [.hint] [.question] [.skip] [.stop]",
         _("""The template used to render time remaining replies.""")))
