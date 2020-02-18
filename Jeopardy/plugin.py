@@ -147,9 +147,9 @@ class Jeopardy(callbacks.Plugin):
                     self.scores[name] = int(score)
                 f.close()
             cluecount = self.num
+            asked = []
             if self.categories == 'random':
                 n = 0
-                asked = []
                 while n <= self.num:
                     if n == self.num:
                         break
@@ -191,7 +191,6 @@ class Jeopardy(callbacks.Plugin):
             else:
                 n = 0
                 k = 0
-                asked = []
                 while n <= self.num:
                     if n == self.num or k > len(self.categories):
                         break
@@ -254,7 +253,6 @@ class Jeopardy(callbacks.Plugin):
                             k += 1
                         except Exception:
                             continue
-            del data
             if self.shuffled or self.registryValue('randomize', channel):
                 random.shuffle(self.questions)
             else:
@@ -277,7 +275,6 @@ class Jeopardy(callbacks.Plugin):
                 text = re.sub('[^a-zA-Z0-9 ]+', '', text)
                 text = re.sub('^a |^an |^the |^or ', '', text).replace(' ', '')
             else:
-                text = re.sub('[^a-zA-Z0-9]+', '', text)
                 text = re.sub('[^a-zA-Z0-9]+', '', text)
             return text
 
