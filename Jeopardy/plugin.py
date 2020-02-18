@@ -272,6 +272,16 @@ class Jeopardy(callbacks.Plugin):
             return q
 
 
+        def clean(self, text):
+            if len(text) > 2:
+                text = re.sub('[^a-zA-Z0-9 ]+', '', text)
+                text = re.sub('^a |^an |^the |^or ', '', text).replace(' ', '')
+            else:
+                text = re.sub('[^a-zA-Z0-9]+', '', text)
+                text = re.sub('[^a-zA-Z0-9]+', '', text)
+            return text
+
+
         def newquestion(self):
             if not self.active:
                 return
@@ -463,14 +473,9 @@ class Jeopardy(callbacks.Plugin):
                     if guess == ans:
                         self.correct = True
                         break
-                    elif not self.correct and len(ans) > 2:
-                        answer = re.sub('[^a-zA-Z0-9 ]+', '', ans)
-                        answer = re.sub('^a |^an |^the |^or ', '', answer).replace(' ', '')
-                        guess = re.sub('[^a-zA-Z0-9 ]+', '', guess)
-                        guess = re.sub('^a |^an |^the |^or ', '', guess).replace(' ', '')
                     elif not self.correct:
-                        answer = re.sub('[^a-zA-Z0-9]+', '', ans)
-                        guess = re.sub('[^a-zA-Z0-9]+', '', guess)
+                        answer = self.clean(ans)
+                        guess = self.clean(guess)
                     if not self.correct and guess == answer:
                         self.correct = True
                         break
@@ -803,5 +808,3 @@ class Jeopardy(callbacks.Plugin):
 
 
 Class = Jeopardy
-
-
