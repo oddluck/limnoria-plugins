@@ -391,11 +391,12 @@ class Jeopardy(callbacks.Plugin):
                 delayTime = time.time() + self.delay
                 schedule.addEvent(event, delayTime, 'clue_%s' % self.channel)
             else:
+                self.correct = True
                 self.active = False
 
 
         def timedEvent(self):
-            if not self.active or self.timeout == 0:
+            if not self.active or self.timeout == 0 or self.correct:
                 return
             if self.showHints:
                 self.hint()
@@ -410,19 +411,19 @@ class Jeopardy(callbacks.Plugin):
 
 
         def end(self):
-            if not self.active or self.timeout == 0:
+            if not self.active or self.correct:
                 return
+            self.correct = True
             reply = self.skip_template.render(answer = self.a[0])
             self.reply(reply)
             self.unanswered += 1
-            self.corect = True
             self.answered += 1
             self.clear()
             self.newquestion()
 
 
         def hint(self):
-            if not self.active:
+            if not self.active or self.correct:
                 return
             try:
                 schedule.removeEvent('event_%s' % self.channel)
@@ -452,10 +453,11 @@ class Jeopardy(callbacks.Plugin):
                 self.p -= int(self.p * self.reduction)
             def event():
                 self.timedEvent()
-            if self.timeout > 0 and self.showHints or self.showTime:
+            if self.timeout > 0:
                 eventTime = time.time() + self.waitTime
-                schedule.addEvent(event, eventTime, 'event_%s' % self.channel)
                 reply = self.hint_template.render(hint = self.currentHint, time = round(self.endTime - time.time()))
+                if self.showHints or self.showTime:
+                    schedule.addEvent(event, eventTime, 'event_%s' % self.channel)
             else:
                 reply = self.hint_template.render(hint = self.currentHint, time = None)
             self.reply(reply)
@@ -463,7 +465,7 @@ class Jeopardy(callbacks.Plugin):
 
 
         def answer(self, msg):
-            if not self.active:
+            if not self.active or self.correct:
                 return
             if not self.correct:
                 channel = msg.channel
@@ -648,6 +650,7 @@ class Jeopardy(callbacks.Plugin):
                     self.games[channel].reply(reply)
             try:
                 self.games[channel].active = False
+                self.games[channel].correct = True
                 self.games[channel].stop()
             except:
                 return
@@ -753,7 +756,7 @@ class Jeopardy(callbacks.Plugin):
         """
         channel = msg.channel
         if channel in self.games:
-            if self.games[channel].active:
+            if self.games[channel].active and not self.games[channel].correct:
                 self.games[channel].reply(self.games[channel].question)
             else:
                 return
@@ -768,7 +771,7 @@ class Jeopardy(callbacks.Plugin):
         """
         channel = msg.channel
         if channel in self.games:
-            if not self.games[channel].active:
+            if not self.games[channel].active or self.games[channel].correct:
                 return
             else:
                 self.games[channel].hint()
