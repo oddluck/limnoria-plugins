@@ -79,6 +79,39 @@ config help plugins.jeopardy.<variable_name>
 Get information about what game options the variable controls.
 
 
+## Templates
+
+```
+config plugins.jeopardy.template.correct "\x0313{{nick}}\x03 got it! The full answer was: {{answer}}. Points: \x0309{{points}}\x03 | Round Score: \x0309{{round}}\x03 | Total: \x0309{{total}}"
+```
+Template for correct answer replies
+
+```
+config plugins.jeopardy.template.hint "HINT: {{hint}}{% if time %} | ({{time}} seconds remaining){% endif %}"
+```
+Template for hint reply
+
+```
+config plugins.jeopardy.template.question "#{{number}} of {{total}}: \x0313({{airdate}}) \x0309[${{points}}] \x0310\x1f{{category}}\x1f: {{clue}}"
+```
+Template for question reply
+
+```
+config plugins.jeopardy.template.skip "No one got the answer! It was: {{answer}}"
+```
+Template for reply when question unanswered after timeout or the 'skip' command used
+
+```
+config plugins.jeopardy.template.stop "Jeopardy! stopped.{% if answer %} (Answer: {{answer}}){% endif %}"
+```
+Template for reply when using the 'stop' command
+
+```
+config plugins.jeopardy.template.time "{{time}} seconds remaining. [.hint] [.question] [.skip]"
+```
+Template for time remaining reply when plugins.jeopardy.showTime = True
+
+
 ## Miscellaneous
 
 Score and history files can be found in <bot_directory>/data/jeopardy/
