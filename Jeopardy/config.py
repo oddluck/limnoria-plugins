@@ -137,15 +137,15 @@ conf.registerChannelValue(Jeopardy.template, 'hint',
         registry.String("HINT: {{hint}}{% if time %} | ({{time}} seconds remaining){% endif %}", _("""The template used to render hints.""")))
 
 conf.registerChannelValue(Jeopardy.template, 'correct',
-        registry.String("\x0313{{nick}}\x03 got it! The full answer was: \x0310{{answer}}\x03. Points: \x0309{{points}}\x03 | Round Score: \x0309{{round}}\x03 | Total: \x0309{{total}}",
+        registry.String("\x0313{{nick}}\x03 got it! The full answer was: {{answer}}. Points: \x0309{{points}}\x03 | Round Score: \x0309{{round}}\x03 | Total: \x0309{{total}}",
         _("""The template used to render correct answer replies.""")))
 
 conf.registerChannelValue(Jeopardy.template, 'skip',
-        registry.String("No one got the answer! It was: \x0310{{answer}}",
+        registry.String("No one got the answer! It was: {{answer}}",
         _("""The template used to render unanswered question and skip replies.""")))
 
 conf.registerChannelValue(Jeopardy.template, 'stop',
-        registry.String("Jeopardy! stopped.{% if answer %} \x0310(Answer: {{answer}}){% endif %}",
+        registry.String("Jeopardy! stopped.{% if answer %} (Answer: {{answer}}){% endif %}",
         _("""The template used to render stop replies.""")))
 
 conf.registerChannelValue(Jeopardy.template, 'time',
