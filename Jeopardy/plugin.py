@@ -418,7 +418,7 @@ class Jeopardy(callbacks.Plugin):
                 schedule.removeEvent('event_%s' % self.channel)
             except:
                 pass
-            if self.hints <= self.numHints and self.hints > 0:
+            if self.hints <= self.numHints and self.hints > 0 and self.numHints > 0:
                 ans = self.a[0]
                 self.show.setdefault(self.id, None)
                 self.revealed.setdefault(self.id, None)
