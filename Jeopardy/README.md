@@ -53,7 +53,7 @@ Repeat the currently active question.
 ```
 hint
 ```
-Display the next hint. If max hints reached, repeat the latest hint. If game set for no hints, show blanked out answer.
+Display the next hint. If max hints reached, repeat the latest hint. If max hints is 0, show blanked out answer.
 
 ```
 skip
