@@ -1,5 +1,3 @@
-[![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=T8E56M6SP9JH2)
-
 **Come play in ##Jeopardy on Freenode.**
 
 irc://chat.freenode.net/##jeopardy
@@ -10,6 +8,8 @@ irc://chat.freenode.net/##jeopardy
 Uses [jService](http://jservice.io) (150K+ Jeopardy! questions, more if run locally) as a trivia source.
 
 To run a local instance (190K+ questions, can add more questions as episodes continue to air) install [my jService fork](https://github.com/oddluck/jService) then point `plugins.jeopardy.jserviceUrl` to your own URL.
+
+To configure replies, see the [templates](#templates) section.
 
 
 ## Commands
@@ -53,7 +53,7 @@ Repeat the currently active question.
 ```
 hint
 ```
-Repeat the current hint. If game set for no hints, show blanked out answer. If timeout disabled reveal the next hint.
+Display the next hint. If max hints reached, repeat the latest hint. If game set for no hints, show blanked out answer.
 
 ```
 skip
