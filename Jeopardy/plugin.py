@@ -759,8 +759,7 @@ class Jeopardy(callbacks.Plugin):
 
     def hint(self, irc, msg, args):
         """
-        Show hint. If timeout = 0 force a new hint. If game set for no hints, show the blanked out answer.
-        Otherwise repeat the latest hint.
+        Display the next hint. If max hints reached, repeat the latest hint. If max hints is 0, show blanked out answer.
         """
         channel = msg.channel
         if channel in self.games:
@@ -768,7 +767,6 @@ class Jeopardy(callbacks.Plugin):
                 return
             else:
                 self.games[channel].hint()
-
     hint = wrap(hint)
 
 
