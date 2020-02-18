@@ -118,6 +118,15 @@ conf.registerChannelValue(Jeopardy, 'useBold',
 conf.registerChannelValue(Jeopardy, 'showScores',
      registry.Boolean(True, _("""Show scores at the end of the round.""")))
 
+conf.registerChannelValue(Jeopardy, 'showBlank',
+     registry.Boolean(True, _("""Show first (blank) hint with the question. Overrides showHints only for this reply.""")))
+
+conf.registerChannelValue(Jeopardy, 'showTime',
+     registry.Boolean(True, _("""Show time remaining messages when not showing hints.""")))
+
+conf.registerChannelValue(Jeopardy, 'showHints',
+     registry.Boolean(True, _("""Show hint messages automatically. Overrides showTime.""")))
+
 conf.registerGroup(Jeopardy, 'template')
 
 conf.registerChannelValue(Jeopardy.template, 'question',
@@ -125,16 +134,20 @@ conf.registerChannelValue(Jeopardy.template, 'question',
         _("""The template used to render questions.""")))
 
 conf.registerChannelValue(Jeopardy.template, 'hint',
-        registry.String("HINT: {{hint}}", _("""The template used to render hints.""")))
+        registry.String("HINT: {{hint}}{% if time %} | ({{time}} seconds remaining){% endif %}", _("""The template used to render hints.""")))
 
 conf.registerChannelValue(Jeopardy.template, 'correct',
         registry.String("\x0313{{nick}}\x03 got it! The full answer was: \x0310{{answer}}\x03. Points: \x0309{{points}}\x03 | Round Score: \x0309{{round}}\x03 | Total: \x0309{{total}}",
         _("""The template used to render correct answer replies.""")))
 
 conf.registerChannelValue(Jeopardy.template, 'skip',
-        registry.String("Skipping question. \x0310(Answer: {{answer}})",
-        _("""The template used to render skip replies.""")))
+        registry.String("No one got the answer! It was: \x0310{{answer}}",
+        _("""The template used to render unanswered question and skip replies.""")))
 
 conf.registerChannelValue(Jeopardy.template, 'stop',
         registry.String("Jeopardy! stopped.{% if answer %} \x0310(Answer: {{answer}}){% endif %}",
         _("""The template used to render stop replies.""")))
+
+conf.registerChannelValue(Jeopardy.template, 'time',
+        registry.String("{{time}} seconds remaining. [.hint] [.skip] [.stop]",
+        _("""The template used to render time remaining replies.""")))
