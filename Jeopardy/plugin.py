@@ -794,9 +794,9 @@ class Jeopardy(callbacks.Plugin):
             if self.games[channel].active:
                 r = requests.post('{0}/api/invalid'.format(self.jserviceUrl), data = {'id':self.games[channel].id})
                 if r.status_code == 200:
-                    self.games[channel].reply('Question successfully reported. (Answer: {0})'.format(self.games[channel].a[0]))
+                    self.games[channel].reply('Question successfully reported.')
                 else:
-                    self.games[channel].reply('Error. Question not reported. (Answer: {0})'.format(self.games[channel].a[0]))
+                    self.games[channel].reply('Error. Question not reported.')
                 self.games[channel].end()
     report = wrap(report)
 
