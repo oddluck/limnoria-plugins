@@ -121,6 +121,7 @@ class Jeopardy(callbacks.Plugin):
             self.stop_template = Template(self.registryValue("template.stop", channel))
             self.time_template = Template(self.registryValue("template.time", channel))
             self.timeout = timeout
+            self.timeReplies = self.registryValue('timeReplies', self.channel)
             self.total = num
             self.unanswered = 0
             if not os.path.exists(self.directory):
@@ -325,7 +326,10 @@ class Jeopardy(callbacks.Plugin):
                 self.correct = False
                 self.reply(self.question)
                 self.endTime = time.time() + self.timeout
-                self.waitTime = self.timeout / (self.numHints + 1)
+                if self.showHints:
+                    self.waitTime = self.timeout / (self.numHints + 1)
+                else:
+                    self.waitTime = self.timeout / (self.timeReplies + 1)
                 if self.registryValue('keepHistory', self.channel):
                     self.history[self.channel].append(int(self.id))
                 if self.timeout > 0:
@@ -338,7 +342,8 @@ class Jeopardy(callbacks.Plugin):
                         self.hint()
                     elif self.timeout > 0 and self.showHints or self.showTime:
                         eventTime = time.time() + self.waitTime
-                        schedule.addEvent(event, eventTime, 'event_%s' % self.channel)
+                        if eventTime < self.endTime:
+                            schedule.addEvent(event, eventTime, 'event_%s' % self.channel)
                 elif self.showBlank:
                     self.hint()
             if self.numAsked > 1 and self.delay > 0:
@@ -404,7 +409,8 @@ class Jeopardy(callbacks.Plugin):
                     def event():
                         self.timedEvent()
                     eventTime = time.time() + self.waitTime
-                    schedule.addEvent(event, eventTime, 'event_%s' % self.channel)
+                    if eventTime < self.endTime:
+                        schedule.addEvent(event, eventTime, 'event_%s' % self.channel)
 
 
         def end(self):
@@ -453,7 +459,7 @@ class Jeopardy(callbacks.Plugin):
             if self.timeout > 0:
                 eventTime = time.time() + self.waitTime
                 reply = self.hint_template.render(hint = self.currentHint, time = round(self.endTime - time.time()))
-                if self.showHints or self.showTime:
+                if self.showHints or self.showTime and eventTime < self.endTime:
                     schedule.addEvent(event, eventTime, 'event_%s' % self.channel)
             else:
                 reply = self.hint_template.render(hint = self.currentHint, time = None)

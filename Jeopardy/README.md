@@ -183,6 +183,11 @@ config [channel #channel] plugins.jeopardy.showHints True
 ```
 ^ Show hint messages automatically. Overrides showTime
 
+```
+config [channel #channel] plugins.jeopardy.timeReplies 1
+```
+^ Number of time remaining replies to show when showHints False and showTime True
+
 
 ## Templates
 

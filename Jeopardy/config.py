@@ -56,6 +56,10 @@ conf.registerChannelValue(Jeopardy, 'numHints',
         registry.PositiveInteger(3, _("""The number of hints to be given for
         each question""")))
 
+conf.registerChannelValue(Jeopardy, 'timeReplies',
+        registry.PositiveInteger(1, _("""The number of time remaining replies
+        if showHints False and showTime True""")))
+
 conf.registerChannelValue(Jeopardy, 'delay',
         registry.Integer(4, _("""The number of seconds to increase the delay
         between questions""")))
