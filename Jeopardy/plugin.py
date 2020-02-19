@@ -269,8 +269,7 @@ class Jeopardy(callbacks.Plugin):
 
         def normalize(self, q):
             q = re.sub('<[^<]+?>', '', fix_text(q, normalization='NFKC')).replace(r"\'", "'").replace(r'\"', '"')
-            q = re.sub('([,;:.!?)])(\w|\"|\'|\()(?![.\'])', '\g<1> \g<2>', q)
-            q = re.sub('(\$\d+[,.]) (\d+)', '\g<1>\g<2>', q)
+            q = re.sub('([,;:.!?)])([a-zA-Z]|\"|\'|\()(?![.\'])', '\g<1> \g<2>', q)
             q = " ".join(q.split())
             return q
 
