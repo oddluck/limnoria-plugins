@@ -1,6 +1,9 @@
+[![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=T8E56M6SP9JH2)
+
 **Come play in ##Jeopardy on Freenode.**
 
-irc://chat.freenode.net/##jeopardy
+[irc://chat.freenode.net/##jeopardy](irc://chat.freenode.net/##jeopardy)</br>
+[https://kiwiirc.com/nextclient/#irc://irc.freenode.net/#kiwiirc](https://kiwiirc.com/nextclient/#irc://irc.freenode.net/#kiwiirc)
 
 
 ## This... is... Jeopardy!
