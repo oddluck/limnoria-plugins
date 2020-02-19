@@ -313,8 +313,9 @@ class Jeopardy(callbacks.Plugin):
             self.a = q[5]
             question['points'], question['number'], question['total'] = self.p, self.numAsked, self.total
             self.question = self.question_template.render(question)
-            ans = re.sub('\(\d of\)', '', self.a)
-            self.a = [ans]
+            self.a = re.sub('\(\d of\)', '', self.a)
+            self.divider = round(len(re.sub('[^a-zA-Z0-9]+', '', self.a)))
+            self.a = [self.a]
             if "(" in self.a[0]:
                 a1, a2, a3 = re.match("(.*)\((.*)\)(.*)", self.a[0]).groups()
                 self.a.append(a1 + a3)
@@ -340,7 +341,7 @@ class Jeopardy(callbacks.Plugin):
                     schedule.addEvent(noTime, self.endTime, 'end_%s' % self.channel)
                     if self.showBlank:
                         self.hint()
-                    elif self.showHints or self.showTime:
+                    elif self.timeout > 0 and self.showHints or self.showTime:
                         eventTime = time.time() + self.waitTime
                         if eventTime < self.endTime:
                             schedule.addEvent(event, eventTime, 'event_%s' % self.channel)
@@ -437,7 +438,8 @@ class Jeopardy(callbacks.Plugin):
                 self.show.setdefault(self.id, None)
                 self.revealed.setdefault(self.id, None)
                 hintPercentage = self.registryValue('hintPercentage', self.channel)
-                divider = round(len(re.sub('[^a-zA-Z0-9]+', '', ans)) * hintPercentage)
+                divider = round(self.divider * hintPercentage)
+                self.divider -= divider
                 if not self.show[self.id]:
                     self.show[self.id] = list(self.blank)
                 if not self.revealed[self.id]:
@@ -457,11 +459,10 @@ class Jeopardy(callbacks.Plugin):
             def event():
                 self.timedEvent()
             if self.timeout > 0:
+                eventTime = time.time() + self.waitTime
                 reply = self.hint_template.render(hint = self.currentHint, time = round(self.endTime - time.time()))
-                if self.showHints or self.showTime:
-                    eventTime = time.time() + self.waitTime
-                    if eventTime < self.endTime:
-                        schedule.addEvent(event, eventTime, 'event_%s' % self.channel)
+                if self.showHints or self.showTime and eventTime < self.endTime:
+                    schedule.addEvent(event, eventTime, 'event_%s' % self.channel)
             else:
                 reply = self.hint_template.render(hint = self.currentHint, time = None)
             self.reply(reply)
