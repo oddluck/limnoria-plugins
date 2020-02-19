@@ -124,6 +124,10 @@ class Jeopardy(callbacks.Plugin):
             self.timeReplies = self.registryValue('timeReplies', self.channel)
             self.total = num
             self.unanswered = 0
+            if timeout > 0 and showHints:
+                self.waitTime = timeout / (hints + 1)
+            elif timeout > 0 and showTime:
+                self.waitTime = timeout / (self.timeReplies + 1)
             if not os.path.exists(self.directory):
                 os.makedirs(self.directory)
             if self.registryValue('keepHistory', channel):
@@ -316,32 +320,28 @@ class Jeopardy(callbacks.Plugin):
             self.a = re.sub('\(\d of\)', '', self.a)
             self.divider = round(len(re.sub('[^a-zA-Z0-9]+', '', self.a)))
             self.a = [self.a]
+            self.blank = re.sub('\w', self.blankChar, self.a[0])
+            self.currentHint = self.blank
             if "(" in self.a[0]:
                 a1, a2, a3 = re.match("(.*)\((.*)\)(.*)", self.a[0]).groups()
                 self.a.append(a1 + a3)
                 self.a.append(a2)
             def next_question():
                 self.clear()
-                self.blank = re.sub('\w', self.blankChar, self.a[0])
-                self.currentHint = self.blank
                 self.correct = False
                 self.reply(self.question)
-                self.endTime = time.time() + self.timeout
-                if self.showHints:
-                    self.waitTime = self.timeout / (self.numHints + 1)
-                else:
-                    self.waitTime = self.timeout / (self.timeReplies + 1)
                 if self.registryValue('keepHistory', self.channel):
                     self.history[self.channel].append(int(self.id))
                 if self.timeout > 0:
                     def event():
-                        self.timedEvent()
-                    def noTime():
                         self.end()
-                    schedule.addEvent(noTime, self.endTime, 'end_%s' % self.channel)
+                    self.endTime = time.time() + self.timeout
+                    schedule.addEvent(event, self.endTime, 'end_%s' % self.channel)
                     if self.showBlank:
                         self.hint()
                     elif self.showHints or self.showTime:
+                        def event():
+                            self.timedEvent()
                         eventTime = time.time() + self.waitTime
                         if eventTime < self.endTime:
                             schedule.addEvent(event, eventTime, 'event_%s' % self.channel)
@@ -453,14 +453,14 @@ class Jeopardy(callbacks.Plugin):
                             i += 1
                     except:
                         break
-                self.currentHint = "{0}".format(''.join(self.show[self.id]))
+                self.currentHint = ''.join(self.show[self.id])
             if self.hints > 0:
                 self.p -= int(self.p * self.reduction)
-            def event():
-                self.timedEvent()
             if self.timeout > 0:
                 reply = self.hint_template.render(hint = self.currentHint, time = round(self.endTime - time.time()))
                 if self.showHints or self.showTime:
+                    def event():
+                        self.timedEvent()
                     eventTime = time.time() + self.waitTime
                     if eventTime < self.endTime:
                         schedule.addEvent(event, eventTime, 'event_%s' % self.channel)
