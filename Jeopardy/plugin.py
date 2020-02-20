@@ -386,7 +386,7 @@ class Jeopardy(callbacks.Plugin):
                     self.reply('{0}'.format(s))
             if self.restart and self.active:
                 def event():
-                    self.__init__(self.irc, self.channel, self.numClues, self.numHints, self.timeout, False, 'random', self.restart, self.showHints, self.showBlank, self.ShowTime, self)
+                    self.__init__(self.irc, self.channel, self.numClues, self.numHints, self.timeout, False, 'random', self.restart, self.showHints, self.showBlank, self.showTime, self)
                 delayTime = time.time() + self.delay
                 schedule.addEvent(event, delayTime, 'clue_%s' % self.channel)
             else:
