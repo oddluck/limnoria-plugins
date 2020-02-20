@@ -86,7 +86,10 @@ class Jeopardy(callbacks.Plugin):
             self.categories = categories
             self.channel = channel
             self.correct = True
-            self.correct_template = Template(self.registryValue("template.correct", channel))
+            if restart:
+                self.correct_template = Template(self.registryValue("template.restart.correct", channel))
+            else:
+                self.correct_template = Template(self.registryValue("template.correct", channel))
             self.currentHint = ''
             self.delay = self.registryValue('delay', channel)
             self.directory = conf.supybot.directories.data.dirize("jeopardy/")
@@ -104,7 +107,7 @@ class Jeopardy(callbacks.Plugin):
             self.points = self.registryValue('defaultPointValue')
             self.question = ''
             if restart:
-                self.question_template = Template(self.registryValue("template.restart", channel))
+                self.question_template = Template(self.registryValue("template.restart.question", channel))
             else:
                 self.question_template = Template(self.registryValue("template.question", channel))
             self.questions = []

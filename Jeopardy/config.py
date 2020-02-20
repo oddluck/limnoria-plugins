@@ -137,9 +137,15 @@ conf.registerChannelValue(Jeopardy.template, 'question',
         registry.String("#{{number}} of {{total}}: \x0313({{airdate}}) \x0309[${{points}}] \x0310\x1f{{category}}\x1f: {{clue}}",
         _("""The template used to render questions.""")))
 
-conf.registerChannelValue(Jeopardy.template, 'restart',
+conf.registerGroup(Jeopardy.template, 'restart')
+
+conf.registerChannelValue(Jeopardy.template.restart, 'question',
         registry.String("\x0313({{airdate}}) \x0309[${{points}}] \x0310\x1f{{category}}\x1f: {{clue}}",
         _("""The template used to render questions when autoRestart is True.""")))
+
+conf.registerChannelValue(Jeopardy.template.restart, 'correct',
+        registry.String("\x0313{{nick}}\x03 got it! The full answer was: {{answer}}. Points: \x0309{{points}}\x03 | Total: \x0309{{total}}",
+        _("""The template used to render correct answer replies when autoRestart is True.""")))
 
 conf.registerChannelValue(Jeopardy.template, 'hint',
         registry.String("HINT: {{hint}}{% if time %} | ({{time}} seconds remaining){% endif %}", _("""The template used to render hints.""")))
