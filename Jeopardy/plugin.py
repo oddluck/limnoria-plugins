@@ -103,7 +103,10 @@ class Jeopardy(callbacks.Plugin):
             self.numHints = hints
             self.points = self.registryValue('defaultPointValue')
             self.question = ''
-            self.question_template = Template(self.registryValue("template.question", channel))
+            if restart:
+                self.question_template = Template(self.registryValue("template.restart", channel))
+            else:
+                self.question_template = Template(self.registryValue("template.question", channel))
             self.questions = []
             self.reduction = self.registryValue('hintReduction', self.channel)
             self.restart = restart
