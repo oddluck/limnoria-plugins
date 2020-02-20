@@ -52,9 +52,6 @@ import supybot.utils as utils
 import textdistance
 import time
 
-from supybot.i18n import PluginInternationalization, internationalizeDocstring
-_ = PluginInternationalization('Jeopardy')
-
 
 class Jeopardy(callbacks.Plugin):
     """Add the help for "@plugin help Jeopardy" here
