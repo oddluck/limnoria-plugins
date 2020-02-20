@@ -1,6 +1,9 @@
+[![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=T8E56M6SP9JH2)
+
 **Come play in ##Jeopardy on Freenode.**
 
-irc://chat.freenode.net/##jeopardy
+[irc://chat.freenode.net/##jeopardy](irc://chat.freenode.net/##jeopardy)</br>
+[https://kiwiirc.com/nextclient/#irc://irc.freenode.net/#kiwiirc](https://kiwiirc.com/nextclient/#irc://irc.freenode.net/#kiwiirc)
 
 
 ## This... is... Jeopardy!
@@ -111,7 +114,7 @@ config [channel #channel] plugins.jeopardy.hintReduction 0.5
 ```
 config [channel #channel] plugins.jeopardy.flexibility 0.94
 ```
-^ The minimum similarity score of the answer checker. Uses jaro-winkler distance, 1.0 is identical/disabled. (Sane values > 0.90)
+^ Minimum similarity score of the answer checker. Jaro-Winkler distance, 1.0 is identical/disabled. Sane values > 0.9
 
 ```
 config [channel #channel] plugins.jeopardy.inactiveShutoff 5
@@ -121,7 +124,7 @@ config [channel #channel] plugins.jeopardy.inactiveShutoff 5
 ```
 config plugins.jeopardy.jserviceUrl http://jservice.io
 ```
-^ Set an alternate URL where jservice can be accessed at, for example a locally run jservice instance: http://127.0.0.1:3000
+^ Alternate URL where jservice can be accessed at, for example a locally run jservice instance: http://127.0.0.1:3000
 
 ```
 config [channel #channel] plugins.jeopardy.defaultRoundLength 10
@@ -131,7 +134,7 @@ config [channel #channel] plugins.jeopardy.defaultRoundLength 10
 ```
 config [channel #channel] plugins.jeopardy.randomize True
 ```
-^ This will determine whether or not the bot will randomize the questions
+^ This will determine whether or not the bot will randomize the question order
 
 ```
 config [channel #channel] plugins.jeopardy.requireOps False
@@ -176,7 +179,7 @@ config [channel #channel] plugins.jeopardy.showBlank True
 ```
 config [channel #channel] plugins.jeopardy.showTime True
 ```
-^ Show time remaining messages when not showing hints
+^ Show time remaining messages when showHints is False
 
 ```
 config [channel #channel] plugins.jeopardy.showHints True
@@ -229,7 +232,7 @@ config [channel #channel] plugins.jeopardy.template.stop "Jeopardy! stopped.{% i
 ```
 config [channel #channel] plugins.jeopardy.template.time "{{time}} seconds remaining. [.hint] [.question] [.skip]"
 ```
-^ Template for time remaining reply when plugins.jeopardy.showTime = True
+^ Template for time remaining reply when showTime = True and showHints = False
 
 
 
