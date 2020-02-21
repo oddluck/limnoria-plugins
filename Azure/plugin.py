@@ -70,7 +70,7 @@ class Azure(callbacks.Plugin):
         response = requests.post(url, headers=headers, json=body)
         response.raise_for_status()
         result = response.json()
-        if result[0]['detectedLanguage']:
+        if result[0].get('detectedLanguage'):
             reply = "{0} [{1}~>{2}]".format(result[0]['translations'][0]['text'], result[0]['detectedLanguage']['language'], target)
         else:
             reply = "{0} [{1}~>{2}]".format(source, target)
