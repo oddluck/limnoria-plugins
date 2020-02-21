@@ -73,7 +73,7 @@ class Azure(callbacks.Plugin):
         if result[0].get('detectedLanguage'):
             reply = "{0} [{1}~>{2}]".format(result[0]['translations'][0]['text'], result[0]['detectedLanguage']['language'], target)
         else:
-            reply = "{0} [{1}~>{2}]".format(source, target)
+            reply = "{0} [{1}~>{2}]".format(result[0]['translations'][0]['text'], source, target)
         irc.reply(reply)
     translate = wrap(translate, [getopts({'from':'text', 'to':'text'}), 'text'])
 
