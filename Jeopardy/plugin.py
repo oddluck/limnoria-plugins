@@ -54,8 +54,7 @@ import time
 
 
 class Jeopardy(callbacks.Plugin):
-    """Add the help for "@plugin help Jeopardy" here
-    This should describe *how* to use this plugin."""
+    """Jeopardy! an IRC Trivia Game"""
     threaded = True
 
 
@@ -540,7 +539,6 @@ class Jeopardy(callbacks.Plugin):
                 f.close()
 
 
-    @internationalizeDocstring
     def start(self, irc, msg, args, channel, optlist, categories):
         """[--num <#>] [--no-hints] [--shuffle] [<category1>, <category2>, etc.]
         Play Jeopardy! with random questions or search/select categories by name.
@@ -639,7 +637,6 @@ class Jeopardy(callbacks.Plugin):
     start = wrap(start, ['channel', getopts({'num':'int', 'hints':'int', 'timeout':'int', 'no-hints':'', 'shuffle':'', 'random':'', 'restart':''}), additional('text')])
 
 
-    @internationalizeDocstring
     def stop(self, irc, msg, args, channel):
         """[<channel>]
         Stops a running game of Jeopardy!. <channel> is only necessary if the
