@@ -1,2 +1,1 @@
-git+https://github.com/ProgVal/Limnoria.git
-pytz==2014.7
+pytz

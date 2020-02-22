@@ -1,5 +1,3 @@
-[![Build Status](https://travis-ci.org/reticulatingspline/WorldTime.svg?branch=master)](https://travis-ci.org/reticulatingspline/WorldTime)
-
 # Limnoria plugin for WorldTime
 
 ## Introduction
@@ -8,16 +6,6 @@ A user contacted me about making some type of plugin to display local time aroun
 Utilizing Python's TimeZone database and google, it was pretty easy to throw together.
 
 ## Install
-
-You will need a working Limnoria bot on Python 2.7 for this to work.
-
-Go into your Limnoria plugin dir, usually ~/supybot/plugins and run:
-
-```
-git clone https://github.com/reticulatingspline/WorldTime
-```
-
-To install additional requirements, run:
 
 ```
 pip install -r requirements.txt 
@@ -33,6 +21,12 @@ Next, load the plugin:
 
 ```
 /msg bot load WorldTime
+```
+
+Enable Google Geocoding and Time Zone APIs. Set your API Key using the command below
+
+```
+/msg bot config plugins.worldtime.mapsapikey <your_key_here>
 ```
 
 ## Example Usage

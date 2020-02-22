@@ -11,10 +11,6 @@ import json
 import time
 import pytz
 import datetime
-if sys.version_info[0] <= 2:
-    from urllib import quote_plus
-else:
-    from urllib.parse import quote_plus
 import pickle
 
 # supybot libs
@@ -25,6 +21,7 @@ import supybot.ircutils as ircutils
 import supybot.callbacks as callbacks
 import supybot.world as world
 import supybot.conf as conf
+import supybot.log as log
 try:
     from supybot.i18n import PluginInternationalization
     _ = PluginInternationalization('WorldTime')
@@ -34,6 +31,10 @@ except ImportError:
     _ = lambda x:x
 
 filename = conf.supybot.directories.data.dirize('WorldTime.db')
+
+HEADERS = {
+    'User-agent': 'Mozilla/5.0 (compatible; Supybot/Limnoria %s; WorldTime plugin)' % conf.version
+}
 
 class WorldTime(callbacks.Plugin):
     """Add the help for "@plugin help WorldTime" here
@@ -95,14 +96,15 @@ class WorldTime(callbacks.Plugin):
     ##############
 
     def _getlatlng(self, location):
-        location = quote_plus(location)
-        url = 'http://maps.googleapis.com/maps/api/geocode/json?address=%s&sensor=false' % location
+        api_key = self.registryValue('mapsAPIkey')
+        location = utils.web.urlquote(location)
+        url = 'https://maps.googleapis.com/maps/api/geocode/json?address=%s&sensor=false&key=%s' % (location, api_key)
 
         # try and fetch url
         try:
-            response = utils.web.getUrl(url)
-        except utils.web.Error:
-            irc.error(str(e), Raise=True)
+            response = utils.web.getUrl(url, headers=HEADERS)
+        except utils.web.Error as e:
+            log.debug(str(e))
 
         # wrap in a big try/except
         try:
@@ -119,14 +121,15 @@ class WorldTime(callbacks.Plugin):
             self.log.info("ERROR: _getlatlng: {0}".format(e))
 
     def _gettime(self, latlng):
-        latlng = quote_plus(latlng)
-        url = 'https://maps.googleapis.com/maps/api/timezone/json?location=%s&sensor=false&timestamp=%s' % (latlng, time.time())
+        api_key = self.registryValue('mapsAPIkey')
+        latlng = utils.web.urlquote(latlng)
+        url = 'https://maps.googleapis.com/maps/api/timezone/json?location=%s&sensor=false&timestamp=%s&key=%s' % (latlng, time.time(), api_key)
 
         # try and fetch url
         try:
-            response = utils.web.getUrl(url)
-        except utils.web.Error:
-            irc.error(str(e), Raise=True)
+            response = utils.web.getUrl(url, headers=HEADERS)
+        except utils.web.Error as e:
+            log.debug(str(e))
 
         # wrap in a big try/except
         try:
