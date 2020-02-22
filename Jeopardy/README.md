@@ -210,7 +210,7 @@ config [channel #channel] plugins.jeopardy.template.correct "\x0313{{nick}}\x03 
 ^ Template for correct answer replies
 
 ```
-config [channel #channel] plugins.jeopardy.template.hint "HINT: {{hint}}{% if time %} | ({{time}} seconds remaining){% endif %}"
+config [channel #channel] plugins.jeopardy.template.hint "HINT: {{hint}}{% if time %} | ({{time}} seconds remaining){% endif %}{% if points %} | \x0309[${{points}}]{% endif %}"
 ```
 ^ Template for hint reply
 
