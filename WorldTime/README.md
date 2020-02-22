@@ -1,5 +1,7 @@
 # Limnoria plugin for WorldTime
 
+Forked from https://github.com/reticulatingspline/WorldTime
+
 ## Introduction
 
 A user contacted me about making some type of plugin to display local time around the world.
