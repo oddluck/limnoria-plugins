@@ -1135,7 +1135,9 @@ class TextArt(callbacks.Plugin):
         else:
             delay = self.registryValue('delay', msg.args[0])
         if url.startswith("https://paste.ee/p/"):
-            url = re.sub("https://paste.ee/p/", "https://paste.ee/r/", url)
+            url = url.replace("https://paste.ee/p/", "https://paste.ee/r/")
+        elif url.startswith("https://pastebin.com/") and '/raw/' not in url:
+            url = url.replace("https://pastebin.com/", "https://pastebin.com/raw/")
         ua = UserAgent()
         header = {'User-Agent':str(ua.random)}
         r = requests.head(url, headers=header)
