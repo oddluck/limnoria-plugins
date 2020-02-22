@@ -110,6 +110,7 @@ class Jeopardy(callbacks.Plugin):
             else:
                 self.question_template = Template(self.registryValue("template.question", channel))
             self.questions = []
+            self.points = 0
             self.reduction = self.registryValue('hintReduction', self.channel)
             self.restart = restart
             self.roundscores = requests.structures.CaseInsensitiveDict()
@@ -313,6 +314,7 @@ class Jeopardy(callbacks.Plugin):
             self.id = q[0]
             question['airdate'] = q[1]
             self.p = int(q[2])
+            self.points = self.p
             question['category'] = q[3]
             question['clue'] = q[4]
             self.a = q[5]
@@ -457,8 +459,12 @@ class Jeopardy(callbacks.Plugin):
                 self.currentHint = ''.join(self.show[self.id])
             if self.hints > 0:
                 self.p -= int(self.p * self.reduction)
+            if self.points > self.p:
+                points = self.p
+            else:
+                points = None
             if self.timeout > 0:
-                reply = self.hint_template.render(hint = self.currentHint, time = round(self.endTime - time.time()))
+                reply = self.hint_template.render(hint = self.currentHint, time = round(self.endTime - time.time()), points = points)
                 if self.showHints or self.showTime:
                     def event():
                         self.timedEvent()
@@ -466,7 +472,7 @@ class Jeopardy(callbacks.Plugin):
                     if eventTime < self.endTime:
                         schedule.addEvent(event, eventTime, 'event_%s' % self.channel)
             else:
-                reply = self.hint_template.render(hint = self.currentHint, time = None)
+                reply = self.hint_template.render(hint = self.currentHint, time = None, points = points)
             self.reply(reply)
             self.hints += 1
 

@@ -148,7 +148,7 @@ conf.registerChannelValue(Jeopardy.template.restart, 'correct',
         _("""The template used to render correct answer replies when autoRestart is True.""")))
 
 conf.registerChannelValue(Jeopardy.template, 'hint',
-        registry.String("HINT: {{hint}}{% if time %} | ({{time}} seconds remaining){% endif %}", _("""The template used to render hints.""")))
+        registry.String("HINT: {{hint}}{% if time %} | ({{time}} seconds remaining){% endif %}{% if points %} | \x0309[${{points}}]{% endif %}", _("""The template used to render hints.""")))
 
 conf.registerChannelValue(Jeopardy.template, 'correct',
         registry.String("\x0313{{nick}}\x03 got it! The full answer was: {{answer}}. Points: \x0309{{points}}\x03 | Round Score: \x0309{{round}}\x03 | Total: \x0309{{total}}",
