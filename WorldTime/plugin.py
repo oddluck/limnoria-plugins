@@ -9,9 +9,8 @@
 import sys
 import json
 import time
-import pytz
-import datetime
 import pickle
+import pendulum
 
 # supybot libs
 import supybot.utils as utils
@@ -79,15 +78,14 @@ class WorldTime(callbacks.Plugin):
     # TIME FUNCTIONS #
     ##################
 
-    def _converttz(self, msg, s, outputTZ):
+    def _converttz(self, msg, outputTZ):
         """Convert epoch seconds to a HH:MM readable string."""
 
         # now do some timezone math.
         try:
-            dtobj = datetime.datetime.fromtimestamp(s, tz=pytz.timezone(outputTZ)) # convert epoch into aware dtobj.
+            dt = pendulum.now(outputTZ)
             outstrf = self.registryValue("format", msg.args[0])
-            local_dt = dtobj.astimezone(pytz.timezone(outputTZ))
-            return local_dt.strftime(outstrf)
+            return dt.strftime(outstrf)
         except Exception as e:
             self.log.info("WorldTime: ERROR: _converttz: {0}".format(e))
 
@@ -174,10 +172,7 @@ class WorldTime(callbacks.Plugin):
         if not ll:
             irc.error("I could not find the local timezone for: {0}. Bad location? Spelled wrong?".format(location), Raise=True)
         # if we're here, we have localtime zone.
-        utcnow = int(time.time()) # grab UTC now.
-        # localtm = utcnow+ll['rawOffset']  # grab raw offset from
-        # now lets use pytz to convert into the localtime in the place.
-        lt = self._converttz(msg, utcnow, ll['timeZoneId'])
+        lt = self._converttz(msg, ll['timeZoneId'])
         if lt:  # make sure we get it back.
             if sys.version_info[0] <= 2:
                 s = "{0} :: Current local time is: {1} ({2})".format(ircutils.bold(gc['place'].encode('utf-8')), lt, ll['timeZoneName'].encode('utf-8'))
