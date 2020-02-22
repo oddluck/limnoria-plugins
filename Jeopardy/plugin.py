@@ -464,7 +464,8 @@ class Jeopardy(callbacks.Plugin):
             else:
                 points = None
             if self.timeout > 0:
-                reply = self.hint_template.render(hint = self.currentHint, time = round(self.endTime - time.time()), points = points)
+                timeLeft = str(round(self.endTime - time.time())).zfill(len(str(self.timeout)))
+                reply = self.hint_template.render(hint = self.currentHint, time = timeLeft, points = points)
                 if self.showHints or self.showTime:
                     def event():
                         self.timedEvent()
