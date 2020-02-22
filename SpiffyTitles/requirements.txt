@@ -6,4 +6,4 @@ imgurpython
 requests
 timeout-decorator
 certifi
-pytz
+pendulum
