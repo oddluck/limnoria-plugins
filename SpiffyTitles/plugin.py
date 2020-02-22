@@ -23,15 +23,13 @@ except ImportError:
 from bs4 import BeautifulSoup
 import random
 import json
-import datetime
 import time
 from jinja2 import Template
-from datetime import timedelta
 import timeout_decorator
 import unicodedata
 import supybot.ircdb as ircdb
 import supybot.log as log
-import pytz
+import pendulum
 
 try:
     from supybot.i18n import PluginInternationalization
@@ -353,7 +351,7 @@ class SpiffyTitles(callbacks.Plugin):
         """
         if is_ctcp and ignore_actions:
             return
-        
+
         url = self.get_url_from_message(message)
 
         if is_channel:
@@ -417,9 +415,8 @@ class SpiffyTitles(callbacks.Plugin):
         link from the cache instead of calling handlers.
         """
         cached_link = self.get_link_from_cache(url, channel)
-            
 
-        if cached_link is not None:
+        if cached_link:
             title = cached_link["title"]
         else:
             if domain in self.handlers:
@@ -434,12 +431,12 @@ class SpiffyTitles(callbacks.Plugin):
                     if self.default_handler_enabled:
                         title = self.handler_default(url, channel)
 
-        if title is not None:
+        if title and not cached_link:
             title = self.get_formatted_title(title, channel)
 
             # Update link cache
             log.debug("SpiffyTitles: caching %s" % (url))
-            now = datetime.datetime.now()
+            now = pendulum.now()
             if channel not in self.link_cache:
                 self.link_cache[channel] = []
             self.link_cache[channel].append({
@@ -449,6 +446,9 @@ class SpiffyTitles(callbacks.Plugin):
                 "from": origin_nick,
                 "channel": channel
             })
+        elif title and cached_link:
+            self.link_cache[channel].append(cached_link)
+            log.debug("SpiffyTitles: serving link from cache: %s" % (url))
 
         return title
 
@@ -467,7 +467,6 @@ class SpiffyTitles(callbacks.Plugin):
             if url:
                 title = self.get_title_by_url(query, channel)
         except Exception as e:
-            
             pass
 
         if title is not None and title:
@@ -495,25 +494,25 @@ class SpiffyTitles(callbacks.Plugin):
             return
 
         cached_link = None
-        now = datetime.datetime.now()
+        now = pendulum.now()
         stale = False
         seconds = 0
 
         if channel in self.link_cache:
-            for link in self.link_cache[channel]:
-                if link["url"] == url:
-                    cached_link = link
+            for i in range(len(self.link_cache[channel])):
+                if self.link_cache[channel][i]["url"] == url:
+                    cached_link = self.link_cache[channel].pop(i)
                     break
 
         # Found link, check timestamp
-        if cached_link is not None:
+        if cached_link:
             seconds = (now - cached_link["timestamp"]).total_seconds()
-            stale = seconds >= cache_lifetime_in_seconds
+            if seconds >= cache_lifetime_in_seconds:
+                stale = True
 
         if stale:
             log.debug("SpiffyTitles: %s was sent %s seconds ago" % (url, seconds))
         else:
-            log.debug("SpiffyTitles: serving link from cache: %s" % (url))
             return cached_link
 
     def is_channel_allowed(self, channel):
@@ -751,9 +750,9 @@ class SpiffyTitles(callbacks.Plugin):
             yt_logo = "{0}\x0F\x02".format(self.registryValue("youtube.logo", dynamic.channel))
         else:
             yt_logo = "{0}\x0F".format(self.registryValue("youtube.logo", dynamic.channel))
-            
+
         return yt_logo
-        
+
     def get_twitch_logo(self):
         use_bold = self.registryValue("useBold", dynamic.channel)
         if use_bold:
@@ -791,7 +790,7 @@ class SpiffyTitles(callbacks.Plugin):
             """, re.VERBOSE)
         duration = regex.match(input).groupdict(0)
 
-        delta = timedelta(hours=int(duration['hours']),
+        delta = pendulum.duration(hours=int(duration['hours']),
                           minutes=int(duration['minutes']),
                           seconds=int(duration['seconds']))
 
@@ -1044,14 +1043,11 @@ class SpiffyTitles(callbacks.Plugin):
         """
 
         try:  # timeline's created_at Tue May 08 10:58:49 +0000 2012
-            ddate = time.strptime(s, "%Y-%m-%dT%H:%M:%SZ")[:-2]
+            ddate = pendulum.parse(s)
         except ValueError:
-            try:  # search's created_at Thu, 06 Oct 2011 19:41:12 +0000
-                ddate = time.strptime(s, "%a, %d %b %Y %H:%M:%S +0000")[:-2]
-            except ValueError:
-                return s
+            return s
         # do the math
-        d = datetime.datetime.now() - datetime.datetime(*ddate, tzinfo=None)
+        d = pendulum.now() - ddate
         # now parse and return.
         if d.days:
             rel_time = "{:1d}d ago".format(abs(d.days))
@@ -1298,8 +1294,8 @@ class SpiffyTitles(callbacks.Plugin):
             self.log.error("SpiffyTitles: Reddit HTTP %s: %s" % (request.status_code, request.text))
 
         if data:
-            today = datetime.datetime.now(pytz.UTC).date()
-            created = datetime.datetime.fromtimestamp(data['created_utc'], pytz.UTC).date()
+            today = pendulum.now().date()
+            created = pendulum.from_timestamp(data['created_utc']).date()
             age_days = (today - created).days
             if age_days == 0:
                 age = "today"
