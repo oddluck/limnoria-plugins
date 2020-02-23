@@ -162,6 +162,14 @@ actors         | Actors
 rated          | Rating
 runtime        | Runtime
 writer         | Writer
+votes          | Votes
+website        | Website
+type           | Type
+language       | Language
+box_office     | BoxOffice
+production     | Production
+poster         | Poster URL
+ratings        | Ratings
 
 ### Twitch handler
 Queries the [Twitch API](https://dev.twitch.tv/) to get additional information about [Twitch](http://twitch.tv) links
