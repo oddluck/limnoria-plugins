@@ -1113,6 +1113,14 @@ class SpiffyTitles(callbacks.Plugin):
                             "rated": response["Rated"],
                             "runtime": response["Runtime"],
                             "writer": response["Writer"],
+                            "votes": response["imdbVotes"],
+                            "website": response["Website"],
+                            "type": response["Type"],
+                            "language": response["Language"],
+                            "box_office": response["BoxOffice"],
+                            "production": response["Production"],
+                            "poster": response["Poster"],
+                            "ratings": response["Ratings"],
                             "imdb_logo": self.get_imdb_logo()
                         }
                         result = imdb_template.render(template_vars)
