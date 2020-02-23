@@ -75,6 +75,8 @@ class SpiffyTitles(callbacks.Plugin):
 
     def add_dailymotion_handlers(self):
         self.handlers["www.dailymotion.com"] = self.handler_dailymotion
+        self.handlers["dailymotion.com"] = self.handler_dailymotion
+        self.handlers["dai.ly"] = self.handler_dailymotion
 
     def add_vimeo_handlers(self):
         self.handlers["vimeo.com"] = self.handler_vimeo
@@ -131,6 +133,8 @@ class SpiffyTitles(callbacks.Plugin):
         """ Get video ID """
         if dailymotion_handler_enabled and "/video/" in info.path:
             video_id = info.path.lstrip("/video/").split("_")[0]
+        elif dailymotion_handler_enabled and "dai.ly" in url:
+            video_id = url.split("/")[-1]
 
             if video_id is not None:
                 fields = "id,title,owner.screenname,duration,views_total"
