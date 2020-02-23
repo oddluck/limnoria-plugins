@@ -385,6 +385,7 @@ class TextArt(callbacks.Plugin):
 
     def doPaste(self, description, paste):
         try:
+            description = description.split('/')[-1]
             apikey = self.registryValue('pasteAPI')
             payload = {'description':description,'sections':[{'contents':paste}]}
             headers = {'X-Auth-Token':apikey}
