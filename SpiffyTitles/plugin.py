@@ -136,38 +136,38 @@ class SpiffyTitles(callbacks.Plugin):
         elif dailymotion_handler_enabled and "dai.ly" in url:
             video_id = url.split("/")[-1]
 
-            if video_id is not None:
-                fields = "id,title,owner.screenname,duration,views_total"
-                api_url = "https://api.dailymotion.com/video/%s?fields=%s" % (video_id, fields)
-                log.debug("SpiffyTitles: looking up dailymotion info: %s", api_url)
-                agent = self.get_user_agent()
-                headers = {
-                    "User-Agent": agent
-                }
+        if video_id is not None:
+            fields = "id,title,owner.screenname,duration,views_total"
+            api_url = "https://api.dailymotion.com/video/%s?fields=%s" % (video_id, fields)
+            log.debug("SpiffyTitles: looking up dailymotion info: %s", api_url)
+            agent = self.get_user_agent()
+            headers = {
+                "User-Agent": agent
+            }
 
-                request = requests.get(api_url, headers=headers)
+            request = requests.get(api_url, headers=headers)
 
-                ok = request.status_code == requests.codes.ok
+            ok = request.status_code == requests.codes.ok
 
-                if ok:
-                    response = json.loads(request.text)
+            if ok:
+                response = json.loads(request.text)
 
-                    if response is not None and "title" in response:
-                        video = response
-                        dailymotion_template = \
-                            Template(self.registryValue("dailymotion.template",
-                                                        channel=channel))
-                        video["views_total"] = "{:,}".format(int(video["views_total"]))
-                        video["duration"] = self.get_duration_from_seconds(video["duration"])
-                        video["ownerscreenname"] = video["owner.screenname"]
+                if response is not None and "title" in response:
+                    video = response
+                    dailymotion_template = \
+                        Template(self.registryValue("dailymotion.template",
+                                                    channel=channel))
+                    video["views_total"] = "{:,}".format(int(video["views_total"]))
+                    video["duration"] = self.get_duration_from_seconds(video["duration"])
+                    video["ownerscreenname"] = video["owner.screenname"]
 
-                        title = dailymotion_template.render(video)
-                    else:
-                        log.debug("SpiffyTitles: received unexpected payload from video: %s" %
-                                  api_url)
+                    title = dailymotion_template.render(video)
                 else:
-                    log.error("SpiffyTitles: dailymotion handler returned %s: %s" %
-                              (request.status_code, request.text[:200]))
+                    log.debug("SpiffyTitles: received unexpected payload from video: %s" %
+                              api_url)
+            else:
+                log.error("SpiffyTitles: dailymotion handler returned %s: %s" %
+                          (request.status_code, request.text[:200]))
 
         if title is None:
             log.debug("SpiffyTitles: could not get dailymotion info for %s" % url)
