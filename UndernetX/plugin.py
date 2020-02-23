@@ -50,8 +50,11 @@ class UndernetX(callbacks.Plugin):
         self.__parent = super(UndernetX, self)
         callbacks.Plugin.__init__(self, irc)
         instance.irc = irc
+        self.reset()
+
 
     def _login(self, irc):
+        self.reset()
         username = self.registryValue('auth.username')
         password = self.registryValue('auth.password')
         xserv = self.registryValue('auth.xservice')
@@ -66,7 +69,11 @@ class UndernetX(callbacks.Plugin):
                     if modex:
                         log.info("Setting +x")
                         irc.sendMsg(ircmsgs.IrcMsg("MODE {} +x".format(irc.nick)))
-
+                    self.identified = True
+                    waitingJoins = self.waitingJoins.pop(irc.network, None)
+                    if waitingJoins:
+                        for m in waitingJoins:
+                            irc.sendMsg(m)
                 else:
                     log.info("Received a NOTICE from X. msg: {}".format(msg.args[1]))
                     return
@@ -75,6 +82,22 @@ class UndernetX(callbacks.Plugin):
                     log.warning("Someone is impersonating X!")
         else:
             log.debug("Notice isn't from UnderNet.. Ignoring")
+
+    def reset(self):
+        self.identified = False
+        self.waitingJoins = {}
+
+    def outFilter(self, irc, msg):
+        if irc.state.supported.get('NETWORK', '') == 'UnderNet':
+            if msg.command == 'JOIN':
+                if not self.identified:
+                    if self.registryValue('auth.noJoinsUntilAuthed'):
+                        self.log.info('Holding JOIN to %s @ %s until identified.',
+                                      msg.channel, irc.network)
+                        self.waitingJoins.setdefault(irc.network, [])
+                        self.waitingJoins[irc.network].append(msg)
+                        return None
+        return msg
 
     def do376(self, irc, msg):
         """Watch for the MOTD and login if we can"""
