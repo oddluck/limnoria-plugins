@@ -85,6 +85,7 @@ class UndernetX(callbacks.Plugin):
                 log.warning("username and password not set, this plugin will not work")
                 return
             self._login(irc)
+    do422 = do377 = do376
 
     # Similar to Services->Identify
     def login(self, irc, msg, args):
