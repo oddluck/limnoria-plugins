@@ -25,7 +25,7 @@ Next, load the plugin:
 /msg bot load WorldTime
 ```
 
-Enable Google Geocoding and Time Zone APIs. Set your API Key using the command below
+Enable Google [Geocoding](https://console.cloud.google.com/apis/library/geocoding-backend.googleapis.com) and [Time Zone](https://console.cloud.google.com/apis/library/timezone-backend.googleapis.com) APIs. Set your [API Key](https://console.cloud.google.com/apis/credentials) using the command below
 
 ```
 /msg bot config plugins.worldtime.mapsapikey <your_key_here>
