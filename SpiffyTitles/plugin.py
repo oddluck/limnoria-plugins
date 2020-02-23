@@ -1100,6 +1100,13 @@ class SpiffyTitles(callbacks.Plugin):
                     if not_found or unknown_error:
                         log.debug("SpiffyTitles: OMDB error for %s" % (omdb_url))
                     else:
+                        meta = "N/A"
+                        tomato = "N/A"
+                        for rating in response["Ratings"]:
+                            if rating["Source"] == "Rotten Tomatoes":
+                                tomato = rating["Value"]
+                            if rating["Source"] == "Metacritic":
+                                meta = "{0}%".format(rating["Value"].split('/')[0])
                         template_vars = {
                             "title": response["Title"],
                             "year": response["Year"],
@@ -1108,8 +1115,8 @@ class SpiffyTitles(callbacks.Plugin):
                             "plot": response["Plot"],
                             "imdb_id": response["imdbID"],
                             "imdb_rating": response["imdbRating"],
-                            "tomatoMeter": response["tomatoMeter"],
-                            "metascore": response["Metascore"],
+                            "tomatoMeter": tomato,
+                            "metascore": meta,
                             "released": response["Released"],
                             "genre": response["Genre"],
                             "awards": response["Awards"],
