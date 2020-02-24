@@ -385,11 +385,11 @@ class Jeopardy(callbacks.Plugin):
                 max = 3
                 if len(sorted) < max:
                     max = len(sorted)
-                s = _('Top finishers:')
+                s = 'Top finishers:'
                 if max > 0:
                     for i in range(0, max):
                         item = sorted[i]
-                        s = _('%s (%s: %s)') % (s, item[0], item[1])
+                        s = '%s (%s: %s)' % (s, item[0], item[1])
                     self.reply('{0}'.format(s))
             if self.restart and self.active:
                 def event():
