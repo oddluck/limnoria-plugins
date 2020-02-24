@@ -136,7 +136,7 @@ Queries the [OMDB API](http://www.omdbapi.com) to get additional information abo
 
 `imdb.template` - This is the template used for [IMDB](http://imdb.com) links
 
-Default value: `^ {{imdb_logo}} :: {{title}} ({{year}}, {{country}} [{{rated}}], {{genre}}, {{runtime}}) ::  IMDB: {{imdb_rating}} MC: {{metascore}} :: {{plot}}`
+Default value: `^ {{imdb_logo}} :: {{title}} ({{year}}, {{country}}, [{{rated}}], {{genre}}, {{runtime}}) ::  IMDB: {{imdb_rating}} | MC: {{metascore}} | RT: {{tomatoMeter}} :: {{plot}}`
 
 `imdb.logo` - This is the logo text used for imdb_logo in the template
 
@@ -163,13 +163,11 @@ rated          | Rating
 runtime        | Runtime
 writer         | Writer
 votes          | Votes
-website        | Website
-type           | Type
+website        | Website URL
 language       | Language
-box_office     | BoxOffice
-production     | Production
+box_office     | Box Office
+production     | Production company
 poster         | Poster URL
-ratings        | Ratings
 
 ### Twitch handler
 Queries the [Twitch API](https://dev.twitch.tv/) to get additional information about [Twitch](http://twitch.tv) links
