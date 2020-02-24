@@ -134,7 +134,7 @@ class SpiffyTitles(callbacks.Plugin):
         if dailymotion_handler_enabled and "/video/" in info.path:
             video_id = info.path.lstrip("/video/").split("_")[0]
         elif dailymotion_handler_enabled and "dai.ly" in url:
-            video_id = url.split("/")[-1]
+            video_id = url.split("/")[-1].split("?")[0]
 
         if video_id is not None:
             fields = "id,title,owner.screenname,duration,views_total"
