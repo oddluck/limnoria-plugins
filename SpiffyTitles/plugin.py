@@ -37,11 +37,7 @@ import re
 import requests
 import urllib
 import sys
-try:
-    from urllib import urlencode
-    from urlparse import urlparse, parse_qsl
-except ImportError:
-    from urllib.parse import urlencode, urlparse, parse_qsl
+from urllib.parse import urlencode, urlparse, parse_qsl
 from bs4 import BeautifulSoup
 import random
 import json
@@ -135,13 +131,13 @@ class SpiffyTitles(callbacks.Plugin):
         """
         self.handlers["youtube.com"] = self.handler_youtube
         self.handlers["youtu.be"] = self.handler_youtube
-    
+
     def add_imgur_handlers(self):
         # Images mostly
         self.handlers["i.imgur.com"] = self.handler_imgur_image
         # Albums, galleries, etc
         self.handlers["imgur.com"] = self.handler_imgur
-    
+
     def handler_dailymotion(self, url, info, channel):
         """
         Handles dailymotion links
@@ -1539,7 +1535,7 @@ class SpiffyTitles(callbacks.Plugin):
         use_bold = self.registryValue("useBold", channel=channel)
 
         IP_pattern = r"((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)([ (\[]?(\.|dot)[ )\]]?(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3})"
-        
+
         # Replace anywhere in string
         title = title.replace("\n", " ")
         title = title.replace("\t", " ")
@@ -1594,7 +1590,7 @@ class SpiffyTitles(callbacks.Plugin):
 
             log.debug("SpiffyTitles: requesting %s" % (url))
 
-            with requests.get(url, headers=headers, timeout=10, 
+            with requests.get(url, headers=headers, timeout=10,
                               allow_redirects=True, stream=True) as request:
                 is_redirect = False
                 if request.history:
@@ -1748,12 +1744,7 @@ class SpiffyTitles(callbacks.Plugin):
         """
         Returns the requested template object.
         """
-        if sys.version_info[0] >= 3:
-            template = Template(self.registryValue(handler_template,
-                                                   channel=channel))
-        else:
-            template = Template(self.registryValue(handler_template,
-                                                   channel=channel).decode("utf-8"))
+        template = Template(self.registryValue(handler_template, channel=channel))
         return template
 
 Class = SpiffyTitles

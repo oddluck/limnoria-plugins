@@ -28,35 +28,44 @@
 # POSSIBILITY OF SUCH DAMAGE.
 ###
 
-import supybot.conf as conf
-import supybot.registry as registry
-try:
-    from supybot.i18n import PluginInternationalization
-    _ = PluginInternationalization('IMDb')
-except:
-    # Placeholder that allows to run the plugin on a bot
-    # without the i18n module
-    _ = lambda x: x
+"""
+YouTube: Queries OMDB database for information about YouTube titles
+"""
 
+import supybot
+import supybot.world as world
 
-def configure(advanced):
-    # This will be called by supybot to configure this module.  advanced is
-    # a bool that specifies whether the user identified themself as an advanced
-    # user or not.  You should effect your configuration by manipulating the
-    # registry as appropriate.
-    from supybot.questions import expect, anything, something, yn
-    conf.registerPlugin('IMDb', True)
+# Use this for the version of this plugin.  You may wish to put a CVS keyword
+# in here if you're keeping the plugin in CVS or some similar system.
+__version__ = "2020.02.24+git"
 
+# XXX Replace this with an appropriate author or supybot.Author instance.
+__author__ = supybot.Author('butterscotchstallion', 'butterscotchstallion',
+                            '')
+__maintainer__ = getattr(supybot.authors, 'oddluck',
+                         supybot.Author('oddluck', 'oddluck', 'oddluck@riseup.net'))
 
-IMDb = conf.registerPlugin('IMDb')
+# This is a dictionary mapping supybot.Author instances to lists of
+# contributions.
+__contributors__ = {}
 
-conf.registerGlobalValue(IMDb, 'template',
-     registry.String("\x02\x031,8 IMDb \x0F\x02 :: $title ($year, $country, [$rated], $genre, $runtime) :: IMDb: $imdbRating | MC: $metascore | RT: $tomatoMeter :: http://imdb.com/title/$imdbID :: $plot :: Director: $director :: Writer: $writer :: Actors: $actors", _("""Template for the output of a search query.""")))
+# This is a url where the most recent plugin package can be downloaded.
+__url__ = 'https://github.com/oddluck/limnoria-plugins/'
 
-conf.registerGlobalValue(IMDb, 'noResultsMessage',
-     registry.String("No results for that query.", _("""This message is sent when there are no results""")))
+from . import config
+from . import plugin
+from imp import reload
+# In case we're being reloaded.
+reload(config)
+reload(plugin)
+# Add more reloads here if you add third-party modules and want them to be
+# reloaded when this plugin is reloaded.  Don't forget to import them as well!
 
-conf.registerGlobalValue(IMDb, 'omdbAPI',
-     registry.String('', _("""OMDB API Key""")))
+if world.testing:
+    from . import test
+
+Class = plugin.Class
+configure = config.configure
+
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:

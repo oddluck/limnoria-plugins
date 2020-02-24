@@ -32,7 +32,7 @@ import supybot.conf as conf
 import supybot.registry as registry
 try:
     from supybot.i18n import PluginInternationalization
-    _ = PluginInternationalization('IMDb')
+    _ = PluginInternationalization('YouTube')
 except:
     # Placeholder that allows to run the plugin on a bot
     # without the i18n module
@@ -45,18 +45,23 @@ def configure(advanced):
     # user or not.  You should effect your configuration by manipulating the
     # registry as appropriate.
     from supybot.questions import expect, anything, something, yn
-    conf.registerPlugin('IMDb', True)
+    conf.registerPlugin('YouTube', True)
 
 
-IMDb = conf.registerPlugin('IMDb')
+YouTube = conf.registerPlugin('YouTube')
 
-conf.registerGlobalValue(IMDb, 'template',
-     registry.String("\x02\x031,8 IMDb \x0F\x02 :: $title ($year, $country, [$rated], $genre, $runtime) :: IMDb: $imdbRating | MC: $metascore | RT: $tomatoMeter :: http://imdb.com/title/$imdbID :: $plot :: Director: $director :: Writer: $writer :: Actors: $actors", _("""Template for the output of a search query.""")))
 
-conf.registerGlobalValue(IMDb, 'noResultsMessage',
-     registry.String("No results for that query.", _("""This message is sent when there are no results""")))
+conf.registerGlobalValue(YouTube, 'developerKey',
+     registry.String("", _("""Google API key. Required.""")))
 
-conf.registerGlobalValue(IMDb, 'omdbAPI',
-     registry.String('', _("""OMDB API Key""")))
+conf.registerChannelValue(YouTube, 'logo',
+    registry.String("\x02\x030,4 ► \x031,0YouTube", _("""Logo used with $yt_logo in template""")))
+
+conf.registerChannelValue(YouTube, 'template',
+     registry.String("{{logo}} :: {{link}} :: {{title}} :: Duration: {{duration}} :: Views: {{views}} :: Uploader: {{uploader}} :: {{likes}} likes :: {{dislikes}} dislikes :: {{favorites}} favorites :: {{comments}} comments", _("""Template used for search result replies""")))
+
+conf.registerChannelValue(YouTube, 'useBold',
+     registry.Boolean(True, _("""Use bold in replies""")))
+
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
