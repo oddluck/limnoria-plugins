@@ -1,6 +1,7 @@
 ###
 # Copyright (c) 2008, Anatoly Popov
 # Copyright (c) 2008, Andrey Rahmatullin
+# Copyright (c) 2020, oddluck <oddluck@riseup.net>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without

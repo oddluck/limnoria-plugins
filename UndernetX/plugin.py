@@ -1,5 +1,6 @@
 ###
 # Copyright (c) 2017, Ken Spencer
+# Copyright (c) 2020, oddluck <oddluck@riseup.net>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -25,8 +26,8 @@
 # CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
-
 ###
+
 import supybot.log as log
 import supybot.ircmsgs as ircmsgs
 import supybot.utils as utils

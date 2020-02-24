@@ -1,5 +1,6 @@
 ###
 # Copyright (c) 2012, Matthias Meusburger
+# Copyright (c) 2020, oddluck <oddluck@riseup.net>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -25,11 +26,10 @@
 # CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
-
 ###
 
 """
-This is a DuckHunt game for supybot
+DuckHunt: an IRC Duck Hunt game for Limnoria
 """
 
 import supybot
@@ -38,7 +38,7 @@ import importlib
 
 # Use this for the version of this plugin.  You may wish to put a CVS keyword
 # in here if you're keeping the plugin in CVS or some similar system.
-__version__ = ""
+__version__ = "2020.02.24+git"
 
 # XXX Replace this with an appropriate author or supybot.Author instance.
 __author__ = supybot.Author('Matthias Meusburger', 'veggiematts', '')

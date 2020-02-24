@@ -1,5 +1,6 @@
 ###
-# Copyright (c) 2002-2004, Jeremiah Fincher
+# Copyright (c) 2004, Jeremiah Fincher
+# Copyright (c) 2020, oddluck <oddluck@riseup.net>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without

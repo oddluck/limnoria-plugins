@@ -1,5 +1,6 @@
 ###
-# Copyright (c) 2007-2010, Andrey Rahmatullin
+# Copyright (c) 2010, Andrey Rahmatullin
+# Copyright (c) 2020, oddluck <oddluck@riseup.net>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,7 +29,7 @@
 ###
 
 """
-Dice
+Dice: commands for dice rolling.
 """
 
 import supybot
@@ -36,7 +37,7 @@ import supybot.world as world
 
 # Use this for the version of this plugin.  You may wish to put a CVS keyword
 # in here if you're keeping the plugin in CVS or some similar system.
-__version__ = ""
+__version__ = "2020.02.24+git"
 
 __author__ = supybot.Author('Andrey Rahmatullin', 'wRAR', 'wrar@wrar.name')
 __maintainer__ = getattr(supybot.authors, 'oddluck',

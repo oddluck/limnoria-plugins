@@ -1,5 +1,6 @@
 ###
 # Copyright (c) 2005, Jeremiah Fincher
+# Copyright (c) 2020, oddluck <oddluck@riseup.net>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -28,8 +29,8 @@
 ###
 
 """
-Filters bad words on outgoing messages from the bot, so the bot can't be made
-to say bad words.
+BadWords: filters bad words on outgoing/incoming messages so the bot can't be 
+made to say bad words.
 """
 
 import supybot
@@ -37,7 +38,7 @@ import supybot.world as world
 
 # Use this for the version of this plugin.  You may wish to put a CVS keyword
 # in here if you're keeping the plugin in CVS or some similar system.
-__version__ = ""
+__version__ = "2020.02.24+git"
 
 # XXX Replace this with an appropriate author or supybot.Author instance.
 __author__ = supybot.authors.jemfinch

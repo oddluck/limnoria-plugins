@@ -1,7 +1,8 @@
 ###
 # Copyright (c) 2012, James Scott
+# Copyright (c) 2020, oddluck <oddluck@riseup.net>
 # All rights reserved.
-#   
+#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
 #
@@ -25,8 +26,8 @@
 # CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
-
 ###
+
 import supybot.utils as utils
 from supybot.commands import *
 import supybot.plugins as plugins
