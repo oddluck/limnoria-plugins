@@ -1,3 +1,5 @@
+The classic game of IRC Duck Hunt.
+
 Forked from https://github.com/veggiematts/supybot-duckhunt
 
 Requires Python3, Limnoria.

@@ -1,3 +1,5 @@
+Highly customizable and fully-featured link title snarfer with many URL handlers.
+
 Forked from https://github.com/butterscotchstallion/limnoria-plugins/tree/master/SpiffyTitles
 
 If you're coming from another fork of SpiffyTitles, please note that some config variables have changed in this version. Everything is now grouped by url handler; spiffytitles.default, spiffytitles.youtube, spiffytitles.imdb, etc.

@@ -43,18 +43,18 @@ import pickle
 
 try:
     from supybot.i18n import PluginInternationalization
-    _ = PluginInternationalization('Uno')
+    _ = PluginInternationalization('UNO')
 except ImportError:
     # Placeholder that allows to run the plugin on a bot
     # without the i18n module
     _ = lambda x: x
 
-class Uno(callbacks.Plugin):
+class UNO(callbacks.Plugin):
     """
-    Uno!
+    UNO!
     """
     threaded = True
-    
+
     game=[{},{},{},{},{}]
 
     channeloptions = {}
@@ -65,9 +65,9 @@ class Uno(callbacks.Plugin):
     channeloptions['maxbots']=9
     channeloptions['use_colors']=True
     channeloptions['use_notice']=True
-    
+
     lastgame=time.time()
-    
+
     def make_sure_path_exists(path):
         try:
             os.makedirs(path)
@@ -80,9 +80,8 @@ class Uno(callbacks.Plugin):
     prefixChar = conf.supybot.reply.whenAddressedBy.chars()[0]
 
     def start(self, irc, msg, args, text):
-        """takes no arguments
-        
-        Start a new game of Uno. For the rules of the game, use the uno rules command.
+        """
+        Start a new game of UNO. For the rules of the game, use the "uno rules" command.
         """
         try:
             self._read_options(irc)
@@ -109,7 +108,7 @@ class Uno(callbacks.Plugin):
             gametype=self.game[table].get('type').capitalize()
             irc.reply('Error: You are already in a game of %s.' % gametype)
             return
-        
+
         table=self._getopentable()
         if table==None:
             irc.reply('Sorry, all the game tables are in use at the moment.')
@@ -118,41 +117,37 @@ class Uno(callbacks.Plugin):
         self._cleanup(table)
         self.game[table]['channel']=msg.args[0]
         self.game[table]['type']=gametype
-        
-        
+
         if gametype=='uno':
             self.game[table]['players'][nick]={}
             #self.game[table]['nplayers']=int(self.channeloptions[gametype+'_nplayers'])
             self.game[table]['nplayers']=int(self.channeloptions['nplayers'])
             irc.reply('%s has started a new game of %s at table %s. For the rules of the game, type "%suno rules". To accept this challenge, join with "%suno join". To add a cpu player, type "%suno join cpu".' % (nick, gametype.capitalize(), table+1, self.prefixChar,self.prefixChar,self.prefixChar), prefixNick=False)
         self.game[table]['phase']='join'
-        
+
     start = wrap(start, ['public', optional('something')])
 
     def begin(self, irc, msg, args):
         """
-        begin uno game
+        Begin the UNO game.
         """
         self._uno_begin(irc, msg.nick)
     begin = wrap(begin)
 
     def _uno_begin(self, irc, nick):
-        """
-        test
-        """
         table=self._gettablefromnick(nick)
         if table == None:
             irc.reply('Error: You are not playing a game at any of the tables.')
             return
         if self.game[table]['type'] != 'uno':
-            irc.reply('Error: Not an Uno game.')
+            irc.reply('Error: Not an UNO game.')
             return
         if self.game[table]['phase'] != 'join':
             irc.reply("Error: You can't use this command right now.")
             return
         nplayers= list(self.game[table]['players'].keys())
         if len(nplayers) < 2:
-            irc.reply('Error: You need at least two players for Uno.')
+            irc.reply('Error: You need at least two players for UNO.')
             return
         # start things for real
         for n in list(self.game[table]['players'].keys()):
@@ -178,15 +173,11 @@ class Uno(callbacks.Plugin):
                 self._uno_cpu_play(irc, table)
             else:
                 return
-    
-    
+
     def _uno_tell_status(self, irc, nick):
-        """
-        test
-        """
         table=self._gettablefromnick(nick)
         if table==None:
-            irc.reply('Error: You are not playing Uno at any of the tables.')
+            irc.reply('Error: You are not playing UNO at any of the tables.')
             return
         channel=self.game[table]['channel']
         opponents=[p for p in list(self.game[table]['players'].keys()) if p!=nick]
@@ -265,7 +256,7 @@ class Uno(callbacks.Plugin):
                 if discardcolor in c:
                     return False
             return True
-            
+
         unocolors=['Blue','Green','Red','Yellow']
         for color in unocolors:
             if color in card:
@@ -300,21 +291,13 @@ class Uno(callbacks.Plugin):
 
     def tellstatus(self, irc, msg, args):
         """
-        ?
+        Tell current UNO status
         """
         self._uno_tell_status(irc, msg.nick)
     tellstatus=wrap(tellstatus)
 
-    def test(self, irc, msg, args):
-        """
-        ?
-        """
-        prefixChar = conf.supybot.reply.whenAddressedBy.chars()[0]
-        irc.reply(chars)
-    test=wrap(test)
-
     def rules(self, irc, msg, args, text):
-        """takes no arguments
+        """
         Display rules for uno. Start a game of uno with the "uno start" command.
         """
         if text:
@@ -322,15 +305,14 @@ class Uno(callbacks.Plugin):
         else:
             gametype='uno'
         if gametype=='uno':
-            irc.reply('Rules for Uno: http://www.wonkavator.com/uno/unorules.html')
+            irc.reply('Rules for UNO: http://www.wonkavator.com/uno/unorules.html')
         else:
             irc.reply('Unknown game type.')
     rules=wrap(rules, [additional('text')])
-    
+
     def join(self, irc, msg, args, table, fakenick):
         """[<table>]
-        
-        Join a game of Uno previously started with the "uno start" command. 
+        Join a game of UNO previously started with the "uno start" command.
         Specify <table> if there is more than one game to join in that channel.
         """
         try:
@@ -391,11 +373,11 @@ class Uno(callbacks.Plugin):
                     self.game[table]['players'][nick]={}
                 if isfake==True:
                     self.game[table]['players'][nick]['fake']=True
-                
+
                 if len(list(self.game[table]['players'].keys())) < self.game[table]['nplayers']:
                     irc.reply('%s has joined the %s game at table %s. Use %suno begin to begin the game.' % (nick,self.game[table]['type'],table+1, self.prefixChar), prefixNick=False, to=self.game[table]['channel'])
                     return
-                
+
                 for n in list(self.game[table]['players'].keys()):
                     self.game[table]['players'][n]['hand']=[]
                     # each player draws 7 initial cards
@@ -420,9 +402,8 @@ class Uno(callbacks.Plugin):
     join = wrap(join, ['public', optional('int'), optional('something')])
 
     def leave(self, irc, msg, args, fakenick):
-        """takes no arguments
-        
-        Leave a game of Uno.
+        """
+        Leave a game of UNO.
         """
         try:
             self._read_options(irc)
@@ -439,7 +420,7 @@ class Uno(callbacks.Plugin):
         if table==None:
             irc.reply('Error: You are not playing a game at any of the tables.')
             return
-            
+
         if self.game[table].get('type')=='uno':
             self._leavegame(irc, msg, nick)
             self._uno_do_cpu(irc, table) # only works if game type is uno
@@ -447,9 +428,8 @@ class Uno(callbacks.Plugin):
     leave = wrap(leave, ['public', optional('something')])
 
     def _leavegame(self, irc, msg, nick):
-        """takes no arguments
-        
-        Leave a game of Uno.
+        """
+        Leave a game of UNO.
         """
         try:
             self._read_options(irc)
@@ -462,29 +442,28 @@ class Uno(callbacks.Plugin):
         table=self._gettablefromnick(nick)
         if table==None:
             return
-        
-        
+
         channel=self.game[table]['channel']
-        
+
         # leaving a game when you're the only player
         if len(self.game[table]['players'])==1:
             irc.reply('There are no more players; The game is over.', to=channel)
             self.game[table]['phase']='gameover'
             self._cleanup(table)
             return
-        
+
         # check if it's only bot players left
         Human=False
         for n in list(self.game[table]['players'].keys()):
             if not self.game[table]['players'][n].get('cpu'):
                 if n!=nick: Human=True
-        
+
         if not Human:
             irc.reply('There are no more human players; the game is over.', to=channel)
             self.game[table]['phase']='gameover'
             self._cleanup(table)
             return
-        
+
         # ---- replace with cpu ----
         oldnick=nick
         nick=self._uno_make_cpu(table)
@@ -551,18 +530,18 @@ class Uno(callbacks.Plugin):
 
     def _uno_cpu_play(self, irc, table):
         channel=self.game[table]['channel']
-        
+
         Human=False
         for n in list(self.game[table]['players'].keys()):
             if not self.game[table]['players'][n].get('cpu'):
                 Human=True
-        
+
         if not Human:
             irc.reply('There are no more human players; the game is over.', to=channel)
             self.game[table]['phase']='gameover'
             self._cleanup(table)
             return
-        
+
         nick=list(self.game[table]['players'].keys())[self.game[table]['turn']]
         discard=self.game[table]['discard'][-1]
         wildcolor = self.game[table].get('wildcolor')
@@ -574,7 +553,7 @@ class Uno(callbacks.Plugin):
             # draw a card
             card=self._uno_draw_card(table, nick)
             self.game[table]['players'][nick]['hasdrawn']=True
-            
+
             if self._uno_is_valid_play(table, card, discard, wildcolor)==True:
                 # always play the card if possible
                 ncards=len(self.game[table]['players'][nick]['hand'])
@@ -651,12 +630,11 @@ class Uno(callbacks.Plugin):
 
     def play(self, irc, msg, args, text):
         """<card>
-        
-        Play a <card> for the Uno game. Examples: "uno play red 0", "uno play wild blue", "uno play draw", "uno play done"
+        Play a <card> for the UNO game. Examples: "uno play red 0", "uno play wild blue", "uno play draw", "uno play done"
         """
 
         nick=msg.nick
-        
+
         table=self._gettablefromnick(nick)
         if table==None:
             irc.reply('Error: You are not playing a game at any of the tables.')
@@ -670,30 +648,30 @@ class Uno(callbacks.Plugin):
                 fakenick=fakenick[0]
                 nick=fakenick
                 text=text.rsplit(' ',1)[:-1][0]
-        
+
         if self.game[table]['phase']=='running':
             nplayers=len(list(self.game[table]['players'].keys()))
             if nick not in self.game[table]['players']:
                 irc.reply("Error: You're not playing this game.")
                 return
             opponent=[p for p in self.game[table]['players'] if p !=nick][0]
-            
+
             turnplayer=list(self.game[table]['players'].keys())[self.game[table]['turn']]
             if nick!=turnplayer:
                 # Note: it will prefix nick in notice -- need to fix that
                 irc.reply("%s: It is %s's turn." % (nick, turnplayer), prefixNick=False)
                 return
-            
+
             text=text.strip()
-            
+
             discard=self.game[table]['discard'][-1]
             wildcolor=self.game[table].get('wildcolor')
             novalid=True
-            
+
             for c in self.game[table]['players'][nick]['hand']:
                 if self._uno_is_valid_play(table, c, discard, wildcolor)==True:
                     novalid=False
-            
+
             if text.lower()=='draw':
                 if self.game[table]['players'][nick].get('hasdrawn')==True:
                     irc.reply('You have already drawn a card.')
@@ -742,9 +720,9 @@ class Uno(callbacks.Plugin):
                     self._uno_tell_status(irc, nn)
                 self._uno_do_cpu(irc, table)
                 return
-            
+
             card=text
-            
+
             card=[card for card in self.unodeck if card.lower()==text.lower()]
             validwild=['Wild Blue','Wild Green', 'Wild Red', 'Wild Yellow',
                        'Wild Draw 4 Blue','Wild Draw 4 Green', 'Wild Draw 4 Red', 'Wild Draw 4 Yellow']
@@ -769,16 +747,16 @@ class Uno(callbacks.Plugin):
             if card not in hand:
                 irc.reply('That card is not in your hand.')
                 return
-            
+
             # check for illegal move
             if self._uno_is_valid_play(table, card, discard, wildcolor)==False:
                 irc.reply("You can't play that card.")
                 return
-            
+
             # play the card
             self.game[table]['players'][nick]['hand'].remove(card)
             self.game[table]['discard'].append(card)
-            ncards=len(self.game[table]['players'][nick]['hand'])            
+            ncards=len(self.game[table]['players'][nick]['hand'])
             if 'Wild' in card:
                 self.game[table]['wildcolor']=newcolor
                 card='%s (%s)' % (card, self.game[table]['wildcolor'])
@@ -802,7 +780,7 @@ class Uno(callbacks.Plugin):
                     self.game[table]['players'][nick]['hasdrawn']=False
                 else:
                     irc.reply('%s played %s (%s cards left in hand).' % (nick, card, ncards), to=channel)
-            
+
             ncards = len(self.game[table]['players'][nick]['hand'])
             if ncards==0:
                 irc.reply('The game is over. '+ircutils.bold('%s wins!' % nick), to=channel)
@@ -812,7 +790,7 @@ class Uno(callbacks.Plugin):
 
             if 'Reverse' in card:
                 self.game[table]['direction']*=-1
-            
+
             turn=self.game[table]['turn']+1*self.game[table]['direction']
             if turn>nplayers-1:turn=0
             if turn<0:turn=nplayers-1
@@ -844,9 +822,9 @@ class Uno(callbacks.Plugin):
 
     def setoption(self, irc, msg, args, channel, text, value):
         """<option> <value>
-        
-        Changes an option for Uno game. You can view the 
-        options for the current channel with the "uno showoptions" command."""
+        Changes an option for UNO game. You can view the
+        options for the current channel with the "uno showoptions" command.
+        """
         try:
             self._read_options(irc)
         except:
@@ -879,9 +857,9 @@ class Uno(callbacks.Plugin):
     setoption = wrap(setoption, [('checkChannelCapability', 'op'), 'something', 'something'])
 
     def showoptions(self, irc, msg, args):
-        """(takes no arguments)
-        
-        Shows options for Uno game for the current channel."""
+        """
+        Shows options for UNO game for the current channel.
+        """
         try:
             self._read_options(irc)
         except:
@@ -918,7 +896,7 @@ class Uno(callbacks.Plugin):
         network=irc.network.replace(' ','_')
         channel=irc.msg.args[0]
         #irc.reply('test: %s.%s.options' % (irc.network, irc.msg.args[0] ))
-        
+
         f="%s%s.%s.options" % (self.dataPath, network, channel)
         if os.path.isfile(f):
             inputfile = open(f, "rb")
@@ -969,7 +947,7 @@ class Uno(callbacks.Plugin):
         if msg.args[0] == self.game[table]['channel']:
             self._leavegame(irc, msg, nick)
             self._uno_do_cpu(irc, table) # only works if game type is uno
-        
+
     def doKick(self, irc, msg):
         (channel, nicks) = msg.args[:2]
         nicks=nicks.split(',')
@@ -1009,6 +987,6 @@ class Uno(callbacks.Plugin):
             m=ircmsgs.privmsg(to, text)
             self._sendMsg(irc, m)
 
-Class = Uno
+Class = UNO
 
 # vim:set shiftwidth=4 softtabstop=4 expandtab textwidth=79:

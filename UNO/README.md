@@ -1,3 +1,5 @@
+The classic card game of UNO for IRC. Play against other chatters or the bot.
+
 Forked from https://github.com/SpiderDave/spidey-supybot-plugins/tree/master/Plugins/Uno
 
 This is a Limnoria plugin implementation of UNO.

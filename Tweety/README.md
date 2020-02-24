@@ -1,3 +1,5 @@
+Retrieve tweets and other assorted info from the Twitter API.
+
 Forked from https://github.com/reticulatingspline/Tweety
 
 # Limnoria plugin for Twitter.

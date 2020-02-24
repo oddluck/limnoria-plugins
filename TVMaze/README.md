@@ -1,6 +1,6 @@
-# TVMaze
+Fetch TV show information and schedules from the TVMaze API.
 
-## Limnoria plugin to fetch TV show information and schedules from tvmaze.com API
+# TVMaze
 
 ### Instructions
 

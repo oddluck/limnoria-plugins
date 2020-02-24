@@ -1,6 +1,6 @@
-Forked from: https://github.com/butterscotchstallion/limnoria-plugins/tree/master/Cayenne
+Displays cat facts or cat gifs.
 
-Displays cat facts or cat gifs based on probability
+Forked from: https://github.com/butterscotchstallion/limnoria-plugins/tree/master/Cayenne
 
 python3 compatible<br>
 uses https://catfact.ninja/ as cat facts source<br> 

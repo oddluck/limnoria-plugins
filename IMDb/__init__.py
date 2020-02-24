@@ -29,7 +29,7 @@
 ###
 
 """
-IMDB: Queries OMDB database for information about IMDB titles
+IMDb: Queries OMDB database for information about IMDb titles
 """
 
 import supybot

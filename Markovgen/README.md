@@ -1,3 +1,5 @@
+Generate markov replies to channel messages.
+
 Forked from: https://github.com/ProgVal/Supybot-plugins/tree/master/Markovgen
 
 Additions:

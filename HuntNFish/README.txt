@@ -1,6 +1,6 @@
-Forked from https://github.com/resistivecorpse/supybot-plugins/tree/master/HuntNFish
+A simple hunting and fishing game.
 
-this is a basic hunting and fishing game for supybot
+Forked from https://github.com/resistivecorpse/supybot-plugins/tree/master/HuntNFish
 
 chance of success is a % variable, 1 to 100. it is set with config plugins.HuntNFish.successRate <number 1 to 100>
 

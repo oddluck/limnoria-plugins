@@ -1,3 +1,5 @@
+Various word games for IRC.
+
 Froked from https://github.com/mmueller/supybot-wordgames
 
 Working with Python3 and Limnoria.

@@ -32,7 +32,7 @@ import supybot.conf as conf
 import supybot.registry as registry
 try:
     from supybot.i18n import PluginInternationalization
-    _ = PluginInternationalization('Uno')
+    _ = PluginInternationalization('UNO')
 except:
     # Placeholder that allows to run the plugin on a bot
     # without the i18n module
@@ -44,8 +44,8 @@ def configure(advanced):
     # user or not.  You should effect your configuration by manipulating the
     # registry as appropriate.
     from supybot.questions import expect, anything, something, yn
-    conf.registerPlugin('Uno', True)
+    conf.registerPlugin('UNO', True)
 
-Uno = conf.registerPlugin('Uno')
+UNO = conf.registerPlugin('UNO')
 
 # vim:set shiftwidth=4 softtabstop=4 expandtab textwidth=79:

@@ -1,3 +1,5 @@
+Dice rolling plugin with many options.
+
 Forked from https://github.com/wRAR/supybot-plugin-Dicebot
 
 Install dependencies: python3 -m pip install -r requirements.txt

@@ -29,7 +29,7 @@
 ###
 
 """
-Undercut: a card game plugin for multiple players
+Undercut: a psychological numbers game for multiple players.
 """
 
 import supybot

@@ -1,3 +1,5 @@
+Retrieve current time and time zone information for various locations.
+
 # Limnoria plugin for WorldTime
 
 Forked from https://github.com/reticulatingspline/WorldTime

@@ -1,5 +1,5 @@
-## Azure Plugin
+Access various Microsoft Azure APIs (translate, search, etc.).
 
-This plugin connects to various Microsoft Azure APIs.
+## Azure Plugin
 
 `config plugins.azure.translate.key` Set your key for the text translation API

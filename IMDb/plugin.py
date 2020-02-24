@@ -43,14 +43,14 @@ from bs4 import BeautifulSoup
 
 try:
     from supybot.i18n import PluginInternationalization
-    _ = PluginInternationalization('IMDB')
+    _ = PluginInternationalization('IMDb')
 except ImportError:
     # Placeholder that allows to run the plugin on a bot
     # without the i18n module
     _ = lambda x: x
 
-class IMDB(callbacks.Plugin):
-    """Queries OMDB database for information about IMDB titles"""
+class IMDb(callbacks.Plugin):
+    """Queries OMDB database for information about IMDb titles"""
     threaded = True
 
     def dosearch(self, query):
@@ -87,7 +87,7 @@ class IMDB(callbacks.Plugin):
         ua = UserAgent()
         headers = {'User-Agent':str(ua.random)}
 
-        self.log.info("IMDB: requesting %s" % omdb_url)
+        self.log.info("IMDb: requesting %s" % omdb_url)
 
         try:
             request = requests.get(omdb_url, timeout=10, headers=headers)
@@ -99,7 +99,7 @@ class IMDB(callbacks.Plugin):
                 unknown_error = response["Response"] != "True"
 
                 if not_found or unknown_error:
-                    self.log.info("IMDB: OMDB error for %s" % (omdb_url))
+                    self.log.info("IMDb: OMDB error for %s" % (omdb_url))
                 else:
                     meta = None
                     tomato = None
@@ -142,14 +142,14 @@ class IMDB(callbacks.Plugin):
 
                     result = imdb_template
             else:
-                self.log.error("IMDB OMDB API %s - %s" % (request.status_code, request.text))
+                self.log.error("IMDb OMDB API %s - %s" % (request.status_code, request.text))
 
         except requests.exceptions.Timeout as e:
-            self.log.error("IMDB Timeout: %s" % (str(e)))
+            self.log.error("IMDb Timeout: %s" % (str(e)))
         except requests.exceptions.ConnectionError as e:
-            self.log.error("IMDB ConnectionError: %s" % (str(e)))
+            self.log.error("IMDb ConnectionError: %s" % (str(e)))
         except requests.exceptions.HTTPError as e:
-            self.log.error("IMDB HTTPError: %s" % (str(e)))
+            self.log.error("IMDb HTTPError: %s" % (str(e)))
         finally:
             if result is not None:
                 irc.reply(result)
@@ -158,7 +158,7 @@ class IMDB(callbacks.Plugin):
 
     imdb = wrap(imdb, ['text'])
 
-Class = IMDB
+Class = IMDb
 
 
 # vim:set shiftwidth=4 softtabstop=4 expandtab textwidth=79:

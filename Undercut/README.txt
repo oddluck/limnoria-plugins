@@ -1,4 +1,4 @@
-This is a Supybot plugin implementation of psychological number games described in Metamagical Themas by Douglas Hofstadter.
+Psychological number game as described in "Metamagical Themas" by Douglas Hofstadter.
 
 ==== Usage ====
 

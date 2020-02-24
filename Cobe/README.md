@@ -1,9 +1,11 @@
+Generate markov responses using the Cobe library.
+
 Forked from https://github.com/waratte/supybot/tree/master/Cobe
 
 Cobe
 ===============
 
-This is a plugin for Limnoria that allows your bot to use [Cobe](https://github.com/HubbeKing/cobe)
+This is a plugin for Limnoria that allows your bot to use [Cobe](https://github.com/oddluck/cobe)
 
 A description of cobe: http://teichman.org/blog/2011/02/cobe.html
 

@@ -1,3 +1,5 @@
+A fully-featured and customizable trivia game similar to Spike's Trivia for eggdrop.
+
 # Configuration
 
 Requires Limnoria and Python 3

@@ -1,4 +1,4 @@
-Limnoria plugin to fetch cannabis (marijuana) strain information from the strain api (strains.evanbusse.com)
+Fetch cannabis (marijuana) strain information from the strain api (strains.evanbusse.com)
 
 obtain an api key from http://strains.evanbusse.com/
 

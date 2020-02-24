@@ -1,4 +1,9 @@
-Use the Bot Libre API (Free) https://www.botlibre.com/api.jsp
+Retrieve responses from the Bot Libre API.
+
+## BotLibre
+
+Register for an account: https://www.botlibre.com/api.jsp (FREE)
+
 ```
 config plugins.BotLibre.application (YOUR_APP_KEY_HERE)
 config plugins.BotLibre.instance (BOT_INSTANCE_ID_HERE)
