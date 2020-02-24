@@ -71,8 +71,8 @@ class IMDb(callbacks.Plugin):
             return url
 
     def imdb(self, irc, msg, args, query):
-        """
-        Queries OMDB api for query
+        """<title>
+        Queries the OMDB api about an IMDb title.
         """
         apikey = self.registryValue('omdbAPI')
         url = self.dosearch(query)
