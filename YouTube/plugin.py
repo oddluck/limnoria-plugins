@@ -28,7 +28,6 @@
 # POSSIBILITY OF SUCH DAMAGE.
 ###
 
-import sys
 import supybot.utils as utils
 from supybot.commands import *
 import supybot.plugins as plugins
@@ -38,7 +37,6 @@ import supybot.callbacks as callbacks
 import supybot.log as log
 import requests
 import pendulum
-import re
 from jinja2 import Template
 from fake_useragent import UserAgent
 from bs4 import BeautifulSoup

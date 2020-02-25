@@ -28,7 +28,6 @@
 # POSSIBILITY OF SUCH DAMAGE.
 ###
 
-import sys
 import supybot.utils as utils
 from supybot.commands import *
 import supybot.plugins as plugins
@@ -101,8 +100,6 @@ class IMDb(callbacks.Plugin):
                     meta = None
                     tomato = None
                     imdb_template = self.registryValue("template")
-                    if sys.version_info[0] < 3:
-                        imdb_template = imdb_template.decode("utf-8")
                     imdb_template = imdb_template.replace("$title", response["Title"])
                     imdb_template = imdb_template.replace("$year", response["Year"])
                     imdb_template = imdb_template.replace("$country", response["Country"])
