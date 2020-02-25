@@ -293,7 +293,7 @@ conf.registerChannelValue(SpiffyTitles.imdb, 'logo',
 
 # IMDB template
 conf.registerChannelValue(SpiffyTitles.imdb, 'template',
-     registry.String("^ {{imdb_logo}} :: {{title}} ({{year}}, {{country}}, [{{rated}}], {{genre}}, {{runtime}}) :: IMDb: {{imdb_rating}} | MC: {{metascore}} | RT: {{tomatoMeter}} :: {{plot}} :: Director: {{director}} :: Cast: {{actors}} :: Writer: {writer}}", _("""IMDB title template""")))
+     registry.String("^ {{imdb_logo}} :: {{title}} ({{year}}, {{country}}, [{{rated}}], {{genre}}, {{runtime}}) :: IMDb: {{imdb_rating}} | MC: {{metascore}} | RT: {{tomatoMeter}} :: {{plot}} :: Director: {{director}} :: Cast: {{actors}} :: Writer: {{writer}}", _("""IMDB title template""")))
 
 
 
