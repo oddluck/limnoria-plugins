@@ -40,6 +40,7 @@ import json
 import re
 from fake_useragent import UserAgent
 from bs4 import BeautifulSoup
+from urllib.parse import urljoin, urlparse
 
 try:
     from supybot.i18n import PluginInternationalization
@@ -62,9 +63,7 @@ class IMDb(callbacks.Plugin):
             soup = BeautifulSoup(data.text)
             elements = soup.select('.r a')
             url = elements[0]['href']
-            url = re.split('https?://', url)[-1]
-            url = re.sub("&rct=.*", "", url)
-            url = "https://{0}".format(url)
+            url = urljoin(url, urlparse(url).path)
         except Exception:
             return
         else:
@@ -77,7 +76,7 @@ class IMDb(callbacks.Plugin):
         apikey = self.registryValue('omdbAPI')
         url = self.dosearch(query)
         if url:
-            imdb_id = url.split("/title/")[1].rstrip("/")
+            imdb_id = url.split("/title/")[-1].rstrip("/")
             omdb_url = "http://www.omdbapi.com/?i=%s&plot=short&r=json&tomatoes=true&apikey=%s" % (imdb_id, apikey)
         else:
             irc.reply("No results found for {0}".format(query))

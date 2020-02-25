@@ -66,9 +66,6 @@ class YouTube(callbacks.Plugin):
             soup = BeautifulSoup(data.text)
             elements = soup.select('.r a')
             url = elements[0]['href']
-            url = re.split('https?://', url)[-1]
-            url = re.sub("&rct=.*", "", url)
-            url = "https://{0}".format(url)
         except Exception:
             return
         else:

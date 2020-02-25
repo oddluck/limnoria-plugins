@@ -38,6 +38,7 @@ import requests
 import re
 import pylyrics3
 from fake_useragent import UserAgent
+from urllib.parse import urljoin, urlparse
 
 try:
     from supybot.i18n import PluginInternationalization
@@ -60,10 +61,8 @@ class Lyrics(callbacks.Plugin):
             soup = BeautifulSoup(data.text)
             elements = soup.select('.r a')
             url = elements[0]['href']
-            url = re.split('https?://', url)[-1]
-            url = re.sub("&rct=.*", "", url)
-            url = "https://{0}".format(url)
-            title = soup.find("h3").getText()
+            urljoin(url, urlparse(url).path)
+            title = soup.find("h3").getText().replace(":", " - ").split('|')[0]
         except Exception:
             return
         else:
@@ -90,7 +89,7 @@ class Lyrics(callbacks.Plugin):
         else:
             try:
                 lyrics = self.getlyrics(url)
-                irc.reply(title.replace(":", " - "))
+                irc.reply(title)
                 irc.reply(lyrics)
             except Exception:
                 irc.reply("Unable to retrieve lyrics from {0}".format(url))
