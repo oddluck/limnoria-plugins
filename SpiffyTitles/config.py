@@ -192,7 +192,7 @@ conf.registerGlobalValue(SpiffyTitles.youtube, 'developerKey',
     registry.String("", _("""Youtube developer key - required for Youtube handler."""), private=True))
 # YouTube Logo
 conf.registerChannelValue(SpiffyTitles.youtube, 'logo',
-    registry.String("\x02\x030,4 ► \x031,0YouTube", _("""Logo used with {{yt_logo}} in template""")))
+    registry.String("\x030,4 ► \x031,0YouTube", _("""Logo used with {{yt_logo}} in template""")))
 # YouTube template
 conf.registerChannelValue(SpiffyTitles.youtube, 'template',
      registry.String("^ {{yt_logo}} :: {{title}} {%if timestamp%} @ {{timestamp}}{% endif %} :: Duration: {{duration}} :: Views: {{view_count}} :: Uploader {{channel_title}} :: {{like_count}} likes :: {{dislike_count}} dislikes :: {{favorite_count}} favorites :: {{comment_count}} comments", _("""Template used for YouTube title responses""")))
@@ -247,7 +247,7 @@ conf.registerGlobalValue(SpiffyTitles.twitch, 'clientID',
 
 # Twitch Logo
 conf.registerChannelValue(SpiffyTitles.twitch, 'logo',
-     registry.String("\x02\x030,6💬twitch", _("""Logo used with {{twitch_logo}} in template""")))
+     registry.String("\x030,6💬twitch", _("""Logo used with {{twitch_logo}} in template""")))
 
 conf.registerChannelValue(SpiffyTitles.twitch, 'channelTemplate',
      registry.String("^ {{twitch_logo}} :: {{display_name}} {%if description%}:: {{description}} {%endif%}:: Viewers: {{view_count}}", _("""twitch.tv channel template""")))
@@ -289,11 +289,11 @@ conf.registerGlobalValue(SpiffyTitles.imdb, 'omdbAPI',
 
 # IMDB Logo
 conf.registerChannelValue(SpiffyTitles.imdb, 'logo',
-     registry.String("\x02\x031,8 IMDb ", _("""Logo used with {{imdb_logo}} in template""")))
+     registry.String("\x031,8 IMDb ", _("""Logo used with {{imdb_logo}} in template""")))
 
 # IMDB template
 conf.registerChannelValue(SpiffyTitles.imdb, 'template',
-     registry.String("^ {{imdb_logo}} :: {{title}} ({{year}}, {{country}}, [{{rated}}], {{genre}}, {{runtime}}) :: IMDb: {{imdb_rating}} | MC: {{metascore}} | RT: {{tomatoMeter}} :: {{plot}}", _("""IMDB title template""")))
+     registry.String("^ {{imdb_logo}} :: {{title}} ({{year}}, {{country}}, [{{rated}}], {{genre}}, {{runtime}}) :: IMDb: {{imdb_rating}} | MC: {{metascore}} | RT: {{tomatoMeter}} :: {{plot}} :: Director: {{director}} :: Cast: {{actors}} :: Writer: {writer}}", _("""IMDB title template""")))
 
 
 

@@ -51,7 +51,7 @@ def configure(advanced):
 IMDb = conf.registerPlugin('IMDb')
 
 conf.registerGlobalValue(IMDb, 'template',
-     registry.String("\x02\x031,8 IMDb \x0F\x02 :: $title ($year, $country, [$rated], $genre, $runtime) :: IMDb: $imdbRating | MC: $metascore | RT: $tomatoMeter :: http://imdb.com/title/$imdbID :: $plot :: Director: $director :: Writer: $writer :: Actors: $actors", _("""Template for the output of a search query.""")))
+     registry.String("\x02\x031,8 IMDb \x0F\x02 :: $title ($year, $country, [$rated], $genre, $runtime) :: IMDb: $imdbRating | MC: $metascore | RT: $tomatoMeter :: http://imdb.com/title/$imdbID :: $plot :: Director: $director :: Cast: $actors :: Writer: $writer", _("""Template for the output of a search query.""")))
 
 conf.registerGlobalValue(IMDb, 'noResultsMessage',
      registry.String("No results for that query.", _("""This message is sent when there are no results""")))
