@@ -21,6 +21,11 @@ from supybot.commands import *
 import supybot.plugins as plugins
 import supybot.ircutils as ircutils
 import supybot.callbacks as callbacks
+import json
+import urllib.request
+import pendulum
+import requests
+
 try:
     from supybot.i18n import PluginInternationalization
     _ = PluginInternationalization('NHL')
@@ -28,14 +33,6 @@ except ImportError:
     # Placeholder that allows to run the plugin on a bot
     # without the i18n module
     _ = lambda x: x
-
-import datetime
-import dateutil.parser
-import json
-import pytz
-import urllib.request
-import pendulum
-import requests
 
 class NHL(callbacks.Plugin):
     """Get scores from NHL.com."""
@@ -118,7 +115,7 @@ class NHL(callbacks.Plugin):
                 irc.reply("No games found for {}".format(team))
                 return
             try:
-                tdate = datetime.datetime.strptime(games[0], '%Y-%m-%d').strftime('%m/%d/%y')
+                tdate = pendulum.from_format(games[0], 'YYYY-MM-DD').strftime('%m/%d/%y')
                 games_string_date = ircutils.bold(tdate + ': ')
             except:
                 games_string_date = ''
@@ -137,7 +134,7 @@ class NHL(callbacks.Plugin):
                 irc.reply("No games found for {}".format(team))
                 return
             try:
-                tdate = datetime.datetime.strptime(games[0], '%Y-%m-%d').strftime('%m/%d/%y')
+                tdate = pendulum.from_format(games[0], 'YYYY-MM-DD').strftime('%m/%d/%y')
                 games_string_date = ircutils.bold(tdate + ': ')
             except:
                 games_string_date = ''
@@ -198,7 +195,7 @@ class NHL(callbacks.Plugin):
             games = self._getTodayTV(team)
             games_string = self._resultTVAsString(games)
             try:
-                tdate = datetime.datetime.strptime(games[0], '%Y-%m-%d').strftime('%m/%d/%y')
+                tdate = pendulum.from_format(games[0], 'YYYY-MM-DD').strftime('%m/%d/%y')
                 games_string_date = ircutils.bold(tdate + ': ')
             except:
                 games_string_date = ''
@@ -215,7 +212,7 @@ class NHL(callbacks.Plugin):
                 return
             games_string = self._resultTVAsString(games)
             try:
-                tdate = datetime.datetime.strptime(games[0], '%Y-%m-%d').strftime('%m/%d/%y')
+                tdate = pendulum.from_format(games[0], 'YYYY-MM-DD').strftime('%m/%d/%y')
                 games_string_date = ircutils.bold(tdate + ': ')
             except:
                 games_string_date = ''
@@ -595,10 +592,10 @@ class NHL(callbacks.Plugin):
         return today_iso #.replace('-', '')
 
     def _easternTimeNow(self):
-        return datetime.datetime.now(pytz.timezone('US/Eastern'))
+        return pendulum.now('US/Eastern')
 
     def _pacificTimeNow(self):
-        return datetime.datetime.now(pytz.timezone('US/Pacific'))
+        return pendulum.now('US/Pacific')
 
     def _convertISODateToTime(self, iso, target='US/Eastern'):
         """Convert the ISO date in UTC time that the API outputs into a
@@ -684,17 +681,16 @@ class NHL(callbacks.Plugin):
             date_string = pendulum.now('US/Pacific').next(pendulum.SATURDAY).format('YYYY-MM-DD')
             return date_string
         # Calculate the day difference and return a string
-        date_string = (self._pacificTimeNow() +
-                      datetime.timedelta(days=day_delta)).strftime('%Y-%m-%d')
+        date_string = self._pacificTimeNow().add(days=day_delta).strftime('%Y-%m-%d')
         return date_string
 
     def _checkDateInput(self, date):
         """Verify that the given string is a valid date formatted as
         YYYY-MM-DD. Also, the API seems to go back until 2014-10-04, so we
         will check that the input is not a date earlier than that."""
-        
+
         error_string = 'Incorrect date format, should be YYYY-MM-DD'
-        
+
         if date is None:
             return None
 
@@ -702,30 +698,20 @@ class NHL(callbacks.Plugin):
             date = self._EnglishDateToDate(date)
         elif date[:3].lower() in self._FUZZY_DAYS:
             date = self._EnglishDateToDate(date.lower())
-#         elif date[:3].upper() in self._TEAMS_BY_TRI:
-#             date = date[:3].upper()
-#             return date
-            
-        #try:
-        #    date = dateutil.parser.parse(date)
-        #except:
-        #    raise ValueError('Incorrect date format, should be YYYY-MM-DD')
-        
-        #print(date)
-        
+
         if date.isdigit():
             try:
-                date = datetime.datetime.strptime(date, '%Y%m%d').strftime('%Y-%m-%d')
+                date = pendulum.from_format(date, 'YYYYMMDD').strftime('%Y-%m-%d')
             except:
                 raise ValueError('Incorrect date format, should be YYYY-MM-DD')
         elif date.replace('-','').isdigit():
             try:
-                parsed_date = datetime.datetime.strptime(date, '%Y-%m-%d')
+                parsed_date = pendulum.from_format(date, 'YYYY-MM-DD')
             except:
                 raise ValueError('Incorrect date format, should be YYYY-MM-DD')
         elif date.replace('/','').isdigit():
             if len(date.split('/')) == 2:
-                year = '/' + str(datetime.datetime.now().year)
+                year = '/' + str(pendulum.datetime.now().year)
                 date += year
             elif len(date.split('/')) == 3:
                 if len(date.split('/')[2]) == 2:
@@ -733,7 +719,7 @@ class NHL(callbacks.Plugin):
             else:
                 raise ValueError('Incorrect date format, should be YYYY-MM-DD')
             try:
-                date = datetime.datetime.strptime(date, '%m/%d/%Y').strftime('%Y-%m-%d')
+                date = pendulum.from_format(date, 'MM/DD/YYYY').strftime('%Y-%m-%d')
             except:
                 raise ValueError('Incorrect date format, should be YYYY-MM-DD')
         elif '-' not in date and date.isdigit() == False and len(date) > 3:
@@ -741,12 +727,12 @@ class NHL(callbacks.Plugin):
                 return "Incorrect date format, should be YYYY-MM-DD"
             try:
                 date = date.title()
-                year = str(datetime.datetime.now().year)
+                year = str(pendulum.datetime.now().year)
                 date += year
                 try:
-                    date = datetime.datetime.strptime(date, '%d%b%Y').strftime('%Y-%m-%d')
+                    date = pendulum.from_format(date, 'DDMMMYYYY').strftime('%Y-%m-%d')
                 except:
-                    date = datetime.datetime.strptime(date, '%b%d%Y').strftime('%Y-%m-%d')
+                    date = pendulum.from_format(date, 'MMMDDYYYY').strftime('%Y-%m-%d')
             except:
                 raise ValueError('Incorrect date format, should be YYYY-MM-DD')
                 #return "Incorrect date format, should be YYYY-MM-DD"

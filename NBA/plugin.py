@@ -35,6 +35,11 @@ from supybot.commands import optional, wrap
 #import supybot.plugins as plugins
 import supybot.ircutils as ircutils
 import supybot.callbacks as callbacks
+import httplib2
+import json
+import pendulum
+from xml.etree import ElementTree
+
 try:
     from supybot.i18n import PluginInternationalization
     _ = PluginInternationalization('NBA')
@@ -42,13 +47,6 @@ except ImportError:
     # Placeholder that allows to run the plugin on a bot
     # without the i18n module
     _ = lambda x: x
-
-import datetime
-import dateutil.parser
-import httplib2
-import json
-import pytz
-from xml.etree import ElementTree
 
 class NBA(callbacks.Plugin):
     """Get scores from NBA.com."""
@@ -136,7 +134,12 @@ class NBA(callbacks.Plugin):
                 if nugget_is_interesting:
                     games_string += ' | {}'.format(nugget)
 
-        irc.reply(games_string)
+        if date:
+            date = pendulum.from_format(date, 'YYYYMMDD').to_date_string()
+        else:
+            date = pendulum.now().to_date_string()
+
+        irc.reply("{0}: {1}".format(date, games_string))
 
     nba = wrap(nba, [optional('somethingWithoutSpaces'),
                      optional('somethingWithoutSpaces')])
@@ -669,11 +672,11 @@ class NBA(callbacks.Plugin):
 
     @staticmethod
     def _easternTimeNow():
-        return datetime.datetime.now(pytz.timezone('US/Eastern'))
+        return pendulum.now('US/Eastern')
 
     @staticmethod
     def _pacificTimeNow():
-        return datetime.datetime.now(pytz.timezone('US/Pacific'))
+        return pendulum.now('US/Pacific')
 
     @staticmethod
     def _ISODateToEasternDate(iso):
@@ -681,8 +684,8 @@ class NBA(callbacks.Plugin):
         Eastern-time date.
         (The default human-readable format for the listing of games).
         """
-        date = dateutil.parser.parse(iso)
-        date_eastern = date.astimezone(pytz.timezone('US/Eastern'))
+        date = pendulum.parse(iso)
+        date_eastern = date.in_tz('US/Eastern')
         eastern_date = date_eastern.strftime('%a %m/%d')
         return "{}".format(eastern_date)
 
@@ -692,8 +695,8 @@ class NBA(callbacks.Plugin):
         Eastern time formatted with am/pm.
         (The default human-readable format for the listing of games).
         """
-        date = dateutil.parser.parse(iso)
-        date_eastern = date.astimezone(pytz.timezone('US/Eastern'))
+        date = pendulum.parse(iso)
+        date_eastern = date.in_tz('US/Eastern')
         eastern_time = date_eastern.strftime('%-I:%M %p')
         return "{} ET".format(eastern_time)
 
@@ -702,8 +705,8 @@ class NBA(callbacks.Plugin):
         """Convert the ISO date in UTC time that the API outputs into a
         string with a date and Eastern time formatted with am/pm.
         """
-        date = dateutil.parser.parse(iso)
-        date_eastern = date.astimezone(pytz.timezone('US/Eastern'))
+        date = pendulum.parse(iso)
+        date_eastern = date.in_tz('US/Eastern')
         eastern_datetime = date_eastern.strftime('%a %m/%d, %I:%M %p')
         return "{} ET".format(eastern_datetime)
 
@@ -723,8 +726,7 @@ class NBA(callbacks.Plugin):
         elif date == 'tomorrow':
             day_delta = 1
         # Calculate the day difference and return a string
-        date_string = (cls._pacificTimeNow() +
-                       datetime.timedelta(days=day_delta)).strftime('%Y%m%d')
+        date_string = cls._pacificTimeNow().add(days=day_delta).strftime('%Y%m%d')
         return date_string
 
     @classmethod
@@ -767,12 +769,12 @@ class NBA(callbacks.Plugin):
 
         elif date.replace('-', '').isdigit():
             try:
-                parsed_date = datetime.datetime.strptime(date, '%Y-%m-%d')
+                parsed_date = pendulum.from_format(date, 'YYYY-MM-DD')
             except:
                 raise ValueError('Incorrect date format, should be YYYY-MM-DD')
 
             # The current API goes back until 2014-10-04. Is it in range?
-            if parsed_date.date() < datetime.date(2014, 10, 4):
+            if parsed_date < pendulum.datetime(2014, 10, 4):
                 raise ValueError('I can only go back until 2014-10-04')
         else:
             raise ValueError('Date is not valid')

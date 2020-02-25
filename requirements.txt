@@ -20,7 +20,6 @@ pyimgur
 pylyrics3
 pytest
 python-dateutil
-pytz
 requests
 roman_numerals
 textdistance[extras]
