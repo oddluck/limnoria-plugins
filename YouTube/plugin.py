@@ -44,6 +44,14 @@ from fake_useragent import UserAgent
 from bs4 import BeautifulSoup
 from urllib.parse import urlencode, urlparse, parse_qsl
 
+try:
+    from supybot.i18n import PluginInternationalization
+    _ = PluginInternationalization('YouTube')
+except ImportError:
+    # Placeholder that allows to run the plugin on a bot
+    # without the i18n module
+    _ = lambda x: x
+
 class YouTube(callbacks.Plugin):
     """Queries OMDB database for information about YouTube titles"""
     threaded = True
