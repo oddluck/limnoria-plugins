@@ -176,7 +176,7 @@ class Jeopardy(callbacks.Plugin):
                             category = string.capwords(item['category']['title'])
                             invalid = item['invalid_count']
                             points = self.points
-                            if item['value']:
+                            if int(item['value']) >= 100:
                                 points = int(item['value'])
                             else:
                                 points = self.points
@@ -238,7 +238,7 @@ class Jeopardy(callbacks.Plugin):
                                 category = string.capwords(item['category']['title'])
                                 invalid = item['invalid_count']
                                 points = self.points
-                                if item['value']:
+                                if int(item['value']) >= 100:
                                     points = int(item['value'])
                                 else:
                                     points = self.points
