@@ -19,7 +19,6 @@ pillow
 pyimgur
 pylyrics3
 pytest
-python-dateutil
 requests
 roman_numerals
 textdistance[extras]
