@@ -58,6 +58,7 @@ class YouTube(callbacks.Plugin):
     threaded = True
 
     def dosearch(self, query):
+        url = None
         try:
             searchurl = "https://www.google.com/search?&q={0} site:youtube.com".format(query)
             ua = UserAgent()
@@ -65,9 +66,15 @@ class YouTube(callbacks.Plugin):
             data = requests.get(searchurl, headers=header)
             soup = BeautifulSoup(data.text)
             elements = soup.select('.r a')
-            url = elements[0]['href']
+            for i in range(len(elements)):
+                if 'watch?v=' in elements[i]['href']:
+                    url = elements[i]['href']
+                    break
         except Exception:
-            return
+            try:
+                self.dosearch(query)
+            except Exception:
+                return None
         else:
             return url
 
