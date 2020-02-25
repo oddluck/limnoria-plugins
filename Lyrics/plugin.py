@@ -53,20 +53,22 @@ class Lyrics(callbacks.Plugin):
     threaded = True
 
     def dosearch(self, lyric):
-        try:
-            searchurl = "https://www.google.com/search?&q={0} site:lyrics.fandom.com/wiki/".format(lyric)
-            ua = UserAgent()
-            header = {'User-Agent':str(ua.random)}
-            data = requests.get(searchurl, headers=header)
-            soup = BeautifulSoup(data.text)
-            elements = soup.select('.r a')
-            url = elements[0]['href']
-            urljoin(url, urlparse(url).path)
-            title = soup.find("h3").getText().replace(":", " - ").split('|')[0]
-        except Exception:
-            return
-        else:
-            return title, url
+        url = None
+        i = 0
+        while i < 3 and not url:
+            try:
+                searchurl = "https://www.google.com/search?&q={0} site:lyrics.fandom.com/wiki/".format(lyric)
+                ua = UserAgent()
+                header = {'User-Agent':str(ua.random)}
+                data = requests.get(searchurl, headers=header)
+                soup = BeautifulSoup(data.text)
+                elements = soup.select('.r a')
+                title = soup.find("h3").getText().replace(":", " - ").split('|')[0]
+                url = urljoin(elements[0]['href'], urlparse(url).path)
+                i += 1
+            except Exception:
+                continue
+        return title, url
 
     def getlyrics(self, url):
         try:

@@ -59,24 +59,23 @@ class YouTube(callbacks.Plugin):
 
     def dosearch(self, query):
         url = None
-        try:
-            searchurl = "https://www.google.com/search?&q={0} site:youtube.com".format(query)
-            ua = UserAgent()
-            header = {'User-Agent':str(ua.random)}
-            data = requests.get(searchurl, headers=header)
-            soup = BeautifulSoup(data.text)
-            elements = soup.select('.r a')
-            for i in range(len(elements)):
-                if 'watch?v=' in elements[i]['href']:
-                    url = elements[i]['href']
-                    break
-        except Exception:
+        k = 0
+        while k < 3 and not url:
             try:
-                self.dosearch(query)
+                searchurl = "https://www.google.com/search?&q={0} site:youtube.com".format(query)
+                ua = UserAgent()
+                header = {'User-Agent':str(ua.random)}
+                data = requests.get(searchurl, headers=header)
+                soup = BeautifulSoup(data.text)
+                elements = soup.select('.r a')
+                for i in range(len(elements)):
+                    if 'watch?v=' in elements[i]['href']:
+                        url = elements[i]['href']
+                        break
+                k += 1
             except Exception:
-                return None
-        else:
-            return url
+                continue
+        return url
 
     def get_video_id_from_url(self, url):
         """

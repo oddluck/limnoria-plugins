@@ -55,19 +55,21 @@ class IMDb(callbacks.Plugin):
     threaded = True
 
     def dosearch(self, query):
-        try:
-            searchurl = "https://www.google.com/search?&q={0} site:imdb.com/title/".format(query)
-            ua = UserAgent()
-            header = {'User-Agent':str(ua.random)}
-            data = requests.get(searchurl, headers=header)
-            soup = BeautifulSoup(data.text)
-            elements = soup.select('.r a')
-            url = elements[0]['href']
-            url = urljoin(url, urlparse(url).path)
-        except Exception:
-            return
-        else:
-            return url
+        url = None
+        i = 0
+        while i < 3 and not url:
+            try:
+                searchurl = "https://www.google.com/search?&q={0} site:imdb.com/title/".format(query)
+                ua = UserAgent()
+                header = {'User-Agent':str(ua.random)}
+                data = requests.get(searchurl, headers=header)
+                soup = BeautifulSoup(data.text)
+                elements = soup.select('.r a')
+                url = urljoin(elements[0]['href'], urlparse(url).path)
+                i += 1
+            except Exception:
+                continue
+        return url
 
     def imdb(self, irc, msg, args, query):
         """<title>
