@@ -106,7 +106,7 @@ Default value: `\x030,4 ► \x031,0YouTube`
 
 `youtube.template` - This is the template used when showing the title of a YouTube video
 
-Default value: `^ {{yt_logo}} :: {{title}} {%if timestamp%} @ {{timestamp}}{% endif %} :: Duration: {{duration}} :: Views: {{view_count}} uploaded by {{channel_title}} :: {{like_count}} likes :: {{dislike_count}} dislikes :: {{favorite_count}} favorites`
+Default value: `^ {{yt_logo}} :: {{title}} {%if timestamp%} @ {{timestamp}}{% endif %} :: Duration: {{duration}} :: Views: {{view_count}} :: Uploader: {{channel_title}} :: Uploaded: {{published}} :: {{like_count}} likes :: {{dislike_count}} dislikes :: {{favorite_count}} favorites`
 
 Example output:
 
@@ -125,6 +125,7 @@ like_count     | Number of likes
 dislike_count  | Number of dislikes
 favorite_count | Number of favorites
 comment_count  | Number of comments
+published      | Date uploaded
 timestamp      | If specified, the start time of the video
 
 Tip: You can use irc colors colors in your templates, but be sure to quote the value

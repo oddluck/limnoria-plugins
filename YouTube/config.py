@@ -58,7 +58,7 @@ conf.registerChannelValue(YouTube, 'logo',
     registry.String("\x02\x030,4 ► \x031,0YouTube", _("""Logo used with $yt_logo in template""")))
 
 conf.registerChannelValue(YouTube, 'template',
-     registry.String("{{logo}} :: {{link}} :: {{title}} :: Duration: {{duration}} :: Views: {{views}} :: Uploader: {{uploader}} :: {{likes}} likes :: {{dislikes}} dislikes :: {{favorites}} favorites :: {{comments}} comments", _("""Template used for search result replies""")))
+     registry.String("{{logo}} :: {{link}} :: {{title}} :: Duration: {{duration}} :: Views: {{views}} :: Uploader: {{uploader}} :: Uploaded: {{published}} :: {{likes}} likes :: {{dislikes}} dislikes :: {{favorites}} favorites :: {{comments}} comments", _("""Template used for search result replies""")))
 
 conf.registerChannelValue(YouTube, 'useBold',
      registry.Boolean(True, _("""Use bold in replies""")))

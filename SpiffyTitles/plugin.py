@@ -717,6 +717,9 @@ class SpiffyTitles(callbacks.Plugin):
                             else:
                                 duration = "LIVE"
 
+                            published = snippet['publishedAt']
+                            published = self.get_published_date(published)
+
                             timestamp = self.get_timestamp_from_youtube_url(url)
                             yt_logo = self.get_youtube_logo()
 
@@ -730,6 +733,7 @@ class SpiffyTitles(callbacks.Plugin):
                                 "comment_count": comment_count,
                                 "favorite_count": favorite_count,
                                 "channel_title": channel_title,
+                                "published": published,
                                 "yt_logo": yt_logo
                             })
 
@@ -753,6 +757,12 @@ class SpiffyTitles(callbacks.Plugin):
             log.debug("SpiffyTitles: falling back to default handler")
 
             return self.handler_default(url, channel)
+
+    def get_published_date(self, date):
+        date = pendulum.parse(date, strict=False)
+        date = pendulum.datetime(date.year, date.month, date.day)
+        date = date.to_date_string()
+        return date
 
     def get_duration_from_seconds(self, duration_seconds):
         m, s = divmod(duration_seconds, 60)

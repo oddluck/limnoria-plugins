@@ -136,6 +136,12 @@ class YouTube(callbacks.Plugin):
 
         return delta.total_seconds()
 
+    def get_published_date(self, date):
+        date = pendulum.parse(date, strict=False)
+        date = pendulum.datetime(date.year, date.month, date.day)
+        date = date.to_date_string()
+        return date
+
     def get_youtube_logo(self):
         use_bold = self.registryValue("useBold", dynamic.channel)
         if use_bold:
@@ -226,6 +232,9 @@ class YouTube(callbacks.Plugin):
                             else:
                                 duration = "LIVE"
 
+                            published = snippet['publishedAt']
+                            published = self.get_published_date(published)
+
                             yt_logo = self.get_youtube_logo()
 
                             link = "https://youtu.be/%s" % (video_id)
@@ -240,6 +249,7 @@ class YouTube(callbacks.Plugin):
                                 "favorites": favorite_count,
                                 "uploader": channel_title,
                                 "link": link,
+                                "published": published,
                                 "logo": yt_logo
                             })
 
