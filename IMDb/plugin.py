@@ -36,8 +36,6 @@ import supybot.ircutils as ircutils
 import supybot.ircmsgs as ircmsgs
 import supybot.callbacks as callbacks
 import requests
-import json
-import re
 from fake_useragent import UserAgent
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin, urlparse
@@ -85,16 +83,14 @@ class IMDb(callbacks.Plugin):
 
         channel = msg.args[0]
         result = None
-        ua = UserAgent()
-        headers = {'User-Agent':str(ua.random)}
 
         self.log.info("IMDb: requesting %s" % omdb_url)
 
         try:
-            request = requests.get(omdb_url, timeout=10, headers=headers)
+            request = requests.get(omdb_url, timeout=10)
 
             if request.status_code == requests.codes.ok:
-                response = json.loads(request.text)
+                response = request.json()
 
                 not_found = "Error" in response
                 unknown_error = response["Response"] != "True"

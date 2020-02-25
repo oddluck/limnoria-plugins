@@ -38,7 +38,6 @@ import supybot.callbacks as callbacks
 import supybot.log as log
 import requests
 import pendulum
-import json
 import re
 from jinja2 import Template
 from fake_useragent import UserAgent
@@ -172,8 +171,6 @@ class YouTube(callbacks.Plugin):
 
         channel = msg.args[0]
         result = None
-        ua = UserAgent()
-        headers = {'User-Agent':str(ua.random)}
 
         yt_template = Template(self.registryValue("template", dynamic.channel))
         title = ""
@@ -191,11 +188,11 @@ class YouTube(callbacks.Plugin):
 
             log.debug("YouTube: requesting %s" % (api_url))
 
-            request = requests.get(api_url, headers=headers)
+            request = requests.get(api_url)
             ok = request.status_code == requests.codes.ok
 
             if ok:
-                response = json.loads(request.text)
+                response = request.json()
 
                 if response:
                     try:
