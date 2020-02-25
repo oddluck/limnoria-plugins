@@ -60,7 +60,7 @@ class Lyrics(callbacks.Plugin):
                 searchurl = "https://www.google.com/search?&q={0} site:lyrics.fandom.com/wiki/".format(lyric)
                 ua = UserAgent()
                 header = {'User-Agent':str(ua.random)}
-                data = requests.get(searchurl, headers=header)
+                data = requests.get(searchurl, headers=header, timeout=10)
                 soup = BeautifulSoup(data.text)
                 elements = soup.select('.r a')
                 title = soup.find("h3").getText().replace(":", " - ").split('|')[0]

@@ -64,7 +64,7 @@ class YouTube(callbacks.Plugin):
                 searchurl = "https://www.google.com/search?&q={0} site:youtube.com".format(query)
                 ua = UserAgent()
                 header = {'User-Agent':str(ua.random)}
-                data = requests.get(searchurl, headers=header)
+                data = requests.get(searchurl, headers=header, timeout=10)
                 soup = BeautifulSoup(data.text)
                 elements = soup.select('.r a')
                 for i in range(len(elements)):
@@ -188,7 +188,7 @@ class YouTube(callbacks.Plugin):
 
             log.debug("YouTube: requesting %s" % (api_url))
 
-            request = requests.get(api_url)
+            request = requests.get(api_url, timeout=10)
             ok = request.status_code == requests.codes.ok
 
             if ok:
