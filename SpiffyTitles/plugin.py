@@ -791,16 +791,16 @@ class SpiffyTitles(callbacks.Plugin):
             twitch_logo = "{0}\x0F\x02".format(self.registryValue("twitch.logo", dynamic.channel))
         else:
             twitch_logo = "{0}\x0F".format(self.registryValue("twitch.logo", dynamic.channel))
-            
+
         return twitch_logo
-        
+
     def get_imdb_logo(self):
         use_bold = self.registryValue("useBold", dynamic.channel)
         if use_bold:
             imdb_logo = "{0}\x0F\x02".format(self.registryValue("imdb.logo", dynamic.channel))
         else:
             imdb_logo = "{0}\x0F".format(self.registryValue("imdb.logo", dynamic.channel))
-            
+
         return imdb_logo
 
     def get_total_seconds_from_duration(self, input):
@@ -809,24 +809,8 @@ class SpiffyTitles(callbacks.Plugin):
         4 minutes and 41 seconds. This method returns the total seconds
         so that the duration can be parsed as usual.
         """
-        regex = re.compile("""
-                   (?P<sign>    -?) P
-                (?:(?P<years>  \d+) Y)?
-                (?:(?P<months> \d+) M)?
-                (?:(?P<days>   \d+) D)?
-            (?:                     T
-                (?:(?P<hours>  \d+) H)?
-                (?:(?P<minutes>\d+) M)?
-                (?:(?P<seconds>\d+) S)?
-            )?
-            """, re.VERBOSE)
-        duration = regex.match(input).groupdict(0)
-
-        delta = pendulum.duration(hours=int(duration['hours']),
-                          minutes=int(duration['minutes']),
-                          seconds=int(duration['seconds']))
-
-        return delta.total_seconds()
+        duration = pendulum.parse(input)
+        return duration.total_seconds()
 
     def get_timestamp_from_youtube_url(self, url):
         """

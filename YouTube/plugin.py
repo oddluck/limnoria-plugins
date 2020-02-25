@@ -44,14 +44,6 @@ from fake_useragent import UserAgent
 from bs4 import BeautifulSoup
 from urllib.parse import urlencode, urlparse, parse_qsl
 
-try:
-    from supybot.i18n import PluginInternationalization
-    _ = PluginInternationalization('YouTube')
-except ImportError:
-    # Placeholder that allows to run the plugin on a bot
-    # without the i18n module
-    _ = lambda x: x
-
 class YouTube(callbacks.Plugin):
     """Queries OMDB database for information about YouTube titles"""
     threaded = True
@@ -122,24 +114,8 @@ class YouTube(callbacks.Plugin):
         4 minutes and 41 seconds. This method returns the total seconds
         so that the duration can be parsed as usual.
         """
-        regex = re.compile("""
-                   (?P<sign>    -?) P
-                (?:(?P<years>  \d+) Y)?
-                (?:(?P<months> \d+) M)?
-                (?:(?P<days>   \d+) D)?
-            (?:                     T
-                (?:(?P<hours>  \d+) H)?
-                (?:(?P<minutes>\d+) M)?
-                (?:(?P<seconds>\d+) S)?
-            )?
-            """, re.VERBOSE)
-        duration = regex.match(input).groupdict(0)
-
-        delta = pendulum.duration(hours=int(duration['hours']),
-                          minutes=int(duration['minutes']),
-                          seconds=int(duration['seconds']))
-
-        return delta.total_seconds()
+        duration = pendulum.parse(input)
+        return duration.total_seconds()
 
     def get_published_date(self, date):
         date = pendulum.parse(date, strict=False)
