@@ -40,10 +40,8 @@ import supybot.world as world
 __version__ = "2020.02.24+git"
 
 # XXX Replace this with an appropriate author or supybot.Author instance.
-__author__ = supybot.Author('butterscotchstallion', 'butterscotchstallion',
-                            '')
-__maintainer__ = getattr(supybot.authors, 'oddluck',
-                         supybot.Author('oddluck', 'oddluck', 'oddluck@riseup.net'))
+__author__ = supybot.Author('oddluck', 'oddluck', 'oddluck@riseup.net')
+__maintainer__ = {}
 
 # This is a dictionary mapping supybot.Author instances to lists of
 # contributions.
