@@ -195,7 +195,7 @@ conf.registerChannelValue(SpiffyTitles.youtube, 'logo',
     registry.String("\x030,4 ► \x031,0YouTube", _("""Logo used with {{yt_logo}} in template""")))
 # YouTube template
 conf.registerChannelValue(SpiffyTitles.youtube, 'template',
-     registry.String("^ {{yt_logo}} :: {{title}} {%if timestamp%} @ {{timestamp}}{% endif %} :: Duration: {{duration}} :: Views: {{view_count}} :: Uploader {{channel_title}} :: Uploaded: {{published}} :: {{like_count}} likes :: {{dislike_count}} dislikes :: {{favorite_count}} favorites :: {{comment_count}} comments", _("""Template used for YouTube title responses""")))
+     registry.String("^ {{yt_logo}} :: {{title}} {%if timestamp%} @ {{timestamp}}{% endif %} :: Duration: {{duration}} :: Views: {{view_count}} :: Uploader: {{channel_title}} :: Uploaded: {{published}} :: {{like_count}} likes :: {{dislike_count}} dislikes :: {{favorite_count}} favorites :: {{comment_count}} comments", _("""Template used for YouTube title responses""")))
 
 
 
