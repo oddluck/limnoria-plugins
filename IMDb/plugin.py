@@ -57,7 +57,6 @@ class IMDb(callbacks.Plugin):
             url = None
             searchurl = "https://www.google.com/search?&q="
             searchurl += quote_plus("{0} site:imdb.com/title/".format(query))
-            log.debug(searchurl)
             ua = UserAgent(fallback="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:74.0) Gecko/20100101 Firefox/74.0")
             header = {'User-Agent':str(ua.random)}
             data = requests.get(searchurl, headers=header, timeout=10)
@@ -78,7 +77,7 @@ class IMDb(callbacks.Plugin):
         if url:
             imdb_id = url.split("/title/")[1].rstrip("/")
             omdb_url = "http://www.omdbapi.com/?i=%s&plot=short&r=json&tomatoes=true&apikey=%s" % (imdb_id, apikey)
-            log.info("IMDb: requesting %s" % omdb_url)
+            log.debug("IMDb: requesting %s" % omdb_url)
         else:
             irc.reply("No results found for {0}".format(query))
             return
@@ -96,7 +95,7 @@ class IMDb(callbacks.Plugin):
                 unknown_error = response["Response"] != "True"
 
                 if not_found or unknown_error:
-                    self.log.info("IMDb: OMDB error for %s" % (omdb_url))
+                    log.debug("IMDb: OMDB error for %s" % (omdb_url))
                 else:
                     meta = None
                     tomato = None
@@ -137,14 +136,14 @@ class IMDb(callbacks.Plugin):
 
                     result = imdb_template
             else:
-                self.log.error("IMDb OMDB API %s - %s" % (request.status_code, request.text))
+                log.error("IMDb OMDB API %s - %s" % (request.status_code, request.text))
 
         except requests.exceptions.Timeout as e:
-            self.log.error("IMDb Timeout: %s" % (str(e)))
+            log.error("IMDb Timeout: %s" % (str(e)))
         except requests.exceptions.ConnectionError as e:
-            self.log.error("IMDb ConnectionError: %s" % (str(e)))
+            log.error("IMDb ConnectionError: %s" % (str(e)))
         except requests.exceptions.HTTPError as e:
-            self.log.error("IMDb HTTPError: %s" % (str(e)))
+            log.error("IMDb HTTPError: %s" % (str(e)))
         finally:
             if result is not None:
                 irc.reply(result)

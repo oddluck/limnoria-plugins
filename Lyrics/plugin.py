@@ -73,11 +73,11 @@ class Lyrics(callbacks.Plugin):
 
     def getlyrics(self, url):
         try:
+            log.debug("Lyrics: requesting {0}".format(url))
             lyrics = pylyrics3.get_lyrics_from_url(url)
             lyrics = re.sub('(?<!\.|\!|\?)\s\\n', '.', lyrics).replace(" \n", "")
         except Exception:
-            lyrics = pylyrics3.get_lyrics_from_url(url)
-            lyrics = re.sub('(?<!\.|\!|\?)\s\\n', '.', lyrics).replace(" \n", "")
+            return
         else:
             return lyrics
 
@@ -88,6 +88,7 @@ class Lyrics(callbacks.Plugin):
         title, url = self.dosearch(lyric)
         if not title or not url:
             irc.reply("No results found for {0}".format(lyric))
+            return
         else:
             try:
                 lyrics = self.getlyrics(url)
