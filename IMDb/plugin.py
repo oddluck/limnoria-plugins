@@ -55,7 +55,7 @@ class IMDb(callbacks.Plugin):
         try:
             url = None
             searchurl = "https://www.google.com/search?&q={0} site:imdb.com/title/".format(query)
-            ua = UserAgent()
+            ua = UserAgent(fallback="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:74.0) Gecko/20100101 Firefox/74.0")
             header = {'User-Agent':str(ua.random)}
             data = requests.get(searchurl, headers=header, timeout=10)
             data.raise_for_status()

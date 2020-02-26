@@ -713,7 +713,7 @@ class TextArt(callbacks.Plugin):
             fg = 0
         if url.startswith("https://paste.ee/p/"):
             url = re.sub("https://paste.ee/p/", "https://paste.ee/r/", url)
-        ua = UserAgent()
+        ua = UserAgent(fallback="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:74.0) Gecko/20100101 Firefox/74.0")
         header = {'User-Agent':str(ua.random)}
         r = requests.head(url, headers=header)
         if "text/plain" in r.headers["content-type"] or url.startswith('https://paste.ee/r/'):
@@ -900,7 +900,7 @@ class TextArt(callbacks.Plugin):
         path = os.path.dirname(os.path.abspath(__file__))
         filepath = "{0}/tmp".format(path)
         filename = "{0}/{1}".format(filepath, url.split('/')[-1])
-        ua = UserAgent()
+        ua = UserAgent(fallback="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:74.0) Gecko/20100101 Firefox/74.0")
         header = {'User-Agent':str(ua.random)}
         image_formats = ("image/png", "image/jpeg", "image/jpg", "image/gif")
         r = requests.head(url, headers=header)
@@ -1161,7 +1161,7 @@ class TextArt(callbacks.Plugin):
             url = url.replace("https://paste.ee/p/", "https://paste.ee/r/")
         elif url.startswith("https://pastebin.com/") and '/raw/' not in url:
             url = url.replace("https://pastebin.com/", "https://pastebin.com/raw/")
-        ua = UserAgent()
+        ua = UserAgent(fallback="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:74.0) Gecko/20100101 Firefox/74.0")
         header = {'User-Agent':str(ua.random)}
         r = requests.head(url, headers=header)
         if "text/plain" in r.headers["content-type"]:
@@ -1209,7 +1209,7 @@ class TextArt(callbacks.Plugin):
             delay = optlist.get('delay')
         else:
             delay = self.registryValue('delay', msg.args[0])
-        ua = UserAgent()
+        ua = UserAgent(fallback="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:74.0) Gecko/20100101 Firefox/74.0")
         header = {'User-Agent':str(ua.random)}
         r = requests.head(url, headers=header)
         try:
@@ -1295,7 +1295,7 @@ class TextArt(callbacks.Plugin):
         path = os.path.dirname(os.path.abspath(__file__))
         filepath = "{0}/tmp".format(path)
         filename = "{0}/{1}".format(filepath, url.split('/')[-1])
-        ua = UserAgent()
+        ua = UserAgent(fallback="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:74.0) Gecko/20100101 Firefox/74.0")
         header = {'User-Agent':str(ua.random)}
         image_formats = ("image/png", "image/jpeg", "image/jpg", "image/gif")
         r = requests.head(url, headers=header)
@@ -1666,7 +1666,7 @@ class TextArt(callbacks.Plugin):
         else:
             delay = self.registryValue('delay', msg.args[0])
         self.stopped[msg.args[0]] = False
-        ua = UserAgent()
+        ua = UserAgent(fallback="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:74.0) Gecko/20100101 Firefox/74.0")
         header = {'User-Agent':str(ua.random)}
         data = requests.get("https://mircart.org/?s={0}".format(search), headers=header)
         soup = BeautifulSoup(data.text)
