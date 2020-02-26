@@ -458,7 +458,7 @@ class Jeopardy(callbacks.Plugin):
                         break
                 self.currentHint = ''.join(self.show[self.id])
             if self.hints > 0:
-                self.p -= int(self.p * self.reduction)
+                self.p -= int(round(self.p * self.reduction, -1))
             if self.points > self.p:
                 points = self.p
             else:
