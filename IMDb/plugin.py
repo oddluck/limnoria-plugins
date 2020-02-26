@@ -34,10 +34,11 @@ import supybot.plugins as plugins
 import supybot.ircutils as ircutils
 import supybot.ircmsgs as ircmsgs
 import supybot.callbacks as callbacks
+import supybot.log as log
 import requests
 from fake_useragent import UserAgent
 from bs4 import BeautifulSoup
-from urllib.parse import urljoin, urlparse
+from urllib.parse import urljoin, urlparse, quote_plus
 
 try:
     from supybot.i18n import PluginInternationalization
@@ -54,7 +55,9 @@ class IMDb(callbacks.Plugin):
     def dosearch(self, query):
         try:
             url = None
-            searchurl = "https://www.google.com/search?&q={0} site:imdb.com/title/".format(query)
+            searchurl = "https://www.google.com/search?&q="
+            searchurl += quote_plus("{0} site:imdb.com/title/".format(query))
+            log.debug(searchurl)
             ua = UserAgent(fallback="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:74.0) Gecko/20100101 Firefox/74.0")
             header = {'User-Agent':str(ua.random)}
             data = requests.get(searchurl, headers=header, timeout=10)
@@ -75,13 +78,13 @@ class IMDb(callbacks.Plugin):
         if url:
             imdb_id = url.split("/title/")[1].rstrip("/")
             omdb_url = "http://www.omdbapi.com/?i=%s&plot=short&r=json&tomatoes=true&apikey=%s" % (imdb_id, apikey)
+            log.info("IMDb: requesting %s" % omdb_url)
         else:
             irc.reply("No results found for {0}".format(query))
+            return
 
         channel = msg.args[0]
         result = None
-
-        self.log.info("IMDb: requesting %s" % omdb_url)
 
         try:
             request = requests.get(omdb_url, timeout=10)

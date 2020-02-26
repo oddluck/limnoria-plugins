@@ -39,7 +39,7 @@ import requests
 import re
 import pylyrics3
 from fake_useragent import UserAgent
-from urllib.parse import urljoin, urlparse
+from urllib.parse import urljoin, urlparse, quote_plus
 
 try:
     from supybot.i18n import PluginInternationalization
@@ -57,7 +57,8 @@ class Lyrics(callbacks.Plugin):
         try:
             url = None
             title = None
-            searchurl = "https://www.google.com/search?&q={0} site:lyrics.fandom.com/wiki/".format(lyric)
+            searchurl = "https://www.google.com/search?&q="
+            searchurl += quote_plus("{0} site:lyrics.fandom.com/wiki/".format(lyric))
             ua = UserAgent(fallback="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:74.0) Gecko/20100101 Firefox/74.0")
             header = {'User-Agent':str(ua.random)}
             data = requests.get(searchurl, headers=header, timeout=10)
