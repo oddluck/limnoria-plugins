@@ -33,6 +33,7 @@ import supybot.plugins as plugins
 import supybot.ircutils as ircutils
 import supybot.callbacks as callbacks
 import supybot.ircmsgs as ircmsgs
+import supybot.log as log
 from bs4 import BeautifulSoup
 import requests
 import re
@@ -53,21 +54,20 @@ class Lyrics(callbacks.Plugin):
     threaded = True
 
     def dosearch(self, lyric):
-        url = None
-        i = 0
-        while i < 3 and not url:
-            try:
-                searchurl = "https://www.google.com/search?&q={0} site:lyrics.fandom.com/wiki/".format(lyric)
-                ua = UserAgent()
-                header = {'User-Agent':str(ua.random)}
-                data = requests.get(searchurl, headers=header, timeout=10)
-                soup = BeautifulSoup(data.text)
-                elements = soup.select('.r a')
-                title = soup.find("h3").getText().replace(":", " - ").split('|')[0]
-                url = urljoin(elements[0]['href'], urlparse(url).path)
-                i += 1
-            except Exception:
-                continue
+        try:
+            url = None
+            title = None
+            searchurl = "https://www.google.com/search?&q={0} site:lyrics.fandom.com/wiki/".format(lyric)
+            ua = UserAgent()
+            header = {'User-Agent':str(ua.random)}
+            data = requests.get(searchurl, headers=header, timeout=10)
+            data.raise_for_status()
+            soup = BeautifulSoup(data.text)
+            elements = soup.select('.r a')
+            title = soup.find("h3").getText().replace(":", " - ").split('|')[0]
+            url = urljoin(elements[0]['href'], urlparse(url).path)
+        except Exception:
+            pass
         return title, url
 
     def getlyrics(self, url):
@@ -84,9 +84,8 @@ class Lyrics(callbacks.Plugin):
         """<text>
         Get song lyrics from Lyrics Wiki. Search powered by Google.
         """
-        try:
-            title, url = self.dosearch(lyric)
-        except Exception:
+        title, url = self.dosearch(lyric)
+        if not title or not url:
             irc.reply("No results found for {0}".format(lyric))
         else:
             try:
