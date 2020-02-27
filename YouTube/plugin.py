@@ -143,7 +143,7 @@ class YouTube(callbacks.Plugin):
         """
         apikey = self.registryValue('developerKey')
         url = self.dosearch(query)
-        if url:
+        if url and 'youtube.com' in utils.web.getDomain(url):
             video_id = self.get_video_id_from_url(url)
         else:
             video_id = None

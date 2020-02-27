@@ -74,7 +74,7 @@ class IMDb(callbacks.Plugin):
         """
         apikey = self.registryValue('omdbAPI')
         url = self.dosearch(query)
-        if url:
+        if url and 'imdb.com' in utils.web.getDomain(url):
             imdb_id = url.split("/title/")[1].rstrip("/")
             omdb_url = "http://www.omdbapi.com/?i=%s&plot=short&r=json&tomatoes=true&apikey=%s" % (imdb_id, apikey)
             log.debug("IMDb: requesting %s" % omdb_url)
@@ -146,7 +146,7 @@ class IMDb(callbacks.Plugin):
             log.error("IMDb HTTPError: %s" % (str(e)))
         finally:
             if result is not None:
-                irc.reply(result)
+                irc.reply(result, prefixNick=False)
             else:
                 irc.error(self.registryValue("noResultsMessage"))
 

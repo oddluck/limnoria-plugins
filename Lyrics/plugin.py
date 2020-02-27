@@ -86,16 +86,16 @@ class Lyrics(callbacks.Plugin):
         Get song lyrics from Lyrics Wiki. Search powered by Google.
         """
         title, url = self.dosearch(lyric)
-        if not title or not url:
-            irc.reply("No results found for {0}".format(lyric))
-            return
-        else:
+        if url and title and 'lyrics.fandom.com' in utils.web.getDomain(url):
             try:
                 lyrics = self.getlyrics(url)
-                irc.reply(title)
-                irc.reply(lyrics)
+                irc.reply(title, prefixNick=False)
+                irc.reply(lyrics, prefixNick=False)
             except Exception:
                 irc.reply("Unable to retrieve lyrics from {0}".format(url))
+        else:
+            irc.reply("No results found for {0}".format(lyric))
+            return
     lyric = wrap(lyric, ['text'])
 
 Class = Lyrics
