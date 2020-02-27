@@ -71,31 +71,61 @@ class Lyrics(callbacks.Plugin):
             pass
         return title, url
 
-    def getlyrics(self, url):
-        try:
-            log.debug("Lyrics: requesting {0}".format(url))
-            lyrics = pylyrics3.get_lyrics_from_url(url)
-            lyrics = re.sub('(?<!\.|\!|\?)\s\\n', '.', lyrics).replace(" \n", "")
-        except Exception:
-            return
+    def getlyrics(self, query):
+        lyrics = None
+        if 'lyrics.fandom.com/wiki/' in query:
+            try:
+                log.debug("Lyrics: requesting {0}".format(query))
+                lyrics = pylyrics3.get_lyrics_from_url(query)
+                lyrics = re.sub('(?<!\.|\!|\?)\s\\n', '.', lyrics).replace(" \n", "")
+            except Exception:
+                pass
         else:
-            return lyrics
+            try:
+                log.debug("Lyrics: requesting {0}".format(query))
+                query = query.split(',', 1)
+                lyrics = pylyrics3.get_song_lyrics(query[0].strip(), query[1].strip())
+                lyrics = re.sub('(?<!\.|\!|\?)\s\\n', '.', lyrics).replace(" \n", "")
+            except Exception:
+                pass
+        return lyrics
 
     def lyric(self, irc, msg, args, lyric):
-        """<text>
-        Get song lyrics from Lyrics Wiki. Search powered by Google.
+        """<query>
+        Get song lyrics from Lyrics Wiki.
         """
-        title, url = self.dosearch(lyric)
-        if url and title and 'lyrics.fandom.com' in utils.web.getDomain(url):
+        channel = msg.channel
+        title = None
+        url = None
+        if self.registryValue("googleSearch", channel):
+            title, url = self.dosearch(lyric)
+        if url and title and 'lyrics.fandom.com/wiki/' in url:
             try:
                 lyrics = self.getlyrics(url)
-                irc.reply(title, prefixNick=False)
-                irc.reply(lyrics, prefixNick=False)
+                if lyrics:
+                    irc.reply(title, prefixNick=False)
+                    irc.reply(lyrics, prefixNick=False)
+                else:
+                    irc.reply("Unable to retrieve lyrics from {0}".format(url))
+                    return
             except Exception:
                 irc.reply("Unable to retrieve lyrics from {0}".format(url))
+                return
         else:
-            irc.reply("No results found for {0}".format(lyric))
-            return
+            if ',' in lyric:
+                try:
+                    lyrics = self.getlyrics(lyric)
+                    if lyrics:
+                        irc.reply(lyrics, prefixNick=False)
+                    else:
+                        irc.reply("Unable to retrieve lyrics for {0}".format(lyric))
+                        return
+                except Exception:
+                    irc.reply("Unable to retrieve lyrics for {0}".format(lyric))
+                    return
+            else:
+                irc.reply("Searches must be formatted as <artist>, <song title>")
+                return
     lyric = wrap(lyric, ['text'])
 
 Class = Lyrics

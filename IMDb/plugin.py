@@ -72,16 +72,18 @@ class IMDb(callbacks.Plugin):
         """<title>
         Queries the OMDB api about an IMDb title.
         """
+        channel = msg.channel
+        url = None
+        result = None
         apikey = self.registryValue('omdbAPI')
-        url = self.dosearch(query)
+        if self.registryValue("googleSearch", channel):
+            url = self.dosearch(query)
         if url and 'imdb.com/title/' in url:
             imdb_id = url.split("/title/")[1].rstrip("/")
             omdb_url = "http://www.omdbapi.com/?i=%s&plot=short&r=json&apikey=%s" % (imdb_id, apikey)
             log.debug("IMDb: requesting %s" % omdb_url)
         else:
             omdb_url = "http://www.omdbapi.com/?t=%s&plot=short&r=json&apikey=%s" % (query, apikey)
-        channel = msg.channel
-        result = None
         try:
             request = requests.get(omdb_url, timeout=10)
             if request.status_code == requests.codes.ok:

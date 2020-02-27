@@ -59,4 +59,7 @@ conf.registerChannelValue(IMDb, 'noResultsMessage',
 conf.registerGlobalValue(IMDb, 'omdbAPI',
      registry.String('', _("""OMDB API Key""")))
 
+conf.registerChannelValue(IMDb, 'googleSearch',
+     registry.Boolean(True, _("""Use google to perform searches for better results.""")))
+
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:

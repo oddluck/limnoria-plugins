@@ -46,6 +46,7 @@ def configure(advanced):
     from supybot.questions import expect, anything, something, yn
     conf.registerPlugin('Lyrics', True)
 
-
 Lyrics = conf.registerPlugin('Lyrics')
 
+conf.registerChannelValue(Lyrics, 'googleSearch',
+     registry.Boolean(True, _("""Use google to perform searches for better results.""")))
