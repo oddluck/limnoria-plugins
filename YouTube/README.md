@@ -1,3 +1,3 @@
-Search for YouTube videos and return link + info. Search powered by Google.
+Search for YouTube videos and return link + info.
 
 `config plugins.youtube.developerkey <your_key_here>`

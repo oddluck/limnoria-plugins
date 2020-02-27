@@ -54,14 +54,19 @@ YouTube = conf.registerPlugin('YouTube')
 conf.registerGlobalValue(YouTube, 'developerKey',
      registry.String("", _("""Google API key. Required.""")))
 
+conf.registerGlobalValue(YouTube, 'sortOrder',
+     registry.String("relevance", _("""Method used to order API responses: date, rating, relevance, title, viewCount""")))
+
+conf.registerGlobalValue(YouTube, 'safeSearch',
+     registry.String("none", _("""Safe search filtering: none, moderate, strict""")))
+
 conf.registerChannelValue(YouTube, 'logo',
-    registry.String("\x02\x030,4 ► \x031,0YouTube", _("""Logo used with $yt_logo in template""")))
+    registry.String("\x030,4 ► \x031,0YouTube", _("""Logo used with $yt_logo in template""")))
 
 conf.registerChannelValue(YouTube, 'template',
      registry.String("{{logo}} :: {{link}} :: {{title}} :: Duration: {{duration}} :: Views: {{views}} :: Uploader: {{uploader}} :: Uploaded: {{published}} :: {{likes}} likes :: {{dislikes}} dislikes :: {{favorites}} favorites :: {{comments}} comments", _("""Template used for search result replies""")))
 
 conf.registerChannelValue(YouTube, 'useBold',
      registry.Boolean(True, _("""Use bold in replies""")))
-
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
