@@ -74,32 +74,26 @@ class IMDb(callbacks.Plugin):
         """
         apikey = self.registryValue('omdbAPI')
         url = self.dosearch(query)
-        if url and 'imdb.com' in utils.web.getDomain(url):
+        if url and 'imdb.com/title/' in url:
             imdb_id = url.split("/title/")[1].rstrip("/")
-            omdb_url = "http://www.omdbapi.com/?i=%s&plot=short&r=json&tomatoes=true&apikey=%s" % (imdb_id, apikey)
+            omdb_url = "http://www.omdbapi.com/?i=%s&plot=short&r=json&apikey=%s" % (imdb_id, apikey)
             log.debug("IMDb: requesting %s" % omdb_url)
         else:
-            irc.reply("No results found for {0}".format(query))
-            return
-
-        channel = msg.args[0]
+            omdb_url = "http://www.omdbapi.com/?t=%s&plot=short&r=json&apikey=%s" % (query, apikey)
+        channel = msg.channel
         result = None
-
         try:
             request = requests.get(omdb_url, timeout=10)
-
             if request.status_code == requests.codes.ok:
                 response = request.json()
-
                 not_found = "Error" in response
                 unknown_error = response["Response"] != "True"
-
                 if not_found or unknown_error:
                     log.debug("IMDb: OMDB error for %s" % (omdb_url))
                 else:
                     meta = None
                     tomato = None
-                    imdb_template = self.registryValue("template")
+                    imdb_template = self.registryValue("template", channel)
                     imdb_template = imdb_template.replace("$title", response["Title"])
                     imdb_template = imdb_template.replace("$year", response["Year"])
                     imdb_template = imdb_template.replace("$country", response["Country"])
@@ -133,11 +127,9 @@ class IMDb(callbacks.Plugin):
                     imdb_template = imdb_template.replace("$production",response["Production"])
                     imdb_template = imdb_template.replace("$website",response["Website"])
                     imdb_template = imdb_template.replace("$poster",response["Poster"])
-
                     result = imdb_template
             else:
                 log.error("IMDb OMDB API %s - %s" % (request.status_code, request.text))
-
         except requests.exceptions.Timeout as e:
             log.error("IMDb Timeout: %s" % (str(e)))
         except requests.exceptions.ConnectionError as e:
@@ -148,11 +140,9 @@ class IMDb(callbacks.Plugin):
             if result is not None:
                 irc.reply(result, prefixNick=False)
             else:
-                irc.error(self.registryValue("noResultsMessage"))
-
+                irc.error(self.registryValue("noResultsMessage", channel))
     imdb = wrap(imdb, ['text'])
 
 Class = IMDb
-
 
 # vim:set shiftwidth=4 softtabstop=4 expandtab textwidth=79:

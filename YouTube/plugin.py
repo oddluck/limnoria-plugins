@@ -54,8 +54,8 @@ class YouTube(callbacks.Plugin):
 
     def dosearch(self, query):
         apikey = self.registryValue('developerKey')
-        safe_search = self.registryValue("safeSearch")
-        sort_order = self.registryValue("sortOrder")
+        safe_search = self.registryValue("safeSearch", dynamic.channel)
+        sort_order = self.registryValue("sortOrder", dynamic.channel)
         video_id = None
         opts = {"q": query,
                 "part": "snippet",
@@ -189,7 +189,7 @@ class YouTube(callbacks.Plugin):
             else:
                 log.error("YouTube: YouTube API HTTP %s: %s" % (request.status_code, request.text))
         if title:
-            use_bold = self.registryValue("useBold", dynamic.channel)
+            use_bold = self.registryValue("useBold", channel)
             if use_bold:
                 title = ircutils.bold(title)
             irc.reply(title, prefixNick=False)

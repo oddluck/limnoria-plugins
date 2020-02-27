@@ -1,4 +1,4 @@
-Information about IMDb titles from the OMDB API. Search powered by Google.
+Information about IMDb titles from the OMDB API.
 
 Forked from https://github.com/butterscotchstallion/limnoria-plugins/tree/master/IMDB
 

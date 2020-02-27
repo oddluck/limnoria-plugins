@@ -54,10 +54,10 @@ YouTube = conf.registerPlugin('YouTube')
 conf.registerGlobalValue(YouTube, 'developerKey',
      registry.String("", _("""Google API key. Required.""")))
 
-conf.registerGlobalValue(YouTube, 'sortOrder',
+conf.registerChannelValue(YouTube, 'sortOrder',
      registry.String("relevance", _("""Method used to order API responses: date, rating, relevance, title, viewCount""")))
 
-conf.registerGlobalValue(YouTube, 'safeSearch',
+conf.registerChannelValue(YouTube, 'safeSearch',
      registry.String("none", _("""Safe search filtering: none, moderate, strict""")))
 
 conf.registerChannelValue(YouTube, 'logo',
