@@ -86,7 +86,7 @@ class TextAdventures(callbacks.Plugin):
         response = []
         prompts = ["\n> >", "\n>", "\n\)", pexpect.TIMEOUT]
         output.expect(prompts, timeout=1)
-        response = output.before 
+        response = output.before
         response = response.decode().splitlines()
         return response
 
@@ -99,12 +99,17 @@ class TextAdventures(callbacks.Plugin):
         if not self.registryValue('requireCommand') or not irc.isChannel(msg.args[0]):
             self.game.setdefault(channel, None)
             if self.game[channel]:
-                command = msg.args[1]
-                self.game[channel].sendline(r'{}'.format(command))
-                response = self.output(self.game[channel])
-                for line in response[1:]:
-                    if line.strip() and line.strip() != ".":
-                        irc.reply(line, prefixNick=False)
+                try:
+                    command = msg.args[1]
+                    self.game[channel].sendline(r'{}'.format(command))
+                    response = self.output(self.game[channel])
+                    for line in response[1:]:
+                        if line.strip() and line.strip() != ".":
+                            irc.reply(line, prefixNick=False)
+                except:
+                    return
+            else:
+                return
         else:
             return
 
