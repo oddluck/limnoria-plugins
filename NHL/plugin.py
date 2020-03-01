@@ -316,7 +316,7 @@ class NHL(callbacks.Plugin):
         return self._cachedData()
 
     def _extractJSON(self, body):
-        return json.loads(body.decode('utf-8'))
+        return json.loads(body.decode())
 
     def _parseGames(self, json, team, tz='US/Eastern'):
         """Extract all relevant fields from NHL.com's json

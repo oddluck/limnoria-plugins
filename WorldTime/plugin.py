@@ -129,7 +129,7 @@ class WorldTime(callbacks.Plugin):
 
         # wrap in a big try/except
         try:
-            result = json.loads(response.decode('utf-8'))
+            result = json.loads(response.decode())
             if result['status'] == 'OK':
                lat = str(result['results'][0]['geometry']['location']['lat'])
                lng = str(result['results'][0]['geometry']['location']['lng'])

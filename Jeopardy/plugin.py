@@ -619,7 +619,7 @@ class Jeopardy(callbacks.Plugin):
                 else:
                     url = "{0}/search?query={1}".format(self.jserviceUrl, category)
                     data = requests.get(url, timeout=5)
-                    soup = BeautifulSoup(data.text)
+                    soup = BeautifulSoup(data.content)
                     searches = soup.find_all('a')
                     for i in range(len(searches)):
                         search = searches[i].get('href').split('/')[-1]

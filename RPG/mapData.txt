@@ -1,1 +1,0 @@
-{"width": 52, "height": 52, "homeY": 26.0, "homeX": 26, "homeLoc": 1430, "desc": "Random Generation."}

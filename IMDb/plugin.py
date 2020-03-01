@@ -61,7 +61,7 @@ class IMDb(callbacks.Plugin):
             header = {'User-Agent':str(ua.random)}
             data = requests.get(searchurl, headers=header, timeout=10)
             data.raise_for_status()
-            soup = BeautifulSoup(data.text)
+            soup = BeautifulSoup(data.content)
             elements = soup.select('.r a')
             url = urljoin(elements[0]['href'], urlparse(url).path)
         except Exception:
@@ -131,7 +131,7 @@ class IMDb(callbacks.Plugin):
                     imdb_template = imdb_template.replace("$poster",response["Poster"])
                     result = imdb_template
             else:
-                log.error("IMDb OMDB API %s - %s" % (request.status_code, request.text))
+                log.error("IMDb OMDB API %s - %s" % (request.status_code, request.content.decode()))
         except requests.exceptions.Timeout as e:
             log.error("IMDb Timeout: %s" % (str(e)))
         except requests.exceptions.ConnectionError as e:

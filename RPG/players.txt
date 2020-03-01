@@ -1,1 +1,0 @@
-{"oddluck": {"Lvl": 1, "Exp": 0, "MHP": 19, "HP": 19, "Atk": 1, "Def": 2, "Spd": 1, "Luc": 1, "Item": {"Head": {"Name": "Cloth", "Power": 0}, "Torso": {"Name": "Cloth", "Power": 0}, "lArm": {"Name": "Wooden", "Power": 0}, "rArm": {"Name": "Wooden", "Power": 0}}, "Deaths": 0, "Loc": 1430, "force": false}}

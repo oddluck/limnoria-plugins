@@ -717,7 +717,7 @@ class TextArt(callbacks.Plugin):
         header = {'User-Agent':str(ua.random)}
         r = requests.head(url, headers=header)
         if "text/plain" in r.headers["content-type"] or url.startswith('https://paste.ee/r/'):
-            file = requests.get(url, headers=header)
+            file = requests.get(url, headers=header, timeout=10)
         else:
             irc.reply("Invalid file type.", private=False, notice=False)
             return
@@ -767,26 +767,26 @@ class TextArt(callbacks.Plugin):
              if words:
                  for word in words:
                      if word.strip():
-                         data = requests.get("https://artii.herokuapp.com/make?text={0}&font={1}".format(word.strip(), font))
-                         for line in data.text.splitlines():
+                         data = requests.get("https://artii.herokuapp.com/make?text={0}&font={1}".format(word.strip(), font), timeout=10)
+                         for line in data.content.decode().splitlines():
                              if line.strip():
                                  irc.reply(ircutils.mircColor(line, color1, color2), prefixNick=False, private=False, notice=False)
              else:
-                 data = requests.get("https://artii.herokuapp.com/make?text={0}&font={1}".format(text, font))
-                 for line in data.text.splitlines():
+                 data = requests.get("https://artii.herokuapp.com/make?text={0}&font={1}".format(text, font), timeout=10)
+                 for line in data.content.decode().splitlines():
                      if line.strip():
                          irc.reply(ircutils.mircColor(line, color1, color2), prefixNick=False, private=False, notice=False, to=channel)
         elif 'font' not in optlist:
             if words:
                  for word in words:
                      if word.strip():
-                         data = requests.get("https://artii.herokuapp.com/make?text={0}&font=univers".format(word.strip()))
-                         for line in data.text.splitlines():
+                         data = requests.get("https://artii.herokuapp.com/make?text={0}&font=univers".format(word.strip()), timeout=10)
+                         for line in data.content.decode().splitlines():
                              if line.strip():
                                  irc.reply(ircutils.mircColor(line, color1, color2), prefixNick=False, private=False, notice=False, to=channel)
             else:
-                data = requests.get("https://artii.herokuapp.com/make?text={0}&font=univers".format(text))
-                for line in data.text.splitlines():
+                data = requests.get("https://artii.herokuapp.com/make?text={0}&font=univers".format(text), timeout=10)
+                for line in data.content.decode().splitlines():
                     if line.strip():
                         irc.reply(ircutils.mircColor(line, color1, color2), prefixNick=False, private=False, notice=False, to=channel)
 
@@ -796,8 +796,8 @@ class TextArt(callbacks.Plugin):
         """
         Get list of artii figlet fonts.
         """
-        fontlist = requests.get("https://artii.herokuapp.com/fonts_list")
-        response = sorted(fontlist.text.split('\n'))
+        fontlist = requests.get("https://artii.herokuapp.com/fonts_list", timeout=10)
+        response = sorted(fontlist.content.decode().split('\n'))
         irc.reply(str(response).replace('\'', '').replace('[', '').replace(']', ''))
     fontlist = wrap(fontlist)
 
@@ -897,25 +897,23 @@ class TextArt(callbacks.Plugin):
             cols = self.registryValue('blockWidth', msg.args[0])
         if 's' in optlist:
             s = float(optlist.get('s'))
-        path = os.path.dirname(os.path.abspath(__file__))
-        filepath = "{0}/tmp".format(path)
-        filename = "{0}/{1}".format(filepath, url.split('/')[-1])
         ua = UserAgent(fallback="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:74.0) Gecko/20100101 Firefox/74.0")
         header = {'User-Agent':str(ua.random)}
         image_formats = ("image/png", "image/jpeg", "image/jpg", "image/gif")
         r = requests.head(url, headers=header)
         if r.headers["content-type"] in image_formats:
-            response = requests.get(url, headers=header)
+            response = requests.get(url, stream=True, timeout=10, headers=header)
         else:
-            irc.reply("Invalid file type.", private=False, notice=False)
+            irc.reply("Error: Invalid file type.", private=False, notice=False)
             return
         if response.status_code == 200:
-            with open("{0}".format(filename), 'wb') as f:
-                f.write(response.content)
+            response.raw.decode_content = True
+            image = Image.open(response.raw)
+        else:
+            irc.reply("Error: Unable to open image.", private=False, notice=False)
         # open image and convert to grayscale
         start_time = time.time()
         self.source_colors = 0
-        image = Image.open(filename)
         if image.mode == 'RGBA':
             if bg == 99:
                 newbg = 1
@@ -1165,7 +1163,7 @@ class TextArt(callbacks.Plugin):
         header = {'User-Agent':str(ua.random)}
         r = requests.head(url, headers=header)
         if "text/plain" in r.headers["content-type"]:
-            file = requests.get(url, headers=header)
+            file = requests.get(url, timeout=10, headers=header)
         else:
             irc.reply("Invalid file type.", private=False, notice=False)
             return
@@ -1217,7 +1215,7 @@ class TextArt(callbacks.Plugin):
                 path = os.path.dirname(os.path.abspath(__file__))
                 filepath = "{0}/tmp".format(path)
                 filename = "{0}/{1}".format(filepath, url.split('/')[-1])
-                r = requests.get(url, headers=header)
+                r = requests.get(url, timeout=10, headers=header)
                 open(filename, 'wb').write(r.content.replace(b';5;', b';'))
                 try:
                     output = pexpect.run('a2m {0} {1}'.format(opts.strip(), str(filename)))
@@ -1300,7 +1298,7 @@ class TextArt(callbacks.Plugin):
         image_formats = ("image/png", "image/jpeg", "image/jpg", "image/gif")
         r = requests.head(url, headers=header)
         if r.headers["content-type"] in image_formats:
-            response = requests.get(url, headers=header)
+            response = requests.get(url, timeout=10, headers=header)
         else:
             irc.reply("Invalid file type.", private=False, notice=False)
             return
@@ -1513,7 +1511,7 @@ class TextArt(callbacks.Plugin):
             speed = 'slow'
         else:
             speed = 'fast'
-        file = requests.get("http://wttr.in/{0}".format(location))
+        file = requests.get("http://wttr.in/{0}".format(location), timeout=10)
         output = file.content.decode()
         output = self.ansi2irc(output)
         output = re.sub('⚡', '☇ ', output)
@@ -1568,7 +1566,7 @@ class TextArt(callbacks.Plugin):
             sub = 'usd'
         if not coin:
             coin = ''
-        file = requests.get("http://{0}.rate.sx/{1}".format(sub, coin))
+        file = requests.get("http://{0}.rate.sx/{1}".format(sub, coin), timeout=10)
         output = file.content.decode()
         output = self.ansi2irc(output)
         output = output.replace('\x1b(B', '')
@@ -1608,10 +1606,10 @@ class TextArt(callbacks.Plugin):
             type = optlist.get('type')
         else:
             type = 'default'
-        data = requests.get("https://easyapis.soue.tk/api/cowsay?text={0}&type={1}".format(text, type))
+        data = requests.get("https://easyapis.soue.tk/api/cowsay?text={0}&type={1}".format(text, type), tiemout=10)
         self.stopped[msg.args[0]] = False
         paste = ''
-        for line in data.text.splitlines():
+        for line in data.content.decode().splitlines():
             if self.registryValue('pasteEnable', msg.args[0]):
                 paste += line + "\n"
             if not line.strip() and not self.stopped[msg.args[0]]:
@@ -1639,8 +1637,8 @@ class TextArt(callbacks.Plugin):
         else:
             delay = self.registryValue('delay', msg.args[0])
         self.stopped[msg.args[0]] = False
-        data = requests.get("http://www.asciiartfarts.com/fortune.txt")
-        fortunes = data.text.split('%\n')
+        data = requests.get("http://www.asciiartfarts.com/fortune.txt", timeout=10)
+        fortunes = data.content.decode().split('%\n')
         fortune = random.randrange(0, len(fortunes))
         for line in fortunes[fortune].splitlines():
             if not line.strip() and not self.stopped[msg.args[0]]:
@@ -1668,10 +1666,10 @@ class TextArt(callbacks.Plugin):
         self.stopped[msg.args[0]] = False
         ua = UserAgent(fallback="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:74.0) Gecko/20100101 Firefox/74.0")
         header = {'User-Agent':str(ua.random)}
-        data = requests.get("https://mircart.org/?s={0}".format(search), headers=header)
-        soup = BeautifulSoup(data.text)
+        data = requests.get("https://mircart.org/?s={0}".format(search), headers=header, timeout=10)
+        soup = BeautifulSoup(data.content)
         url = soup.find(href=re.compile(".txt"))
-        data = requests.get(url.get('href'), headers=header)
+        data = requests.get(url.get('href'), headers=header, timeout=10)
         output = data.content.decode()
         for line in output.splitlines():
             if not line.strip() and not self.stopped[msg.args[0]]:

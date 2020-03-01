@@ -440,7 +440,7 @@ class Trackers(callbacks.Plugin):
             return
 
         # Extract statuses
-        status_txt = re.search(r'.*Site.*2x\ (.*)".*\n.*2x\ (.*)".*\n.*2x\ (.*)"', content.text)
+        status_txt = re.search(r'.*Site.*2x\ (.*)".*\n.*2x\ (.*)".*\n.*2x\ (.*)"', content.content.decode())
         print(status_txt)
         status = []
         for i in range(0,4):
@@ -479,7 +479,7 @@ class Trackers(callbacks.Plugin):
             return
 
         # Extract statuses
-        status_txt = re.search(r'.*site.*\n.*status (.*)"[\S\s]+tracker.*\n.*status (.*)"[\S\s]+irc.*\n.*status (.*)"', content.text)
+        status_txt = re.search(r'.*site.*\n.*status (.*)"[\S\s]+tracker.*\n.*status (.*)"[\S\s]+irc.*\n.*status (.*)"', content.content.decode())
         status = []
         for i in range(0,4):
             if status_txt.group(i) == "normal":
@@ -517,7 +517,7 @@ class Trackers(callbacks.Plugin):
             return
 
         # Extract statuses
-        status_txt = re.search(r'.*pull-right">(.*)<\/span>[\S\s.]+?pull-right">(.*)<\/span>[\S\s.]+?pull-right">(.*)<\/span>[\S\s.]+?pull-right">(.*)<\/span>', content.text)
+        status_txt = re.search(r'.*pull-right">(.*)<\/span>[\S\s.]+?pull-right">(.*)<\/span>[\S\s.]+?pull-right">(.*)<\/span>[\S\s.]+?pull-right">(.*)<\/span>', content.content.decode())
         status = []
         for i in range(0,5):
             if status_txt.group(i) == "Online":

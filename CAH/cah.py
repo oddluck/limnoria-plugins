@@ -40,7 +40,7 @@ question_cards_file_name = ['question_main', 'custom_question_cards']
 blank_format = '__________'
 
 # Settings that are used
-#this is one level hire then it should be 
+#this is one level higher than it should be
 base_directory = os.path.dirname(os.path.abspath(__file__))
 
 class Deck(object):
@@ -59,7 +59,7 @@ class Deck(object):
                 with open(path) as file_handle:
                     file_data = file_handle.readlines()
                 card_text_list.extend(file_data)
-        if len(card_text_list) is 0:
+        if len(card_text_list) == 0:
             raise IOError
 
         # Deduplicate the text from the cards
@@ -80,7 +80,7 @@ class Deck(object):
 
     def count_answers(self, text):
         blanks = text.count(blank_format)
-        if blanks is 0:
+        if blanks == 0:
             return 1
         else:
             return blanks
@@ -122,7 +122,7 @@ class Game(object):
         return player_list
 
     def next_round(self):
-        if self.round is None:
+        if not self.round:
             self.round = 0
         if self.round < self.round_limit:
             self.round += 1

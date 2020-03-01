@@ -63,7 +63,7 @@ class Lyrics(callbacks.Plugin):
             header = {'User-Agent':str(ua.random)}
             data = requests.get(searchurl, headers=header, timeout=10)
             data.raise_for_status()
-            soup = BeautifulSoup(data.text)
+            soup = BeautifulSoup(data.content)
             elements = soup.select('.r a')
             title = soup.find("h3").getText().replace(":", " - ").split('|')[0]
             url = urljoin(elements[0]['href'], urlparse(url).path)

@@ -143,7 +143,7 @@ class Fun(callbacks.Plugin):
         if not data:  # http fetch breaks.
             irc.reply("ERROR")
             return
-        soup = BeautifulSoup(data.text)
+        soup = BeautifulSoup(data.content)
         text = soup.find('center').getText()
         irc.reply("{0}".format(text))
     devexcuse = wrap(devexcuse)
@@ -263,7 +263,7 @@ class Fun(callbacks.Plugin):
         Get a random cat .gif
         """
         try:
-            response = utils.web.getUrl("http://edgecats.net/random").decode("utf8")
+            response = utils.web.getUrl("http://edgecats.net/random").decode()
             # Expecting a link
             if "http" in response:
                 irc.reply(response)

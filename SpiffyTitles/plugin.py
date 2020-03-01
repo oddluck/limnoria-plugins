@@ -40,7 +40,6 @@ import sys
 from urllib.parse import urlencode, urlparse, parse_qsl
 from bs4 import BeautifulSoup
 import random
-import json
 import time
 from jinja2 import Template
 import timeout_decorator
@@ -168,7 +167,7 @@ class SpiffyTitles(callbacks.Plugin):
             ok = request.status_code == requests.codes.ok
 
             if ok:
-                response = json.loads(request.text)
+                response = request.json()
 
                 if response is not None and "title" in response:
                     video = response
@@ -185,7 +184,7 @@ class SpiffyTitles(callbacks.Plugin):
                               api_url)
             else:
                 log.error("SpiffyTitles: dailymotion handler returned %s: %s" %
-                          (request.status_code, request.text[:200]))
+                          (request.status_code, request.content.decode()[:200]))
 
         if title is None:
             log.debug("SpiffyTitles: could not get dailymotion info for %s" % url)
@@ -223,7 +222,7 @@ class SpiffyTitles(callbacks.Plugin):
                 ok = request.status_code == requests.codes.ok
 
                 if ok:
-                    response = json.loads(request.text)
+                    response = request.json()
 
                     if response is not None and "title" in response[0]:
                         video = response[0]
@@ -252,8 +251,8 @@ class SpiffyTitles(callbacks.Plugin):
                         log.debug("SpiffyTitles: received unexpected payload from video: %s" %
                                   api_url)
                 else:
-                    log.error("SpiffyTitles: vimeo handler returned %s: %s" % (request.status_code,
-                                                                               request.text[:200]))
+                    log.error("SpiffyTitles: vimeo handler returned %s: %s" %
+                              (request.status_code, request.content.decode()[:200]))
 
         if title is None:
             log.debug("SpiffyTitles: could not get vimeo info for %s" % url)
@@ -289,7 +288,7 @@ class SpiffyTitles(callbacks.Plugin):
             ok = request.status_code == requests.codes.ok
 
             if ok:
-                response = json.loads(request.text)
+                response = request.json()
 
                 if response:
                     video = response
@@ -302,7 +301,7 @@ class SpiffyTitles(callbacks.Plugin):
                     title = coub_template.render(video)
             else:
                 log.error("SpiffyTitles: coub handler returned %s: %s" %
-                          (request.status_code, request.text[:200]))
+                          (request.status_code, request.content.decode()[:200]))
 
         if title is None:
             if coub_handler_enabled:
@@ -674,7 +673,7 @@ class SpiffyTitles(callbacks.Plugin):
             ok = request.status_code == requests.codes.ok
 
             if ok:
-                response = json.loads(request.text)
+                response = request.json()
 
                 if response:
                     try:
@@ -748,7 +747,7 @@ class SpiffyTitles(callbacks.Plugin):
                     log.error("SpiffyTitles: Error parsing Youtube API JSON response")
             else:
                 log.error("SpiffyTitles: Youtube API HTTP %s: %s" %
-                          (request.status_code, request.text))
+                          (request.status_code, request.content.decode()[:200]))
 
         # If we found a title, return that. otherwise, use default handler
         if title:
@@ -896,7 +895,7 @@ class SpiffyTitles(callbacks.Plugin):
         data = {}
         extract = ""
         if ok:
-            response = json.loads(request.text)
+            response = request.json()
             if response:
                 self.log.debug("SpiffyTitles: twitch - got response:\n%s" % (response))
                 if 'error' in response:
@@ -915,9 +914,10 @@ class SpiffyTitles(callbacks.Plugin):
                         ok = request.status_code == requests.codes.ok
                         user_data = {}
                         if not ok:
-                            self.log.error("SpiffyTitles: twitch HTTP %s: %s" % (request.status_code, request.text))
+                            self.log.error("SpiffyTitles: twitch HTTP %s: %s" %
+                                           (request.status_code, request.content.decode()[:200]))
                         else:
-                            response = json.loads(request.text)
+                            response = requests.json()
                             if not response:
                                 self.log.error("SpiffyTitles: Error parsing Twitch JSON response")
                             else:
@@ -953,7 +953,7 @@ class SpiffyTitles(callbacks.Plugin):
                         created_at = self._time_created_at(data['started_at'])
                         if game_id:
                             get_game = requests.get("https://api.twitch.tv/helix/games?id={}".format(game_id), timeout=10, headers=headers)
-                            game_data = json.loads(get_game.text)
+                            game_data = get_game.json()
                             game_name = game_data["data"][0]["name"]
                         template_vars = {
                             "display_name": display_name,
@@ -973,9 +973,10 @@ class SpiffyTitles(callbacks.Plugin):
                         ok = request.status_code == requests.codes.ok
                         user_data = {}
                         if not ok:
-                            self.log.error("SpiffyTitles: twitch HTTP %s: %s" % (request.status_code, request.text))
+                            self.log.error("SpiffyTitles: twitch HTTP %s: %s" %
+                                           (request.status_code, request.content.decode()[:200]))
                         else:
-                            response = json.loads(request.text)
+                            response = request.json()
                             if not response:
                                 self.log.error("SpiffyTitles: Error parsing Twitch JSON response")
                             else:
@@ -994,7 +995,7 @@ class SpiffyTitles(callbacks.Plugin):
                         created_at = self._time_created_at(data['created_at'])
                         if game_id:
                             get_game = requests.get("https://api.twitch.tv/helix/games?id={}".format(game_id), timeout=10, headers=headers)
-                            game_data = json.loads(get_game.text)
+                            game_data = get_game.json()
                             game_name = game_data["data"][0]["name"]
                         template_vars = {
                             "display_name": display_name,
@@ -1014,9 +1015,10 @@ class SpiffyTitles(callbacks.Plugin):
                         ok = request.status_code == requests.codes.ok
                         user_data = {}
                         if not ok:
-                            self.log.error("SpiffyTitles: twitch HTTP %s: %s" % (request.status_code, request.text))
+                            self.log.error("SpiffyTitles: twitch HTTP %s: %s" %
+                                           (request.status_code, request.content.decode()[:200]))
                         else:
-                            response = json.loads(request.text)
+                            response = request.json()
                             if not response:
                                 self.log.error("SpiffyTitles: Error parsing Twitch JSON response")
                             else:
@@ -1103,7 +1105,7 @@ class SpiffyTitles(callbacks.Plugin):
                 request = requests.get(omdb_url, timeout=10, headers=headers)
 
                 if request.status_code == requests.codes.ok:
-                    response = json.loads(request.text)
+                    response = request.json()
                     result = None
                     imdb_template = Template(self.registryValue("imdb.template"))
                     not_found = "Error" in response
@@ -1146,7 +1148,8 @@ class SpiffyTitles(callbacks.Plugin):
                         }
                         result = imdb_template.render(template_vars)
                 else:
-                    log.error("SpiffyTitles OMDB API %s - %s" % (request.status_code, request.text))
+                    log.error("SpiffyTitles OMDB API %s: %s" %
+                              (request.status_code, request.content.decode()[:200]))
 
             except requests.exceptions.Timeout as e:
                 log.error("SpiffyTitles imdb Timeout: %s" % (str(e)))
@@ -1221,7 +1224,7 @@ class SpiffyTitles(callbacks.Plugin):
         ok = request.status_code == requests.codes.ok
 
         if ok:
-            response = json.loads(request.text)
+            response = request.json()
 
             if response:
                 try:
@@ -1233,7 +1236,7 @@ class SpiffyTitles(callbacks.Plugin):
                 self.log.error("SpiffyTitles: Error parsing Wikipedia API JSON response")
         else:
             self.log.error("SpiffyTitles: Wikipedia API HTTP %s: %s" %
-                           (request.status_code, request.text))
+                           (request.status_code, request.content.decode()[:200]))
 
         if extract:
             if (self.registryValue("wikipedia.removeParentheses")):
@@ -1301,7 +1304,7 @@ class SpiffyTitles(callbacks.Plugin):
         extract = ''
 
         if ok:
-            response = json.loads(request.text)
+            response = request.json()
 
             if response:
                 try:
@@ -1320,7 +1323,8 @@ class SpiffyTitles(callbacks.Plugin):
             else:
                 self.log.error("SpiffyTitles: Error parsing Reddit JSON response")
         else:
-            self.log.error("SpiffyTitles: Reddit HTTP %s: %s" % (request.status_code, request.text))
+            self.log.error("SpiffyTitles: Reddit HTTP %s: %s" %
+                           (request.status_code, request.content.decode()[:200]))
 
         if data:
             today = pendulum.now().date()
@@ -1742,4 +1746,3 @@ class SpiffyTitles(callbacks.Plugin):
         return template
 
 Class = SpiffyTitles
-

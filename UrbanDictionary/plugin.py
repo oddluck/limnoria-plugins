@@ -115,7 +115,7 @@ class UrbanDictionary(callbacks.Plugin):
         #irc.reply("{0}".format(self._repairjson(html.decode('utf-8'))))
         try:
             #jsondata = self._repairjson(html.decode('utf-8'))  # decode utf-8. fix \r\n that ud puts in below.
-            jsondata = html.decode('utf-8')
+            jsondata = html.decode()
             jsondata = json.loads(jsondata)  # odds chars in UD.
         except Exception as e:
             self.log.error("Error parsing JSON from UD: {0}".format(e))

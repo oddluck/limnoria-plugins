@@ -72,7 +72,7 @@ class YouTube(callbacks.Plugin):
             request = request.json()
             video_id = request["items"][0]["id"]["videoId"]
         except Exception:
-            log.error("YouTube: YouTube API HTTP %s: %s" % (request.status_code, request.text))
+            log.error("YouTube: YouTube API HTTP %s: %s" % (request.status_code, request.content.decode()))
             pass
         return video_id
 
@@ -187,7 +187,7 @@ class YouTube(callbacks.Plugin):
                 else:
                     log.error("YouTube: Error parsing Youtube API JSON response")
             else:
-                log.error("YouTube: YouTube API HTTP %s: %s" % (request.status_code, request.text))
+                log.error("YouTube: YouTube API HTTP %s: %s" % (request.status_code, request.content.decode()))
         if title:
             use_bold = self.registryValue("useBold", channel)
             if use_bold:
