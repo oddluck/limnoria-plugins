@@ -39,31 +39,31 @@ def configure(advanced):
     # user or not.  You should effect your configuration by manipulating the
     # registry as appropriate.
     from supybot.questions import expect, anything, something, yn
-    conf.registerPlugin('Wordgames', True)
+    conf.registerPlugin('WordGames', True)
 
-Wordgames = conf.registerPlugin('Wordgames')
+WordGames = conf.registerPlugin('WordGames')
 
-conf.registerGlobalValue(Wordgames, 'wordFile',
+conf.registerGlobalValue(WordGames, 'wordFile',
     registry.String('/usr/share/dict/american-english',
                     'Path to the dictionary file.'))
 
-conf.registerGlobalValue(Wordgames, 'wordRegexp',
+conf.registerGlobalValue(WordGames, 'wordRegexp',
     registry.String('^[a-z]+$',
                     'Regular expression defining what a valid word looks ' +
                     'like (i.e. ignore proper names, contractions, etc. ' +
                     'Modify this if you need to allow non-English chars.'))
 
-conf.registerGlobalValue(Wordgames, 'worddleDelay',
+conf.registerGlobalValue(WordGames, 'boggleDelay',
     registry.NonNegativeInteger(15,
-                                'Delay (in seconds) before a Worddle game ' +
+                                'Delay (in seconds) before a Boggle game ' +
                                 'begins.'))
 
-conf.registerGlobalValue(Wordgames, 'worddleDuration',
-    registry.NonNegativeInteger(90,
-                                'Duration (in seconds) of a Worddle game ' +
+conf.registerGlobalValue(WordGames, 'boggleDuration',
+    registry.NonNegativeInteger(120,
+                                'Duration (in seconds) of a Boggle game ' +
                                 '(not including the initial delay).'))
 
-conf.registerGlobalValue(Wordgames, 'worddleDifficulty',
-    registry.String('easy', 'Default difficulty for Worddle games.'))
+conf.registerGlobalValue(WordGames, 'boggleDifficulty',
+    registry.String('easy', 'Default difficulty for Boggle games.'))
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:

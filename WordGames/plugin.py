@@ -62,13 +62,13 @@ GRAY = '\x0314'
 LGRAY = '\x0315'
 
 def debug(message):
-    log.debug('Wordgames: ' + message)
+    log.debug('WordGames: ' + message)
 
 def info(message):
-    log.info('Wordgames: ' + message)
+    log.info('WordGames: ' + message)
 
 def error(message):
-    log.error('Wordgames: ' + message)
+    log.error('WordGames: ' + message)
 
 def point_str(value):
     "Return 'point' or 'points' depending on value."
@@ -97,7 +97,7 @@ def get_max_targets(irc):
         error('Detecting max targets: %s. Using default (1).' % str(e))
     return result
 
-class WordgamesError(Exception): pass
+class WordGamesError(Exception): pass
 
 class Difficulty:
     EASY = 0
@@ -117,9 +117,9 @@ class Difficulty:
         try:
             return Difficulty.VALUES[Difficulty.NAMES.index(name)]
         except ValueError:
-            raise WordgamesError('Unrecognized difficulty value: %s' % name)
+            raise WordGamesError('Unrecognized difficulty value: %s' % name)
 
-class Wordgames(callbacks.Plugin):
+class WordGames(callbacks.Plugin):
     "Please see the README file to configure and use this plugin."
 
     def inFilter(self, irc, msg):
@@ -135,16 +135,16 @@ class Wordgames(callbacks.Plugin):
                         game.guess(msg.nick, msg.args[1])
                         return None
         except:
-            return
+            pass
         # In all other cases, default to normal message handling
-        return self.parent.inFilter(irc, msg)
+        return msg
 
     def __init__(self, irc):
         # Tech note: Save a reference to my parent class because Supybot's
         # Owner plugin will reload this module BEFORE calling die(), which
         # means super() calls will fail with a TypeError. I consider this a
         # bug in Supybot.
-        self.parent = super(Wordgames, self)
+        self.parent = super(WordGames, self)
         self.parent.__init__(irc)
         self.games = {}
 
@@ -170,55 +170,53 @@ class Wordgames(callbacks.Plugin):
                 irc.reply('No game is currently running.')
         wordsolve = wrap(wordsolve, ['channel'])
 
-    def worddle(self, irc, msgs, args, channel, command):
+    def boggle(self, irc, msgs, args, channel, command):
         """[command]
 
-        Play a Worddle game. Commands: [easy|medium|hard|evil | stop|stats]
+        Play a game of Boggle. Commands: [easy|medium|hard|evil] [stop|stats]
         (default: start with configured difficulty).
         """
         try:
             # Allow deprecated 'join' command:
             if not command or command == 'join' or command in Difficulty.NAMES:
                 difficulty = Difficulty.value(
-                    self.registryValue('worddleDifficulty'))
+                    self.registryValue('boggleDifficulty'))
                 if command in Difficulty.NAMES:
                     difficulty = Difficulty.value(command)
                 game = self.games.get(channel)
                 if game and game.is_running():
-                    if game.__class__ == Worddle:
+                    if game.__class__ == Boggle:
                         if command:
                             irc.reply('Joining the game. (Ignored "%s".)' %
                                 command)
                         game.join(msgs.nick)
                     else:
-                        irc.reply('Current word game is not Worddle!')
+                        irc.reply('Current word game is not Boggle!')
                 else:
-                    delay = self.registryValue('worddleDelay')
-                    duration = self.registryValue('worddleDuration')
-                    self._start_game(Worddle, irc, channel, msgs.nick,
+                    delay = self.registryValue('boggleDelay')
+                    duration = self.registryValue('boggleDuration')
+                    self._start_game(Boggle, irc, channel, msgs.nick,
                         delay, duration, difficulty)
             elif command == 'stop':
                 # Alias for @wordquit
                 self._stop_game(irc, channel)
             elif command == 'stats':
                 game = self.games.get(channel)
-                if not game or game.__class__ != Worddle:
-                    irc.reply('No Worddle game available for stats.')
+                if not game or game.__class__ != Boggle:
+                    irc.reply('No Boggle game available for stats.')
                 elif game.is_running():
                     irc.reply('Please wait until the game finishes.')
                 else:
                     game.stats()
             else:
-                irc.reply('Unrecognized command to worddle.')
-        except WordgamesError as e:
-            irc.reply('Wordgames error: %s' % str(e))
+                irc.reply('Unrecognized command to Boggle.')
+        except WordGamesError as e:
+            irc.reply('WordGames error: %s' % str(e))
             irc.reply('Please check the configuration and try again. ' +
                       'See README for help.')
-    worddle = wrap(worddle,
+    boggle = wrap(boggle,
         ['channel', optional(('literal',
             Difficulty.NAMES + ['join', 'stop', 'stats']))])
-    # Alias for misspelling of the game name
-    wordle = worddle
 
     def wordshrink(self, irc, msgs, args, channel, difficulty):
         """[easy|medium|hard|evil] (default: medium)
@@ -268,12 +266,12 @@ class Wordgames(callbacks.Plugin):
         try:
             regexp = re.compile(self.registryValue('wordRegexp'))
         except Exception as e:
-            raise WordgamesError("Bad value for wordRegexp: %s" % str(e))
+            raise WordGamesError("Bad value for wordRegexp: %s" % str(e))
         path = self.registryValue('wordFile')
         try:
             wordFile = open(path)
         except Exception as e:
-            raise WordgamesError("Unable to open word file: %s" % path)
+            raise WordGamesError("Unable to open word file: %s" % path)
         return list(filter(regexp.match, list(map(str.strip, wordFile.readlines()))))
 
     def _start_game(self, Game, irc, channel, *args, **kwargs):
@@ -286,10 +284,10 @@ class Wordgames(callbacks.Plugin):
                 words = self._get_words()
                 self.games[channel] = Game(words, irc, channel, *args, **kwargs)
                 self.games[channel].start()
-        except WordgamesError as e:
+        except WordGamesError as e:
             # Get rid of the game in case it's in an indeterminate state
             if channel in self.games: del self.games[channel]
-            irc.reply('Wordgames error: %s' % str(e))
+            irc.reply('WordGames error: %s' % str(e))
             irc.reply('Please check the configuration and try again. ' +
                       'See README for help.')
 
@@ -364,8 +362,8 @@ class BaseGame(object):
         "Handle incoming messages on the channel."
         pass
 
-class Worddle(BaseGame):
-    "The Worddle game implementation."
+class Boggle(BaseGame):
+    "The Boggle game implementation."
 
     BOARD_SIZE = 4
     FREQUENCY_TABLE = {
@@ -401,7 +399,7 @@ class Worddle(BaseGame):
                      'point%%(plural)s (%%(words)s)') %
                     (WHITE, LGRAY, LGREEN, LGRAY),
         'startup': ('Starting in %%(seconds)d seconds, ' +
-                     'use "%s%%(commandChar)sworddle%s" to play!') %
+                     'use "%s%%(commandChar)sboggle%s" to play!') %
                     (WHITE, LGRAY),
         'stopped':  'Game stopped.',
         'stopped2':  ('%s::: Game Stopped :::%s') % (LRED, LGRAY),
@@ -451,7 +449,7 @@ class Worddle(BaseGame):
         def get_score(self):
             score = 0
             for word in self.unique:
-                score += Worddle.POINT_VALUES.get(len(word), Worddle.MAX_POINTS)
+                score += Boggle.POINT_VALUES.get(len(word), Boggle.MAX_POINTS)
             return score
 
         def render_words(self, longest_len=0):
@@ -496,14 +494,14 @@ class Worddle(BaseGame):
                 else:
                     unique.add(word)
             self.player_results[player] = \
-                    Worddle.PlayerResult(player, unique, dup)
+                    Boggle.PlayerResult(player, unique, dup)
 
         def sorted_results(self):
             return sorted(list(self.player_results.values()), reverse=True)
 
     def __init__(self, words, irc, channel, nick, delay, duration, difficulty):
-        # See tech note in the Wordgames class.
-        self.parent = super(Worddle, self)
+        # See tech note in the WordGames class.
+        self.parent = super(Boggle, self)
         self.parent.__init__(words, irc, channel)
         self.delay = delay
         self.duration = duration
@@ -511,11 +509,11 @@ class Worddle(BaseGame):
         self.max_targets = get_max_targets(irc)
         self._handle_difficulty()
         self.board = self._generate_board()
-        self.event_name = 'Worddle.%d' % id(self)
+        self.event_name = 'Boggle.%d' % id(self)
         self.init_time = time.time()
         self.longest_len = len(max(self.board.solutions, key=len))
         self.starter = nick
-        self.state = Worddle.State.PREGAME
+        self.state = Boggle.State.PREGAME
         self.players = []
         self.player_answers = {}
         self.warnings = [30, 10, 5]
@@ -527,7 +525,7 @@ class Worddle(BaseGame):
         if nick not in self.players:
             self.join(nick)
         # Pre-game messages are relayed as chatter (not treated as guesses)
-        if self.state < Worddle.State.ACTIVE:
+        if self.state < Boggle.State.ACTIVE:
             self._broadcast('chat', self.players, nick=nick, text=text)
             return
         guesses = set(map(str.lower, text.split()))
@@ -548,7 +546,7 @@ class Worddle(BaseGame):
 
     def join(self, nick):
         assert self.is_running()
-        assert self.state != Worddle.State.DONE
+        assert self.state != Boggle.State.DONE
         if nick not in self.players:
             self._broadcast('welcome1', [nick], now=True,
                 difficulty=Difficulty.name(self.difficulty),
@@ -557,12 +555,12 @@ class Worddle(BaseGame):
             self._broadcast('joined', self.players, nick=nick)
             self.players.append(nick)
             self.player_answers[nick] = set()
-            if self.state == Worddle.State.ACTIVE:
+            if self.state == Boggle.State.ACTIVE:
                 self._display_board(nick)
             else:
                 self._broadcast('players', [nick])
             # Keep at least 5 seconds on the pre-game clock if someone joins
-            if self.state == Worddle.State.PREGAME:
+            if self.state == Boggle.State.PREGAME:
                 time_left = self.init_time + self.delay - time.time()
                 if time_left < 5:
                     self.delay += (5 - time_left)
@@ -572,7 +570,7 @@ class Worddle(BaseGame):
 
     def show(self):
         # Not sure if this is really useful.
-        #if self.state == Worddle.State.ACTIVE:
+        #if self.state == Boggle.State.ACTIVE:
         #    self._display_board(self.channel)
         pass
 
@@ -587,7 +585,7 @@ class Worddle(BaseGame):
 
     def stop(self, now=False):
         self.parent.stop()
-        self.state = Worddle.State.DONE
+        self.state = Boggle.State.DONE
         try:
             schedule.removeEvent(self.event_name)
         except KeyError:
@@ -597,10 +595,10 @@ class Worddle(BaseGame):
             self._broadcast('stopped2', self.players)
 
     def stats(self):
-        assert self.state == Worddle.State.DONE
+        assert self.state == Boggle.State.DONE
         points = 0
         for word in self.board.solutions:
-            points += Worddle.POINT_VALUES.get(len(word), Worddle.MAX_POINTS)
+            points += Boggle.POINT_VALUES.get(len(word), Boggle.MAX_POINTS)
         longest_words = [w for w in self.board.solutions if len(w) == self.longest_len]
         self.announce(('There were %s%d%s possible words, with total point'
             ' value %s%d%s. The longest word%s: %s%s%s.') %
@@ -635,7 +633,7 @@ class Worddle(BaseGame):
             (WHITE, (LGRAY + ', ' + WHITE).join(self.players), LGRAY)
         if 'points' in kwargs:
             kwargs['plural'] = '' if kwargs['points'] == 1 else 's'
-        formatted = Worddle.MESSAGES[name] % kwargs
+        formatted = Boggle.MESSAGES[name] % kwargs
         self._broadcast_text(formatted, recipients, now)
 
     def _handle_difficulty(self):
@@ -647,12 +645,12 @@ class Worddle(BaseGame):
         }[self.difficulty]
 
     def _get_ready(self):
-        self.state = Worddle.State.READY
+        self.state = Boggle.State.READY
         self._broadcast('ready', now=True)
         self._schedule_next_event()
 
     def _begin_game(self):
-        self.state = Worddle.State.ACTIVE
+        self.state = Boggle.State.ACTIVE
         self.start_time = time.time()
         self.end_time = self.start_time + self.duration
         self._display_board()
@@ -668,15 +666,15 @@ class Worddle(BaseGame):
             schedule.removeEvent(self.event_name)
         except KeyError:
             pass
-        if self.state == Worddle.State.PREGAME:
+        if self.state == Boggle.State.PREGAME:
             # Schedule "get ready" message
             schedule.addEvent(self._get_ready,
                 self.init_time + self.delay, self.event_name)
-        elif self.state == Worddle.State.READY:
+        elif self.state == Boggle.State.READY:
             # Schedule game start
             schedule.addEvent(self._begin_game,
                 self.init_time + self.delay + 3, self.event_name)
-        elif self.state == Worddle.State.ACTIVE:
+        elif self.state == Boggle.State.ACTIVE:
             if self.warnings:
                 # Warn almost half a second early, in case there is a little
                 # latency before the event is triggered. (Otherwise a 30 second
@@ -697,10 +695,10 @@ class Worddle(BaseGame):
 
     def _end_game(self):
         self.gameover()
-        self.state = Worddle.State.DONE
+        self.state = Boggle.State.DONE
 
         # Compute results
-        results = Worddle.Results()
+        results = Boggle.Results()
         for player, answers in self.player_answers.items():
             results.add_player_words(player, answers)
 
@@ -728,7 +726,7 @@ class Worddle(BaseGame):
     def _display_board(self, nick=None):
         "Display the board to everyone or just one nick if specified."
         commandChar = str(conf.supybot.reply.whenAddressedBy.chars)[0]
-        help_msgs = [''] * Worddle.BOARD_SIZE
+        help_msgs = [''] * Boggle.BOARD_SIZE
         help_msgs[1] = '%sLet\'s GO!' % (WHITE)
         help_msgs[2] = '%s%s%s seconds left!' % \
             (LYELLOW, int(round(self.end_time - time.time())), LGRAY)
@@ -744,16 +742,16 @@ class Worddle(BaseGame):
         attempts = 5
         wordtrie = Trie()
         list(map(wordtrie.add, self.words))
-        boards = [WorddleBoard(wordtrie, Worddle.BOARD_SIZE, self.min_length)
+        boards = [BoggleBoard(wordtrie, Boggle.BOARD_SIZE, self.min_length)
             for i in range(0, attempts)]
         board_quality = lambda b: len(b.solutions)
         return max(boards, key=board_quality)
 
-class WorddleBoard(object):
-    "Represents the board in a Worddle game."
+class BoggleBoard(object):
+    "Represents the board in a Boggle game."
 
     def __init__(self, wordtrie, n, min_length):
-        "Generate a new n x n Worddle board."
+        "Generate a new n x n Boggle board."
         self.size = n
         self.min_length = min_length
         self.rows = self._generate_rows()
@@ -798,10 +796,10 @@ class WorddleBoard(object):
         return result
 
     def _generate_rows(self):
-        "Randomly generate a Worddle board (a list of lists)."
+        "Randomly generate a Boggle board (a list of lists)."
         letters = reduce(add, (list(map(mul,
-                list(Worddle.FREQUENCY_TABLE.keys()),
-                list(Worddle.FREQUENCY_TABLE.values())))))
+                list(Boggle.FREQUENCY_TABLE.keys()),
+                list(Boggle.FREQUENCY_TABLE.values())))))
         rows = []
         values = random.sample(letters, self.size**2)
         for i in range(0, self.size):
@@ -831,7 +829,7 @@ class WordChain(BaseGame):
             self.num_solutions = num_solutions
 
     def __init__(self, words, irc, channel, settings):
-        # See tech note in the Wordgames class.
+        # See tech note in the WordGames class.
         self.parent = super(WordChain, self)
         self.parent.__init__(words, irc, channel)
         self.settings = settings
@@ -853,7 +851,7 @@ class WordChain(BaseGame):
             while len(self.solution) < self.solution_length:
                 attempts -= 1
                 if attempts == 0:
-                    raise WordgamesError(('Unable to generate %s puzzle. This' +
+                    raise WordGamesError(('Unable to generate %s puzzle. This' +
                         ' is either a bug, or the word file is too small.') %
                         self.__class__.__name__)
                 self.solution = [random.choice(self.words)]
@@ -877,7 +875,7 @@ class WordChain(BaseGame):
             if happy:
                 break
         if not happy:
-            raise WordgamesError(('Unable to generate %s puzzle meeting the ' +
+            raise WordGamesError(('Unable to generate %s puzzle meeting the ' +
                 'game parameters. This is probably a bug.') %
                 self.__class__.__name__)
 
@@ -1064,6 +1062,6 @@ class WordTwist(WordChain):
         "If it's possible to get there in fewer hops, this is trivial."
         return len(solution) < self.solution_length
 
-Class = Wordgames
+Class = WordGames
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
