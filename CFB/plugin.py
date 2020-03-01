@@ -37,6 +37,8 @@ import re
 import os
 from supybot import utils, plugins, ircutils, callbacks, schedule
 from supybot.commands import *
+import json
+
 try:
     from supybot.i18n import PluginInternationalization
     _ = PluginInternationalization('CFB')
@@ -69,7 +71,7 @@ class CFB(callbacks.Plugin):
         if not self.abbrv:
             self.abbrv = requests.get(
             'https://raw.githubusercontent.com/diagonalfish/FootballBotX2/master/abbrv.json')
-            self.abbrv = self.abbrv.json()
+            self.abbrv = json.loads(self.abbrv.content)
 
 
     @wrap
@@ -118,7 +120,7 @@ class CFB(callbacks.Plugin):
 
         try:
             data = requests.get(url)
-            data = data.json()
+            data = json.loads(data.content)
         except:
             irc.reply('Error fetching rankings')
             return
@@ -224,7 +226,7 @@ class CFB(callbacks.Plugin):
             url += '&week={}'.format(week)
 
         games = requests.get(url)
-        games = games.json()
+        games = json.loads(games.content)
 
         games = games['events']
 

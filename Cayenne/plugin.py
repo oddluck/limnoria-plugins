@@ -36,6 +36,7 @@ import random
 import datetime
 import os
 import requests
+import json
 
 try:
     from supybot.i18n import PluginInternationalization
@@ -59,7 +60,8 @@ class Cayenne(callbacks.Plugin):
         """
         Get a random cat fact
         """
-        data = requests.get("https://catfact.ninja/fact").json()
+        data = requests.get("https://catfact.ninja/fact")
+        data = json.loads(data.content)
         return data['fact']
 
     def message_contains_trigger_word(self, message):

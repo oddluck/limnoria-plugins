@@ -37,6 +37,7 @@ import supybot.callbacks as callbacks
 import supybot.log as log
 import requests
 import pendulum
+import json
 from jinja2 import Template
 from urllib.parse import urlencode
 
@@ -68,8 +69,7 @@ class YouTube(callbacks.Plugin):
         try:
             log.debug("YouTube: requesting %s" % (api_url))
             request = requests.get(api_url, timeout=10)
-            request.raise_for_status()
-            request = request.json()
+            request = json.loads(request.content)
             video_id = request["items"][0]["id"]["videoId"]
         except Exception:
             log.error("YouTube: YouTube API HTTP %s: %s" % (request.status_code, request.content.decode()))
@@ -131,7 +131,7 @@ class YouTube(callbacks.Plugin):
             request = requests.get(api_url, timeout=10)
             ok = request.status_code == requests.codes.ok
             if ok:
-                response = request.json()
+                response = json.loads(request.content)
                 if response:
                     try:
                         if response["pageInfo"]["totalResults"] > 0:

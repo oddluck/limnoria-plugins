@@ -29,7 +29,8 @@
 ###
 
 import pendulum
-import requests, json
+import requests
+import json
 from roman_numerals import convert_to_numeral
 
 from supybot import utils, plugins, ircutils, callbacks
@@ -97,17 +98,18 @@ class NFL(callbacks.Plugin):
             url = BASE_URL.format(f"/schedules/{int(date['year'])-1}")
         else:
             url = BASE_URL.format(f"/schedules/{date['year']}")
-        data = requests.get(url).json()
-        
+        data = requests.get(url)
+        data = json.loads(data.content)
+
         if not week:
             url = BASE_URL.format('/currentWeek')
-            week = requests.get(url).json()['week']
+            week = json.loads(requests.get(url).content)['week']
         if not season:
             url = BASE_URL.format('/currentWeek')
-            season = requests.get(url).json()['seasonId']
+            season = json.loads(requests.get(url).content)['seasonId']
         if not seasonType:
             url = BASE_URL.format('/currentWeek')
-            tmp = requests.get(url).json()['seasonType']
+            tmp = json.loads(requests.get(url).content)['seasonType']
             if tmp == "PRO":
                 if not options.get('pro'):
                     tmp = "POST"
@@ -147,7 +149,7 @@ class NFL(callbacks.Plugin):
             season, seasonType.upper(), week
         ))
         try:
-            scores = requests.get(url).json()['gameScores']
+            scores = json.loads(requests.get(url).content)['gameScores']
         except json.decoder.JSONDecodeError:
             irc.error('invalid input', Raise=True)
         except Exception as e:
@@ -296,7 +298,7 @@ class NFL(callbacks.Plugin):
                             gameId = info['gameId']
                             url = BASE_URL.format('/playbyplay/{}/latest'.format(gameId))
                             try:
-                                last_play = requests.get(url).json()
+                                last_play = json.loads(requests.get(url).content)
                                 last_play = last_play['plays'][-1]['playDescription']
                             except:
                                 pass
@@ -342,7 +344,7 @@ class NFL(callbacks.Plugin):
             return
         
         endpoint = '/playerGameStats/{}'.format(player_id)
-        data = requests.get(BASE_URL.format(endpoint)).json()
+        data = json.loads(requests.get(BASE_URL.format(endpoint)).content)
         game_stats = data['playerGameStats']
         player_info = data['teamPlayer']
 

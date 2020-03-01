@@ -41,6 +41,7 @@ from urllib.parse import urlencode, urlparse, parse_qsl
 from bs4 import BeautifulSoup
 import random
 import time
+import json
 from jinja2 import Template
 import timeout_decorator
 import unicodedata
@@ -167,7 +168,7 @@ class SpiffyTitles(callbacks.Plugin):
             ok = request.status_code == requests.codes.ok
 
             if ok:
-                response = request.json()
+                response = json.loads(request.content)
 
                 if response is not None and "title" in response:
                     video = response
@@ -222,7 +223,7 @@ class SpiffyTitles(callbacks.Plugin):
                 ok = request.status_code == requests.codes.ok
 
                 if ok:
-                    response = request.json()
+                    response = json.loads(request.content)
 
                     if response is not None and "title" in response[0]:
                         video = response[0]
@@ -288,7 +289,7 @@ class SpiffyTitles(callbacks.Plugin):
             ok = request.status_code == requests.codes.ok
 
             if ok:
-                response = request.json()
+                response = json.loads(request.content)
 
                 if response:
                     video = response
@@ -673,7 +674,7 @@ class SpiffyTitles(callbacks.Plugin):
             ok = request.status_code == requests.codes.ok
 
             if ok:
-                response = request.json()
+                response = json.loads(request.content)
 
                 if response:
                     try:
@@ -895,7 +896,7 @@ class SpiffyTitles(callbacks.Plugin):
         data = {}
         extract = ""
         if ok:
-            response = request.json()
+            response = json.loads(request.content)
             if response:
                 self.log.debug("SpiffyTitles: twitch - got response:\n%s" % (response))
                 if 'error' in response:
@@ -917,7 +918,7 @@ class SpiffyTitles(callbacks.Plugin):
                             self.log.error("SpiffyTitles: twitch HTTP %s: %s" %
                                            (request.status_code, request.content.decode()[:200]))
                         else:
-                            response = requests.json()
+                            response = json.loads(request.content)
                             if not response:
                                 self.log.error("SpiffyTitles: Error parsing Twitch JSON response")
                             else:
@@ -953,7 +954,7 @@ class SpiffyTitles(callbacks.Plugin):
                         created_at = self._time_created_at(data['started_at'])
                         if game_id:
                             get_game = requests.get("https://api.twitch.tv/helix/games?id={}".format(game_id), timeout=10, headers=headers)
-                            game_data = get_game.json()
+                            game_data = json.loads(get_game.content)
                             game_name = game_data["data"][0]["name"]
                         template_vars = {
                             "display_name": display_name,
@@ -976,7 +977,7 @@ class SpiffyTitles(callbacks.Plugin):
                             self.log.error("SpiffyTitles: twitch HTTP %s: %s" %
                                            (request.status_code, request.content.decode()[:200]))
                         else:
-                            response = request.json()
+                            response = json.loads(request.content)
                             if not response:
                                 self.log.error("SpiffyTitles: Error parsing Twitch JSON response")
                             else:
@@ -995,7 +996,7 @@ class SpiffyTitles(callbacks.Plugin):
                         created_at = self._time_created_at(data['created_at'])
                         if game_id:
                             get_game = requests.get("https://api.twitch.tv/helix/games?id={}".format(game_id), timeout=10, headers=headers)
-                            game_data = get_game.json()
+                            game_data = json.loads(get_game.content)
                             game_name = game_data["data"][0]["name"]
                         template_vars = {
                             "display_name": display_name,
@@ -1018,7 +1019,7 @@ class SpiffyTitles(callbacks.Plugin):
                             self.log.error("SpiffyTitles: twitch HTTP %s: %s" %
                                            (request.status_code, request.content.decode()[:200]))
                         else:
-                            response = request.json()
+                            response = json.loads(request.content)
                             if not response:
                                 self.log.error("SpiffyTitles: Error parsing Twitch JSON response")
                             else:
@@ -1105,7 +1106,7 @@ class SpiffyTitles(callbacks.Plugin):
                 request = requests.get(omdb_url, timeout=10, headers=headers)
 
                 if request.status_code == requests.codes.ok:
-                    response = request.json()
+                    response = json.loads(request.content)
                     result = None
                     imdb_template = Template(self.registryValue("imdb.template"))
                     not_found = "Error" in response
@@ -1224,7 +1225,7 @@ class SpiffyTitles(callbacks.Plugin):
         ok = request.status_code == requests.codes.ok
 
         if ok:
-            response = request.json()
+            response = json.loads(request.content)
 
             if response:
                 try:
@@ -1304,7 +1305,7 @@ class SpiffyTitles(callbacks.Plugin):
         extract = ''
 
         if ok:
-            response = request.json()
+            response = json.loads(request.content)
 
             if response:
                 try:

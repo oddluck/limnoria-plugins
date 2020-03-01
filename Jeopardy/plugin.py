@@ -39,6 +39,7 @@ import os
 import random
 import re
 import requests
+import json
 import string
 import supybot.callbacks as callbacks
 import supybot.conf as conf
@@ -163,9 +164,11 @@ class Jeopardy(callbacks.Plugin):
                         break
                     try:
                         if self.jserviceUrl == 'http://jservice.io':
-                            data = requests.get("{0}/api/random".format(self.jserviceUrl), timeout=5).json()
+                            data = requests.get("{0}/api/random".format(self.jserviceUrl), timeout=5)
+                            data = json.loads(data.content)
                         else:
-                            data = requests.get("{0}/api/random?count={1}".format(self.jserviceUrl, self.num + 5), timeout=5).json()
+                            data = requests.get("{0}/api/random?count={1}".format(self.jserviceUrl, self.num + 5), timeout=5)
+                            data = json.loads(data.content)
                         for item in data:
                             if n == self.num:
                                 break
@@ -207,20 +210,21 @@ class Jeopardy(callbacks.Plugin):
                             break
                         try:
                             category = int(category)
-                            data = requests.get("{0}/api/clues?category={1}".format(self.jserviceUrl, category)).json()
+                            data = requests.get("{0}/api/clues?category={1}".format(self.jserviceUrl, category))
+                            data = json.loads(data.content)
                             cluecount = data[0]['category']['clues_count']
                             if cluecount < self.num and len(self.categories) == 1:
                                 self.num = cluecount
                             if cluecount > 100:
-                                data.extend(requests.get("{0}/api/clues?&category={1}&offset=100".format(self.jserviceUrl, category), timeout=5).json())
+                                data.extend(json.loads(requests.get("{0}/api/clues?&category={1}&offset=100".format(self.jserviceUrl, category), timeout=5).content))
                             if cluecount > 200:
-                                data.extend(requests.get("{0}/api/clues?&category={1}&offset=200".format(self.jserviceUrl, category), timeout=5).json())
+                                data.extend(json.loads(requests.get("{0}/api/clues?&category={1}&offset=200".format(self.jserviceUrl, category), timeout=5).content))
                             if cluecount > 300:
-                                data.extend(requests.get("{0}/api/clues?&category={1}&offset=300".format(self.jserviceUrl, category), timeout=5).json())
+                                data.extend(json.loads(requests.get("{0}/api/clues?&category={1}&offset=300".format(self.jserviceUrl, category), timeout=5).content))
                             if cluecount > 400:
-                                data.extend(requests.get("(0}/api/clues?&category={1}&offset=400".format(self.jserviceUrl, category), timeout=5).json())
+                                data.extend(json.loads(requests.get("(0}/api/clues?&category={1}&offset=400".format(self.jserviceUrl, category), timeout=5).content))
                             if cluecount > 500:
-                                data.extend(requests.get("{0}/api/clues?&category={1}&offset=500".format(self.jserviceUrl, category), timeout=5).json())
+                                data.extend(json.loads(requests.get("{0}/api/clues?&category={1}&offset=500".format(self.jserviceUrl, category), timeout=5).content))
                             j = 0
                             for item in data:
                                 if n == self.num or k > len(self.categories):
@@ -601,7 +605,8 @@ class Jeopardy(callbacks.Plugin):
                 seed = random.randint(0,184) * 100
             else:
                 seed = random.randint(0,250) * 100
-            data = requests.get("{0}/api/categories?count=100&offset={1}".format(self.jserviceUrl, int(seed)), timeout=5).json()
+            data = requests.get("{0}/api/categories?count=100&offset={1}".format(self.jserviceUrl, int(seed)), timeout=5)
+            data = json.loads(data.content)
             random.shuffle(data)
             results = []
             for item in data:

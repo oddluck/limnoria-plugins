@@ -47,6 +47,7 @@ import time
 import random as random
 import pyimgur
 from bs4 import BeautifulSoup
+import json
 
 try:
     from supybot.i18n import PluginInternationalization
@@ -412,7 +413,7 @@ class TextArt(callbacks.Plugin):
             payload = {'description':description,'sections':[{'contents':paste}]}
             headers = {'X-Auth-Token':apikey}
             post_response = requests.post(url='https://api.paste.ee/v1/pastes', json=payload, headers=headers)
-            response = post_response.json()
+            response = json.loads(post_response.content)
             return response['link'].replace('/p/', '/r/')
         except:
             return "Error. Did you set a valid Paste.ee API Key? https://paste.ee/account/api"

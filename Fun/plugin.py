@@ -39,6 +39,7 @@ from bs4 import BeautifulSoup
 import codecs
 import os
 import collections
+import json
 
 try:
     from supybot.i18n import PluginInternationalization
@@ -58,7 +59,8 @@ class Fun(callbacks.Plugin):
         """
 
         channel = msg.args[0]
-        data = requests.get("https://api.adviceslip.com/advice").json()
+        data = requests.get("https://api.adviceslip.com/advice")
+        data = json.loads(data.content)
         irc.reply(data['slip']['advice'])
 
     advice = wrap(advice)
@@ -72,7 +74,8 @@ class Fun(callbacks.Plugin):
         headers = {
         'Accept': 'application/json',
         }
-        data = requests.get('https://icanhazdadjoke.com/', headers=headers).json()
+        data = requests.get('https://icanhazdadjoke.com/', headers=headers)
+        data = json.loads(data.content)
         irc.reply(data['joke'].replace('\n', '').replace('\r', '').replace('\t', ''))
 
     joke = wrap(joke)
@@ -83,7 +86,8 @@ class Fun(callbacks.Plugin):
         """
 
         channel = msg.args[0]
-        data = requests.get("https://catfact.ninja/fact").json()
+        data = requests.get("https://catfact.ninja/fact")
+        data = json.loads(data.content)
         irc.reply(data['fact'])
 
     catfact = wrap(catfact)
@@ -94,7 +98,8 @@ class Fun(callbacks.Plugin):
         """
 
         channel = msg.args[0]
-        data = requests.get("https://uselessfacts.jsph.pl/random.json?language=en").json()
+        data = requests.get("https://uselessfacts.jsph.pl/random.json?language=en")
+        data = json.loads(data.content)
         irc.reply(data['text'])
 
     useless = wrap(useless)
@@ -104,7 +109,8 @@ class Fun(callbacks.Plugin):
         Corporate buzzord generator
         """
         channel = msg.args[0]
-        data = requests.get("https://corporatebs-generator.sameerkumar.website").json()
+        data = requests.get("https://corporatebs-generator.sameerkumar.website")
+        data = json.loads(data.content)
         irc.reply(data['phrase'])
     buzz = wrap(buzz)
 
@@ -113,7 +119,8 @@ class Fun(callbacks.Plugin):
         Startup generator
         """
         channel = msg.args[0]
-        data = requests.get("http://itsthisforthat.com/api.php?json").json()
+        data = requests.get("http://itsthisforthat.com/api.php?json")
+        data = json.loads(data.content)
         vowels = ('a','e','i','o','u','A','E','I','O','U')
         if data['this'].startswith(vowels):
             response = "So, Basically, It\'s Like An {0} for {1}".format(data['this'], data['that'])
@@ -127,7 +134,8 @@ class Fun(callbacks.Plugin):
         Insult generator. Optionally send insult to <nick> (<nick> must be in channel).
         """
         channel = msg.args[0]
-        data = requests.get("https://insult.mattbas.org/api/en/insult.json").json()
+        data = requests.get("https://insult.mattbas.org/api/en/insult.json")
+        data = json.loads(data.content)
         if nick:
             response = "{0}: {1}".format(nick, data['insult'])
             irc.reply(response, prefixNick=False)
@@ -328,14 +336,14 @@ class Fun(callbacks.Plugin):
         coins = []
         coins.append(optcoin)
         coins_str = ','.join(c.upper() for c in coins)
-        coin_data = requests.get(coin_url.format(coins=coins_str))
-        coin_data = coin_data.json()
-        if 'RAW' not in coin_data:
+        data = requests.get(coin_url.format(coins=coins_str))
+        data = json.loads(data.content)
+        if 'RAW' not in data:
             irc.reply('ERROR: no coin found for {}'.format(optcoin))
             return
         output = []
         tmp = {}
-        data = coin_data['RAW']
+        data = data['RAW']
         data2 = collections.OrderedDict.fromkeys(sorted(data))
         for k,v in data.items():
             data2.update({k: v})
@@ -350,18 +358,19 @@ class Fun(callbacks.Plugin):
         """
         volm_url = 'https://min-api.cryptocompare.com/data/top/totalvol?limit=10&tsym=USD'
         coin_url = 'https://min-api.cryptocompare.com/data/pricemultifull?fsyms={coins}&tsyms=USD'
-        volm_data = requests.get(volm_url).json()
+        data = requests.get(volm_url)
+        data = json.loads(data.content)
         coins = []
-        for thing in volm_data['Data']:
+        for thing in data['Data']:
             name = thing['CoinInfo']['Name']
             coins.append(name)
         coins.append('DOGE')
         coins_str = ','.join(c for c in coins)
-        coin_data = requests.get(coin_url.format(coins=coins_str))
-        coin_data = coin_data.json()
+        data = requests.get(coin_url.format(coins=coins_str))
+        data = json.loads(data.content)
         output = []
         tmp = {}
-        data = coin_data['RAW']
+        data = data['RAW']
         tmp['BTC'] = data.pop('BTC')
         data2 = collections.OrderedDict.fromkeys(sorted(data))
         for k,v in data.items():
@@ -374,9 +383,7 @@ class Fun(callbacks.Plugin):
     coins = wrap(coins, [optional('somethingWithoutSpaces')])
 
     def _parseCoins(self, data, optmarket=None):
-
         ticker = []
-
         def _humifyCap(cap):
             if not cap:
                 return cap
@@ -394,7 +401,6 @@ class Fun(callbacks.Plugin):
                 cap = '${:.2f}'.format(cap)
                 return cap
             return cap
-
         for symbol in data:
             name = symbol
             name = ircutils.bold(name)

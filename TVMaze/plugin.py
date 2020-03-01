@@ -31,7 +31,7 @@
 import requests
 import pendulum
 import urllib.parse
-
+import json
 from . import accountsdb
 
 from supybot import utils, plugins, ircutils, callbacks, world
@@ -87,7 +87,8 @@ class TVMaze(callbacks.Plugin):
             query = urllib.parse.quote_plus(query)
             base_url += '/search/shows?q={}'.format(query)
             try:
-                data = requests.get(base_url).json()
+                data = requests.get(base_url)
+                data = json.loads(data.content)
             except:
                 data = None
         elif mode == 'schedule':
@@ -95,7 +96,8 @@ class TVMaze(callbacks.Plugin):
                 date = pendulum.now().format('YYYY-MM-DD')
             base_url += '/schedule?country={}&date={}'.format(country, date)
             try:
-                data = requests.get(base_url).json()
+                data = requests.get(base_url)
+                data = json.loads(data.content)
             except:
                 data = None
         elif mode == 'shows':
@@ -103,7 +105,8 @@ class TVMaze(callbacks.Plugin):
                 return
             base_url += '/shows/{}?embed[]=previousepisode&embed[]=nextepisode'.format(id_)
             try:
-                data = requests.get(base_url).json()
+                data = requests.get(base_url)
+                data = json.loads(data.content)
             except:
                 data = None
         else:

@@ -30,7 +30,7 @@
 
 import pendulum
 import requests
-
+import json
 from supybot import utils, plugins, ircutils, callbacks
 from supybot.commands import *
 try:
@@ -51,7 +51,8 @@ class PGA(callbacks.Plugin):
     def _fetchCurrent(self, type_='r'):
         tmp = None
         try:
-            jdata = requests.get(CURRENT_URL.format(trn_type=type_)).json()
+            jdata = requests.get(CURRENT_URL.format(trn_type=type_))
+            jdata = json.loads(jdata.content)
             tmp = jdata['tid']
             return [type_, tmp]
         except:
@@ -79,17 +80,18 @@ class PGA(callbacks.Plugin):
             url = 'https://www.pgatour.com/bin/data/feeds/weather.json/{}{}'.format(
                 trn[0], trn[1])
             print(url)
-            idata = requests.get(url).json()
+            idata = requests.get(url, timeout=10)
+            idata = json.loads(idata.content)
             url2 = 'https://statdata.pgatour.com/r/current/schedule-v2.json' #.format(trn[0])
             #print(url2)
-            sdata = requests.get(url2).json()
+            sdata = requests.get(url2, timeout=10)
+            sdata = json.loads(sdata.content)
             #print(sdata)
         
         # now get the leaderboard json
         try:
-            jdata = requests.get(SCOREBOARD.format(trn_type=trn[0], trn_id=trn[1]))
-            print(jdata.url)
-            jdata = jdata.json()
+            jdata = requests.get(SCOREBOARD.format(trn_type=trn[0], trn_id=trn[1]), timeout=10)
+            jdata = json.loads(jdata.content)
         except:
             irc.reply('Something went wrong fetching the leaderboard')
             return

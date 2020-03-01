@@ -31,7 +31,7 @@
 import pendulum
 import requests
 import collections
-
+import json
 from supybot import utils, plugins, ircutils, callbacks, conf, schedule, ircmsgs
 from supybot.commands import *
 try:
@@ -170,7 +170,8 @@ class CBB(callbacks.Plugin):
 
         data = collections.OrderedDict()
         for date in dates:
-            tmp = requests.get(SCOREBOARD.format(date=date)).json()
+            tmp = requests.get(SCOREBOARD.format(date=date), timeout=10)
+            tmp = json.loads(tmp.content)
             tmp_date = pendulum.parse(tmp['eventsDate']['date'],
                 strict=False).in_tz('US/Eastern').format('YYYYMMDD')
             data[tmp_date] = tmp['events']

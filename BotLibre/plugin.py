@@ -33,7 +33,7 @@ import supybot.utils as utils
 import supybot.plugins as plugins
 import supybot.callbacks as callbacks
 import re
-
+import json
 import requests
 
 try:
@@ -76,7 +76,7 @@ class BotLibre(callbacks.Plugin):
             }
         try:
             r = requests.post(self.url, json=payload)
-            j = r.json()
+            j = json.loads(r.content)
             response = j['message']
             self.conversation[channel] = j['conversation']
             if response:

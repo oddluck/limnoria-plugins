@@ -62,7 +62,8 @@ class Weed(callbacks.Plugin):
                 
         url = "http://strainapi.evanbusse.com/{0}/strains/search/name/{1}".format(strain_api, strain)
         
-        data = requests.get(url).json()
+        data = requests.get(url)
+        data = json.loads(data.content)
         
         for item in data:
             if item['desc'] is not None and item['name'].casefold() == strain:
@@ -71,7 +72,8 @@ class Weed(callbacks.Plugin):
                 type = ircutils.bold(item['race'])
                 desc = item['desc']
                 url2 = "http://strainapi.evanbusse.com/{0}/strains/data/flavors/{1}".format(strain_api, id)
-                data2 = requests.get(url2).json()
+                data2 = requests.get(url2)
+                data2 = json.loads(data2.content)
                 flavor1 = data2[0]
                 flavor2 = data2[1]
                 flavor3 = data2[2]
@@ -84,7 +86,8 @@ class Weed(callbacks.Plugin):
                 type = ircutils.bold(item['race'])
                 desc = item['desc']
                 url2 = "http://strainapi.evanbusse.com/{0}/strains/data/flavors/{1}".format(strain_api, id)
-                data2 = requests.get(url2).json()
+                data2 = requests.get(url2)
+                data2 = json.loads(data2.content)
                 flavor1 = data2[0]
                 flavor2 = data2[1]
                 flavor3 = data2[2]

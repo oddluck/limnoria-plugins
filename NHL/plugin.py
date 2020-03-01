@@ -154,7 +154,8 @@ class NHL(callbacks.Plugin):
         
         url = 'https://statsapi.web.nhl.com/api/v1/teams'
         try:
-            data = requests.get(url).json()
+            data = requests.get(url)
+            data = json.loads(data.content)
             data = data['teams']
         except:
             return None
@@ -316,7 +317,7 @@ class NHL(callbacks.Plugin):
         return self._cachedData()
 
     def _extractJSON(self, body):
-        return json.loads(body.decode())
+        return json.loads(body)
 
     def _parseGames(self, json, team, tz='US/Eastern'):
         """Extract all relevant fields from NHL.com's json

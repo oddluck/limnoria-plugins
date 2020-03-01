@@ -35,7 +35,7 @@ import supybot.ircutils as ircutils
 import supybot.callbacks as callbacks
 import supybot.conf as conf
 import requests
-
+import json
 
 class Azure(callbacks.Plugin):
 
@@ -68,8 +68,7 @@ class Azure(callbacks.Plugin):
         'text' : text
         }]
         response = requests.post(url, headers=headers, json=body)
-        response.raise_for_status()
-        result = response.json()
+        result = json.loads(response.content)
         if result[0].get('detectedLanguage'):
             reply = "{0} [{1}~>{2}]".format(result[0]['translations'][0]['text'], result[0]['detectedLanguage']['language'], target)
         else:

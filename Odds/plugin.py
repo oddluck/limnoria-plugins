@@ -30,7 +30,7 @@
 
 import requests
 import pendulum
-
+import json
 from supybot import utils, plugins, ircutils, callbacks
 from supybot.commands import *
 try:
@@ -98,9 +98,11 @@ class Odds(callbacks.Plugin):
                            'origin': 'https://www.oddsshark.com/',
                            'referer': 'https://www.oddsshark.com/nhl/odds', 
                            'user-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36'}
-            
-                data.append(requests.get('https://io.oddsshark.com/ticker/nhl', headers=headers).json())
-                
+
+                request = requests.get('https://io.oddsshark.com/ticker/nhl', headers=headers)
+                request = json.loads(request.content)
+                data.append(request)
+
             elif league == 4:
                 #print('one')
                 headers = {'accept': 'application/json, text/plain, */*', 
@@ -109,14 +111,18 @@ class Odds(callbacks.Plugin):
                            'origin': 'https://www.oddsshark.com/',
                            'referer': 'https://www.oddsshark.com/nba/odds', 
                            'user-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36'}
-            
-                data.append(requests.get('https://io.oddsshark.com/ticker/nba', headers=headers).json())
+
+                request = requests.get('https://io.oddsshark.com/ticker/nba', headers=headers)
+                request = json.loads(request.content)
+                data.append(request)
             else:
                 #print('two')
                 url = base_url.format(league=league, date=today)
-                print(url)
-                data.append(requests.get(url).json())
-            
+
+                request = requests.get(headers, timeout=10, headers=headers)
+                request = json.loads(request.content)
+                data.append(request)
+
                 if league == 2 or league == 1 or league == 3:
                     if league == 2 or league == 1:
                         dates = [tdate.add(days=1).format('YYYY-MM-DD'), tdate.add(days=2).format('YYYY-MM-DD'),
@@ -130,8 +136,9 @@ class Odds(callbacks.Plugin):
                     for nflday in dates:
                         url = base_url.format(league=league, date=nflday)
                         #print(url)
-                        #tdata = requests.get(url).json()
-                        data[idx]['events'].extend(requests.get(url).json()['events'])
+                        request = requests.get(url)
+                        request = json.loads(request.content)
+                        data[idx]['events'].extend(request['events'])
         #print(data)
 #         
 #try:            

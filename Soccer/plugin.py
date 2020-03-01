@@ -42,7 +42,7 @@ except ImportError:
 import requests
 import pendulum
 import pickle
-
+import json
 
 class Soccer(callbacks.Plugin):
     """Fetches soccer scores and other information"""
@@ -195,8 +195,7 @@ class Soccer(callbacks.Plugin):
                 data.url))
             return
         
-        print(data.url)
-        data = data.json()
+        data = json.loads(data.content)
         
         if 'leagues' not in data:
             irc.reply('ERROR: {} not found in valid leagues: {}'.format(

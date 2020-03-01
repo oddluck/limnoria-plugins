@@ -139,13 +139,14 @@ class Tweety(callbacks.Plugin):
 
     def _shortenUrl(self, url):
         """Shortens a long URL into a short one."""
-        
+
         api_key = self.registryValue('bitlyKey')
         url_enc = urllib.parse.quote_plus(url)
         api_url = 'https://api-ssl.bitly.com/v3/shorten?access_token={}&longUrl={}&format=json'
 
         try:
-            data = requests.get(api_url.format(api_key, url_enc)).json()
+            data = requests.get(api_url.format(api_key, url_enc), timeout=10)
+            data = json.loads(data.content)
             url2 = data['data'].get('url')
             if url2.strip():
                 return url2.strip()
@@ -177,7 +178,7 @@ class Tweety(callbacks.Plugin):
             data = twitterApi.ApiCall('account/verify_credentials')
             # check the response. if we can load json, it means we're authenticated. else, return response.
             try:  # if we pass, response is validated. set self.twitterApi w/object.
-                json.loads(data.read().decode())
+                json.loads(data.read())
                 self.log.info("I have successfully authorized and logged in to Twitter using your credentials.")
                 self.twitterApi = OAuthApi(self.registryValue('consumerKey'), self.registryValue('consumerSecret'), self.registryValue('accessKey'), self.registryValue('accessSecret'))
             except:  # response failed. Return what we got back.
@@ -303,7 +304,8 @@ class Tweety(callbacks.Plugin):
         api_url = 'https://api-ssl.bitly.com/v3/shorten?access_token={}&longUrl={}&format=json'
 
         try:
-            data = requests.get(api_url.format(api_key, longurl)).json()
+            data = requests.get(api_url.format(api_key, longurl), timeout=10)
+            data = json.loads(data.content)
             url2 = data['data'].get('url')
             if url2.strip():
                 return url2.strip()
@@ -354,7 +356,7 @@ class Tweety(callbacks.Plugin):
         # make API call.
         data = self.twitterApi.ApiCall('application/rate_limit_status', parameters={'resources':'trends,search,statuses,users'})
         try:
-            data = json.loads(data.read().decode())
+            data = json.loads(data.read())
         except:
             irc.reply("ERROR: Failed to lookup ratelimit data: {0}".format(data))
             return
@@ -423,7 +425,7 @@ class Tweety(callbacks.Plugin):
         # now build our API call
         data = self.twitterApi.ApiCall('trends/place', parameters=args)
         try:
-            data = json.loads(data.read().decode())
+            data = json.loads(data.read())
         except:
             irc.reply("ERROR: failed to lookup trends on Twitter: {0}".format(data))
             return
@@ -487,7 +489,7 @@ class Tweety(callbacks.Plugin):
         # now build our API call.
         data = self.twitterApi.ApiCall('search/tweets', parameters=tsearchArgs)
         try:
-            data = json.loads(data.read().decode())
+            data = json.loads(data.read())
         except:
             irc.reply("ERROR: Something went wrong trying to search Twitter. ({0})".format(data))
             return
@@ -612,7 +614,7 @@ class Tweety(callbacks.Plugin):
         # call the Twitter API with our data.
         data = self.twitterApi.ApiCall(apiUrl, parameters=twitterArgs)
         try:
-            data = json.loads(data.read().decode())
+            data = json.loads(data.read())
         except:
             irc.reply("ERROR: Failed to lookup Twitter for '{0}' ({1}) ".format(optnick, data))
             return
