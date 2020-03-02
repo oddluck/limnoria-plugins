@@ -77,6 +77,9 @@ class IMDb(callbacks.Plugin):
         url = None
         result = None
         apikey = self.registryValue('omdbAPI')
+        if not apikey:
+            irc.reply("Error: You must set an API key to use this plugin.")
+            return
         if self.registryValue("googleSearch", channel):
             url = self.dosearch(query)
         if url and 'imdb.com/title/' in url:

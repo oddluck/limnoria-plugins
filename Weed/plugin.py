@@ -53,18 +53,22 @@ class Weed(callbacks.Plugin):
         """<strain>
         Searches API based on user input
         """
-        
         response1 = None
         response2 = None
         channel = msg.args[0]
         strain = re.sub('[^\w\:\"\#\-\.\' ]', '', strain).casefold()
         strain_api = self.registryValue('strain_api')
-                
+        if not strain_api:
+            irc.reply("Error: You must set an API key to use this plugin.")
+            return
         url = "http://strainapi.evanbusse.com/{0}/strains/search/name/{1}".format(strain_api, strain)
-        
-        data = requests.get(url)
-        data = json.loads(data.content)
-        
+        request = requests.get(url)
+        ok = request.status_code == requests.codes.ok
+        if not ok:
+            irc.reply("Error: Unable to retrieve data. Did you set an API key?")
+            log.error("IMDB: API Error %s: %s" % (request.status_code, request.content.decode()))
+            return
+        data = json.loads(request.content)
         for item in data:
             if item['desc'] is not None and item['name'].casefold() == strain:
                 id = item['id']
@@ -93,13 +97,12 @@ class Weed(callbacks.Plugin):
                 flavor3 = data2[2]
                 response2 = "{0} | {1} | Flavors: {2}, {3}, {4} | {5}".format(name, type.title(), flavor1, flavor2, flavor3, desc)
                 break
-        if  response1 != None:
+        if response1 != None:
             irc.reply(response1)
         elif response1 == None and response2 != None:
             irc.reply(response2)
         else:
             irc.reply('No results found, what have you been smoking?')
-
     strain = wrap(strain, ['text'])
-    
+
 Class = Weed

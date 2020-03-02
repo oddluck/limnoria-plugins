@@ -69,8 +69,8 @@ class YouTube(callbacks.Plugin):
         try:
             log.debug("YouTube: requesting %s" % (api_url))
             request = requests.get(api_url, timeout=10)
-            request = json.loads(request.content)
-            video_id = request["items"][0]["id"]["videoId"]
+            response = json.loads(request.content)
+            video_id = response["items"][0]["id"]["videoId"]
         except Exception:
             log.error("YouTube: YouTube API HTTP %s: %s" % (request.status_code, request.content.decode()))
             pass
@@ -113,6 +113,9 @@ class YouTube(callbacks.Plugin):
         Search for YouTube videos
         """
         apikey = self.registryValue('developerKey')
+        if not apikey:
+            irc.reply("Error: You need to set an API key to use this plugin.")
+            return
         channel = msg.channel
         yt_template = Template(self.registryValue("template", channel))
         response = None
