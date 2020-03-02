@@ -39,7 +39,6 @@ import requests
 import json
 from fake_useragent import UserAgent
 from bs4 import BeautifulSoup
-from urllib.parse import urljoin, urlparse, quote_plus
 
 try:
     from supybot.i18n import PluginInternationalization
@@ -57,14 +56,14 @@ class IMDb(callbacks.Plugin):
         try:
             url = None
             searchurl = "https://www.google.com/search?&q="
-            searchurl += quote_plus("{0} site:imdb.com/title/".format(query))
+            searchurl += "{0} site:imdb.com/title/".format(query)
             ua = UserAgent(fallback="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:74.0) Gecko/20100101 Firefox/74.0")
             header = {'User-Agent':str(ua.random)}
             data = requests.get(searchurl, headers=header, timeout=10)
             data.raise_for_status()
             soup = BeautifulSoup(data.content)
             elements = soup.select('.r a')
-            url = urljoin(elements[0]['href'], urlparse(url).path)
+            url = elements[0]['href']
         except Exception:
             pass
         return url
