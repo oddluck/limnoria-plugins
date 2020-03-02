@@ -17,9 +17,8 @@ To configure replies, see the [templates](#templates) section.
 
 ## Commands
 
-```
-start [channel] [--num <#>] [--timeout <#>] [--hints <#>] [--no-hints] [--random] [--shuffle] [--restart] [<category1>, <category2>, etc.]
-```
+`start [channel] [--num <#>] [--timeout <#>] [--hints <#>] [--no-hints] [--random] [--shuffle] [--restart] [<category1>, <category2>, etc.]`
+
 `start` - start a round with random questions
 
 `start <category name>, <category name>` - search for a category by name, separate multiple categories with commas
@@ -204,36 +203,25 @@ config help plugins.jeopardy.template.<variable_name>
 ```
 ^ Get information about what template the variable controls.
 
-```
-config [channel #channel] plugins.jeopardy.template.correct "\x0313{{nick}}\x03 got it! The full answer was: {{answer}}. Points: \x0309{{points}}\x03 | Round Score: \x0309{{round}}\x03 | Total: \x0309{{total}}"
-```
+
+`config [channel #channel] plugins.jeopardy.template.correct "\x0313{{nick}}\x03 got it! The full answer was: {{answer}}. Points: \x0309{{points}}\x03 | Round Score: \x0309{{round}}\x03 | Total: \x0309{{total}}"`<br />
 ^ Template for correct answer replies
 
-```
-config [channel #channel] plugins.jeopardy.template.hint "HINT: {{hint}}{% if time %} | ({{time}} seconds remaining){% endif %}{% if points %} | \x0309[${{points}}]{% endif %}"
-```
+
+`config [channel #channel] plugins.jeopardy.template.hint "HINT: {{hint}}{% if time %} | ({{time}} seconds remaining){% endif %}{% if points %} | \x0309[${{points}}]{% endif %}"`<br />
 ^ Template for hint reply
 
-```
-config [channel #channel] plugins.jeopardy.template.question "#{{number}} of {{total}}: \x0313({{airdate}}) \x0309[${{points}}] \x0310\x1f{{category}}\x1f: {{clue}}"
-```
+`config [channel #channel] plugins.jeopardy.template.question "#{{number}} of {{total}}: \x0313({{airdate}}) \x0309[${{points}}] \x0310\x1f{{category}}\x1f: {{clue}}"`<br />
 ^ Template for question reply
 
-```
-config [channel #channel] plugins.jeopardy.template.skip "No one got the answer! It was: {{answer}}"
-```
+`config [channel #channel] plugins.jeopardy.template.skip "No one got the answer! It was: {{answer}}"`<br />
 ^ Template for reply when question unanswered after timeout or the 'skip' command used
 
-```
-config [channel #channel] plugins.jeopardy.template.stop "Jeopardy! stopped.{% if answer %} (Answer: {{answer}}){% endif %}"
-```
+`config [channel #channel] plugins.jeopardy.template.stop "Jeopardy! stopped.{% if answer %} (Answer: {{answer}}){% endif %}"`<br />
 ^ Template for reply when using the 'stop' command
 
-```
-config [channel #channel] plugins.jeopardy.template.time "{{time}} seconds remaining. [.hint] [.question] [.skip]"
-```
+`config [channel #channel] plugins.jeopardy.template.time "{{time}} seconds remaining. [.hint] [.question] [.skip]"`<br />
 ^ Template for time remaining reply when showTime = True and showHints = False
-
 
 
 ## Miscellaneous
