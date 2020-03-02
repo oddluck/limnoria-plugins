@@ -83,16 +83,8 @@ Example output:
 Note: as of April 20 2015 version 2 of the Youtube API was deprecated. As a result, this feature now
 requires a [developer key](https://code.google.com/apis/youtube/dashboard/gwt/index.html#settings).
 
-- Obtain a [developer key](https://code.google.com/apis/youtube/dashboard/gwt/index.html#settings)
-- Click the link on the left to go to the `Credentials` area under `APIs and auth`
-- Click `Create new Key` under `Public API access`
-- Choose `Server key`
-- Click `Create` as shown in the screenshot below
-
-![Google Developer Console Screenshot](https://i.imgur.com/IUfk3VB.jpg "Google Developer Console Screenshot")
-
-- You may specify allowed IPs but be aware that this setting seems to cache. It is easier to test using the URL listed in the console to verify requests from that machine are working.
-- Make sure the YouTube API is enabled in [the developer console](https://developers.google.com/console/help/#activatingapis).
+- Obtain an [API key](https://console.cloud.google.com/apis/credentials)
+- Make sure the [YouTube Data API](https://console.developers.google.com/apis/library/youtube.googleapis.com) is enabled.
 - Set the key: `!config supybot.plugins.SpiffyTitles.youtube.developerKey your_developer_key_here`
 - Observe the logs to check for errors
 
