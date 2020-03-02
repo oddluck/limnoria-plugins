@@ -27,10 +27,10 @@ Commands
 
 The following commands are exposed by this plugin:
 
-`worddle [easy|medium|hard|evil | stop|stats]`
+`boggle [easy|medium|hard|evil | stop|stats]`
 
-> Play a Worddle game.  With no argument, a new game will start with the
-> default difficulty (see worddleDifficulty in the Configuration section).
+> Play a game of Boggle.  With no argument, a new game will start with the
+> default difficulty (see boggleDifficulty in the Configuration section).
 > If a game is already started, you will join the game in progress.
 >
 > In addition, you may use the following subcommands:
@@ -58,11 +58,11 @@ The following commands are exposed by this plugin:
 Game Rules
 ----------
 
-### Worddle
+### Boggle
 
-Worddle is a clone of a well-known puzzle game involving a 4x4 grid of
-randomly-placed letters.  It's a timed, multiplayer game where you compete
-to find words that your opponents didn't find.
+Boggle is a well-known puzzle game involving a 4x4 grid of randomly-placed 
+letters. It's a timed, multiplayer game where you compete to find words that 
+your opponents didn't find.
 
 When you start a new game, or join an existing game, the bot will send you a
 private message indicating that you are playing.  All your guesses must be
@@ -148,41 +148,37 @@ Configuration Variables
 >
 > Default: `^[a-z]+$`
 
-`plugins.Wordgames.worddleDelay`
+`plugins.Wordgames.boggleDelay`
 
 > The length (in seconds) of the pre-game period where players can join a
-> new Worddle game.
+> new Boggle game.
 >
 > Default: `15`
 
-`plugins.Wordgames.worddleDuration`
+`plugins.Wordgames.boggleDuration`
 
-> The length (in seconds) of the active period of a Worddle game, when
+> The length (in seconds) of the active period of a Boggle game, when
 > players can submit guesses.
 >
 > Default: `90`
 
-`plugins.Wordgames.worddleDifficulty`
+`plugins.Wordgames.boggleDifficulty`
 
-> The default difficulty for a Worddle game.
+> The default difficulty for a Boggle game.
 >
 > Default: `easy` (words must be 3 letters or longer)
 
-A Technical Note About Worddle
+A Technical Note About Boggle
 ------------------------------
 
 This game sends a lot of PRIVMSGs (between the channel and all the players,
 the messages add up).  It attempts to send them in a single PRIVMSG if
 possible to combine targets.
 
-Supybot: I run Supybot with the latest git (there are show-stopper bugs in
-0.83.4.1) and the Twisted driver (but Socket should work as well).
-
 IRC Server: I had to tune my IRC server to handle this game, due to the large
 amount of messages it sends.  You may find that it has problems on your server
 due to flood controls (bot may be either fake lagged or kicked from the
-server).  If the game seems extremely slow, it is either an old Supybot or the
-server is throttling you.
+server).  If the game seems extremely slow, the server is throttling you.
 
 I would like to add an option to tune the verbosity of the game to mitigate
 this for restrictive servers.
@@ -191,6 +187,8 @@ Credit
 ------
 
 Copyright 2012 Mike Mueller <mike@subfocal.net>
-Released under the WTF public license: http://sam.zoy.org/wtfpl/
+Copyright 2020 oddluck <oddluck@riseup.net>
+
+Released under the WTF public license
 
 Thanks to Ben Schomp <ben@benschomp.com> for the inspiration and QA testing.
