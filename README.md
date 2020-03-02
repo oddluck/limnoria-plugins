@@ -11,7 +11,7 @@ Easy installation:
 load PluginDownloader<br />
 repolist oddluck<br />
 install oddluck PluginName<br />
-cd <YourBotDirectory>/plugins/<PluginName><br />
+cd YourBotDirectory/plugins/PluginName<br />
 python3 -m pip install -r requirements.txt --upgrade<br />
 load PluginName<br />
 
