@@ -75,8 +75,6 @@ class Corona(callbacks.Plugin):
             if search:
                 region = r.get('Country_Region')
                 state = r.get('Province_State')
-                if state and ',' in state:
-                    state = state.split(',', 1)[1].strip()
                 if 'china' in search.lower():
                     search = 'mainland china'
                 if region and search.lower() == region.lower():
@@ -85,12 +83,20 @@ class Corona(callbacks.Plugin):
                     deaths += r.get('Deaths')
                     recovered += r.get('Recovered')
                     local_ratio_dead = "{0:.00%}".format(deaths/confirmed)
-                elif state and search.lower() == state.lower():
-                    location = state
-                    confirmed += r.get('Confirmed')
-                    deaths += r.get('Deaths')
-                    recovered += r.get('Recovered')
-                    local_ratio_dead = "{0:.00%}".format(deaths/confirmed)
+                elif state:
+                    state = state.split(',', 1)
+                    if search.lower() == state[0].lower().strip():
+                        location = state[0].strip()
+                        confirmed += r.get('Confirmed')
+                        deaths += r.get('Deaths')
+                        recovered += r.get('Recovered')
+                        local_ratio_dead = "{0:.00%}".format(deaths/confirmed)
+                    elif len(state) > 1 and search.lower() == state[1].lower().strip():
+                        location = state[1].strip()
+                        confirmed += r.get('Confirmed')
+                        deaths += r.get('Deaths')
+                        recovered += r.get('Recovered')
+                        local_ratio_dead = "{0:.00%}".format(deaths/confirmed)
 
             total_confirmed += r.get('Confirmed')
             total_deaths += r.get('Deaths')
