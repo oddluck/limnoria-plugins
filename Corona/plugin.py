@@ -50,7 +50,8 @@ class Corona(callbacks.Plugin):
     @wrap([optional('text')])
     def corona(self, irc, msg, args, search):
         """<area>
-        Displays Coronavirus stats"""
+        Displays Coronavirus stats
+        """
 
         try:
             data = utils.web.getUrl(self.url).decode()
@@ -66,8 +67,8 @@ class Corona(callbacks.Plugin):
 
         total_confirmed = total_deaths = total_recovered = 0
         confirmed = deaths = recovered = 0
+        location = 'Global'
 
-        extra_output = None
         for region in features:
             r = region.get('attributes')
 
@@ -76,25 +77,32 @@ class Corona(callbacks.Plugin):
                 if 'china' in search:
                     search = 'mainland china'
                 if search.lower() == name.lower():
+                    location = name
                     confirmed += r.get('Confirmed')
                     deaths += r.get('Deaths')
                     recovered += r.get('Recovered')
-                    local_ratio_dead = deaths/confirmed
-                    extra_output = ' {0} infected, {1} dead ({4:.00%}), {2} recovered in {3}.'\
-                        .format(confirmed, deaths, recovered, name, local_ratio_dead)
+                    local_ratio_dead = "{0:.00%}".format(deaths/confirmed)
 
             total_confirmed += r.get('Confirmed')
             total_deaths += r.get('Deaths')
             total_recovered += r.get('Recovered')
 
-        ratio_dead = total_deaths/total_confirmed
+        ratio_dead = "{0:.00%}".format(total_deaths/total_confirmed)
 
-        output = '{0} infected, {1} dead ({3:.00%}), {2} recovered globally.'\
-            .format(total_confirmed, total_deaths, total_recovered, ratio_dead)
+        template = self.registryValue("template", msg.channel)
+        if location == 'Global':
+            template = template.replace("$location", location)
+            template = template.replace("$confirmed", str(total_confirmed))
+            template = template.replace("$dead", str(total_deaths))
+            template = template.replace("$recovered", str(total_recovered))
+            template = template.replace("$ratio", ratio_dead)
+        else:
+            template = template.replace("$location", location)
+            template = template.replace("$confirmed", str(confirmed))
+            template = template.replace("$dead", str(deaths))
+            template = template.replace("$recovered", str(recovered))
+            template = template.replace("$ratio", local_ratio_dead)
 
-        if extra_output:
-            output += extra_output
-
-        irc.reply(output)
+        irc.reply(template)
 
 Class = Corona
