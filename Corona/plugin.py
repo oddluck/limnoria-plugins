@@ -65,18 +65,18 @@ class Corona(callbacks.Plugin):
             return
 
         total_confirmed = total_deaths = total_recovered = 0
+        confirmed = deaths = recovered = 0
 
         extra_output = None
         for region in features:
             r = region.get('attributes')
 
-            confirmed = r.get('Confirmed')
-            deaths = r.get('Deaths')
-            recovered = r.get('Recovered')
-
             if search:
                 name = r.get('Country_Region')
                 if search.lower() in name.lower():
+                    confirmed += r.get('Confirmed')
+                    deaths += r.get('Deaths')
+                    recovered += r.get('Recovered')
                     local_ratio_dead = deaths/confirmed
                     extra_output = ' {0} infected, {1} dead ({4:.00%}), {2} recovered in {3}.'\
                         .format(confirmed, deaths, recovered, name, local_ratio_dead)
