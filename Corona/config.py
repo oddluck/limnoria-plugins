@@ -50,4 +50,4 @@ def configure(advanced):
 Corona = conf.registerPlugin('Corona')
 
 conf.registerChannelValue(Corona, 'template',
-     registry.String("\x02$location: \x0309$confirmed\x03 infected, \x0304$dead\x03 dead ($ratio), \x0309$recovered\x03 recovered.", _("""Template for replies""")))
+     registry.String("\x02$location: \x0307$confirmed\x03 infected, \x0304$dead\x03 dead ($ratio), \x0309$recovered\x03 recovered.", _("""Template for replies""")))
