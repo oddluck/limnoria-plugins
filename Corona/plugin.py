@@ -30,7 +30,7 @@
 import json
 import urllib
 
-from supybot import utils, plugins, ircutils, callbacks
+from supybot import utils, plugins, ircutils, callbacks, log
 from supybot.commands import *
 try:
     from supybot.i18n import PluginInternationalization
