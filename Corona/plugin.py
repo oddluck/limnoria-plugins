@@ -45,7 +45,7 @@ class Corona(callbacks.Plugin):
     """Displays current stats of the Coronavirus outbreak"""
     threaded = True
 
-    url = 'https://services1.arcgis.com/0MSEUqKaxRlEPj5g/arcgis/rest/services/ncov_cases/FeatureServer/1/query?f=json&where=Confirmed>0&returnGeometry=false&spatialRel=esriSpatialRelIntersects&outFields=*&orderByFields=Confirmed%20desc%2CCountry_Region%20asc%2CProvince_State%20asc&outSR=102100&resultOffset=0&resultRecordCount=250&cacheHint=true'
+    url = "https://services1.arcgis.com/0MSEUqKaxRlEPj5g/arcgis/rest/services/ncov_cases/FeatureServer/1/query?f=json&where=Confirmed>0&outFields=*"
 
     @wrap([optional('text')])
     def corona(self, irc, msg, args, search):
