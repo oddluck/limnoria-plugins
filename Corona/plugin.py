@@ -73,7 +73,9 @@ class Corona(callbacks.Plugin):
 
             if search:
                 name = r.get('Country_Region')
-                if search.lower() in name.lower():
+                if 'china' in search:
+                    search = 'mainland china'
+                if search.lower() == name.lower():
                     confirmed += r.get('Confirmed')
                     deaths += r.get('Deaths')
                     recovered += r.get('Recovered')
