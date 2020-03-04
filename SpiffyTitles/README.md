@@ -23,7 +23,7 @@ The ONLY gluten-free plugin for displaying link titles.
 - Rate limiting to mitigate abuse
 - Configurable white/black list to control where titles are disabled
 - MIME type and size info for file links
-- Random selection of current useragents using fake-useragent
+- Configurable list of user agents
 - Ability to ignore domains using a regular expression
 
 Check out the [available options](#available-options)!
@@ -294,6 +294,18 @@ titles will be shown in all channels. Default value: `""`
 
 `badLinkText` - The text to return when unable to retrieve a title from a URL. Default value: `Nice link idiot.`
 
+`userAgents` - A comma separated list of strings of user agents randomly chosen when requesting.
+
+`urlRegularExpression` - A regular expression used to match URLs. You shouldn't need to change this.
+
+`linkMessageIgnorePattern` - If a message matches this pattern, it will be ignored. This differs from ignoredDomainPattern in that it compares against the entire message rather than just the domain.
+
+`ignoreActionLinks` (Boolean) - By default SpiffyTitles will ignore links that appear in an action, like /me.
+
+`requireCapability` (String) - If defined, SpiffyTitles will only acknowledge links from users with this capability. Useful for hostile environments. Refer to [Limnoria's documentation on capabilities](http://doc.supybot.aperio.fr/en/latest/use/capabilities.html) for more information
+
+`ignoredTitlePattern` (Regexp) - If the parsed title matches this regular expression, it will be ignored.
+
 ### About white/black lists
 - Channel names must be in lowercase
 - If `channelWhitelist` and `channelBlacklist` are empty, then titles will be displayed in every channel
@@ -318,10 +330,6 @@ titles will be shown in all channels. Default value: `""`
 
     !config supybot.plugins.SpiffyTitles.channelWhitelist ""
 
-`ignoredDomainPattern` - ignore domains matching this pattern. Default value: `""`
-
-`whitelistDomainPattern` - ignore any link without a domain matching this pattern. Default value: `""`
-
 ### Pro Tip
 
 You can ignore domains that you know aren't websites. This prevents a request from being made at all.
@@ -340,23 +348,13 @@ Ignore all links except youtube, imgur, and reddit
 
     !config supybot.plugins.SpiffyTitles.whitelistDomainPattern /(reddit\.com|youtube\.com|youtu\.be|imgur\.com)/
 
-`urlRegularExpression` - A regular expression used to match URLs. You shouldn't need to change this.
+Ignore any message that contains "[tw]".
 
-`linkMessageIgnorePattern` - If a message matches this pattern, it will be ignored. This differs from `ignoredDomainPattern` in that it compares against the entire message rather than just the domain.
+    !config supybot.plugins.SpiffyTitles.linkMessageIgnorePattern "/\[tw\]/"
 
-Example: `!config supybot.plugins.SpiffyTitles.linkMessageIgnorePattern "/\[tw\]/"`
+Ignore any link which results in a title matching a pattern.
 
-This would ignore any message that contains "[tw]".
-
-`ignoreActionLinks` (Boolean) - By default SpiffyTitles will ignore links that appear in an action, like `/me`.
-
-`requireCapability` (String) - If defined, SpiffyTitles will only acknowledge links from users with this capability. Useful for hostile environments. [Refer to Limnoria's documentation on capabilities for more information](http://doc.supybot.aperio.fr/en/latest/use/capabilities.html)
-
-`ignoredTitlePattern` (Regexp) - If the parsed title matches this regular expression, it will be ignored.
-
-Example: `!config channel #example supybot.plugins.SpiffyTitles.ignoredTitlePattern m/^\^ Google$|- Google Search$|^\^ Google Maps$|^\^ Imgur: The most awesome images on the Internet$|^\^ Pastebin \| IRCCloud|^\^ Instagram|^\^ Urban Dictionary:|– Wikipedia$|- Wikipedia, the free encyclopedia$|- Wiktionary$| - RationalWiki$|^\^ Meet Google Drive|- Wikia$|^\^ Imgur$|^\^ Google Trends|^\^ reactiongifs/`
-
-This line would ignore any link which results in a title matching the above pattern.
+    !config channel #example supybot.plugins.SpiffyTitles.ignoredTitlePattern m/^\^ Google$|- Google Search$|^\^ Google Maps$|^\^ Imgur: The most awesome images on the Internet$|^\^ Pastebin \| IRCCloud|^\^ Instagram|^\^ Urban Dictionary:|– Wikipedia$|- Wikipedia, the free encyclopedia$|- Wiktionary$| - RationalWiki$|^\^ Meet Google Drive|- Wikia$|^\^ Imgur$|^\^ Google Trends|^\^ reactiongifs/
 
 ### FAQ
 

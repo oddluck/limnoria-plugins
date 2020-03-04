@@ -7,4 +7,3 @@ requests
 timeout-decorator
 certifi
 pendulum
-fake-useragent

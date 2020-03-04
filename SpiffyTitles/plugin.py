@@ -48,7 +48,6 @@ import unicodedata
 import supybot.ircdb as ircdb
 import supybot.log as log
 import pendulum
-from fake_useragent import UserAgent
 
 try:
     from supybot.i18n import PluginInternationalization
@@ -160,7 +159,7 @@ class SpiffyTitles(callbacks.Plugin):
             api_url = "https://api.dailymotion.com/video/%s?fields=%s" % (video_id, fields)
             log.debug("SpiffyTitles: looking up dailymotion info: %s", api_url)
             headers = self.get_headers()
-            request = requests.get(api_url, headers=headers)
+            request = requests.get(api_url, headers=headers, timeout=10)
 
             ok = request.status_code == requests.codes.ok
 
@@ -211,7 +210,7 @@ class SpiffyTitles(callbacks.Plugin):
                 api_url = "https://vimeo.com/api/v2/video/%s.json" % video_id
                 log.debug("SpiffyTitles: looking up vimeo info: %s", api_url)
                 headers = self.get_headers()
-                request = requests.get(api_url, headers=headers)
+                request = requests.get(api_url, headers=headers, timeout=10)
 
                 ok = request.status_code == requests.codes.ok
 
@@ -273,7 +272,7 @@ class SpiffyTitles(callbacks.Plugin):
 
             api_url = "http://coub.com/api/v2/coubs/%s" % video_id
             headers = self.get_headers()
-            request = requests.get(api_url, headers=headers)
+            request = requests.get(api_url, headers=headers, timeout=10)
 
             ok = request.status_code == requests.codes.ok
 
@@ -656,7 +655,7 @@ class SpiffyTitles(callbacks.Plugin):
 
             log.debug("SpiffyTitles: requesting %s" % (api_url))
 
-            request = requests.get(api_url, headers=headers)
+            request = requests.get(api_url, headers=headers, timeout=10)
             ok = request.status_code == requests.codes.ok
 
             if ok:
@@ -1200,7 +1199,7 @@ class SpiffyTitles(callbacks.Plugin):
 
         self.log.debug("SpiffyTitles: requesting %s" % (api_url))
 
-        request = requests.get(api_url, headers=headers)
+        request = requests.get(api_url, headers=headers, timeout=10)
         ok = request.status_code == requests.codes.ok
 
         if ok:
@@ -1275,7 +1274,7 @@ class SpiffyTitles(callbacks.Plugin):
 
         self.log.debug("SpiffyTitles: requesting %s" % (data_url))
 
-        request = requests.get(data_url, headers=headers)
+        request = requests.get(data_url, headers=headers, timeout=10)
         ok = request.status_code == requests.codes.ok
         data = {}
         extract = ''
@@ -1664,8 +1663,8 @@ class SpiffyTitles(callbacks.Plugin):
         """
         Returns a random user agent from the ones available
         """
-        ua = UserAgent(fallback="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:74.0) Gecko/20100101 Firefox/74.0")
-        return str(ua.random)
+        agents = self.registryValue("userAgents")
+        return random.choice(agents)
 
     def message_matches_ignore_pattern(self, input):
         """
