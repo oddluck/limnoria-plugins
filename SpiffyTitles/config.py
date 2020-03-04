@@ -69,7 +69,7 @@ conf.registerChannelValue(SpiffyTitles, 'useBold',
      registry.Boolean(False, _("""Use bold in titles""")))
 
 # User agents
-conf.registerGlobalValue(SpiffyTitles, 'badLinkText',
+conf.registerChannelValue(SpiffyTitles, 'badLinkText',
      registry.String("Nice link idiot.", _("""Title to return for bad/unsnarfable links.""")))
 
 # Mime Types
