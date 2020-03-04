@@ -22,7 +22,8 @@ The ONLY gluten-free plugin for displaying link titles.
 - Article extracts from [Wikipedia](https://en.wikipedia.org) links
 - Rate limiting to mitigate abuse
 - Configurable white/black list to control where titles are disabled
-- Configurable list of user agents
+- MIME type and size info for file links
+- Random selection of current useragents using fake-useragent
 - Ability to ignore domains using a regular expression
 
 Check out the [available options](#available-options)!
