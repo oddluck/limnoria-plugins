@@ -89,3 +89,6 @@ registry.Integer(99, _("""Set the default foreground color for ascii art images.
 
 conf.registerChannelValue(TextArt, 'bg',
 registry.Integer(99, _("""Set the default background color for ascii art images. 0-98. 99 is disabled (default)""")))
+
+conf.registerGlobalValue(TextArt, 'userAgents',
+     registry.CommaSeparatedListOfStrings(["Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.130 Safari/537.36", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:73.0) Gecko/20100101 Firefox/73.0", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.122 Safari/537.36", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:74.0) Gecko/20100101 Firefox/74.0"], _("""Reported user agent when fetching links""")))

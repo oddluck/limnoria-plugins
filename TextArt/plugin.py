@@ -40,7 +40,6 @@ import requests
 from PIL import Image, ImageOps, ImageFont, ImageDraw, ImageEnhance
 import numpy as np
 import sys, math
-from fake_useragent import UserAgent
 import re
 import pexpect
 import time
@@ -68,6 +67,7 @@ class TextArt(callbacks.Plugin):
         self.stopped = {}
         self.old_color = None
         self.source_colors = 0
+        self.agents = self.registryValue("userAgents")
         self.rgbColors = [
             (255,255,255),
             (0,0,0),
@@ -714,18 +714,17 @@ class TextArt(callbacks.Plugin):
             fg = 0
         if url.startswith("https://paste.ee/p/"):
             url = re.sub("https://paste.ee/p/", "https://paste.ee/r/", url)
-        ua = UserAgent(fallback="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:74.0) Gecko/20100101 Firefox/74.0")
-        header = {'User-Agent':str(ua.random)}
-        r = requests.head(url, headers=header)
+        ua = random.choice(self.agents)
+        header = {'User-Agent': ua}
+        r = requests.get(url, stream=True, headers=header, timeout=10)
         if "text/plain" in r.headers["content-type"] or url.startswith('https://paste.ee/r/'):
-            file = requests.get(url, headers=header, timeout=10)
+            try:
+                file = r.content.decode()
+            except:
+                file = r.content.decode('cp437')
         else:
             irc.reply("Invalid file type.", private=False, notice=False)
             return
-        try:
-            file = file.content.decode()
-        except:
-            file = file.content.decode('cp437')
         file = re.sub('(\x03(\d+).*)\x03,', '\g<1>\x03\g<2>,', file).replace('\r\n','\n') 
         im, x, y = self.renderImage(file, 18, bg, fg)
         path = os.path.dirname(os.path.abspath(__file__))
@@ -898,20 +897,16 @@ class TextArt(callbacks.Plugin):
             cols = self.registryValue('blockWidth', msg.args[0])
         if 's' in optlist:
             s = float(optlist.get('s'))
-        ua = UserAgent(fallback="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:74.0) Gecko/20100101 Firefox/74.0")
-        header = {'User-Agent':str(ua.random)}
+        ua = random.choice(self.agents)
+        header = {'User-Agent': ua}
         image_formats = ("image/png", "image/jpeg", "image/jpg", "image/gif")
-        r = requests.head(url, headers=header)
-        if r.headers["content-type"] in image_formats:
-            response = requests.get(url, stream=True, timeout=10, headers=header)
+        r = requests.get(url, stream=True, headers=header, timeout=10)
+        if r.headers["content-type"] in image_formats and r.status_code == 200:
+            r.raw.decode_content = True
+            image = Image.open(r.raw)
         else:
             irc.reply("Error: Invalid file type.", private=False, notice=False)
             return
-        if response.status_code == 200:
-            response.raw.decode_content = True
-            image = Image.open(response.raw)
-        else:
-            irc.reply("Error: Unable to open image.", private=False, notice=False)
         # open image and convert to grayscale
         start_time = time.time()
         self.source_colors = 0
@@ -1160,15 +1155,14 @@ class TextArt(callbacks.Plugin):
             url = url.replace("https://paste.ee/p/", "https://paste.ee/r/")
         elif url.startswith("https://pastebin.com/") and '/raw/' not in url:
             url = url.replace("https://pastebin.com/", "https://pastebin.com/raw/")
-        ua = UserAgent(fallback="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:74.0) Gecko/20100101 Firefox/74.0")
-        header = {'User-Agent':str(ua.random)}
-        r = requests.head(url, headers=header)
+        ua = random.choice(self.agents)
+        header = {'User-Agent': ua}
+        r = requests.get(url, headers=header, stream=True, timeout=10)
         if "text/plain" in r.headers["content-type"]:
-            file = requests.get(url, timeout=10, headers=header)
+            file = r.content.decode().replace('\r\n','\n')
         else:
             irc.reply("Invalid file type.", private=False, notice=False)
             return
-        file = file.content.decode().replace('\r\n','\n')
         for line in file.split('\n'):
             if line.strip() and not self.stopped[msg.args[0]]:
                 time.sleep(delay)
@@ -1208,15 +1202,14 @@ class TextArt(callbacks.Plugin):
             delay = optlist.get('delay')
         else:
             delay = self.registryValue('delay', msg.args[0])
-        ua = UserAgent(fallback="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:74.0) Gecko/20100101 Firefox/74.0")
-        header = {'User-Agent':str(ua.random)}
-        r = requests.head(url, headers=header)
+        ua = random.choice(self.agents)
+        header = {'User-Agent': ua}
+        r = requests.get(url, stream=True, headers=header, timeout=10)
         try:
             if "text/plain" in r.headers["content-type"] or "application/octet-stream" in r.headers["content-type"] and int(r.headers["content-length"]) < 1000000:
                 path = os.path.dirname(os.path.abspath(__file__))
                 filepath = "{0}/tmp".format(path)
                 filename = "{0}/{1}".format(filepath, url.split('/')[-1])
-                r = requests.get(url, timeout=10, headers=header)
                 open(filename, 'wb').write(r.content.replace(b';5;', b';'))
                 try:
                     output = pexpect.run('a2m {0} {1}'.format(opts.strip(), str(filename)))
@@ -1294,18 +1287,13 @@ class TextArt(callbacks.Plugin):
         path = os.path.dirname(os.path.abspath(__file__))
         filepath = "{0}/tmp".format(path)
         filename = "{0}/{1}".format(filepath, url.split('/')[-1])
-        ua = UserAgent(fallback="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:74.0) Gecko/20100101 Firefox/74.0")
-        header = {'User-Agent':str(ua.random)}
+        ua = random.choice(self.agents)
+        header = {'User-Agent': ua}
         image_formats = ("image/png", "image/jpeg", "image/jpg", "image/gif")
-        r = requests.head(url, headers=header)
-        if r.headers["content-type"] in image_formats:
-            response = requests.get(url, timeout=10, headers=header)
-        else:
-            irc.reply("Invalid file type.", private=False, notice=False)
-            return
-        if response.status_code == 200:
+        r = requests.get(url, stream=True, headers=header, timeout=10)
+        if r.headers["content-type"] in image_formats and r.status_code == 200:
             with open("{0}".format(filename), 'wb') as f:
-                f.write(response.content)
+                f.write(r.content)
             try:
                 output = pexpect.run('p2u -f m {0} {1}'.format(opts.strip(), str(filename)))
                 try:
@@ -1315,18 +1303,21 @@ class TextArt(callbacks.Plugin):
             except:
                 irc.reply("Error. Have you installed p2u? https://git.trollforge.org/p2u", private=False, notice=False)
                 return
-            paste = ""
-            self.stopped[msg.args[0]] = False
-            for line in output.splitlines():
-                line = line.decode()
-                line = re.sub('^\x03 ', ' ', line)
-                if self.registryValue('pasteEnable', msg.args[0]):
-                    paste += line + "\n"
-                if line.strip() and not self.stopped[msg.args[0]]:
-                    time.sleep(delay)
-                    irc.reply(line, prefixNick = False, noLengthCheck=True, private=False, notice=False, to=channel)
+        else:
+            irc.reply("Invalid file type.", private=False, notice=False)
+            return
+        paste = ""
+        self.stopped[msg.args[0]] = False
+        for line in output.splitlines():
+            line = line.decode()
+            line = re.sub('^\x03 ', ' ', line)
             if self.registryValue('pasteEnable', msg.args[0]):
-                irc.reply(self.doPaste(url, paste), private=False, notice=False, to=channel)
+                paste += line + "\n"
+            if line.strip() and not self.stopped[msg.args[0]]:
+                time.sleep(delay)
+                irc.reply(line, prefixNick = False, noLengthCheck=True, private=False, notice=False, to=channel)
+        if self.registryValue('pasteEnable', msg.args[0]):
+            irc.reply(self.doPaste(url, paste), private=False, notice=False, to=channel)
         else:
             irc.reply("Unexpected file type or link format", private=False, notice=False)
     p2u = wrap(p2u, [optional('channel'), getopts({'b':'int', 'f':'text', 'p':'text', 's':'int', 't':'int', 'w':'int', 'delay':'float'}), ('text')])
@@ -1665,11 +1656,17 @@ class TextArt(callbacks.Plugin):
         else:
             delay = self.registryValue('delay', msg.args[0])
         self.stopped[msg.args[0]] = False
-        ua = UserAgent(fallback="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:74.0) Gecko/20100101 Firefox/74.0")
-        header = {'User-Agent':str(ua.random)}
+        ua = random.choice(self.agents)
+        header = {'User-Agent': ua}
         data = requests.get("https://mircart.org/?s={0}".format(search), headers=header, timeout=10)
+        if not data:
+            irc.reply("Error: No results found for {0}".format(search))
+            return
         soup = BeautifulSoup(data.content)
         url = soup.find(href=re.compile(".txt"))
+        if not url:
+            irc.reply("Error: No results found for {0}".format(search))
+            return
         data = requests.get(url.get('href'), headers=header, timeout=10)
         output = data.content.decode()
         for line in output.splitlines():

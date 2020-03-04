@@ -1,7 +1,6 @@
 requests
 numpy
 pillow
-fake-useragent
 pexpect
 pyimgur
 beautifulsoup4

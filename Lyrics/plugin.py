@@ -38,7 +38,6 @@ from bs4 import BeautifulSoup
 import requests
 import re
 import pylyrics3
-from fake_useragent import UserAgent
 
 try:
     from supybot.i18n import PluginInternationalization
@@ -58,8 +57,9 @@ class Lyrics(callbacks.Plugin):
             title = None
             searchurl = "https://www.google.com/search?&q="
             searchurl += "{0} site:lyrics.fandom.com/wiki/".format(lyric)
-            ua = UserAgent(fallback="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:74.0) Gecko/20100101 Firefox/74.0")
-            header = {'User-Agent':str(ua.random)}
+            agents = self.registryValue("userAgents")
+            ua = random.choice(agents)
+            header = {'User-Agent': ua}
             data = requests.get(searchurl, headers=header, timeout=10)
             data.raise_for_status()
             soup = BeautifulSoup(data.content)

@@ -1,6 +1,5 @@
 beautifulsoup4
 certifi
-fake-useragent
 ftfy
 geoip2
 git+https://github.com/oddluck/cobe.git

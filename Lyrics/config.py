@@ -50,3 +50,6 @@ Lyrics = conf.registerPlugin('Lyrics')
 
 conf.registerChannelValue(Lyrics, 'googleSearch',
      registry.Boolean(True, _("""Use google to perform searches for better results.""")))
+
+conf.registerGlobalValue(Lyrics, 'userAgents',
+     registry.CommaSeparatedListOfStrings(["Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.130 Safari/537.36", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:73.0) Gecko/20100101 Firefox/73.0", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.122 Safari/537.36", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:74.0) Gecko/20100101 Firefox/74.0"], _("""Reported user agent when fetching links""")))
