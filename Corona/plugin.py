@@ -82,14 +82,14 @@ class Corona(callbacks.Plugin):
                     confirmed += r.get('Confirmed')
                     deaths += r.get('Deaths')
                     recovered += r.get('Recovered')
-                    local_ratio_dead = "{0:.00%}".format(deaths/confirmed)
+                    local_ratio_dead = "{0:.1%}".format(deaths/confirmed)
                 elif state:
                     if search.lower() == state.lower():
                         location = state
                         confirmed += r.get('Confirmed')
                         deaths += r.get('Deaths')
                         recovered += r.get('Recovered')
-                        local_ratio_dead = "{0:.00%}".format(deaths/confirmed)
+                        local_ratio_dead = "{0:.1%}".format(deaths/confirmed)
                     else:
                         state = state.split(',', 1)
                         if search.lower() == state[0].lower().strip():
@@ -97,25 +97,25 @@ class Corona(callbacks.Plugin):
                             confirmed += r.get('Confirmed')
                             deaths += r.get('Deaths')
                             recovered += r.get('Recovered')
-                            local_ratio_dead = "{0:.00%}".format(deaths/confirmed)
+                            local_ratio_dead = "{0:.1%}".format(deaths/confirmed)
                         elif len(state) > 1 and search.lower() == state[1].lower().strip():
                             location = state[1].strip()
                             confirmed += r.get('Confirmed')
                             deaths += r.get('Deaths')
                             recovered += r.get('Recovered')
-                            local_ratio_dead = "{0:.00%}".format(deaths/confirmed)
+                            local_ratio_dead = "{0:.1%}".format(deaths/confirmed)
                         elif search.lower().replace('county', '').strip() == state[0].lower().replace('county', '').strip():
                             location = r.get('Province_State')
                             confirmed += r.get('Confirmed')
                             deaths += r.get('Deaths')
                             recovered += r.get('Recovered')
-                            local_ratio_dead = "{0:.00%}".format(deaths/confirmed)
+                            local_ratio_dead = "{0:.1%}".format(deaths/confirmed)
 
             total_confirmed += r.get('Confirmed')
             total_deaths += r.get('Deaths')
             total_recovered += r.get('Recovered')
 
-        ratio_dead = "{0:.00%}".format(total_deaths/total_confirmed)
+        ratio_dead = "{0:.1%}".format(total_deaths/total_confirmed)
 
         template = self.registryValue("template", msg.channel)
         if location == 'Global':
