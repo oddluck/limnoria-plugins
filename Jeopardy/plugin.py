@@ -333,33 +333,35 @@ class Jeopardy(callbacks.Plugin):
                 a1, a2, a3 = re.match("(.*)\((.*)\)(.*)", self.a[0]).groups()
                 self.a.append(a1 + a3)
                 self.a.append(a2)
-            def next_question():
-                self.clear()
-                self.correct = False
-                self.reply(self.question)
-                if self.registryValue('keepHistory', self.channel):
-                    self.history[self.channel].append(int(self.id))
-                if self.timeout > 0:
-                    def event():
-                        self.end()
-                    self.endTime = time.time() + self.timeout
-                    schedule.addEvent(event, self.endTime, 'end_%s' % self.channel)
-                    if self.showBlank:
-                        self.hint()
-                    elif self.showHints or self.showTime:
-                        def event():
-                            self.timedEvent()
-                        eventTime = time.time() + self.waitTime
-                        if eventTime < self.endTime:
-                            schedule.addEvent(event, eventTime, 'event_%s' % self.channel)
-                elif self.showBlank:
-                    self.hint()
             if self.numAsked > 1 and self.delay > 0:
                 delayTime = time.time() + self.delay
-                schedule.addEvent(next_question, delayTime, 'clue_%s' % self.channel)
+                def event():
+                    self.next_question()
+                schedule.addEvent(event, delayTime, 'clue_%s' % self.channel)
             else:
-                next_question()
+                self.next_question()
 
+        def next_question(self):
+            self.clear()
+            self.correct = False
+            if self.registryValue('keepHistory', self.channel):
+                self.history[self.channel].append(int(self.id))
+            self.reply(self.question)
+            if self.timeout > 0:
+                def event():
+                    self.end()
+                self.endTime = time.time() + self.timeout
+                schedule.addEvent(event, self.endTime, 'end_%s' % self.channel)
+                if self.showBlank:
+                    self.hint()
+                elif self.showHints or self.showTime:
+                    def event():
+                        self.timedEvent()
+                    eventTime = time.time() + self.waitTime
+                    if eventTime < self.endTime:
+                        schedule.addEvent(event, eventTime, 'event_%s' % self.channel)
+            elif self.showBlank:
+                self.hint()
 
         def clear(self):
             try:
