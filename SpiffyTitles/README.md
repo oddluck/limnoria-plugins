@@ -40,7 +40,7 @@ You should `!unload Web` and any other plugins that show link titles for best re
 
 Load SpiffyTitles:
     
-    !load SpiffyTitles
+`!load SpiffyTitles`
 
 Pro Tip: Observe the logs when loading the plugin and afterwards to see if there are any errors.
 
@@ -77,7 +77,7 @@ Default value: `^ {{title}}`
 
 Example output:
 
-    ^ Google.com
+`^ Google.com`
 
 ### Youtube handler
 
@@ -103,7 +103,7 @@ Default value: `^ {{yt_logo}} :: {{title}} {%if timestamp%} @ {{timestamp}}{% en
 
 Example output:
 
-    ^ Snoop Dogg - Pump Pump feat. Lil Malik uploaded by GeorgeRDR3218 @ 00:45:: Duration: 04:41 :: 203,218 views :: 933 likes :: 40 dislikes :: 0 favorites :: 112 comments
+`^ Snoop Dogg - Pump Pump feat. Lil Malik uploaded by GeorgeRDR3218 @ 00:45:: Duration: 04:41 :: 203,218 views :: 933 likes :: 40 dislikes :: 0 favorites :: 112 comments`
 
 ### Available variables for the Youtube template ###
 
@@ -198,21 +198,21 @@ Default value: `^ {{twitch_logo}} :: {{display_name}} {%if game_name%}:: [{{game
 
 Default value
 
-    ^ {%if section %} [{{section}}] {% endif -%}{%- if title -%} {{title}} :: {% endif %}{{type}} {{width}}x{{height}} {{file_size}} :: {{view_count}} views :: {%if nsfw == None %}not sure if safe for work{% elif nsfw == True %}not safe for work!{% else %}safe for work{% endif %}
+`^ {%if section %} [{{section}}] {% endif -%}{%- if title -%} {{title}} :: {% endif %}{{type}} {{width}}x{{height}} {{file_size}} :: {{view_count}} views :: {%if nsfw == None %}not sure if safe for work{% elif nsfw == True %}not safe for work!{% else %}safe for work{% endif %}`
 
 Example output:
 
-    ^ [pics] He really knows nothing... :: image/jpeg 700x1575 178.8KiB :: 809 views :: safe for work
+`^ [pics] He really knows nothing... :: image/jpeg 700x1575 178.8KiB :: 809 views :: safe for work`
 
 `imgur.albumTemplate` - This is the template used when showing information about an imgur album link.
 
 Default value
 
-    ^ {%if section %} [{{section}}] {% endif -%}{%- if title -%} {{title}} :: {% endif %}{{image_count}} images :: {{view_count}} views :: {%if nsfw == None %}not sure if safe for work{% elif nsfw == True %}not safe for work!{% else %}safe for work{% endif %}
+`^ {%if section %} [{{section}}] {% endif -%}{%- if title -%} {{title}} :: {% endif %}{{image_count}} images :: {{view_count}} views :: {%if nsfw == None %}not sure if safe for work{% elif nsfw == True %}not safe for work!{% else %}safe for work{% endif %}`
 
 Example output:
     
-    ^ [compsci] Regex Fractals :: 33 images :: 21,453 views :: safe for work
+`^ [compsci] Regex Fractals :: 33 images :: 21,453 views :: safe for work`
 
 ### Using the imgur handler
 
@@ -220,9 +220,9 @@ Example output:
 - Select "OAuth 2 authorization without a callback URL"
 - Once registered, set your client id and client secret
 
-    `!config supybot.plugins.SpiffyTitles.imgur.clientID`
+`!config supybot.plugins.SpiffyTitles.imgur.clientID`
     
-    `!config supybot.plugins.SpiffyTitles.imgur.clientSecret`
+`!config supybot.plugins.SpiffyTitles.imgur.clientSecret`
 
 ### Notes on the imgur handler
 
@@ -306,6 +306,10 @@ titles will be shown in all channels. Default value: `""`
 
 `ignoredTitlePattern` (Regexp) - If the parsed title matches this regular expression, it will be ignored.
 
+`ignoredDomainPattern` - ignore domains matching this pattern. Default value: `""`
+
+`whitelistDomainPattern` - ignore any link without a domain matching this pattern. Default value: `""`
+
 ### About white/black lists
 - Channel names must be in lowercase
 - If `channelWhitelist` and `channelBlacklist` are empty, then titles will be displayed in every channel
@@ -316,19 +320,19 @@ titles will be shown in all channels. Default value: `""`
 
 ### Show titles in every channel except #foo
 
-    !config supybot.plugins.SpiffyTitles.channelBlacklist #foo
+`!config supybot.plugins.SpiffyTitles.channelBlacklist #foo`
 
 ### Only show titles in #bar
 
-    !config supybot.plugins.SpiffyTitles.channelWhitelist #bar
+`!config supybot.plugins.SpiffyTitles.channelWhitelist #bar`
 
 ### Only show titles in #baz and #bar
 
-    !config supybot.plugins.SpiffyTitles.channelWhitelist #baz,#bar
+`!config supybot.plugins.SpiffyTitles.channelWhitelist #baz,#bar`
 
 ### Remove channel whitelist
 
-    !config supybot.plugins.SpiffyTitles.channelWhitelist ""
+`!config supybot.plugins.SpiffyTitles.channelWhitelist ""`
 
 ### Pro Tip
 
@@ -338,23 +342,23 @@ You can ignore domains that you know aren't websites. This prevents a request fr
 
 Ignore all links with the domain `buzzfeed.com`
 
-    !config supybot.plugins.SpiffyTitles.ignoredDomainPattern (buzzfeed\.com)
+`!config supybot.plugins.SpiffyTitles.ignoredDomainPattern (buzzfeed\.com)`
 
 Ignore `*.tk` and `buzzfeed.com`
 
-    !config supybot.plugins.SpiffyTitles.ignoredDomainPattern (\.tk|buzzfeed\.com)
+`!config supybot.plugins.SpiffyTitles.ignoredDomainPattern (\.tk|buzzfeed\.com)`
 
 Ignore all links except youtube, imgur, and reddit
 
-    !config supybot.plugins.SpiffyTitles.whitelistDomainPattern /(reddit\.com|youtube\.com|youtu\.be|imgur\.com)/
+`!config supybot.plugins.SpiffyTitles.whitelistDomainPattern /(reddit\.com|youtube\.com|youtu\.be|imgur\.com)/`
 
 Ignore any message that contains "[tw]".
 
-    !config supybot.plugins.SpiffyTitles.linkMessageIgnorePattern "/\[tw\]/"
+`!config supybot.plugins.SpiffyTitles.linkMessageIgnorePattern "/\[tw\]/"`
 
 Ignore any link which results in a title matching a pattern.
 
-    !config channel #example supybot.plugins.SpiffyTitles.ignoredTitlePattern m/^\^ Google$|- Google Search$|^\^ Google Maps$|^\^ Imgur: The most awesome images on the Internet$|^\^ Pastebin \| IRCCloud|^\^ Instagram|^\^ Urban Dictionary:|– Wikipedia$|- Wikipedia, the free encyclopedia$|- Wiktionary$| - RationalWiki$|^\^ Meet Google Drive|- Wikia$|^\^ Imgur$|^\^ Google Trends|^\^ reactiongifs/
+`!config channel #example supybot.plugins.SpiffyTitles.ignoredTitlePattern m/^\^ Google$|- Google Search$|^\^ Google Maps$|^\^ Imgur: The most awesome images on the Internet$|^\^ Pastebin \| IRCCloud|^\^ Instagram|^\^ Urban Dictionary:|– Wikipedia$|- Wikipedia, the free encyclopedia$|- Wiktionary$| - RationalWiki$|^\^ Meet Google Drive|- Wikia$|^\^ Imgur$|^\^ Google Trends|^\^ reactiongifs/`
 
 ### FAQ
 
