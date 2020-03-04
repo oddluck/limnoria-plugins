@@ -285,11 +285,13 @@ improving performance. Default value: `60`
 `wallClockTimeoutInSeconds` - Timeout for total elapsed time when retrieving a title. If you set this value too 
 high, the bot may time out. Default value: `8` (seconds). You must `!reload SpiffyTitles` for this setting to take effect.
 
-`channelWhitelist` - a comma separated list of channels in which titles should be displayed. If `""`,
+`channelWhitelist` - A comma separated list of channels in which titles should be displayed. If `""`,
 titles will be shown in all channels. Default value: `""`
 
-`channelBlacklist` - a comma separated list of channels in which titles should never be displayed. If `""`,
+`channelBlacklist` - A comma separated list of channels in which titles should never be displayed. If `""`,
 titles will be shown in all channels. Default value: `""`
+
+`badLinkText` - The text to return when unable to retrieve a title from a URL. Default value: `Nice link idiot.`
 
 ### About white/black lists
 - Channel names must be in lowercase
@@ -336,8 +338,6 @@ Ignore `*.tk` and `buzzfeed.com`
 Ignore all links except youtube, imgur, and reddit
 
     !config supybot.plugins.SpiffyTitles.whitelistDomainPattern /(reddit\.com|youtube\.com|youtu\.be|imgur\.com)/
-
-`userAgents` - A comma separated list of strings of user agents randomly chosen when requesting. 
 
 `urlRegularExpression` - A regular expression used to match URLs. You shouldn't need to change this.
 

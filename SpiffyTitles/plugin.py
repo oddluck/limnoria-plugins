@@ -48,6 +48,7 @@ import unicodedata
 import supybot.ircdb as ircdb
 import supybot.log as log
 import pendulum
+from fake_useragent import UserAgent
 
 try:
     from supybot.i18n import PluginInternationalization
@@ -117,7 +118,7 @@ class SpiffyTitles(callbacks.Plugin):
         self.handlers["www.twitch.tv"] = self.handler_twitch
         self.handlers["go.twitch.tv"] = self.handler_twitch
         self.handlers["clips.twitch.tv"] = self.handler_twitch
-        
+
     def add_imdb_handlers(self):
         """
         Enables meta info about IMDB links through the OMDB API
@@ -158,11 +159,7 @@ class SpiffyTitles(callbacks.Plugin):
             fields = "id,title,owner.screenname,duration,views_total"
             api_url = "https://api.dailymotion.com/video/%s?fields=%s" % (video_id, fields)
             log.debug("SpiffyTitles: looking up dailymotion info: %s", api_url)
-            agent = self.get_user_agent()
-            headers = {
-                "User-Agent": agent
-            }
-
+            headers = self.get_headers()
             request = requests.get(api_url, headers=headers)
 
             ok = request.status_code == requests.codes.ok
@@ -213,11 +210,7 @@ class SpiffyTitles(callbacks.Plugin):
             if video_id is not None:
                 api_url = "https://vimeo.com/api/v2/video/%s.json" % video_id
                 log.debug("SpiffyTitles: looking up vimeo info: %s", api_url)
-                agent = self.get_user_agent()
-                headers = {
-                    "User-Agent": agent
-                }
-
+                headers = self.get_headers()
                 request = requests.get(api_url, headers=headers)
 
                 ok = request.status_code == requests.codes.ok
@@ -279,11 +272,7 @@ class SpiffyTitles(callbacks.Plugin):
                 video_id = video_id.split("?")[0]
 
             api_url = "http://coub.com/api/v2/coubs/%s" % video_id
-            agent = self.get_user_agent()
-            headers = {
-                "User-Agent": agent
-            }
-
+            headers = self.get_headers()
             request = requests.get(api_url, headers=headers)
 
             ok = request.status_code == requests.codes.ok
@@ -491,7 +480,7 @@ class SpiffyTitles(callbacks.Plugin):
         except Exception as e:
             pass
 
-        if title is not None and title:
+        if title:
             irc.reply(title)
         else:
             irc.reply(error_message + " {}".format(err))
@@ -663,10 +652,7 @@ class SpiffyTitles(callbacks.Plugin):
             }
             encoded_options = urlencode(options)
             api_url = "https://www.googleapis.com/youtube/v3/videos?%s" % (encoded_options)
-            agent = self.get_user_agent()
-            headers = {
-                "User-Agent": agent
-            }
+            headers = self.get_headers()
 
             log.debug("SpiffyTitles: requesting %s" % (api_url))
 
@@ -886,10 +872,7 @@ class SpiffyTitles(callbacks.Plugin):
         if not match:
             self.log.debug("SpiffyTitles: twitch - no title found.")
             return self.handler_default(url, channel)
-        agent = self.get_user_agent()
-        headers = {
-            "Client-ID": twitch_client_id
-        }
+        headers = self.get_headers()
         self.log.debug("SpiffyTitles: twitch - requesting %s" % (data_url))
         request = requests.get(data_url, timeout=10, headers=headers)
         ok = request.status_code == requests.codes.ok
@@ -1212,11 +1195,7 @@ class SpiffyTitles(callbacks.Plugin):
         api_params.update(title_param)
         param_string = "&".join("%s=%s" % (key, val) for (key, val) in api_params.items())
         api_url = "https://%s/w/api.php?%s" % (info.netloc, param_string)
-
-        agent = self.get_user_agent()
-        headers = {
-            "User-Agent": agent
-        }
+        headers = self.get_headers()
         extract = ""
 
         self.log.debug("SpiffyTitles: requesting %s" % (api_url))
@@ -1292,10 +1271,7 @@ class SpiffyTitles(callbacks.Plugin):
             self.log.debug("SpiffyTitles: no title found.")
             return self.handler_default(url, channel)
 
-        agent = self.get_user_agent()
-        headers = {
-            "User-Agent": agent
-        }
+        headers = self.get_headers()
 
         self.log.debug("SpiffyTitles: requesting %s" % (data_url))
 
@@ -1621,14 +1597,30 @@ class SpiffyTitles(callbacks.Plugin):
                     else:
                         log.debug("SpiffyTitles: unacceptable mime type %s for url %s" %
                                   (content_type, url))
+                        suffixes = ['B', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB']
+                        def humansize(nbytes):
+                            i = 0
+                            while nbytes >= 1024 and i < len(suffixes)-1:
+                                nbytes /= 1024.
+                                i += 1
+                            f = ('%.2f' % nbytes).rstrip('0').rstrip('.')
+                            return '%s %s' % (f, suffixes[i])
+                        size = request.headers.get("content-length")
+                        if size:
+                            size = humansize(int(size))
+                            text = "[{0}] ({1})".format(content_type, size)
+                        else:
+                            text = "[{0}]".format(content_type)
+                        text = "<html><head><title>{0}</title></head><body></body></html>".format(text)
+                        return (text, is_redirect)
                 else:
                     log.error("SpiffyTitles HTTP response code %s" % (request.status_code,))
-                                                                           #request.content))
-                    return ('<html><head><title>Nice link idiot.</title></head><body></body></html>', is_redirect)
+                    text = self.registryValue("badLinkText")
+                    text = "<html><head><title>{0}</title></head><body></body></html>".format(text)
+                    return (text, is_redirect)
 
         except timeout_decorator.TimeoutError:
             log.error("SpiffyTitles: wall timeout!")
-
             self.get_source_by_url(url, retries + 1)
         except requests.exceptions.MissingSchema as e:
             url_wschema = "http://%s" % (url)
@@ -1640,11 +1632,9 @@ class SpiffyTitles(callbacks.Plugin):
                 return self.get_source_by_url(url_wschema)
         except requests.exceptions.Timeout as e:
             log.error("SpiffyTitles Timeout: %s" % (str(e)))
-
             self.get_source_by_url(url, retries + 1)
         except requests.exceptions.ConnectionError as e:
             log.error("SpiffyTitles ConnectionError: %s" % (str(e)))
-
             self.get_source_by_url(url, retries + 1)
         except requests.exceptions.HTTPError as e:
             log.error("SpiffyTitles HTTPError: %s" % (str(e)))
@@ -1674,9 +1664,8 @@ class SpiffyTitles(callbacks.Plugin):
         """
         Returns a random user agent from the ones available
         """
-        agents = self.registryValue("userAgents")
-
-        return random.choice(agents)
+        ua = UserAgent(fallback="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:74.0) Gecko/20100101 Firefox/74.0")
+        return str(ua.random)
 
     def message_matches_ignore_pattern(self, input):
         """

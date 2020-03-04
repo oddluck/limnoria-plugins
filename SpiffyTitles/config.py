@@ -69,8 +69,8 @@ conf.registerChannelValue(SpiffyTitles, 'useBold',
      registry.Boolean(False, _("""Use bold in titles""")))
 
 # User agents
-conf.registerGlobalValue(SpiffyTitles, 'userAgents',
-     registry.CommaSeparatedListOfStrings(["Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.60 Safari/537.36", "Mozilla/5.0 (Windows NT 6.3; rv:36.0) Gecko/20100101 Firefox/36.0", "Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; AS; rv:11.0) like Gecko"], _("""Reported user agent when fetching links""")))
+conf.registerGlobalValue(SpiffyTitles, 'badLinkText',
+     registry.String("Nice link idiot.", _("""Title to return for bad/unsnarfable links.""")))
 
 # Mime Types
 conf.registerGlobalValue(SpiffyTitles, 'mimeTypes',
