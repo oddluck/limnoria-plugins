@@ -84,19 +84,26 @@ class Corona(callbacks.Plugin):
                     recovered += r.get('Recovered')
                     local_ratio_dead = "{0:.00%}".format(deaths/confirmed)
                 elif state:
-                    state = state.split(',', 1)
-                    if search.lower() == state[0].lower().strip():
-                        location = state[0].strip()
+                    if search.lower() == state.lower():
+                        location = state
                         confirmed += r.get('Confirmed')
                         deaths += r.get('Deaths')
                         recovered += r.get('Recovered')
                         local_ratio_dead = "{0:.00%}".format(deaths/confirmed)
-                    elif len(state) > 1 and search.lower() == state[1].lower().strip():
-                        location = state[1].strip()
-                        confirmed += r.get('Confirmed')
-                        deaths += r.get('Deaths')
-                        recovered += r.get('Recovered')
-                        local_ratio_dead = "{0:.00%}".format(deaths/confirmed)
+                    else:
+                        state = state.split(',', 1)
+                        if search.lower() == state[0].lower().strip():
+                            location = r.get('Province_State')
+                            confirmed += r.get('Confirmed')
+                            deaths += r.get('Deaths')
+                            recovered += r.get('Recovered')
+                            local_ratio_dead = "{0:.00%}".format(deaths/confirmed)
+                        elif len(state) > 1 and search.lower() == state[1].lower().strip():
+                            location = state[1].strip()
+                            confirmed += r.get('Confirmed')
+                            deaths += r.get('Deaths')
+                            recovered += r.get('Recovered')
+                            local_ratio_dead = "{0:.00%}".format(deaths/confirmed)
 
             total_confirmed += r.get('Confirmed')
             total_deaths += r.get('Deaths')
