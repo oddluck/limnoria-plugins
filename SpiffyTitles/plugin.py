@@ -872,6 +872,7 @@ class SpiffyTitles(callbacks.Plugin):
             self.log.debug("SpiffyTitles: twitch - no title found.")
             return self.handler_default(url, channel)
         headers = self.get_headers()
+        headers['Client-ID'] = twitch_client_id
         self.log.debug("SpiffyTitles: twitch - requesting %s" % (data_url))
         request = requests.get(data_url, timeout=10, headers=headers)
         ok = request.status_code == requests.codes.ok
