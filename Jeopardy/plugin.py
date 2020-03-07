@@ -72,8 +72,6 @@ class Jeopardy(callbacks.Plugin):
         channel = msg.channel
         if not irc.isChannel(channel):
             return
-        if callbacks.addressed(irc.nick, msg):
-            return
         if self.registryValue('enabled', channel) and channel in self.games:
             self.games[channel].answer(msg)
 
@@ -278,7 +276,8 @@ class Jeopardy(callbacks.Plugin):
         def normalize(self, q):
             q = BeautifulSoup(q)
             q = fix_text(q.text).replace(r"\'", "'").replace(r'\"', '"')
-            q = re.sub('([,;:.!?)])([a-zA-Z]|\()(?![.\'])', '\g<1> \g<2>', q)
+            q = re.sub('([.!?])([A-Z]|\()(?![.\'])', '\g<1> \g<2>', q)
+            q = re.sub('([,;:)])([a-zA-Z]|\()', '\g<1> \g<2>', q)
             q = " ".join(q.split())
             return q
 
