@@ -38,6 +38,7 @@ import supybot.log as log
 import requests
 import json
 from bs4 import BeautifulSoup
+import random
 
 try:
     from supybot.i18n import PluginInternationalization

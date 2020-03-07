@@ -38,6 +38,7 @@ from bs4 import BeautifulSoup
 import requests
 import re
 import pylyrics3
+import random
 
 try:
     from supybot.i18n import PluginInternationalization
@@ -62,6 +63,7 @@ class Lyrics(callbacks.Plugin):
             header = {'User-Agent': ua}
             data = requests.get(searchurl, headers=header, timeout=10)
             data.raise_for_status()
+            log.debug(data.content.decode())
             soup = BeautifulSoup(data.content)
             elements = soup.select('.r a')
             title = soup.find("h3").getText().replace(":", " - ").split('|')[0]

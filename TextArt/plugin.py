@@ -43,7 +43,7 @@ import sys, math
 import re
 import pexpect
 import time
-import random as random
+import random
 import pyimgur
 from bs4 import BeautifulSoup
 import json
