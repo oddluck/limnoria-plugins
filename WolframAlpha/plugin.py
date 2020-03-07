@@ -40,6 +40,7 @@ from supybot.commands import *
 import supybot.plugins as plugins
 import supybot.ircutils as ircutils
 import supybot.callbacks as callbacks
+import re
 try:
     from supybot.i18n import PluginInternationalization
     _ = PluginInternationalization('WolframAlpha')
@@ -182,27 +183,27 @@ class WolframAlpha(callbacks.Plugin):
             answer = output.get(outputlist[1])  # get second (answer).
             # output time. display with color or not?
             if self.registryValue('disableANSI'):
-                irc.reply("{0} :: {1}".format("".join([i for i in question]), "".join([i for i in answer])))
+                irc.reply(re.sub("\s+", " ", "{0} :: {1}".format("".join([i for i in question]), " | ".join([i for i in answer]))).replace(": | ", ": "))
             else:  # with ansi.
-                irc.reply("{0} :: {1}".format(self._bold("".join([i for i in question])), "".join([i for i in answer])))
+                irc.reply(re.sub("\s+", " ", "{0} :: {1}".format(self._bold("".join([i for i in question])), " | ".join([i for i in answer]))).replace(": | ", ": "))
         elif args['fulloutput']: # show everything. no limits.
             # grab all values, sorted via the position number. output one per line.
             for (k, v) in sorted(outputlist.items()):
                 itemout = output.get(v)  # items out will be a list of items.
                 # now decide to output with ANSI or not.
                 if self.registryValue('disableANSI'):
-                    irc.reply("{0} :: {1}".format(v, "".join(itemout)))
+                    irc.reply(re.sub("\s+", " ", "{0} :: {1}".format(v, " | ".join(itemout))).replace(": | ", ": "))
                 else:  # with ansi.
-                    irc.reply("{0} :: {1}".format(self._red(v), "".join(itemout)))
+                    irc.reply(re.sub("\s+", " ", "{0} :: {1}".format(self._red(v), " | ".join(itemout))).replace(": | ", ": "))
         else:  # regular output, dictated by --lines or maxoutput.
             for q, k in enumerate(sorted(outputlist.keys())):
                 if q < args['maxoutput']:  # if less than max.
                     itemout = output.get(outputlist[k])  # have the key, get the value, use for output.
                     if itemout:
                         if self.registryValue('disableANSI'):  # display w/o formatting.
-                            irc.reply("{0} :: {1}".format(outputlist[k], "".join(itemout)))
+                            irc.reply(re.sub("\s+", " ", "{0} :: {1}".format(outputlist[k], " | ".join(itemout))).replace(": | ", ": "))
                         else:  # display w/formatting.
-                            irc.reply("{0} :: {1}".format(self._red(outputlist[k]), "".join(itemout)))
+                            irc.reply(re.sub("\s+", " ", "{0} :: {1}".format(self._red(outputlist[k]), " | ".join(itemout))).replace(": | ", ": "))
 
     wolframalpha = wrap(wolframalpha, [getopts({'num':('int'),
                                                 'reinterpret':'',

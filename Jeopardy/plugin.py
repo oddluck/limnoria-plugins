@@ -39,6 +39,7 @@ import os
 import random
 import re
 import requests
+from unidecode import unidecode
 import json
 import string
 import supybot.callbacks as callbacks
@@ -277,6 +278,7 @@ class Jeopardy(callbacks.Plugin):
         def normalize(self, q):
             q = re.sub('<[^<]+?>', '', fix_text(q, normalization='NFKC')).replace(r"\'", "'").replace(r'\"', '"')
             q = re.sub('([,;:.!?)])([a-zA-Z]|\()(?![.\'])', '\g<1> \g<2>', q)
+            q = unidecode(q)
             q = " ".join(q.split())
             return q
 
