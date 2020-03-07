@@ -276,14 +276,15 @@ class Jeopardy(callbacks.Plugin):
 
 
         def normalize(self, q):
-            q = re.sub('<[^<]+?>', '', fix_text(q, normalization='NFKC')).replace(r"\'", "'").replace(r'\"', '"')
+            q = BeautifulSoup(q)
+            q = fix_text(q.text).replace(r"\'", "'").replace(r'\"', '"')
             q = re.sub('([,;:.!?)])([a-zA-Z]|\()(?![.\'])', '\g<1> \g<2>', q)
-            q = unidecode(q)
             q = " ".join(q.split())
             return q
 
 
         def clean(self, text):
+            text = unidecode(text)
             if len(text) > 2:
                 text = re.sub('[^a-zA-Z0-9 ]+', '', text)
                 text = re.sub('^a |^an |^the |^or ', '', text).replace(' ', '')
