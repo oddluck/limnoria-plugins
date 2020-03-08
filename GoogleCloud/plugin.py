@@ -33,6 +33,7 @@ from supybot.commands import *
 import supybot.plugins as plugins
 import supybot.ircutils as ircutils
 import supybot.callbacks as callbacks
+import supybot.log as log
 import supybot.conf as conf
 import requests
 import json
@@ -47,6 +48,9 @@ class GoogleCloud(callbacks.Plugin):
         """
         optlist = dict(optlist)
         key = self.registryValue('translate.key')
+        if not key:
+            irc.reply("Error: No API key has been set.")
+            return
         if 'from' in optlist:
             source = optlist.get('from')
         else:
@@ -60,8 +64,14 @@ class GoogleCloud(callbacks.Plugin):
         else:
             url = 'https://translation.googleapis.com/language/translate/v2?q={0}&target={1}&key={2}'.format(text, target, key)
         response = requests.get(url, timeout=10)
+        if not response.status_code == 200:
+            log.debug("GoogleCloud: Error accessing {0}: {1}".format(url, response.content.decode()))
+            return
         result = json.loads(response.content)
-        if result['data']['translations'][0].get('translatedText'):
+        if not response:
+            log.debug("GoogleCloud: Error opening JSON response")
+            return
+        if result['data']['translations'][0].get('detectedSourceLanguage'):
             reply = "{0} [{1}~>{2}]".format(result['data']['translations'][0]['translatedText'], result['data']['translations'][0]['detectedSourceLanguage'], target)
         else:
             reply = "{0} [{1}~>{2}]".format(result['data']['translations'][0]['translatedText'], source, target)
