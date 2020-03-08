@@ -68,7 +68,7 @@ class GoogleCloud(callbacks.Plugin):
             log.debug("GoogleCloud: Error accessing {0}: {1}".format(url, response.content.decode()))
             return
         result = json.loads(response.content)
-        if not response:
+        if not result.get('data'):
             log.debug("GoogleCloud: Error opening JSON response")
             return
         if result['data']['translations'][0].get('detectedSourceLanguage'):
