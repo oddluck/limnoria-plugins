@@ -1,5 +1,6 @@
 ###
 # Copyright (c) 2020, Hoaas
+# Copyright (c) 2020, oddluck <oddluck@riseup.net>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -40,7 +41,7 @@ import imp
 __version__ = "2020.02.24+git"
 
 # XXX Replace this with an appropriate author or supybot.Author instance.
-__author__ = supybot.Author('Hoaas', 'Hoaas', '')
+__author__ = supybot.Author('oddluck', 'oddluck', 'oddluck@riseup.net')
 __maintainer__ = {}
 
 # This is a dictionary mapping supybot.Author instances to lists of

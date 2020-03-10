@@ -1,5 +1,6 @@
 ###
 # Copyright (c) 2020, Hoaas
+# Copyright (c) 2020, oddluck <oddluck@riseup.net>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -50,4 +51,7 @@ def configure(advanced):
 Corona = conf.registerPlugin('Corona')
 
 conf.registerChannelValue(Corona, 'template',
-     registry.String("\x02$location: \x0307$confirmed\x03 infected, \x0304$dead\x03 dead ($ratio), \x0309$recovered\x03 recovered.", _("""Template for replies""")))
+    registry.String("\x02$location: \x0307$confirmed\x03 infected, \x0304$dead\x03 dead ($ratio), \x0309$recovered\x03 recovered.", _("""Template for replies""")))
+
+conf.registerChannelValue(Corona, 'countryFirst',
+    registry.Boolean(False, _("Give preference to country name abbreviations over USA state name abbreviations")))
