@@ -42,8 +42,7 @@ except ImportError:
     # without the i18n module
     _ = lambda x: x
 
-
-CC = {
+countries = {
     "AF": "AFGHANISTAN",
     "AX": "ÅLAND ISLANDS",
     "AL": "ALBANIA",
@@ -91,7 +90,7 @@ CC = {
     "CL": "CHILE",
     "CN": "CHINA",
     "CX": "CHRISTMAS ISLAND",
-    "CC": "COCOS (KEELING) ISLANDS",
+    "CC": "COCOS ISLANDS",
     "CO": "COLOMBIA",
     "KM": "COMOROS",
     "CG": "CONGO",
@@ -232,7 +231,7 @@ CC = {
     "SH": "SAINT HELENA",
     "KN": "SAINT KITTS AND NEVIS",
     "LC": "SAINT LUCIA",
-    "MF": "SAINT MARTIN (FRENCH PART)",
+    "MF": "SAINT MARTIN",
     "PM": "SAINT PIERRE AND MIQUELON",
     "VC": "SAINT VINCENT AND THE GRENADINES",
     "WS": "SAMOA",
@@ -296,109 +295,126 @@ CC = {
 }
 
 states = {
-        'AK': 'Alaska',
-        'AL': 'Alabama',
-        'AR': 'Arkansas',
-        'AS': 'American Samoa',
-        'AZ': 'Arizona',
-        'CA': 'California',
-        'CO': 'Colorado',
-        'CT': 'Connecticut',
-        'DC': 'District of Columbia',
-        'DE': 'Delaware',
-        'FL': 'Florida',
-        'GA': 'Georgia',
-        'GU': 'Guam',
-        'HI': 'Hawaii',
-        'IA': 'Iowa',
-        'ID': 'Idaho',
-        'IL': 'Illinois',
-        'IN': 'Indiana',
-        'KS': 'Kansas',
-        'KY': 'Kentucky',
-        'LA': 'Louisiana',
-        'MA': 'Massachusetts',
-        'MD': 'Maryland',
-        'ME': 'Maine',
-        'MI': 'Michigan',
-        'MN': 'Minnesota',
-        'MO': 'Missouri',
-        'MP': 'Northern Mariana Islands',
-        'MS': 'Mississippi',
-        'MT': 'Montana',
-        'NA': 'National',
-        'NC': 'North Carolina',
-        'ND': 'North Dakota',
-        'NE': 'Nebraska',
-        'NH': 'New Hampshire',
-        'NJ': 'New Jersey',
-        'NM': 'New Mexico',
-        'NV': 'Nevada',
-        'NY': 'New York',
-        'OH': 'Ohio',
-        'OK': 'Oklahoma',
-        'OR': 'Oregon',
-        'PA': 'Pennsylvania',
-        'PR': 'Puerto Rico',
-        'RI': 'Rhode Island',
-        'SC': 'South Carolina',
-        'SD': 'South Dakota',
-        'TN': 'Tennessee',
-        'TX': 'Texas',
-        'UT': 'Utah',
-        'VA': 'Virginia',
-        'VI': 'Virgin Islands',
-        'VT': 'Vermont',
-        'WA': 'Washington',
-        'WI': 'Wisconsin',
-        'WV': 'West Virginia',
-        'WY': 'Wyoming'
+    'AK': 'ALASKA',
+    'AL': 'ALABAMA',
+    'AR': 'ARKANSAS',
+    'AS': 'AMERICAN SAMOA',
+    'AZ': 'ARIZONA',
+    'CA': 'CALIFORNIA',
+    'CO': 'COLORADO',
+    'CT': 'CONNECTICUT',
+    'DC': 'DISTRICT OF COLUMBIA',
+    'DE': 'DELAWARE',
+    'FL': 'FLORIDA',
+    'GA': 'GEORGIA',
+    'GU': 'GUAM',
+    'HI': 'HAWAII',
+    'IA': 'IOWA',
+    'ID': 'IDAHO',
+    'IL': 'ILLINOIS',
+    'IN': 'INDIANA',
+    'KS': 'KANSAS',
+    'KY': 'KENTUCKY',
+    'LA': 'LOUISIANA',
+    'MA': 'MASSACHUSETTS',
+    'MD': 'MARYLAND',
+    'ME': 'MAINE',
+    'MI': 'MICHIGAN',
+    'MN': 'MINNESOTA',
+    'MO': 'MISSOURI',
+    'MP': 'NORTHERN MARIANA ISLANDS',
+    'MS': 'MISSISSIPPI',
+    'MT': 'MONTANA',
+    'NA': 'NATIONAL',
+    'NC': 'NORTH CAROLINA',
+    'ND': 'NORTH DAKOTA',
+    'NE': 'NEBRASKA',
+    'NH': 'NEW HAMPSHIRE',
+    'NJ': 'NEW JERSEY',
+    'NM': 'NEW MEXICO',
+    'NV': 'NEVADA',
+    'NY': 'NEW YORK',
+    'OH': 'OHIO',
+    'OK': 'OKLAHOMA',
+    'OR': 'OREGON',
+    'PA': 'PENNSYLVANIA',
+    'PR': 'PUERTO RICO',
+    'RI': 'RHODE ISLAND',
+    'SC': 'SOUTH CAROLINA',
+    'SD': 'SOUTH DAKOTA',
+    'TN': 'TENNESSEE',
+    'TX': 'TEXAS',
+    'UT': 'UTAH',
+    'VA': 'VIRGINIA',
+    'VI': 'VIRGIN ISLANDS',
+    'VT': 'VERMONT',
+    'WA': 'WASHINGTON',
+    'WI': 'WISCONSIN',
+    'WV': 'WEST VIRGINIA',
+    'WY': 'WYOMING'
 }
 
 class Corona(callbacks.Plugin):
     """Displays current stats of the Coronavirus outbreak"""
     threaded = True
 
-    @wrap([optional('text')])
-    def corona(self, irc, msg, args, search):
-        """<area>
-        Displays Coronavirus stats
-        """
-        git = api = False
+    def getCSV(self):
+        data = None
+        try:
+            day = date.today().strftime('%m-%d-%Y')
+            url = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/{0}.csv".format(day)
+            r = requests.get(url, timeout=10)
+            r.raise_for_status()
+        except (requests.exceptions.RequestException, requests.exceptions.HTTPError) as e:
+            log.debug('Corona: error retrieving data for today: {0}'.format(e))
+            try:
+                day = date.today() - timedelta(days=1)
+                day = day.strftime('%m-%d-%Y')
+                url = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/{0}.csv".format(day)
+                r = requests.get(url, timeout=10)
+                r.raise_for_status()
+            except (requests.exceptions.RequestException, requests.exceptions.HTTPError) as e:
+                log.debug('Corona: error retrieving data for yesterday: {0}'.format(e))
+            else:
+                data = csv.DictReader(r.iter_lines(decode_unicode = True))
+        else:
+            data = csv.DictReader(r.iter_lines(decode_unicode = True))
+        return data
+
+    def getAPI(self):
+        data = None
         url = "https://services1.arcgis.com/0MSEUqKaxRlEPj5g/arcgis/rest/services/ncov_cases/FeatureServer/1/query?f=json&where=Confirmed>0&outFields=*"
         try:
-            data = requests.get(url, timeout=10)
-            data.raise_for_status()
+            r = requests.get(url, timeout=10)
+            r.raise_for_status()
         except (requests.exceptions.RequestException, requests.exceptions.HTTPError) as e:
             log.debug('Corona: error retrieving data from API: {0}'.format(e))
-            try:
-                day = date.today().strftime('%m-%d-%Y')
-                url = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/{0}.csv".format(day)
-                data = requests.get(url, timeout=10)
-                data.raise_for_status()
-            except (requests.exceptions.RequestException, requests.exceptions.HTTPError) as e:
-                log.debug('Corona: error retrieving data for today: {0}'.format(e))
-                try:
-                    day = date.today() - timedelta(days=1)
-                    day = day.strftime('%m-%d-%Y')
-                    url = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/{0}.csv".format(day)
-                    data = requests.get(url, timeout=10)
-                except (requests.exceptions.RequestException, requests.exceptions.HTTPError) as e:
-                    log.debug('Corona: error retrieving data for yesterday: {0}'.format(e))
-                    return
-                else:
-                    git = True
-                    data = csv.DictReader(data.iter_lines(decode_unicode = True))
-            else:
-                git = True
-                data = csv.DictReader(data.iter_lines(decode_unicode = True))
         else:
-            api = True
-            data = json.loads(data.content.decode())
-            data = data.get('features')
+            r = json.loads(r.content.decode())
+            data = r.get('features')
             if not data:
                 log.debug("Corona: Error retrieving features data from API.")
-                return
+        return data
+
+    @wrap([optional('text')])
+    def corona(self, irc, msg, args, search):
+        """[region]
+        Displays Coronavirus statistics. Add a region name to search for country/state
+        specific results. Accepts full country/state names or ISO 3166-1 alpha-2 (two
+        character) country abbreviations and US Postal (two character) state abbreviations.
+        Invalid region names or search terms without data return global results.
+        """
+        git = api = False
+        data = self.getAPI()
+        if data:
+            api = True
+        else:
+            data = self.getCSV()
+            if data:
+                git = True
+        if not data:
+            irc.reply("Error. Unable to access database.")
+            return
         total_confirmed = total_deaths = total_recovered = 0
         confirmed = deaths = recovered = 0
         location = 'Global'
@@ -414,10 +430,10 @@ class Corona(callbacks.Plugin):
                 else:
                     region = r.get('Country/Region')
                     state = r.get('Province/State')
-                if len(search) == 2 and search.lower() != 'us' and search.lower() != 'uk':
+                if len(search) == 2:
                     if self.registryValue("countryFirst", msg.channel):
                         try:
-                            search = CC[search.upper()]
+                            search = countries[search.upper()]
                         except KeyError:
                             try:
                                 search = states[search.upper()]
@@ -428,12 +444,10 @@ class Corona(callbacks.Plugin):
                             search = states[search.upper()]
                         except KeyError:
                             try:
-                                search = CC[search.upper()]
+                                search = countries[search.upper()]
                             except KeyError:
                                 pass
-                if 'china' in search.lower():
-                    search = 'mainland china'
-                elif search.lower() == 'usa' or 'united states' in search.lower():
+                if search.lower() == 'usa' or 'united states' in search.lower():
                     search = 'us'
                 elif 'united kingdom' in search.lower():
                     search = 'uk'
@@ -469,4 +483,3 @@ class Corona(callbacks.Plugin):
         irc.reply(template)
 
 Class = Corona
-
