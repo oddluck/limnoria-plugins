@@ -405,6 +405,19 @@ class Corona(callbacks.Plugin):
                 log.debug("Corona: Error retrieving features data from API.")
         return data
 
+    def timeCreated(self, time):
+        time = datetime.datetime.fromtimestamp(time/1000.0)
+        d = datetime.datetime.now() - time
+        if d.days:
+            rel_time = "{:1d} days ago".format(abs(d.days))
+        elif d.seconds > 3600:
+            rel_time = "{:.1f} hours ago".format(round((abs(d.seconds) / 3600),1))
+        elif 60 <= d.seconds < 3600:
+            rel_time = "{:.1f} minutes ago".format(round((abs(d.seconds) / 60),1))
+        else:
+            rel_time = "%ss ago" % (abs(d.seconds))
+        return rel_time
+
     @wrap([optional('text')])
     def corona(self, irc, msg, args, search):
         """[region]
@@ -456,8 +469,8 @@ class Corona(callbacks.Plugin):
         if not data:
             irc.reply("Error. Unable to access database.")
             return
-        total_confirmed = total_deaths = total_recovered = 0
-        confirmed = deaths = recovered = 0
+        total_confirmed = total_deaths = total_recovered = last_update = 0
+        confirmed = deaths = recovered = updated = 0
         location = 'Global'
         for region in data:
             if api:
@@ -495,30 +508,44 @@ class Corona(callbacks.Plugin):
                     confirmed += int(r.get('Confirmed'))
                     deaths += int(r.get('Deaths'))
                     recovered += int(r.get('Recovered'))
+                    time = int(r.get('Last_Update'))
+                    if time > updated:
+                        updated = time
+
                     local_ratio_dead = "{0:.1%}".format(deaths/confirmed)
                 elif state and search.lower() == state.lower():
                     location = state
                     confirmed += int(r.get('Confirmed'))
                     deaths += int(r.get('Deaths'))
                     recovered += int(r.get('Recovered'))
+                    time = int(r.get('Last_Update'))
+                    if time > updated:
+                        updated = time
                     local_ratio_dead = "{0:.1%}".format(deaths/confirmed)
             total_confirmed += int(r.get('Confirmed'))
             total_deaths += int(r.get('Deaths'))
             total_recovered += int(r.get('Recovered'))
+            time = int(r.get('Last_Update'))
+            if time > last_update:
+                last_update = time
         ratio_dead = "{0:.1%}".format(total_deaths/total_confirmed)
         template = self.registryValue("template", msg.channel)
         if location == 'Global':
+            last_update = self.timeCreated(last_update)
             template = template.replace("$location", location)
             template = template.replace("$confirmed", str(total_confirmed))
             template = template.replace("$dead", str(total_deaths))
             template = template.replace("$recovered", str(total_recovered))
             template = template.replace("$ratio", ratio_dead)
+            template = template.replace("$updated", last_update)
         else:
+            updated = self.timeCreated(updated)
             template = template.replace("$location", location)
             template = template.replace("$confirmed", str(confirmed))
             template = template.replace("$dead", str(deaths))
             template = template.replace("$recovered", str(recovered))
             template = template.replace("$ratio", local_ratio_dead)
+            template = template.replace("$updated", updated)
         irc.reply(template)
 
 Class = Corona

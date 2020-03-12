@@ -4,7 +4,7 @@ Return the latest Coronavirus (COVID-19) statistics globally or by country/state
 
 `config plugins.corona.template` - Configure the template for replies
 
-Template default: `\x02$location: \x0307$confirmed\x03 infected, \x0304$dead\x03 dead ($ratio), \x0309$recovered\x03 recovered.`
+Template default: `\x02$location: \x0307$confirmed\x03 infected, \x0304$dead\x03 dead ($ratio), \x0309$recovered\x03 recovered. (Last update: $updated)`
 
 `config plugins.corona.countryFirst` - Country name abbreviations take precedence over USA state name abbreviations when `True`
 
