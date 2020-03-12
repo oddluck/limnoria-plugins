@@ -137,7 +137,7 @@ class NBA(callbacks.Plugin):
         if date:
             date = pendulum.from_format(date, 'YYYYMMDD').to_date_string()
         else:
-            date = pendulum.now().to_date_string()
+            date = pendulum.now('US/Pacific').to_date_string()
 
         irc.reply("{0}: {1}".format(date, games_string))
 
