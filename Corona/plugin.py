@@ -396,8 +396,11 @@ class Corona(callbacks.Plugin):
         except (requests.exceptions.RequestException, requests.exceptions.HTTPError) as e:
             log.debug('Corona: error retrieving data from API: {0}'.format(e))
         else:
-            r = json.loads(r.content.decode())
-            data = r.get('features')
+            try:
+                r = json.loads(r.content.decode())
+                data = r.get('features')
+            except:
+                data = None
             if not data:
                 log.debug("Corona: Error retrieving features data from API.")
         return data
