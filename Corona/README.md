@@ -9,3 +9,5 @@ Template default: `\x02$location: \x0307$confirmed\x03 infected, \x0304$dead\x03
 `config plugins.corona.countryFirst` - Country name abbreviations take precedence over USA state name abbreviations when `True`
 
 countryFirst default: `False`
+
+`config plugins.corona.cacheLifetime` - Time in seconds to cache API results. Default: `600`

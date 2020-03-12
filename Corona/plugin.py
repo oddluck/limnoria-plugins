@@ -31,7 +31,7 @@
 import json
 import requests
 import csv
-from datetime import date, timedelta
+import datetime
 from supybot import utils, plugins, ircutils, callbacks, log
 from supybot.commands import *
 try:
@@ -359,17 +359,22 @@ class Corona(callbacks.Plugin):
     """Displays current stats of the Coronavirus outbreak"""
     threaded = True
 
+    def __init__(self, irc):
+        self.__parent = super(Corona, self)
+        self.__parent.__init__(irc)
+        self.cache = {}
+
     def getCSV(self):
         data = None
         try:
-            day = date.today().strftime('%m-%d-%Y')
+            day = datetime.date.today().strftime('%m-%d-%Y')
             url = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/{0}.csv".format(day)
             r = requests.get(url, timeout=10)
             r.raise_for_status()
         except (requests.exceptions.RequestException, requests.exceptions.HTTPError) as e:
             log.debug('Corona: error retrieving data for today: {0}'.format(e))
             try:
-                day = date.today() - timedelta(days=1)
+                day = datetime.date.today() - datetime.timedelta(days=1)
                 day = day.strftime('%m-%d-%Y')
                 url = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/{0}.csv".format(day)
                 r = requests.get(url, timeout=10)
@@ -406,13 +411,45 @@ class Corona(callbacks.Plugin):
         Invalid region names or search terms without data return global results.
         """
         git = api = False
-        data = self.getAPI()
-        if data:
-            api = True
+        data = None
+        if len(self.cache) > 0:
+            cacheLifetime = self.registryValue("cacheLifetime")
+            now = datetime.datetime.now()
+            seconds = (now - self.cache['timestamp']).total_seconds()
+            if seconds < cacheLifetime:
+                data = self.cache['data']
+                api = True
+                log.debug("Corona: returning cached API data")
+            else:
+                data = self.getAPI()
+                if data:
+                    api = True
+                    self.cache['timestamp'] = datetime.datetime.now()
+                    self.cache['data'] = data
+                    log.debug("Corona: caching API data")
+                else:
+                    now = datetime.datetime.now()
+                    midnight = now.replace(hour=0, minute=0, second=0, microsecond=0)
+                    seconds = (now - midnight).seconds
+                    if seconds > (now - self.cache['timestamp']).total_seconds():
+                        data = self.cache['data']
+                        api = True
+                        log.debug("Corona: error accessing API, returning cached API data")
+                    else:
+                        data = self.getCSV()
+                        if data:
+                            git = True
         else:
-            data = self.getCSV()
+            data = self.getAPI()
             if data:
-                git = True
+                api = True
+                self.cache['timestamp'] = datetime.datetime.now()
+                self.cache['data'] = data
+                log.debug("Corona: caching API data")
+            else:
+                data = self.getCSV()
+                if data:
+                    git = True
         if not data:
             irc.reply("Error. Unable to access database.")
             return

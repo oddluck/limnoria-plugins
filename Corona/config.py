@@ -55,3 +55,6 @@ conf.registerChannelValue(Corona, 'template',
 
 conf.registerChannelValue(Corona, 'countryFirst',
     registry.Boolean(False, _("Give preference to country name abbreviations over USA state name abbreviations")))
+
+conf.registerGlobalValue(Corona, 'cacheLifetime',
+    registry.Integer(600, _("Amount of time in seconds to cache API results")))
