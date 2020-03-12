@@ -350,7 +350,7 @@ class TimeBomb(callbacks.Plugin):
         eligibleNicks = []
 
         for victim in nicks:
-            if not (victim == self.lastBomb or victim.casefold() in self.registryValue('randomExclusions', channel) or victim.casefold() in self.registryValue('exclusions', channel)) and self._canBomb(irc, channel, msg.nick, victim, False):
+            if not (victim == self.lastBomb or victim.lower() in self.registryValue('randomExclusions', channel) or victim.lower() in self.registryValue('exclusions', channel)) and self._canBomb(irc, channel, msg.nick, victim, False):
                 eligibleNicks.append(victim)
 
         if len(eligibleNicks) == 0:
@@ -398,19 +398,20 @@ class TimeBomb(callbacks.Plugin):
         if victim.lower() == irc.nick.lower() and not self.registryValue('allowSelfBombs', channel):
             irc.reply('You really expect me to bomb myself? Stuffing explosives down my pants isn\'t exactly my idea of fun.')
             return
-        victim = victim.casefold()
+        victim = victim.lower()
         found = False
 
         for nick in list(irc.state.channels[channel].users):
-            if victim == nick.casefold():
+            if victim == nick.lower():
                 victim = nick
                 found = True
         if not found:
             irc.reply('Error: nick not found.')
             return
-        if victim.casefold() in self.registryValue('exclusions', channel):
-            irc.reply('Error: that nick can\'t be bombed.')
-            return
+        for nick in self.registryValue('exclusions', channel):
+            if nick.lower() == victim.lower():
+                irc.reply('Error: that nick can\'t be bombed.')
+                return
 
         # not (victim == msg.nick and victim == 'mniip') and
         if not ircdb.checkCapability(msg.prefix, 'admin') and not self._canBomb(irc, channel, msg.nick, victim, True):
