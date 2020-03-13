@@ -508,24 +508,35 @@ class Corona(callbacks.Plugin):
                     confirmed += int(r.get('Confirmed'))
                     deaths += int(r.get('Deaths'))
                     recovered += int(r.get('Recovered'))
-                    time = int(r.get('Last_Update'))
+                    if api:
+                        time = int(r.get('Last_Update'))
+                    if git:
+                        time = datetime.datetime.strptime(r.get('Last Update'), "%Y-%m-%dT%H:%M:%S")
+                        time = int(time.timestamp()*1000)
                     if time > updated:
                         updated = time
-
                     local_ratio_dead = "{0:.1%}".format(deaths/confirmed)
                 elif state and search.lower() == state.lower():
                     location = state
                     confirmed += int(r.get('Confirmed'))
                     deaths += int(r.get('Deaths'))
                     recovered += int(r.get('Recovered'))
-                    time = int(r.get('Last_Update'))
+                    if api:
+                        time = int(r.get('Last_Update'))
+                    if git:
+                        time = datetime.datetime.strptime(r.get('Last Update'), "%Y-%m-%dT%H:%M:%S")
+                        time = int(time.timestamp()*1000)
                     if time > updated:
                         updated = time
                     local_ratio_dead = "{0:.1%}".format(deaths/confirmed)
             total_confirmed += int(r.get('Confirmed'))
             total_deaths += int(r.get('Deaths'))
             total_recovered += int(r.get('Recovered'))
-            time = int(r.get('Last_Update'))
+            if api:
+                time = int(r.get('Last_Update'))
+            if git:
+                time = datetime.datetime.strptime(r.get('Last Update'), "%Y-%m-%dT%H:%M:%S")
+                time = int(time.timestamp()*1000)
             if time > last_update:
                 last_update = time
         ratio_dead = "{0:.1%}".format(total_deaths/total_confirmed)
