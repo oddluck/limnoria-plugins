@@ -39,6 +39,7 @@ import requests
 import json
 from bs4 import BeautifulSoup
 import random
+import re
 
 try:
     from supybot.i18n import PluginInternationalization
@@ -71,16 +72,19 @@ class IMDb(callbacks.Plugin):
 
     def imdb(self, irc, msg, args, query):
         """<title>
-        Queries the OMDB api about an IMDb title.
+        Queries the OMDB API about an IMDb title. Search by title name or IMDb ID.
         """
         channel = msg.channel
-        url = None
-        result = None
+        url = result = None
+        id = stop = False
         apikey = self.registryValue('omdbAPI')
         if not apikey:
             irc.reply("Error: You must set an API key to use this plugin.")
             return
-        if self.registryValue("googleSearch", channel):
+        if re.match('tt\d+', query.strip()):
+            id = True
+            url = "http://imdb.com/title/{0}".format(query.strip())
+        if not id and self.registryValue("googleSearch", channel):
             url = self.dosearch(query)
         if url and 'imdb.com/title/' in url:
             imdb_id = url.split("/title/")[1].rstrip("/")
@@ -95,10 +99,54 @@ class IMDb(callbacks.Plugin):
                 not_found = "Error" in response
                 unknown_error = response["Response"] != "True"
                 if not_found or unknown_error:
-                    log.debug("IMDb: OMDB error for %s" % (omdb_url))
+                    match = re.match('(.*) \(*(\d\d\d\d)\)*$', query.strip())
+                    if match:
+                        query = match.group(1).strip()
+                        year = match.group(2).strip()
+                        omdb_url = "http://www.omdbapi.com/?t=%s&y=%s&plot=short&r=json&apikey=%s" % (query, year, apikey)
+                        request = requests.get(omdb_url, timeout=10)
+                        if request.status_code == requests.codes.ok:
+                            response = json.loads(request.content)
+                            not_found = "Error" in response
+                            unknown_error = response["Response"] != "True"
+                            if not_found or unknown_error:
+                                log.debug("IMDb: OMDB error for %s" % (omdb_url))
+                        else:
+                            log.error("IMDb OMDB API %s - %s" % (request.status_code, request.content.decode()))
+                    else:
+                        log.debug("IMDb: OMDB error for %s" % (omdb_url))
+                        query = re.sub('\d\d\d\d', '', query)
+                        omdb_url = "http://www.omdbapi.com/?s=%s&plot=short&r=json&apikey=%s" % (query, apikey)
+                        request = requests.get(omdb_url, timeout=10)
+                        if request.status_code == requests.codes.ok:
+                            response = json.loads(request.content)
+                            not_found = "Error" in response
+                            unknown_error = response["Response"] != "True"
+                            if not_found or unknown_error:
+                                log.debug("IMDb: OMDB error for %s" % (omdb_url))
+                            elif response.get("Search") and len(response.get("Search")) == 1:
+                                imdb_id = response["Search"][0]["imdbID"]
+                                omdb_url = "http://www.omdbapi.com/?i=%s&plot=short&r=json&apikey=%s" % (imdb_id, apikey)
+                                request = requests.get(omdb_url, timeout=10)
+                                if request.status_code == requests.codes.ok:
+                                    response = json.loads(request.content)
+                                    not_found = "Error" in response
+                                    unknown_error = response["Response"] != "True"
+                                    if not_found or unknown_error:
+                                        log.debug("IMDb: OMDB error for %s" % (omdb_url))
+                                else:
+                                    log.error("IMDb OMDB API %s - %s" % (request.status_code, request.content.decode()))
+                            elif response.get("Search") and len(response.get("Search")) > 1:
+                                reply = "No title found. Did you mean:"
+                                for item in response["Search"]:
+                                    reply += " {0} ({1}) [{2}],".format(item["Title"], item["Year"], item["imdbID"])
+                                irc.reply(reply.rstrip(','))
+                                not_found = stop = True
+                                return
                 else:
-                    meta = None
-                    tomato = None
+                    log.error("IMDb OMDB API %s - %s" % (request.status_code, request.content.decode()))
+                if not not_found or not unknown_error:
+                    meta = tomato = None
                     imdb_template = self.registryValue("template", channel)
                     imdb_template = imdb_template.replace("$title", response["Title"])
                     imdb_template = imdb_template.replace("$year", response["Year"])
@@ -145,7 +193,7 @@ class IMDb(callbacks.Plugin):
         finally:
             if result is not None:
                 irc.reply(result, prefixNick=False)
-            else:
+            elif not stop:
                 irc.error(self.registryValue("noResultsMessage", channel))
     imdb = wrap(imdb, ['text'])
 
