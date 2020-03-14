@@ -148,18 +148,18 @@ class IMDb(callbacks.Plugin):
                 if not not_found or not unknown_error:
                     meta = tomato = None
                     imdb_template = self.registryValue("template", channel)
-                    imdb_template = imdb_template.replace("$title", response["Title"])
-                    imdb_template = imdb_template.replace("$year", response["Year"])
-                    imdb_template = imdb_template.replace("$country", response["Country"])
-                    imdb_template = imdb_template.replace("$director", response["Director"])
-                    imdb_template = imdb_template.replace("$plot", response["Plot"])
-                    imdb_template = imdb_template.replace("$imdbID", response["imdbID"])
-                    imdb_template = imdb_template.replace("$imdbRating", response["imdbRating"])
+                    imdb_template = imdb_template.replace("$title", str(response.get("Title")))
+                    imdb_template = imdb_template.replace("$year", str(response.get("Year")))
+                    imdb_template = imdb_template.replace("$country", str(response.get("Country")))
+                    imdb_template = imdb_template.replace("$director", str(response.get("Director")))
+                    imdb_template = imdb_template.replace("$plot", str(response.get("Plot")))
+                    imdb_template = imdb_template.replace("$imdbID", str(response.get("imdbID")))
+                    imdb_template = imdb_template.replace("$imdbRating", str(response.get("imdbRating")))
                     for rating in response["Ratings"]:
                         if rating["Source"] == "Rotten Tomatoes":
-                            tomato = rating["Value"]
+                            tomato = rating.get("Value")
                         if rating["Source"] == "Metacritic":
-                            meta = "{0}%".format(rating["Value"].split('/')[0])
+                            meta = "{0}%".format(rating.get("Value").split('/')[0])
                     if meta:
                         imdb_template = imdb_template.replace("$metascore", meta)
                     else:
@@ -168,19 +168,19 @@ class IMDb(callbacks.Plugin):
                         imdb_template = imdb_template.replace("$tomatoMeter", tomato)
                     else:
                         imdb_template = imdb_template.replace("$tomatoMeter", "N/A")
-                    imdb_template = imdb_template.replace("$released",response["Released"])
-                    imdb_template = imdb_template.replace("$genre",response["Genre"])
-                    imdb_template = imdb_template.replace("$released",response["Released"])
-                    imdb_template = imdb_template.replace("$awards",response["Awards"])
-                    imdb_template = imdb_template.replace("$actors",response["Actors"])
-                    imdb_template = imdb_template.replace("$rated",response["Rated"])
-                    imdb_template = imdb_template.replace("$runtime",response["Runtime"])
-                    imdb_template = imdb_template.replace("$writer",response["Writer"])
-                    imdb_template = imdb_template.replace("$votes",response["imdbVotes"])
-                    imdb_template = imdb_template.replace("$boxOffice",response["BoxOffice"])
-                    imdb_template = imdb_template.replace("$production",response["Production"])
-                    imdb_template = imdb_template.replace("$website",response["Website"])
-                    imdb_template = imdb_template.replace("$poster",response["Poster"])
+                    imdb_template = imdb_template.replace("$released", str(response.get("Released")))
+                    imdb_template = imdb_template.replace("$genre", str(response.get("Genre")))
+                    imdb_template = imdb_template.replace("$released", str(response.get("Released")))
+                    imdb_template = imdb_template.replace("$awards", str(response.get("Awards")))
+                    imdb_template = imdb_template.replace("$actors", str(response.get("Actors")))
+                    imdb_template = imdb_template.replace("$rated", str(response.get("Rated")))
+                    imdb_template = imdb_template.replace("$runtime", str(response.get("Runtime")))
+                    imdb_template = imdb_template.replace("$writer", str(response.get("Writer")))
+                    imdb_template = imdb_template.replace("$votes", str(response.get("imdbVotes")))
+                    imdb_template = imdb_template.replace("$boxOffice", str(response.get("BoxOffice")))
+                    imdb_template = imdb_template.replace("$production", str(response.get("Production")))
+                    imdb_template = imdb_template.replace("$website", str(response.get("Website")))
+                    imdb_template = imdb_template.replace("$poster", str(response.get("Poster")))
                     result = imdb_template
             else:
                 log.error("IMDb OMDB API %s - %s" % (request.status_code, request.content.decode()))
