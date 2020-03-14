@@ -54,11 +54,11 @@ class GoogleCloud(callbacks.Plugin):
         if 'from' in optlist:
             source = optlist.get('from')
         else:
-            source = self.registryValue('translate.source')
+            source = self.registryValue('translate.source', msg.channel)
         if 'to' in optlist:
             target = optlist.get('to')
         else:
-            target = self.registryValue('translate.target')
+            target = self.registryValue('translate.target', msg.channel)
         if source != 'auto':
             url = 'https://translation.googleapis.com/language/translate/v2?q={0}&target={1}&source={2}&key={3}'.format(text, target, source, key)
         else:

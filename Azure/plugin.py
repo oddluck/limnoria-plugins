@@ -50,11 +50,11 @@ class Azure(callbacks.Plugin):
         if 'from' in optlist:
             source = optlist.get('from')
         else:
-            source = self.registryValue('translate.source')
+            source = self.registryValue('translate.source', msg.channel)
         if 'to' in optlist:
             target = optlist.get('to')
         else:
-            target = self.registryValue('translate.target')
+            target = self.registryValue('translate.target', msg.channel)
         if source != 'auto':
             url = 'https://api.cognitive.microsofttranslator.com/translate?api-version=3.0&to={0}&from={1}'.format(target, source)
         else:
@@ -68,6 +68,9 @@ class Azure(callbacks.Plugin):
         'text' : text
         }]
         response = requests.post(url, headers=headers, json=body)
+        if not response.status_code == 200:
+            log.debug("Azure: Error accessing {0}: {1}".format(url, response.content.decode()))
+            return
         result = json.loads(response.content)
         if result[0].get('detectedLanguage'):
             reply = "{0} [{1}~>{2}]".format(result[0]['translations'][0]['text'], result[0]['detectedLanguage']['language'], target)
