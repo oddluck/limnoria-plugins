@@ -47,6 +47,7 @@ from supybot.commands import *
 import supybot.plugins as plugins
 import supybot.ircutils as ircutils
 import supybot.callbacks as callbacks
+import supybot.log as log
 from bs4 import BeautifulSoup
 import os
 
@@ -117,7 +118,7 @@ class Tweety(callbacks.Plugin):
         self.since_id = {}
         if not self.twitterApi:
             self._checkAuthorization()
-            
+
     def _httpget(self, url, h=None, d=None, l=False):
         """General HTTP resource fetcher. Pass headers via h, data via d, and to log via l."""
 
@@ -277,7 +278,7 @@ class Tweety(callbacks.Plugin):
         else:  # bold otherwise.
             ret = "@{0}".format(self._bu(nick))
         if verified:
-            string = self._bold(ircutils.mircColor("✓", 'white', 'blue'))
+            string = self._bold(ircutils.mircColor("", 'white', 'blue'))
             ret += "{}".format(string)
         # show real name in tweet output?
         if not self.registryValue('hideRealName', msg.args[0]):
@@ -319,10 +320,14 @@ class Tweety(callbacks.Plugin):
         """<location>
         Use Yahoo's API to look-up a WOEID.
         """
-        woeidlist = open('{0}/woeidList.json'.format(os.path.dirname(os.path.abspath(__file__))))
-        data = json.loads(woeidlist.read())
+        try:
+            data = self.twitterApi.ApiCall('trends/available')
+            data = json.loads(data.read())
+        except:
+            data = None
+            log.debug('Tweety: error retrieving data from Trends API')
         if not data:
-            irc.reply("ERROR opening woeidList.json")
+            log.debug("No location results for {0}".format(lookup))
             return
         return next((item["woeid"] for item in data if lookup.lower() in item["name"].lower()), None)
 
@@ -446,7 +451,7 @@ class Tweety(callbacks.Plugin):
     trends = wrap(trends, [getopts({'exclude':''}), optional('text')])
 
     def tsearch(self, irc, msg, args, optlist, optterm):
-        """[--num number] [--searchtype mixed,recent,popular] [--lang xx] <term>
+        """[--num number] [--searchtype mixed,recent,popular] [--lang xx] [--new] <term>
 
         Searches Twitter for the <term> and returns the most recent results.
         --num is number of results. (1-10)
@@ -466,6 +471,9 @@ class Tweety(callbacks.Plugin):
             irc.reply("ERROR: Twitter is not authorized. Please check logs before running this command.")
             return
 
+        self.since_id.setdefault(msg.channel, {})
+        self.since_id[msg.channel].setdefault('{0}'.format(optterm), None)
+        new = False
         # default arguments.
         tsearchArgs = {'include_entities':'false',
                        'tweet_mode': 'extended',
@@ -486,6 +494,9 @@ class Tweety(callbacks.Plugin):
                     tsearchArgs['result_type'] = value  # limited by getopts to valid values.
                 if key == 'lang':  # lang . Uses ISO-639 codes like 'en' http://en.wikipedia.org/wiki/ISO_639-1
                     tsearchArgs['lang'] = value
+                if key == 'new' and self.since_id[msg.channel]['{0}'.format(optterm)]:
+                    new = True
+                    tsearchArgs['since_id'] = self.since_id[msg.channel]['{0}'.format(optterm)]
         # now build our API call.
         data = self.twitterApi.ApiCall('search/tweets', parameters=tsearchArgs)
         try:
@@ -496,9 +507,11 @@ class Tweety(callbacks.Plugin):
         # check the return data.
         results = data.get('statuses') # data returned as a dict.
         if not results or len(results) == 0:  # found nothing or length 0.
-            irc.reply("ERROR: No Twitter Search results found for '{0}'".format(optterm))
+            if not new:
+                irc.reply("ERROR: No Twitter Search results found for '{0}'".format(optterm))
             return
         else:  # we found something.
+            self.since_id[msg.channel]['{0}'.format(optterm)] = results[0].get('id')
             for result in results[0:int(tsearchArgs['count'])]:  # iterate over each.
                 nick = self._unescape(result['user'].get('screen_name'))
                 name = self._unescape(result["user"].get('name'))
@@ -512,7 +525,8 @@ class Tweety(callbacks.Plugin):
 
     tsearch = wrap(tsearch, [getopts({'num':('int'),
                                       'searchtype':('literal', ('popular', 'mixed', 'recent')),
-                                      'lang':('somethingWithoutSpaces')}),
+                                      'lang':('somethingWithoutSpaces'),
+                                      'new':''}),
                                      ('text')])
 
     def twitter(self, irc, msg, args, optlist, optnick, opturl):
@@ -526,7 +540,8 @@ class Tweety(callbacks.Plugin):
         Ex: --info @cnn OR --id 337197009729622016 OR --number 3 @drudge
         """
 
-        self.since_id.setdefault('{0}-{1}'.format(optnick, msg.args[0]), None)
+        self.since_id.setdefault(msg.channel, {})
+        self.since_id[msg.channel].setdefault('{0}'.format(optnick), None)
         # enforce +voice or above to use command?
         if self.registryValue('requireVoiceOrAbove', msg.args[0]):  # should we check?
             if ircutils.isChannel(msg.args[0]):  # are we in a channel?
@@ -546,7 +561,7 @@ class Tweety(callbacks.Plugin):
                 'nort': False,
                 'noreply': False,
                 'url': False,
-		'new': False,
+                'new': False,
                 'num': self.registryValue('defaultResults', msg.args[0]),
                 'info': False}
         # handle input optlist.
@@ -578,10 +593,10 @@ class Tweety(callbacks.Plugin):
         elif args['info']:  # --info.
             apiUrl = 'users/show'
             twitterArgs = {'screen_name': optnick, 'include_entities':'false'}
-        elif args['new']:  # --new. 
+        elif args['new']:  # --new.
             apiUrl = 'statuses/user_timeline'
-            if self.since_id['{0}-{1}'.format(optnick, msg.args[0])]:
-                twitterArgs = {'screen_name': optnick, 'since_id':self.since_id['{0}-{1}'.format(optnick, msg.args[0])], 'count': args['num'], 'tweet_mode': 'extended'}
+            if self.since_id[msg.channel]['{0}'.format(optnick)]:
+                twitterArgs = {'screen_name': optnick, 'since_id':self.since_id[msg.channel]['{0}'.format(optnick)], 'count': args['num'], 'tweet_mode': 'extended'}
                 if args['nort']:  # show retweets?
                     twitterArgs['include_rts'] = 'false'
                 else:  # default is to show retweets.
@@ -599,7 +614,7 @@ class Tweety(callbacks.Plugin):
                 if args['noreply']:  # show replies?
                     twitterArgs['exclude_replies'] = 'true'
                 else:  # default is to NOT exclude replies.
-                    twitterArgs['exclude_replies'] = 'false'               
+                    twitterArgs['exclude_replies'] = 'false'
         else:  # if not an --id --info, or --new we're printing from their timeline.
             apiUrl = 'statuses/user_timeline'
             twitterArgs = {'screen_name': optnick, 'count': args['num'], 'tweet_mode': 'extended'}
@@ -687,7 +702,7 @@ class Tweety(callbacks.Plugin):
                 else:
                     irc.reply("ERROR: '{0}' has not tweeted yet.".format(optnick))
                     return
-            self.since_id['{0}-{1}'.format(optnick, msg.args[0])] = data[0].get('id')
+            self.since_id[msg.channel]['{0}'.format(optnick)] = data[0].get('id')
             for tweet in data:  # n+1 tweets found. iterate through each tweet.
                 text = self._unescape(tweet.get('full_text')) or self._unescape(tweet.get('text'))
                 nick = self._unescape(tweet["user"].get('screen_name'))
