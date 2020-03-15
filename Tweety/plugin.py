@@ -420,6 +420,8 @@ class Tweety(callbacks.Plugin):
         if optwoeid:  # if we have an input location, lookup the woeid.
             if optwoeid.lower().startswith('world'):  # looking for worldwide or some variation. (bypass)
                 args['id'] = 1  # "World Wide" is worldwide (odd bug) = 1.
+            elif optwoeid.strip().isdigit():
+                args['id'] = optwoeid.strip()
             else:  # looking for something else.
                 woeid = self._woeid_lookup(optwoeid)  # yahoo search for woeid.
                 if woeid:  # if we get a returned value, set it. otherwise default value.
