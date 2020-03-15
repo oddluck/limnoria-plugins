@@ -86,6 +86,7 @@ Optional: There are some config variables that can be set for the bot. They main
 Return new tweets since the last time you checked in channel with --new
 ```
 twitter --new <twitter_nick>
+tsearch --new <search_term>
 ```
 Schudule a repeating feed of Tweets from a user. Same options as usual apply, just use --new to only return new tweets.
 ```

@@ -390,7 +390,7 @@ class Tweety(callbacks.Plugin):
     def trends(self, irc, msg, args, getopts, optwoeid):
         """[--exclude] [location]
 
-        Returns the Top 10 Twitter trends for a specific location. Use optional argument location for trends.
+        Returns the top Twitter trends for a specific location. Use optional argument location for trends.
         Defaults to worldwide and can be set via config variable.
         Use --exclude to not include #hashtags in trends data.
         Ex: Boston or --exclude London
@@ -448,16 +448,17 @@ class Tweety(callbacks.Plugin):
         # if no error here, we found trends. prepare string and output.
         location = data[0]['locations'][0]['name']
         ttrends = " | ".join([trend['name'] for trend in data[0]['trends']])
-        irc.reply("Top 10 Twitter Trends in {0} :: {1}".format(self._bold(location), ttrends))
+        irc.reply("Top Twitter Trends in {0} :: {1}".format(self._bold(location), ttrends))
 
     trends = wrap(trends, [getopts({'exclude':''}), optional('text')])
 
     def tsearch(self, irc, msg, args, optlist, optterm):
-        """[--num number] [--searchtype mixed,recent,popular] [--lang xx] [--new] <term>
+        """[--num number] [--searchtype mixed|recent|popular] [--lang xx] [--new] <term>
 
         Searches Twitter for the <term> and returns the most recent results.
-        --num is number of results. (1-10)
+        --num is number of results.
         --searchtype being recent, popular or mixed. Popular is the default.
+        --new returns new messages since last search for <term> in channel.
         Ex: --num 3 breaking news
         """
 
@@ -532,14 +533,14 @@ class Tweety(callbacks.Plugin):
                                      ('text')])
 
     def twitter(self, irc, msg, args, optlist, optnick, opturl):
-        """[--noreply] [--nort] [--new] [--num number] <nick> | [--id id] | [--info nick]
+        """[--noreply] [--nort] [--num <##>] [--id <id#>] [--info] [--new] <nick>
 
-        Returns last tweet or 'number' tweets (max 10). Shows all tweets, including rt and reply.
-        To not display replies or RT's, use --noreply or --nort, respectively.
-        Return new tweets since the last time you checked in channel with --new
-        Or returns specific tweet with --id 'tweet#'.
-        Or returns information on user with --info 'name'.
-        Ex: --info @cnn OR --id 337197009729622016 OR --number 3 @drudge
+        Returns last tweet or --num tweets. Shows all tweets, including RT and reply.
+        To not display replies or RT's, use --noreply or --nort.
+        Return new tweets since you last checked in channel with --new.
+        Return specific tweet with --id <id#>.
+        Return information on user with --info.
+        Ex: --info CNN | --id 337197009729622016 | --num 3 CNN
         """
 
         self.since_id.setdefault(msg.channel, {})
