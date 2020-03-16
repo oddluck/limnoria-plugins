@@ -270,6 +270,10 @@ class Jeopardy(callbacks.Plugin):
                 self.questions = self.questions[::-1]
             self.total = len(self.questions)
             self.num = len(self.questions)
+            if self.num == 0:
+                self.reply("Sorry, no questions available.")
+                self.stop()
+                return
             self.newquestion()
 
 
