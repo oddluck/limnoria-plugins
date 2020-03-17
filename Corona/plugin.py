@@ -225,7 +225,7 @@ countries = {
     "QA": "QATAR",
     "RE": "RÉUNION",
     "RO": "ROMANIA",
-    "RU": "RUSSIAN FEDERATION",
+    "RU": "RUSSIA",
     "RW": "RWANDA",
     "BL": "SAINT BARTHÉLEMY",
     "SH": "SAINT HELENA",
@@ -503,6 +503,8 @@ class Corona(callbacks.Plugin):
                                 pass
                 if search.lower() == 'usa' or 'united states' in search.lower():
                     search = 'us'
+                if 'korea' in search.lower():
+                    search = 'korea, south'
                 if region and search.lower() == region.lower():
                     location = region
                     confirmed += int(r.get('Confirmed'))
