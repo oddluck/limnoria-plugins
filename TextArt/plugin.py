@@ -419,6 +419,10 @@ class TextArt(callbacks.Plugin):
         channel = msg.args[0]
         if len(text) > self.registryValue('maxLength', msg.channel):
             return
+        if len(text.split(' ')) > self.registryValue('maxWords', msg.channel):
+            return
+        elif len(text.split('|')) > self.registryValue('maxWords', msg.channel):
+            return
         optlist = dict(optlist)
         font = None
         words = []
@@ -1016,6 +1020,8 @@ class TextArt(callbacks.Plugin):
             return
         if len(text) > self.registryValue('maxLength', msg.channel):
             return
+        if len(text.split(' ')) > self.registryValue('maxWords', msg.channel):
+            return
         optlist = dict(optlist)
         opts = ''
         if 'f' in optlist:
@@ -1075,6 +1081,8 @@ class TextArt(callbacks.Plugin):
             irc.errorNoCapability('admin')
             return
         if len(text) > self.registryValue('maxLength', msg.channel):
+            return
+        if len(text.split(' ')) > self.registryValue('maxWords', msg.channel):
             return
         optlist = dict(optlist)
         opts = ''
