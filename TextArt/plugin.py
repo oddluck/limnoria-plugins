@@ -417,6 +417,8 @@ class TextArt(callbacks.Plugin):
         if not channel:
             channel = msg.args[0]
         channel = msg.args[0]
+        if len(text) > self.registryValue('maxLength', msg.channel):
+            return
         optlist = dict(optlist)
         font = None
         words = []
@@ -1012,6 +1014,8 @@ class TextArt(callbacks.Plugin):
         if channel != msg.args[0] and not ircdb.checkCapability(msg.prefix, 'admin'):
             irc.errorNoCapability('admin')
             return
+        if len(text) > self.registryValue('maxLength', msg.channel):
+            return
         optlist = dict(optlist)
         opts = ''
         if 'f' in optlist:
@@ -1069,6 +1073,8 @@ class TextArt(callbacks.Plugin):
             channel = msg.args[0]
         if channel != msg.args[0] and not ircdb.checkCapability(msg.prefix, 'admin'):
             irc.errorNoCapability('admin')
+            return
+        if len(text) > self.registryValue('maxLength', msg.channel):
             return
         optlist = dict(optlist)
         opts = ''
