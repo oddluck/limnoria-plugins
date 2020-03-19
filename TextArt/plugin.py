@@ -35,6 +35,7 @@ import supybot.ircutils as ircutils
 import supybot.ircdb as ircdb
 import supybot.callbacks as callbacks
 import supybot.ircmsgs as ircmsgs
+import supybot.log as log
 import os
 import requests
 from PIL import Image, ImageOps, ImageFont, ImageDraw, ImageEnhance
@@ -390,7 +391,12 @@ class TextArt(callbacks.Plugin):
             url = re.sub("https://paste.ee/p/", "https://paste.ee/r/", url)
         ua = random.choice(self.agents)
         header = {'User-Agent': ua}
-        r = requests.get(url, stream=True, headers=header, timeout=10)
+        try:
+            r = requests.get(url, stream=True, headers=header, timeout=10)
+            r.raise_for_status()
+        except (requests.exceptions.RequestException, requests.exceptions.HTTPError) as e:
+            log.debug('TextArt: error retrieving data for png: {0}'.format(e))
+            return
         if "text/plain" in r.headers["content-type"] or url.startswith('https://paste.ee/r/'):
             try:
                 file = r.content.decode()
@@ -447,12 +453,22 @@ class TextArt(callbacks.Plugin):
              if words:
                  for word in words:
                      if word.strip():
-                         data = requests.get("https://artii.herokuapp.com/make?text={0}&font={1}".format(word.strip(), font), timeout=10)
+                         try:
+                             data = requests.get("https://artii.herokuapp.com/make?text={0}&font={1}".format(word.strip(), font), timeout=10)
+                             data.raise_for_status()
+                         except (requests.exceptions.RequestException, requests.exceptions.HTTPError) as e:
+                             log.debug('TextArt: error retrieving data for artii: {0}'.format(e))
+                             return
                          for line in data.content.decode().splitlines():
                              if line.strip():
                                  irc.reply(ircutils.mircColor(line, color1, color2), prefixNick=False, private=False, notice=False)
              else:
-                 data = requests.get("https://artii.herokuapp.com/make?text={0}&font={1}".format(text, font), timeout=10)
+                 try:
+                     data = requests.get("https://artii.herokuapp.com/make?text={0}&font={1}".format(text, font), timeout=10)
+                     data.raise_for_status()
+                 except (requests.exceptions.RequestException, requests.exceptions.HTTPError) as e:
+                     log.debug('TextArt: error retrieving data for artii: {0}'.format(e))
+                     return
                  for line in data.content.decode().splitlines():
                      if line.strip():
                          irc.reply(ircutils.mircColor(line, color1, color2), prefixNick=False, private=False, notice=False, to=channel)
@@ -460,12 +476,22 @@ class TextArt(callbacks.Plugin):
             if words:
                  for word in words:
                      if word.strip():
-                         data = requests.get("https://artii.herokuapp.com/make?text={0}&font=univers".format(word.strip()), timeout=10)
+                         try:
+                             data = requests.get("https://artii.herokuapp.com/make?text={0}&font=univers".format(word.strip()), timeout=10)
+                             data.raise_for_status()
+                         except (requests.exceptions.RequestException, requests.exceptions.HTTPError) as e:
+                             log.debug('TextArt: error retrieving data for artii: {0}'.format(e))
+                             return
                          for line in data.content.decode().splitlines():
                              if line.strip():
                                  irc.reply(ircutils.mircColor(line, color1, color2), prefixNick=False, private=False, notice=False, to=channel)
             else:
-                data = requests.get("https://artii.herokuapp.com/make?text={0}&font=univers".format(text), timeout=10)
+                try:
+                    data = requests.get("https://artii.herokuapp.com/make?text={0}&font=univers".format(text), timeout=10)
+                    data.raise_for_status()
+                except (requests.exceptions.RequestException, requests.exceptions.HTTPError) as e:
+                     log.debug('TextArt: error retrieving data for artii: {0}'.format(e))
+                     return
                 for line in data.content.decode().splitlines():
                     if line.strip():
                         irc.reply(ircutils.mircColor(line, color1, color2), prefixNick=False, private=False, notice=False, to=channel)
@@ -476,7 +502,12 @@ class TextArt(callbacks.Plugin):
         """
         Get list of artii figlet fonts.
         """
-        fontlist = requests.get("https://artii.herokuapp.com/fonts_list", timeout=10)
+        try:
+            fontlist = requests.get("https://artii.herokuapp.com/fonts_list", timeout=10)
+            fontlist.raise_for_status()
+        except (requests.exceptions.RequestException, requests.exceptions.HTTPError) as e:
+            log.debug('textArt: error retrieving data for fontlist: {0}'.format(e))
+            return
         response = sorted(fontlist.content.decode().split('\n'))
         irc.reply(str(response).replace('\'', '').replace('[', '').replace(']', ''))
     fontlist = wrap(fontlist)
@@ -580,7 +611,12 @@ class TextArt(callbacks.Plugin):
         ua = random.choice(self.agents)
         header = {'User-Agent': ua}
         image_formats = ("image/png", "image/jpeg", "image/jpg", "image/gif")
-        r = requests.get(url, stream=True, headers=header, timeout=10)
+        try:
+            r = requests.get(url, stream=True, headers=header, timeout=10)
+            r.raise_for_status()
+        except (requests.exceptions.RequestException, requests.exceptions.HTTPError) as e:
+            log.debug('TextArt: error retrieving data for img: {0}'.format(e))
+            return
         if r.headers["content-type"] in image_formats and r.status_code == 200:
             r.raw.decode_content = True
             image = Image.open(r.raw)
@@ -838,7 +874,12 @@ class TextArt(callbacks.Plugin):
             url = url.replace("https://pastebin.com/", "https://pastebin.com/raw/")
         ua = random.choice(self.agents)
         header = {'User-Agent': ua}
-        r = requests.get(url, headers=header, stream=True, timeout=10)
+        try:
+            r = requests.get(url, headers=header, stream=True, timeout=10)
+            r.raise_for_status()
+        except (requests.exceptions.RequestException, requests.exceptions.HTTPError) as e:
+            log.debug('TextArt: error retrieving data for scroll: {0}'.format(e))
+            return
         if "text/plain" in r.headers["content-type"]:
             file = r.content.decode().replace('\r\n','\n')
         else:
@@ -885,7 +926,12 @@ class TextArt(callbacks.Plugin):
             delay = self.registryValue('delay', msg.args[0])
         ua = random.choice(self.agents)
         header = {'User-Agent': ua}
-        r = requests.get(url, stream=True, headers=header, timeout=10)
+        try:
+            r = requests.get(url, stream=True, headers=header, timeout=10)
+            r.raise_for_status()
+        except (requests.exceptions.RequestException, requests.exceptions.HTTPError) as e:
+            log.debug('TextArt: error retrieving data for a2m: {0}'.format(e))
+            return
         try:
             if "text/plain" in r.headers["content-type"] or "application/octet-stream" in r.headers["content-type"] and int(r.headers["content-length"]) < 1000000:
                 path = os.path.dirname(os.path.abspath(__file__))
@@ -971,7 +1017,12 @@ class TextArt(callbacks.Plugin):
         ua = random.choice(self.agents)
         header = {'User-Agent': ua}
         image_formats = ("image/png", "image/jpeg", "image/jpg", "image/gif")
-        r = requests.get(url, stream=True, headers=header, timeout=10)
+        try:
+            r = requests.get(url, stream=True, headers=header, timeout=10)
+            r.raise_for_status()
+        except (requests.exceptions.RequestException, requests.exceptions.HTTPError) as e:
+            log.debug('TextArt: error retrieving data for p2u: {0}'.format(e))
+            return
         if r.headers["content-type"] in image_formats and r.status_code == 200:
             with open("{0}".format(filename), 'wb') as f:
                 f.write(r.content)
@@ -1287,7 +1338,12 @@ class TextArt(callbacks.Plugin):
             type = optlist.get('type')
         else:
             type = 'default'
-        data = requests.get("https://easyapis.soue.tk/api/cowsay?text={0}&type={1}".format(text, type), tiemout=10)
+        try:
+            data = requests.get("https://easyapis.soue.tk/api/cowsay?text={0}&type={1}".format(text, type), timeout=10)
+            data.raise_for_status()
+        except (requests.exceptions.RequestException, requests.exceptions.HTTPError) as e:
+            log.debug('TextArt: error retrieving data for cowsay: {0}'.format(e))
+            return
         self.stopped[msg.args[0]] = False
         paste = ''
         for line in data.content.decode().splitlines():
