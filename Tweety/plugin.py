@@ -141,21 +141,14 @@ class Tweety(callbacks.Plugin):
     def _shortenUrl(self, url):
         """Shortens a long URL into a short one."""
 
-        api_key = self.registryValue('bitlyKey')
         url_enc = urllib.parse.quote_plus(url)
-        api_url = 'https://api-ssl.bitly.com/v3/shorten?access_token={}&longUrl={}&format=json'
-
         try:
-            data = requests.get(api_url.format(api_key, url_enc), timeout=10)
-            data = json.loads(data.content)
-            url2 = data['data'].get('url')
-            if url2.strip():
-                return url2.strip()
-            else:
-                return url
-        except:
-            self.log.error("ERROR: Failed shortening url: {0}".format(longurl))
-            return url
+            data = requests.get('http://tinyurl.com/api-create.php?url={0}'.format(url_enc), timeout=10)
+        except (requests.exceptions.RequestException, requests.exceptions.HTTPError) as e:
+            log.debug('Tweety: error retrieving tiny url: {0}'.format(e))
+            return
+        else:
+            return data.content.decode()
 
     def _checkAuthorization(self):
         """ Check if we have our keys and can auth."""
@@ -271,7 +264,7 @@ class Tweety(callbacks.Plugin):
         """
         Constructs string to output for Tweet. Used for tsearch and twitter.
         """
-
+        url = None
         # build output string.
         if self.registryValue('outputColorTweets', msg.args[0]):
             ret = "@{0}".format(self._ul(self._blue(nick)))
@@ -283,38 +276,23 @@ class Tweety(callbacks.Plugin):
         # show real name in tweet output?
         if not self.registryValue('hideRealName', msg.args[0]):
             ret += " ({0})".format(name)
+        # short url the link to the tweet?
+        if self.registryValue('addShortUrl', msg.args[0]):
+            url = self._shortenUrl("https://twitter.com/{0}/status/{1}".format(nick, tweetid))
         # add in the end with the text + tape.
         if self.registryValue('colorTweetURLs', msg.args[0]):  # color urls.
             text = re.sub(r'(http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+)', self._red(r'\1'), text)
-            ret += ": {0} ({1})".format(text, self._bold(time))
+            if url:
+                ret += ": {0} {1} ({2})".format(text, url, self._bold(time))
+            else:
+                ret += ": {0} ({1})".format(text, self._bold(time))
         else:  # only bold time. no text color.
-            ret += ": {0} ({1})".format(text, self._bold(time))
-        # short url the link to the tweet?
-        if self.registryValue('addShortUrl', msg.args[0]):
-            url = self._createShortUrl(nick, tweetid)
-            if url:  # if we got a url back.
-                ret += " {0}".format(url)
+            if url:
+                ret += ": {0} {1} ({2})".format(text, url, self._bold(time))
+            else:
+                ret += ": {0} ({1})".format(text, self._bold(time))
         # now return.
         return ret
-
-    def _createShortUrl(self, nick, tweetid):
-        """Shortens a tweet into a short one."""
-
-        api_key = self.registryValue('bitlyKey')
-        longurl = "https://twitter.com/%s/status/%s" % (nick, tweetid)
-        api_url = 'https://api-ssl.bitly.com/v3/shorten?access_token={}&longUrl={}&format=json'
-
-        try:
-            data = requests.get(api_url.format(api_key, longurl), timeout=10)
-            data = json.loads(data.content)
-            url2 = data['data'].get('url')
-            if url2.strip():
-                return url2.strip()
-            else:
-                return longurl
-        except:
-            self.log.error("ERROR: Failed shortening url: {0}".format(longurl))
-            return longurl
 
     def _woeid_lookup(self, lookup):
         """<location>

@@ -83,6 +83,11 @@ Optional: There are some config variables that can be set for the bot. They main
 
 ## Extras
 
+Shorten Tweet URLs with TinyURL.
+```
+config plugins.tweety.addshorturl True
+```
+
 Return new tweets since the last time you checked in channel with --new
 ```
 twitter --new <twitter_nick>

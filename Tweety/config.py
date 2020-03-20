@@ -45,7 +45,6 @@ conf.registerGlobalValue(Tweety,'consumerKey',registry.String('', """The consume
 conf.registerGlobalValue(Tweety,'consumerSecret',registry.String('', """The consumer secret of the application.""", private=True))
 conf.registerGlobalValue(Tweety,'accessKey',registry.String('', """The Twitter Access Token key for the bot's account"""))
 conf.registerGlobalValue(Tweety,'accessSecret',registry.String('', """The Twitter Access Token secret for the bot's account""", private=True))
-conf.registerGlobalValue(Tweety,'bitlyKey',registry.String('', """bit.ly API key for shortening links""", private=True))
 conf.registerChannelValue(Tweety,'hideRealName',registry.Boolean(False, """Do not show real name when displaying tweets."""))
 conf.registerChannelValue(Tweety,'addShortUrl',registry.Boolean(False, """Whether or not to add a short URL to the tweets."""))
 conf.registerChannelValue(Tweety,'woeid',registry.Integer(1, """Where On Earth ID. World Wide is 1. USA is 23424977."""))
