@@ -414,20 +414,38 @@ class Corona(callbacks.Plugin):
                     self.data[country] = {}
                     self.data[country]['name'] = country
                     self.data[country]['country'] = True
-                    self.data[country]['total_cases'] = cells[1].text.strip()
+                    if cells[1].text.strip():
+                        self.data[country]['total_cases'] = cells[1].text.strip()
+                    else:
+                        self.data[country]['total_cases'] = '0'
                     if cells[2].text.strip():
                         self.data[country]['new_cases'] = cells[2].text.strip()
                     else:
                         self.data[country]['new_cases'] = '+0'
-                    self.data[country]['total_deaths'] = cells[3].text.strip()
+                    if cells[3].text.strip():
+                        self.data[country]['total_deaths'] = cells[3].text.strip()
+                    else:
+                        self.data[country]['total_deaths'] = '0'
                     if cells[4].text.strip():
                         self.data[country]['new_deaths'] = cells[4].text.strip()
                     else:
                         self.data[country]['new_deaths'] = '+0'
-                    self.data[country]['total_recovered'] = cells[5].text.strip()
-                    self.data[country]['active'] = cells[6].text.strip()
-                    self.data[country]['serious'] = cells[7].text.strip()
-                    self.data[country]['per_million'] = cells[8].text.strip()
+                    if cells[5].text.strip():
+                        self.data[country]['total_recovered'] = cells[5].text.strip()
+                    else:
+                        self.data[country]['total_recovered'] = 'N/A'
+                    if cells[6].text.strip():
+                        self.data[country]['active'] = cells[6].text.strip()
+                    else:
+                        self.data[country]['active'] = 'N/A'
+                    if cells[7].text.strip():
+                        self.data[country]['serious'] = cells[7].text.strip()
+                    else:
+                        self.data[country]['serious'] = 'N/A'
+                    if cells[8].text.strip():
+                        self.data[country]['per_million'] = cells[8].text.strip()
+                    else:
+                        self.data[country]['per_million'] = 'N/A'
                     self.data[country]['rank'] = "#{}".format(n)
             try:
                 r = requests.get('https://www.worldometers.info/coronavirus/country/us/', timeout=10)
@@ -448,17 +466,26 @@ class Corona(callbacks.Plugin):
                         self.data[state] = {}
                         self.data[state]['country'] = False
                         self.data[state]['name'] = state
-                        self.data[state]['total_cases'] = cells[1].text.strip()
+                        if cells[1].text.strip():
+                            self.data[state]['total_cases'] = cells[1].text.strip()
+                        else:
+                            self.data[state]['total_cases'] = '0'
                         if cells[2].text.strip():
                             self.data[state]['new_cases'] = cells[2].text.strip()
                         else:
                             self.data[state]['new_cases'] = '+0'
-                        self.data[state]['total_deaths'] = cells[3].text.strip()
+                        if cells[3].text.strip():
+                            self.data[state]['total_deaths'] = cells[3].text.strip()
+                        else:
+                            self.data[state]['total_deaths'] = '0'
                         if cells[4].text.strip():
                             self.data[state]['new_deaths'] = cells[4].text.strip()
                         else:
                             self.data[state]['new_deaths'] = '+0'
-                        self.data[state]['active'] = cells[5].text.strip()
+                        if cells[5].text.strip():
+                            self.data[state]['active'] = cells[5].text.strip()
+                        else:
+                            self.data[state]['active'] = 'N/A'
                         self.data[state]['rank'] = "#{}".format(n)
             else:
                 log.debug("Corona: unable to retrieve latest USA data")
@@ -486,10 +513,7 @@ class Corona(callbacks.Plugin):
                         pass
         if search and self.data.get(search):
             if self.data[search]['country']:
-                if self.data[search]['total_deaths'].strip():
-                    ratio_dead = "{0:.1%}".format(int(self.data[search]['total_deaths'].replace(',', ''))/int(self.data[search]['total_cases'].replace(',', '')))
-                else:
-                    ratio_dead = "{0:.1%}".format(0)
+                ratio_dead = "{0:.1%}".format(int(self.data[search]['total_deaths'].replace(',', ''))/int(self.data[search]['total_cases'].replace(',', '')))
                 mild = int(self.data[search]['active'].replace(',', '')) - int(self.data[search]['serious'].replace(',', ''))
                 irc.reply("\x02\x1F{0}\x1F: World Rank: {1} | Cases: \x0307{2}\x03 (\x0307{3}\x03) | Deaths: \x0304{4}\x03 (\x0304{5}\x03) (\x0304{6}\x03) | Recovered: \x0309{7}\x03 | Active: \x0307{8}\x03 (\x0310{9}\x03 Mild) (\x0313{10}\x03 Serious) | Updated: {11}".format(
                     self.data[search]['name'],
@@ -505,10 +529,7 @@ class Corona(callbacks.Plugin):
                     self.data[search]['serious'],
                     self.time_created(updated)))
             else:
-                if self.data[search]['total_deaths'].strip():
-                    ratio_dead = "{0:.1%}".format(int(self.data[search]['total_deaths'].replace(',', ''))/int(self.data[search]['total_cases'].replace(',', '')))
-                else:
-                    ratio_dead = "{0:.1%}".format(0)
+                ratio_dead = "{0:.1%}".format(int(self.data[search]['total_deaths'].replace(',', ''))/int(self.data[search]['total_cases'].replace(',', '')))
                 irc.reply("\x02\x1F{0}\x1F: USA Rank: {1} | Cases: \x0307{2}\x03 (\x0307{3}\x03) | Deaths: \x0304{4}\x03 (\x0304{5}\x03) (\x0304{6}\x03) | Active: \x0307{7}\x03 | Updated: {8}".format(
                     self.data[search]['name'],
                     self.data[search]['rank'],
@@ -521,10 +542,7 @@ class Corona(callbacks.Plugin):
                     self.time_created(updated)))
         else:
             mild = int(self.data['total:']['active'].replace(',', '')) - int(self.data['total:']['serious'].replace(',', ''))
-            if self.data['total:']['total_deaths'].strip():
-                ratio_dead = "{0:.1%}".format(int(self.data['total:']['total_deaths'].replace(',', ''))/int(self.data['total:']['total_cases'].replace(',', '')))
-            else:
-                ratio_dead = "{0:.1%}".format(0)
+            ratio_dead = "{0:.1%}".format(int(self.data['total:']['total_deaths'].replace(',', ''))/int(self.data['total:']['total_cases'].replace(',', '')))
             irc.reply("\x02\x1F{0}\x1F: Cases: \x0307{1}\x03 (\x0307+{2}\x03) | Deaths: \x0304{3}\x03 (\x0304+{4}\x03) (\x0304{5}\x03) | Recovered: \x0309{6}\x03 | Active: \x0307{7}\x03 (\x0310{8}\x03 Mild) (\x0313{9}\x03 Serious) | Updated: {10}".format(
                 'Global',
                 self.data['total:']['total_cases'],
