@@ -514,8 +514,12 @@ class Corona(callbacks.Plugin):
         if search and self.data.get(search):
             if self.data[search]['country']:
                 ratio_dead = "{0:.1%}".format(int(self.data[search]['total_deaths'].replace(',', ''))/int(self.data[search]['total_cases'].replace(',', '')))
-                mild = int(self.data[search]['active'].replace(',', '')) - int(self.data[search]['serious'].replace(',', ''))
-                irc.reply("\x02\x1F{0}\x1F: World Rank: {1} | Cases: \x0307{2}\x03 (\x0307{3}\x03) | Deaths: \x0304{4}\x03 (\x0304{5}\x03) (\x0304{6}\x03) | Recovered: \x0309{7}\x03 | Active: \x0307{8}\x03 (\x0310{9}\x03 Mild) (\x0313{10}\x03 Serious) | Cases/1M Population: \x0307{11}\x03 | Updated: {12}".format(
+                ratio_recovered = "{0:.1%}".format(int(self.data[search]['total_recovered'].replace(',', ''))/int(self.data[search]['total_cases'].replace(',', '')))
+                if self.data[search]['serious'].replace(',', '').isdigit():
+                    mild = '{:,}'.format(int(self.data[search]['active'].replace(',', '')) - int(self.data[search]['serious'].replace(',', '')))
+                else:
+                    mild = 'N/A'
+                irc.reply("\x02\x1F{0}\x1F: World Rank: {1} | Cases: \x0307{2}\x03 (\x0307{3}\x03) | Deaths: \x0304{4}\x03 (\x0304{5}\x03) (\x0304{6}\x03) | Recovered: \x0309{7}\x03 (\x0309{8}\x03) | Active: \x0307{9}\x03 (\x0310{10}\x03 Mild) (\x0313{11}\x03 Serious) | Cases/1M Population: \x0307{12}\x03 | Updated: {13}".format(
                     self.data[search]['name'],
                     self.data[search]['rank'],
                     self.data[search]['total_cases'],
@@ -524,8 +528,9 @@ class Corona(callbacks.Plugin):
                     self.data[search]['new_deaths'],
                     ratio_dead,
                     self.data[search]['total_recovered'],
+                    ratio_recovered,
                     self.data[search]['active'],
-                    '{:,}'.format(mild),
+                    mild,
                     self.data[search]['serious'],
                     self.data[search]['per_million'],
                     self.time_created(updated)))
@@ -542,9 +547,13 @@ class Corona(callbacks.Plugin):
                     self.data[search]['active'],
                     self.time_created(updated)))
         else:
-            mild = int(self.data['total:']['active'].replace(',', '')) - int(self.data['total:']['serious'].replace(',', ''))
+            if self.data['total:']['serious'].replace(',', '').isdigit():
+                mild = '{:,}'.format(int(self.data['total:']['active'].replace(',', '')) - int(self.data['total:']['serious'].replace(',', '')))
+            else:
+                mild = 'N/A'
             ratio_dead = "{0:.1%}".format(int(self.data['total:']['total_deaths'].replace(',', ''))/int(self.data['total:']['total_cases'].replace(',', '')))
-            irc.reply("\x02\x1F{0}\x1F: Cases: \x0307{1}\x03 (\x0307+{2}\x03) | Deaths: \x0304{3}\x03 (\x0304+{4}\x03) (\x0304{5}\x03) | Recovered: \x0309{6}\x03 | Active: \x0307{7}\x03 (\x0310{8}\x03 Mild) (\x0313{9}\x03 Serious) | Cases/1M Population: \x0307{10}\x03 | Updated: {11}".format(
+            ratio_recovered = "{0:.1%}".format(int(self.data['total:']['total_recovered'].replace(',', ''))/int(self.data['total:']['total_cases'].replace(',', '')))
+            irc.reply("\x02\x1F{0}\x1F: Cases: \x0307{1}\x03 (\x0307+{2}\x03) | Deaths: \x0304{3}\x03 (\x0304+{4}\x03) (\x0304{5}\x03) | Recovered: \x0309{6}\x03 (\x0309{7}\x03) | Active: \x0307{8}\x03 (\x0310{9}\x03 Mild) (\x0313{10}\x03 Serious) | Cases/1M Population: \x0307{11}\x03 | Updated: {12}".format(
                 'Global',
                 self.data['total:']['total_cases'],
                 self.data['total:']['new_cases'],
@@ -552,8 +561,9 @@ class Corona(callbacks.Plugin):
                 self.data['total:']['new_deaths'],
                 ratio_dead,
                 self.data['total:']['total_recovered'],
+                ratio_recovered,
                 self.data['total:']['active'],
-                '{:,}'.format(mild),
+                mild,
                 self.data['total:']['serious'],
                 self.data['total:']['per_million'],
                 self.time_created(updated)))
