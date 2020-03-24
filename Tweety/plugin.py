@@ -29,9 +29,9 @@
 ###
 
 # my libs
-import urllib.request, urllib.error
 import json
 import requests
+from requests_oauthlib import OAuth1
 import os
 # libraries for time_created_at
 import time
@@ -39,8 +39,6 @@ from datetime import datetime
 # for unescape
 import re
 import html.entities
-# oauthtwitter
-import oauth2 as oauth
 # supybot libs
 import supybot.utils as utils
 from supybot.commands import *
@@ -55,51 +53,27 @@ class OAuthApi:
     """OAuth class to work with Twitter v1.1 API."""
 
     def __init__(self, consumer_key, consumer_secret, token, token_secret):
-        token = oauth.Token(token, token_secret)
-        self._Consumer = oauth.Consumer(consumer_key, consumer_secret)
-        self._signature_method = oauth.SignatureMethod_HMAC_SHA1()
-        self._access_token = token
-
-    def _FetchUrl(self,url, parameters=None):
-        """Fetch a URL with oAuth. Returns a string containing the body of the response."""
-        extra_params = {}
-        if parameters:
-            extra_params.update(parameters)
-        req = self._makeOAuthRequest(url, params=extra_params)
-        opener = urllib.request.build_opener(urllib.request.HTTPHandler(debuglevel=0))
-        url = req.to_url()
-        url_data = opener.open(url)
-        opener.close()
-        return url_data
-
-    def _makeOAuthRequest(self, url, token=None, params=None):
-        """Make a OAuth request from url and parameters. Returns oAuth object."""
-        oauth_base_params = {
-            'oauth_version': "1.0",
-            'oauth_nonce': oauth.generate_nonce(),
-            'oauth_timestamp': int(time.time())
-            }
-        if params:
-            params.update(oauth_base_params)
-        else:
-            params = oauth_base_params
-        if not token:
-            token = self._access_token
-        request = oauth.Request(method="GET", url=url, parameters=params)
-        request.sign_request(self._signature_method, self._Consumer, token)
-        return request
+        self.auth = OAuth1(consumer_key, consumer_secret, token, token_secret)
 
     def ApiCall(self, call, parameters={}):
         """Calls the twitter API with 'call' and returns the twitter object (JSON)."""
+        extra_params = {}
+        if parameters:
+            extra_params.update(parameters)
         try:
-            data = self._FetchUrl("https://api.twitter.com/1.1/" + call + ".json", parameters)
-        except urllib.error.HTTPError as e:  # http error code.
-            return e.code
-        except urllib.error.URLError as e:  # http "reason"
-            return e.reason
-        else:  # return data if good.
-            return data
-
+            r = requests.get("https://api.twitter.com/1.1/" + call + ".json", params=extra_params, auth=self.auth, timeout=10)
+            r.raise_for_status()
+        except (requests.exceptions.RequestException, requests.exceptions.HTTPError) as e:
+            log.info('Tweety: error connecting to Twitter API (Retrying...): {0}'.format(e))
+            try:
+                r = requests.get("https://api.twitter.com/1.1/" + call + ".json", params=extra_params, auth=self.auth, timeout=10)
+                r.raise_for_status()
+            except (requests.exceptions.RequestException, requests.exceptions.HTTPError) as e:
+                log.info('Tweety: error connecting to Twitter API on retry: {0}'.format(e))
+            else:
+                return r.content
+        else:
+            return r.content
 
 class Tweety(callbacks.Plugin):
     """Public Twitter class for working with the API."""
@@ -177,11 +151,11 @@ class Tweety(callbacks.Plugin):
             data = twitterApi.ApiCall('account/verify_credentials')
             # check the response. if we can load json, it means we're authenticated. else, return response.
             try:  # if we pass, response is validated. set self.twitterApi w/object.
-                json.loads(data.read())
+                json.loads(data)
                 self.log.info("I have successfully authorized and logged in to Twitter using your credentials.")
                 self.twitterApi = OAuthApi(self.registryValue('consumerKey'), self.registryValue('consumerSecret'), self.registryValue('accessKey'), self.registryValue('accessSecret'))
             except:  # response failed. Return what we got back.
-                self.log.error("ERROR: I could not log in using your credentials. Message: {0}".format(data))
+                self.log.error("Tweety: ERROR. I could not log in using your credentials.")
                 return False
         else:  # if we're already validated, pass.
             pass
@@ -299,7 +273,7 @@ class Tweety(callbacks.Plugin):
         """
         try:
             data = self.twitterApi.ApiCall('trends/available')
-            data = json.loads(data.read())
+            data = json.loads(data)
         except:
             data = None
             log.debug('Tweety: error retrieving data from Trends API')
@@ -335,7 +309,7 @@ class Tweety(callbacks.Plugin):
         # make API call.
         data = self.twitterApi.ApiCall('application/rate_limit_status', parameters={'resources':'trends,search,statuses,users'})
         try:
-            data = json.loads(data.read())
+            data = json.loads(data)
         except:
             irc.reply("ERROR: Failed to lookup ratelimit data: {0}".format(data))
             return
@@ -402,7 +376,7 @@ class Tweety(callbacks.Plugin):
         # now build our API call
         data = self.twitterApi.ApiCall('trends/place', parameters=args)
         try:
-            data = json.loads(data.read())
+            data = json.loads(data)
         except:
             irc.reply("ERROR: failed to lookup trends on Twitter: {0}".format(data))
             return
@@ -468,7 +442,7 @@ class Tweety(callbacks.Plugin):
         # now build our API call.
         data = self.twitterApi.ApiCall('search/tweets', parameters=tsearchArgs)
         try:
-            data = json.loads(data.read())
+            data = json.loads(data)
         except:
             irc.reply("ERROR: Something went wrong trying to search Twitter. ({0})".format(data))
             return
@@ -592,7 +566,7 @@ class Tweety(callbacks.Plugin):
         # call the Twitter API with our data.
         data = self.twitterApi.ApiCall(apiUrl, parameters=twitterArgs)
         try:
-            data = json.loads(data.read())
+            data = json.loads(data)
         except:
             irc.reply("ERROR: Failed to lookup Twitter for '{0}' ({1}) ".format(optnick, data))
             return
