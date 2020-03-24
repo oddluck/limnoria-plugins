@@ -486,7 +486,10 @@ class Corona(callbacks.Plugin):
                         pass
         if search and self.data.get(search):
             if self.data[search]['country']:
-                ratio_dead = "{0:.1%}".format(int(self.data[search]['total_deaths'].replace(',', ''))/int(self.data[search]['total_cases'].replace(',', '')))
+                if self.data[search]['total_deaths'].strip():
+                    ratio_dead = "{0:.1%}".format(int(self.data[search]['total_deaths'].replace(',', ''))/int(self.data[search]['total_cases'].replace(',', '')))
+                else:
+                    ratio_dead = "{0:.1%}".format(0)
                 mild = int(self.data[search]['active'].replace(',', '')) - int(self.data[search]['serious'].replace(',', ''))
                 irc.reply("\x02\x1F{0}\x1F: World Rank: {1} | Cases: \x0307{2}\x03 (\x0307{3}\x03) | Deaths: \x0304{4}\x03 (\x0304{5}\x03) (\x0304{6}\x03) | Recovered: \x0309{7}\x03 | Active: \x0307{8}\x03 (\x0310{9}\x03 Mild) (\x0313{10}\x03 Serious) | Updated: {11}".format(
                     self.data[search]['name'],
@@ -502,7 +505,10 @@ class Corona(callbacks.Plugin):
                     self.data[search]['serious'],
                     self.time_created(updated)))
             else:
-                ratio_dead = "{0:.1%}".format(int(self.data[search]['total_deaths'].replace(',', ''))/int(self.data[search]['total_cases'].replace(',', '')))
+                if self.data[search]['total_deaths'].strip():
+                    ratio_dead = "{0:.1%}".format(int(self.data[search]['total_deaths'].replace(',', ''))/int(self.data[search]['total_cases'].replace(',', '')))
+                else:
+                    ratio_dead = "{0:.1%}".format(0)
                 irc.reply("\x02\x1F{0}\x1F: USA Rank: {1} | Cases: \x0307{2}\x03 (\x0307{3}\x03) | Deaths: \x0304{4}\x03 (\x0304{5}\x03) (\x0304{6}\x03) | Active: \x0307{7}\x03 | Updated: {8}".format(
                     self.data[search]['name'],
                     self.data[search]['rank'],
@@ -515,7 +521,10 @@ class Corona(callbacks.Plugin):
                     self.time_created(updated)))
         else:
             mild = int(self.data['total:']['active'].replace(',', '')) - int(self.data['total:']['serious'].replace(',', ''))
-            ratio_dead = "{0:.1%}".format(int(self.data['total:']['total_deaths'].replace(',', ''))/int(self.data['total:']['total_cases'].replace(',', '')))
+            if self.data['total:']['total_deaths'].strip():
+                ratio_dead = "{0:.1%}".format(int(self.data['total:']['total_deaths'].replace(',', ''))/int(self.data['total:']['total_cases'].replace(',', '')))
+            else:
+                ratio_dead = "{0:.1%}".format(0)
             irc.reply("\x02\x1F{0}\x1F: Cases: \x0307{1}\x03 (\x0307+{2}\x03) | Deaths: \x0304{3}\x03 (\x0304+{4}\x03) (\x0304{5}\x03) | Recovered: \x0309{6}\x03 | Active: \x0307{7}\x03 (\x0310{8}\x03 Mild) (\x0313{9}\x03 Serious) | Updated: {10}".format(
                 'Global',
                 self.data['total:']['total_cases'],
