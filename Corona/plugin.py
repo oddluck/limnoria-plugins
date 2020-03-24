@@ -29,7 +29,7 @@
 ###
 
 import requests
-import pendulum
+import datetime
 import re
 from bs4 import BeautifulSoup
 from supybot import utils, plugins, ircutils, callbacks, log
@@ -364,13 +364,14 @@ class Corona(callbacks.Plugin):
         self.__parent = super(Corona, self)
         self.__parent.__init__(irc)
         self.data = requests.structures.CaseInsensitiveDict()
-        self.updated = pendulum.yesterday()
+        today = datetime.datetime.utcnow()
+        self.updated = today - datetime.timedelta(days=1)
 
     def time_created(self, time):
         """
         Return relative time delta between now and s (dt string).
         """
-        d = pendulum.now() - time
+        d = datetime.datetime.utcnow() - time
         if d.days:
             rel_time = "{:1d}d ago".format(abs(d.days))
         elif d.seconds > 3600:
@@ -400,7 +401,7 @@ class Corona(callbacks.Plugin):
         soup = BeautifulSoup(r.content)
         updated = soup.find("div", text = re.compile('Last updated:'))
         updated = updated.text.split(':', 1)[1].replace('GMT', '').strip()
-        updated = pendulum.from_format(updated, "MMMM DD, YYYY, HH:mm")
+        updated = datetime.datetime.strptime(updated, "%B %d, %Y, %H:%M")
         if OK and updated > self.updated:
             self.updated = updated
             table = soup.find("table", { "id" : "main_table_countries_today" })
