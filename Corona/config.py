@@ -50,11 +50,5 @@ def configure(advanced):
 
 Corona = conf.registerPlugin('Corona')
 
-conf.registerChannelValue(Corona, 'template',
-    registry.String("\x02$location: \x0307$confirmed\x03 infected, \x0304$dead\x03 dead ($ratio), \x0309$recovered\x03 recovered. (Last update: $updated)", _("""Template for replies""")))
-
 conf.registerChannelValue(Corona, 'countryFirst',
     registry.Boolean(False, _("Give preference to country name abbreviations over USA state name abbreviations")))
-
-conf.registerGlobalValue(Corona, 'cacheLifetime',
-    registry.Integer(600, _("Amount of time in seconds to cache API results")))

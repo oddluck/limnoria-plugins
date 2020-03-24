@@ -28,12 +28,13 @@
 # POSSIBILITY OF SUCH DAMAGE.
 ###
 
-import json
 import requests
-import csv
-import datetime
+import pendulum
+import re
+from bs4 import BeautifulSoup
 from supybot import utils, plugins, ircutils, callbacks, log
 from supybot.commands import *
+
 try:
     from supybot.i18n import PluginInternationalization
     _ = PluginInternationalization('Corona')
@@ -59,7 +60,7 @@ countries = {
     "AU": "AUSTRALIA",
     "AT": "AUSTRIA",
     "AZ": "AZERBAIJAN",
-    "BS": "BAHAMAS, THE",
+    "BS": "BAHAMAS",
     "BH": "BAHRAIN",
     "BD": "BANGLADESH",
     "BB": "BARBADOS",
@@ -83,9 +84,9 @@ countries = {
     "KH": "CAMBODIA",
     "CM": "CAMEROON",
     "CA": "CANADA",
-    "CV": "CAPE VERDE",
+    "CV": "CABO VERDE",
     "KY": "CAYMAN ISLANDS",
-    "CF": "CENTRAL AFRICAN REPUBLIC",
+    "CF": "CAR",
     "TD": "CHAD",
     "CL": "CHILE",
     "CN": "CHINA",
@@ -93,8 +94,8 @@ countries = {
     "CC": "COCOS ISLANDS",
     "CO": "COLOMBIA",
     "KM": "COMOROS",
-    "CG": "CONGO (BRAZZAVILLE)",
-    "CD": "CONGO (KINSHASA)",
+    "CG": "CONGO",
+    "CD": "CONGO",
     "CK": "COOK ISLANDS",
     "CR": "COSTA RICA",
     "CI": "CÔTE D'IVOIRE",
@@ -119,11 +120,11 @@ countries = {
     "FJ": "FIJI",
     "FI": "FINLAND",
     "FR": "FRANCE",
-    "GF": "GUIANA",
-    "PF": "POLYNESIA",
+    "GF": "FRENCH GUIANA",
+    "PF": "FRENCH POLYNESIA",
     "TF": "FRENCH SOUTHERN TERRITORIES",
     "GA": "GABON",
-    "GM": "GAMBIA, THE",
+    "GM": "GAMBIA",
     "GE": "GEORGIA",
     "DE": "GERMANY",
     "GH": "GHANA",
@@ -136,11 +137,11 @@ countries = {
     "GT": "GUATEMALA",
     "GG": "GUERNSEY",
     "GN": "GUINEA",
-    "GW": "GUINEA-BISSAU",
+    "GW": "GUINEA",
     "GY": "GUYANA",
     "HT": "HAITI",
     "HM": "HEARD ISLAND AND MCDONALD ISLANDS",
-    "VA": "HOLY SEE",
+    "VA": "VATICAN CITY",
     "HN": "HONDURAS",
     "HK": "HONG KONG",
     "HU": "HUNGARY",
@@ -160,8 +161,8 @@ countries = {
     "KZ": "KAZAKHSTAN",
     "KE": "KENYA",
     "KI": "KIRIBATI",
-    "KP": "KOREA, NORTH",
-    "KR": "KOREA, SOUTH",
+    "KP": "N. KOREA",
+    "KR": "S. KOREA",
     "KW": "KUWAIT",
     "KG": "KYRGYZSTAN",
     "LA": "LAOS",
@@ -212,7 +213,7 @@ countries = {
     "OM": "OMAN",
     "PK": "PAKISTAN",
     "PW": "PALAU",
-    "PS": "PALESTINE, STATE OF",
+    "PS": "PALESTINE",
     "PA": "PANAMA",
     "PG": "PAPUA NEW GUINEA",
     "PY": "PARAGUAY",
@@ -227,13 +228,13 @@ countries = {
     "RO": "ROMANIA",
     "RU": "RUSSIA",
     "RW": "RWANDA",
-    "BL": "SAINT BARTHÉLEMY",
+    "BL": "ST. BARTH",
     "SH": "SAINT HELENA",
     "KN": "SAINT KITTS AND NEVIS",
     "LC": "SAINT LUCIA",
     "MF": "SAINT MARTIN",
     "PM": "SAINT PIERRE AND MIQUELON",
-    "VC": "SAINT VINCENT AND THE GRENADINES",
+    "VC": "ST. VINCENT GRENADINES",
     "WS": "SAMOA",
     "SM": "SAN MARINO",
     "ST": "SAO TOME AND PRINCIPE",
@@ -250,7 +251,7 @@ countries = {
     "SO": "SOMALIA",
     "ZA": "SOUTH AFRICA",
     "GS": "GEORGIA",
-    "SS": "SOUTH SUDAN",
+    "SS": "SUDAN",
     "ES": "SPAIN",
     "LK": "SRI LANKA",
     "SD": "SUDAN",
@@ -272,22 +273,22 @@ countries = {
     "TN": "TUNISIA",
     "TR": "TURKEY",
     "TM": "TURKMENISTAN",
-    "TC": "TURKS AND CAICOS ISLANDS",
+    "TC": "TURKS AND CAICOS",
     "TV": "TUVALU",
     "UG": "UGANDA",
     "UA": "UKRAINE",
     "AE": "UNITED ARAB EMIRATES",
-    "GB": "UNITED KINGDOM",
-    "UK": "UNITED KINGDOM",
-    "US": "US",
+    "GB": "UK",
+    "UK": "UK",
+    "US": "USA",
     "UM": "UNITED STATES MINOR OUTLYING ISLANDS",
     "UY": "URUGUAY",
     "UZ": "UZBEKISTAN",
     "VU": "VANUATU",
     "VE": "VENEZUELA",
     "VN": "VIETNAM",
-    "VG": "VIRGIN ISLANDS",
-    "VI": "VIRGIN ISLANDS",
+    "VG": "U.S. VIRGIN ISLANDS",
+    "VI": "U.S. VIRGIN ISLANDS",
     "WF": "WALLIS AND FUTUNA",
     "EH": "WESTERN SAHARA",
     "YE": "YEMEN",
@@ -362,58 +363,20 @@ class Corona(callbacks.Plugin):
     def __init__(self, irc):
         self.__parent = super(Corona, self)
         self.__parent.__init__(irc)
-        self.cache = {}
+        self.data = requests.structures.CaseInsensitiveDict()
+        self.updated = pendulum.yesterday()
 
-    def getCSV(self):
-        data = None
-        try:
-            day = datetime.date.today().strftime('%m-%d-%Y')
-            url = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/{0}.csv".format(day)
-            r = requests.get(url, timeout=10)
-            r.raise_for_status()
-        except (requests.exceptions.RequestException, requests.exceptions.HTTPError) as e:
-            log.debug('Corona: error retrieving data for today: {0}'.format(e))
-            try:
-                day = datetime.date.today() - datetime.timedelta(days=1)
-                day = day.strftime('%m-%d-%Y')
-                url = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/{0}.csv".format(day)
-                r = requests.get(url, timeout=10)
-                r.raise_for_status()
-            except (requests.exceptions.RequestException, requests.exceptions.HTTPError) as e:
-                log.debug('Corona: error retrieving data for yesterday: {0}'.format(e))
-            else:
-                data = csv.DictReader(r.iter_lines(decode_unicode = True))
-        else:
-            data = csv.DictReader(r.iter_lines(decode_unicode = True))
-        return data
-
-    def getAPI(self):
-        data = None
-        url = "https://services1.arcgis.com/0MSEUqKaxRlEPj5g/arcgis/rest/services/ncov_cases/FeatureServer/1/query?f=json&where=Confirmed>0&outFields=*"
-        try:
-            r = requests.get(url, timeout=10)
-            r.raise_for_status()
-        except (requests.exceptions.RequestException, requests.exceptions.HTTPError) as e:
-            log.debug('Corona: error retrieving data from API: {0}'.format(e))
-        else:
-            try:
-                r = json.loads(r.content.decode())
-                data = r.get('features')
-            except:
-                data = None
-            if not data:
-                log.debug("Corona: Error retrieving features data from API.")
-        return data
-
-    def timeCreated(self, time):
-        time = datetime.datetime.fromtimestamp(time/1000.0)
-        d = datetime.datetime.now() - time
+    def time_created(self, time):
+        """
+        Return relative time delta between now and s (dt string).
+        """
+        d = pendulum.now() - time
         if d.days:
-            rel_time = "{:1d} days ago".format(abs(d.days))
+            rel_time = "{:1d}d ago".format(abs(d.days))
         elif d.seconds > 3600:
-            rel_time = "{:.1f} hours ago".format(round((abs(d.seconds) / 3600),1))
+            rel_time = "{:.1f}h ago".format(round((abs(d.seconds) / 3600),1))
         elif 60 <= d.seconds < 3600:
-            rel_time = "{:.1f} minutes ago".format(round((abs(d.seconds) / 60),1))
+            rel_time = "{:.1f}m ago".format(round((abs(d.seconds) / 60),1))
         else:
             rel_time = "%ss ago" % (abs(d.seconds))
         return rel_time
@@ -426,139 +389,143 @@ class Corona(callbacks.Plugin):
         character) country abbreviations and US Postal (two character) state abbreviations.
         Invalid region names or search terms without data return global results.
         """
-        git = api = False
-        data = None
-        if len(self.cache) > 0:
-            cacheLifetime = self.registryValue("cacheLifetime")
-            now = datetime.datetime.now()
-            seconds = (now - self.cache['timestamp']).total_seconds()
-            if seconds < cacheLifetime:
-                data = self.cache['data']
-                api = True
-                log.debug("Corona: returning cached API data")
-            else:
-                data = self.getAPI()
-                if data:
-                    api = True
-                    self.cache['timestamp'] = datetime.datetime.now()
-                    self.cache['data'] = data
-                    log.debug("Corona: caching API data")
-                else:
-                    now = datetime.datetime.now()
-                    midnight = now.replace(hour=0, minute=0, second=0, microsecond=0)
-                    seconds = (now - midnight).seconds
-                    if seconds > (now - self.cache['timestamp']).total_seconds():
-                        data = self.cache['data']
-                        api = True
-                        log.debug("Corona: error accessing API, returning cached API data")
+        OK = False
+        try:
+            r = requests.get('https://www.worldometers.info/coronavirus/', timeout=10)
+            r.raise_for_status()
+            OK = True
+        except (requests.exceptions.RequestException, requests.exceptions.HTTPError) as e:
+            log.debug('Corona: error retrieving World data from API: {0}'.format(e))
+            OK = False
+        soup = BeautifulSoup(r.content)
+        updated = soup.find("div", text = re.compile('Last updated:'))
+        updated = updated.text.split(':', 1)[1].replace('GMT', '').strip()
+        updated = pendulum.from_format(updated, "MMMM DD, YYYY, HH:mm")
+        if OK and updated > self.updated:
+            self.updated = updated
+            table = soup.find("table", { "id" : "main_table_countries_today" })
+            n = 0
+            for row in table.findAll("tr"):
+                cells = row.findAll("td")
+                if len(cells) == 9:
+                    n += 1
+                    country = cells[0].text.strip()
+                    self.data[country] = {}
+                    self.data[country]['name'] = country
+                    self.data[country]['country'] = True
+                    self.data[country]['total_cases'] = cells[1].text.strip()
+                    if cells[2].text.strip():
+                        self.data[country]['new_cases'] = cells[2].text.strip()
                     else:
-                        data = self.getCSV()
-                        if data:
-                            git = True
-        else:
-            data = self.getAPI()
-            if data:
-                api = True
-                self.cache['timestamp'] = datetime.datetime.now()
-                self.cache['data'] = data
-                log.debug("Corona: caching API data")
+                        self.data[country]['new_cases'] = '+0'
+                    self.data[country]['total_deaths'] = cells[3].text.strip()
+                    if cells[4].text.strip():
+                        self.data[country]['new_deaths'] = cells[4].text.strip()
+                    else:
+                        self.data[country]['new_deaths'] = '+0'
+                    self.data[country]['total_recovered'] = cells[5].text.strip()
+                    self.data[country]['active'] = cells[6].text.strip()
+                    self.data[country]['serious'] = cells[7].text.strip()
+                    self.data[country]['per_million'] = cells[8].text.strip()
+                    self.data[country]['rank'] = "#{}".format(n)
+            try:
+                r = requests.get('https://www.worldometers.info/coronavirus/country/us/', timeout=10)
+                r.raise_for_status()
+                OK = True
+            except (requests.exceptions.RequestException, requests.exceptions.HTTPError) as e:
+                log.debug('Corona: error retrieving USA data from API: {0}'.format(e))
+                OK = False
+            if OK:
+                soup = BeautifulSoup(r.content)
+                table = soup.find("table", { "id" : "usa_table_countries_today" })
+                n = 0
+                for row in table.findAll("tr")[:-1]:
+                    cells = row.findAll("td")
+                    if len(cells) == 7:
+                        n += 1
+                        state = cells[0].text.strip()
+                        self.data[state] = {}
+                        self.data[state]['country'] = False
+                        self.data[state]['name'] = state
+                        self.data[state]['total_cases'] = cells[1].text.strip()
+                        if cells[2].text.strip():
+                            self.data[state]['new_cases'] = cells[2].text.strip()
+                        else:
+                            self.data[state]['new_cases'] = '+0'
+                        self.data[state]['total_deaths'] = cells[3].text.strip()
+                        if cells[4].text.strip():
+                            self.data[state]['new_deaths'] = cells[4].text.strip()
+                        else:
+                            self.data[state]['new_deaths'] = '+0'
+                        self.data[state]['active'] = cells[5].text.strip()
+                        self.data[state]['rank'] = "#{}".format(n)
             else:
-                data = self.getCSV()
-                if data:
-                    git = True
-        if not data:
-            irc.reply("Error. Unable to access database.")
+                log.debug("Corona: unable to retrieve latest USA data")
+        elif len(self.data) > 0:
+            log.debug("Corona: data not yet updated, using cache")
+        else:
+            log.debug("Corona: Error. Unable to retrieve data.")
             return
-        total_confirmed = total_deaths = total_recovered = last_update = 0
-        confirmed = deaths = recovered = updated = 0
-        location = 'Global'
-        for region in data:
-            if api:
-                r = region.get('attributes')
+        if search and len(search) == 2:
+            if self.registryValue("countryFirst", msg.channel):
+                try:
+                    search = countries[search.upper()]
+                except KeyError:
+                    try:
+                        search = states[search.upper()]
+                    except KeyError:
+                        pass
             else:
-                r = region
-            if search:
-                if api:
-                    region = r.get('Country_Region')
-                    state = r.get('Province_State')
-                else:
-                    region = r.get('Country/Region')
-                    state = r.get('Province/State')
-                if len(search) == 2:
-                    if self.registryValue("countryFirst", msg.channel):
-                        try:
-                            search = countries[search.upper()]
-                        except KeyError:
-                            try:
-                                search = states[search.upper()]
-                            except KeyError:
-                                pass
-                    else:
-                        try:
-                            search = states[search.upper()]
-                        except KeyError:
-                            try:
-                                search = countries[search.upper()]
-                            except KeyError:
-                                pass
-                if search.lower() == 'usa' or 'united states' in search.lower():
-                    search = 'us'
-                if 'korea' in search.lower():
-                    search = 'korea, south'
-                if region and search.lower() == region.lower():
-                    location = region
-                    confirmed += int(r.get('Confirmed'))
-                    deaths += int(r.get('Deaths'))
-                    recovered += int(r.get('Recovered'))
-                    if api:
-                        time = int(r.get('Last_Update'))
-                    if git:
-                        time = datetime.datetime.strptime(r.get('Last Update'), "%Y-%m-%dT%H:%M:%S")
-                        time = int(time.timestamp()*1000)
-                    if time > updated:
-                        updated = time
-                    local_ratio_dead = "{0:.1%}".format(deaths/confirmed)
-                elif state and search.lower() == state.lower():
-                    location = state
-                    confirmed += int(r.get('Confirmed'))
-                    deaths += int(r.get('Deaths'))
-                    recovered += int(r.get('Recovered'))
-                    if api:
-                        time = int(r.get('Last_Update'))
-                    if git:
-                        time = datetime.datetime.strptime(r.get('Last Update'), "%Y-%m-%dT%H:%M:%S")
-                        time = int(time.timestamp()*1000)
-                    if time > updated:
-                        updated = time
-                    local_ratio_dead = "{0:.1%}".format(deaths/confirmed)
-            total_confirmed += int(r.get('Confirmed'))
-            total_deaths += int(r.get('Deaths'))
-            total_recovered += int(r.get('Recovered'))
-            if api:
-                time = int(r.get('Last_Update'))
-            if git:
-                time = datetime.datetime.strptime(r.get('Last Update'), "%Y-%m-%dT%H:%M:%S")
-                time = int(time.timestamp()*1000)
-            if time > last_update:
-                last_update = time
-        ratio_dead = "{0:.1%}".format(total_deaths/total_confirmed)
-        template = self.registryValue("template", msg.channel)
-        if location == 'Global':
-            last_update = self.timeCreated(last_update)
-            template = template.replace("$location", location)
-            template = template.replace("$confirmed", str(total_confirmed))
-            template = template.replace("$dead", str(total_deaths))
-            template = template.replace("$recovered", str(total_recovered))
-            template = template.replace("$ratio", ratio_dead)
-            template = template.replace("$updated", last_update)
+                try:
+                    search = states[search.upper()]
+                except KeyError:
+                    try:
+                        search = countries[search.upper()]
+                    except KeyError:
+                        pass
+        if search and self.data.get(search):
+            if self.data[search]['country']:
+                ratio_dead = "{0:.1%}".format(int(self.data[search]['total_deaths'].replace(',', ''))/int(self.data[search]['total_cases'].replace(',', '')))
+                mild = int(self.data[search]['active'].replace(',', '')) - int(self.data[search]['serious'].replace(',', ''))
+                irc.reply("\x02\x1F{0}\x1F: World Rank: {1} | Cases: \x0307{2}\x03 (\x0307{3}\x03) | Deaths: \x0304{4}\x03 (\x0304{5}\x03) (\x0304{6}\x03) | Recovered: \x0309{7}\x03 | Active: \x0307{8}\x03 (\x0310{9}\x03 Mild) (\x0313{10}\x03 Serious) | Updated: {11}".format(
+                    self.data[search]['name'],
+                    self.data[search]['rank'],
+                    self.data[search]['total_cases'],
+                    self.data[search]['new_cases'],
+                    self.data[search]['total_deaths'],
+                    self.data[search]['new_deaths'],
+                    ratio_dead,
+                    self.data[search]['total_recovered'],
+                    self.data[search]['active'],
+                    '{:,}'.format(mild),
+                    self.data[search]['serious'],
+                    self.time_created(updated)))
+            else:
+                ratio_dead = "{0:.1%}".format(int(self.data[search]['total_deaths'].replace(',', ''))/int(self.data[search]['total_cases'].replace(',', '')))
+                irc.reply("\x02\x1F{0}\x1F: USA Rank: {1} | Cases: \x0307{2}\x03 (\x0307{3}\x03) | Deaths: \x0304{4}\x03 (\x0304{5}\x03) (\x0304{6}\x03) | Active: \x0307{7}\x03 | Updated: {8}".format(
+                    self.data[search]['name'],
+                    self.data[search]['rank'],
+                    self.data[search]['total_cases'],
+                    self.data[search]['new_cases'],
+                    self.data[search]['total_deaths'],
+                    self.data[search]['new_deaths'],
+                    ratio_dead,
+                    self.data[search]['active'],
+                    self.time_created(updated)))
         else:
-            updated = self.timeCreated(updated)
-            template = template.replace("$location", location)
-            template = template.replace("$confirmed", str(confirmed))
-            template = template.replace("$dead", str(deaths))
-            template = template.replace("$recovered", str(recovered))
-            template = template.replace("$ratio", local_ratio_dead)
-            template = template.replace("$updated", updated)
-        irc.reply(template)
+            mild = int(self.data['total:']['active'].replace(',', '')) - int(self.data['total:']['serious'].replace(',', ''))
+            ratio_dead = "{0:.1%}".format(int(self.data['total:']['total_deaths'].replace(',', ''))/int(self.data['total:']['total_cases'].replace(',', '')))
+            irc.reply("\x02\x1F{0}\x1F: Cases: \x0307{1}\x03 (\x0307+{2}\x03) | Deaths: \x0304{3}\x03 (\x0304+{4}\x03) (\x0304{5}\x03) | Recovered: \x0309{6}\x03 | Active: \x0307{7}\x03 (\x0310{8}\x03 Mild) (\x0313{9}\x03 Serious) | Updated: {10}".format(
+                'Global',
+                self.data['total:']['total_cases'],
+                self.data['total:']['new_cases'],
+                self.data['total:']['total_deaths'],
+                self.data['total:']['new_deaths'],
+                ratio_dead,
+                self.data['total:']['total_recovered'],
+                self.data['total:']['active'],
+                '{:,}'.format(mild),
+                self.data['total:']['serious'],
+                self.time_created(updated)))
 
 Class = Corona
