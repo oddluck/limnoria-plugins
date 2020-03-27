@@ -530,7 +530,7 @@ class Corona(callbacks.Plugin):
                 irc.reply("\x02\x1F{0}\x1F: World Rank: {1} | Cases: \x0307{2}\x03 (\x0307{3}\x03) | Deaths: \x0304{4}\x03 (\x0304{5}\x03) (\x0304{6}\x03) | Recovered: \x0309{7}\x03 (\x0309{8}\x03) | Active: \x0307{9}\x03 (\x0310{10}\x03 Mild) (\x0313{11}\x03 Serious) | Cases/1M: \x0307{12}\x03 | Deaths/1M: \x0304{13}\x03 | Updated: {14}".format(
                     self.data[search]['name'],
                     self.data[search]['rank'],
-                    self.data[search]['total_cases'],
+                    '{:,}'.format(self.data[search]['total_cases']),
                     self.data[search]['new_cases'],
                     self.data[search]['total_deaths'],
                     self.data[search]['new_deaths'],
@@ -548,7 +548,7 @@ class Corona(callbacks.Plugin):
                 irc.reply("\x02\x1F{0}\x1F: USA Rank: {1} | Cases: \x0307{2}\x03 (\x0307{3}\x03) | Deaths: \x0304{4}\x03 (\x0304{5}\x03) (\x0304{6}\x03) | Active: \x0307{7}\x03 | Updated: {8}".format(
                     self.data[search]['name'],
                     self.data[search]['rank'],
-                    self.data[search]['total_cases'],
+                    '{:,}'.format(self.data[search]['total_cases']),
                     self.data[search]['new_cases'],
                     self.data[search]['total_deaths'],
                     self.data[search]['new_deaths'],
@@ -564,7 +564,7 @@ class Corona(callbacks.Plugin):
             ratio_recovered = "{0:.1%}".format(int(self.data['total:']['total_recovered'].replace(',', ''))/self.data['total:']['total_cases'])
             irc.reply("\x02\x1F{0}\x1F: Cases: \x0307{1}\x03 (\x0307+{2}\x03) | Deaths: \x0304{3}\x03 (\x0304+{4}\x03) (\x0304{5}\x03) | Recovered: \x0309{6}\x03 (\x0309{7}\x03) | Active: \x0307{8}\x03 (\x0310{9}\x03 Mild) (\x0313{10}\x03 Serious) | Cases/1M: \x0307{11}\x03 | Deaths/1M: \x0304{12}\x03 | Updated: {13}".format(
                 'Global',
-                self.data['total:']['total_cases'],
+                '{:,}'.format(self.data['total:']['total_cases']),
                 self.data['total:']['new_cases'],
                 self.data['total:']['total_deaths'],
                 self.data['total:']['new_deaths'],
