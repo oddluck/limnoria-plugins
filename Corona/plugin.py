@@ -382,14 +382,19 @@ class Corona(callbacks.Plugin):
             rel_time = "%ss ago" % (abs(d.seconds))
         return rel_time
 
-    @wrap([optional('text')])
-    def corona(self, irc, msg, args, search):
-        """[region]
+    @wrap([getopts({'top10':''}), optional('text')])
+    def corona(self, irc, msg, args, optlist, search):
+        """[--top10] [region]
         Displays Coronavirus statistics. Add a region name to search for country/state
         specific results. Accepts full country/state names or ISO 3166-1 alpha-2 (two
         character) country abbreviations and US Postal (two character) state abbreviations.
         Invalid region names or search terms without data return global results.
         """
+        optlist = dict(optlist)
+        if 'top10' in optlist:
+            top10 = True
+        else:
+            top10 = False
         OK = False
         try:
             r = requests.get('https://www.worldometers.info/coronavirus/', timeout=10)
@@ -519,7 +524,7 @@ class Corona(callbacks.Plugin):
                         search = countries[search.upper()]
                     except KeyError:
                         pass
-        if search and self.data.get(search):
+        if not top10 and search and self.data.get(search):
             if self.data[search]['country']:
                 ratio_dead = "{0:.1%}".format(int(self.data[search]['total_deaths'].replace(',', ''))/self.data[search]['total_cases'])
                 ratio_recovered = "{0:.1%}".format(int(self.data[search]['total_recovered'].replace(',', ''))/self.data[search]['total_cases'])
@@ -555,7 +560,7 @@ class Corona(callbacks.Plugin):
                     ratio_dead,
                     self.data[search]['active'],
                     self.time_created(updated)))
-        else:
+        elif not top10:
             if self.data['total:']['serious'].replace(',', '').isdigit():
                 mild = '{:,}'.format(int(self.data['total:']['active'].replace(',', '')) - int(self.data['total:']['serious'].replace(',', '')))
             else:
@@ -577,5 +582,21 @@ class Corona(callbacks.Plugin):
                 self.data['total:']['cases_million'],
                 self.data['total:']['deaths_million'],
                 self.time_created(updated)))
+        else:
+            reply = ''
+            n = 0
+            for country in self.data:
+                if country == 'Total:':
+                    continue
+                if n > 9:
+                    break
+                reply += " \x02{0}: \x1F{1}\x1F (\x0307{2}\x03/\x0304{3}\x03),".format(
+                    self.data[country]['rank'],
+                    self.data[country]['name'],
+                    '{:,}'.format(self.data[country]['total_cases']),
+                    self.data[country]['total_deaths'])
+                n += 1
+            reply = reply.strip().strip(',')
+            irc.reply(reply)
 
 Class = Corona
