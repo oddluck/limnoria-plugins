@@ -597,6 +597,6 @@ class Corona(callbacks.Plugin):
                     self.data[country]['total_deaths'])
                 n += 1
             reply = reply.strip().strip(',')
-            irc.reply("\x02{0}".format(reply))
+            irc.reply("\x02{0} | Updated: {1}".format(reply, self.time_created(updated)))
 
 Class = Corona
