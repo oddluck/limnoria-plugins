@@ -584,18 +584,17 @@ class Corona(callbacks.Plugin):
                 self.time_created(updated)))
         else:
             reply = ''
-            n = 0
+            n = 1
             for country in self.data:
-                if country == 'Total:':
-                    continue
-                if n > 9:
+                if n > 10:
                     break
-                reply += " {0}: \x1F{1}\x1F (\x0307{2}\x03/\x0304{3}\x03),".format(
-                    self.data[country]['rank'],
-                    self.data[country]['name'],
-                    '{:,}'.format(self.data[country]['total_cases']),
-                    self.data[country]['total_deaths'])
-                n += 1
+                if self.data[country]['rank'] == "#{0}".format(n):
+                    reply += " {0}: \x1F{1}\x1F (\x0307{2}\x03/\x0304{3}\x03),".format(
+                        self.data[country]['rank'],
+                        self.data[country]['name'],
+                        '{:,}'.format(self.data[country]['total_cases']),
+                        self.data[country]['total_deaths'])
+                    n += 1
             reply = reply.strip().strip(',')
             irc.reply("\x02{0} | Updated: {1}".format(reply, self.time_created(updated)))
 
