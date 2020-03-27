@@ -590,13 +590,13 @@ class Corona(callbacks.Plugin):
                     continue
                 if n > 9:
                     break
-                reply += " \x02{0}: \x1F{1}\x1F (\x0307{2}\x03/\x0304{3}\x03),".format(
+                reply += " {0}: \x1F{1}\x1F (\x0307{2}\x03/\x0304{3}\x03),".format(
                     self.data[country]['rank'],
                     self.data[country]['name'],
                     '{:,}'.format(self.data[country]['total_cases']),
                     self.data[country]['total_deaths'])
                 n += 1
             reply = reply.strip().strip(',')
-            irc.reply(reply)
+            irc.reply("\x02{0}".format(reply))
 
 Class = Corona
