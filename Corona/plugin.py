@@ -567,7 +567,7 @@ class Corona(callbacks.Plugin):
                 mild = 'N/A'
             ratio_dead = "{0:.1%}".format(int(self.data['total:']['total_deaths'].replace(',', ''))/self.data['total:']['total_cases'])
             ratio_recovered = "{0:.1%}".format(int(self.data['total:']['total_recovered'].replace(',', ''))/self.data['total:']['total_cases'])
-            irc.reply("\x02\x1F{0}\x1F: Cases: \x0307{1}\x03 (\x0307+{2}\x03) | Deaths: \x0304{3}\x03 (\x0304+{4}\x03) (\x0304{5}\x03) | Recovered: \x0309{6}\x03 (\x0309{7}\x03) | Active: \x0307{8}\x03 (\x0310{9}\x03 Mild) (\x0313{10}\x03 Serious) | Cases/1M: \x0307{11}\x03 | Deaths/1M: \x0304{12}\x03 | Updated: {13}".format(
+            irc.reply("\x02\x1F{0}\x1F: Cases: \x0307{1}\x03 (\x0307{2}\x03) | Deaths: \x0304{3}\x03 (\x0304{4}\x03) (\x0304{5}\x03) | Recovered: \x0309{6}\x03 (\x0309{7}\x03) | Active: \x0307{8}\x03 (\x0310{9}\x03 Mild) (\x0313{10}\x03 Serious) | Cases/1M: \x0307{11}\x03 | Deaths/1M: \x0304{12}\x03 | Updated: {13}".format(
                 'Global',
                 '{:,}'.format(self.data['total:']['total_cases']),
                 self.data['total:']['new_cases'],
