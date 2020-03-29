@@ -588,7 +588,7 @@ class Corona(callbacks.Plugin):
             for country in self.data:
                 if n > 10:
                     break
-                if self.data[country]['rank'] == "#{0}".format(n):
+                if self.data[country]['country'] and self.data[country]['rank'] == "#{0}".format(n):
                     reply += " {0}: \x1F{1}\x1F (\x0307{2}\x03/\x0304{3}\x03),".format(
                         self.data[country]['rank'],
                         self.data[country]['name'],
