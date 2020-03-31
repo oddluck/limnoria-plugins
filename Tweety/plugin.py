@@ -258,7 +258,7 @@ class Tweety(callbacks.Plugin):
             url = self._shortenUrl("https://twitter.com/{0}/status/{1}".format(nick, tweetid))
             if url:
                 text += " {0}".format(url)
-            if retweetid:
+            if retweetid and retweetid != tweetid:
                 url2 = self._shortenUrl("https://twitter.com/{0}/status/{1}".format(nick, retweetid))
             if url2:
                 text += " {0}".format(url2)
