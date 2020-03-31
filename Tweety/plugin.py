@@ -117,7 +117,7 @@ class Tweety(callbacks.Plugin):
                     page = page.decode('iso-8859-1')
             return page
         except utils.web.Error as e:
-            self.log.error("ERROR opening {0} message: {1}".format(url, e))
+            log.error("Tweety: ERROR opening {0} message: {1}".format(url, e))
             return None
 
     def _shortenUrl(self, url):
@@ -125,7 +125,7 @@ class Tweety(callbacks.Plugin):
         try:
             data = requests.get('http://tinyurl.com/api-create.php?url={0}'.format(url), timeout=5)
         except (requests.exceptions.RequestException, requests.exceptions.HTTPError) as e:
-            log.debug('Tweety: error retrieving tiny url: {0}'.format(e))
+            log.error('Tweety: ERROR retrieving tiny url: {0}'.format(e))
             return
         else:
             return data.content.decode()
@@ -138,12 +138,12 @@ class Tweety(callbacks.Plugin):
                 try:  # try to see if each key is set.
                     testKey = self.registryValue(checkKey)
                 except:  # a key is not set, break and error.
-                    self.log.debug("Failed checking keys. We're missing the config value for: {0}. Please set this and try again.".format(checkKey))
+                    log.error("Tweety: ERROR checking keys. We're missing the config value for: {0}. Please set this and try again.".format(checkKey))
                     failTest = True
                     break
             # if any missing, throw an error and keep twitterApi=False
             if failTest:
-                self.log.error('Failed getting keys. You must set all 4 keys in config variables and reload plugin.')
+                log.error('Tweety: ERROR getting keys. You must set all 4 keys in config variables and reload plugin.')
                 return False
             # We have all 4 keys. Now lets see if they are valid by calling verify_credentials in the API.
             self.log.info("Got all 4 keys. Now trying to auth up with Twitter.")
@@ -155,7 +155,7 @@ class Tweety(callbacks.Plugin):
                 self.log.info("I have successfully authorized and logged in to Twitter using your credentials.")
                 self.twitterApi = OAuthApi(self.registryValue('consumerKey'), self.registryValue('consumerSecret'), self.registryValue('accessKey'), self.registryValue('accessSecret'))
             except:  # response failed. Return what we got back.
-                self.log.error("Tweety: ERROR. I could not log in using your credentials.")
+                log.error("Tweety: ERROR. I could not log in using your credentials.")
                 return False
         else:  # if we're already validated, pass.
             pass
@@ -271,14 +271,17 @@ class Tweety(callbacks.Plugin):
         """<location>
         Use Yahoo's API to look-up a WOEID.
         """
+        data = self.twitterApi.ApiCall('trends/available')
+        if not data:
+            log.error('Tweety: ERROR retrieving data from Trends API')
+            return
         try:
-            data = self.twitterApi.ApiCall('trends/available')
             data = json.loads(data)
         except:
             data = None
-            log.debug('Tweety: error retrieving data from Trends API')
+            log.error('Tweety: ERROR retrieving data from Trends API')
         if not data:
-            log.debug("No location results for {0}".format(lookup))
+            log.info("Tweety: No location results for {0}".format(lookup))
             return
         return next((item["woeid"] for item in data if lookup.lower() in item["name"].lower()), None)
 
@@ -317,7 +320,7 @@ class Tweety(callbacks.Plugin):
         data = data.get('resources')
         if not data:  # simple check if we have part of the json dict.
             irc.reply("ERROR: Failed to fetch application rate limit status. Something could be wrong with Twitter.")
-            self.log.error("ERROR: fetching rate limit data. '{0}'".format(data))
+            log.error("Tweety: ERROR fetching rate limit data: {0}".format(data))
             return
         # dict of resources we want and how to parse. key=human name, values are for the json dict.
         resources = {'trends':['trends', '/trends/place'],
@@ -441,16 +444,24 @@ class Tweety(callbacks.Plugin):
                     tsearchArgs['since_id'] = self.since_id[msg.channel]['{0}'.format(optterm)]
         # now build our API call.
         data = self.twitterApi.ApiCall('search/tweets', parameters=tsearchArgs)
+        if not data:
+            if not new:
+                irc.reply("ERROR: Something went wrong trying to search Twitter. ({0})".format(data))
+            log.error("Tweety: ERROR trying to search Twitter: {0}".format(data))
+            return
         try:
             data = json.loads(data)
         except:
-            irc.reply("ERROR: Something went wrong trying to search Twitter. ({0})".format(data))
+            if not new:
+                irc.reply("ERROR: Something went wrong trying to search Twitter. ({0})".format(data))
+            log.error("Tweety: ERROR trying to search Twitter: {0}".format(data))
             return
         # check the return data.
         results = data.get('statuses') # data returned as a dict.
         if not results or len(results) == 0:  # found nothing or length 0.
             if not new:
                 irc.reply("ERROR: No Twitter Search results found for '{0}'".format(optterm))
+            log.info("Tweety: No Twitter Search results found for '{0}': {1}".format(optterm, data))
             return
         else:  # we found something.
             self.since_id[msg.channel]['{0}'.format(optterm)] = results[0].get('id')
@@ -565,10 +576,17 @@ class Tweety(callbacks.Plugin):
                 twitterArgs['exclude_replies'] = 'false'
         # call the Twitter API with our data.
         data = self.twitterApi.ApiCall(apiUrl, parameters=twitterArgs)
+        if not data:
+            if not args['new']:
+                irc.reply("ERROR: Failed to lookup Twitter for '{0}' ({1})".format(optnick, data))
+            log.error:("Tweety: ERROR looking up Twitter for '{0}': {1}".format(optnick, data))
+            return
         try:
             data = json.loads(data)
         except:
-            irc.reply("ERROR: Failed to lookup Twitter for '{0}' ({1}) ".format(optnick, data))
+            if not args['new']:
+                irc.reply("ERROR: Failed to lookup Twitter for '{0}' ({1})".format(optnick, data))
+            log.error:("Tweety: ERROR looking up Twitter for '{0}': {1}".format(optnick, data))
             return
         # before anything, check for errors. errmsg is conditional.
         if 'errors' in data:
@@ -581,7 +599,9 @@ class Tweety(callbacks.Plugin):
                 return
             else:  # errmsg is not 34. just return it.
                 errmsg = data['errors'][0]
-                irc.reply("ERROR: {0} {1}".format(errmsg['code'], errmsg['message']))
+                if not args['new']:
+                    irc.reply("ERROR: {0} {1}".format(errmsg['code'], errmsg['message']))
+                log.error("Tweety: ERROR: {0}: {1}".format(errmsg['code'], errmsg['message']))
                 return
         # no errors, so we process data conditionally.
         if args['id']:  # If --id was given for a single tweet.
@@ -630,11 +650,10 @@ class Tweety(callbacks.Plugin):
             return
         else:  # this will display tweets/a user's timeline. can be n+1 tweets.
             if len(data) == 0:  # no tweets found.
-                if args['new']:
-                    return
-                else:
+                if not args['new']:
                     irc.reply("ERROR: '{0}' has not tweeted yet.".format(optnick))
-                    return
+                log.info("Tweety: '{0}' has not tweeted yet.".format(optnick))
+                return
             self.since_id[msg.channel]['{0}'.format(optnick)] = data[0].get('id')
             for tweet in data:  # n+1 tweets found. iterate through each tweet.
                 text = self._unescape(tweet.get('full_text')) or self._unescape(tweet.get('text'))
