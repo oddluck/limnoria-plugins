@@ -237,11 +237,11 @@ class Tweety(callbacks.Plugin):
             rel_time = "%ss ago" % (abs(d.seconds))
         return rel_time
 
-    def _outputTweet(self, irc, msg, nick, name, verified, text, time, tweetid):
+    def _outputTweet(self, irc, msg, nick, name, verified, text, time, tweetid, retweetid):
         """
         Constructs string to output for Tweet. Used for tsearch and twitter.
         """
-        url = None
+        url = url2 = None
         # build output string.
         if self.registryValue('outputColorTweets', msg.args[0]):
             ret = "@{0}".format(self._ul(self._blue(nick)))
@@ -258,6 +258,10 @@ class Tweety(callbacks.Plugin):
             url = self._shortenUrl("https://twitter.com/{0}/status/{1}".format(nick, tweetid))
             if url:
                 text += " {0}".format(url)
+            if retweetid:
+                url2 = self._shortenUrl("https://twitter.com/{0}/status/{1}".format(nick, retweetid))
+            if url2:
+                text += " {0}".format(url2)
         # add in the end with the text + tape.
         if self.registryValue('colorTweetURLs', msg.args[0]):  # color urls.
             text = re.sub(r'(http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+)', self._red(r'\1'), text)
@@ -473,7 +477,7 @@ class Tweety(callbacks.Plugin):
                 date = self._time_created_at(result.get('created_at'))
                 tweetid = result.get('id_str')
                 # build output string and output.
-                output = self._outputTweet(irc, msg, nick, name, verified, text, date, tweetid)
+                output = self._outputTweet(irc, msg, nick, name, verified, text, date, tweetid, None)
                 irc.reply(output)
     tsearch = wrap(tsearch, [getopts({'num':('int'),
                                       'searchtype':('literal', ('popular', 'mixed', 'recent')),
@@ -611,8 +615,12 @@ class Tweety(callbacks.Plugin):
             verified = data["user"].get('verified')
             relativeTime = self._time_created_at(data.get('created_at'))
             tweetid = data.get('id')
+            if data.get('retweeted_status'):
+                retweetid = data['retweeted_status'].get('id')
+            else:
+                retweetid = None
             # prepare string to output and send to irc.
-            output = self._outputTweet(irc, msg, nick, name, verified, text, relativeTime, tweetid)
+            output = self._outputTweet(irc, msg, nick, name, verified, text, relativeTime, tweetid, retweetid)
             irc.reply(output)
             return
         elif args['info']:  # --info to return info on a Twitter user.
@@ -661,9 +669,13 @@ class Tweety(callbacks.Plugin):
                 name = self._unescape(tweet["user"].get('name'))
                 verified = tweet['user'].get('verified')
                 tweetid = tweet.get('id')
+                if tweet.get('retweeted_status'):
+                    retweetid = tweet['retweeted_status'].get('id')
+                else:
+                    retweetid = None
                 relativeTime = self._time_created_at(tweet.get('created_at'))
                 # prepare string to output and send to irc.
-                output = self._outputTweet(irc, msg, nick, name, verified, text, relativeTime, tweetid)
+                output = self._outputTweet(irc, msg, nick, name, verified, text, relativeTime, tweetid, retweetid)
                 irc.reply(output)
     twitter = wrap(twitter, [getopts({'noreply':'',
                                       'nort':'',
