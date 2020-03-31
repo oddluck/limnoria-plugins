@@ -576,8 +576,8 @@ class Corona(callbacks.Plugin):
                                 "#{0}: \x1F{1}\x1F (\x0307{2}\x03/\x0304{3}\x03)".format(
                                     rank,
                                     item[self.headers["states"][0]],
-                                    item[self.headers["states"][1]],
-                                    item[self.headers["states"][2]],
+                                    "{:,}".format(item[self.headers["states"][1]]),
+                                    "{:,}".format(item[self.headers["states"][2]]),
                                 )
                             )
                 self.top["states"] = top
