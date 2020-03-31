@@ -37,7 +37,8 @@ from supybot.commands import *
 
 try:
     from supybot.i18n import PluginInternationalization
-    _ = PluginInternationalization('Corona')
+
+    _ = PluginInternationalization("Corona")
 except ImportError:
     # Placeholder that allows to run the plugin on a bot
     # without the i18n module
@@ -293,79 +294,88 @@ countries = {
     "EH": "WESTERN SAHARA",
     "YE": "YEMEN",
     "ZM": "ZAMBIA",
-    "ZW": "ZIMBABWE"
+    "ZW": "ZIMBABWE",
 }
 
 states = {
-    'AK': 'ALASKA',
-    'AL': 'ALABAMA',
-    'AR': 'ARKANSAS',
-    'AS': 'AMERICAN SAMOA',
-    'AZ': 'ARIZONA',
-    'CA': 'CALIFORNIA',
-    'CO': 'COLORADO',
-    'CT': 'CONNECTICUT',
-    'DC': 'DISTRICT OF COLUMBIA',
-    'DE': 'DELAWARE',
-    'FL': 'FLORIDA',
-    'GA': 'GEORGIA',
-    'GU': 'GUAM',
-    'HI': 'HAWAII',
-    'IA': 'IOWA',
-    'ID': 'IDAHO',
-    'IL': 'ILLINOIS',
-    'IN': 'INDIANA',
-    'KS': 'KANSAS',
-    'KY': 'KENTUCKY',
-    'LA': 'LOUISIANA',
-    'MA': 'MASSACHUSETTS',
-    'MD': 'MARYLAND',
-    'ME': 'MAINE',
-    'MI': 'MICHIGAN',
-    'MN': 'MINNESOTA',
-    'MO': 'MISSOURI',
-    'MP': 'NORTHERN MARIANA ISLANDS',
-    'MS': 'MISSISSIPPI',
-    'MT': 'MONTANA',
-    'NA': 'NATIONAL',
-    'NC': 'NORTH CAROLINA',
-    'ND': 'NORTH DAKOTA',
-    'NE': 'NEBRASKA',
-    'NH': 'NEW HAMPSHIRE',
-    'NJ': 'NEW JERSEY',
-    'NM': 'NEW MEXICO',
-    'NV': 'NEVADA',
-    'NY': 'NEW YORK',
-    'OH': 'OHIO',
-    'OK': 'OKLAHOMA',
-    'OR': 'OREGON',
-    'PA': 'PENNSYLVANIA',
-    'PR': 'PUERTO RICO',
-    'RI': 'RHODE ISLAND',
-    'SC': 'SOUTH CAROLINA',
-    'SD': 'SOUTH DAKOTA',
-    'TN': 'TENNESSEE',
-    'TX': 'TEXAS',
-    'UT': 'UTAH',
-    'VA': 'VIRGINIA',
-    'VI': 'VIRGIN ISLANDS',
-    'VT': 'VERMONT',
-    'WA': 'WASHINGTON',
-    'WI': 'WISCONSIN',
-    'WV': 'WEST VIRGINIA',
-    'WY': 'WYOMING'
+    "AK": "ALASKA",
+    "AL": "ALABAMA",
+    "AR": "ARKANSAS",
+    "AS": "AMERICAN SAMOA",
+    "AZ": "ARIZONA",
+    "CA": "CALIFORNIA",
+    "CO": "COLORADO",
+    "CT": "CONNECTICUT",
+    "DC": "DISTRICT OF COLUMBIA",
+    "DE": "DELAWARE",
+    "FL": "FLORIDA",
+    "GA": "GEORGIA",
+    "GU": "GUAM",
+    "HI": "HAWAII",
+    "IA": "IOWA",
+    "ID": "IDAHO",
+    "IL": "ILLINOIS",
+    "IN": "INDIANA",
+    "KS": "KANSAS",
+    "KY": "KENTUCKY",
+    "LA": "LOUISIANA",
+    "MA": "MASSACHUSETTS",
+    "MD": "MARYLAND",
+    "ME": "MAINE",
+    "MI": "MICHIGAN",
+    "MN": "MINNESOTA",
+    "MO": "MISSOURI",
+    "MP": "NORTHERN MARIANA ISLANDS",
+    "MS": "MISSISSIPPI",
+    "MT": "MONTANA",
+    "NA": "NATIONAL",
+    "NC": "NORTH CAROLINA",
+    "ND": "NORTH DAKOTA",
+    "NE": "NEBRASKA",
+    "NH": "NEW HAMPSHIRE",
+    "NJ": "NEW JERSEY",
+    "NM": "NEW MEXICO",
+    "NV": "NEVADA",
+    "NY": "NEW YORK",
+    "OH": "OHIO",
+    "OK": "OKLAHOMA",
+    "OR": "OREGON",
+    "PA": "PENNSYLVANIA",
+    "PR": "PUERTO RICO",
+    "RI": "RHODE ISLAND",
+    "SC": "SOUTH CAROLINA",
+    "SD": "SOUTH DAKOTA",
+    "TN": "TENNESSEE",
+    "TX": "TEXAS",
+    "UT": "UTAH",
+    "VA": "VIRGINIA",
+    "VI": "VIRGIN ISLANDS",
+    "VT": "VERMONT",
+    "WA": "WASHINGTON",
+    "WI": "WISCONSIN",
+    "WV": "WEST VIRGINIA",
+    "WY": "WYOMING",
 }
+
 
 class Corona(callbacks.Plugin):
     """Displays current stats of the Coronavirus outbreak"""
+
     threaded = True
 
     def __init__(self, irc):
         self.__parent = super(Corona, self)
         self.__parent.__init__(irc)
-        self.data = requests.structures.CaseInsensitiveDict()
+        self.countries = requests.structures.CaseInsensitiveDict()
+        self.states = requests.structures.CaseInsensitiveDict()
         today = datetime.datetime.utcnow()
         self.updated = today - datetime.timedelta(days=1)
+        self.headers = {}
+        self.top = {}
+        self.headers["countries"] = []
+        self.headers["states"] = []
+        self.top["countries"] = []
+        self.top["states"] = []
 
     def time_created(self, time):
         """
@@ -375,137 +385,264 @@ class Corona(callbacks.Plugin):
         if d.days:
             rel_time = "{:1d}d ago".format(abs(d.days))
         elif d.seconds > 3600:
-            rel_time = "{:.1f}h ago".format(round((abs(d.seconds) / 3600),1))
+            rel_time = "{:.1f}h ago".format(round((abs(d.seconds) / 3600), 1))
         elif 60 <= d.seconds < 3600:
-            rel_time = "{:.1f}m ago".format(round((abs(d.seconds) / 60),1))
+            rel_time = "{:.1f}m ago".format(round((abs(d.seconds) / 60), 1))
         else:
             rel_time = "%ss ago" % (abs(d.seconds))
         return rel_time
 
-    @wrap([getopts({'top10':''}), optional('text')])
-    def corona(self, irc, msg, args, optlist, search):
-        """[--top10] [region]
-        Displays Coronavirus statistics. Add a region name to search for country/state
-        specific results. Accepts full country/state names or ISO 3166-1 alpha-2 (two
-        character) country abbreviations and US Postal (two character) state abbreviations.
-        Invalid region names or search terms without data return global results.
-        """
-        optlist = dict(optlist)
-        if 'top10' in optlist:
-            top10 = True
-        else:
-            top10 = False
+    def get_data(self):
         OK = False
         try:
-            r = requests.get('https://www.worldometers.info/coronavirus/', timeout=10)
+            r = requests.get("https://www.worldometers.info/coronavirus/", timeout=10)
             r.raise_for_status()
             OK = True
-        except (requests.exceptions.RequestException, requests.exceptions.HTTPError) as e:
-            log.debug('Corona: error retrieving World data from API: {0}'.format(e))
+        except (
+            requests.exceptions.RequestException,
+            requests.exceptions.HTTPError,
+        ) as e:
+            log.error("Corona: error retrieving World data from API: {0}".format(e))
             OK = False
+            return
         soup = BeautifulSoup(r.content)
-        updated = soup.find("div", text = re.compile('Last updated:'))
-        updated = updated.text.split(':', 1)[1].replace('GMT', '').strip()
+        updated = soup.find("div", text=re.compile("Last updated:"))
+        updated = updated.text.split(":", 1)[1].replace("GMT", "").strip()
         updated = datetime.datetime.strptime(updated, "%B %d, %Y, %H:%M")
         if OK and updated > self.updated:
             self.updated = updated
-            table = soup.find("table", { "id" : "main_table_countries_today" })
-            data = {}
-            for row in table.findAll("tr"):
-                cells = row.findAll("td")
-                if len(cells) >= 9:
-                    country = cells[0].text.strip()
-                    data[country] = {}
-                    data[country]['name'] = country
-                    data[country]['country'] = True
-                    if cells[1].text.strip():
-                        data[country]['total_cases'] = int(cells[1].text.strip().replace(',', ''))
-                    else:
-                        data[country]['total_cases'] = 0
-                    if cells[2].text.strip():
-                        data[country]['new_cases'] = cells[2].text.strip()
-                    else:
-                        data[country]['new_cases'] = '+0'
-                    if cells[3].text.strip():
-                        data[country]['total_deaths'] = cells[3].text.strip()
-                    else:
-                        data[country]['total_deaths'] = '0'
-                    if cells[4].text.strip():
-                        data[country]['new_deaths'] = cells[4].text.strip()
-                    else:
-                        data[country]['new_deaths'] = '+0'
-                    if cells[5].text.strip():
-                        data[country]['total_recovered'] = cells[5].text.strip()
-                    else:
-                        data[country]['total_recovered'] = '0'
-                    if cells[6].text.strip():
-                        data[country]['active'] = cells[6].text.strip()
-                    else:
-                        data[country]['active'] = 'N/A'
-                    if cells[7].text.strip():
-                        data[country]['serious'] = cells[7].text.strip()
-                    else:
-                        data[country]['serious'] = 'N/A'
-                    if cells[8].text.strip():
-                        data[country]['cases_million'] = cells[8].text.strip()
-                    else:
-                        data[country]['cases_million'] = 'N/A'
-                    if cells[9].text.strip():
-                        data[country]['deaths_million'] = cells[9].text.strip()
-                    else:
-                        data[country]['deaths_million'] = 'N/A'
-            data =  requests.structures.CaseInsensitiveDict(sorted(data.items(), key=lambda k_v: k_v[1]['total_cases'], reverse = True))
-            for country in data:
-                data[country]['rank'] = "#{0}".format(list(data).index(country))
-            self.data.update(data)
+            table = soup.find("table", {"id": "main_table_countries_today"})
+            self.headers["countries"] = [header.text for header in table.find_all("th")]
+            results = [
+                {
+                    self.headers["countries"][i]: cell.text.strip()
+                    for i, cell in enumerate(row.find_all("td"))
+                }
+                for row in table.find_all("tr")
+            ]
+            results = sorted(
+                results,
+                key=lambda k_v: int(
+                    re.sub("[^\d]", "", k_v[self.headers["countries"][1]])
+                )
+                if len(k_v) == len(self.headers["countries"])
+                else 0,
+                reverse=True,
+            )
+            top = []
+            for item in results:
+                if len(item) == len(self.headers["countries"]):
+                    i = 0
+                    while i < len(self.headers["countries"]):
+                        if i < 7 and not item[self.headers["countries"][i]]:
+                            item[self.headers["countries"][i]] = "0"
+                        elif not item[self.headers["countries"][i]]:
+                            item[self.headers["countries"][i]] = "N/A"
+                        if re.sub(
+                            "[^\w ]", "", item[self.headers["countries"][i]]
+                        ).isdigit():
+                            item[self.headers["countries"][i]] = int(
+                                re.sub("[^\d]", "", item[self.headers["countries"][i]])
+                            )
+                        i += 1
+                    self.countries[item[self.headers["countries"][0]]] = item
+                    rank = results.index(item)
+                    self.countries[item[self.headers["countries"][0]]]["rank"] = rank
+                    if rank > 0 and rank <= 10:
+                        top.append(
+                            "#{0}: \x1F{1}\x1F (\x0307{2}\x03/\x0304{3}\x03)".format(
+                                rank,
+                                item[self.headers["countries"][0]],
+                                "{:,}".format(item[self.headers["countries"][1]]),
+                                "{:,}".format(item[self.headers["countries"][2]]),
+                            )
+                        )
+            self.top["countries"] = top
+            for item in self.countries:
+                try:
+                    self.countries[item]["ratio_new_cases"] = "{0:.1%}".format(
+                        self.countries[item][self.headers["countries"][2]]
+                        / (
+                            self.countries[item][self.headers["countries"][1]]
+                            - self.countries[item][self.headers["countries"][2]]
+                        )
+                    )
+                except:
+                    self.countries[item]["ratio_new_cases"] = "0%"
+                try:
+                    self.countries[item]["ratio_new_dead"] = "{0:.1%}".format(
+                        self.countries[item][self.headers["countries"][4]]
+                        / (
+                            self.countries[item][self.headers["countries"][3]]
+                            - self.countries[item][self.headers["countries"][4]]
+                        )
+                    )
+                except:
+                    self.countries[item]["ratio_new_dead"] = "0%"
+                try:
+                    self.countries[item]["ratio_dead"] = "{0:.1%}".format(
+                        self.countries[item][self.headers["countries"][3]]
+                        / self.countries[item][self.headers["countries"][1]]
+                    )
+                except:
+                    self.countries[item]["ratio_dead"] = "N/A"
+                try:
+                    self.countries[item]["ratio_recovered"] = "{0:.1%}".format(
+                        self.countries[item][self.headers["countries"][5]]
+                        / self.countries[item][self.headers["countries"][1]]
+                    )
+                except:
+                    self.countries[item]["ratio_recovered"] = "N/A"
+                try:
+                    self.countries[item]["mild"] = (
+                        self.countries[item][self.headers["countries"][6]]
+                        - self.countries[item][self.headers["countries"][7]]
+                    )
+                except:
+                    self.countries[item]["mild"] = "N/A"
+                try:
+                    self.countries[item]["ratio_mild"] = "{0:.1%}".format(
+                        self.countries[item]["mild"]
+                        / self.countries[item][self.headers["countries"][6]]
+                    )
+                except:
+                    self.countries[item]["ratio_mild"] = "N/A"
+                try:
+                    self.countries[item]["ratio_serious"] = "{0:.1%}".format(
+                        self.countries[item][self.headers["countries"][7]]
+                        / self.countries[item][self.headers["countries"][6]]
+                    )
+                except:
+                    self.countries[item]["ratio_serious"] = "N/A"
+                for value in self.countries[item]:
+                    if isinstance(self.countries[item][value], int):
+                        self.countries[item][value] = "{:,}".format(
+                            self.countries[item][value]
+                        )
             try:
-                r = requests.get('https://www.worldometers.info/coronavirus/country/us/', timeout=10)
+                r = requests.get(
+                    "https://www.worldometers.info/coronavirus/country/us/", timeout=10
+                )
                 r.raise_for_status()
                 OK = True
-            except (requests.exceptions.RequestException, requests.exceptions.HTTPError) as e:
-                log.debug('Corona: error retrieving USA data from API: {0}'.format(e))
+            except (
+                requests.exceptions.RequestException,
+                requests.exceptions.HTTPError,
+            ) as e:
+                log.error("Corona: error retrieving USA data from API: {0}".format(e))
                 OK = False
+                return
             if OK:
                 soup = BeautifulSoup(r.content)
-                table = soup.find("table", { "id" : "usa_table_countries_today" })
-                data = {}
-                for row in table.findAll("tr")[:-1]:
-                    cells = row.findAll("td")
-                    if len(cells) >= 7:
-                        state = cells[0].text.strip()
-                        data[state] = {}
-                        data[state]['country'] = False
-                        data[state]['name'] = state
-                        if cells[1].text.strip():
-                            data[state]['total_cases'] = int(cells[1].text.strip().replace(',', ''))
-                        else:
-                            data[state]['total_cases'] = '0'
-                        if cells[2].text.strip():
-                            data[state]['new_cases'] = cells[2].text.strip()
-                        else:
-                            data[state]['new_cases'] = '+0'
-                        if cells[3].text.strip():
-                            data[state]['total_deaths'] = cells[3].text.strip()
-                        else:
-                            data[state]['total_deaths'] = '0'
-                        if cells[4].text.strip():
-                            data[state]['new_deaths'] = cells[4].text.strip()
-                        else:
-                            data[state]['new_deaths'] = '+0'
-                        if cells[5].text.strip():
-                            data[state]['active'] = cells[5].text.strip()
-                        else:
-                            data[state]['active'] = 'N/A'
-                data = requests.structures.CaseInsensitiveDict(sorted(data.items(), key=lambda k_v: k_v[1]['total_cases'], reverse = True))
-                for state in data:
-                    data[state]['rank'] = "#{0}".format(list(data).index(state)+1)
-                self.data.update(data)
+                table = soup.find("table", {"id": "usa_table_countries_today"})
+                self.headers["states"] = [
+                    header.text for header in table.find_all("th")
+                ]
+                results = [
+                    {
+                        self.headers["states"][i]: cell.text.strip()
+                        for i, cell in enumerate(row.find_all("td"))
+                    }
+                    for row in table.find_all("tr")
+                ]
+                results = sorted(
+                    results,
+                    key=lambda k_v: int(
+                        re.sub("[^\d]", "", k_v[self.headers["states"][1]])
+                    )
+                    if len(k_v) == len(self.headers["states"])
+                    else 0,
+                    reverse=True,
+                )
+                top = []
+                for item in results:
+                    if len(item) == len(self.headers["states"]):
+                        i = 0
+                        while i < len(self.headers["states"]):
+                            if not item[self.headers["states"][i]]:
+                                item[self.headers["states"][i]] = "0"
+                            if re.sub(
+                                "[^\w ]", "", item[self.headers["states"][i]]
+                            ).isdigit():
+                                item[self.headers["states"][i]] = int(
+                                    re.sub("[^\d]", "", item[self.headers["states"][i]])
+                                )
+                            i += 1
+                        self.states[item[self.headers["states"][0]]] = item
+                        rank = results.index(item)
+                        self.states[item[self.headers["states"][0]]]["rank"] = rank
+                        if rank > 0 and rank <= 10:
+                            top.append(
+                                "#{0}: \x1F{1}\x1F (\x0307{2}\x03/\x0304{3}\x03)".format(
+                                    rank,
+                                    item[self.headers["states"][0]],
+                                    item[self.headers["states"][1]],
+                                    item[self.headers["states"][2]],
+                                )
+                            )
+                self.top["states"] = top
+                for item in self.states:
+                    try:
+                        self.states[item]["ratio_new_cases"] = "{0:.1%}".format(
+                            self.states[item][self.headers["states"][2]]
+                            / (
+                                self.states[item][self.headers["states"][1]]
+                                - self.states[item][self.headers["states"][2]]
+                            )
+                        )
+                    except:
+                        self.states[item]["ratio_new_cases"] = "0%"
+                    try:
+                        self.states[item]["ratio_new_dead"] = "{0:.1%}".format(
+                            self.states[item][self.headers["states"][4]]
+                            / (
+                                self.states[item][self.headers["states"][3]]
+                                - self.states[item][self.headers["states"][4]]
+                            )
+                        )
+                    except:
+                        self.states[item]["ratio_new_dead"] = "0%"
+                    try:
+                        self.states[item]["ratio_dead"] = "{0:.1%}".format(
+                            self.states[item][self.headers["states"][3]]
+                            / self.states[item][self.headers["states"][1]]
+                        )
+                    except:
+                        self.states[item]["ratio_dead"] = "N/A"
+                    for value in self.states[item]:
+                        if isinstance(self.states[item][value], int):
+                            self.states[item][value] = "{:,}".format(
+                                self.states[item][value]
+                            )
+                return True
             else:
-                log.debug("Corona: unable to retrieve latest USA data")
-        elif len(self.data) > 0:
-            log.debug("Corona: data not yet updated, using cache")
+                log.error("Corona: unable to retrieve latest USA data")
+                return
+        elif len(self.countries) > 0 and len(self.states) > 0:
+            log.info("Corona: data not yet updated, using cache")
+            return True
         else:
-            log.debug("Corona: Error. Unable to retrieve data.")
+            log.error("Corona: Error. Unable to retrieve data.")
+            return
+
+    @wrap([getopts({"top10": ""}), optional("text")])
+    def corona(self, irc, msg, args, optlist, search):
+        """[region]
+        Return Coronavirus statistics from https://www.worldometers.info/coronavirus/.
+        Search accepts full country/state names or ISO 3166-1 alpha-2 (two character)
+        country abbreviations and US Postal (two character) state abbreviations.
+        Invalid region names or search terms without data return global results.
+        """
+        optlist = dict(optlist)
+        if "top10" in optlist:
+            self.top10(irc, msg, args, None)
+            return
+        if search:
+            search = search.strip()
+        if not self.get_data():
+            irc.reply(
+                "Error retrieving data from https://www.worldometers.info/coronavirus/"
+            )
             return
         if search and len(search) == 2:
             if self.registryValue("countryFirst", msg.channel):
@@ -524,78 +661,134 @@ class Corona(callbacks.Plugin):
                         search = countries[search.upper()]
                     except KeyError:
                         pass
-        if not top10 and search and self.data.get(search):
-            if self.data[search]['country']:
-                ratio_dead = "{0:.1%}".format(int(self.data[search]['total_deaths'].replace(',', ''))/self.data[search]['total_cases'])
-                ratio_recovered = "{0:.1%}".format(int(self.data[search]['total_recovered'].replace(',', ''))/self.data[search]['total_cases'])
-                if self.data[search]['serious'].replace(',', '').isdigit():
-                    mild = '{:,}'.format(int(self.data[search]['active'].replace(',', '')) - int(self.data[search]['serious'].replace(',', '')))
-                else:
-                    mild = 'N/A'
-                irc.reply("\x02\x1F{0}\x1F: World Rank: {1} | Cases: \x0307{2}\x03 (\x0307{3}\x03) | Deaths: \x0304{4}\x03 (\x0304{5}\x03) (\x0304{6}\x03) | Recovered: \x0309{7}\x03 (\x0309{8}\x03) | Active: \x0307{9}\x03 (\x0310{10}\x03 Mild) (\x0313{11}\x03 Serious) | Cases/1M: \x0307{12}\x03 | Deaths/1M: \x0304{13}\x03 | Updated: {14}".format(
-                    self.data[search]['name'],
-                    self.data[search]['rank'],
-                    '{:,}'.format(self.data[search]['total_cases']),
-                    self.data[search]['new_cases'],
-                    self.data[search]['total_deaths'],
-                    self.data[search]['new_deaths'],
-                    ratio_dead,
-                    self.data[search]['total_recovered'],
-                    ratio_recovered,
-                    self.data[search]['active'],
-                    mild,
-                    self.data[search]['serious'],
-                    self.data[search]['cases_million'],
-                    self.data[search]['deaths_million'],
-                    self.time_created(updated)))
-            else:
-                ratio_dead = "{0:.1%}".format(int(self.data[search]['total_deaths'].replace(',', ''))/self.data[search]['total_cases'])
-                irc.reply("\x02\x1F{0}\x1F: USA Rank: {1} | Cases: \x0307{2}\x03 (\x0307{3}\x03) | Deaths: \x0304{4}\x03 (\x0304{5}\x03) (\x0304{6}\x03) | Active: \x0307{7}\x03 | Updated: {8}".format(
-                    self.data[search]['name'],
-                    self.data[search]['rank'],
-                    '{:,}'.format(self.data[search]['total_cases']),
-                    self.data[search]['new_cases'],
-                    self.data[search]['total_deaths'],
-                    self.data[search]['new_deaths'],
-                    ratio_dead,
-                    self.data[search]['active'],
-                    self.time_created(updated)))
-        elif not top10:
-            if self.data['total:']['serious'].replace(',', '').isdigit():
-                mild = '{:,}'.format(int(self.data['total:']['active'].replace(',', '')) - int(self.data['total:']['serious'].replace(',', '')))
-            else:
-                mild = 'N/A'
-            ratio_dead = "{0:.1%}".format(int(self.data['total:']['total_deaths'].replace(',', ''))/self.data['total:']['total_cases'])
-            ratio_recovered = "{0:.1%}".format(int(self.data['total:']['total_recovered'].replace(',', ''))/self.data['total:']['total_cases'])
-            irc.reply("\x02\x1F{0}\x1F: Cases: \x0307{1}\x03 (\x0307{2}\x03) | Deaths: \x0304{3}\x03 (\x0304{4}\x03) (\x0304{5}\x03) | Recovered: \x0309{6}\x03 (\x0309{7}\x03) | Active: \x0307{8}\x03 (\x0310{9}\x03 Mild) (\x0313{10}\x03 Serious) | Cases/1M: \x0307{11}\x03 | Deaths/1M: \x0304{12}\x03 | Updated: {13}".format(
-                'Global',
-                '{:,}'.format(self.data['total:']['total_cases']),
-                self.data['total:']['new_cases'],
-                self.data['total:']['total_deaths'],
-                self.data['total:']['new_deaths'],
-                ratio_dead,
-                self.data['total:']['total_recovered'],
-                ratio_recovered,
-                self.data['total:']['active'],
-                mild,
-                self.data['total:']['serious'],
-                self.data['total:']['cases_million'],
-                self.data['total:']['deaths_million'],
-                self.time_created(updated)))
+        if search and self.countries.get(search):
+            irc.reply(
+                "\x02\x1F{0}\x1F: World Rank: #{1} | Cases: \x0307{2}\x03 "
+                "(\x0307+{3}\x03) (\x0307+{4}\x03) | Deaths: \x0304{5}\x03 "
+                "(\x0304+{6}\x03) (\x0304+{7}\x03) (\x0304{8}\x03) | Recovered: "
+                "\x0309{9}\x03 (\x0309{10}\x03) | Active: \x0307{11}\x03 "
+                "(\x0310{12}\x03 Mild) (\x0313{13}\x03 Serious) (\x0310{14}\x03/"
+                "\x0313{15}\x03) | Cases/1M: \x0307{16}\x03 | Deaths/1M: \x0304{17}"
+                "\x03 | 1st Case: {18} | Updated: {19}".format(
+                    self.countries[search][self.headers["countries"][0]],
+                    self.countries[search]["rank"],
+                    self.countries[search][self.headers["countries"][1]],
+                    self.countries[search][self.headers["countries"][2]],
+                    self.countries[search]["ratio_new_cases"],
+                    self.countries[search][self.headers["countries"][3]],
+                    self.countries[search][self.headers["countries"][4]],
+                    self.countries[search]["ratio_new_dead"],
+                    self.countries[search]["ratio_dead"],
+                    self.countries[search][self.headers["countries"][5]],
+                    self.countries[search]["ratio_recovered"],
+                    self.countries[search][self.headers["countries"][6]],
+                    self.countries[search]["mild"],
+                    self.countries[search][self.headers["countries"][7]],
+                    self.countries[search]["ratio_mild"],
+                    self.countries[search]["ratio_serious"],
+                    self.countries[search][self.headers["countries"][8]],
+                    self.countries[search][self.headers["countries"][9]],
+                    self.countries[search][self.headers["countries"][10]],
+                    self.time_created(self.updated),
+                )
+            )
+        elif search and self.states.get(search):
+            irc.reply(
+                "\x02\x1F{0}\x1F: USA Rank: #{1} | Cases: \x0307{2}\x03 "
+                "(\x0307+{3}\x03) (\x0307+{4}\x03) | Deaths: \x0304{5}\x03 "
+                "(\x0304+{6}\x03) (\x0304+{7}\x03) (\x0304{8}\x03) | Active: "
+                "\x0307{9}\x03 | Updated: {10}".format(
+                    self.states[search][self.headers["states"][0]],
+                    self.states[search]["rank"],
+                    self.states[search][self.headers["states"][1]],
+                    self.states[search][self.headers["states"][2]],
+                    self.states[search]["ratio_new_cases"],
+                    self.states[search][self.headers["states"][3]],
+                    self.states[search][self.headers["states"][4]],
+                    self.states[search]["ratio_new_dead"],
+                    self.states[search]["ratio_dead"],
+                    self.states[search][self.headers["states"][5]],
+                    self.time_created(self.updated),
+                )
+            )
         else:
-            reply = ''
-            n = 1
-            for country in self.data:
-                if n > 10:
-                    break
-                if self.data[country]['country'] and self.data[country]['rank'] == "#{0}".format(n):
-                    reply += " {0}: \x1F{1}\x1F (\x0307{2}\x03/\x0304{3}\x03),".format(
-                        self.data[country]['rank'],
-                        self.data[country]['name'],
-                        '{:,}'.format(self.data[country]['total_cases']),
-                        self.data[country]['total_deaths'])
-                    n += 1
-            reply = reply.strip().strip(',')
-            irc.reply("\x02{0} | Updated: {1}".format(reply, self.time_created(updated)))
+            irc.reply(
+                "\x02\x1F{0}\x1F: Cases: \x0307{1}\x03 (\x0307+{2}\x03) "
+                "(\x0307+{3}\x03) | Deaths: \x0304{4}\x03 (\x0304+{5}\x03) "
+                "(\x0304+{6}\x03) (\x0304{7}\x03) | Recovered: \x0309{8}\x03 "
+                "(\x0309{9}\x03) | Active: \x0307{10}\x03 (\x0310{11}\x03 Mild) "
+                "(\x0313{12}\x03 Serious) (\x0310{13}\x03/\x0313{14}\x03) | "
+                "Cases/1M: \x0307{15}\x03 | Deaths/1M: \x0304{16}\x03 | 1st Case: "
+                "{17} | Updated: {18}".format(
+                    "Global",
+                    self.countries[list(self.countries)[0]][
+                        self.headers["countries"][1]
+                    ],
+                    self.countries[list(self.countries)[0]][
+                        self.headers["countries"][2]
+                    ],
+                    self.countries[list(self.countries)[0]]["ratio_new_cases"],
+                    self.countries[list(self.countries)[0]][
+                        self.headers["countries"][3]
+                    ],
+                    self.countries[list(self.countries)[0]][
+                        self.headers["countries"][4]
+                    ],
+                    self.countries[list(self.countries)[0]]["ratio_new_dead"],
+                    self.countries[list(self.countries)[0]]["ratio_dead"],
+                    self.countries[list(self.countries)[0]][
+                        self.headers["countries"][5]
+                    ],
+                    self.countries[list(self.countries)[0]]["ratio_recovered"],
+                    self.countries[list(self.countries)[0]][
+                        self.headers["countries"][6]
+                    ],
+                    self.countries[list(self.countries)[0]]["mild"],
+                    self.countries[list(self.countries)[0]][
+                        self.headers["countries"][7]
+                    ],
+                    self.countries[list(self.countries)[0]]["ratio_mild"],
+                    self.countries[list(self.countries)[0]]["ratio_serious"],
+                    self.countries[list(self.countries)[0]][
+                        self.headers["countries"][8]
+                    ],
+                    self.countries[list(self.countries)[0]][
+                        self.headers["countries"][9]
+                    ],
+                    self.countries["China"][self.headers["countries"][10]],
+                    self.time_created(self.updated),
+                )
+            )
+
+    @wrap([optional("text")])
+    def top10(self, irc, msg, args, search):
+        """[usa|global]
+        Return the countries with the most confirmed cases. Valid options are USA or
+        global. Returns global list if no option given.
+        """
+        if not self.get_data():
+            irc.reply(
+                "Error retrieving data from https://www.worldometers.info/coronavirus/"
+            )
+            return
+        reply = ""
+        n = 1
+        if search:
+            search = search.strip().lower()
+        else:
+            search = "global"
+        if not search.startswith("us"):
+            irc.reply(
+                "{0} | Updated: {1}".format(
+                    ", ".join(self.top["countries"]), self.time_created(self.updated)
+                )
+            )
+        else:
+            irc.reply(
+                "{0} | Updated: {1}".format(
+                    ", ".join(self.top["states"]), self.time_created(self.updated)
+                )
+            )
+
 
 Class = Corona
