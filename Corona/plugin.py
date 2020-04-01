@@ -454,7 +454,7 @@ class Corona(callbacks.Plugin):
                                 rank,
                                 item[self.headers["countries"][0]],
                                 "{:,}".format(item[self.headers["countries"][1]]),
-                                "{:,}".format(item[self.headers["countries"][2]]),
+                                "{:,}".format(item[self.headers["countries"][3]]),
                             )
                         )
             self.top["countries"] = top
@@ -577,7 +577,7 @@ class Corona(callbacks.Plugin):
                                     rank,
                                     item[self.headers["states"][0]],
                                     "{:,}".format(item[self.headers["states"][1]]),
-                                    "{:,}".format(item[self.headers["states"][2]]),
+                                    "{:,}".format(item[self.headers["states"][3]]),
                                 )
                             )
                 self.top["states"] = top
