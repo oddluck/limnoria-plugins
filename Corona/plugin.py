@@ -665,7 +665,7 @@ class Corona(callbacks.Plugin):
             irc.reply(
                 "\x02\x1F{0}\x1F: World Rank: #{1} | Cases: \x0307{2}\x03 "
                 "(\x0307+{3}\x03) (\x0307+{4}\x03) | Deaths: \x0304{5}\x03 "
-                "(\x0304+{6}\x03) (\x0304+{7}\x03) (\x0304{8}\x03) | Recovered: "
+                "(\x0304{6}\x03) (\x0304+{7}\x03) (\x0304+{8}\x03) | Recovered: "
                 "\x0309{9}\x03 (\x0309{10}\x03) | Active: \x0307{11}\x03 "
                 "(\x0310{12}\x03 Mild) (\x0313{13}\x03 Serious) (\x0310{14}\x03/"
                 "\x0313{15}\x03) | Cases/1M: \x0307{16}\x03 | Deaths/1M: \x0304{17}"
@@ -676,9 +676,9 @@ class Corona(callbacks.Plugin):
                     self.countries[search][self.headers["countries"][2]],
                     self.countries[search]["ratio_new_cases"],
                     self.countries[search][self.headers["countries"][3]],
+                    self.countries[search]["ratio_dead"],
                     self.countries[search][self.headers["countries"][4]],
                     self.countries[search]["ratio_new_dead"],
-                    self.countries[search]["ratio_dead"],
                     self.countries[search][self.headers["countries"][5]],
                     self.countries[search]["ratio_recovered"],
                     self.countries[search][self.headers["countries"][6]],
@@ -696,7 +696,7 @@ class Corona(callbacks.Plugin):
             irc.reply(
                 "\x02\x1F{0}\x1F: USA Rank: #{1} | Cases: \x0307{2}\x03 "
                 "(\x0307+{3}\x03) (\x0307+{4}\x03) | Deaths: \x0304{5}\x03 "
-                "(\x0304+{6}\x03) (\x0304+{7}\x03) (\x0304{8}\x03) | Active: "
+                "(\x0304{6}\x03) (\x0304+{7}\x03) (\x0304+{8}\x03) | Active: "
                 "\x0307{9}\x03 | Updated: {10}".format(
                     self.states[search][self.headers["states"][0]],
                     self.states[search]["rank"],
@@ -704,9 +704,9 @@ class Corona(callbacks.Plugin):
                     self.states[search][self.headers["states"][2]],
                     self.states[search]["ratio_new_cases"],
                     self.states[search][self.headers["states"][3]],
+                    self.states[search]["ratio_dead"],
                     self.states[search][self.headers["states"][4]],
                     self.states[search]["ratio_new_dead"],
-                    self.states[search]["ratio_dead"],
                     self.states[search][self.headers["states"][5]],
                     self.time_created(self.updated),
                 )
@@ -714,8 +714,8 @@ class Corona(callbacks.Plugin):
         else:
             irc.reply(
                 "\x02\x1F{0}\x1F: Cases: \x0307{1}\x03 (\x0307+{2}\x03) "
-                "(\x0307+{3}\x03) | Deaths: \x0304{4}\x03 (\x0304+{5}\x03) "
-                "(\x0304+{6}\x03) (\x0304{7}\x03) | Recovered: \x0309{8}\x03 "
+                "(\x0307+{3}\x03) | Deaths: \x0304{4}\x03 (\x0304{5}\x03) "
+                "(\x0304+{6}\x03) (\x0304+{7}\x03) | Recovered: \x0309{8}\x03 "
                 "(\x0309{9}\x03) | Active: \x0307{10}\x03 (\x0310{11}\x03 Mild) "
                 "(\x0313{12}\x03 Serious) (\x0310{13}\x03/\x0313{14}\x03) | "
                 "Cases/1M: \x0307{15}\x03 | Deaths/1M: \x0304{16}\x03 | 1st Case: "
@@ -731,11 +731,11 @@ class Corona(callbacks.Plugin):
                     self.countries[list(self.countries)[0]][
                         self.headers["countries"][3]
                     ],
+                    self.countries[list(self.countries)[0]]["ratio_dead"],
                     self.countries[list(self.countries)[0]][
                         self.headers["countries"][4]
                     ],
                     self.countries[list(self.countries)[0]]["ratio_new_dead"],
-                    self.countries[list(self.countries)[0]]["ratio_dead"],
                     self.countries[list(self.countries)[0]][
                         self.headers["countries"][5]
                     ],
