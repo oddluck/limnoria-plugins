@@ -669,7 +669,7 @@ class Corona(callbacks.Plugin):
                 "\x0309{9}\x03 (\x0309{10}\x03) | Active: \x0307{11}\x03 "
                 "(\x0310{12}\x03 Mild) (\x0313{13}\x03 Serious) (\x0310{14}\x03/"
                 "\x0313{15}\x03) | Cases/1M: \x0307{16}\x03 | Deaths/1M: \x0304{17}"
-                "\x03 | 1st Case: {18} | Updated: {19}".format(
+                "\x03 | Updated: {18}".format(
                     self.countries[search][self.headers["countries"][0]],
                     self.countries[search]["rank"],
                     self.countries[search][self.headers["countries"][1]],
@@ -688,7 +688,6 @@ class Corona(callbacks.Plugin):
                     self.countries[search]["ratio_serious"],
                     self.countries[search][self.headers["countries"][8]],
                     self.countries[search][self.headers["countries"][9]],
-                    self.countries[search][self.headers["countries"][10]],
                     self.time_created(self.updated),
                 )
             )
@@ -718,8 +717,8 @@ class Corona(callbacks.Plugin):
                 "(\x0304+{6}\x03) (\x0304+{7}\x03) | Recovered: \x0309{8}\x03 "
                 "(\x0309{9}\x03) | Active: \x0307{10}\x03 (\x0310{11}\x03 Mild) "
                 "(\x0313{12}\x03 Serious) (\x0310{13}\x03/\x0313{14}\x03) | "
-                "Cases/1M: \x0307{15}\x03 | Deaths/1M: \x0304{16}\x03 | 1st Case: "
-                "{17} | Updated: {18}".format(
+                "Cases/1M: \x0307{15}\x03 | Deaths/1M: \x0304{16}\x03 | "
+                "Updated: {17}".format(
                     "Global",
                     self.countries[list(self.countries)[0]][
                         self.headers["countries"][1]
@@ -755,7 +754,6 @@ class Corona(callbacks.Plugin):
                     self.countries[list(self.countries)[0]][
                         self.headers["countries"][9]
                     ],
-                    self.countries["China"][self.headers["countries"][10]],
                     self.time_created(self.updated),
                 )
             )
