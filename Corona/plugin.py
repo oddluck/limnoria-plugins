@@ -661,7 +661,8 @@ class Corona(callbacks.Plugin):
                         search = countries[search.upper()]
                     except KeyError:
                         pass
-        if search and self.countries.get(search):
+
+        def reply_country():
             irc.reply(
                 "\x02\x1F{0}\x1F: World Rank: #{1} | Cases: \x0307{2}\x03 "
                 "(\x0307+{3}\x03) (\x0307+{4}\x03) | Deaths: \x0304{5}\x03 "
@@ -691,7 +692,8 @@ class Corona(callbacks.Plugin):
                     self.time_created(self.updated),
                 )
             )
-        elif search and self.states.get(search):
+
+        def reply_state():
             irc.reply(
                 "\x02\x1F{0}\x1F: USA Rank: #{1} | Cases: \x0307{2}\x03 "
                 "(\x0307+{3}\x03) (\x0307+{4}\x03) | Deaths: \x0304{5}\x03 "
@@ -710,7 +712,8 @@ class Corona(callbacks.Plugin):
                     self.time_created(self.updated),
                 )
             )
-        else:
+
+        def reply_global():
             irc.reply(
                 "\x02\x1F{0}\x1F: Cases: \x0307{1}\x03 (\x0307+{2}\x03) "
                 "(\x0307+{3}\x03) | Deaths: \x0304{4}\x03 (\x0304{5}\x03) "
@@ -757,6 +760,21 @@ class Corona(callbacks.Plugin):
                     self.time_created(self.updated),
                 )
             )
+
+        if self.registryValue("countryFirst", msg.channel):
+            if search and self.countries.get(search):
+                reply_country()
+            elif search and self.states.get(search):
+                reply_state()
+            else:
+                reply_global()
+        else:
+            if search and self.states.get(search):
+                reply_state()
+            elif search and self.countries.get(search):
+                reply_country()
+            else:
+                reply_global()
 
     @wrap([optional("text")])
     def top10(self, irc, msg, args, search):
