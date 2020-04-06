@@ -569,7 +569,7 @@ class Corona(callbacks.Plugin):
                                 )
                             i += 1
                         self.states[item[self.headers["states"][0]]] = item
-                        rank = results.index(item)
+                        rank = results.index(item) - 1
                         self.states[item[self.headers["states"][0]]]["rank"] = rank
                         if rank > 0 and rank <= 10:
                             top.append(
@@ -698,7 +698,8 @@ class Corona(callbacks.Plugin):
                 "\x02\x1F{0}\x1F: USA Rank: #{1} | Cases: \x0307{2}\x03 "
                 "(\x0307+{3}\x03) (\x0307+{4}\x03) | Deaths: \x0304{5}\x03 "
                 "(\x0304{6}\x03) (\x0304+{7}\x03) (\x0304+{8}\x03) | Active: "
-                "\x0307{9}\x03 | Updated: {10}".format(
+                "\x0307{9}\x03 | Cases/1M: \x0307{10}\x03 | Deaths/1M: "
+                "\x0304{11}\x03 | Updated: {12}".format(
                     self.states[search][self.headers["states"][0]],
                     self.states[search]["rank"],
                     self.states[search][self.headers["states"][1]],
@@ -709,6 +710,8 @@ class Corona(callbacks.Plugin):
                     self.states[search][self.headers["states"][4]],
                     self.states[search]["ratio_new_dead"],
                     self.states[search][self.headers["states"][5]],
+                    self.states[search][self.headers["states"][6]],
+                    self.states[search][self.headers["states"][7]],
                     self.time_created(self.updated),
                 )
             )
