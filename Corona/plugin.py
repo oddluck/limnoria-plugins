@@ -418,7 +418,7 @@ class Corona(callbacks.Plugin):
                     self.headers["countries"][i]: cell.text.strip()
                     for i, cell in enumerate(row.find_all("td"))
                 }
-                for row in table.find_all("tr")
+                for row in table.find_all("tr", {"style":""})
             ]
             results = sorted(
                 results,
