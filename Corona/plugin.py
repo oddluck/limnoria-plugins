@@ -418,7 +418,7 @@ class Corona(callbacks.Plugin):
                     self.headers["countries"][i]: cell.text.strip()
                     for i, cell in enumerate(row.find_all("td"))
                 }
-                for row in table.find_all("tr", {"style":""})
+                for row in table.find_all("tr", {"style": ""})
             ]
             results = sorted(
                 results,
@@ -439,7 +439,7 @@ class Corona(callbacks.Plugin):
                         elif not item[self.headers["countries"][i]]:
                             item[self.headers["countries"][i]] = "N/A"
                         if re.sub(
-                            "[^\w ]", "", item[self.headers["countries"][i]]
+                            "[^\w. ]", "", item[self.headers["countries"][i]]
                         ).isdigit():
                             item[self.headers["countries"][i]] = int(
                                 re.sub("[^\d]", "", item[self.headers["countries"][i]])
@@ -562,7 +562,7 @@ class Corona(callbacks.Plugin):
                             if not item[self.headers["states"][i]]:
                                 item[self.headers["states"][i]] = "0"
                             if re.sub(
-                                "[^\w ]", "", item[self.headers["states"][i]]
+                                "[^\w. ]", "", item[self.headers["states"][i]]
                             ).isdigit():
                                 item[self.headers["states"][i]] = int(
                                     re.sub("[^\d]", "", item[self.headers["states"][i]])
