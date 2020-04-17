@@ -1,9 +1,5 @@
-html5lib
-lxml
+requests
 beautifulsoup4
 jinja2
-imgurpython
-requests
-timeout-decorator
-certifi
 pendulum
+imgurpython
