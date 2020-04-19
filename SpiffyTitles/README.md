@@ -34,7 +34,6 @@ Check out the [available options](#available-options)!
 - `cp -r SpiffyTitles ~/your_bot_directory/plugins`
 - `cd ~/your_bot_directory/plugins/SpiffyTitles`
 - `pip install -r requirements.txt --user --upgrade`
-- If you need to install `certifi` you may have to restart the bot afterwards
 
 You should `!unload Web` and any other plugins that show link titles for best results
 
