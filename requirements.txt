@@ -1,15 +1,12 @@
 beautifulsoup4
-certifi
 ftfy
 geoip2
 git+https://github.com/oddluck/cobe.git
 html5lib
 httplib2
-imgurpython
 jinja2
 limnoria
 lxml
-markovgen
 numpy
 pendulum
 pexpect
@@ -21,5 +18,4 @@ requests
 requests_oauthlib
 roman_numerals
 textdistance[extras]
-timeout-decorator
 unidecode
