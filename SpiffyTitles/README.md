@@ -79,6 +79,10 @@ Example output:
 
 `^ Google.com`
 
+`default.fileTemplate` - Template shown for direct file links
+
+Default value: `{% if type %}[{{type}}] {% endif %}{% if size %}({{size}}){% endif %}`
+
 ### Youtube handler
 
 Note: as of April 20 2015 version 2 of the Youtube API was deprecated. As a result, this feature now
@@ -198,7 +202,7 @@ Default value: `^ {{twitch_logo}} :: {{display_name}} {%if game_name%}:: [{{game
 
 Default value
 
-`^ {%if section %} [{{section}}] {% endif -%}{%- if title -%} {{title}} :: {% endif %}{{type}} {{width}}x{{height}} {{file_size}} :: {{view_count}} views :: {%if nsfw == None %}not sure if safe for work{% elif nsfw == True %}not safe for work!{% else %}safe for work{% endif %}`
+`^ {%if section %}[{{section}}] {% endif -%}{%- if title -%}{{title}} :: {% endif %}{{type}} {{width}}x{{height}} {{file_size}} :: {{view_count}} views :: {%if nsfw == None %}not sure if safe for work{% elif nsfw == True %}not safe for work!{% else %}safe for work{% endif %}`
 
 Example output:
 
@@ -208,7 +212,7 @@ Example output:
 
 Default value
 
-`^ {%if section %} [{{section}}] {% endif -%}{%- if title -%} {{title}} :: {% endif %}{{image_count}} images :: {{view_count}} views :: {%if nsfw == None %}not sure if safe for work{% elif nsfw == True %}not safe for work!{% else %}safe for work{% endif %}`
+`^ {%if section %}[{{section}}] {% endif -%}{%- if title -%}{{title}} :: {% endif %}{{image_count}} images :: {{view_count}} views :: {%if nsfw == None %}not sure if safe for work{% elif nsfw == True %}not safe for work!{% else %}safe for work{% endif %}`
 
 Example output:
     
@@ -218,11 +222,9 @@ Example output:
 
 - You'll need to [register an application with imgur](https://api.imgur.com/oauth2/addclient)
 - Select "OAuth 2 authorization without a callback URL"
-- Once registered, set your client id and client secret
+- Once registered, set your client id
 
 `!config supybot.plugins.SpiffyTitles.imgur.clientID`
-    
-`!config supybot.plugins.SpiffyTitles.imgur.clientSecret`
 
 ### Notes on the imgur handler
 

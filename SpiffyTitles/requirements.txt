@@ -2,4 +2,3 @@ requests
 beautifulsoup4
 jinja2
 pendulum
-imgurpython

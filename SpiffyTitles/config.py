@@ -437,21 +437,15 @@ conf.registerGlobalValue(
     registry.String("", _("""imgur client ID"""), private=True),
 )
 
-conf.registerGlobalValue(
-    SpiffyTitles.imgur,
-    "clientSecret",
-    registry.String("", _("""imgur client secret"""), private=True),
-)
-
 conf.registerChannelValue(
     SpiffyTitles.imgur,
-    "template",
+    "imageTemplate",
     registry.String(
-        "^{%if section %} [{{section}}] {% endif -%}{%- if title -%} {{title}} :: "
+        "^ {%if section %}[{{section}}] {% endif %}{% if title %}{{title}} :: "
         "{% endif %}{{type}} {{width}}x{{height}} {{file_size}} :: {{view_count}} "
         "views :: {%if nsfw == None %}not sure if safe for work{% elif nsfw == True %}"
         "not safe for work!{% else %}safe for work{% endif %}",
-        _("""imgur template"""),
+        _("""imgur image template"""),
     ),
 )
 
@@ -459,11 +453,11 @@ conf.registerChannelValue(
     SpiffyTitles.imgur,
     "albumTemplate",
     registry.String(
-        "^{%if section %} [{{section}}] {% endif -%}{%- if title -%} {{title}} :: "
+        "^ {%if section %}[{{section}}] {% endif %}{% if title %}{{title}} :: "
         "{% endif %}{{image_count}} images :: {{view_count}} views :: "
         "{%if nsfw == None %}not sure if safe for work{% elif nsfw == True %}"
         "not safe for work!{% else %}safe for work{% endif %}",
-        _("""imgur template"""),
+        _("""imgur album template"""),
     ),
 )
 
