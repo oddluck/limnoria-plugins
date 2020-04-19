@@ -63,13 +63,11 @@ class SpiffyTitles(callbacks.Plugin):
     callBefore = ["Web"]
     link_cache = {}
     handlers = {}
-    wall_clock_timeout = 8
     max_request_retries = 3
 
     def __init__(self, irc):
         self.__parent = super(SpiffyTitles, self)
         self.__parent.__init__(irc)
-        self.wall_clock_timeout = self.registryValue("wallClockTimeoutInSeconds")
         self.default_handler_enabled = self.registryValue("default.enabled")
         self.add_handlers()
 
@@ -242,60 +240,6 @@ class SpiffyTitles(callbacks.Plugin):
             log.debug(
                 "SpiffyTitles: default handler fired but doing nothing because disabled"
             )
-
-    def handler_dailymotion(self, url, info, channel):
-        """
-        Handles dailymotion links
-        """
-        dailymotion_handler_enabled = self.registryValue(
-            "dailymotion.enabled", channel=channel
-        )
-        log.debug("SpiffyTitles: calling dailymotion handler for %s" % url)
-        title = None
-        video_id = None
-        """ Get video ID """
-        if dailymotion_handler_enabled and "/video/" in info.path:
-            video_id = info.path.lstrip("/video/").split("_")[0]
-        elif dailymotion_handler_enabled and "dai.ly" in url:
-            video_id = url.split("/")[-1].split("?")[0]
-        if video_id is not None:
-            fields = "id,title,owner.screenname,duration,views_total"
-            api_url = "https://api.dailymotion.com/video/%s?fields=%s" % (
-                video_id,
-                fields,
-            )
-            log.debug("SpiffyTitles: looking up dailymotion info: %s", api_url)
-            headers = self.get_headers()
-            request = requests.get(api_url, headers=headers, timeout=10)
-            ok = request.status_code == requests.codes.ok
-            if ok:
-                response = json.loads(request.content.decode())
-                if response is not None and "title" in response:
-                    video = response
-                    dailymotion_template = Template(
-                        self.registryValue("dailymotion.template", channel=channel)
-                    )
-                    video["views_total"] = "{:,}".format(int(video["views_total"]))
-                    video["duration"] = self.get_duration_from_seconds(
-                        video["duration"]
-                    )
-                    video["ownerscreenname"] = video["owner.screenname"]
-                    title = dailymotion_template.render(video)
-                else:
-                    log.debug(
-                        "SpiffyTitles: received unexpected payload from video: %s"
-                        % api_url
-                    )
-            else:
-                log.error(
-                    "SpiffyTitles: dailymotion handler returned %s: %s"
-                    % (request.status_code, request.content.decode()[:200])
-                )
-        if title is None:
-            log.debug("SpiffyTitles: could not get dailymotion info for %s" % url)
-            return self.handler_default(url, channel)
-        else:
-            return title
 
     def get_title_by_url(self, url, channel, origin_nick=None):
         """
@@ -656,6 +600,60 @@ class SpiffyTitles(callbacks.Plugin):
         template = Template(self.registryValue(handler_template, channel=channel))
         return template
 
+    def handler_dailymotion(self, url, info, channel):
+        """
+        Handles dailymotion links
+        """
+        dailymotion_handler_enabled = self.registryValue(
+            "dailymotion.enabled", channel=channel
+        )
+        log.debug("SpiffyTitles: calling dailymotion handler for %s" % url)
+        title = None
+        video_id = None
+        """ Get video ID """
+        if dailymotion_handler_enabled and "/video/" in info.path:
+            video_id = info.path.lstrip("/video/").split("_")[0]
+        elif dailymotion_handler_enabled and "dai.ly" in url:
+            video_id = url.split("/")[-1].split("?")[0]
+        if video_id is not None:
+            fields = "id,title,owner.screenname,duration,views_total"
+            api_url = "https://api.dailymotion.com/video/%s?fields=%s" % (
+                video_id,
+                fields,
+            )
+            log.debug("SpiffyTitles: looking up dailymotion info: %s", api_url)
+            headers = self.get_headers()
+            request = requests.get(api_url, headers=headers, timeout=10)
+            ok = request.status_code == requests.codes.ok
+            if ok:
+                response = json.loads(request.content.decode())
+                if response is not None and "title" in response:
+                    video = response
+                    dailymotion_template = Template(
+                        self.registryValue("dailymotion.template", channel=channel)
+                    )
+                    video["views_total"] = "{:,}".format(int(video["views_total"]))
+                    video["duration"] = self.get_duration_from_seconds(
+                        video["duration"]
+                    )
+                    video["ownerscreenname"] = video["owner.screenname"]
+                    title = dailymotion_template.render(video)
+                else:
+                    log.debug(
+                        "SpiffyTitles: received unexpected payload from video: %s"
+                        % api_url
+                    )
+            else:
+                log.error(
+                    "SpiffyTitles: dailymotion handler returned %s: %s"
+                    % (request.status_code, request.content.decode()[:200])
+                )
+        if title is None:
+            log.debug("SpiffyTitles: could not get dailymotion info for %s" % url)
+            return self.handler_default(url, channel)
+        else:
+            return title
+
     def handler_vimeo(self, url, domain, channel):
         """
         Handles Vimeo links
@@ -921,7 +919,7 @@ class SpiffyTitles(callbacks.Plugin):
         so that the duration can be parsed as usual.
         """
         regex = re.compile(
-            """
+            r"""
                    (?P<sign>    -?) P
                 (?:(?P<years>  \d+) Y)?
                 (?:(?P<months> \d+) M)?

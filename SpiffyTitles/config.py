@@ -59,19 +59,6 @@ conf.registerGlobalValue(
     registry.Integer(3, _("""Maximum retries upon failure""")),
 )
 
-conf.registerGlobalValue(
-    SpiffyTitles,
-    "wallClockTimeoutInSeconds",
-    registry.Integer(
-        8,
-        _(
-            """
-            Timeout for getting a title. If you set this too high,
-            the bot will time out."""
-        ),
-    ),
-)
-
 # Language
 conf.registerGlobalValue(
     SpiffyTitles, "language", registry.String("en-US", _("""Language code"""))
