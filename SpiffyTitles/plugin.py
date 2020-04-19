@@ -40,11 +40,11 @@ import random
 import time
 import json
 import unicodedata
+import datetime
 from urllib.parse import urlparse, parse_qsl
 from bs4 import BeautifulSoup
 from jinja2 import Template
 import requests
-import pendulum
 
 try:
     from supybot.i18n import PluginInternationalization
@@ -219,7 +219,7 @@ class SpiffyTitles(callbacks.Plugin):
                                    handler is disabled"
                             % (url)
                         )
- 
+
     def handler_default(self, url, channel):
         """
         Default handler for websites
@@ -327,7 +327,7 @@ class SpiffyTitles(callbacks.Plugin):
             title = self.get_formatted_title(title, channel)
             # Update link cache
             log.debug("SpiffyTitles: caching %s" % (url))
-            now = pendulum.now()
+            now = datetime.datetime.now()
             if channel not in self.link_cache:
                 self.link_cache[channel] = []
             self.link_cache[channel].append(
@@ -360,7 +360,7 @@ class SpiffyTitles(callbacks.Plugin):
         if len(self.link_cache) == 0:
             return
         cached_link = None
-        now = pendulum.now()
+        now = datetime.datetime.now()
         stale = False
         seconds = 0
         if channel in self.link_cache:
@@ -855,8 +855,7 @@ class SpiffyTitles(callbacks.Plugin):
                                 )
                             else:
                                 duration = "LIVE"
-                            published = snippet["publishedAt"]
-                            published = self.get_published_date(published)
+                            published = snippet["publishedAt"].split("T")[0]
                             timestamp = self.get_timestamp_from_youtube_url(url)
                             yt_logo = self.get_youtube_logo(channel)
                             compiled_template = yt_template.render(
@@ -898,12 +897,6 @@ class SpiffyTitles(callbacks.Plugin):
             log.debug("SpiffyTitles: falling back to default handler")
             return self.handler_default(url, channel)
 
-    def get_published_date(self, date):
-        date = pendulum.parse(date, strict=False)
-        date = pendulum.datetime(date.year, date.month, date.day)
-        date = date.to_date_string()
-        return date
-
     def get_duration_from_seconds(self, duration_seconds):
         m, s = divmod(duration_seconds, 60)
         h, m = divmod(m, 60)
@@ -927,8 +920,27 @@ class SpiffyTitles(callbacks.Plugin):
         4 minutes and 41 seconds. This method returns the total seconds
         so that the duration can be parsed as usual.
         """
-        duration = pendulum.parse(input)
-        return duration.total_seconds()
+        regex = re.compile(
+            """
+                   (?P<sign>    -?) P
+                (?:(?P<years>  \d+) Y)?
+                (?:(?P<months> \d+) M)?
+                (?:(?P<days>   \d+) D)?
+            (?:                     T
+                (?:(?P<hours>  \d+) H)?
+                (?:(?P<minutes>\d+) M)?
+                (?:(?P<seconds>\d+) S)?
+            )?
+            """,
+            re.VERBOSE,
+        )
+        duration = regex.match(input).groupdict(0)
+        delta = datetime.timedelta(
+            hours=int(duration["hours"]),
+            minutes=int(duration["minutes"]),
+            seconds=int(duration["seconds"]),
+        )
+        return delta.total_seconds()
 
     def get_timestamp_from_youtube_url(self, url):
         """
@@ -1209,12 +1221,16 @@ class SpiffyTitles(callbacks.Plugin):
         """
         Return relative time delta between now and s (dt string).
         """
+
         try:  # timeline's created_at Tue May 08 10:58:49 +0000 2012
-            ddate = pendulum.parse(s)
+            ddate = time.strptime(s, "%Y-%m-%dT%H:%M:%SZ")[:-2]
         except ValueError:
-            return s
+            try:  # search's created_at Thu, 06 Oct 2011 19:41:12 +0000
+                ddate = time.strptime(s, "%a, %d %b %Y %H:%M:%S +0000")[:-2]
+            except ValueError:
+                return s
         # do the math
-        d = pendulum.now() - ddate
+        d = datetime.datetime.now() - datetime.datetime(*ddate, tzinfo=None)
         # now parse and return.
         if d.days:
             rel_time = "{:1d}d ago".format(abs(d.days))
@@ -1479,8 +1495,8 @@ class SpiffyTitles(callbacks.Plugin):
                 % (request.status_code, request.content.decode()[:200])
             )
         if data:
-            today = pendulum.now().date()
-            created = pendulum.from_timestamp(data["created_utc"]).date()
+            today = datetime.datetime.now().date()
+            created = datetime.datetime.fromtimestamp(data["created_utc"]).date()
             age_days = (today - created).days
             if age_days == 0:
                 age = "today"
@@ -1577,9 +1593,7 @@ class SpiffyTitles(callbacks.Plugin):
             if client_id and self.is_valid_imgur_id(album_id):
                 log.debug("SpiffyTitles: found imgur album id %s" % (album_id))
                 try:
-                    header = {
-                        "Authorization": "Client-ID {0}".format(client_id)
-                    }
+                    header = {"Authorization": "Client-ID {0}".format(client_id)}
                     api_url = "https://api.imgur.com/3/album/{0}".format(album_id)
                     request = requests.get(api_url, headers=header, timeout=10)
                     request.raise_for_status()
@@ -1642,9 +1656,7 @@ class SpiffyTitles(callbacks.Plugin):
             if client_id and self.is_valid_imgur_id(image_id):
                 log.debug("SpiffyTitles: found image id %s" % (image_id))
                 try:
-                    headers = {
-                        "Authorization": "Client-ID {0}".format(client_id)
-                    }
+                    headers = {"Authorization": "Client-ID {0}".format(client_id)}
                     api_url = "https://api.imgur.com/3/image/{0}".format(image_id)
                     request = requests.get(api_url, headers=headers, timeout=10)
                     request.raise_for_status()
@@ -1711,6 +1723,7 @@ class SpiffyTitles(callbacks.Plugin):
             irc.reply(title)
         else:
             irc.reply(error_message + " {}".format(err))
+
     t = wrap(t, ["text"])
 
 
