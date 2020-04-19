@@ -243,7 +243,7 @@ conf.registerChannelValue(
     SpiffyTitles.default,
     "fileTemplate",
     registry.String(
-        "{% if type %}[{{type}}] {% endif %}" "{% if size %}({{size}}){% endif %}",
+        "{% if type %}[{{type}}] {% endif %}{% if size %}({{size}}){% endif %}",
         _("""Template used for default title responses"""),
     ),
 )

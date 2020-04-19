@@ -1656,9 +1656,9 @@ class SpiffyTitles(callbacks.Plugin):
             if client_id and self.is_valid_imgur_id(image_id):
                 log.debug("SpiffyTitles: found image id %s" % (image_id))
                 try:
-                    headers = {"Authorization": "Client-ID {0}".format(client_id)}
+                    header = {"Authorization": "Client-ID {0}".format(client_id)}
                     api_url = "https://api.imgur.com/3/image/{0}".format(image_id)
-                    request = requests.get(api_url, headers=headers, timeout=10)
+                    request = requests.get(api_url, headers=header, timeout=10)
                     request.raise_for_status()
                     ok = request.status_code == requests.codes.ok
                     image = None
