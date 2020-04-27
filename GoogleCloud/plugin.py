@@ -37,46 +37,62 @@ import supybot.log as log
 import supybot.conf as conf
 import requests
 import json
+import html
+
 
 class GoogleCloud(callbacks.Plugin):
-
-
     def translate(self, irc, msg, args, optlist, text):
         """[--from <source>] [--to <target>] <text>
-        Translate text using Google Translate API. Uses automatic language detection if source not
-        set. No target uses the plugin default.
+        Translate text using Google Translate API. Uses automatic language detection
+        if source not set. No target uses the plugin default.
         """
         optlist = dict(optlist)
-        key = self.registryValue('translate.key')
+        key = self.registryValue("translate.key")
         if not key:
             irc.reply("Error: No API key has been set.")
             return
-        if 'from' in optlist:
-            source = optlist.get('from')
+        if "from" in optlist:
+            source = optlist.get("from")
         else:
-            source = self.registryValue('translate.source', msg.channel)
-        if 'to' in optlist:
-            target = optlist.get('to')
+            source = self.registryValue("translate.source", msg.channel)
+        if "to" in optlist:
+            target = optlist.get("to")
         else:
-            target = self.registryValue('translate.target', msg.channel)
-        if source != 'auto':
-            url = 'https://translation.googleapis.com/language/translate/v2?q={0}&target={1}&source={2}&key={3}'.format(text, target, source, key)
+            target = self.registryValue("translate.target", msg.channel)
+        url = "https://translation.googleapis.com/language/translate/v2"
+        if source != "auto":
+            url += "?q={0}&target={1}&source={2}&key={3}".format(
+                text, target, source, key
+            )
         else:
-            url = 'https://translation.googleapis.com/language/translate/v2?q={0}&target={1}&key={2}'.format(text, target, key)
+            url += "?q={0}&target={1}&key={2}".format(text, target, key)
         response = requests.get(url, timeout=10)
         if not response.status_code == 200:
-            log.debug("GoogleCloud: Error accessing {0}: {1}".format(url, response.content.decode()))
+            log.debug(
+                "GoogleCloud: Error accessing {0}: {1}".format(
+                    url, response.content.decode()
+                )
+            )
             return
         result = json.loads(response.content)
-        if not result.get('data'):
+        if not result.get("data"):
             log.debug("GoogleCloud: Error opening JSON response")
             return
-        if result['data']['translations'][0].get('detectedSourceLanguage'):
-            reply = "{0} [{1}~>{2}]".format(result['data']['translations'][0]['translatedText'], result['data']['translations'][0]['detectedSourceLanguage'], target)
+        if result["data"]["translations"][0].get("detectedSourceLanguage"):
+            reply = "{0} [{1}~>{2}]".format(
+                html.unescape(result["data"]["translations"][0]["translatedText"]),
+                result["data"]["translations"][0]["detectedSourceLanguage"],
+                target,
+            )
         else:
-            reply = "{0} [{1}~>{2}]".format(result['data']['translations'][0]['translatedText'], source, target)
+            reply = "{0} [{1}~>{2}]".format(
+                html.unescape(result["data"]["translations"][0]["translatedText"]),
+                source,
+                target,
+            )
         irc.reply(reply)
-    translate = wrap(translate, [getopts({'from':'text', 'to':'text'}), 'text'])
+
+    translate = wrap(translate, [getopts({"from": "text", "to": "text"}), "text"])
 
 
 Class = GoogleCloud

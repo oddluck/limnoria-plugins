@@ -29,9 +29,11 @@
 
 import supybot.conf as conf
 import supybot.registry as registry
+
 try:
     from supybot.i18n import PluginInternationalization
-    _ = PluginInternationalization('GoogleCloud')
+
+    _ = PluginInternationalization("GoogleCloud")
 except:
     # Placeholder that allows to run the plugin on a bot
     # without the i18n module
@@ -44,21 +46,43 @@ def configure(advanced):
     # user or not.  You should effect your configuration by manipulating the
     # registry as appropriate.
     from supybot.questions import expect, anything, something, yn
-    conf.registerPlugin('GoogleCloud', True)
+
+    conf.registerPlugin("GoogleCloud", True)
 
 
-GoogleCloud = conf.registerPlugin('GoogleCloud')
+GoogleCloud = conf.registerPlugin("GoogleCloud")
 
-conf.registerGroup(GoogleCloud, 'translate')
+conf.registerGroup(GoogleCloud, "translate")
 
-conf.registerGlobalValue(GoogleCloud.translate, 'key',
-    registry.String('', _("""The Google API translation key
-    (required)"""), private=True))
+conf.registerGlobalValue(
+    GoogleCloud.translate,
+    "key",
+    registry.String(
+        "", _("""The Google API translation key (required)"""), private=True,
+    ),
+)
 
-conf.registerChannelValue(GoogleCloud.translate, 'target',
-    registry.String('en', _("""The default target language for the
-    translate command."""), private=True))
+conf.registerChannelValue(
+    GoogleCloud.translate,
+    "target",
+    registry.String(
+        "en",
+        _("""The default target language for the translate command."""),
+        private=True,
+    ),
+)
 
-conf.registerChannelValue(GoogleCloud.translate, 'source',
-    registry.String('auto', _("""The default source language for the translate
-    command. Default is 'auto' for automatic language detection."""), private=True))
+conf.registerChannelValue(
+    GoogleCloud.translate,
+    "source",
+    registry.String(
+        "auto",
+        _(
+            """
+            The default source language for the translate command. Default is 'auto'
+            for automatic language detection.
+            """
+        ),
+        private=True,
+    ),
+)
