@@ -31,25 +31,28 @@
 from random import choice
 import os
 import json
-from . import test
 
 # Settings you change
-card_folder = 'cards'
-answer_cards_file_names = ['answer_main', 'custom_answer_cards']
-question_cards_file_name = ['question_main', 'custom_question_cards']
-blank_format = '__________'
+card_folder = "cards"
+answer_cards_file_names = ["answer_main", "custom_answer_cards"]
+question_cards_file_name = ["question_main", "custom_question_cards"]
+blank_format = "__________"
 
 # Settings that are used
-#this is one level higher than it should be
+# this is one level higher than it should be
 base_directory = os.path.dirname(os.path.abspath(__file__))
+
 
 class Deck(object):
     def __init__(self):
-        self.answerDb = self.parse_card_file('answer')
-        self.questionDb = self.parse_card_file('question')
+        self.answerDb = self.parse_card_file("answer")
+        self.questionDb = self.parse_card_file("question")
 
     def parse_card_file(self, card_type):
-        card_type_map = {'answer': answer_cards_file_names, 'question': question_cards_file_name}
+        card_type_map = {
+            "answer": answer_cards_file_names,
+            "question": question_cards_file_name,
+        }
 
         # Read text file into a list containing only strings of text for the card
         card_text_list = []
@@ -71,7 +74,7 @@ class Deck(object):
             # Prepare card text by removing control chars
             card = card.rstrip()
             # Figure out how many answers are required for a question card
-            if card_type == 'question':
+            if card_type == "question":
                 answers = self.count_answers(card)
                 card_object_list.append(Card(index, card_type, card, answers=answers))
             else:
@@ -86,14 +89,17 @@ class Deck(object):
             return blanks
 
     def drawCard(self, typeOfCard):
-        typeMap = {'answer': self.answerDb, 'question': self.questionDb}
+        typeMap = {"answer": self.answerDb, "question": self.questionDb}
         type = typeMap[typeOfCard]
         card = choice(type)
         type.remove(card)
         return card
 
     def __repr__(self):
-        return json.dumps({'questions': len(self.questionDb), 'answers': len(self.answerDb)})
+        return json.dumps(
+            {"questions": len(self.questionDb), "answers": len(self.answerDb)}
+        )
+
 
 class Card(object):
     def __init__(self, id, type, text, **kwargs):
@@ -102,12 +108,13 @@ class Card(object):
         self.text = text
         for key, value in kwargs.items():
             setattr(self, key, value)
+
     def __str__(self):
         return self.text
 
 
 class Game(object):
-    def __init__(self, players, round_limit = 5):
+    def __init__(self, players, round_limit=5):
         self.round_limit = round_limit
         self.deck = Deck()
         self.players = self.build_player_list(players)
@@ -129,8 +136,8 @@ class Game(object):
         else:
             raise IndexError
 
-        self.question = self.deck.drawCard('question')
-        return {'question': self.question, 'hands': self.players}
+        self.question = self.deck.drawCard("question")
+        return {"question": self.question, "hands": self.players}
 
     def end_round(self, winner_name, cards_played):
         self.score_keeping(winner_name)
@@ -155,14 +162,16 @@ class Game(object):
             cardRange = list(range(5))
             while cardInput not in cardRange:
                 try:
-                    cardInput = int(input('%s Pick a Card: ' % player)) - 1
+                    cardInput = int(input("%s Pick a Card: " % player)) - 1
                 except ValueError:
                     pass
 
+
 class Round(object):
     def __init__(self, deck, players):
-        self.question = deck.drawCard('question')
+        self.question = deck.drawCard("question")
         self.players = players
+
 
 class PlayerHand(object):
     def __init__(self, deck):
@@ -171,35 +180,38 @@ class PlayerHand(object):
 
     def deal_hand(self, deck):
         while len(self.card_list) < 5:
-            card = deck.drawCard('answer')
+            card = deck.drawCard("answer")
             self.card_list.append(card)
 
     def text_list(self):
         card_text = []
         for index, card in enumerate(self.card_list):
-            card_text.append ( card.text)
+            card_text.append(card.text)
         return card_text
 
     def showHand(self):
-            print('%s' % self.text_list())
+        print("%s" % self.text_list())
 
 
-
-
-if __name__=="__main__":
-    game = Game(['Bear','Swim', 'Jazz'])
-    print("\nGame started with the following players: %s \n" % list(game.players.keys()))
+if __name__ == "__main__":
+    game = Game(["Bear", "Swim", "Jazz"])
+    print(
+        "\nGame started with the following players: %s \n" % list(game.players.keys())
+    )
     round = game.next_round()
     print("The first question is: %s \n" % game.question.text)
 
     print("Swim's hand the easy way:")
-    game.players['Swim'].showHand()
+    game.players["Swim"].showHand()
 
     print("\nJazz's hand in a weird way")
-    round['hands']['Jazz'].showHand()
+    round["hands"]["Jazz"].showHand()
 
     print("\nBear's hand the hard way:")
-    for index, card in enumerate(game.players['Bear'].card_list):
-        print('%s: %s' % (index + 1, card.text))
+    for index, card in enumerate(game.players["Bear"].card_list):
+        print("%s: %s" % (index + 1, card.text))
 
-    print("\nEnd the round by picking a random cards amd winner: %s" % str(test.build_end_round_data(game)))
+    print(
+        "\nEnd the round by picking a random cards amd winner: %s"
+        % str(test.build_end_round_data(game))
+    )
