@@ -41,26 +41,32 @@ import supybot.world as world
 __version__ = "2020.02.24+git"
 
 # XXX Replace this with an appropriate author or supybot.Author instance.
-__author__ = supybot.Author('oddluck', 'oddluck',
-                            'oddluck@riseup.net')
+__author__ = supybot.Author("oddluck", "oddluck", "oddluck@riseup.net")
 
 # This is a dictionary mapping supybot.Author instances to lists of
 # contributions.
-if not hasattr(supybot.authors, 'progval') or not hasattr(supybot.authors, 'quantumlemur'):
-    supybot.authors.progval = supybot.Author('Valentin Lorentz', 'ProgVal',
-                                             'progval@gmail.com')
-    supybot.authors.quantumlemur = supybot.Author('quantumlemur', 'quantumlemur',
-                                                  'quantumlemur@users.sourceforge.net')
-__contributors__ = {supybot.authors.quantumlemur: ['original plugin base'],
-                    supybot.authors.progval:      ['code enhancement']}
+if not hasattr(supybot.authors, "progval") or not hasattr(
+    supybot.authors, "quantumlemur"
+):
+    supybot.authors.progval = supybot.Author(
+        "Valentin Lorentz", "ProgVal", "progval@gmail.com"
+    )
+    supybot.authors.quantumlemur = supybot.Author(
+        "quantumlemur", "quantumlemur", "quantumlemur@users.sourceforge.net"
+    )
+__contributors__ = {
+    supybot.authors.quantumlemur: ["original plugin base"],
+    supybot.authors.progval: ["code enhancement"],
+}
 
 # This is a url where the most recent plugin package can be downloaded.
-__url__ = 'https://github.com/oddluck/limnoria-plugins/'
+__url__ = "https://github.com/oddluck/limnoria-plugins/"
 
 from . import config
 from . import plugin
 from imp import reload
-reload(plugin) # In case we're being reloaded.
+
+reload(plugin)  # In case we're being reloaded.
 # Add more reloads here if you add third-party modules and want them to be
 # reloaded when this plugin is reloaded.  Don't forget to import them as well!
 
