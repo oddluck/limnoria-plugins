@@ -3,8 +3,6 @@ A fully-featured and customizable IRC trivia game using an archive of Jeopardy! 
 **Come play in ##Jeopardy on Freenode.**
 
 [irc://chat.freenode.net/##jeopardy](irc://chat.freenode.net/##jeopardy)</br>
-[https://kiwiirc.com/nextclient/#irc://irc.freenode.net/#kiwiirc](https://kiwiirc.com/nextclient/#irc://irc.freenode.net/#kiwiirc)
-
 
 ## This... is... Jeopardy!
 
