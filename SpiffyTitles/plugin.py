@@ -1706,15 +1706,12 @@ class SpiffyTitles(callbacks.Plugin):
         """
         Retrieves title for a URL on demand
         """
-        message = msg.args[1]
         channel = msg.args[0]
-        url = self.get_url_from_message(message)
         title = None
         error_message = self.registryValue("onDemandTitleError", channel=channel)
         err = ""
         try:
-            if url:
-                title = self.get_title_by_url(query, channel)
+            title = self.get_title_by_url(query, channel)
         except:
             pass
         if title:
