@@ -136,6 +136,8 @@ class SpiffyTitles(callbacks.Plugin):
         """
         Observe each channel message and look for links
         """
+        if callbacks.addressed(irc, msg):
+            return
         channel = msg.args[0]
         ignore_actions = self.registryValue("ignoreActionLinks", channel=msg.args[0])
         is_channel = irc.isChannel(channel)
