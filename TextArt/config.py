@@ -49,10 +49,10 @@ def configure(advanced):
 TextArt = conf.registerPlugin('TextArt')
 
 conf.registerGlobalValue(TextArt, 'pasteAPI',
-    registry.String('', _("""Paste.ee API Key""")))
+    registry.String('', _("""Paste.ee API Key"""), private=True))
 
 conf.registerGlobalValue(TextArt, 'imgurAPI',
-    registry.String('', _("""Imgur Client ID""")))
+    registry.String('', _("""Imgur Client ID"""), private=True))
 
 conf.registerChannelValue(TextArt, 'pasteEnable',
     registry.Boolean(False, _("""Turns on and off paste.ee support""")))

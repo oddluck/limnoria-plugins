@@ -42,14 +42,17 @@ import random
 
 try:
     from supybot.i18n import PluginInternationalization
-    _ = PluginInternationalization('Weed')
+
+    _ = PluginInternationalization("Weed")
 except ImportError:
     # Placeholder that allows to run the plugin on a bot
     # without the i18n module
     _ = lambda x: x
 
+
 class Lyrics(callbacks.Plugin):
     """Retrieves song lyrics"""
+
     threaded = True
 
     def dosearch(self, lyric):
@@ -60,33 +63,33 @@ class Lyrics(callbacks.Plugin):
             searchurl += "{0} site:lyrics.fandom.com/wiki/".format(lyric)
             agents = self.registryValue("userAgents")
             ua = random.choice(agents)
-            header = {'User-Agent': ua}
+            header = {"User-Agent": ua}
             data = requests.get(searchurl, headers=header, timeout=10)
             data.raise_for_status()
             log.debug(data.content.decode())
             soup = BeautifulSoup(data.content)
-            elements = soup.select('.r a')
-            title = soup.find("h3").getText().replace(":", " - ").split('|')[0]
-            url = elements[0]['href']
+            elements = soup.select(".r a")
+            title = soup.find("h3").getText().replace(":", " - ").split("|")[0]
+            url = elements[0]["href"]
         except Exception:
             pass
         return title, url
 
     def getlyrics(self, query):
         lyrics = None
-        if 'lyrics.fandom.com/wiki/' in query:
+        if "lyrics.fandom.com/wiki/" in query:
             try:
                 log.debug("Lyrics: requesting {0}".format(query))
                 lyrics = pylyrics3.get_lyrics_from_url(query)
-                lyrics = re.sub('(?<!\.|\!|\?)\s\\n', '.', lyrics).replace(" \n", "")
+                lyrics = re.sub(r"(?<!\.|\!|\?)\s\\n", ".", lyrics).replace(" \n", "")
             except Exception:
                 pass
         else:
             try:
                 log.debug("Lyrics: requesting {0}".format(query))
-                query = query.split(',', 1)
+                query = query.split(",", 1)
                 lyrics = pylyrics3.get_song_lyrics(query[0].strip(), query[1].strip())
-                lyrics = re.sub('(?<!\.|\!|\?)\s\\n', '.', lyrics).replace(" \n", "")
+                lyrics = re.sub(r"(?<!\.|\!|\?)\s\\n", ".", lyrics).replace(" \n", "")
             except Exception:
                 pass
         return lyrics
@@ -100,7 +103,7 @@ class Lyrics(callbacks.Plugin):
         url = None
         if self.registryValue("googleSearch", channel):
             title, url = self.dosearch(lyric)
-        if url and title and 'lyrics.fandom.com/wiki/' in url:
+        if url and title and "lyrics.fandom.com/wiki/" in url:
             try:
                 lyrics = self.getlyrics(url)
                 if lyrics:
@@ -113,7 +116,7 @@ class Lyrics(callbacks.Plugin):
                 irc.reply("Unable to retrieve lyrics from {0}".format(url))
                 return
         else:
-            if ',' in lyric:
+            if "," in lyric:
                 try:
                     lyrics = self.getlyrics(lyric)
                     if lyrics:
@@ -127,6 +130,8 @@ class Lyrics(callbacks.Plugin):
             else:
                 irc.reply("Searches must be formatted as <artist>, <song title>")
                 return
-    lyric = wrap(lyric, ['text'])
+
+    lyric = wrap(lyric, ["text"])
+
 
 Class = Lyrics

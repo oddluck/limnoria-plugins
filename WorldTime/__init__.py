@@ -41,20 +41,24 @@ import importlib
 __version__ = "2020.02.24+git"
 
 # XXX Replace this with an appropriate author or supybot.Author instance.
-__author__ = supybot.Author('reticulatingspline', 'spline', '')
-__maintainer__ = getattr(supybot.authors, 'oddluck',
-                         supybot.Author('oddluck', 'oddluck', 'oddluck@riseup.net'))
+__author__ = supybot.Author("reticulatingspline", "spline", "")
+__maintainer__ = getattr(
+    supybot.authors,
+    "oddluck",
+    supybot.Author("oddluck", "oddluck", "oddluck@riseup.net"),
+)
 
 # This is a dictionary mapping supybot.Author instances to lists of
 # contributions.
 __contributors__ = {}
 
 # This is a url where the most recent plugin package can be downloaded.
-__url__ = '' # 'http://supybot.com/Members/yourname/WorldTime/download'
+__url__ = ""  # 'http://supybot.com/Members/yourname/WorldTime/download'
 
 from . import config
 from . import plugin
 from imp import reload
+
 # In case we're being reloaded.
 importlib.reload(config)
 importlib.reload(plugin)

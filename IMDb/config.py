@@ -30,9 +30,11 @@
 
 import supybot.conf as conf
 import supybot.registry as registry
+
 try:
     from supybot.i18n import PluginInternationalization
-    _ = PluginInternationalization('IMDb')
+
+    _ = PluginInternationalization("IMDb")
 except:
     # Placeholder that allows to run the plugin on a bot
     # without the i18n module
@@ -45,24 +47,55 @@ def configure(advanced):
     # user or not.  You should effect your configuration by manipulating the
     # registry as appropriate.
     from supybot.questions import expect, anything, something, yn
-    conf.registerPlugin('IMDb', True)
+
+    conf.registerPlugin("IMDb", True)
 
 
-IMDb = conf.registerPlugin('IMDb')
+IMDb = conf.registerPlugin("IMDb")
 
-conf.registerChannelValue(IMDb, 'template',
-     registry.String("\x02\x031,8 IMDb \x0F\x02 :: $title ($year, $country, [$rated], $genre, $runtime) :: IMDb: $imdbRating | MC: $metascore | RT: $tomatoMeter :: http://imdb.com/title/$imdbID :: $plot :: Director: $director :: Cast: $actors :: Writer: $writer", _("""Template for the output of a search query.""")))
+conf.registerChannelValue(
+    IMDb,
+    "template",
+    registry.String(
+        "\x02\x031,8 IMDb \x0F\x02 :: $title ($year, $country, [$rated], $genre, "
+        "$runtime) :: IMDb: $imdbRating | MC: $metascore | RT: $tomatoMeter :: "
+        "http://imdb.com/title/$imdbID :: $plot :: Director: $director :: Cast: "
+        "$actors :: Writer: $writer",
+        _("""Template for the output of a search query."""),
+    ),
+)
 
-conf.registerChannelValue(IMDb, 'noResultsMessage',
-     registry.String("No results for that query.", _("""This message is sent when there are no results""")))
+conf.registerChannelValue(
+    IMDb,
+    "noResultsMessage",
+    registry.String(
+        "No results for that query.",
+        _("""This message is sent when there are no results"""),
+    ),
+)
 
-conf.registerGlobalValue(IMDb, 'omdbAPI',
-     registry.String('', _("""OMDB API Key""")))
+conf.registerGlobalValue(
+    IMDb, "omdbAPI", registry.String("", _("""OMDB API Key"""), private=True)
+)
 
-conf.registerChannelValue(IMDb, 'googleSearch',
-     registry.Boolean(True, _("""Use google to perform searches for better results.""")))
+conf.registerChannelValue(
+    IMDb,
+    "googleSearch",
+    registry.Boolean(True, _("""Use google to perform searches for better results.""")),
+)
 
-conf.registerGlobalValue(IMDb, 'userAgents',
-     registry.CommaSeparatedListOfStrings(["Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.130 Safari/537.36", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:73.0) Gecko/20100101 Firefox/73.0", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.122 Safari/537.36", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:74.0) Gecko/20100101 Firefox/74.0"], _("""Reported user agent when fetching links""")))
+conf.registerGlobalValue(
+    IMDb,
+    "userAgents",
+    registry.CommaSeparatedListOfStrings(
+        [
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:75.0) Gecko/20100101 Firefox/75.0",
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:76.0) Gecko/20100101 Firefox/76.0",
+            "Mozilla/5.0 (Linux x86_64; rv:75.0) Gecko/20100101 Firefox/75.0",
+            "Mozilla/5.0 (Linux x86_64; rv:76.0) Gecko/20100101 Firefox/76.0",
+        ],
+        _("""Reported user agent when fetching links"""),
+    ),
+)
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:

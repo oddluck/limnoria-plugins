@@ -486,7 +486,9 @@ conf.registerChannelValue(
 
 # Twitch API Key
 conf.registerGlobalValue(
-    SpiffyTitles.twitch, "clientID", registry.String("", _("""Twitch API Client_ID"""))
+    SpiffyTitles.twitch,
+    "clientID",
+    registry.String("", _("""Twitch API Client_ID"""), private=True),
 )
 
 # Twitch Logo
@@ -579,7 +581,9 @@ conf.registerChannelValue(
 
 # OMDB API Key
 conf.registerGlobalValue(
-    SpiffyTitles.imdb, "omdbAPI", registry.String("", _("""OMDB API Key"""))
+    SpiffyTitles.imdb,
+    "omdbAPI",
+    registry.String("", _("""OMDB API Key"""), private=True),
 )
 
 # IMDB Logo

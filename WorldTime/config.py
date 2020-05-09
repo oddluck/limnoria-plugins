@@ -30,13 +30,16 @@
 
 import supybot.conf as conf
 import supybot.registry as registry
+
 try:
     from supybot.i18n import PluginInternationalization
-    _ = PluginInternationalization('WorldTime')
+
+    _ = PluginInternationalization("WorldTime")
 except:
     # Placeholder that allows to run the plugin on a bot
     # without the i18n module
-    _ = lambda x:x
+    _ = lambda x: x
+
 
 def configure(advanced):
     # This will be called by supybot to configure this module.  advanced is
@@ -44,13 +47,31 @@ def configure(advanced):
     # user or not.  You should effect your configuration by manipulating the
     # registry as appropriate.
     from supybot.questions import expect, anything, something, yn
-    conf.registerPlugin('WorldTime', True)
+
+    conf.registerPlugin("WorldTime", True)
 
 
-WorldTime = conf.registerPlugin('WorldTime')
+WorldTime = conf.registerPlugin("WorldTime")
 # This is where your configuration variables (if any) should go.  For example:
-conf.registerChannelValue(WorldTime, 'disableANSI', registry.Boolean(False, _("""Disable color/bolding for WorldTime output in channel.""")))
-conf.registerChannelValue(WorldTime, 'format', registry.String('%a, %H:%M', _("""Sets the output time format (using an strftime-formatted string).""")))
-conf.registerGlobalValue(WorldTime, 'mapsAPIkey', registry.String('', """Sets the Google Maps Places API key"""))
+conf.registerChannelValue(
+    WorldTime,
+    "disableANSI",
+    registry.Boolean(
+        False, _("""Disable color/bolding for WorldTime output in channel.""")
+    ),
+)
+conf.registerChannelValue(
+    WorldTime,
+    "format",
+    registry.String(
+        "%a, %H:%M",
+        _("""Sets the output time format (using an strftime-formatted string)."""),
+    ),
+)
+conf.registerGlobalValue(
+    WorldTime,
+    "mapsAPIkey",
+    registry.String("", """Sets the Google Maps Places API key""", private=True),
+)
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:

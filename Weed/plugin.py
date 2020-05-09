@@ -39,14 +39,17 @@ import re
 
 try:
     from supybot.i18n import PluginInternationalization
-    _ = PluginInternationalization('Weed')
+
+    _ = PluginInternationalization("Weed")
 except ImportError:
     # Placeholder that allows to run the plugin on a bot
     # without the i18n module
     _ = lambda x: x
 
+
 class Weed(callbacks.Plugin):
     """Uses API to retrieve information"""
+
     threaded = True
 
     def strain(self, irc, msg, args, strain):
@@ -56,53 +59,68 @@ class Weed(callbacks.Plugin):
         response1 = None
         response2 = None
         channel = msg.args[0]
-        strain = re.sub('[^\w\:\"\#\-\.\' ]', '', strain).casefold()
-        strain_api = self.registryValue('strain_api')
+        strain = re.sub("[^\w\:\"\#\-\.' ]", "", strain).casefold()
+        strain_api = self.registryValue("strain_api")
         if not strain_api:
             irc.reply("Error: You must set an API key to use this plugin.")
             return
-        url = "http://strainapi.evanbusse.com/{0}/strains/search/name/{1}".format(strain_api, strain)
+        url = "http://strainapi.evanbusse.com/{0}/strains/search/name/{1}".format(
+            strain_api, strain
+        )
         request = requests.get(url)
         ok = request.status_code == requests.codes.ok
         if not ok:
             irc.reply("Error: Unable to retrieve data. Did you set an API key?")
-            log.error("IMDB: API Error %s: %s" % (request.status_code, request.content.decode()))
+            log.error(
+                "IMDB: API Error %s: %s"
+                % (request.status_code, request.content.decode())
+            )
             return
         data = json.loads(request.content)
         for item in data:
-            if item['desc'] is not None and item['name'].casefold() == strain:
-                id = item['id']
-                name = ircutils.bold(item['name'])
-                type = ircutils.bold(item['race'])
-                desc = item['desc']
-                url2 = "http://strainapi.evanbusse.com/{0}/strains/data/flavors/{1}".format(strain_api, id)
+            if item["desc"] is not None and item["name"].casefold() == strain:
+                id = item["id"]
+                name = ircutils.bold(item["name"])
+                type = ircutils.bold(item["race"])
+                desc = item["desc"]
+                url2 = "http://strainapi.evanbusse.com/{0}/strains/data/flavors/{1}".format(
+                    strain_api, id
+                )
                 data2 = requests.get(url2)
                 data2 = json.loads(data2.content)
                 flavor1 = data2[0]
                 flavor2 = data2[1]
                 flavor3 = data2[2]
-                response1 = "{0} | {1} | Flavors: {2}, {3}, {4} | {5}".format(name, type, flavor1, flavor2, flavor3, desc)
+                response1 = "{0} | {1} | Flavors: {2}, {3}, {4} | {5}".format(
+                    name, type, flavor1, flavor2, flavor3, desc
+                )
                 break
         for item in data:
-            if item['desc'] is not None and item['name'].casefold() != strain:
-                id = item['id']
-                name = ircutils.bold(item['name'])
-                type = ircutils.bold(item['race'])
-                desc = item['desc']
-                url2 = "http://strainapi.evanbusse.com/{0}/strains/data/flavors/{1}".format(strain_api, id)
+            if item["desc"] is not None and item["name"].casefold() != strain:
+                id = item["id"]
+                name = ircutils.bold(item["name"])
+                type = ircutils.bold(item["race"])
+                desc = item["desc"]
+                url2 = "http://strainapi.evanbusse.com/{0}/strains/data/flavors/{1}".format(
+                    strain_api, id
+                )
                 data2 = requests.get(url2)
                 data2 = json.loads(data2.content)
                 flavor1 = data2[0]
                 flavor2 = data2[1]
                 flavor3 = data2[2]
-                response2 = "{0} | {1} | Flavors: {2}, {3}, {4} | {5}".format(name, type.title(), flavor1, flavor2, flavor3, desc)
+                response2 = "{0} | {1} | Flavors: {2}, {3}, {4} | {5}".format(
+                    name, type.title(), flavor1, flavor2, flavor3, desc
+                )
                 break
         if response1 != None:
             irc.reply(response1)
         elif response1 == None and response2 != None:
             irc.reply(response2)
         else:
-            irc.reply('No results found, what have you been smoking?')
-    strain = wrap(strain, ['text'])
+            irc.reply("No results found, what have you been smoking?")
+
+    strain = wrap(strain, ["text"])
+
 
 Class = Weed
