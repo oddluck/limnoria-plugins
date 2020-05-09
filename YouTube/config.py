@@ -30,9 +30,11 @@
 
 import supybot.conf as conf
 import supybot.registry as registry
+
 try:
     from supybot.i18n import PluginInternationalization
-    _ = PluginInternationalization('YouTube')
+
+    _ = PluginInternationalization("YouTube")
 except:
     # Placeholder that allows to run the plugin on a bot
     # without the i18n module
@@ -45,28 +47,59 @@ def configure(advanced):
     # user or not.  You should effect your configuration by manipulating the
     # registry as appropriate.
     from supybot.questions import expect, anything, something, yn
-    conf.registerPlugin('YouTube', True)
+
+    conf.registerPlugin("YouTube", True)
 
 
-YouTube = conf.registerPlugin('YouTube')
+YouTube = conf.registerPlugin("YouTube")
 
 
-conf.registerGlobalValue(YouTube, 'developerKey',
-     registry.String("", _("""Google API key. Required.""")))
+conf.registerGlobalValue(
+    YouTube,
+    "developerKey",
+    registry.String("", _("""Google API key. Required."""), private=True),
+)
 
-conf.registerChannelValue(YouTube, 'sortOrder',
-     registry.String("relevance", _("""Method used to order API responses: date, rating, relevance, title, viewCount""")))
+conf.registerChannelValue(
+    YouTube,
+    "sortOrder",
+    registry.String(
+        "relevance",
+        _(
+            """
+            Method used to order API responses: date, rating, relevance, title, viewCount
+            """
+        ),
+    ),
+)
 
-conf.registerChannelValue(YouTube, 'safeSearch',
-     registry.String("none", _("""Safe search filtering: none, moderate, strict""")))
+conf.registerChannelValue(
+    YouTube,
+    "safeSearch",
+    registry.String("none", _("""Safe search filtering: none, moderate, strict""")),
+)
 
-conf.registerChannelValue(YouTube, 'logo',
-    registry.String("\x030,4 ► \x031,0YouTube", _("""Logo used with $yt_logo in template""")))
+conf.registerChannelValue(
+    YouTube,
+    "logo",
+    registry.String(
+        "\x030,4 ► \x031,0YouTube", _("""Logo used with $yt_logo in template""")
+    ),
+)
 
-conf.registerChannelValue(YouTube, 'template',
-     registry.String("{{logo}} :: {{link}} :: {{title}} :: Duration: {{duration}} :: Views: {{views}} :: Uploader: {{uploader}} :: Uploaded: {{published}} :: {{likes}} likes :: {{dislikes}} dislikes :: {{favorites}} favorites :: {{comments}} comments", _("""Template used for search result replies""")))
+conf.registerChannelValue(
+    YouTube,
+    "template",
+    registry.String(
+        "{{logo}} :: {{link}} :: {{title}} :: Duration: {{duration}} :: Views: {{views}} "
+        ":: Uploader: {{uploader}} :: Uploaded: {{published}} :: {{likes}} likes :: "
+        "{{dislikes}} dislikes :: {{favorites}} favorites :: {{comments}} comments",
+        _("""Template used for search result replies"""),
+    ),
+)
 
-conf.registerChannelValue(YouTube, 'useBold',
-     registry.Boolean(True, _("""Use bold in replies""")))
+conf.registerChannelValue(
+    YouTube, "useBold", registry.Boolean(True, _("""Use bold in replies"""))
+)
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:

@@ -43,36 +43,46 @@ from urllib.parse import urlencode
 
 try:
     from supybot.i18n import PluginInternationalization
-    _ = PluginInternationalization('YouTube')
+
+    _ = PluginInternationalization("YouTube")
 except ImportError:
     # Placeholder that allows to run the plugin on a bot
     # without the i18n module
     _ = lambda x: x
 
+
 class YouTube(callbacks.Plugin):
     """Queries OMDB database for information about YouTube titles"""
+
     threaded = True
 
     def dosearch(self, query):
-        apikey = self.registryValue('developerKey')
+        apikey = self.registryValue("developerKey")
         safe_search = self.registryValue("safeSearch", dynamic.channel)
         sort_order = self.registryValue("sortOrder", dynamic.channel)
         video_id = None
-        opts = {"q": query,
-                "part": "snippet",
-                "maxResults": "1",
-                "order": sort_order,
-                "key": apikey,
-                "safeSearch": safe_search,
-                "type": "video"}
-        api_url = "https://www.googleapis.com/youtube/v3/search?{0}".format(urlencode(opts))
+        opts = {
+            "q": query,
+            "part": "snippet",
+            "maxResults": "1",
+            "order": sort_order,
+            "key": apikey,
+            "safeSearch": safe_search,
+            "type": "video",
+        }
+        api_url = "https://www.googleapis.com/youtube/v3/search?{0}".format(
+            urlencode(opts)
+        )
         try:
             log.debug("YouTube: requesting %s" % (api_url))
             request = requests.get(api_url, timeout=10)
             response = json.loads(request.content)
             video_id = response["items"][0]["id"]["videoId"]
         except Exception:
-            log.error("YouTube: YouTube API HTTP %s: %s" % (request.status_code, request.content.decode()))
+            log.error(
+                "YouTube: YouTube API HTTP %s: %s"
+                % (request.status_code, request.content.decode())
+            )
             pass
         return video_id
 
@@ -112,7 +122,7 @@ class YouTube(callbacks.Plugin):
         """<search term>
         Search for YouTube videos
         """
-        apikey = self.registryValue('developerKey')
+        apikey = self.registryValue("developerKey")
         if not apikey:
             irc.reply("Error: You need to set an API key to use this plugin.")
             return
@@ -127,7 +137,8 @@ class YouTube(callbacks.Plugin):
                 "part": "snippet,statistics,contentDetails",
                 "maxResults": 1,
                 "key": apikey,
-                "id": video_id}
+                "id": video_id,
+            }
             opts = urlencode(opts)
             api_url = "https://www.googleapis.com/youtube/v3/videos?%s" % (opts)
             log.debug("YouTube: requesting %s" % (api_url))
@@ -153,50 +164,72 @@ class YouTube(callbacks.Plugin):
                             if "likeCount" in statistics:
                                 like_count = "{:,}".format(int(statistics["likeCount"]))
                             if "dislikeCount" in statistics:
-                                dislike_count = "{:,}".format(int(statistics["dislikeCount"]))
+                                dislike_count = "{:,}".format(
+                                    int(statistics["dislikeCount"])
+                                )
                             if "favoriteCount" in statistics:
-                                favorite_count = "{:,}".format(int(statistics["favoriteCount"]))
+                                favorite_count = "{:,}".format(
+                                    int(statistics["favoriteCount"])
+                                )
                             if "commentCount" in statistics:
-                                comment_count = "{:,}".format(int(statistics["commentCount"]))
+                                comment_count = "{:,}".format(
+                                    int(statistics["commentCount"])
+                                )
                             channel_title = snippet["channelTitle"]
                             video_duration = video["contentDetails"]["duration"]
-                            duration_seconds = self.get_total_seconds_from_duration(video_duration)
+                            duration_seconds = self.get_total_seconds_from_duration(
+                                video_duration
+                            )
                             if duration_seconds > 0:
-                                duration = self.get_duration_from_seconds(duration_seconds)
+                                duration = self.get_duration_from_seconds(
+                                    duration_seconds
+                                )
                             else:
                                 duration = "LIVE"
-                            published = snippet['publishedAt']
+                            published = snippet["publishedAt"]
                             published = self.get_published_date(published)
                             yt_logo = self.get_youtube_logo()
                             link = "https://youtu.be/%s" % (video_id)
-                            compiled_template = yt_template.render({
-                                "title": title,
-                                "duration": duration,
-                                "views": view_count,
-                                "likes": like_count,
-                                "dislikes": dislike_count,
-                                "comments": comment_count,
-                                "favorites": favorite_count,
-                                "uploader": channel_title,
-                                "link": link,
-                                "published": published,
-                                "logo": yt_logo
-                            })
+                            compiled_template = yt_template.render(
+                                {
+                                    "title": title,
+                                    "duration": duration,
+                                    "views": view_count,
+                                    "likes": like_count,
+                                    "dislikes": dislike_count,
+                                    "comments": comment_count,
+                                    "favorites": favorite_count,
+                                    "uploader": channel_title,
+                                    "link": link,
+                                    "published": published,
+                                    "logo": yt_logo,
+                                }
+                            )
                             title = compiled_template
                         else:
-                            log.debug("YouTube: video appears to be private; no results!")
+                            log.debug(
+                                "YouTube: video appears to be private; no results!"
+                            )
                     except IndexError as e:
-                        log.error("YouTube: IndexError parsing Youtube API JSON response: %s" % (str(e)))
+                        log.error(
+                            "YouTube: IndexError parsing Youtube API JSON response: %s"
+                            % (str(e))
+                        )
                 else:
                     log.error("YouTube: Error parsing Youtube API JSON response")
             else:
-                log.error("YouTube: YouTube API HTTP %s: %s" % (request.status_code, request.content.decode()))
+                log.error(
+                    "YouTube: YouTube API HTTP %s: %s"
+                    % (request.status_code, request.content.decode())
+                )
         if title:
             use_bold = self.registryValue("useBold", channel)
             if use_bold:
                 title = ircutils.bold(title)
             irc.reply(title, prefixNick=False)
-    yt = wrap(yt, ['text'])
+
+    yt = wrap(yt, ["text"])
+
 
 Class = YouTube
 
