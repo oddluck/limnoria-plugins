@@ -281,11 +281,13 @@ Default value: 400
 
 `useBold` - Whether to bold the title. Default value: `False`
 
-`linkCacheLifetimeInSeconds` - Caches the title of links. This is useful for reducing API usage and 
-improving performance. Default value: `60`
+`cacheLifetime` - Caches the title of links. This is useful for reducing API usage and 
+improving performance. Default value: `600`
 
-`wallClockTimeoutInSeconds` - Timeout for total elapsed time when retrieving a title. If you set this value too 
-high, the bot may time out. Default value: `8` (seconds). You must `!reload SpiffyTitles` for this setting to take effect.
+`timeout` - Timeout for total elapsed time when requestging a title. If you set this value too 
+high, the bot may time out. Default value: `10` (seconds). You must `!reload SpiffyTitles` for this setting to take effect.
+
+`maxRetries` - Maximum number of times to retry retrieving a link. Default value: `3`
 
 `channelWhitelist` - A comma separated list of channels in which titles should be displayed. If `""`,
 titles will be shown in all channels. Default value: `""`
@@ -293,21 +295,23 @@ titles will be shown in all channels. Default value: `""`
 `channelBlacklist` - A comma separated list of channels in which titles should never be displayed. If `""`,
 titles will be shown in all channels. Default value: `""`
 
-`badLinkText` - The text to return when unable to retrieve a title from a URL. Default value: `Nice link idiot.`
+`badLinkText` - The text to return when unable to retrieve a title from a URL. Default value: `Error retrieving title. Check the log for more details.`
 
 `userAgents` - A comma separated list of strings of user agents randomly chosen when requesting.
 
-`urlRegularExpression` - A regular expression used to match URLs. You shouldn't need to change this.
-
-`linkMessageIgnorePattern` - If a message matches this pattern, it will be ignored. This differs from ignoredDomainPattern in that it compares against the entire message rather than just the domain.
+`urlRegularExpression` - A regular expression used to match URLs. You shouldn't need to change this. Default value: `http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+`
 
 `ignoreActionLinks` (Boolean) - By default SpiffyTitles will ignore links that appear in an action, like /me.
+
+`ignoreAddressed` (Boolean) - By default SpiffyTitles will ignore links that appear in messages addressed to the bot.
 
 `requireCapability` (String) - If defined, SpiffyTitles will only acknowledge links from users with this capability. Useful for hostile environments. Refer to [Limnoria's documentation on capabilities](http://doc.supybot.aperio.fr/en/latest/use/capabilities.html) for more information
 
 `ignoredTitlePattern` (Regexp) - If the parsed title matches this regular expression, it will be ignored.
 
-`ignoredDomainPattern` - ignore domains matching this pattern. Default value: `""`
+`ignoredDomainPattern` - Ignore domains matching this pattern.
+
+`ignoredMessagePattern` - If a message matches this pattern, it will be ignored. This differs from ignoredDomainPattern in that it compares against the entire message rather than just the domain.
 
 `whitelistDomainPattern` - ignore any link without a domain matching this pattern. Default value: `""`
 

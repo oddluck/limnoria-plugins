@@ -59,6 +59,12 @@ conf.registerGlobalValue(
     registry.Integer(3, _("""Maximum retries upon failure""")),
 )
 
+conf.registerGlobalValue(
+    SpiffyTitles,
+    "timeout",
+    registry.Integer(10, _("""Maximum time in seconds to try and retrieve a link""")),
+)
+
 # Language
 conf.registerGlobalValue(
     SpiffyTitles, "language", registry.String("en-US", _("""Language code"""))
@@ -69,7 +75,7 @@ conf.registerGlobalValue(
     SpiffyTitles,
     "urlRegularExpression",
     registry.String(
-        r"(https?:\/\/(?:www\.|(?!www))[^\s\.]+\.[^\s]{2,}|www\.[^\s]+\.[^\s]{2,})",
+        r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+",
         _("""This regular expression will be used to match URLs"""),
     ),
 )
@@ -85,16 +91,10 @@ conf.registerGlobalValue(
     "userAgents",
     registry.CommaSeparatedListOfStrings(
         [
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-            "AppleWebKit/537.36 (KHTML, like Gecko) "
-            "Chrome/79.0.3945.130 Safari/537.36",
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:73.0) "
-            "Gecko/20100101 Firefox/73.0",
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-            "AppleWebKit/537.36 (KHTML, like Gecko) "
-            "Chrome/80.0.3987.122 Safari/537.36",
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:74.0) "
-            "Gecko/20100101 Firefox/74.0",
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:75.0) Gecko/20100101 Firefox/75.0",
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:76.0) Gecko/20100101 Firefox/76.0",
+            "Mozilla/5.0 (Linux x86_64; rv:75.0) Gecko/20100101 Firefox/75.0",
+            "Mozilla/5.0 (Linux x86_64; rv:76.0) Gecko/20100101 Firefox/76.0",
         ],
         _("""Reported user agent when fetching links"""),
     ),
@@ -154,8 +154,8 @@ conf.registerGlobalValue(
 # Link cache lifetime
 conf.registerGlobalValue(
     SpiffyTitles,
-    "linkCacheLifetimeInSeconds",
-    registry.Integer(60, _("""Link cache lifetime in seconds""")),
+    "cacheLifetime",
+    registry.Integer(600, _("""Link cache lifetime in seconds""")),
 )
 
 conf.registerChannelValue(
@@ -172,16 +172,29 @@ conf.registerChannelValue(
     ),
 )
 
-conf.registerGlobalValue(
+conf.registerChannelValue(
     SpiffyTitles,
-    "linkMessageIgnorePattern",
+    "ignoredMessagePattern",
     registry.Regexp("", _("""Messages matching this pattern will be ignored.""")),
 )
 
 conf.registerChannelValue(
     SpiffyTitles,
     "ignoreActionLinks",
-    registry.Boolean(True, _("""Ignores URLs that appear in an action such as /me""")),
+    registry.Boolean(True, _("""Ignore URLs that appear in an action such as /me.""")),
+)
+
+conf.registerChannelValue(
+    SpiffyTitles,
+    "ignoreAddressed",
+    registry.Boolean(
+        True,
+        _(
+            """
+            Ignore URLs that appear in messages addressed to the bot.
+            """
+        ),
+    ),
 )
 
 conf.registerChannelValue(

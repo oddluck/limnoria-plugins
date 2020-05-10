@@ -61,13 +61,13 @@ class SpiffyTitles(callbacks.Plugin):
 
     threaded = True
     callBefore = ["Web"]
-    link_cache = {}
-    handlers = {}
-    max_request_retries = 3
 
     def __init__(self, irc):
         self.__parent = super(SpiffyTitles, self)
         self.__parent.__init__(irc)
+        self.link_cache = {}
+        self.handlers = {}
+        self.timeout = self.registryValue("timeout")
         self.default_handler_enabled = self.registryValue("default.enabled")
         self.add_handlers()
 
@@ -136,53 +136,49 @@ class SpiffyTitles(callbacks.Plugin):
         """
         Observe each channel message and look for links
         """
-        if callbacks.addressed(irc, msg):
-            return
         channel = msg.args[0]
-        ignore_actions = self.registryValue("ignoreActionLinks", channel=msg.args[0])
-        is_channel = irc.isChannel(channel)
-        is_ctcp = ircmsgs.isCtcp(msg)
         message = msg.args[1]
         title = None
-        bot_nick = irc.nick
-        origin_nick = msg.nick
-        is_message_from_self = origin_nick.lower() == bot_nick.lower()
-        requires_capability = (
-            len(str(self.registryValue("requireCapability", channel=msg.args[0]))) > 0
-        )
-        if is_message_from_self:
+        if not irc.isChannel(channel):
+            return
+        if msg.nick.lower() == irc.nick.lower():
+            return
+        if callbacks.addressed(irc, msg) and self.registryValue(
+            "ignoreAddressed", channel=channel
+        ):
             return
         """
         Check if we require a capability to acknowledge this link
         """
-        if requires_capability:
-            user_has_capability = self.user_has_capability(msg)
-            if not user_has_capability:
+        if self.registryValue("requireCapability", channel=channel):
+            if not self.user_has_capability(msg):
                 return
         """
         Configuration option determines whether we should
         ignore links that appear within an action
         """
-        if is_ctcp and ignore_actions:
+        if self.registryValue("ignoreActionLinks", channel=channel) and (
+            ircmsgs.isCtcp(msg) or ircmsgs.isAction(msg)
+        ):
             return
-        url = self.get_url_from_message(message)
-        if is_channel:
-            channel_is_allowed = self.is_channel_allowed(channel)
-            # url = self.get_url_from_message(message)
-            ignore_match = self.message_matches_ignore_pattern(message)
-            if ignore_match:
-                log.debug(
-                    "SpiffyTitles: ignoring message due to linkMessagePattern match"
-                )
-                return
-            if url:
+        if self.message_matches_ignore_pattern(message, channel):
+            log.debug(
+                "SpiffyTitles: ignoring message due to ignoredMessagePattern match"
+            )
+            return
+        if not self.is_channel_allowed(channel):
+            log.debug(
+                "SpiffyTitles: not responding to link in %s due to black/white "
+                "list restrictions" % (channel)
+            )
+            return
+        urls = self.get_urls_from_message(message)
+        if not urls:
+            return
+        for url in urls:
+            if url.strip():
+                url = self.remove_control_characters(url)
                 # Check if channel is allowed based on white/black list restrictions
-                if not channel_is_allowed:
-                    log.debug(
-                        "SpiffyTitles: not responding to link in %s due to black/white "
-                        "list restrictions" % (channel)
-                    )
-                    return
                 info = urlparse(url)
                 domain = info.netloc
                 is_ignored = self.is_ignored_domain(domain, channel)
@@ -202,14 +198,13 @@ class SpiffyTitles(callbacks.Plugin):
                         % url
                     )
                     return
-                title = self.get_title_by_url(url, channel, origin_nick)
-                if title is not None and title:
+                title = self.get_title_by_url(url, channel, msg.nick)
+                if title:
                     ignore_match = self.title_matches_ignore_pattern(title, channel)
                     if ignore_match:
                         return
-                    else:
-                        if not is_ignored:
-                            irc.reply(title, prefixNick=False)
+                    elif not is_ignored:
+                        irc.reply(title, prefixNick=False)
                 else:
                     if self.default_handler_enabled:
                         log.debug("SpiffyTitles: could not get a title for %s" % (url))
@@ -231,9 +226,9 @@ class SpiffyTitles(callbacks.Plugin):
                 self.registryValue("default.template", channel=channel)
             )
             (html, is_redirect) = self.get_source_by_url(url, channel)
-            if html is not None and html:
+            if html:
                 title = self.get_title_from_html(html)
-                if title is not None:
+                if title:
                     title_template = default_template.render(
                         title=title, redirect=is_redirect
                     )
@@ -293,13 +288,10 @@ class SpiffyTitles(callbacks.Plugin):
     def get_link_from_cache(self, url, channel):
         """
         Looks for a URL in the link cache and returns info about if it's not stale
-        according to the configured cache lifetime, or None.
-        If linkCacheLifetimeInSeconds is 0, then cache is disabled and we can
-        immediately return
+        according to the configured cache lifetime, or None. If cacheLifetime is 0,
+        then cache is disabled and we can immediately return
         """
-        cache_lifetime_in_seconds = int(
-            self.registryValue("linkCacheLifetimeInSeconds")
-        )
+        cache_lifetime_in_seconds = int(self.registryValue("cacheLifetime"))
         if cache_lifetime_in_seconds == 0:
             return
         # No cache yet
@@ -361,7 +353,7 @@ class SpiffyTitles(callbacks.Plugin):
             log.debug("SpiffyTitles: matching %s against %s" % (domain, str(pattern)))
             try:
                 pattern_search_result = re.search(pattern, domain)
-                if pattern_search_result is not None:
+                if pattern_search_result:
                     match = pattern_search_result.group()
                     return match
             except re.error:
@@ -376,7 +368,7 @@ class SpiffyTitles(callbacks.Plugin):
             log.debug("SpiffyTitles: matching %s against %s" % (domain, str(pattern)))
             try:
                 pattern_search_result = re.search(pattern, domain)
-                if pattern_search_result is not None:
+                if pattern_search_result:
                     match = pattern_search_result.group()
                     return match
             except re.error:
@@ -388,36 +380,30 @@ class SpiffyTitles(callbacks.Plugin):
         """
         use_bold = self.registryValue("useBold", channel=channel)
         # Replace anywhere in string
-        title = re.sub(r"\s+| +", " ", title)
+        title = re.sub(r"\s+", " ", title)
         if use_bold:
-            title = ircutils.bold(title)
-        title = title.strip()
+            title = ircutils.bold(title).strip()
         return title
 
     def get_title_from_html(self, html):
         """
         Retrieves value of <title> tag from HTML
         """
+        title = None
         soup = BeautifulSoup(html)
-        if soup is not None:
-            """
-            Some websites have more than one title tag, so get all of them
-            and take the last value.
-            """
-            head = soup.find("head")
-            titles = head.find_all("title")
-            if titles is not None and len(titles):
-                for t in titles[::-1]:
-                    title = t.get_text().strip()
-                    if title:
-                        return title
+        if soup:
+            title = soup.title.string.strip()
+        if title:
+            return title
+        else:
+            return
 
     def get_source_by_url(self, url, channel, retries=1):
         """
         Get the HTML of a website based on a URL
         """
         max_retries = self.registryValue("maxRetries")
-        if retries is None:
+        if not retries:
             retries = 1
         if retries >= max_retries:
             log.debug("SpiffyTitles: hit maximum retries for %s" % url)
@@ -427,7 +413,11 @@ class SpiffyTitles(callbacks.Plugin):
             headers = self.get_headers()
             log.debug("SpiffyTitles: requesting %s" % (url))
             with requests.get(
-                url, headers=headers, timeout=10, allow_redirects=True, stream=True
+                url,
+                headers=headers,
+                timeout=self.timeout,
+                allow_redirects=True,
+                stream=True,
             ) as request:
                 is_redirect = False
                 if request.history:
@@ -526,13 +516,13 @@ class SpiffyTitles(callbacks.Plugin):
         agents = self.registryValue("userAgents")
         return random.choice(agents)
 
-    def message_matches_ignore_pattern(self, input):
+    def message_matches_ignore_pattern(self, input, channel):
         """
-        Checks message against linkMessageIgnorePattern to determine
+        Checks message against ignoredMessagePattern to determine
         whether the message should be ignored.
         """
         match = False
-        pattern = self.registryValue("linkMessageIgnorePattern")
+        pattern = self.registryValue("ignoredMessagePattern")
         if pattern:
             match = re.search(pattern, input)
         return match
@@ -553,16 +543,13 @@ class SpiffyTitles(callbacks.Plugin):
                 )
         return match
 
-    def get_url_from_message(self, input):
+    def get_urls_from_message(self, input):
         """
         Find the first string that looks like a URL from the message
         """
         url_re = self.registryValue("urlRegularExpression")
-        match = re.search(url_re, input)
-        if match:
-            raw_url = match.group(0).strip()
-            url = self.remove_control_characters(str(raw_url))
-            return url
+        matches = re.findall(url_re, input)
+        return matches
 
     def remove_control_characters(self, s):
         return "".join(ch for ch in s if unicodedata.category(ch)[0] != "C")
@@ -617,7 +604,7 @@ class SpiffyTitles(callbacks.Plugin):
             video_id = info.path.lstrip("/video/").split("_")[0]
         elif dailymotion_handler_enabled and "dai.ly" in url:
             video_id = url.split("/")[-1].split("?")[0]
-        if video_id is not None:
+        if video_id:
             fields = "id,title,owner.screenname,duration,views_total"
             api_url = "https://api.dailymotion.com/video/%s?fields=%s" % (
                 video_id,
@@ -625,11 +612,11 @@ class SpiffyTitles(callbacks.Plugin):
             )
             log.debug("SpiffyTitles: looking up dailymotion info: %s", api_url)
             headers = self.get_headers()
-            request = requests.get(api_url, headers=headers, timeout=10)
+            request = requests.get(api_url, headers=headers, timeout=self.timeout)
             ok = request.status_code == requests.codes.ok
             if ok:
                 response = json.loads(request.content.decode())
-                if response is not None and "title" in response:
+                if response and "title" in response:
                     video = response
                     dailymotion_template = Template(
                         self.registryValue("dailymotion.template", channel=channel)
@@ -650,7 +637,7 @@ class SpiffyTitles(callbacks.Plugin):
                     "SpiffyTitles: dailymotion handler returned %s: %s"
                     % (request.status_code, request.content.decode()[:200])
                 )
-        if title is None:
+        if not title:
             log.debug("SpiffyTitles: could not get dailymotion info for %s" % url)
             return self.handler_default(url, channel)
         else:
@@ -667,17 +654,17 @@ class SpiffyTitles(callbacks.Plugin):
         """ Get video ID """
         if vimeo_handler_enabled:
             result = re.search(r"^(http(s)://)?(www\.)?(vimeo\.com/)?(\d+)", url)
-            if result is not None:
+            if result:
                 video_id = result.group(5)
-            if video_id is not None:
+            if video_id:
                 api_url = "https://vimeo.com/api/v2/video/%s.json" % video_id
                 log.debug("SpiffyTitles: looking up vimeo info: %s", api_url)
                 headers = self.get_headers()
-                request = requests.get(api_url, headers=headers, timeout=10)
+                request = requests.get(api_url, headers=headers, timeout=self.timeout)
                 ok = request.status_code == requests.codes.ok
                 if ok:
                     response = json.loads(request.content.decode())
-                    if response is not None and "title" in response[0]:
+                    if response and "title" in response[0]:
                         video = response[0]
                         vimeo_template = Template(
                             self.registryValue("vimeo.template", channel=channel)
@@ -711,7 +698,7 @@ class SpiffyTitles(callbacks.Plugin):
                         "SpiffyTitles: vimeo handler returned %s: %s"
                         % (request.status_code, request.content.decode()[:200])
                     )
-        if title is None:
+        if not title:
             log.debug("SpiffyTitles: could not get vimeo info for %s" % url)
             return self.handler_default(url, channel)
         else:
@@ -732,7 +719,7 @@ class SpiffyTitles(callbacks.Plugin):
                 video_id = video_id.split("?")[0]
             api_url = "http://coub.com/api/v2/coubs/%s" % video_id
             headers = self.get_headers()
-            request = requests.get(api_url, headers=headers, timeout=10)
+            request = requests.get(api_url, headers=headers, timeout=self.timeout)
             ok = request.status_code == requests.codes.ok
             if ok:
                 response = json.loads(request.content.decode())
@@ -748,7 +735,7 @@ class SpiffyTitles(callbacks.Plugin):
                     "SpiffyTitles: coub handler returned %s: %s"
                     % (request.status_code, request.content.decode()[:200])
                 )
-        if title is None:
+        if not title:
             if coub_handler_enabled:
                 log.debug("SpiffyTitles: %s does not appear to be a video link!" % url)
             return self.handler_default(url, channel)
@@ -808,7 +795,9 @@ class SpiffyTitles(callbacks.Plugin):
             api_url = "https://www.googleapis.com/youtube/v3/videos"
             headers = self.get_headers()
             log.debug("SpiffyTitles: requesting %s" % (api_url))
-            request = requests.get(api_url, headers=headers, params=options, timeout=10)
+            request = requests.get(
+                api_url, headers=headers, params=options, timeout=self.timeout
+            )
             ok = request.status_code == requests.codes.ok
             if ok:
                 response = json.loads(request.content.decode())
@@ -1000,7 +989,7 @@ class SpiffyTitles(callbacks.Plugin):
         headers = self.get_headers()
         headers["Client-ID"] = twitch_client_id
         self.log.debug("SpiffyTitles: twitch - requesting %s" % (data_url))
-        request = requests.get(data_url, timeout=10, headers=headers)
+        request = requests.get(data_url, timeout=self.timeout, headers=headers)
         ok = request.status_code == requests.codes.ok
         data = {}
         if ok:
@@ -1022,7 +1011,9 @@ class SpiffyTitles(callbacks.Plugin):
                             "https://api.twitch.tv/helix/users?"
                             "login={channel_name}".format(**link_info)
                         )
-                        request = requests.get(data_url, timeout=10, headers=headers)
+                        request = requests.get(
+                            data_url, timeout=self.timeout, headers=headers
+                        )
                         ok = request.status_code == requests.codes.ok
                         user_data = {}
                         if not ok:
@@ -1084,7 +1075,7 @@ class SpiffyTitles(callbacks.Plugin):
                                 "https://api.twitch.tv/helix/games?id={}".format(
                                     game_id
                                 ),
-                                timeout=10,
+                                timeout=self.timeout,
                                 headers=headers,
                             )
                             game_data = json.loads(get_game.content.decode())
@@ -1105,7 +1096,9 @@ class SpiffyTitles(callbacks.Plugin):
                         data_url = "https://api.twitch.tv/helix/users?login={}".format(
                             display_name
                         )
-                        request = requests.get(data_url, timeout=10, headers=headers)
+                        request = requests.get(
+                            data_url, timeout=self.timeout, headers=headers
+                        )
                         ok = request.status_code == requests.codes.ok
                         user_data = {}
                         if not ok:
@@ -1143,7 +1136,7 @@ class SpiffyTitles(callbacks.Plugin):
                                 "https://api.twitch.tv/helix/games?id={}".format(
                                     game_id
                                 ),
-                                timeout=10,
+                                timeout=self.timeout,
                                 headers=headers,
                             )
                             game_data = json.loads(get_game.content.decode())
@@ -1164,7 +1157,9 @@ class SpiffyTitles(callbacks.Plugin):
                         data_url = "https://api.twitch.tv/helix/users?login={}".format(
                             display_name
                         )
-                        request = requests.get(data_url, timeout=10, headers=headers)
+                        request = requests.get(
+                            data_url, timeout=self.timeout, headers=headers
+                        )
                         ok = request.status_code == requests.codes.ok
                         user_data = {}
                         if not ok:
@@ -1276,7 +1271,7 @@ class SpiffyTitles(callbacks.Plugin):
             options = {"apikey": apikey, "i": imdb_id, "r": "json", "plot": "short"}
             try:
                 request = requests.get(
-                    omdb_url, params=options, timeout=10, headers=headers
+                    omdb_url, params=options, timeout=self.timeout, headers=headers
                 )
                 request.raise_for_status()
             except (
@@ -1330,7 +1325,7 @@ class SpiffyTitles(callbacks.Plugin):
                     "imdb_logo": self.get_imdb_logo(channel),
                 }
                 result = imdb_template.render(template_vars)
-        if result is not None:
+        if result:
             return result
         else:
             log.debug("SpiffyTitles: IMDB handler failed. calling default handler")
@@ -1389,7 +1384,9 @@ class SpiffyTitles(callbacks.Plugin):
         headers = self.get_headers()
         extract = ""
         self.log.debug("SpiffyTitles: requesting %s" % (api_url))
-        request = requests.get(api_url, headers=headers, params=api_params, timeout=10)
+        request = requests.get(
+            api_url, headers=headers, params=api_params, timeout=self.timeout
+        )
         ok = request.status_code == requests.codes.ok
         if ok:
             response = json.loads(request.content.decode())
@@ -1465,7 +1462,7 @@ class SpiffyTitles(callbacks.Plugin):
             return self.handler_default(url, channel)
         headers = self.get_headers()
         self.log.debug("SpiffyTitles: requesting %s" % (data_url))
-        request = requests.get(data_url, headers=headers, timeout=10)
+        request = requests.get(data_url, headers=headers, timeout=self.timeout)
         ok = request.status_code == requests.codes.ok
         data = {}
         extract = ""
@@ -1560,7 +1557,10 @@ class SpiffyTitles(callbacks.Plugin):
         Images, galleries, and albums all share their format in their identifier.
         """
         match = re.match(r"[a-z0-9]+", input, re.IGNORECASE)
-        return match is not None
+        if match:
+            return match
+        else:
+            return
 
     def handler_imgur(self, url, info, channel):
         """
@@ -1595,7 +1595,9 @@ class SpiffyTitles(callbacks.Plugin):
                 try:
                     header = {"Authorization": "Client-ID {0}".format(client_id)}
                     api_url = "https://api.imgur.com/3/album/{0}".format(album_id)
-                    request = requests.get(api_url, headers=header, timeout=10)
+                    request = requests.get(
+                        api_url, headers=header, timeout=self.timeout
+                    )
                     request.raise_for_status()
                     ok = request.status_code == requests.codes.ok
                     album = None
@@ -1658,7 +1660,9 @@ class SpiffyTitles(callbacks.Plugin):
                 try:
                     header = {"Authorization": "Client-ID {0}".format(client_id)}
                     api_url = "https://api.imgur.com/3/image/{0}".format(image_id)
-                    request = requests.get(api_url, headers=header, timeout=10)
+                    request = requests.get(
+                        api_url, headers=header, timeout=self.timeout
+                    )
                     request.raise_for_status()
                     ok = request.status_code == requests.codes.ok
                     image = None
@@ -1699,7 +1703,7 @@ class SpiffyTitles(callbacks.Plugin):
                     log.error("SpiffyTitles: imgur error: %s" % (e))
             else:
                 log.error("SpiffyTitles: error retrieving image id for %s" % (url))
-        if title is not None:
+        if title:
             return title
         else:
             return self.handler_default(url, channel)
