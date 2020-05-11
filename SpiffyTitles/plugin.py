@@ -418,7 +418,7 @@ class SpiffyTitles(callbacks.Plugin):
             return (None, False)
         log.debug("SpiffyTitles: attempt #%s for %s" % (retries, url))
         try:
-            headers = self.get_headers()
+            headers = self.get_headers(channel)
             log.debug("SpiffyTitles: requesting %s" % (url))
             with requests.get(
                 url,
@@ -508,12 +508,12 @@ class SpiffyTitles(callbacks.Plugin):
         """
         return ".".join(urlparse(url).netloc.rsplit(".", 2)[-2:])
 
-    def get_headers(self):
+    def get_headers(self, channel):
         agent = self.get_user_agent()
-        self.accept_language = self.registryValue("language")
+        language = self.registryValue("default.language", channel)
         headers = {
             "User-Agent": agent,
-            "Accept-Language": "{0}".format(self.accept_language),
+            "Accept-Language": "{0}".format(language),
         }
         return headers
 
@@ -521,7 +521,7 @@ class SpiffyTitles(callbacks.Plugin):
         """
         Returns a random user agent from the ones available
         """
-        agents = self.registryValue("userAgents")
+        agents = self.registryValue("default.userAgents")
         return random.choice(agents)
 
     def message_matches_ignore_pattern(self, input, channel):
@@ -619,8 +619,7 @@ class SpiffyTitles(callbacks.Plugin):
                 fields,
             )
             log.debug("SpiffyTitles: looking up dailymotion info: %s", api_url)
-            headers = self.get_headers()
-            request = requests.get(api_url, headers=headers, timeout=self.timeout)
+            request = requests.get(api_url, timeout=self.timeout)
             ok = request.status_code == requests.codes.ok
             if ok:
                 response = json.loads(request.content.decode())
@@ -667,8 +666,7 @@ class SpiffyTitles(callbacks.Plugin):
             if video_id:
                 api_url = "https://vimeo.com/api/v2/video/%s.json" % video_id
                 log.debug("SpiffyTitles: looking up vimeo info: %s", api_url)
-                headers = self.get_headers()
-                request = requests.get(api_url, headers=headers, timeout=self.timeout)
+                request = requests.get(api_url, timeout=self.timeout)
                 ok = request.status_code == requests.codes.ok
                 if ok:
                     response = json.loads(request.content.decode())
@@ -726,8 +724,7 @@ class SpiffyTitles(callbacks.Plugin):
             if "?" in video_id:
                 video_id = video_id.split("?")[0]
             api_url = "http://coub.com/api/v2/coubs/%s" % video_id
-            headers = self.get_headers()
-            request = requests.get(api_url, headers=headers, timeout=self.timeout)
+            request = requests.get(api_url, timeout=self.timeout)
             ok = request.status_code == requests.codes.ok
             if ok:
                 response = json.loads(request.content.decode())
@@ -801,11 +798,8 @@ class SpiffyTitles(callbacks.Plugin):
                 "id": video_id,
             }
             api_url = "https://www.googleapis.com/youtube/v3/videos"
-            headers = self.get_headers()
             log.debug("SpiffyTitles: requesting %s" % (api_url))
-            request = requests.get(
-                api_url, headers=headers, params=options, timeout=self.timeout
-            )
+            request = requests.get(api_url, params=options, timeout=self.timeout)
             ok = request.status_code == requests.codes.ok
             if ok:
                 response = json.loads(request.content.decode())
@@ -994,8 +988,7 @@ class SpiffyTitles(callbacks.Plugin):
         if not match:
             self.log.debug("SpiffyTitles: twitch - no title found.")
             return self.handler_default(url, channel)
-        headers = self.get_headers()
-        headers["Client-ID"] = twitch_client_id
+        headers = {"Client-ID": twitch_client_id}
         self.log.debug("SpiffyTitles: twitch - requesting %s" % (data_url))
         request = requests.get(data_url, timeout=self.timeout, headers=headers)
         ok = request.status_code == requests.codes.ok
@@ -1261,7 +1254,6 @@ class SpiffyTitles(callbacks.Plugin):
         Typical IMDB URL: http://www.imdb.com/title/tt2467372/
         """
         apikey = self.registryValue("imdb.omdbAPI")
-        headers = self.get_headers()
         result = None
         response = None
         if not self.registryValue("imdb.enabled", channel=channel):
@@ -1278,9 +1270,7 @@ class SpiffyTitles(callbacks.Plugin):
             omdb_url = "http://www.omdbapi.com/"
             options = {"apikey": apikey, "i": imdb_id, "r": "json", "plot": "short"}
             try:
-                request = requests.get(
-                    omdb_url, params=options, timeout=self.timeout, headers=headers
-                )
+                request = requests.get(omdb_url, params=options, timeout=self.timeout)
                 request.raise_for_status()
             except (
                 requests.exceptions.RequestException,
@@ -1389,12 +1379,9 @@ class SpiffyTitles(callbacks.Plugin):
         api_params.update(extra_params)
         api_params.update(title_param)
         api_url = "https://%s/w/api.php" % (info.netloc)
-        headers = self.get_headers()
         extract = ""
         self.log.debug("SpiffyTitles: requesting %s" % (api_url))
-        request = requests.get(
-            api_url, headers=headers, params=api_params, timeout=self.timeout
-        )
+        request = requests.get(api_url, params=api_params, timeout=self.timeout)
         ok = request.status_code == requests.codes.ok
         if ok:
             response = json.loads(request.content.decode())
@@ -1468,9 +1455,8 @@ class SpiffyTitles(callbacks.Plugin):
         if not match:
             self.log.debug("SpiffyTitles: no title found.")
             return self.handler_default(url, channel)
-        headers = self.get_headers()
         self.log.debug("SpiffyTitles: requesting %s" % (data_url))
-        request = requests.get(data_url, headers=headers, timeout=self.timeout)
+        request = requests.get(data_url, timeout=self.timeout)
         ok = request.status_code == requests.codes.ok
         data = {}
         extract = ""
@@ -1601,10 +1587,10 @@ class SpiffyTitles(callbacks.Plugin):
             if client_id and self.is_valid_imgur_id(album_id):
                 log.debug("SpiffyTitles: found imgur album id %s" % (album_id))
                 try:
-                    header = {"Authorization": "Client-ID {0}".format(client_id)}
+                    headers = {"Authorization": "Client-ID {0}".format(client_id)}
                     api_url = "https://api.imgur.com/3/album/{0}".format(album_id)
                     request = requests.get(
-                        api_url, headers=header, timeout=self.timeout
+                        api_url, headers=headers, timeout=self.timeout
                     )
                     request.raise_for_status()
                     ok = request.status_code == requests.codes.ok
@@ -1666,10 +1652,10 @@ class SpiffyTitles(callbacks.Plugin):
             if client_id and self.is_valid_imgur_id(image_id):
                 log.debug("SpiffyTitles: found image id %s" % (image_id))
                 try:
-                    header = {"Authorization": "Client-ID {0}".format(client_id)}
+                    headers = {"Authorization": "Client-ID {0}".format(client_id)}
                     api_url = "https://api.imgur.com/3/image/{0}".format(image_id)
                     request = requests.get(
-                        api_url, headers=header, timeout=self.timeout
+                        api_url, headers=headers, timeout=self.timeout
                     )
                     request.raise_for_status()
                     ok = request.status_code == requests.codes.ok

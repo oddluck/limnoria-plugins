@@ -70,6 +70,10 @@ This means that you can change whether a handler is enabled, or what the templat
 
 `default.enabled` - Whether to show additional information about links that aren't handled elsewhere. You'd really only want to disable this if all of the other handlers were enabled. In this scenario, the bot would only show information for websites with custom handlers, like Youtube, IMDB, and imgur.
 
+`default.userAgents` - A comma separated list of strings of user agents randomly chosen when requesting.
+
+`default.language` - Accept-Language header string. https://tools.ietf.org/html/rfc7231#section-5.3.5
+
 `default.template` - This is the template used when showing the title of a link.
 
 Default value: `^ {{title}}`
@@ -296,8 +300,6 @@ titles will be shown in all channels. Default value: `""`
 titles will be shown in all channels. Default value: `""`
 
 `badLinkText` - The text to return when unable to retrieve a title from a URL. Default value: `Error retrieving title. Check the log for more details.`
-
-`userAgents` - A comma separated list of strings of user agents randomly chosen when requesting.
 
 `urlRegularExpression` - A regular expression used to match URLs. You shouldn't need to change this. Default value: `http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+`
 

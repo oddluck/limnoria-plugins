@@ -65,11 +65,6 @@ conf.registerGlobalValue(
     registry.Integer(10, _("""Maximum time in seconds to try and retrieve a link""")),
 )
 
-# Language
-conf.registerGlobalValue(
-    SpiffyTitles, "language", registry.String("en-US", _("""Language code"""))
-)
-
 # URL regex
 conf.registerGlobalValue(
     SpiffyTitles,
@@ -83,21 +78,6 @@ conf.registerGlobalValue(
 # Bold
 conf.registerChannelValue(
     SpiffyTitles, "useBold", registry.Boolean(False, _("""Use bold in titles"""))
-)
-
-# User agents
-conf.registerGlobalValue(
-    SpiffyTitles,
-    "userAgents",
-    registry.CommaSeparatedListOfStrings(
-        [
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:75.0) Gecko/20100101 Firefox/75.0",
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:76.0) Gecko/20100101 Firefox/76.0",
-            "Mozilla/5.0 (Linux x86_64; rv:75.0) Gecko/20100101 Firefox/75.0",
-            "Mozilla/5.0 (Linux x86_64; rv:76.0) Gecko/20100101 Firefox/76.0",
-        ],
-        _("""Reported user agent when fetching links"""),
-    ),
 )
 
 # Bad link text
@@ -212,6 +192,34 @@ conf.registerChannelValue(
     "enabled",
     registry.Boolean(
         True, _("""Whether to add additional information about regular links""")
+    ),
+)
+
+conf.registerChannelValue(
+    SpiffyTitles.default,
+    "language",
+    registry.String(
+        "en-US, en;q=0.8",
+        _(
+            """
+            Accept-Language header string.
+            https://tools.ietf.org/html/rfc7231#section-5.3.5
+            """
+        ),
+    ),
+)
+
+conf.registerGlobalValue(
+    SpiffyTitles.default,
+    "userAgents",
+    registry.CommaSeparatedListOfStrings(
+        [
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:75.0) Gecko/20100101 Firefox/75.0",
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:76.0) Gecko/20100101 Firefox/76.0",
+            "Mozilla/5.0 (Linux x86_64; rv:75.0) Gecko/20100101 Firefox/75.0",
+            "Mozilla/5.0 (Linux x86_64; rv:76.0) Gecko/20100101 Firefox/76.0",
+        ],
+        _("""Reported user agent when fetching links"""),
     ),
 )
 
