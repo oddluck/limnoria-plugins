@@ -228,11 +228,16 @@ class SpiffyTitles(callbacks.Plugin):
             (html, is_redirect) = self.get_source_by_url(url, channel)
             if html:
                 title = self.get_title_from_html(html)
-                if title:
-                    title_template = default_template.render(
-                        title=title, redirect=is_redirect
+                if not title:
+                    log.error(
+                        "SpiffyTitles: Unable to parse title from html response for %s"
+                        % (url)
                     )
-                    return title_template
+                    title = self.registryValue("badLinkText", channel=channel)
+                title_template = default_template.render(
+                    title=title, redirect=is_redirect
+                )
+                return title_template
         else:
             log.debug(
                 "SpiffyTitles: default handler fired but doing nothing because disabled"
@@ -392,7 +397,10 @@ class SpiffyTitles(callbacks.Plugin):
         title = None
         soup = BeautifulSoup(html)
         if soup:
-            title = soup.title.string.strip()
+            try:
+                title = soup.title.string.strip()
+            except:
+                pass
         if title:
             return title
         else:
@@ -468,7 +476,7 @@ class SpiffyTitles(callbacks.Plugin):
                     log.error(
                         "SpiffyTitles HTTP response code %s" % (request.status_code,)
                     )
-                    text = self.registryValue("badLinkText")
+                    text = self.registryValue("badLinkText", channel=channel)
                     text = (
                         "<html><head><title>{0}</title>"
                         "</head><body></body></html>".format(text)
