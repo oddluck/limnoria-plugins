@@ -50,7 +50,7 @@ You can increase the verbosity of the logging in SpiffyTitles by issuing the fol
 
 
 ## On-Demand Titles
-You can retrieve titles on demand using the `t` command. If something goes wrong, `onDemandTitleError`
+You can retrieve titles on demand using the `t` command. If something goes wrong, `badLinkText`
 will be sent instead of the link title.
 
 ## Available Options

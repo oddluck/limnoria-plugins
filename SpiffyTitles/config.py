@@ -160,20 +160,6 @@ conf.registerGlobalValue(
 
 conf.registerChannelValue(
     SpiffyTitles,
-    "onDemandTitleError",
-    registry.String(
-        "Error retrieving title.",
-        _(
-            """
-            This error message is used when there is a problem getting
-            an on-demand title
-            """
-        ),
-    ),
-)
-
-conf.registerChannelValue(
-    SpiffyTitles,
     "ignoredMessagePattern",
     registry.Regexp("", _("""Messages matching this pattern will be ignored.""")),
 )

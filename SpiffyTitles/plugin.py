@@ -1722,8 +1722,6 @@ class SpiffyTitles(callbacks.Plugin):
         """
         channel = msg.args[0]
         title = None
-        error_message = self.registryValue("onDemandTitleError", channel=channel)
-        err = ""
         try:
             title = self.get_title_by_url(query, channel)
         except:
@@ -1731,7 +1729,7 @@ class SpiffyTitles(callbacks.Plugin):
         if title:
             irc.reply(title)
         else:
-            irc.reply(error_message + " {}".format(err))
+            return
 
     t = wrap(t, ["text"])
 
