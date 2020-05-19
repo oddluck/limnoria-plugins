@@ -69,7 +69,9 @@ class IMDb(callbacks.Plugin):
     threaded = True
 
     def dosearch(self, irc, channel, text):
-        google = ddg = match = None
+        google = None
+        ddg = None
+        match = None
         if self.registryValue("google", channel) > 0:
             google = irc.getCallback("google")
             if not google:
@@ -109,7 +111,9 @@ class IMDb(callbacks.Plugin):
         """<title>
         Queries the OMDB API about an IMDb title. Search by title name or IMDb ID.
         """
-        url = response = result = None
+        url = None
+        response = None
+        result = None
         if not self.registryValue("omdbAPI"):
             irc.error("Error: You must set an OMDB API key to use this plugin.")
             return
@@ -146,12 +150,14 @@ class IMDb(callbacks.Plugin):
                 self.registryValue("template", msg.channel)
             )
             response["logo"] = self.registryValue("logo", msg.channel)
+            response["tomatometer"] = "N/A"
+            response["metascore"] = "N/A"
             for rating in response["Ratings"]:
                 if rating["Source"] == "Rotten Tomatoes":
-                    response["tomatometer"] = rating.get("Value")
+                    response["tomatometer"] = rating["Value"]
                 if rating["Source"] == "Metacritic":
                     response["metascore"] = "{0}%".format(
-                        rating.get("Value").split("/")[0]
+                        rating["Value"].split("/")[0]
                     )
             result = imdb_template.safe_substitute(response)
         elif response.get("Error"):
