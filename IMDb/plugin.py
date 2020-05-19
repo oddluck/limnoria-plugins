@@ -72,9 +72,14 @@ class IMDb(callbacks.Plugin):
         google = ddg = match = None
         if self.registryValue("google", channel) > 0:
             google = irc.getCallback("google")
+            if not google:
+                log.error("IMDb: Error: Google search enabled but plugin not loaded.")
         if self.registryValue("ddg", channel) > 0:
             ddg = irc.getCallback("ddg")
+            if not ddg:
+                log.error("IMDb: Error: DDG search enabled but plugin not loaded.")
         if not google and not ddg:
+            log.error("IMDb: Google and DDG plugins not loaded.")
             return
         query = "site:www.imdb.com/title/ %s" % text
         pattern = re.compile(r"https?://www.imdb.com/title/tt\d+/$")
@@ -84,6 +89,7 @@ class IMDb(callbacks.Plugin):
                 for r in results:
                     match = re.search(pattern, r["url"])
                     if match:
+                        log.debug("IMDb: found link using Google search")
                         break
             elif ddg and self.registryValue("ddg", channel) == i:
                 results = ddg.search_core(
@@ -92,6 +98,7 @@ class IMDb(callbacks.Plugin):
                 for r in results:
                     match = re.search(pattern, r[2])
                     if match:
+                        log.debug("IMDb: found link using DDG search")
                         break
         if match:
             return match.group(0)
@@ -104,7 +111,7 @@ class IMDb(callbacks.Plugin):
         """
         url = response = result = None
         if not self.registryValue("omdbAPI"):
-            irc.error("Error: You must set an API key to use this plugin.")
+            irc.error("Error: You must set an OMDB API key to use this plugin.")
             return
         id = re.match(r"tt\d+", query.strip())
         if id:
@@ -134,7 +141,7 @@ class IMDb(callbacks.Plugin):
             log.debug("IMDb: requesting %s" % url)
         request = utils.web.getUrl(url).decode()
         response = json.loads(request)
-        if response["Response"] != "False":
+        if response["Response"] != "False" and not response.get("Error"):
             imdb_template = lowercase_template(
                 self.registryValue("template", msg.channel)
             )
@@ -147,6 +154,8 @@ class IMDb(callbacks.Plugin):
                         rating.get("Value").split("/")[0]
                     )
             result = imdb_template.safe_substitute(response)
+        elif response.get("Error"):
+            log.debug("IMDb: OMDB API: %s" % response["Error"])
         if result:
             irc.reply(result, prefixNick=False)
         else:

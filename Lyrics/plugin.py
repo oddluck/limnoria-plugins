@@ -57,9 +57,14 @@ class Lyrics(callbacks.Plugin):
         google = ddg = title = None
         if self.registryValue("google", channel) > 0:
             google = irc.getCallback("google")
+            if not google:
+                log.error("Lyrics: Error: Google search enabled but plugin not loaded.")
         if self.registryValue("ddg", channel) > 0:
             ddg = irc.getCallback("ddg")
+            if not ddg:
+                log.error("Lyrics: Error: DDG search enabled but plugin not loaded.")
         if not google and not ddg:
+            log.error("Lyrics: Google and DDG plugins not loaded.")
             return
         query = "site:lyrics.fandom.com/wiki/ %s" % text
         pattern = re.compile(r"https?://lyrics.fandom.com/wiki/.*")
@@ -70,6 +75,7 @@ class Lyrics(callbacks.Plugin):
                     match = re.search(pattern, r["url"])
                     if match:
                         title = r["title"].replace(":", " - ").split("|")[0]
+                        log.debug("Lyrics: found link using Google search")
                         break
             elif self.registryValue("ddg", channel) == i:
                 results = ddg.search_core(
@@ -79,6 +85,7 @@ class Lyrics(callbacks.Plugin):
                     match = re.search(pattern, r[2])
                     if match:
                         title = r[0].replace(":", " - ").split("|")[0]
+                        log.debug("Lyrics: found link using DDG")
                         break
         if match and title:
             return title, match.group(0)
