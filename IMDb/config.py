@@ -57,11 +57,19 @@ conf.registerChannelValue(
     IMDb,
     "template",
     registry.String(
-        "\x02\x031,8 IMDb \x0F\x02 :: $title ($year, $country, [$rated], $genre, "
-        "$runtime) :: IMDb: $imdbRating | MC: $metascore | RT: $tomatoMeter :: "
-        "http://imdb.com/title/$imdbID :: $plot :: Director: $director :: Cast: "
-        "$actors :: Writer: $writer",
-        _("""Template for the output of a search query."""),
+        "$logo :: $title ($year, $country, [$rated], $genre, $runtime) "
+        ":: IMDb: $imdbRating | MC: $metascore | RT: $tomatoMeter :: "
+        "http://imdb.com/title/$imdbID :: $plot :: Director: $director :: "
+        "Cast: $actors :: Writer: $writer",
+        _("""IMDb reply template."""),
+    ),
+)
+
+conf.registerChannelValue(
+    IMDb,
+    "logo",
+    registry.String(
+        "\x02\x031,8 IMDb \x03", _("""Logo used with {{logo}} in template""")
     ),
 )
 
@@ -74,28 +82,32 @@ conf.registerChannelValue(
     ),
 )
 
-conf.registerGlobalValue(
-    IMDb, "omdbAPI", registry.String("", _("""OMDB API Key"""), private=True)
+conf.registerChannelValue(
+    IMDb,
+    "google",
+    registry.Integer(
+        1,
+        """
+        Google search priority. Google plugin must be loaded.
+        0 = disabled. 1 = first. 2 = second.
+        """,
+    ),
 )
 
 conf.registerChannelValue(
     IMDb,
-    "googleSearch",
-    registry.Boolean(True, _("""Use google to perform searches for better results.""")),
+    "ddg",
+    registry.Integer(
+        2,
+        """
+        DDG search priority. DDG plugin must be loaded.
+        0 = disabled. 1 = first. 2 = second.
+        """,
+    ),
 )
 
 conf.registerGlobalValue(
-    IMDb,
-    "userAgents",
-    registry.CommaSeparatedListOfStrings(
-        [
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:75.0) Gecko/20100101 Firefox/75.0",
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:76.0) Gecko/20100101 Firefox/76.0",
-            "Mozilla/5.0 (Linux x86_64; rv:75.0) Gecko/20100101 Firefox/75.0",
-            "Mozilla/5.0 (Linux x86_64; rv:76.0) Gecko/20100101 Firefox/76.0",
-        ],
-        _("""Reported user agent when fetching links"""),
-    ),
+    IMDb, "omdbAPI", registry.String("", _("""OMDB API Key"""), private=True)
 )
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:

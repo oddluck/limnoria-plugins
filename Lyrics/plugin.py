@@ -34,11 +34,9 @@ import supybot.ircutils as ircutils
 import supybot.callbacks as callbacks
 import supybot.ircmsgs as ircmsgs
 import supybot.log as log
-from bs4 import BeautifulSoup
-import requests
-import re
+import re, random
 import pylyrics3
-import random
+
 
 try:
     from supybot.i18n import PluginInternationalization
@@ -55,25 +53,37 @@ class Lyrics(callbacks.Plugin):
 
     threaded = True
 
-    def dosearch(self, lyric):
-        try:
-            url = None
-            title = None
-            searchurl = "https://www.google.com/search?&q="
-            searchurl += "{0} site:lyrics.fandom.com/wiki/".format(lyric)
-            agents = self.registryValue("userAgents")
-            ua = random.choice(agents)
-            header = {"User-Agent": ua}
-            data = requests.get(searchurl, headers=header, timeout=10)
-            data.raise_for_status()
-            log.debug(data.content.decode())
-            soup = BeautifulSoup(data.content)
-            elements = soup.select(".r a")
-            title = soup.find("h3").getText().replace(":", " - ").split("|")[0]
-            url = elements[0]["href"]
-        except Exception:
-            pass
-        return title, url
+    def dosearch(self, irc, channel, text):
+        google = ddg = title = None
+        if self.registryValue("google", channel) > 0:
+            google = irc.getCallback("google")
+        if self.registryValue("ddg", channel) > 0:
+            ddg = irc.getCallback("ddg")
+        if not google and not ddg:
+            return
+        query = "site:lyrics.fandom.com/wiki/ %s" % text
+        pattern = re.compile(r"https?://lyrics.fandom.com/wiki/.*")
+        for i in range(1, 3):
+            if google and self.registryValue("google", channel) == i:
+                results = google.decode(google.search(query, irc.network, channel))
+                for r in results:
+                    match = re.search(pattern, r["url"])
+                    if match:
+                        title = r["title"].replace(":", " - ").split("|")[0]
+                        break
+            elif self.registryValue("ddg", channel) == i:
+                results = ddg.search_core(
+                    query, channel_context=channel, max_results=10, show_snippet=False
+                )
+                for r in results:
+                    match = re.search(pattern, r[2])
+                    if match:
+                        title = r[0].replace(":", " - ").split("|")[0]
+                        break
+        if match and title:
+            return title, match.group(0)
+        else:
+            return
 
     def getlyrics(self, query):
         lyrics = None
@@ -98,11 +108,9 @@ class Lyrics(callbacks.Plugin):
         """<query>
         Get song lyrics from Lyrics Wiki.
         """
-        channel = msg.channel
         title = None
         url = None
-        if self.registryValue("googleSearch", channel):
-            title, url = self.dosearch(lyric)
+        title, url = self.dosearch(irc, msg.channel, lyric)
         if url and title and "lyrics.fandom.com/wiki/" in url:
             try:
                 lyrics = self.getlyrics(url)

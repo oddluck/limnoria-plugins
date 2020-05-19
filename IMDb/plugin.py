@@ -35,11 +35,9 @@ import supybot.ircutils as ircutils
 import supybot.ircmsgs as ircmsgs
 import supybot.callbacks as callbacks
 import supybot.log as log
+import json, random, re
 import requests
-import json
-from bs4 import BeautifulSoup
-import random
-import re
+from string import Template
 
 try:
     from supybot.i18n import PluginInternationalization
@@ -51,234 +49,108 @@ except ImportError:
     _ = lambda x: x
 
 
+class lowercase_dict(dict):
+    def __getitem__(self, name):
+        return dict.__getitem__(self, name.lower())
+
+
+class lowercase_template(Template):
+    def safe_substitute(self, mapping=None, **kws):
+        if mapping is None:
+            mapping = {}
+        m = lowercase_dict((k.lower(), v) for k, v in mapping.items())
+        m.update(lowercase_dict((k.lower(), v) for k, v in kws.items()))
+        return Template.safe_substitute(self, m)
+
+
 class IMDb(callbacks.Plugin):
     """Queries OMDB database for information about IMDb titles"""
 
     threaded = True
 
-    def dosearch(self, query):
-        try:
-            url = None
-            searchurl = "https://www.google.com/search?&q="
-            searchurl += "{0} site:imdb.com/title/".format(query)
-            agents = self.registryValue("userAgents")
-            ua = random.choice(agents)
-            header = {"User-Agent": ua}
-            data = requests.get(searchurl, headers=header, timeout=10)
-            data.raise_for_status()
-            soup = BeautifulSoup(data.content)
-            url = soup.find(
-                "a", attrs={"href": re.compile(r"https://www.imdb.com/title/tt\d+/$")}
-            )["href"]
-        except Exception:
-            pass
-        return url
+    def dosearch(self, irc, channel, text):
+        google = ddg = match = None
+        if self.registryValue("google", channel) > 0:
+            google = irc.getCallback("google")
+        if self.registryValue("ddg", channel) > 0:
+            ddg = irc.getCallback("ddg")
+        if not google and not ddg:
+            return
+        query = "site:www.imdb.com/title/ %s" % text
+        pattern = re.compile(r"https?://www.imdb.com/title/tt\d+/$")
+        for i in range(1, 3):
+            if google and self.registryValue("google", channel) == i:
+                results = google.decode(google.search(query, irc.network, channel))
+                for r in results:
+                    match = re.search(pattern, r["url"])
+                    if match:
+                        break
+            elif ddg and self.registryValue("ddg", channel) == i:
+                results = ddg.search_core(
+                    query, channel_context=channel, max_results=10, show_snippet=False
+                )
+                for r in results:
+                    match = re.search(pattern, r[2])
+                    if match:
+                        break
+        if match:
+            return match.group(0)
+        else:
+            return
 
     def imdb(self, irc, msg, args, query):
         """<title>
         Queries the OMDB API about an IMDb title. Search by title name or IMDb ID.
         """
-        channel = msg.channel
-        url = result = None
-        id = stop = False
-        apikey = self.registryValue("omdbAPI")
-        if not apikey:
-            irc.reply("Error: You must set an API key to use this plugin.")
+        url = response = result = None
+        if not self.registryValue("omdbAPI"):
+            irc.error("Error: You must set an API key to use this plugin.")
             return
-        if re.match(r"tt\d+", query.strip()):
-            id = True
-            url = "http://imdb.com/title/{0}".format(query.strip())
-        if not id and self.registryValue("googleSearch", channel):
-            url = self.dosearch(query)
-        if url and "imdb.com/title/" in url:
-            imdb_id = url.split("/title/")[1].rstrip("/")
-            omdb_url = "http://www.omdbapi.com/?i=%s&plot=short&r=json&apikey=%s" % (
-                imdb_id,
-                apikey,
+        id = re.match(r"tt\d+", query.strip())
+        if id:
+            url = "http://imdb.com/title/{0}".format(id.group(0))
+        if not id:
+            url = self.dosearch(irc, msg.channel, query)
+        if url:
+            id = url.split("/title/")[1].rstrip("/")
+            url = "http://www.omdbapi.com/?" + utils.web.urlencode(
+                {
+                    "i": id,
+                    "plot": "short",
+                    "r": "json",
+                    "apikey": self.registryValue("omdbAPI"),
+                }
             )
-            log.debug("IMDb: requesting %s" % omdb_url)
+            log.debug("IMDb: requesting %s" % url)
         else:
-            omdb_url = "http://www.omdbapi.com/?t=%s&plot=short&r=json&apikey=%s" % (
-                query,
-                apikey,
+            url = "http://www.omdbapi.com/?" + utils.web.urlencode(
+                {
+                    "t": query,
+                    "plot": "short",
+                    "r": "json",
+                    "apikey": self.registryValue("omdbAPI"),
+                }
             )
-        try:
-            request = requests.get(omdb_url, timeout=10)
-            if request.status_code == requests.codes.ok:
-                response = json.loads(request.content)
-                not_found = "Error" in response
-                unknown_error = response["Response"] != "True"
-                if not_found or unknown_error:
-                    match = re.match(r"(.*) \(*(\d\d\d\d)\)*$", query.strip())
-                    if match:
-                        query = match.group(1).strip()
-                        year = match.group(2).strip()
-                        omdb_url = (
-                            "http://www.omdbapi.com/?t=%s&y=%s&plot=short&r=json&apikey=%s"
-                            % (query, year, apikey)
-                        )
-                        request = requests.get(omdb_url, timeout=10)
-                        if request.status_code == requests.codes.ok:
-                            response = json.loads(request.content)
-                            not_found = "Error" in response
-                            unknown_error = response["Response"] != "True"
-                            if not_found or unknown_error:
-                                log.debug("IMDb: OMDB error for %s" % (omdb_url))
-                        else:
-                            log.error(
-                                "IMDb OMDB API %s - %s"
-                                % (request.status_code, request.content.decode())
-                            )
-                    else:
-                        log.debug("IMDb: OMDB error for %s" % (omdb_url))
-                        query = re.sub(r"\d\d\d\d", "", query)
-                        omdb_url = (
-                            "http://www.omdbapi.com/?s=%s&plot=short&r=json&apikey=%s"
-                            % (query, apikey)
-                        )
-                        request = requests.get(omdb_url, timeout=10)
-                        if request.status_code == requests.codes.ok:
-                            response = json.loads(request.content)
-                            not_found = "Error" in response
-                            unknown_error = response["Response"] != "True"
-                            if not_found or unknown_error:
-                                log.debug("IMDb: OMDB error for %s" % (omdb_url))
-                            elif (
-                                response.get("Search")
-                                and len(response.get("Search")) == 1
-                            ):
-                                imdb_id = response["Search"][0]["imdbID"]
-                                omdb_url = (
-                                    "http://www.omdbapi.com/?i=%s&plot=short&r=json&apikey=%s"
-                                    % (imdb_id, apikey)
-                                )
-                                request = requests.get(omdb_url, timeout=10)
-                                if request.status_code == requests.codes.ok:
-                                    response = json.loads(request.content)
-                                    not_found = "Error" in response
-                                    unknown_error = response["Response"] != "True"
-                                    if not_found or unknown_error:
-                                        log.debug(
-                                            "IMDb: OMDB error for %s" % (omdb_url)
-                                        )
-                                else:
-                                    log.error(
-                                        "IMDb OMDB API %s - %s"
-                                        % (
-                                            request.status_code,
-                                            request.content.decode(),
-                                        )
-                                    )
-                            elif (
-                                response.get("Search")
-                                and len(response.get("Search")) > 1
-                            ):
-                                reply = "No title found. Did you mean:"
-                                for item in response["Search"]:
-                                    reply += " {0} ({1}) [{2}],".format(
-                                        item["Title"], item["Year"], item["imdbID"]
-                                    )
-                                irc.reply(reply.rstrip(","))
-                                not_found = stop = True
-                                return
-                else:
-                    log.error(
-                        "IMDb OMDB API %s - %s"
-                        % (request.status_code, request.content.decode())
+            log.debug("IMDb: requesting %s" % url)
+        request = utils.web.getUrl(url).decode()
+        response = json.loads(request)
+        if response["Response"] != "False":
+            imdb_template = lowercase_template(
+                self.registryValue("template", msg.channel)
+            )
+            response["logo"] = self.registryValue("logo", msg.channel)
+            for rating in response["Ratings"]:
+                if rating["Source"] == "Rotten Tomatoes":
+                    response["tomatometer"] = rating.get("Value")
+                if rating["Source"] == "Metacritic":
+                    response["metascore"] = "{0}%".format(
+                        rating.get("Value").split("/")[0]
                     )
-                if not not_found or not unknown_error:
-                    meta = tomato = None
-                    imdb_template = self.registryValue("template", channel)
-                    imdb_template = imdb_template.replace(
-                        "$title", str(response.get("Title"))
-                    )
-                    imdb_template = imdb_template.replace(
-                        "$year", str(response.get("Year"))
-                    )
-                    imdb_template = imdb_template.replace(
-                        "$country", str(response.get("Country"))
-                    )
-                    imdb_template = imdb_template.replace(
-                        "$director", str(response.get("Director"))
-                    )
-                    imdb_template = imdb_template.replace(
-                        "$plot", str(response.get("Plot"))
-                    )
-                    imdb_template = imdb_template.replace(
-                        "$imdbID", str(response.get("imdbID"))
-                    )
-                    imdb_template = imdb_template.replace(
-                        "$imdbRating", str(response.get("imdbRating"))
-                    )
-                    for rating in response["Ratings"]:
-                        if rating["Source"] == "Rotten Tomatoes":
-                            tomato = rating.get("Value")
-                        if rating["Source"] == "Metacritic":
-                            meta = "{0}%".format(rating.get("Value").split("/")[0])
-                    if meta:
-                        imdb_template = imdb_template.replace("$metascore", meta)
-                    else:
-                        imdb_template = imdb_template.replace("$metascore", "N/A")
-                    if tomato:
-                        imdb_template = imdb_template.replace("$tomatoMeter", tomato)
-                    else:
-                        imdb_template = imdb_template.replace("$tomatoMeter", "N/A")
-                    imdb_template = imdb_template.replace(
-                        "$released", str(response.get("Released"))
-                    )
-                    imdb_template = imdb_template.replace(
-                        "$genre", str(response.get("Genre"))
-                    )
-                    imdb_template = imdb_template.replace(
-                        "$released", str(response.get("Released"))
-                    )
-                    imdb_template = imdb_template.replace(
-                        "$awards", str(response.get("Awards"))
-                    )
-                    imdb_template = imdb_template.replace(
-                        "$actors", str(response.get("Actors"))
-                    )
-                    imdb_template = imdb_template.replace(
-                        "$rated", str(response.get("Rated"))
-                    )
-                    imdb_template = imdb_template.replace(
-                        "$runtime", str(response.get("Runtime"))
-                    )
-                    imdb_template = imdb_template.replace(
-                        "$writer", str(response.get("Writer"))
-                    )
-                    imdb_template = imdb_template.replace(
-                        "$votes", str(response.get("imdbVotes"))
-                    )
-                    imdb_template = imdb_template.replace(
-                        "$boxOffice", str(response.get("BoxOffice"))
-                    )
-                    imdb_template = imdb_template.replace(
-                        "$production", str(response.get("Production"))
-                    )
-                    imdb_template = imdb_template.replace(
-                        "$website", str(response.get("Website"))
-                    )
-                    imdb_template = imdb_template.replace(
-                        "$poster", str(response.get("Poster"))
-                    )
-                    result = imdb_template
-            else:
-                log.error(
-                    "IMDb OMDB API %s - %s"
-                    % (request.status_code, request.content.decode())
-                )
-        except requests.exceptions.Timeout as e:
-            log.error("IMDb Timeout: %s" % (str(e)))
-        except requests.exceptions.ConnectionError as e:
-            log.error("IMDb ConnectionError: %s" % (str(e)))
-        except requests.exceptions.HTTPError as e:
-            log.error("IMDb HTTPError: %s" % (str(e)))
-        finally:
-            if result is not None:
-                irc.reply(result, prefixNick=False)
-            elif not stop:
-                irc.error(self.registryValue("noResultsMessage", channel))
+            result = imdb_template.safe_substitute(response)
+        if result:
+            irc.reply(result, prefixNick=False)
+        else:
+            irc.error(self.registryValue("noResultsMessage", msg.channel))
 
     imdb = wrap(imdb, ["text"])
 

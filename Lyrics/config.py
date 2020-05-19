@@ -54,20 +54,24 @@ Lyrics = conf.registerPlugin("Lyrics")
 
 conf.registerChannelValue(
     Lyrics,
-    "googleSearch",
-    registry.Boolean(True, _("""Use google to perform searches for better results.""")),
+    "google",
+    registry.Integer(
+        1,
+        """
+        Google search priority. Google plugin must be loaded.
+        0 = disabled. 1 = first. 2 = second.
+        """,
+    ),
 )
 
-conf.registerGlobalValue(
+conf.registerChannelValue(
     Lyrics,
-    "userAgents",
-    registry.CommaSeparatedListOfStrings(
-        [
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:75.0) Gecko/20100101 Firefox/75.0",
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:76.0) Gecko/20100101 Firefox/76.0",
-            "Mozilla/5.0 (Linux x86_64; rv:75.0) Gecko/20100101 Firefox/75.0",
-            "Mozilla/5.0 (Linux x86_64; rv:76.0) Gecko/20100101 Firefox/76.0",
-        ],
-        _("""Reported user agent when fetching links"""),
+    "ddg",
+    registry.Integer(
+        2,
+        """
+        DDG search priority. DDG plugin must be loaded.
+        0 = disabled. 1 = first. 2 = second.
+        """,
     ),
 )
