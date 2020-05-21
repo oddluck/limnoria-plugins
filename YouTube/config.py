@@ -91,9 +91,9 @@ conf.registerChannelValue(
     YouTube,
     "template",
     registry.String(
-        "{{logo}} :: {{link}} :: {{title}} :: Duration: {{duration}} :: Views: {{views}} "
-        ":: Uploader: {{uploader}} :: Uploaded: {{published}} :: {{likes}} likes :: "
-        "{{dislikes}} dislikes :: {{favorites}} favorites :: {{comments}} comments",
+        "$logo :: $link :: $title :: Duration: $duration :: Views: $views :: Uploader:"
+        " $uploader :: Uploaded: $published :: $likes likes :: $dislikes dislikes ::"
+        " $favorites favorites :: $comments comments",
         _("""Template used for search result replies"""),
     ),
 )

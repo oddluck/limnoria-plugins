@@ -1,5 +1,0 @@
-requests
-pendulum
-beautifulsoup4
-fake_useragent
-jinja2
