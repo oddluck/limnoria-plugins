@@ -90,15 +90,6 @@ conf.registerChannelValue(
     ),
 )
 
-# Mime types
-conf.registerGlobalValue(
-    SpiffyTitles,
-    "mimeTypes",
-    registry.CommaSeparatedListOfStrings(
-        ["text/html"], _("""Acceptable mime types for displaying titles""")
-    ),
-)
-
 # Ignored domain pattern
 conf.registerChannelValue(
     SpiffyTitles,
@@ -191,7 +182,45 @@ conf.registerChannelValue(
     SpiffyTitles.default,
     "enabled",
     registry.Boolean(
-        True, _("""Whether to add additional information about regular links""")
+        True, _("""Whether to add additional information about regular links.""")
+    ),
+)
+
+conf.registerChannelValue(
+    SpiffyTitles.default,
+    "mimeTypes",
+    registry.CommaSeparatedListOfStrings(
+        ["text/html,application/xhtml+xml"], _("""Acceptable mime types for parsing html titles.""")
+    ),
+)
+
+conf.registerChannelValue(
+    SpiffyTitles.default,
+    "language",
+    registry.String(
+        "en-US, en;q=0.8",
+        _(
+            """
+            Accept-Language header string.
+            https://tools.ietf.org/html/rfc7231#section-5.3.5
+            """
+        ),
+    ),
+)
+
+conf.registerChannelValue(
+    SpiffyTitles.default,
+    "userAgents",
+    registry.CommaSeparatedListOfStrings(
+        [
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:75.0) Gecko/20100101"
+            " Firefox/75.0",
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:76.0) Gecko/20100101"
+            " Firefox/76.0",
+            "Mozilla/5.0 (Linux x86_64; rv:75.0) Gecko/20100101 Firefox/75.0",
+            "Mozilla/5.0 (Linux x86_64; rv:76.0) Gecko/20100101 Firefox/76.0",
+        ],
+        _("""Reported user agent when fetching links"""),
     ),
 )
 
@@ -214,8 +243,10 @@ conf.registerGlobalValue(
     "userAgents",
     registry.CommaSeparatedListOfStrings(
         [
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:75.0) Gecko/20100101 Firefox/75.0",
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:76.0) Gecko/20100101 Firefox/76.0",
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:75.0) Gecko/20100101"
+            " Firefox/75.0",
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:76.0) Gecko/20100101"
+            " Firefox/76.0",
             "Mozilla/5.0 (Linux x86_64; rv:75.0) Gecko/20100101 Firefox/75.0",
             "Mozilla/5.0 (Linux x86_64; rv:76.0) Gecko/20100101 Firefox/76.0",
         ],
@@ -319,9 +350,9 @@ conf.registerChannelValue(
     SpiffyTitles.reddit,
     "linkThreadTemplate",
     registry.String(
-        "/r/{{subreddit}}{% if title %} :: {{title}}{% endif %} :: {{score}} "
-        "points ({{percent}}) :: {{comments}} comments :: Posted {{age}} by "
-        "{{author}}{% if url %} :: {{url}} ({{domain}}){% endif %}",
+        "/r/{{subreddit}}{% if title %} :: {{title}}{% endif %} :: {{score}} points"
+        " ({{percent}}) :: {{comments}} comments :: Posted {{age}} by {{author}}{% if"
+        " url %} :: {{url}} ({{domain}}){% endif %}",
         _("""Template used for Reddit link thread title responses"""),
     ),
 )
@@ -330,9 +361,9 @@ conf.registerChannelValue(
     SpiffyTitles.reddit,
     "textThreadTemplate",
     registry.String(
-        "/r/{{subreddit}}{% if title %} :: {{title}}{% endif %}{% if extract %} "
-        ":: {{extract}}{% endif %} :: {{score}} points ({{percent}}) :: {{comments}} "
-        "comments :: Posted {{age}} by {{author}}",
+        "/r/{{subreddit}}{% if title %} :: {{title}}{% endif %}{% if extract %} ::"
+        " {{extract}}{% endif %} :: {{score}} points ({{percent}}) :: {{comments}}"
+        " comments :: Posted {{age}} by {{author}}",
         _("""Template used for Reddit text thread title responses"""),
     ),
 )
@@ -341,8 +372,8 @@ conf.registerChannelValue(
     SpiffyTitles.reddit,
     "commentTemplate",
     registry.String(
-        "/r/{{subreddit}}{% if extract %} :: {{extract}}{% endif %} :: "
-        '{{score}} points :: Posted {{age}} by {{author}} on "{{title}}"',
+        "/r/{{subreddit}}{% if extract %} :: {{extract}}{% endif %} :: {{score}} points"
+        ' :: Posted {{age}} by {{author}} on "{{title}}"',
         _("""Template used for Reddit comment title responses"""),
     ),
 )
@@ -351,9 +382,9 @@ conf.registerChannelValue(
     SpiffyTitles.reddit,
     "userTemplate",
     registry.String(
-        "/u/{{user}}{% if gold %} :: (GOLD{% if mod %}, MOD{% endif %}){% endif %} "
-        ":: Joined: {{created}} :: Link karma: {{link_karma}} :: Comment karma: "
-        "{{comment_karma}}",
+        "/u/{{user}}{% if gold %} :: (GOLD{% if mod %}, MOD{% endif %}){% endif %} ::"
+        " Joined: {{created}} :: Link karma: {{link_karma}} :: Comment karma:"
+        " {{comment_karma}}",
         _("""Template used for Reddit user page title responses"""),
     ),
 )
@@ -401,11 +432,11 @@ conf.registerChannelValue(
     SpiffyTitles.youtube,
     "template",
     registry.String(
-        "^ {{yt_logo}} :: {{title}} {%if timestamp%} @ {{timestamp}}{% endif %} "
-        ":: Duration: {{duration}} :: Views: {{view_count}} :: Uploader: "
-        "{{channel_title}} :: Uploaded: {{published}} :: {{like_count}} likes :: "
-        "{{dislike_count}} dislikes :: {{favorite_count}} favorites :: "
-        "{{comment_count}} comments",
+        "^ {{yt_logo}} :: {{title}} {%if timestamp%} @ {{timestamp}}{% endif %} ::"
+        " Duration: {{duration}} :: Views: {{view_count}} :: Uploader:"
+        " {{channel_title}} :: Uploaded: {{published}} :: {{like_count}} likes ::"
+        " {{dislike_count}} dislikes :: {{favorite_count}} favorites ::"
+        " {{comment_count}} comments",
         _("""Template used for YouTube title responses"""),
     ),
 )
@@ -434,10 +465,10 @@ conf.registerChannelValue(
     SpiffyTitles.imgur,
     "imageTemplate",
     registry.String(
-        "^ {%if section %}[{{section}}] {% endif %}{% if title %}{{title}} :: "
-        "{% endif %}{{type}} {{width}}x{{height}} {{file_size}} :: {{view_count}} "
-        "views :: {%if nsfw == None %}not sure if safe for work{% elif nsfw == True %}"
-        "not safe for work!{% else %}safe for work{% endif %}",
+        "^ {%if section %}[{{section}}] {% endif %}{% if title %}{{title}} :: {% endif"
+        " %}{{type}} {{width}}x{{height}} {{file_size}} :: {{view_count}} views :: {%if"
+        " nsfw == None %}not sure if safe for work{% elif nsfw == True %}not safe for"
+        " work!{% else %}safe for work{% endif %}",
         _("""imgur image template"""),
     ),
 )
@@ -446,10 +477,10 @@ conf.registerChannelValue(
     SpiffyTitles.imgur,
     "albumTemplate",
     registry.String(
-        "^ {%if section %}[{{section}}] {% endif %}{% if title %}{{title}} :: "
-        "{% endif %}{{image_count}} images :: {{view_count}} views :: "
-        "{%if nsfw == None %}not sure if safe for work{% elif nsfw == True %}"
-        "not safe for work!{% else %}safe for work{% endif %}",
+        "^ {%if section %}[{{section}}] {% endif %}{% if title %}{{title}} :: {% endif"
+        " %}{{image_count}} images :: {{view_count}} views :: {%if nsfw == None %}not"
+        " sure if safe for work{% elif nsfw == True %}not safe for work!{% else %}safe"
+        " for work{% endif %}",
         _("""imgur album template"""),
     ),
 )
@@ -472,8 +503,8 @@ conf.registerChannelValue(
     SpiffyTitles.dailymotion,
     "template",
     registry.String(
-        "^ [{{ownerscreenname}}] {{title}} :: Duration: {{duration}} :: "
-        "{{views_total}} views",
+        "^ [{{ownerscreenname}}] {{title}} :: Duration: {{duration}} :: {{views_total}}"
+        " views",
         _("""Template used for Vimeo title responses"""),
     ),
 )
@@ -511,8 +542,8 @@ conf.registerChannelValue(
     SpiffyTitles.twitch,
     "channelTemplate",
     registry.String(
-        "^ {{twitch_logo}} :: {{display_name}} {%if description%}:: "
-        "{{description}} {%endif%}:: Viewers: {{view_count}}",
+        "^ {{twitch_logo}} :: {{display_name}} {%if description%}:: {{description}}"
+        " {%endif%}:: Viewers: {{view_count}}",
         _("""twitch.tv channel template"""),
     ),
 )
@@ -521,10 +552,10 @@ conf.registerChannelValue(
     SpiffyTitles.twitch,
     "streamTemplate",
     registry.String(
-        "^ {{twitch_logo}} :: {{display_name}} :: (LIVE) "
-        "{%if game_name%}[{{game_name}}] {%endif%}{%if title%}:: {{title}} "
-        "{%endif%}:: Created: {{created_at}} :: Viewers: {{view_count}} "
-        "{%if description%}:: {{description}}{%endif%}",
+        "^ {{twitch_logo}} :: {{display_name}} :: (LIVE) {%if"
+        " game_name%}[{{game_name}}] {%endif%}{%if title%}:: {{title}} {%endif%}::"
+        " Created: {{created_at}} :: Viewers: {{view_count}} {%if description%}::"
+        " {{description}}{%endif%}",
         _("""twitch.tv stream template"""),
     ),
 )
@@ -533,9 +564,9 @@ conf.registerChannelValue(
     SpiffyTitles.twitch,
     "videoTemplate",
     registry.String(
-        "^ {{twitch_logo}} :: {{display_name}} {%if title%}:: {{title}} {%endif%}}:: "
-        "Duration: {{duration}} :: Created: {{created_at}} {%if description%}:: "
-        "{{description}} {%endif%}:: Viewers: {{view_count}}",
+        "^ {{twitch_logo}} :: {{display_name}} {%if title%}:: {{title}} {%endif%}}::"
+        " Duration: {{duration}} :: Created: {{created_at}} {%if description%}::"
+        " {{description}} {%endif%}:: Viewers: {{view_count}}",
         _("""twitch.tv video template"""),
     ),
 )
@@ -544,9 +575,9 @@ conf.registerChannelValue(
     SpiffyTitles.twitch,
     "clipTemplate",
     registry.String(
-        "^ {{twitch_logo}} :: {{display_name}} {%if game_name%}:: [{{game_name}}] "
-        "{%endif%}{%if title%}:: {{title}} {%endif%}:: Created: {{created_at}} :: "
-        "Viewers: {{view_count}} {%if description%}:: {{description}}{%endif%}",
+        "^ {{twitch_logo}} :: {{display_name}} {%if game_name%}:: [{{game_name}}]"
+        " {%endif%}{%if title%}:: {{title}} {%endif%}:: Created: {{created_at}} ::"
+        " Viewers: {{view_count}} {%if description%}:: {{description}}{%endif%}",
         _("""twitch.tv clip template"""),
     ),
 )
@@ -567,8 +598,8 @@ conf.registerChannelValue(
     SpiffyTitles.vimeo,
     "template",
     registry.String(
-        "^ {{title}} :: Duration: {{duration}} :: {{stats_number_of_plays}} plays "
-        ":: {{stats_number_of_comments}} comments",
+        "^ {{title}} :: Duration: {{duration}} :: {{stats_number_of_plays}} plays ::"
+        " {{stats_number_of_comments}} comments",
         _("""Template used for Vimeo title responses"""),
     ),
 )
@@ -605,10 +636,10 @@ conf.registerChannelValue(
     SpiffyTitles.imdb,
     "template",
     registry.String(
-        "^ {{imdb_logo}} :: {{title}} ({{year}}, {{country}}, [{{rated}}], {{genre}}, "
-        "{{runtime}}) :: IMDb: {{imdb_rating}} | MC: {{metascore}} | RT: "
-        "{{tomatoMeter}} :: {{plot}} :: Director: {{director}} :: Cast: {{actors}} "
-        ":: Writer: {{writer}}",
+        "^ {{imdb_logo}} :: {{title}} ({{year}}, {{country}}, [{{rated}}], {{genre}},"
+        " {{runtime}}) :: IMDb: {{imdb_rating}} | MC: {{metascore}} | RT:"
+        " {{tomatoMeter}} :: {{plot}} :: Director: {{director}} :: Cast: {{actors}} ::"
+        " Writer: {{writer}}",
         _("""IMDB title template"""),
     ),
 )
@@ -631,8 +662,8 @@ conf.registerChannelValue(
     SpiffyTitles.coub,
     "template",
     registry.String(
-        "^ {%if not_safe_for_work %}NSFW{% endif %} [{{channel.title}}] {{title}} :: "
-        "{{views_count}} views :: {{likes_count}} likes :: {{recoubs_count}} recoubs",
+        "^ {%if not_safe_for_work %}NSFW{% endif %} [{{channel.title}}] {{title}} ::"
+        " {{views_count}} views :: {{likes_count}} likes :: {{recoubs_count}} recoubs",
         _("""Uses Coub API to get additional information about coub.com links"""),
     ),
 )

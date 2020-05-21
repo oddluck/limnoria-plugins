@@ -74,6 +74,11 @@ This means that you can change whether a handler is enabled, or what the templat
 
 `default.language` - Accept-Language header string. https://tools.ietf.org/html/rfc7231#section-5.3.5
 
+<<<<<<< Updated upstream
+=======
+`default.mimeTypes` - Comma separated list of strings of mime types to parse for html title. Default value: `text/html`. You shouldn't need to change this.
+
+>>>>>>> Stashed changes
 `default.template` - This is the template used when showing the title of a link.
 
 Default value: `^ {{title}}`

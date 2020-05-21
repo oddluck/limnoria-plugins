@@ -34,13 +34,7 @@ import supybot.callbacks as callbacks
 import supybot.utils as utils
 import supybot.ircdb as ircdb
 import supybot.log as log
-import re
-import sys
-import random
-import time
-import json
-import unicodedata
-import datetime
+import re, sys, random, time, json, unicodedata, datetime
 from urllib.parse import urlparse, parse_qsl
 from bs4 import BeautifulSoup
 from jinja2 import Template
@@ -169,7 +163,8 @@ class SpiffyTitles(callbacks.Plugin):
         if not self.is_channel_allowed(channel):
             log.debug(
                 "SpiffyTitles: not responding to link in %s due to black/white "
-                "list restrictions" % (channel)
+                "list restrictions"
+                % (channel)
             )
             return
         urls = self.get_urls_from_message(message)
@@ -210,8 +205,8 @@ class SpiffyTitles(callbacks.Plugin):
                         log.debug("SpiffyTitles: could not get a title for %s" % (url))
                     else:
                         log.debug(
-                            "SpiffyTitles: could not get a title for %s but default \
-                                   handler is disabled"
+                            "SpiffyTitles: could not get a title for %s but default    "
+                            "                                handler is disabled"
                             % (url)
                         )
 
@@ -445,7 +440,7 @@ class SpiffyTitles(callbacks.Plugin):
                     content_type = (
                         request.headers.get("content-type").split(";")[0].strip()
                     )
-                    acceptable_types = self.registryValue("mimeTypes")
+                    acceptable_types = self.registryValue("default.mimeTypes")
                     log.debug("SpiffyTitles: content type %s" % (content_type))
                     if content_type in acceptable_types:
                         text = request.content
@@ -1042,7 +1037,8 @@ class SpiffyTitles(callbacks.Plugin):
                                 except KeyError as e:
                                     self.log.error(
                                         "SpiffyTitles: KeyError parsing Twitch.TV JSON "
-                                        "response: %s" % (str(e))
+                                        "response: %s"
+                                        % (str(e))
                                     )
                     elif link_type == "video":
                         data = response
@@ -1125,7 +1121,8 @@ class SpiffyTitles(callbacks.Plugin):
                                 except KeyError as e:
                                     self.log.error(
                                         "SpiffyTitles: KeyError parsing Twitch.TV JSON "
-                                        "response: %s" % (str(e))
+                                        "response: %s"
+                                        % (str(e))
                                     )
                         game_id = data["game_id"]
                         game_name = game_id
@@ -1186,7 +1183,8 @@ class SpiffyTitles(callbacks.Plugin):
                                 except KeyError as e:
                                     self.log.error(
                                         "SpiffyTitles: KeyError parsing Twitch.TV JSON "
-                                        "response: %s" % (str(e))
+                                        "response: %s"
+                                        % (str(e))
                                     )
                         title = data["title"]
                         view_count = data["view_count"]
@@ -1436,8 +1434,10 @@ class SpiffyTitles(callbacks.Plugin):
             "comment": {
                 "pattern": r"^/r/(?P<subreddit>[^/]+)/comments/(?P<thread>[^/]+)/"
                 r"[^/]+/(?P<comment>\w+/?)$",
-                "url": "https://www.reddit.com/r/{subreddit}/comments/{thread}/x/"
-                "{comment}.json",
+                "url": (
+                    "https://www.reddit.com/r/{subreddit}/comments/{thread}/x/"
+                    "{comment}.json"
+                ),
             },
             "user": {
                 "pattern": r"^/u(?:ser)?/(?P<user>[^/]+)/?$",
