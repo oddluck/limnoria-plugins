@@ -190,7 +190,7 @@ conf.registerChannelValue(
     SpiffyTitles.default,
     "mimeTypes",
     registry.CommaSeparatedListOfStrings(
-        ["text/html,application/xhtml+xml"], _("""Acceptable mime types for parsing html titles.""")
+        ["text/html","application/xhtml+xml"], _("""Acceptable mime types for parsing html titles.""")
     ),
 )
 
