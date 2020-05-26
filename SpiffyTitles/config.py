@@ -238,22 +238,6 @@ conf.registerChannelValue(
     ),
 )
 
-conf.registerGlobalValue(
-    SpiffyTitles.default,
-    "userAgents",
-    registry.CommaSeparatedListOfStrings(
-        [
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:75.0) Gecko/20100101"
-            " Firefox/75.0",
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:76.0) Gecko/20100101"
-            " Firefox/76.0",
-            "Mozilla/5.0 (Linux x86_64; rv:75.0) Gecko/20100101 Firefox/75.0",
-            "Mozilla/5.0 (Linux x86_64; rv:76.0) Gecko/20100101 Firefox/76.0",
-        ],
-        _("""Reported user agent when fetching links"""),
-    ),
-)
-
 # default title template - show a warning if redirects to a different domain
 conf.registerChannelValue(
     SpiffyTitles.default,
