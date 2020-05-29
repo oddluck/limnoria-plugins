@@ -186,7 +186,7 @@ class Jeopardy(callbacks.Plugin):
                             data = requests.get(
                                 "{0}/api/random".format(self.jserviceUrl), timeout=5
                             )
-                            data = json.loads(data.content)
+                            data = json.loads(data.content.decode())
                         else:
                             data = requests.get(
                                 "{0}/api/random?count={1}".format(
@@ -194,7 +194,10 @@ class Jeopardy(callbacks.Plugin):
                                 ),
                                 timeout=5,
                             )
-                            data = json.loads(data.content)
+                            data = json.loads(data.content.decode())
+                            if not data:
+                                n += 1
+                                break
                         for item in data:
                             if n == self.num:
                                 break
@@ -260,7 +263,10 @@ class Jeopardy(callbacks.Plugin):
                                     self.jserviceUrl, category
                                 )
                             )
-                            data = json.loads(data.content)
+                            data = json.loads(data.content.decode())
+                            if not data:
+                                k += 1
+                                break
                             cluecount = data[0]["category"]["clues_count"]
                             if cluecount < self.num and len(self.categories) == 1:
                                 self.num = cluecount
@@ -268,55 +274,50 @@ class Jeopardy(callbacks.Plugin):
                                 data.extend(
                                     json.loads(
                                         requests.get(
-                                            "{0}/api/clues?&category={1}&offset=100".format(
-                                                self.jserviceUrl, category
-                                            ),
+                                            "{0}/api/clues?&category={1}&offset=100"
+                                            .format(self.jserviceUrl, category),
                                             timeout=5,
-                                        ).content
+                                        ).content.decode()
                                     )
                                 )
                             if cluecount > 200:
                                 data.extend(
                                     json.loads(
                                         requests.get(
-                                            "{0}/api/clues?&category={1}&offset=200".format(
-                                                self.jserviceUrl, category
-                                            ),
+                                            "{0}/api/clues?&category={1}&offset=200"
+                                            .format(self.jserviceUrl, category),
                                             timeout=5,
-                                        ).content
+                                        ).content.decode()
                                     )
                                 )
                             if cluecount > 300:
                                 data.extend(
                                     json.loads(
                                         requests.get(
-                                            "{0}/api/clues?&category={1}&offset=300".format(
-                                                self.jserviceUrl, category
-                                            ),
+                                            "{0}/api/clues?&category={1}&offset=300"
+                                            .format(self.jserviceUrl, category),
                                             timeout=5,
-                                        ).content
+                                        ).content.decode()
                                     )
                                 )
                             if cluecount > 400:
                                 data.extend(
                                     json.loads(
                                         requests.get(
-                                            "{0}/api/clues?&category={1}&offset=400".format(
-                                                self.jserviceUrl, category
-                                            ),
+                                            "{0}/api/clues?&category={1}&offset=400"
+                                            .format(self.jserviceUrl, category),
                                             timeout=5,
-                                        ).content
+                                        ).content.decode()
                                     )
                                 )
                             if cluecount > 500:
                                 data.extend(
                                     json.loads(
                                         requests.get(
-                                            "{0}/api/clues?&category={1}&offset=500".format(
-                                                self.jserviceUrl, category
-                                            ),
+                                            "{0}/api/clues?&category={1}&offset=500"
+                                            .format(self.jserviceUrl, category),
                                             timeout=5,
-                                        ).content
+                                        ).content.decode()
                                     )
                                 )
                             j = 0
@@ -476,21 +477,23 @@ class Jeopardy(callbacks.Plugin):
             self.reply(self.question)
             if self.timeout > 0:
 
-                def event():
+                def endEvent():
                     self.end()
 
                 self.endTime = time.time() + self.timeout
-                schedule.addEvent(event, self.endTime, "end_%s" % self.channel)
+                schedule.addEvent(endEvent, self.endTime, "end_%s" % self.channel)
                 if self.showBlank:
                     self.hint()
                 elif self.showHints or self.showTime:
 
-                    def event():
+                    def timedEvent():
                         self.timedEvent()
 
                     eventTime = time.time() + self.waitTime
                     if eventTime < self.endTime:
-                        schedule.addEvent(event, eventTime, "event_%s" % self.channel)
+                        schedule.addEvent(
+                            timedEvent, eventTime, "event_%s" % self.channel
+                        )
             elif self.showBlank:
                 self.hint()
 
@@ -793,7 +796,7 @@ class Jeopardy(callbacks.Plugin):
                 ),
                 timeout=5,
             )
-            data = json.loads(data.content)
+            data = json.loads(data.content.decode())
             random.shuffle(data)
             results = []
             for item in data:
@@ -921,7 +924,8 @@ class Jeopardy(callbacks.Plugin):
         if self.registryValue("useBold", msg.channel):
             irc.reply(
                 ircutils.bold(
-                    "Add category name to the start command to select a category by name."
+                    "Add category name to the start command to select a category by"
+                    " name."
                 ),
                 prefixNick=False,
             )
@@ -1107,3 +1111,4 @@ class Jeopardy(callbacks.Plugin):
 
 
 Class = Jeopardy
+
