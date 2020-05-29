@@ -494,22 +494,22 @@ class Corona(callbacks.Plugin):
                     self.countries[item]["ratio_recovered"] = "N/A"
                 try:
                     self.countries[item]["mild"] = (
-                        self.countries[item][self.headers["countries"][8]]
-                        - self.countries[item][self.headers["countries"][9]]
+                        self.countries[item][self.headers["countries"][7]]
+                        - self.countries[item][self.headers["countries"][8]]
                     )
                 except:
                     self.countries[item]["mild"] = "N/A"
                 try:
                     self.countries[item]["ratio_mild"] = "{0:.1%}".format(
                         self.countries[item]["mild"]
-                        / self.countries[item][self.headers["countries"][8]]
+                        / self.countries[item][self.headers["countries"][7]]
                     )
                 except:
                     self.countries[item]["ratio_mild"] = "N/A"
                 try:
                     self.countries[item]["ratio_serious"] = "{0:.1%}".format(
-                        self.countries[item][self.headers["countries"][9]]
-                        / self.countries[item][self.headers["countries"][8]]
+                        self.countries[item][self.headers["countries"][8]]
+                        / self.countries[item][self.headers["countries"][7]]
                     )
                 except:
                     self.countries[item]["ratio_serious"] = "N/A"
@@ -681,13 +681,13 @@ class Corona(callbacks.Plugin):
                     self.countries[search]["ratio_new_dead"],
                     self.countries[search][self.headers["countries"][6]],
                     self.countries[search]["ratio_recovered"],
-                    self.countries[search][self.headers["countries"][8]],
+                    self.countries[search][self.headers["countries"][7]],
                     self.countries[search]["mild"],
-                    self.countries[search][self.headers["countries"][9]],
+                    self.countries[search][self.headers["countries"][8]],
                     self.countries[search]["ratio_mild"],
                     self.countries[search]["ratio_serious"],
+                    self.countries[search][self.headers["countries"][9]],
                     self.countries[search][self.headers["countries"][10]],
-                    self.countries[search][self.headers["countries"][11]],
                     self.time_created(self.updated),
                 )
             )
@@ -745,11 +745,11 @@ class Corona(callbacks.Plugin):
                     ],
                     self.countries[list(self.countries)[0]]["ratio_recovered"],
                     self.countries[list(self.countries)[0]][
-                        self.headers["countries"][8]
+                        self.headers["countries"][7]
                     ],
                     self.countries[list(self.countries)[0]]["mild"],
                     self.countries[list(self.countries)[0]][
-                        self.headers["countries"][9]
+                        self.headers["countries"][8]
                     ],
                     self.countries[list(self.countries)[0]]["ratio_mild"],
                     self.countries[list(self.countries)[0]]["ratio_serious"],
@@ -757,7 +757,7 @@ class Corona(callbacks.Plugin):
                         self.headers["countries"][9]
                     ],
                     self.countries[list(self.countries)[0]][
-                        self.headers["countries"][11]
+                        self.headers["countries"][10]
                     ],
                     self.time_created(self.updated),
                 )
