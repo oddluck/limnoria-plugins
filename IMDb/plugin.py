@@ -89,7 +89,10 @@ class IMDb(callbacks.Plugin):
             if google and self.registryValue("google", channel) == i:
                 results = google.decode(google.search(query, irc.network, channel))
                 for r in results:
-                    match = re.search(pattern, r["url"])
+                    try:
+                        match = re.search(pattern, r["url"])
+                    except TypeError:
+                        match = re.search(pattern, r.link)
                     if match:
                         log.debug("IMDb: found link using Google search")
                         break
@@ -156,9 +159,7 @@ class IMDb(callbacks.Plugin):
                 if rating["Source"] == "Rotten Tomatoes":
                     response["tomatometer"] = rating["Value"]
                 if rating["Source"] == "Metacritic":
-                    response["metascore"] = "{0}%".format(
-                        rating["Value"].split("/")[0]
-                    )
+                    response["metascore"] = "{0}%".format(rating["Value"].split("/")[0])
             result = imdb_template.safe_substitute(response)
         elif response.get("Error"):
             log.debug("IMDb: OMDB API: %s" % response["Error"])

@@ -72,9 +72,15 @@ class Lyrics(callbacks.Plugin):
             if google and self.registryValue("google", channel) == i:
                 results = google.decode(google.search(query, irc.network, channel))
                 for r in results:
-                    match = re.search(pattern, r["url"])
+                    try:
+                        match = re.search(pattern, r["url"])
+                    except TypeError:
+                        match = re.search(pattern, r.link)
                     if match:
-                        title = r["title"].replace(":", " - ").split("|")[0]
+                        try:
+                            title = r["title"].replace(":", " - ").split("|")[0]
+                        except TypeError:
+                            title = r.title.replace(":", " - ").split("|")[0]
                         log.debug("Lyrics: found link using Google search")
                         break
             elif self.registryValue("ddg", channel) == i:
