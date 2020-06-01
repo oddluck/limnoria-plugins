@@ -212,7 +212,7 @@ class Jeopardy(callbacks.Plugin):
                                 try:
                                     points = int(item["value"])
                                 except:
-                                    continue
+                                    pass
                             if self.registryValue("keepHistory", channel):
                                 if (
                                     clue
