@@ -91,6 +91,7 @@ class Jeopardy(callbacks.Plugin):
             plugin,
         ):
             self.registryValue = plugin.registryValue
+            defaultPoints = self.registryValue("defaultPointValue")
             self.active = True
             self.answered = 0
             self.blankChar = self.registryValue("blankChar", channel)
@@ -119,7 +120,6 @@ class Jeopardy(callbacks.Plugin):
             self.numAsked = 0
             self.numClues = num
             self.numHints = hints
-            self.points = self.registryValue("defaultPointValue")
             self.question = ""
             if restart:
                 self.question_template = Template(
@@ -207,11 +207,12 @@ class Jeopardy(callbacks.Plugin):
                             answer = item["answer"].strip()
                             category = string.capwords(item["category"]["title"])
                             invalid = item["invalid_count"]
-                            points = self.points
-                            if int(item["value"]) >= 100:
-                                points = int(item["value"])
-                            else:
-                                points = self.points
+                            points = defaultPoints
+                            if item.get("value"):
+                                try:
+                                    points = int(item["value"])
+                                except:
+                                    continue
                             if self.registryValue("keepHistory", channel):
                                 if (
                                     clue
@@ -245,8 +246,9 @@ class Jeopardy(callbacks.Plugin):
                                     self.questions.append(q)
                                     asked.append(id)
                                     n += 1
-                    except Exception:
-                        continue
+                    except Exception as e:
+                        log.error("Jeopardy: Error: {0}".format(e))
+                        break
             else:
                 n = 0
                 k = 0
@@ -336,11 +338,12 @@ class Jeopardy(callbacks.Plugin):
                                 answer = item["answer"].strip()
                                 category = string.capwords(item["category"]["title"])
                                 invalid = item["invalid_count"]
-                                points = self.points
-                                if int(item["value"]) >= 100:
-                                    points = int(item["value"])
-                                else:
-                                    points = self.points
+                                points = defaultPoints
+                                if item.get("value"):
+                                    try:
+                                        points = int(item["value"])
+                                    except:
+                                        pass
                                 if self.registryValue("keepHistory", channel):
                                     if (
                                         clue
@@ -377,8 +380,10 @@ class Jeopardy(callbacks.Plugin):
                                         n += 1
                                         j += 1
                             k += 1
-                        except Exception:
-                            continue
+                        except Exception as e:
+                            log.error("Jeopardy: Error: {0}".format(e))
+                            k += 1
+                            break
             if self.shuffled or self.registryValue("randomize", channel):
                 random.shuffle(self.questions)
             else:
@@ -1111,4 +1116,3 @@ class Jeopardy(callbacks.Plugin):
 
 
 Class = Jeopardy
-
