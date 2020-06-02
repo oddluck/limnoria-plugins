@@ -29,7 +29,7 @@
 
 import supybot.ansi as ansi
 import supybot.utils as utils
-from supybot.commands import wrap, getopts, optional
+from supybot.commands import *
 import supybot.plugins as plugins
 import supybot.ircutils as ircutils
 import supybot.ircdb as ircdb
