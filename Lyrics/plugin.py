@@ -65,7 +65,7 @@ class Lyrics(callbacks.Plugin):
                 log.error("Lyrics: Error: DDG search enabled but plugin not loaded.")
         if not google and not ddg:
             log.error("Lyrics: Google and DDG plugins not loaded.")
-            return
+            return None, None
         query = "site:lyrics.fandom.com/wiki/ %s" % text
         pattern = re.compile(r"https?://lyrics.fandom.com/wiki/.*")
         for i in range(1, 3):
@@ -96,7 +96,7 @@ class Lyrics(callbacks.Plugin):
         if match and title:
             return title, match.group(0)
         else:
-            return
+            return None, None
 
     def getlyrics(self, query):
         lyrics = None
@@ -104,7 +104,6 @@ class Lyrics(callbacks.Plugin):
             try:
                 log.debug("Lyrics: requesting {0}".format(query))
                 lyrics = pylyrics3.get_lyrics_from_url(query)
-                lyrics = re.sub(r"(?<!\.|\!|\?)\s\\n", ".", lyrics).replace(" \n", "")
             except Exception:
                 pass
         else:
@@ -112,10 +111,15 @@ class Lyrics(callbacks.Plugin):
                 log.debug("Lyrics: requesting {0}".format(query))
                 query = query.split(",", 1)
                 lyrics = pylyrics3.get_song_lyrics(query[0].strip(), query[1].strip())
-                lyrics = re.sub(r"(?<!\.|\!|\?)\s\\n", ".", lyrics).replace(" \n", "")
             except Exception:
                 pass
-        return lyrics
+        if lyrics:
+            lyrics = re.sub(r"(?<!\.|\!|\?)\s+\n", ".", lyrics)
+            lyrics = re.sub(r"\s+\n", "", lyrics)
+
+            return lyrics
+        else:
+            return
 
     def lyric(self, irc, msg, args, lyric):
         """<query>
