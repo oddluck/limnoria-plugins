@@ -406,8 +406,6 @@ class SpiffyTitles(callbacks.Plugin):
         Get the HTML of a website based on a URL
         """
         max_retries = self.registryValue("maxRetries")
-        if not retries:
-            retries = 1
         if retries >= max_retries:
             log.debug("SpiffyTitles: hit maximum retries for %s" % url)
             return (None, False)
@@ -422,6 +420,7 @@ class SpiffyTitles(callbacks.Plugin):
                 allow_redirects=True,
                 stream=True,
             ) as request:
+                request.raise_for_status()
                 is_redirect = False
                 if request.history:
                     # check the top two domain levels
@@ -435,43 +434,30 @@ class SpiffyTitles(callbacks.Plugin):
                             % (redir.status_code, redir.url)
                         )
                     log.debug("SpiffyTitles: Final url %s" % (request.url))
-                if request.status_code == requests.codes.ok:
-                    # Check the content type
-                    content_type = (
-                        request.headers.get("content-type").split(";")[0].strip()
-                    )
-                    acceptable_types = self.registryValue("default.mimeTypes")
-                    log.debug("SpiffyTitles: content type %s" % (content_type))
-                    if content_type in acceptable_types:
-                        text = request.content
-                        if text:
-                            return (text, is_redirect)
-                        else:
-                            log.debug("SpiffyTitles: empty content from %s" % (url))
-                    else:
-                        log.debug(
-                            "SpiffyTitles: unacceptable mime type %s for url %s"
-                            % (content_type, url)
-                        )
-                        size = request.headers.get("content-length")
-                        if size:
-                            size = self.get_readable_file_size(int(size))
-                        file_template = self.registryValue(
-                            "default.fileTemplate", channel=channel
-                        )
-                        text = Template(file_template).render(
-                            {"type": content_type, "size": size}
-                        )
-                        text = (
-                            "<html><head><title>{0}</title>"
-                            "</head><body></body></html>".format(text)
-                        )
+                # Check the content type
+                content_type = request.headers.get("content-type").split(";")[0].strip()
+                acceptable_types = self.registryValue("default.mimeTypes")
+                log.debug("SpiffyTitles: content type %s" % (content_type))
+                if content_type in acceptable_types:
+                    text = request.content
+                    if text:
                         return (text, is_redirect)
+                    else:
+                        log.debug("SpiffyTitles: empty content from %s" % (url))
                 else:
-                    log.error(
-                        "SpiffyTitles HTTP response code %s" % (request.status_code,)
+                    log.debug(
+                        "SpiffyTitles: unacceptable mime type %s for url %s"
+                        % (content_type, url)
                     )
-                    text = self.registryValue("badLinkText", channel=channel)
+                    size = request.headers.get("content-length")
+                    if size:
+                        size = self.get_readable_file_size(int(size))
+                    file_template = self.registryValue(
+                        "default.fileTemplate", channel=channel
+                    )
+                    text = Template(file_template).render(
+                        {"type": content_type, "size": size}
+                    )
                     text = (
                         "<html><head><title>{0}</title>"
                         "</head><body></body></html>".format(text)
@@ -493,8 +479,18 @@ class SpiffyTitles(callbacks.Plugin):
             self.get_source_by_url(url, channel, retries + 1)
         except requests.exceptions.HTTPError as e:
             log.error("SpiffyTitles HTTPError: %s" % (str(e)))
+            text = self.registryValue("badLinkText", channel=channel)
+            text = "<html><head><title>{0}</title></head><body></body></html>".format(
+                text
+            )
+            return (text, is_redirect)
         except requests.exceptions.InvalidURL as e:
             log.error("SpiffyTitles InvalidURL: %s" % (str(e)))
+            text = self.registryValue("badLinkText", channel=channel)
+            text = "<html><head><title>{0}</title></head><body></body></html>".format(
+                text
+            )
+            return (text, is_redirect)
         return (None, False)
 
     def get_base_domain(self, url):
@@ -599,46 +595,47 @@ class SpiffyTitles(callbacks.Plugin):
         dailymotion_handler_enabled = self.registryValue(
             "dailymotion.enabled", channel=channel
         )
+        if not dailymotion_handler_enabled:
+            return self.handler_default(url, channel)
         log.debug("SpiffyTitles: calling dailymotion handler for %s" % url)
         title = None
         video_id = None
         """ Get video ID """
-        if dailymotion_handler_enabled and "/video/" in info.path:
+        if "/video/" in info.path:
             video_id = info.path.lstrip("/video/").split("_")[0]
-        elif dailymotion_handler_enabled and "dai.ly" in url:
+        elif "dai.ly" in url:
             video_id = url.split("/")[-1].split("?")[0]
-        if video_id:
-            fields = "id,title,owner.screenname,duration,views_total"
-            api_url = "https://api.dailymotion.com/video/%s?fields=%s" % (
-                video_id,
-                fields,
+        if not video_id:
+            log.error(
+                "SpiffyTitles: unable to get dailymotion video_id for URL: %s" % url
             )
-            log.debug("SpiffyTitles: looking up dailymotion info: %s", api_url)
+            return self.handler_default(url, channel)
+        fields = "id,title,owner.screenname,duration,views_total"
+        api_url = "https://api.dailymotion.com/video/%s?fields=%s" % (video_id, fields,)
+        log.debug("SpiffyTitles: looking up dailymotion info: %s", api_url)
+        try:
             request = requests.get(api_url, timeout=self.timeout)
-            ok = request.status_code == requests.codes.ok
-            if ok:
-                response = json.loads(request.content.decode())
-                if response and "title" in response:
-                    video = response
-                    dailymotion_template = Template(
-                        self.registryValue("dailymotion.template", channel=channel)
-                    )
-                    video["views_total"] = "{:,}".format(int(video["views_total"]))
-                    video["duration"] = self.get_duration_from_seconds(
-                        video["duration"]
-                    )
-                    video["ownerscreenname"] = video["owner.screenname"]
-                    title = dailymotion_template.render(video)
-                else:
-                    log.debug(
-                        "SpiffyTitles: received unexpected payload from video: %s"
-                        % api_url
-                    )
-            else:
-                log.error(
-                    "SpiffyTitles: dailymotion handler returned %s: %s"
-                    % (request.status_code, request.content.decode()[:200])
-                )
+            request.raise_for_status()
+        except (
+            requests.exceptions.RequestException,
+            requests.exceptions.HTTPError,
+        ) as e:
+            log.error("SpiffyTitles: dailymotion error: {0}".format(e))
+            return self.handler_default(url, channel)
+        response = json.loads(request.content.decode())
+        if response and "title" in response:
+            video = response
+            dailymotion_template = Template(
+                self.registryValue("dailymotion.template", channel=channel)
+            )
+            video["views_total"] = "{:,}".format(int(video["views_total"]))
+            video["duration"] = self.get_duration_from_seconds(video["duration"])
+            video["ownerscreenname"] = video["owner.screenname"]
+            title = dailymotion_template.render(video)
+        else:
+            log.debug(
+                "SpiffyTitles: received unexpected payload from video: %s" % api_url
+            )
         if not title:
             log.debug("SpiffyTitles: could not get dailymotion info for %s" % url)
             return self.handler_default(url, channel)
@@ -650,55 +647,54 @@ class SpiffyTitles(callbacks.Plugin):
         Handles Vimeo links
         """
         vimeo_handler_enabled = self.registryValue("vimeo.enabled", channel=channel)
+        if not vimeo_handler_enabled:
+            return self.handler_default(url, channel)
         log.debug("SpiffyTitles: calling vimeo handler for %s" % url)
         title = None
         video_id = None
         """ Get video ID """
-        if vimeo_handler_enabled:
-            result = re.search(r"^(http(s)://)?(www\.)?(vimeo\.com/)?(\d+)", url)
-            if result:
-                video_id = result.group(5)
-            if video_id:
-                api_url = "https://vimeo.com/api/v2/video/%s.json" % video_id
-                log.debug("SpiffyTitles: looking up vimeo info: %s", api_url)
-                request = requests.get(api_url, timeout=self.timeout)
-                ok = request.status_code == requests.codes.ok
-                if ok:
-                    response = json.loads(request.content.decode())
-                    if response and "title" in response[0]:
-                        video = response[0]
-                        vimeo_template = Template(
-                            self.registryValue("vimeo.template", channel=channel)
-                        )
-                        """
-                        Some videos do not have this information available
-                        """
-                        if "stats_number_of_plays" in video:
-                            int_plays = int(video["stats_number_of_plays"])
-                            video["stats_number_of_plays"] = "{:,}".format(int_plays)
-                        else:
-                            video["stats_number_of_plays"] = 0
-                        if "stats_number_of_comments" in video:
-                            int_comments = int(video["stats_number_of_comments"])
-                            video["stats_number_of_comments"] = "{:,}".format(
-                                int_comments
-                            )
-                        else:
-                            video["stats_number_of_comments"] = 0
-                        video["duration"] = self.get_duration_from_seconds(
-                            video["duration"]
-                        )
-                        title = vimeo_template.render(video)
-                    else:
-                        log.debug(
-                            "SpiffyTitles: received unexpected payload from video: %s"
-                            % api_url
-                        )
-                else:
-                    log.error(
-                        "SpiffyTitles: vimeo handler returned %s: %s"
-                        % (request.status_code, request.content.decode()[:200])
-                    )
+        result = re.search(r"^(http(s)://)?(www\.)?(vimeo\.com/)?(\d+)", url)
+        if result:
+            video_id = result.group(5)
+        if not video_id:
+            log.error("SpiffyTitles: Failef to get Vimeo video ID from URL: %s" % url)
+            return self.handler_default(url, channel)
+        api_url = "https://vimeo.com/api/v2/video/%s.json" % video_id
+        log.debug("SpiffyTitles: looking up vimeo info: %s", api_url)
+        try:
+            request = requests.get(api_url, timeout=self.timeout)
+            request.raise_for_status()
+        except (
+            requests.exceptions.RequestException,
+            requests.exceptions.HTTPError,
+        ) as e:
+            log.error("SpiffyTitles: vimeo error: {0}".format(e))
+            return self.handler_default(url, channel)
+        response = json.loads(request.content.decode())
+        if response and "title" in response[0]:
+            video = response[0]
+            vimeo_template = Template(
+                self.registryValue("vimeo.template", channel=channel)
+            )
+            """
+            Some videos do not have this information available
+            """
+            if "stats_number_of_plays" in video:
+                int_plays = int(video["stats_number_of_plays"])
+                video["stats_number_of_plays"] = "{:,}".format(int_plays)
+            else:
+                video["stats_number_of_plays"] = 0
+            if "stats_number_of_comments" in video:
+                int_comments = int(video["stats_number_of_comments"])
+                video["stats_number_of_comments"] = "{:,}".format(int_comments)
+            else:
+                video["stats_number_of_comments"] = 0
+            video["duration"] = self.get_duration_from_seconds(video["duration"])
+            title = vimeo_template.render(video)
+        else:
+            log.debug(
+                "SpiffyTitles: received unexpected payload from video: %s" % api_url
+            )
         if not title:
             log.debug("SpiffyTitles: could not get vimeo info for %s" % url)
             return self.handler_default(url, channel)
@@ -710,34 +706,40 @@ class SpiffyTitles(callbacks.Plugin):
         Handles coub.com links
         """
         coub_handler_enabled = self.registryValue("coub.enabled", channel=channel)
+        if not coub_handler_enabled:
+            return self.handler_default(url, channel)
         log.debug("SpiffyTitles: calling coub handler for %s" % url)
         title = None
+        video_id = None
         """ Get video ID """
-        if coub_handler_enabled and "/view/" in url:
+        if "/view/" in url:
             video_id = url.split("/view/")[1]
             """ Remove any query strings """
             if "?" in video_id:
                 video_id = video_id.split("?")[0]
-            api_url = "http://coub.com/api/v2/coubs/%s" % video_id
+        if not video_id:
+            log.error("SpiffyTitles: Failed to get Coub video ID for URL: %s" % url)
+            return self.handler_default(url, channel)
+        api_url = "http://coub.com/api/v2/coubs/%s" % video_id
+        try:
             request = requests.get(api_url, timeout=self.timeout)
-            ok = request.status_code == requests.codes.ok
-            if ok:
-                response = json.loads(request.content.decode())
-                if response:
-                    video = response
-                    coub_template = Template(self.registryValue("coub.template"))
-                    video["likes_count"] = "{:,}".format(int(video["likes_count"]))
-                    video["recoubs_count"] = "{:,}".format(int(video["recoubs_count"]))
-                    video["views_count"] = "{:,}".format(int(video["views_count"]))
-                    title = coub_template.render(video)
-            else:
-                log.error(
-                    "SpiffyTitles: coub handler returned %s: %s"
-                    % (request.status_code, request.content.decode()[:200])
-                )
+            request.raise_for_status()
+        except (
+            requests.exceptions.RequestException,
+            requests.exceptions.HTTPError,
+        ) as e:
+            log.error("SpiffyTitles: coub error: {0}".format(e))
+            return self.handler_default(url, channel)
+        response = json.loads(request.content.decode())
+        if response:
+            video = response
+            coub_template = Template(self.registryValue("coub.template"))
+            video["likes_count"] = "{:,}".format(int(video["likes_count"]))
+            video["recoubs_count"] = "{:,}".format(int(video["recoubs_count"]))
+            video["views_count"] = "{:,}".format(int(video["views_count"]))
+            title = coub_template.render(video)
         if not title:
-            if coub_handler_enabled:
-                log.debug("SpiffyTitles: %s does not appear to be a video link!" % url)
+            log.debug("SpiffyTitles: Coub handler failed to get data for URL: %s" % url)
             return self.handler_default(url, channel)
         else:
             return title
@@ -772,9 +774,9 @@ class SpiffyTitles(callbacks.Plugin):
         Youtube Video links posted.
         """
         youtube_handler_enabled = self.registryValue("youtube.enabled", channel)
-        developer_key = self.registryValue("youtube.developerKey")
         if not youtube_handler_enabled:
-            return None
+            return self.handler_default(url, channel)
+        developer_key = self.registryValue("youtube.developerKey")
         if not developer_key:
             log.info(
                 "SpiffyTitles: no Youtube developer key set! Check the documentation "
@@ -783,99 +785,88 @@ class SpiffyTitles(callbacks.Plugin):
             return None
         log.debug("SpiffyTitles: calling Youtube handler for %s" % (url))
         video_id = self.get_video_id_from_url(url, domain)
+        if not video_id:
+            log.debug(
+                "SpiffyTitles: Failed to get YouTube video ID for URL: {0}".format(url)
+            )
+            return self.handler_default(url, channel)
         yt_template = Template(self.registryValue("youtube.template", channel))
         title = ""
-        if video_id:
-            options = {
-                "part": "snippet,statistics,contentDetails",
-                "maxResults": 1,
-                "key": developer_key,
-                "id": video_id,
-            }
-            api_url = "https://www.googleapis.com/youtube/v3/videos"
-            log.debug("SpiffyTitles: requesting %s" % (api_url))
+        options = {
+            "part": "snippet,statistics,contentDetails",
+            "maxResults": 1,
+            "key": developer_key,
+            "id": video_id,
+        }
+        api_url = "https://www.googleapis.com/youtube/v3/videos"
+        log.debug("SpiffyTitles: requesting %s" % (api_url))
+        try:
             request = requests.get(api_url, params=options, timeout=self.timeout)
-            ok = request.status_code == requests.codes.ok
-            if ok:
-                response = json.loads(request.content.decode())
-                if response:
-                    try:
-                        if response["pageInfo"]["totalResults"] > 0:
-                            items = response["items"]
-                            video = items[0]
-                            snippet = video["snippet"]
-                            title = snippet["title"]
-                            statistics = video["statistics"]
-                            view_count = 0
-                            like_count = 0
-                            dislike_count = 0
-                            comment_count = 0
-                            favorite_count = 0
-                            if "viewCount" in statistics:
-                                view_count = "{:,}".format(int(statistics["viewCount"]))
-                            if "likeCount" in statistics:
-                                like_count = "{:,}".format(int(statistics["likeCount"]))
-                            if "dislikeCount" in statistics:
-                                dislike_count = "{:,}".format(
-                                    int(statistics["dislikeCount"])
-                                )
-                            if "favoriteCount" in statistics:
-                                favorite_count = "{:,}".format(
-                                    int(statistics["favoriteCount"])
-                                )
-                            if "commentCount" in statistics:
-                                comment_count = "{:,}".format(
-                                    int(statistics["commentCount"])
-                                )
-                            channel_title = snippet["channelTitle"]
-                            video_duration = video["contentDetails"]["duration"]
-                            duration_seconds = self.get_total_seconds_from_duration(
-                                video_duration
-                            )
-                            """
-                            #23 - If duration is zero, then it"s a LIVE video
-                            """
-                            if duration_seconds > 0:
-                                duration = self.get_duration_from_seconds(
-                                    duration_seconds
-                                )
-                            else:
-                                duration = "LIVE"
-                            published = snippet["publishedAt"].split("T")[0]
-                            timestamp = self.get_timestamp_from_youtube_url(url)
-                            yt_logo = self.get_youtube_logo(channel)
-                            compiled_template = yt_template.render(
-                                {
-                                    "title": title,
-                                    "duration": duration,
-                                    "timestamp": timestamp,
-                                    "view_count": view_count,
-                                    "like_count": like_count,
-                                    "dislike_count": dislike_count,
-                                    "comment_count": comment_count,
-                                    "favorite_count": favorite_count,
-                                    "channel_title": channel_title,
-                                    "published": published,
-                                    "yt_logo": yt_logo,
-                                }
-                            )
-                            title = compiled_template
-                        else:
-                            log.debug(
-                                "SpiffyTitles: video appears to be private; no results!"
-                            )
-                    except IndexError as e:
-                        log.error(
-                            "SpiffyTitles: IndexError. Youtube API JSON response: %s"
-                            % (str(e))
-                        )
-                else:
-                    log.error("SpiffyTitles: Error parsing Youtube API JSON response")
+            request.raise_for_status()
+        except (
+            requests.exceptions.RequestException,
+            requests.exceptions.HTTPError,
+        ) as e:
+            log.error("SpiffyTitiles: YouTube Error: {0}".format(e))
+            return self.handler_default(url, channel)
+        response = json.loads(request.content.decode())
+        if not response or not response.get("items"):
+            log.error("SpiffyTitles: Failed to parse YouTube JSON response")
+            return self.handler_default(url, channel)
+        try:
+            items = response["items"]
+            video = items[0]
+            snippet = video["snippet"]
+            title = snippet["title"]
+            statistics = video["statistics"]
+            view_count = 0
+            like_count = 0
+            dislike_count = 0
+            comment_count = 0
+            favorite_count = 0
+            if "viewCount" in statistics:
+                view_count = "{:,}".format(int(statistics["viewCount"]))
+            if "likeCount" in statistics:
+                like_count = "{:,}".format(int(statistics["likeCount"]))
+            if "dislikeCount" in statistics:
+                dislike_count = "{:,}".format(int(statistics["dislikeCount"]))
+            if "favoriteCount" in statistics:
+                favorite_count = "{:,}".format(int(statistics["favoriteCount"]))
+            if "commentCount" in statistics:
+                comment_count = "{:,}".format(int(statistics["commentCount"]))
+            channel_title = snippet["channelTitle"]
+            video_duration = video["contentDetails"]["duration"]
+            duration_seconds = self.get_total_seconds_from_duration(video_duration)
+            """
+            #23 - If duration is zero, then it"s a LIVE video
+            """
+            if duration_seconds > 0:
+                duration = self.get_duration_from_seconds(duration_seconds)
             else:
-                log.error(
-                    "SpiffyTitles: Youtube API HTTP %s: %s"
-                    % (request.status_code, request.content.decode()[:200])
-                )
+                duration = "LIVE"
+            published = snippet["publishedAt"].split("T")[0]
+            timestamp = self.get_timestamp_from_youtube_url(url)
+            yt_logo = self.get_youtube_logo(channel)
+            compiled_template = yt_template.render(
+                {
+                    "title": title,
+                    "duration": duration,
+                    "timestamp": timestamp,
+                    "view_count": view_count,
+                    "like_count": like_count,
+                    "dislike_count": dislike_count,
+                    "comment_count": comment_count,
+                    "favorite_count": favorite_count,
+                    "channel_title": channel_title,
+                    "published": published,
+                    "yt_logo": yt_logo,
+                }
+            )
+            title = compiled_template
+        except IndexError as e:
+            log.error(
+                "SpiffyTitles: IndexError. Youtube API JSON response: %s" % (str(e))
+            )
         # If we found a title, return that. otherwise, use default handler
         if title:
             return title
@@ -950,11 +941,14 @@ class SpiffyTitles(callbacks.Plugin):
         Queries twitch API for additional information about twitch links.
         This handler is for (www.)twitch.tv
         """
-        url = url.split("?")[0]
-        twitch_client_id = self.registryValue("twitch.clientID")
         twitch_handler_enabled = self.registryValue("twitch.enabled", channel=channel)
-        if not twitch_handler_enabled or not twitch_client_id:
+        if not twitch_handler_enabled:
             return self.handler_default(url, channel)
+        twitch_client_id = self.registryValue("twitch.clientID")
+        if not twitch_client_id:
+            log.error("SpiffyTitles: Please set your Twitch client ID")
+            return self.handler_default(url, channel)
+        url = url.split("?")[0]
         self.log.debug("SpiffyTitles: calling twitch handler for %s" % (url))
         patterns = {
             "video": {
@@ -985,231 +979,194 @@ class SpiffyTitles(callbacks.Plugin):
             return self.handler_default(url, channel)
         headers = {"Client-ID": twitch_client_id}
         self.log.debug("SpiffyTitles: twitch - requesting %s" % (data_url))
-        request = requests.get(data_url, timeout=self.timeout, headers=headers)
-        ok = request.status_code == requests.codes.ok
+        try:
+            request = requests.get(data_url, timeout=self.timeout, headers=headers)
+            request.raise_for_status()
+        except (
+            requests.exceptions.RequestException,
+            requests.exceptions.HTTPError,
+        ) as e:
+            log.error("SpiffytTitles: Twitch Error: {0}".format(e))
+            return self.handler_default(url, channel)
         data = {}
-        if ok:
+        try:
             response = json.loads(request.content.decode())
-            if response:
-                self.log.debug("SpiffyTitles: twitch - got response:\n%s" % (response))
-                if "error" in response:
-                    return "[ Twitch ] - Error!"
-                try:
-                    if link_type == "channel":
-                        self.log.debug("SpiffyTitles: Twitch: link_type is channel")
-                        if "data" in response and response["data"]:
-                            self.log.debug("SpiffyTitles: Twitch: Got data[0]")
-                            data = response["data"][0]
-                            link_type = "stream"
-                        else:
-                            self.log.debug("SpiffyTitles: Twitch: No data[0]")
-                        data_url = (
-                            "https://api.twitch.tv/helix/users?"
-                            "login={channel_name}".format(**link_info)
-                        )
-                        request = requests.get(
-                            data_url, timeout=self.timeout, headers=headers
-                        )
-                        ok = request.status_code == requests.codes.ok
-                        user_data = {}
-                        if not ok:
-                            self.log.error(
-                                "SpiffyTitles: twitch HTTP %s: %s"
-                                % (request.status_code, request.content.decode()[:200])
-                            )
-                        else:
-                            response = json.loads(request.content.decode())
-                            if not response:
-                                self.log.error(
-                                    "SpiffyTitles: Error parsing Twitch JSON response"
-                                )
-                            else:
-                                if "error" in response:
-                                    self.log.error(
-                                        "SpiffyTitles: twitch - error in JSON response"
-                                    )
-                                    return self.handler_default(url, channel)
-                                try:
-                                    user_data = response["data"][0]
-                                    display_name = user_data["display_name"]
-                                    description = user_data["description"]
-                                    view_count = user_data["view_count"]
-                                except KeyError as e:
-                                    self.log.error(
-                                        "SpiffyTitles: KeyError parsing Twitch.TV JSON "
-                                        "response: %s"
-                                        % (str(e))
-                                    )
-                    elif link_type == "video":
-                        data = response
-                    elif link_type == "clip":
-                        data = response
-                except KeyError as e:
-                    self.log.error(
-                        "SpiffyTitles: KeyError parsing Twitch.TV JSON response: %s"
-                        % (str(e))
+        except:
+            response = None
+        if not response:
+            log.error("SpiffyTitles: Error parsing Twitch.TV JSON response")
+            return self.handler_default(url, channel)
+        self.log.debug("SpiffyTitles: twitch - got response:\n%s" % (response))
+        if "error" in response:
+            log.error("SpiffyTitles: Twitch Error: {0}".format(response["error"]))
+            return self.handler_default(url, channel)
+        if link_type == "channel":
+            self.log.debug("SpiffyTitles: Twitch: link_type is channel")
+            if "data" in response and response["data"]:
+                self.log.debug("SpiffyTitles: Twitch: Got data[0]")
+                data = response["data"][0]
+                link_type = "stream"
+            else:
+                self.log.debug("SpiffyTitles: Twitch: No data[0]")
+            data_url = "https://api.twitch.tv/helix/users?login={channel_name}".format(
+                **link_info
+            )
+            try:
+                request = requests.get(data_url, timeout=self.timeout, headers=headers)
+                request.raise_for_status()
+            except (
+                requests.exceptions.RequestException,
+                requests.exceptions.HTTPError,
+            ) as e:
+                log.error("SpiffyTitles: Twitch Error: {0}".format(e))
+                return self.handler_default(url, channel)
+            user_data = {}
+            try:
+                response = json.loads(request.content.decode())
+                user_data = response["data"][0]
+                display_name = user_data["display_name"]
+                description = user_data["description"]
+                view_count = user_data["view_count"]
+            except Exception as e:
+                log.error(
+                    "SpiffyTitles: KeyError parsing Twitch.TV JSON response: %s"
+                    % (str(e))
+                )
+        elif link_type == "video":
+            data = response
+        elif link_type == "clip":
+            data = response
+        if not data or not user_data:
+            log.error("SpiffyTitles: Twitch: Failed to get data from Twitch API")
+            return self.handler_default(url, channel)
+        log.debug("SpiffyTitles: twitch - Got data '%s'" % (data))
+        twitch_template = self.get_template(
+            "".join(["twitch.", link_type, "Template"]), channel
+        )
+        twitch_logo = self.get_twitch_logo(channel)
+        if not twitch_template:
+            self.log.debug("SpiffyTitles - twitch: bad template for %s" % (link_type))
+            log.error("SpiffyTitles: Twitch: Got data, but template was bad")
+            return self.handler_default(url, channel)
+        if link_type == "stream":
+            display_name = data["user_name"]
+            game_id = data["game_id"]
+            game_name = game_id
+            title = data["title"]
+            view_count = data["viewer_count"]
+            created_at = self._time_created_at(data["started_at"])
+            if game_id:
+                get_game = requests.get(
+                    "https://api.twitch.tv/helix/games?id={}".format(game_id),
+                    timeout=self.timeout,
+                    headers=headers,
+                )
+                game_data = json.loads(get_game.content.decode())
+                game_name = game_data["data"][0]["name"]
+            template_vars = {
+                "display_name": display_name,
+                "game_name": game_name,
+                "title": title,
+                "view_count": view_count,
+                "description": description,
+                "created_at": created_at,
+                "twitch_logo": twitch_logo,
+            }
+            reply = twitch_template.render(template_vars)
+        elif link_type == "clip":
+            data = response["data"][0]
+            display_name = data["broadcaster_name"]
+            data_url = "https://api.twitch.tv/helix/users?login={}".format(display_name)
+            try:
+                request = requests.get(data_url, timeout=self.timeout, headers=headers)
+                request.raise_for_status()
+            except (
+                requests.exceptions.RequestException,
+                requests.exceptions.HTTPError,
+            ) as e:
+                log.error("SpiffyTitles: Twitch Error: {0}".format(e))
+                return self.handler_default(url, channel)
+            user_data = {}
+            try:
+                response = json.loads(request.content.decode())
+                user_data = response["data"][0]
+                description = user_data["description"]
+                game_id = data["game_id"]
+                game_name = game_id
+                title = data["title"]
+                view_count = data["view_count"]
+                created_at = self._time_created_at(data["created_at"])
+                if game_id:
+                    get_game = requests.get(
+                        "https://api.twitch.tv/helix/games?id={}".format(game_id),
+                        timeout=self.timeout,
+                        headers=headers,
                     )
-                if data or user_data:
-                    self.log.debug("SpiffyTitles: twitch - Got data '%s'" % (data))
-                    twitch_template = self.get_template(
-                        "".join(["twitch.", link_type, "Template"]), channel
-                    )
-                    twitch_logo = self.get_twitch_logo(channel)
-                    if not twitch_template:
-                        self.log.debug(
-                            "SpiffyTitles - twitch: bad template for %s" % (link_type)
-                        )
-                        reply = "[ Twitch.TV ] - Got data, but template was bad"
-                    elif link_type == "stream":
-                        display_name = data["user_name"]
-                        game_id = data["game_id"]
-                        game_name = game_id
-                        title = data["title"]
-                        view_count = data["viewer_count"]
-                        created_at = self._time_created_at(data["started_at"])
-                        if game_id:
-                            get_game = requests.get(
-                                "https://api.twitch.tv/helix/games?id={}".format(
-                                    game_id
-                                ),
-                                timeout=self.timeout,
-                                headers=headers,
-                            )
-                            game_data = json.loads(get_game.content.decode())
-                            game_name = game_data["data"][0]["name"]
-                        template_vars = {
-                            "display_name": display_name,
-                            "game_name": game_name,
-                            "title": title,
-                            "view_count": view_count,
-                            "description": description,
-                            "created_at": created_at,
-                            "twitch_logo": twitch_logo,
-                        }
-                        reply = twitch_template.render(template_vars)
-                    elif link_type == "clip":
-                        data = response["data"][0]
-                        display_name = data["broadcaster_name"]
-                        data_url = "https://api.twitch.tv/helix/users?login={}".format(
-                            display_name
-                        )
-                        request = requests.get(
-                            data_url, timeout=self.timeout, headers=headers
-                        )
-                        ok = request.status_code == requests.codes.ok
-                        user_data = {}
-                        if not ok:
-                            self.log.error(
-                                "SpiffyTitles: twitch HTTP %s: %s"
-                                % (request.status_code, request.content.decode()[:200])
-                            )
-                        else:
-                            response = json.loads(request.content.decode())
-                            if not response:
-                                self.log.error(
-                                    "SpiffyTitles: Error parsing Twitch JSON response"
-                                )
-                            else:
-                                if "error" in response:
-                                    self.log.error(
-                                        "SpiffyTitles: twitch - error in JSON response"
-                                    )
-                                    return self.handler_default(url, channel)
-                                try:
-                                    user_data = response["data"][0]
-                                    description = user_data["description"]
-                                except KeyError as e:
-                                    self.log.error(
-                                        "SpiffyTitles: KeyError parsing Twitch.TV JSON "
-                                        "response: %s"
-                                        % (str(e))
-                                    )
-                        game_id = data["game_id"]
-                        game_name = game_id
-                        title = data["title"]
-                        view_count = data["view_count"]
-                        created_at = self._time_created_at(data["created_at"])
-                        if game_id:
-                            get_game = requests.get(
-                                "https://api.twitch.tv/helix/games?id={}".format(
-                                    game_id
-                                ),
-                                timeout=self.timeout,
-                                headers=headers,
-                            )
-                            game_data = json.loads(get_game.content.decode())
-                            game_name = game_data["data"][0]["name"]
-                        template_vars = {
-                            "display_name": display_name,
-                            "game_name": game_name,
-                            "title": title,
-                            "view_count": view_count,
-                            "description": description,
-                            "created_at": created_at,
-                            "twitch_logo": twitch_logo,
-                        }
-                        reply = twitch_template.render(template_vars)
-                    elif link_type == "video":
-                        data = response["data"][0]
-                        display_name = data["user_name"]
-                        data_url = "https://api.twitch.tv/helix/users?login={}".format(
-                            display_name
-                        )
-                        request = requests.get(
-                            data_url, timeout=self.timeout, headers=headers
-                        )
-                        ok = request.status_code == requests.codes.ok
-                        user_data = {}
-                        if not ok:
-                            self.log.error(
-                                "SpiffyTitles: twitch HTTP %s: %s"
-                                % (request.status_code, request.content.decode()[:200])
-                            )
-                        else:
-                            response = json.loads(request.content.decode())
-                            if not response:
-                                self.log.error(
-                                    "SpiffyTitles: Error parsing Twitch JSON response"
-                                )
-                            else:
-                                if "error" in response:
-                                    self.log.error(
-                                        "SpiffyTitles: twitch - error in JSON response"
-                                    )
-                                    return self.handler_default(url, channel)
-                                try:
-                                    user_data = response["data"][0]
-                                    description = user_data["description"]
-                                except KeyError as e:
-                                    self.log.error(
-                                        "SpiffyTitles: KeyError parsing Twitch.TV JSON "
-                                        "response: %s"
-                                        % (str(e))
-                                    )
-                        title = data["title"]
-                        view_count = data["view_count"]
-                        created_at = self._time_created_at(data["created_at"])
-                        duration = data["duration"]
-                        template_vars = {
-                            "display_name": display_name,
-                            "title": title,
-                            "view_count": view_count,
-                            "created_at": created_at,
-                            "description": description,
-                            "duration": duration,
-                            "twitch_logo": twitch_logo,
-                        }
-                        reply = twitch_template.render(template_vars)
-                    else:
-                        template_vars = {
-                            "display_name": display_name,
-                            "description": description,
-                            "view_count": view_count,
-                            "twitch_logo": twitch_logo,
-                        }
-                        reply = twitch_template.render(template_vars)
-                    self.log.debug("SpiffyTitles: twitch - reply = '%s'" % (reply))
-                    return reply
+                    game_data = json.loads(get_game.content.decode())
+                    game_name = game_data["data"][0]["name"]
+                template_vars = {
+                    "display_name": display_name,
+                    "game_name": game_name,
+                    "title": title,
+                    "view_count": view_count,
+                    "description": description,
+                    "created_at": created_at,
+                    "twitch_logo": twitch_logo,
+                }
+                reply = twitch_template.render(template_vars)
+            except Exception as e:
+                self.log.error(
+                    "SpiffyTitles: Error parsing Twitch.TV JSON response: %s" % (str(e))
+                )
+        elif link_type == "video":
+            data = response["data"][0]
+            display_name = data["user_name"]
+            data_url = "https://api.twitch.tv/helix/users?login={}".format(display_name)
+            try:
+                request = requests.get(data_url, timeout=self.timeout, headers=headers)
+            except (
+                requests.exceptions.RequestException,
+                requests.exceptions.HTTPError,
+            ) as e:
+                log.error("SpiffyTitles: Twitch Error: {0}".format(e))
+                return self.handler_default(url, channel)
+            user_data = {}
+            try:
+                response = json.loads(request.content.decode())
+                user_data = response["data"][0]
+                description = user_data["description"]
+                title = data["title"]
+                view_count = data["view_count"]
+                created_at = self._time_created_at(data["created_at"])
+                duration = data["duration"]
+                template_vars = {
+                    "display_name": display_name,
+                    "title": title,
+                    "view_count": view_count,
+                    "created_at": created_at,
+                    "description": description,
+                    "duration": duration,
+                    "twitch_logo": twitch_logo,
+                }
+                reply = twitch_template.render(template_vars)
+            except Exception as e:
+                self.log.error(
+                    "SpiffyTitles: Error parsing Twitch.TV JSON response: %s" % (str(e))
+                )
+        else:
+            try:
+                template_vars = {
+                    "display_name": display_name,
+                    "description": description,
+                    "view_count": view_count,
+                    "twitch_logo": twitch_logo,
+                }
+                reply = twitch_template.render(template_vars)
+            except Exception as e:
+                self.log.error(
+                    "SpiffyTitles: Error parsing Twitch.TV JSON response: %s" % (str(e))
+                )
+        return reply
 
     def _time_created_at(self, s):
         """
@@ -1251,76 +1208,79 @@ class SpiffyTitles(callbacks.Plugin):
         Handles imdb.com links, querying the OMDB API for additional info
         Typical IMDB URL: http://www.imdb.com/title/tt2467372/
         """
-        apikey = self.registryValue("imdb.omdbAPI")
-        result = None
-        response = None
         if not self.registryValue("imdb.enabled", channel=channel):
             log.debug(
                 "SpiffyTitles: IMDB handler disabled. Falling back to default handler."
             )
             return self.handler_default(url, channel)
+        apikey = self.registryValue("imdb.omdbAPI")
+        result = None
+        response = None
         # Don't care about query strings
         if "?" in url:
             url = url.split("?")[0]
         # We can only accommodate a specific format of URL here
         if "/title/" in url:
-            imdb_id = url.split("/title/")[1].rstrip("/")
-            omdb_url = "http://www.omdbapi.com/"
-            options = {"apikey": apikey, "i": imdb_id, "r": "json", "plot": "short"}
-            try:
-                request = requests.get(omdb_url, params=options, timeout=self.timeout)
-                request.raise_for_status()
-            except (
-                requests.exceptions.RequestException,
-                requests.exceptions.HTTPError,
-            ) as e:
-                log.error("SpiffyTitles OMDB Error: %s" % (str(e)))
-            try:
-                response = json.loads(request.content.decode())
-                imdb_template = Template(self.registryValue("imdb.template"))
-                if "Error" in response or response["Response"] != "True":
-                    response = None
-            except:
-                log.error(
-                    "SpiffyTitles: JSON error opening OMDB response: %s"
-                    % (request.content.decode())
-                )
+            imdb_id = url.split("/title/")[1].rstrip("/").strip()
+        if not imdb_id:
+            log.error("SpiffyTitles: Invalid IMDB URL: %s" % url)
+            return self.handler_default(url, channel)
+        omdb_url = "http://www.omdbapi.com/"
+        options = {"apikey": apikey, "i": imdb_id, "r": "json", "plot": "short"}
+        try:
+            request = requests.get(omdb_url, params=options, timeout=self.timeout)
+            request.raise_for_status()
+        except (
+            requests.exceptions.RequestException,
+            requests.exceptions.HTTPError,
+        ) as e:
+            log.error("SpiffyTitles OMDB Error: %s" % (str(e)))
+        try:
+            response = json.loads(request.content.decode())
+            imdb_template = Template(self.registryValue("imdb.template"))
+            if "Error" in response or response["Response"] != "True":
                 response = None
-            if response:
-                imdb_template = Template(self.registryValue("imdb.template"))
-                meta = None
-                tomato = None
-                for rating in response["Ratings"]:
-                    if rating["Source"] == "Rotten Tomatoes":
-                        tomato = rating["Value"]
-                    if rating["Source"] == "Metacritic":
-                        meta = "{0}%".format(rating["Value"].split("/")[0])
-                template_vars = {
-                    "title": response.get("Title"),
-                    "year": response.get("Year"),
-                    "country": response.get("Country"),
-                    "director": response.get("Director"),
-                    "plot": response.get("Plot"),
-                    "imdb_id": response.get("imdbID"),
-                    "imdb_rating": response.get("imdbRating"),
-                    "tomatoMeter": tomato,
-                    "metascore": meta,
-                    "released": response.get("Released"),
-                    "genre": response.get("Genre"),
-                    "awards": response.get("Awards"),
-                    "actors": response.get("Actors"),
-                    "rated": response.get("Rated"),
-                    "runtime": response.get("Runtime"),
-                    "writer": response.get("Writer"),
-                    "votes": response.get("imdbVotes"),
-                    "website": response.get("Website"),
-                    "language": response.get("Language"),
-                    "box_office": response.get("BoxOffice"),
-                    "production": response.get("Production"),
-                    "poster": response.get("Poster"),
-                    "imdb_logo": self.get_imdb_logo(channel),
-                }
-                result = imdb_template.render(template_vars)
+        except:
+            log.error(
+                "SpiffyTitles: JSON error opening OMDB response: %s"
+                % (request.content.decode())
+            )
+            response = None
+        if response:
+            imdb_template = Template(self.registryValue("imdb.template"))
+            meta = None
+            tomato = None
+            for rating in response["Ratings"]:
+                if rating["Source"] == "Rotten Tomatoes":
+                    tomato = rating["Value"]
+                if rating["Source"] == "Metacritic":
+                    meta = "{0}%".format(rating["Value"].split("/")[0])
+            template_vars = {
+                "title": response.get("Title"),
+                "year": response.get("Year"),
+                "country": response.get("Country"),
+                "director": response.get("Director"),
+                "plot": response.get("Plot"),
+                "imdb_id": response.get("imdbID"),
+                "imdb_rating": response.get("imdbRating"),
+                "tomatoMeter": tomato,
+                "metascore": meta,
+                "released": response.get("Released"),
+                "genre": response.get("Genre"),
+                "awards": response.get("Awards"),
+                "actors": response.get("Actors"),
+                "rated": response.get("Rated"),
+                "runtime": response.get("Runtime"),
+                "writer": response.get("Writer"),
+                "votes": response.get("imdbVotes"),
+                "website": response.get("Website"),
+                "language": response.get("Language"),
+                "box_office": response.get("BoxOffice"),
+                "production": response.get("Production"),
+                "poster": response.get("Poster"),
+                "imdb_logo": self.get_imdb_logo(channel),
+            }
+            result = imdb_template.render(template_vars)
         if result:
             return result
         else:
@@ -1379,27 +1339,25 @@ class SpiffyTitles(callbacks.Plugin):
         api_url = "https://%s/w/api.php" % (info.netloc)
         extract = ""
         self.log.debug("SpiffyTitles: requesting %s" % (api_url))
-        request = requests.get(api_url, params=api_params, timeout=self.timeout)
-        ok = request.status_code == requests.codes.ok
-        if ok:
-            response = json.loads(request.content.decode())
-            if response:
-                try:
-                    extract = list(response["query"]["pages"].values())[0]["extract"]
-                except KeyError as e:
-                    self.log.error(
-                        "SpiffyTitles: KeyError. Wikipedia API JSON response: %s"
-                        % (str(e))
-                    )
-            else:
+        try:
+            request = requests.get(api_url, params=api_params, timeout=self.timeout)
+            request.raise_for_status()
+        except (
+            requests.exceptions.RequestException,
+            requests.exceptions.HTTPError,
+        ) as e:
+            log.error("SpiffyTitles: Wikipedia Error: {0}".format(e))
+            return self.handler_default(url, channel)
+        response = json.loads(request.content.decode())
+        if response:
+            try:
+                extract = list(response["query"]["pages"].values())[0]["extract"]
+            except KeyError as e:
                 self.log.error(
-                    "SpiffyTitles: Error parsing Wikipedia API JSON response"
+                    "SpiffyTitles: KeyError. Wikipedia API JSON response: %s" % (str(e))
                 )
         else:
-            self.log.error(
-                "SpiffyTitles: Wikipedia API HTTP %s: %s"
-                % (request.status_code, request.content.decode()[:200])
-            )
+            self.log.error("SpiffyTitles: Error parsing Wikipedia API JSON response")
         if extract:
             if self.registryValue("wikipedia.removeParentheses"):
                 extract = re.sub(r" ?\([^)]*\)", "", extract)
@@ -1456,35 +1414,33 @@ class SpiffyTitles(callbacks.Plugin):
             self.log.debug("SpiffyTitles: no title found.")
             return self.handler_default(url, channel)
         self.log.debug("SpiffyTitles: requesting %s" % (data_url))
-        request = requests.get(data_url, timeout=self.timeout)
-        ok = request.status_code == requests.codes.ok
+        try:
+            request = requests.get(data_url, timeout=self.timeout)
+            request.raise_for_status()
+        except (
+            requests.exceptions.RequestException,
+            requests.exceptions.HTTPError,
+        ) as e:
+            log.error("SpiffyTitles: Reddit Error: {0}".format(e))
+            return self.handler_default(url, channel)
         data = {}
         extract = ""
-        if ok:
-            response = json.loads(request.content.decode())
-            if response:
-                try:
-                    if link_type == "thread":
-                        data = response[0]["data"]["children"][0]["data"]
-                    if link_type == "comment":
-                        data = response[1]["data"]["children"][0]["data"]
-                        data["title"] = response[0]["data"]["children"][0]["data"][
-                            "title"
-                        ]
-                    if link_type == "user":
-                        data = response["data"]
-                except KeyError as e:
-                    self.log.error(
-                        "SpiffyTitles: KeyError parsing Reddit JSON response: %s"
-                        % (str(e))
-                    )
-            else:
-                self.log.error("SpiffyTitles: Error parsing Reddit JSON response")
+        response = json.loads(request.content.decode())
+        if response:
+            try:
+                if link_type == "thread":
+                    data = response[0]["data"]["children"][0]["data"]
+                if link_type == "comment":
+                    data = response[1]["data"]["children"][0]["data"]
+                    data["title"] = response[0]["data"]["children"][0]["data"]["title"]
+                if link_type == "user":
+                    data = response["data"]
+            except KeyError as e:
+                self.log.error(
+                    "SpiffyTitles: KeyError parsing Reddit JSON response: %s" % (str(e))
+                )
         else:
-            self.log.error(
-                "SpiffyTitles: Reddit HTTP %s: %s"
-                % (request.status_code, request.content.decode()[:200])
-            )
+            self.log.error("SpiffyTitles: Error parsing Reddit JSON response")
         if data:
             today = datetime.datetime.now().date()
             created = datetime.datetime.fromtimestamp(data["created_utc"]).date()
@@ -1575,60 +1531,52 @@ class SpiffyTitles(callbacks.Plugin):
         imgur provides the following information about albums:
         https://api.imgur.com/models/album
         """
-        if self.registryValue("imgur.enabled", channel=channel):
-            if info.path.startswith("/a/"):
-                album_id = info.path.split("/a/")[1]
-            elif info.path.startswith("/gallery/"):
-                album_id = info.path.split("/gallery/")[1]
-            """ If there is a query string appended, remove it """
-            if "?" in album_id:
-                album_id = album_id.split("?")[0]
-            client_id = self.registryValue("imgur.clientID")
-            if client_id and self.is_valid_imgur_id(album_id):
-                log.debug("SpiffyTitles: found imgur album id %s" % (album_id))
-                try:
-                    headers = {"Authorization": "Client-ID {0}".format(client_id)}
-                    api_url = "https://api.imgur.com/3/album/{0}".format(album_id)
-                    request = requests.get(
-                        api_url, headers=headers, timeout=self.timeout
-                    )
-                    request.raise_for_status()
-                    ok = request.status_code == requests.codes.ok
-                    album = None
-                    if ok:
-                        try:
-                            album = json.loads(request.content.decode())
-                            album = album.get("data")
-                        except:
-                            log.error("SpiffyTitles: Error reading imgur JSON response")
-                            album = None
-                    if album:
-                        album_template = self.registryValue(
-                            "imgur.albumTemplate", channel=channel
-                        )
-                        imgur_album_template = Template(album_template)
-                        compiled_template = imgur_album_template.render(
-                            {
-                                "title": album.get("title"),
-                                "section": album.get("section"),
-                                "view_count": "{:,}".format(album["views"]),
-                                "image_count": "{:,}".format(album["images_count"]),
-                                "nsfw": album.get("nsfw"),
-                            }
-                        )
-                        return compiled_template
-                    else:
-                        log.error(
-                            "SpiffyTitles: imgur album API returned unexpected results!"
-                        )
-                except (
-                    requests.exceptions.RequestException,
-                    requests.exceptions.HTTPError,
-                ) as e:
-                    log.error("SpiffyTitles: imgur error: %s" % (e))
-            else:
-                log.debug("SpiffyTitles: unable to determine album id for %s" % (url))
+        if not self.registryValue("imgur.enabled", channel=channel):
+            return self.handler_default(url, channel)
+        client_id = self.registryValue("imgur.clientID")
+        if not client_id:
+            log.error("SpiffyTitles: imgur client ID not set")
+            return self.handler_default(url, channel)
+        if info.path.startswith("/a/"):
+            album_id = info.path.split("/a/")[1]
+        elif info.path.startswith("/gallery/"):
+            album_id = info.path.split("/gallery/")[1]
+        """ If there is a query string appended, remove it """
+        if "?" in album_id:
+            album_id = album_id.split("?")[0]
+        if not self.is_valid_imgur_id(album_id):
+            log.error("SpiffyTitles: Invalid imgur ID")
+            return self.handler_default(url, channel)
+        log.debug("SpiffyTitles: found imgur album id %s" % (album_id))
+        headers = {"Authorization": "Client-ID {0}".format(client_id)}
+        api_url = "https://api.imgur.com/3/album/{0}".format(album_id)
+        try:
+            request = requests.get(api_url, headers=headers, timeout=self.timeout)
+            request.raise_for_status()
+        except (
+            requests.exceptions.RequestException,
+            requests.exceptions.HTTPError,
+        ) as e:
+            log.error("SpiffyTitles: Imgur Error: {0}".format(e))
+            return self.handler_default(url, channel)
+        album = None
+        album = json.loads(request.content.decode())
+        album = album.get("data")
+        if album:
+            album_template = self.registryValue("imgur.albumTemplate", channel=channel)
+            imgur_album_template = Template(album_template)
+            compiled_template = imgur_album_template.render(
+                {
+                    "title": album.get("title"),
+                    "section": album.get("section"),
+                    "view_count": "{:,}".format(album["views"]),
+                    "image_count": "{:,}".format(album["images_count"]),
+                    "nsfw": album.get("nsfw"),
+                }
+            )
+            return compiled_template
         else:
+            log.error("SpiffyTitles: imgur album API returned unexpected results!")
             return self.handler_default(url, channel)
 
     def handler_imgur_image(self, url, info, channel):
@@ -1637,66 +1585,65 @@ class SpiffyTitles(callbacks.Plugin):
         Used for both direct images and imgur.com/some_image_id_here type links, as
         they're both single images.
         """
+        if not self.registryValue("imgur.enabled", channel=channel):
+            return self.handler_default(url, channel)
+        client_id = self.registryValue("imgur.clientID")
+        if not client_id:
+            log.error("SpiffyTitles: imgur client ID not set")
+            return self.handler_default(url, channel)
         title = None
-        if self.registryValue("imgur.enabled", channel=channel):
-            """
-            If there is a period in the path, it's a direct link to an image.
-            If not, then it's an imgur.com/some_image_id_here type link
-            """
-            if "." in info.path:
-                path = info.path.lstrip("/")
-                image_id = path.split(".")[0]
-            else:
-                image_id = info.path.lstrip("/")
-            client_id = self.registryValue("imgur.clientID")
-            if client_id and self.is_valid_imgur_id(image_id):
-                log.debug("SpiffyTitles: found image id %s" % (image_id))
-                try:
-                    headers = {"Authorization": "Client-ID {0}".format(client_id)}
-                    api_url = "https://api.imgur.com/3/image/{0}".format(image_id)
-                    request = requests.get(
-                        api_url, headers=headers, timeout=self.timeout
-                    )
-                    request.raise_for_status()
-                    ok = request.status_code == requests.codes.ok
-                    image = None
-                    if ok:
-                        try:
-                            image = json.loads(request.content.decode())
-                            image = image.get("data")
-                        except:
-                            log.error("SpiffyTitles: Error reading imgur JSON response")
-                            image = None
-                    if image:
-                        channel_template = self.registryValue(
-                            "imgur.imageTemplate", channel=channel
-                        )
-                        imgur_template = Template(channel_template)
-                        readable_file_size = self.get_readable_file_size(image["size"])
-                        compiled_template = imgur_template.render(
-                            {
-                                "title": image.get("title"),
-                                "type": image.get("type"),
-                                "nsfw": image.get("nsfw"),
-                                "width": image.get("width"),
-                                "height": image.get("height"),
-                                "view_count": "{:,}".format(image["views"]),
-                                "file_size": readable_file_size,
-                                "section": image.get("section"),
-                            }
-                        )
-                        title = compiled_template
-                    else:
-                        log.error(
-                            "SpiffyTitles: imgur API returned unexpected results!"
-                        )
-                except (
-                    requests.exceptions.RequestException,
-                    requests.exceptions.HTTPError,
-                ) as e:
-                    log.error("SpiffyTitles: imgur error: %s" % (e))
-            else:
-                log.error("SpiffyTitles: error retrieving image id for %s" % (url))
+        """
+        If there is a period in the path, it's a direct link to an image.
+        If not, then it's an imgur.com/some_image_id_here type link
+        """
+        if "." in info.path:
+            path = info.path.lstrip("/")
+            image_id = path.split(".")[0]
+        else:
+            image_id = info.path.lstrip("/")
+        if not self.is_valid_imgur_id(image_id):
+            log.error("SpiffyTitles: Invalid imgur image ID")
+            return self.handler_default(url, channel)
+        log.debug("SpiffyTitles: found image id %s" % (image_id))
+        headers = {"Authorization": "Client-ID {0}".format(client_id)}
+        api_url = "https://api.imgur.com/3/image/{0}".format(image_id)
+        try:
+            request = requests.get(api_url, headers=headers, timeout=self.timeout)
+            request.raise_for_status()
+        except (
+            requests.exceptions.RequestException,
+            requests.exceptions.HTTPError,
+        ) as e:
+            log.error("SpiffyTitles: Imgur Error: {0}".format(e))
+            return self.handler_default(url, channel)
+        image = None
+        try:
+            image = json.loads(request.content.decode())
+            image = image.get("data")
+        except:
+            log.error("SpiffyTitles: Error reading imgur JSON response")
+            image = None
+        if image:
+            channel_template = self.registryValue(
+                "imgur.imageTemplate", channel=channel
+            )
+            imgur_template = Template(channel_template)
+            readable_file_size = self.get_readable_file_size(image["size"])
+            compiled_template = imgur_template.render(
+                {
+                    "title": image.get("title"),
+                    "type": image.get("type"),
+                    "nsfw": image.get("nsfw"),
+                    "width": image.get("width"),
+                    "height": image.get("height"),
+                    "view_count": "{:,}".format(image["views"]),
+                    "file_size": readable_file_size,
+                    "section": image.get("section"),
+                }
+            )
+            title = compiled_template
+        else:
+            log.error("SpiffyTitles: imgur API returned unexpected results!")
         if title:
             return title
         else:
