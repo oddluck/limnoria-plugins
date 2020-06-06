@@ -1676,7 +1676,6 @@ class SpiffyTitles(callbacks.Plugin):
             log.error("SpiffyTitles: Error reading Twitter JSON response")
             return self.handler_default(url, channel)
         results = {}
-        results["name"] = response["author_name"]
         soup = BeautifulSoup(response["html"])
         results["text"] = soup.text.replace("—", " - ").strip()
         template = Template(self.registryValue("twitter.template", channel))
