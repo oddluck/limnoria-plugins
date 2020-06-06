@@ -1221,6 +1221,7 @@ class SpiffyTitles(callbacks.Plugin):
         apikey = self.registryValue("imdb.omdbAPI")
         result = None
         response = None
+        imdb_id = None
         # Don't care about query strings
         if "?" in url:
             url = url.split("?")[0]
