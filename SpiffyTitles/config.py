@@ -658,7 +658,7 @@ conf.registerGroup(SpiffyTitles, "twitter")
 
 # twitter enabler
 conf.registerChannelValue(
-    SpiffyTitles.coub,
+    SpiffyTitles.twitter,
     "enabled",
     registry.Boolean(
         True, _("""Whether to add additional information about Twitter links""")
@@ -667,7 +667,7 @@ conf.registerChannelValue(
 
 # twitter template
 conf.registerChannelValue(
-    SpiffyTitles.coub,
+    SpiffyTitles.twitter,
     "template",
     registry.String(
         "^ {{text}}",
