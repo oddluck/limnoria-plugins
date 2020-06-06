@@ -12,6 +12,7 @@ The ONLY gluten-free plugin for displaying link titles.
 
 - Configurable template so you can decide how titles are displayed and what they say
 - Additional information about [Youtube](https://youtube.com) videos
+- Additional information about [Twitter](https://twitter.com) links
 - Additional information about [imgur](https://imgur.com) links
 - Additional information about [IMDB](https://imdb.com) links
 - Additional information about [Reddit](https://reddit.com/) links
