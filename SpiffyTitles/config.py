@@ -652,3 +652,25 @@ conf.registerChannelValue(
         _("""Uses Coub API to get additional information about coub.com links"""),
     ),
 )
+
+# twitter configs
+conf.registerGroup(SpiffyTitles, "twitter")
+
+# twitter enabler
+conf.registerChannelValue(
+    SpiffyTitles.coub,
+    "enabled",
+    registry.Boolean(
+        True, _("""Whether to add additional information about Twitter links""")
+    ),
+)
+
+# twitter template
+conf.registerChannelValue(
+    SpiffyTitles.coub,
+    "template",
+    registry.String(
+        "^ {{text}}",
+        _("""Uses Twitter API to get additional information about twitter.com links"""),
+    ),
+)

@@ -78,6 +78,11 @@ class SpiffyTitles(callbacks.Plugin):
         self.add_wikipedia_handlers()
         self.add_reddit_handlers()
         self.add_twitch_handlers()
+        self.add_twitter_handlers()
+
+    def add_twitter_handlers(self):
+        self.handlers["twitter.com"] = self.handler_twitter
+        self.handlers["www.twitter.com"] = self.handler_twitter
 
     def add_dailymotion_handlers(self):
         self.handlers["www.dailymotion.com"] = self.handler_dailymotion
@@ -1644,6 +1649,38 @@ class SpiffyTitles(callbacks.Plugin):
             title = compiled_template
         else:
             log.error("SpiffyTitles: imgur API returned unexpected results!")
+        if title:
+            return title
+        else:
+            return self.handler_default(url, channel)
+
+    def handler_twitter(self, url, info, channel):
+        if not self.registryValue("twitter.enabled", channel):
+            return self.handler_default(url, channel)
+        api_url = "https://publish.twitter.com/oembed?url={0}&omit_script=True".format(
+            url
+        )
+        try:
+            request = requests.get(api_url, timeout=self.timeout)
+            request.raise_for_status()
+        except (
+            requests.exceptions.RequestException,
+            requests.exceptions.HTTPError,
+        ) as e:
+            log.error("SpiffyTitles: Twitter Error: {0}".format(e))
+            return self.handler_default(url, channel)
+        response = None
+        try:
+            response = json.loads(request.content.decode())
+        except:
+            log.error("SpiffyTitles: Error reading Twitter JSON response")
+            return self.handler_default(url, channel)
+        results = {}
+        results["name"] = response["author_name"]
+        soup = BeautifulSoup(response["html"])
+        results["text"] = soup.text.replace("—", " - ").strip()
+        template = Template(self.registryValue("twitter.template", channel))
+        title = template.render(results).strip()
         if title:
             return title
         else:
