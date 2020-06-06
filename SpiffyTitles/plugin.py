@@ -1225,8 +1225,9 @@ class SpiffyTitles(callbacks.Plugin):
         if "?" in url:
             url = url.split("?")[0]
         # We can only accommodate a specific format of URL here
-        if "/title/" in url:
-            imdb_id = url.split("/title/")[1].rstrip("/").strip()
+        match = re.match(r"https?:\/\/.*\.imdb\.com\/title\/(tt[0-9]+)\/.*", url)
+        if match:
+            imdb_id = match.group(1)
         if not imdb_id:
             log.error("SpiffyTitles: Invalid IMDB URL: %s" % url)
             return self.handler_default(url, channel)
