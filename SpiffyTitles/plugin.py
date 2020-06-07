@@ -1421,8 +1421,11 @@ class SpiffyTitles(callbacks.Plugin):
             self.log.debug("SpiffyTitles: no title found.")
             return self.handler_default(url, channel)
         self.log.debug("SpiffyTitles: requesting %s" % (data_url))
+        headers = {
+            "User-Agent": self.get_user_agent()
+        }
         try:
-            request = requests.get(data_url, timeout=self.timeout)
+            request = requests.get(data_url, headers=headers, timeout=self.timeout)
             request.raise_for_status()
         except (
             requests.exceptions.RequestException,
