@@ -289,7 +289,7 @@ class Tweety(callbacks.Plugin):
         else:  # bold otherwise.
             ret = "@{0}".format(self._bu(nick))
         if verified:
-            string = self._bold(ircutils.mircColor("✓", "white", "blue"))
+            string = self._bold(ircutils.mircColor("", "white", "blue"))
             ret += "{}".format(string)
         # show real name in tweet output?
         if not self.registryValue("hideRealName", msg.args[0]):
@@ -415,7 +415,7 @@ class Tweety(callbacks.Plugin):
 
     def trends(self, irc, msg, args, getopts, optwoeid):
         """[--exclude] [location]
-        Returns the top Twitter trends for a specific location. Use optional argument 
+        Returns the top Twitter trends for a specific location. Use optional argument
         location for trends. Defaults to worldwide and can be set via config variable.
         Use --exclude to not include #hashtags in trends data.
         Ex: Boston or --exclude London
@@ -498,7 +498,7 @@ class Tweety(callbacks.Plugin):
     trends = wrap(trends, [getopts({"exclude": ""}), optional("text")])
 
     def tsearch(self, irc, msg, args, optlist, optterm):
-        """[--num number] [--searchtype mixed|recent|popular] [--lang xx] [--new] <term>
+        """[--num number] [--searchtype mixed|recent|popular] [--lang xx] [--nort] [--new] <term>
         Searches Twitter for the <term> and returns the most recent results.
         --num is number of results.
         --searchtype being recent, popular or mixed. Popular is the default.
@@ -560,14 +560,15 @@ class Tweety(callbacks.Plugin):
                     tsearchArgs["since_id"] = self.since_id[msg.channel][
                         "{0}".format(optterm)
                     ]
+                if key == "nort":
+                    tsearchArgs["q"] += " exclude:retweets"
         # now build our API call.
         data = self.twitterApi.ApiCall("search/tweets", parameters=tsearchArgs)
         if not data:
             if not new:
                 irc.reply(
-                    "ERROR: Something went wrong trying to search Twitter. ({0})".format(
-                        data
-                    )
+                    "ERROR: Something went wrong trying to search Twitter. ({0})"
+                    .format(data)
                 )
             log.error("Tweety: ERROR trying to search Twitter: {0}".format(data))
             return
@@ -576,9 +577,8 @@ class Tweety(callbacks.Plugin):
         except:
             if not new:
                 irc.reply(
-                    "ERROR: Something went wrong trying to search Twitter. ({0})".format(
-                        data
-                    )
+                    "ERROR: Something went wrong trying to search Twitter. ({0})"
+                    .format(data)
                 )
             log.error("Tweety: ERROR trying to search Twitter: {0}".format(data))
             return
@@ -617,13 +617,14 @@ class Tweety(callbacks.Plugin):
         [
             getopts(
                 {
-                    "num": ("int"),
+                    "num": "int",
                     "searchtype": ("literal", ("popular", "mixed", "recent")),
-                    "lang": ("somethingWithoutSpaces"),
+                    "lang": "somethingWithoutSpaces",
                     "new": "",
+                    "nort": "",
                 }
             ),
-            ("text"),
+            "text",
         ],
     )
 
@@ -761,8 +762,8 @@ class Tweety(callbacks.Plugin):
                         optnick, data
                     )
                 )
-            log.error: (
-                "Tweety: ERROR looking up Twitter for '{0}': {1}".format(optnick, data)
+            log.error: "Tweety: ERROR looking up Twitter for '{0}': {1}".format(
+                optnick, data
             )
             return
         try:
@@ -774,8 +775,8 @@ class Tweety(callbacks.Plugin):
                         optnick, data
                     )
                 )
-            log.error: (
-                "Tweety: ERROR looking up Twitter for '{0}': {1}".format(optnick, data)
+            log.error: "Tweety: ERROR looking up Twitter for '{0}': {1}".format(
+                optnick, data
             )
             return
         # before anything, check for errors. errmsg is conditional.
@@ -895,10 +896,10 @@ class Tweety(callbacks.Plugin):
                     "id": "",
                     "url": "",
                     "new": "",
-                    "num": ("int"),
+                    "num": "int",
                 }
             ),
-            ("somethingWithoutSpaces"),
+            "somethingWithoutSpaces",
         ],
     )
 
