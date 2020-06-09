@@ -561,7 +561,7 @@ class Tweety(callbacks.Plugin):
                         "{0}".format(optterm)
                     ]
                 if key == "nort":
-                    tsearchArgs["q"] += " exclude:retweets"
+                    tsearchArgs["q"] += " -filter:retweets"
         # now build our API call.
         data = self.twitterApi.ApiCall("search/tweets", parameters=tsearchArgs)
         if not data:
