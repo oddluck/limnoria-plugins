@@ -62,7 +62,6 @@ class SpiffyTitles(callbacks.Plugin):
         self.link_cache = {}
         self.handlers = {}
         self.timeout = self.registryValue("timeout")
-        self.default_handler_enabled = self.registryValue("default.enabled")
         self.add_handlers()
 
     def add_handlers(self):
@@ -206,7 +205,7 @@ class SpiffyTitles(callbacks.Plugin):
                     elif not is_ignored:
                         irc.reply(title, prefixNick=False)
                 else:
-                    if self.default_handler_enabled:
+                    if self.registryValue("default.enabled", channel):
                         log.debug("SpiffyTitles: could not get a title for %s" % (url))
                     else:
                         log.debug(
@@ -219,8 +218,7 @@ class SpiffyTitles(callbacks.Plugin):
         """
         Default handler for websites
         """
-        default_handler_enabled = self.registryValue("default.enabled", channel=channel)
-        if default_handler_enabled:
+        if self.registryValue("default.enabled", channel):
             log.debug("SpiffyTitles: calling default handler for %s" % (url))
             default_template = Template(
                 self.registryValue("default.template", channel=channel)
@@ -267,7 +265,7 @@ class SpiffyTitles(callbacks.Plugin):
                     handler = self.handlers[base_domain]
                     title = handler(url, info, channel)
                 else:
-                    if self.default_handler_enabled:
+                    if self.registryValue("default.enabled", channel):
                         title = self.handler_default(url, channel)
         if title and not cached_link:
             title = self.get_formatted_title(title, channel)
