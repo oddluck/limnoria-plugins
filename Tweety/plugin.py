@@ -289,7 +289,7 @@ class Tweety(callbacks.Plugin):
         else:  # bold otherwise.
             ret = "@{0}".format(self._bu(nick))
         if verified:
-            string = self._bold(ircutils.mircColor("", "white", "blue"))
+            string = self._bold(ircutils.mircColor("✓", "white", "blue"))
             ret += "{}".format(string)
         # show real name in tweet output?
         if not self.registryValue("hideRealName", msg.args[0]):
