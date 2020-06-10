@@ -223,19 +223,15 @@ class SpiffyTitles(callbacks.Plugin):
             default_template = Template(
                 self.registryValue("default.template", channel=channel)
             )
-            (html, is_redirect) = self.get_source_by_url(url, channel)
-            if html:
-                title = self.get_title_from_html(html)
-                if not title:
-                    log.error(
-                        "SpiffyTitles: Unable to parse title from html response for %s"
-                        % (url)
-                    )
-                    title = self.registryValue("badLinkText", channel=channel)
-                title_template = default_template.render(
-                    title=title, redirect=is_redirect
+            (title, is_redirect) = self.get_source_by_url(url, channel)
+            if not title:
+                log.error(
+                    "SpiffyTitles: Unable to parse title from html response for %s"
+                    % (url)
                 )
-                return title_template
+                title = self.registryValue("badLinkText", channel=channel)
+            title_template = default_template.render(title=title, redirect=is_redirect)
+            return title_template
         else:
             log.debug(
                 "SpiffyTitles: default handler fired but doing nothing because disabled"
@@ -399,10 +395,7 @@ class SpiffyTitles(callbacks.Plugin):
                 title = soup.title.string.strip()
             except:
                 pass
-        if title:
-            return title
-        else:
-            return
+        return title
 
     def get_source_by_url(self, url, channel, retries=1):
         """
@@ -413,6 +406,7 @@ class SpiffyTitles(callbacks.Plugin):
             log.debug("SpiffyTitles: hit maximum retries for %s" % url)
             return (None, False)
         log.debug("SpiffyTitles: attempt #%s for %s" % (retries, url))
+        is_redirect = False
         try:
             headers = self.get_headers(channel)
             log.debug("SpiffyTitles: requesting %s" % (url))
@@ -424,19 +418,44 @@ class SpiffyTitles(callbacks.Plugin):
                 stream=True,
             ) as request:
                 request.raise_for_status()
-                is_redirect = False
                 if request.history:
                     # check the top two domain levels
                     link_domain = self.get_base_domain(request.history[0].url)
                     real_domain = self.get_base_domain(request.url)
                     if link_domain != real_domain:
                         is_redirect = True
-                    for redir in request.history:
-                        log.debug(
-                            "SpiffyTitles: Redirect %s from %s"
-                            % (redir.status_code, redir.url)
+                        for redir in request.history:
+                            log.debug(
+                                "SpiffyTitles: Redirect %s from %s"
+                                % (redir.status_code, redir.url)
+                            )
+                        log.debug("SpiffyTitles: Final url %s" % (request.url))
+                        info = urlparse(request.url)
+                        domain = info.netloc
+                        is_ignored = self.is_ignored_domain(domain, channel)
+                        if is_ignored:
+                            log.debug(
+                                "SpiffyTitles: URL ignored due to domain blacklist"
+                                " match: %s"
+                                % url
+                            )
+                            return
+                        whitelist_pattern = self.registryValue(
+                            "whitelistDomainPattern", channel=channel
                         )
-                    log.debug("SpiffyTitles: Final url %s" % (request.url))
+                        is_whitelisted_domain = self.is_whitelisted_domain(
+                            domain, channel
+                        )
+                        if whitelist_pattern and not is_whitelisted_domain:
+                            log.debug(
+                                "SpiffyTitles: URL ignored due to domain whitelist"
+                                " mismatch: %s"
+                                % url
+                            )
+                            return
+                        text = self.get_title_by_url(request.url, channel)
+                        text = text.lstrip("\x02").lstrip("^").strip()
+                        return (text, is_redirect)
                 # Check the content type
                 content_type = request.headers.get("content-type").split(";")[0].strip()
                 acceptable_types = self.registryValue("default.mimeTypes")
@@ -444,7 +463,7 @@ class SpiffyTitles(callbacks.Plugin):
                 if content_type in acceptable_types:
                     text = request.content
                     if text:
-                        return (text, is_redirect)
+                        return (self.get_title_from_html(text), is_redirect)
                     else:
                         log.debug("SpiffyTitles: empty content from %s" % (url))
                 else:
@@ -460,10 +479,6 @@ class SpiffyTitles(callbacks.Plugin):
                     )
                     text = Template(file_template).render(
                         {"type": content_type, "size": size}
-                    )
-                    text = (
-                        "<html><head><title>{0}</title>"
-                        "</head><body></body></html>".format(text)
                     )
                     return (text, is_redirect)
         except requests.exceptions.MissingSchema as e:
@@ -483,16 +498,10 @@ class SpiffyTitles(callbacks.Plugin):
         except requests.exceptions.HTTPError as e:
             log.error("SpiffyTitles HTTPError: %s" % (str(e)))
             text = self.registryValue("badLinkText", channel=channel)
-            text = "<html><head><title>{0}</title></head><body></body></html>".format(
-                text
-            )
             return (text, is_redirect)
         except requests.exceptions.InvalidURL as e:
             log.error("SpiffyTitles InvalidURL: %s" % (str(e)))
             text = self.registryValue("badLinkText", channel=channel)
-            text = "<html><head><title>{0}</title></head><body></body></html>".format(
-                text
-            )
             return (text, is_redirect)
         return (None, False)
 
@@ -1419,9 +1428,7 @@ class SpiffyTitles(callbacks.Plugin):
             self.log.debug("SpiffyTitles: no title found.")
             return self.handler_default(url, channel)
         self.log.debug("SpiffyTitles: requesting %s" % (data_url))
-        headers = {
-            "User-Agent": self.get_user_agent()
-        }
+        headers = {"User-Agent": self.get_user_agent()}
         try:
             request = requests.get(data_url, headers=headers, timeout=self.timeout)
             request.raise_for_status()
