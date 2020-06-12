@@ -304,7 +304,7 @@ titles will be shown in all channels. Default value: `""`
 
 `badLinkText` - The text to return when unable to retrieve a title from a URL. Default value: `Error retrieving title. Check the log for more details.`
 
-`urlRegularExpression` - A regular expression used to match URLs. You shouldn't need to change this. Default value: `http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+`
+`urlRegularExpression` - A regular expression used to match URLs. You shouldn't need to change this. Default value: `http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+~]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+`
 
 `ignoreActionLinks` (Boolean) - By default SpiffyTitles will ignore links that appear in an action, like /me.
 
