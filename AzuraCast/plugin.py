@@ -27,7 +27,7 @@ class AzuraCast(callbacks.Plugin):
         self.__parent.__init__(irc)
         
         self.BASE_API = self.registryValue('AzuraAPI') + '{endpoint}'
-        self.PUB_URL = self.registryValue('PublicURL') + '{name}'
+        self.PUB_URL = self.registryValue('PublicURL') + '#{name}'
         
     def _fetchURL(self, url, headers=None):
         return requests.get(url, headers=headers).json()
