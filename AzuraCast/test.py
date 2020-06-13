@@ -9,7 +9,7 @@ from supybot.test import *
 
 
 class AzuraCastTestCase(PluginTestCase):
-    plugins = ('AzuraCast',)
+    plugins = ("AzuraCast",)
 
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
