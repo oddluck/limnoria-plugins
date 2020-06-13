@@ -46,7 +46,6 @@ class AzuraCast(callbacks.Plugin):
                 name=code) if station['station']['is_public'] else ''
             tmp_dict['listeners'] = station['listeners']
             tmp_dict['nowplaying'] = station['now_playing']
-            tmp_dict['url'] = station['station']['listen_url']
             stations[code] = tmp_dict
         return stations
     
@@ -75,7 +74,7 @@ class AzuraCast(callbacks.Plugin):
             prefix = ircutils.bold('Now Playing on {}:'.format(d['name']))
             album = ' [{}]'.format(d['nowplaying']['song']['album']) \
                 if d['nowplaying']['song']['album'] else ''
-            url = ' | {}'.format(d['url'])
+            url = ' | {}'.format(d['public_url']) if d['public_url'] else ''
             np = '{}'.format(d['nowplaying']['song']['text'])
             listeners = " | Listeners: {}".format(d['listeners']['current'])
             string = '{} {}{}{}{}'.format(prefix, np, album, listeners, url)
@@ -86,7 +85,7 @@ class AzuraCast(callbacks.Plugin):
                 prefix = ircutils.bold('Now Playing on {}:'.format(d['name']))
                 album = ' [{}]'.format(d['nowplaying']['song']['album']) \
                     if d['nowplaying']['song']['album'] else ''
-                url = ' | {}'.format(d['url'])
+                url = ' | {}'.format(d['public_url']) if d['public_url'] else ''
                 np = '{}'.format(d['nowplaying']['song']['text'])
                 listeners = " | Listeners: {}".format(d['listeners']['current'])
                 string = '{} {}{}{}{}'.format(prefix, np, album, listeners, url)
