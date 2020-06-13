@@ -408,7 +408,10 @@ class SpiffyTitles(callbacks.Plugin):
         log.debug("SpiffyTitles: attempt #%s for %s" % (retries, url))
         is_redirect = False
         try:
-            headers = self.get_headers(channel)
+            if retries > 1:
+                headers = self.get_headers(channel)
+            else:
+                headers = {}
             log.debug("SpiffyTitles: requesting %s" % (url))
             with requests.get(
                 url,
@@ -1587,6 +1590,7 @@ class SpiffyTitles(callbacks.Plugin):
                     "view_count": "{:,}".format(album["views"]),
                     "image_count": "{:,}".format(album["images_count"]),
                     "nsfw": album.get("nsfw"),
+                    "description": album.get("description"),
                 }
             )
             return compiled_template

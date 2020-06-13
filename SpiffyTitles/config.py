@@ -463,9 +463,9 @@ conf.registerChannelValue(
     "albumTemplate",
     registry.String(
         "^ {%if section %}[{{section}}] {% endif %}{% if title %}{{title}} :: {% endif"
-        " %}{{image_count}} images :: {{view_count}} views :: {%if nsfw == None %}not"
-        " sure if safe for work{% elif nsfw == True %}not safe for work!{% else %}safe"
-        " for work{% endif %}",
+        " %}{%- if description -%}{{description}} :: {% endif %}{{image_count}} images"
+        " :: {{view_count}} views :: {%if nsfw == None %}not sure if safe for work{%"
+        " elif nsfw == True %}not safe for work!{% else %}safe for work{% endif %}",
         _("""imgur album template"""),
     ),
 )
