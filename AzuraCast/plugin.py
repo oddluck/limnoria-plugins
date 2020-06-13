@@ -26,7 +26,7 @@ class AzuraCast(callbacks.Plugin):
         self.__parent = super(AzuraCast, self)
         self.__parent.__init__(irc)
         
-        self.BASE_API = self.registryValue('AzuraAPI') + '{endpoint}'
+        self.BASE_API = self.registryValue('AzuraAPI')
         self.PUB_URL = self.registryValue('PublicURL') + '#{name}'
         
     def _fetchURL(self, url, headers=None):
@@ -56,8 +56,7 @@ class AzuraCast(callbacks.Plugin):
         """
         options = dict(options)
         station = options.get('station')
-        endpoint = 'nowplaying'
-        url = self.BASE_API.format(endpoint=endpoint)
+        url = self.BASE_API + 'nowplaying'
         
         data = self._fetchURL(url)
         
@@ -77,7 +76,8 @@ class AzuraCast(callbacks.Plugin):
             url = ' | {}'.format(d['public_url']) if d['public_url'] else ''
             np = '{}'.format(d['nowplaying']['song']['text'])
             listeners = " | Listeners: {}".format(d['listeners']['current'])
-            string = '{} {}{}{}{}'.format(prefix, np, album, listeners, url)
+            listen = " | Audio player link: {}/public/{}/playlist/pls".format(self.BASE_API.replace("/api/", ""), d['id'])
+            string = '{} {}{}{}{}{}'.format(prefix, np, album, listeners, url, listen)
             output.append(string)
         else:
             # all stations?
@@ -88,7 +88,8 @@ class AzuraCast(callbacks.Plugin):
                 url = ' | {}'.format(d['public_url']) if d['public_url'] else ''
                 np = '{}'.format(d['nowplaying']['song']['text'])
                 listeners = " | Listeners: {}".format(d['listeners']['current'])
-                string = '{} {}{}{}{}'.format(prefix, np, album, listeners, url)
+                listen = " | Audio player link: {}/public/{}/playlist/pls".format(self.BASE_API.replace("/api/", ""), d['id'])
+                string = '{} {}{}{}{}{}'.format(prefix, np, album, listeners, url, listen)
                 output.append(string)
         
         for string in output:
@@ -103,8 +104,7 @@ class AzuraCast(callbacks.Plugin):
         """
         options = dict(options)
         station = options.get('station')
-        endpoint = 'nowplaying'
-        url = self.BASE_API.format(endpoint=endpoint)
+        url = self.BASE_API + 'nowplaying'
         
         data = self._fetchURL(url)
         
