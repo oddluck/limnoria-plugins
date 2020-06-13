@@ -408,10 +408,7 @@ class SpiffyTitles(callbacks.Plugin):
         log.debug("SpiffyTitles: attempt #%s for %s" % (retries, url))
         is_redirect = False
         try:
-            if retries > 1:
-                headers = self.get_headers(channel)
-            else:
-                headers = {}
+            headers = self.get_headers(channel)
             log.debug("SpiffyTitles: requesting %s" % (url))
             with requests.get(
                 url,
