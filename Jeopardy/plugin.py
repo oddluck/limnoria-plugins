@@ -645,7 +645,7 @@ class Jeopardy(callbacks.Plugin):
                         schedule.addEvent(event, eventTime, "event_%s" % self.channel)
             else:
                 reply = self.hint_template.render(
-                    hint=self.currentHint, time=None, points=points
+                    hint=self.currentHint, time=None, points=points, hintNum = self.hints
                 )
             self.reply(reply)
             self.hints += 1
