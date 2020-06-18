@@ -427,6 +427,8 @@ class Jeopardy(callbacks.Plugin):
                 return
             elif self.unanswered > inactiveShutoff and inactiveShutoff > 0:
                 self.reply("Seems like no one's playing any more. Jeopardy! stopped.")
+                self.correct = True
+                self.active = False
                 self.stop()
                 return
             elif len(self.questions) == 0:
