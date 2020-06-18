@@ -633,7 +633,7 @@ class Jeopardy(callbacks.Plugin):
                     len(str(self.timeout))
                 )
                 reply = self.hint_template.render(
-                    hint=self.currentHint, time=timeLeft, points=points
+                    hint=self.currentHint, time=timeLeft, points=points, hintNum = self.hints
                 )
                 if self.showHints or self.showTime:
 
