@@ -248,6 +248,8 @@ class SpiffyTitles(callbacks.Plugin):
         Check if we have this link cached according to the cache lifetime. If so, serve
         link from the cache instead of calling handlers.
         """
+        if self.registryValue("cacheGlobal"):
+            channel = "global"
         cached_link = self.get_link_from_cache(url, channel)
         if cached_link:
             title = cached_link["title"]

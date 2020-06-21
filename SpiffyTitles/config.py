@@ -129,6 +129,13 @@ conf.registerGlobalValue(
     registry.Integer(600, _("""Link cache lifetime in seconds""")),
 )
 
+# Link cache lifetime
+conf.registerGlobalValue(
+    SpiffyTitles,
+    "cacheGlobal",
+    registry.Boolean(False, _("""Keep link title cache globally""")),
+)
+
 conf.registerChannelValue(
     SpiffyTitles,
     "ignoredMessagePattern",
