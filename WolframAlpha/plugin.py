@@ -30,6 +30,7 @@
 
 # my libs
 from collections import defaultdict
+
 try:
     import xml.etree.cElementTree as ElementTree
 except ImportError:
@@ -41,17 +42,21 @@ import supybot.plugins as plugins
 import supybot.ircutils as ircutils
 import supybot.callbacks as callbacks
 import re
+
 try:
     from supybot.i18n import PluginInternationalization
-    _ = PluginInternationalization('WolframAlpha')
+
+    _ = PluginInternationalization("WolframAlpha")
 except:
     # Placeholder that allows to run the plugin on a bot
     # without the i18n module
-    _ = lambda x:x
+    _ = lambda x: x
+
 
 class WolframAlpha(callbacks.Plugin):
     """Add the help for "@plugin help WolframAlpha" here
     This should describe *how* to use this plugin."""
+
     threaded = True
 
     ######################
@@ -59,7 +64,7 @@ class WolframAlpha(callbacks.Plugin):
     ######################
 
     def _red(self, s):
-        return ircutils.mircColor(s, 'red')
+        return ircutils.mircColor(s, "red")
 
     def _bold(self, s):
         return ircutils.bold(s)
@@ -82,40 +87,47 @@ class WolframAlpha(callbacks.Plugin):
         """
 
         # check for API key before we can do anything.
-        apiKey = self.registryValue('apiKey')
+        apiKey = self.registryValue("apiKey")
         if not apiKey or apiKey == "Not set":
-            irc.reply("Wolfram Alpha API key not set. see 'config help supybot.plugins.WolframAlpha.apiKey'.")
+            irc.reply(
+                "Wolfram Alpha API key not set. see 'config help"
+                " supybot.plugins.WolframAlpha.apiKey'."
+            )
             return
         # first, url arguments, some of which getopts and config variables can manipulate.
-        urlArgs = { 'input':optinput,
-                    'appid':apiKey,
-                    'reinterpret':'false',
-                    'format':'plaintext',
-                    'units':'nonmetric' }
+        urlArgs = {
+            "input": optinput,
+            "appid": apiKey,
+            "reinterpret": "false",
+            "format": "plaintext",
+            "units": "nonmetric",
+        }
         # check for config variables to manipulate URL arguments.
-        if not self.registryValue('useImperial'):
-            urlArgs['units'] = 'metric'
-        if self.registryValue('reinterpretInput'):
-            urlArgs['reinterpret'] = 'true'
+        if not self.registryValue("useImperial"):
+            urlArgs["units"] = "metric"
+        if self.registryValue("reinterpretInput"):
+            urlArgs["reinterpret"] = "true"
         # now handle input. default input arguments.
-        args = { 'maxoutput': self.registryValue('maxOutput'),
-                 'shortest':None,
-                 'fulloutput':None }
+        args = {
+            "maxoutput": self.registryValue("maxOutput"),
+            "shortest": None,
+            "fulloutput": None,
+        }
         # handle getopts (optlist)
         if optlist:
             for (key, value) in optlist:
-                if key == 'shortest':
-                    args['shortest'] = True
-                if key == 'fulloutput':
-                    args['fulloutput'] = True
-                if key == 'num':
-                    args['maxoutput'] = value
-                if key == 'usemetric':
-                    urlArgs['units'] = 'metric'
-                if key == 'reinterpret':
-                    urlArgs['reinterpret'] = 'true'
+                if key == "shortest":
+                    args["shortest"] = True
+                if key == "fulloutput":
+                    args["fulloutput"] = True
+                if key == "num":
+                    args["maxoutput"] = value
+                if key == "usemetric":
+                    urlArgs["units"] = "metric"
+                if key == "reinterpret":
+                    urlArgs["reinterpret"] = "true"
         # build url and query.
-        url = 'http://api.wolframalpha.com/v2/query?' + utils.web.urlencode(urlArgs)
+        url = "http://api.wolframalpha.com/v2/query?" + utils.web.urlencode(urlArgs)
         try:
             page = utils.web.getUrl(url)
         except Exception as e:
@@ -129,33 +141,47 @@ class WolframAlpha(callbacks.Plugin):
             self.log.error("ERROR: Broke processing XML: {0}".format(e))
             irc.reply("ERROR: Something broke processing XML from WolframAlpha's API.")
             return
-        #document = ElementTree.fromstring(page) #.decode('utf-8'))
+        # document = ElementTree.fromstring(page) #.decode('utf-8'))
         # check if we have an error. reports to irc but more detailed in the logs.
-        if document.attrib['success'] == 'false' and document.attrib['error'] == 'true':
+        if document.attrib["success"] == "false" and document.attrib["error"] == "true":
             errormsgs = []
-            for error in document.findall('.//error'):
-                errorcode = error.find('code').text
-                errormsg = error.find('msg').text
+            for error in document.findall(".//error"):
+                errorcode = error.find("code").text
+                errormsg = error.find("msg").text
                 errormsgs.append("{0} - {1}".format(errorcode, errormsg))
             # log and report to irc if we have these.
-            self.log.debug("ERROR processing request for: {0} message: {1}".format(optinput, errormsgs))
-            irc.reply("ERROR: Something went wrong processing request for: {0} ERROR: {1}".format(optinput, errormsgs))
+            self.log.debug(
+                "ERROR processing request for: {0} message: {1}".format(
+                    optinput, errormsgs
+                )
+            )
+            irc.reply(
+                "ERROR: Something went wrong processing request for: {0} ERROR: {1}"
+                .format(optinput, errormsgs)
+            )
             return
         # check if we have no success but also no error. (Did you mean?)
-        elif document.attrib['success'] == 'false' and document.attrib['error'] == 'false':
+        elif (
+            document.attrib["success"] == "false"
+            and document.attrib["error"] == "false"
+        ):
             errormsgs = []  # list to contain whatever is there.
-            for error in document.findall('.//futuretopic'):
-                errormsg = error.attrib['msg']
+            for error in document.findall(".//futuretopic"):
+                errormsg = error.attrib["msg"]
                 errormsgs.append("FUTURE TOPIC: {0}".format(errormsg))
-            for error in document.findall('.//didyoumeans'):
-                errormsg = error.find('didyoumean').text
+            for error in document.findall(".//didyoumeans"):
+                errormsg = error.find("didyoumean").text
                 errormsgs.append("Did you mean? {0}".format(errormsg))
-            for error in document.findall('.//tips'):
-                errormsg = error.find('tip').attrib['text'].text
+            for error in document.findall(".//tips"):
+                errormsg = error.find("tip").attrib["text"].text
                 errormsgs.append("TIPS: {0}".format(errormsg))
             # now output the messages to irc and log.
-            self.log.debug("ERROR with input: {0} API returned: {1}".format(optinput, errormsgs))
-            irc.reply("ERROR with input: {0} API returned: {1}".format(optinput, errormsgs))
+            self.log.debug(
+                "ERROR with input: {0} API returned: {1}".format(optinput, errormsgs)
+            )
+            irc.reply(
+                "ERROR with input: {0} API returned: {1}".format(optinput, errormsgs)
+            )
             return
         else:  # this means we have success and no error messages.
             # each pod has a title, position and a number of subtexts. output contains the plaintext.
@@ -163,53 +189,109 @@ class WolframAlpha(callbacks.Plugin):
             output = defaultdict(list)
             outputlist = {}
             # each answer has a different amount of pods.
-            for pod in document.findall('.//pod'):
-                title = pod.attrib['title']  # title of it.
-                position = int(pod.attrib['position'])  # store pods int when we sort.
+            for pod in document.findall(".//pod"):
+                title = pod.attrib["title"]  # title of it.
+                position = int(pod.attrib["position"])  # store pods int when we sort.
                 outputlist[position] = title  # pu
-                for plaintext in pod.findall('.//plaintext'):
+                for plaintext in pod.findall(".//plaintext"):
                     if plaintext.text:
-                        output[title].append(plaintext.text.replace('\n',' '))
+                        output[title].append(plaintext.text.replace("\n", " "))
         # last sanity check...
         if len(output) == 0:
             irc.reply("ERROR: I received no output looking up: {0}".format(optinput))
             return
         # done processing the XML so lets work on the output.
         # the way we output is based on args above, controlled by getopts.
-        if args['shortest']:  # just show the question and answer.
+        if args["shortest"]:  # just show the question and answer.
             # outputlist has pod titles, ordered by importance, not every input has a clear Input/Result (question/answer).
             outputlist = [outputlist[item] for item in sorted(outputlist.keys())]
             question = output.get(outputlist[0])  # get first (question).
             answer = output.get(outputlist[1])  # get second (answer).
             # output time. display with color or not?
-            if self.registryValue('disableANSI'):
-                irc.reply(re.sub("\s+", " ", "{0} :: {1}".format("".join([i for i in question]), " | ".join([i for i in answer]))).replace(": | ", ": "))
+            if self.registryValue("disableANSI"):
+                irc.reply(
+                    re.sub(
+                        "\s+",
+                        " ",
+                        "{0} :: {1}".format(
+                            "".join([i for i in question]),
+                            " | ".join([i for i in answer]),
+                        ),
+                    ).replace(": | ", ": ")
+                )
             else:  # with ansi.
-                irc.reply(re.sub("\s+", " ", "{0} :: {1}".format(self._bold("".join([i for i in question])), " | ".join([i for i in answer]))).replace(": | ", ": "))
-        elif args['fulloutput']: # show everything. no limits.
+                irc.reply(
+                    re.sub(
+                        "\s+",
+                        " ",
+                        "{0} :: {1}".format(
+                            self._bold("".join([i for i in question])),
+                            " | ".join([i for i in answer]),
+                        ),
+                    ).replace(": | ", ": ")
+                )
+        elif args["fulloutput"]:  # show everything. no limits.
             # grab all values, sorted via the position number. output one per line.
             for (k, v) in sorted(outputlist.items()):
                 itemout = output.get(v)  # items out will be a list of items.
                 # now decide to output with ANSI or not.
-                if self.registryValue('disableANSI'):
-                    irc.reply(re.sub("\s+", " ", "{0} :: {1}".format(v, " | ".join(itemout))).replace(": | ", ": "))
+                if self.registryValue("disableANSI"):
+                    irc.reply(
+                        re.sub(
+                            "\s+", " ", "{0} :: {1}".format(v, " | ".join(itemout))
+                        ).replace(": | ", ": ")
+                    )
                 else:  # with ansi.
-                    irc.reply(re.sub("\s+", " ", "{0} :: {1}".format(self._red(v), " | ".join(itemout))).replace(": | ", ": "))
+                    irc.reply(
+                        re.sub(
+                            "\s+",
+                            " ",
+                            "{0} :: {1}".format(self._red(v), " | ".join(itemout)),
+                        ).replace(": | ", ": ")
+                    )
         else:  # regular output, dictated by --lines or maxoutput.
             for q, k in enumerate(sorted(outputlist.keys())):
-                if q < args['maxoutput']:  # if less than max.
-                    itemout = output.get(outputlist[k])  # have the key, get the value, use for output.
+                if q < args["maxoutput"]:  # if less than max.
+                    itemout = output.get(
+                        outputlist[k]
+                    )  # have the key, get the value, use for output.
                     if itemout:
-                        if self.registryValue('disableANSI'):  # display w/o formatting.
-                            irc.reply(re.sub("\s+", " ", "{0} :: {1}".format(outputlist[k], " | ".join(itemout))).replace(": | ", ": "))
+                        if self.registryValue("disableANSI"):  # display w/o formatting.
+                            irc.reply(
+                                re.sub(
+                                    "\s+",
+                                    " ",
+                                    "{0} :: {1}".format(
+                                        outputlist[k], " | ".join(itemout)
+                                    ),
+                                ).replace(": | ", ": ")
+                            )
                         else:  # display w/formatting.
-                            irc.reply(re.sub("\s+", " ", "{0} :: {1}".format(self._red(outputlist[k]), " | ".join(itemout))).replace(": | ", ": "))
+                            irc.reply(
+                                re.sub(
+                                    "\s+",
+                                    " ",
+                                    "{0} :: {1}".format(
+                                        self._red(outputlist[k]), " | ".join(itemout)
+                                    ),
+                                ).replace(": | ", ": ")
+                            )
 
-    wolframalpha = wrap(wolframalpha, [getopts({'num':('int'),
-                                                'reinterpret':'',
-                                                'usemetric':'',
-                                                'shortest':'',
-                                                'fulloutput':''}), ('text')])
+    wolframalpha = wrap(
+        wolframalpha,
+        [
+            getopts(
+                {
+                    "num": "int",
+                    "reinterpret": "",
+                    "usemetric": "",
+                    "shortest": "",
+                    "fulloutput": "",
+                }
+            ),
+            "text",
+        ],
+    )
 
     def btc(self, irc, msg, args, amount, currency):
         """<amount> <currency>
@@ -217,17 +299,22 @@ class WolframAlpha(callbacks.Plugin):
         Convert bitcoin to another currency"""
 
         # check for API key before we can do anything.
-        apiKey = self.registryValue('apiKey')
+        apiKey = self.registryValue("apiKey")
         if not apiKey or apiKey == "Not set":
-            irc.reply("Wolfram Alpha API key not set. see 'config help supybot.plugins.WolframAlpha.apiKey'.")
+            irc.reply(
+                "Wolfram Alpha API key not set. see 'config help"
+                " supybot.plugins.WolframAlpha.apiKey'."
+            )
             return
         # first, url arguments, some of which getopts and config variables can manipulate.
-        urlArgs = { 'input':'%d btc to %s' % (amount,currency),
-                    'appid':apiKey,
-                    'reinterpret':'false',
-                    'format':'plaintext',
-                    'units':'nonmetric' }
-        url = 'http://api.wolframalpha.com/v2/query?' + utils.web.urlencode(urlArgs)
+        urlArgs = {
+            "input": "{:.2f} btc to {}".format(amount, currency),
+            "appid": apiKey,
+            "reinterpret": "false",
+            "format": "plaintext",
+            "units": "nonmetric",
+        }
+        url = "http://api.wolframalpha.com/v2/query?" + utils.web.urlencode(urlArgs)
         print(url)
         try:
             page = utils.web.getUrl(url)
@@ -244,19 +331,20 @@ class WolframAlpha(callbacks.Plugin):
             return
 
         # each answer has a different amount of pods.
-        for pod in document.findall('.//pod'):
-            title = pod.attrib['title']  # title of it.
+        for pod in document.findall(".//pod"):
+            title = pod.attrib["title"]  # title of it.
             if title == "Result":
-                for plaintext in pod.findall('.//plaintext'):
+                for plaintext in pod.findall(".//plaintext"):
                     print((plaintext.text))
 
-                    if 'not compatible' in plaintext.text:
-                        irc.reply('Conversion from btc to %s not available' % currency)
+                    if "not compatible" in plaintext.text:
+                        irc.reply("Conversion from btc to %s not available" % currency)
                     else:
-                        converted_amount = plaintext.text.split('(')[0].strip()
-                        irc.reply('%s%d = %s' % ('\u0e3f', amount, converted_amount))
+                        converted_amount = plaintext.text.split("(")[0].strip()
+                        irc.reply("{}{:.2f} = {}".format("\u0e3f", amount, converted_amount))
 
-    btc = wrap(btc,['float', 'text'])
+    btc = wrap(btc, ["float", "text"])
+
 
 Class = WolframAlpha
 
