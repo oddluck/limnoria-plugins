@@ -66,7 +66,7 @@ conf.registerGlobalValue(
 )
 
 # URL regex
-conf.registerGlobalValue(
+conf.registerChannelValue(
     SpiffyTitles,
     "urlRegularExpression",
     registry.String(
@@ -137,7 +137,7 @@ conf.registerGlobalValue(
         False,
         _(
             """
-            Keep link cache globally. This will use default values for all link templates
+            Keep link cache globally. This will use global values for all link templates.
             """
         ),
     ),

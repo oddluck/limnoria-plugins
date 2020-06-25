@@ -35,7 +35,7 @@ import supybot.utils as utils
 import supybot.ircdb as ircdb
 import supybot.log as log
 import re, sys, random, time, json, unicodedata, datetime
-from urllib.parse import urlparse, parse_qsl
+from urllib.parse import urlparse, parse_qsl, quote
 from bs4 import BeautifulSoup
 from jinja2 import Template
 import requests
@@ -171,7 +171,7 @@ class SpiffyTitles(callbacks.Plugin):
                 % (channel)
             )
             return
-        urls = self.get_urls_from_message(message)
+        urls = self.get_urls_from_message(message, channel)
         if not urls:
             return
         for url in urls:
@@ -559,11 +559,11 @@ class SpiffyTitles(callbacks.Plugin):
                 )
         return match
 
-    def get_urls_from_message(self, input):
+    def get_urls_from_message(self, input, channel):
         """
         Find the first string that looks like a URL from the message
         """
-        url_re = self.registryValue("urlRegularExpression")
+        url_re = self.registryValue("urlRegularExpression", channel)
         matches = re.findall(url_re, input)
         return matches
 
