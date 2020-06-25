@@ -395,10 +395,6 @@ class SpiffyTitles(callbacks.Plugin):
             try:
                 title = soup.title.string.strip()
             except:
-                log.error(
-                    "SpiffyTitles: Unable to parse title from html response for %s"
-                    % (url)
-                )
                 title = self.registryValue("badLinkText", channel=channel)
         return title
 
