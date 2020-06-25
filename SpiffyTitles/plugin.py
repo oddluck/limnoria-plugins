@@ -35,7 +35,7 @@ import supybot.utils as utils
 import supybot.ircdb as ircdb
 import supybot.log as log
 import re, sys, random, time, json, unicodedata, datetime
-from urllib.parse import urlparse, parse_qsl, quote
+from urllib.parse import urlparse, parse_qsl
 from bs4 import BeautifulSoup
 from jinja2 import Template
 import requests
