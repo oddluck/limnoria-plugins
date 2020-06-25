@@ -224,14 +224,13 @@ class SpiffyTitles(callbacks.Plugin):
                 self.registryValue("default.template", channel=channel)
             )
             (title, is_redirect) = self.get_source_by_url(url, channel)
-            if not title:
-                log.error(
-                    "SpiffyTitles: Unable to parse title from html response for %s"
-                    % (url)
+            if title:
+                title_template = default_template.render(
+                    title=title, redirect=is_redirect
                 )
-                title = self.registryValue("badLinkText", channel=channel)
-            title_template = default_template.render(title=title, redirect=is_redirect)
-            return title_template
+                return title_template
+            else:
+                return
         else:
             log.debug(
                 "SpiffyTitles: default handler fired but doing nothing because disabled"
@@ -386,7 +385,7 @@ class SpiffyTitles(callbacks.Plugin):
             title = ircutils.bold(title).strip()
         return title
 
-    def get_title_from_html(self, html):
+    def get_title_from_html(self, html, channel):
         """
         Retrieves value of <title> tag from HTML
         """
@@ -396,7 +395,11 @@ class SpiffyTitles(callbacks.Plugin):
             try:
                 title = soup.title.string.strip()
             except:
-                pass
+                log.error(
+                    "SpiffyTitles: Unable to parse title from html response for %s"
+                    % (url)
+                )
+                title = self.registryValue("badLinkText", channel=channel)
         return title
 
     def get_source_by_url(self, url, channel, retries=1):
@@ -465,7 +468,7 @@ class SpiffyTitles(callbacks.Plugin):
                 if content_type in acceptable_types:
                     text = request.content
                     if text:
-                        return (self.get_title_from_html(text), is_redirect)
+                        return (self.get_title_from_html(text, channel), is_redirect)
                     else:
                         log.debug("SpiffyTitles: empty content from %s" % (url))
                 else:

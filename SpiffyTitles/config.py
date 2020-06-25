@@ -133,7 +133,14 @@ conf.registerGlobalValue(
 conf.registerGlobalValue(
     SpiffyTitles,
     "cacheGlobal",
-    registry.Boolean(False, _("""Keep link title cache globally""")),
+    registry.Boolean(
+        False,
+        _(
+            """
+            Keep link cache globally. This will use default values for all link templates
+            """
+        ),
+    ),
 )
 
 conf.registerChannelValue(
