@@ -70,8 +70,7 @@ conf.registerChannelValue(
     SpiffyTitles,
     "urlRegularExpression",
     registry.String(
-        r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+~]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+",
-        _("""This regular expression will be used to match URLs"""),
+        r"", _("""If set, this regular expression will be used to match URLs"""),
     ),
 )
 
