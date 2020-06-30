@@ -31,15 +31,17 @@
 import supybot.conf as conf
 import supybot.registry as registry
 import os
+
 try:
     from supybot.i18n import PluginInternationalization, internationalizeDocstring
 except:
-    PluginInternationalization, internationalizeDocstring = lambda x:x, lambda x:x
+    PluginInternationalization, internationalizeDocstring = lambda x: x, lambda x: x
 
-#The plugin name will be based on the plugin's folder.
-PluginName=os.path.dirname( __file__ ).split(os.sep)[-1]
+# The plugin name will be based on the plugin's folder.
+PluginName = os.path.dirname(__file__).split(os.sep)[-1]
 
 _ = PluginInternationalization(PluginName)
+
 
 def configure(advanced):
     # This will be called by supybot to configure this module.  advanced is
@@ -47,23 +49,52 @@ def configure(advanced):
     # user or not.  You should effect your configuration by manipulating the
     # registry as appropriate.
     from supybot.questions import expect, anything, something, yn
+
     conf.registerPlugin(PluginName, True)
 
-Trackers = conf.registerPlugin('Trackers')
 
-conf.registerGroup(Trackers, 'announce')
-conf.registerChannelValue(Trackers.announce, 'seconds',
-    registry.PositiveInteger(10, _("""Determines the amount of time in seconds the bot should
-        announce tracker statuses.""")))
+Trackers = conf.registerPlugin("Trackers")
 
-_events = {'ab':False, 'ahd':False, 'ar':False, 'btn':False, 'emp':False, 'ggn':False, 'mtv':False, 'nbl':False, 'nwcd':False, '32p':False, 'ptp':False, 'red':False}
+conf.registerGroup(Trackers, "announce")
+conf.registerChannelValue(
+    Trackers.announce,
+    "seconds",
+    registry.PositiveInteger(
+        10,
+        _(
+            """Determines the amount of time in seconds the bot should
+        announce tracker statuses."""
+        ),
+    ),
+)
+
+_events = {
+    "ab": False,
+    "ahd": False,
+    "ar": False,
+    "btn": False,
+    "emp": False,
+    "ggn": False,
+    "mtv": False,
+    "nbl": False,
+    "nwcd": False,
+    "32p": False,
+    "ptp": False,
+    "red": False,
+}
 for ev in _events:
-    conf.registerChannelValue(Trackers.announce, 'relay%s' % ev,
-        registry.Boolean(_events[ev], """Determines whether the bot should announce status for %s.""" % ev))
+    conf.registerChannelValue(
+        Trackers.announce,
+        "relay%s" % ev,
+        registry.Boolean(
+            _events[ev],
+            """Determines whether the bot should announce status for %s.""" % ev,
+        ),
+    )
 
 
 P = conf.registerPlugin(PluginName)
-#P.__name__ = PluginName
+# P.__name__ = PluginName
 
 # This is where your configuration variables (if any) should go.  For example:
 # conf.registerGlobalValue(PluginName, 'someConfigVariableName',

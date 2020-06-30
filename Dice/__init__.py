@@ -39,21 +39,25 @@ import supybot.world as world
 # in here if you're keeping the plugin in CVS or some similar system.
 __version__ = "2020.02.24+git"
 
-__author__ = supybot.Author('Andrey Rahmatullin', 'wRAR', 'wrar@wrar.name')
-__maintainer__ = getattr(supybot.authors, 'oddluck',
-                         supybot.Author('oddluck', 'oddluck', 'oddluck@riseup.net'))
+__author__ = supybot.Author("Andrey Rahmatullin", "wRAR", "wrar@wrar.name")
+__maintainer__ = getattr(
+    supybot.authors,
+    "oddluck",
+    supybot.Author("oddluck", "oddluck", "oddluck@riseup.net"),
+)
 
 # This is a dictionary mapping supybot.Author instances to lists of
 # contributions.
 __contributors__ = {}
 
 # This is a url where the most recent plugin package can be downloaded.
-__url__ = 'https://github.com/oddluck/limnoria-plugins/'
+__url__ = "https://github.com/oddluck/limnoria-plugins/"
 
 from . import config
 from . import plugin
 from . import deck
 from imp import reload
+
 # In case we're being reloaded.
 reload(deck)
 reload(plugin)

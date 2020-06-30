@@ -83,8 +83,9 @@ class Weed(callbacks.Plugin):
                 name = ircutils.bold(item["name"])
                 type = ircutils.bold(item["race"])
                 desc = item["desc"]
-                url2 = "http://strainapi.evanbusse.com/{0}/strains/data/flavors/{1}".format(
-                    strain_api, id
+                url2 = (
+                    "http://strainapi.evanbusse.com/{0}/strains/data/flavors/{1}"
+                    .format(strain_api, id)
                 )
                 data2 = requests.get(url2)
                 data2 = json.loads(data2.content)
@@ -101,8 +102,9 @@ class Weed(callbacks.Plugin):
                 name = ircutils.bold(item["name"])
                 type = ircutils.bold(item["race"])
                 desc = item["desc"]
-                url2 = "http://strainapi.evanbusse.com/{0}/strains/data/flavors/{1}".format(
-                    strain_api, id
+                url2 = (
+                    "http://strainapi.evanbusse.com/{0}/strains/data/flavors/{1}"
+                    .format(strain_api, id)
                 )
                 data2 = requests.get(url2)
                 data2 = json.loads(data2.content)

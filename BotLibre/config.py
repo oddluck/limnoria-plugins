@@ -29,27 +29,53 @@
 
 import supybot.conf as conf
 import supybot.registry as registry
+
 try:
     from supybot.i18n import PluginInternationalization
-    _ = PluginInternationalization('BotLibre')
+
+    _ = PluginInternationalization("BotLibre")
 except:
     _ = lambda x: x
 
+
 def configure(advanced):
     from supybot.questions import expect, anything, something, yn
-    conf.registerPlugin('BotLibre', True)
+
+    conf.registerPlugin("BotLibre", True)
     if advanced:
-        output('The BotLibre Plugin allows you to interact with Bot Libre')
+        output("The BotLibre Plugin allows you to interact with Bot Libre")
 
-BotLibre = conf.registerPlugin('BotLibre')
 
-conf.registerChannelValue(BotLibre, 'invalidCommand',
-    registry.Boolean(False, _("""Should I be invoked on Invalid Commands?""")))
-conf.registerGlobalValue(BotLibre, 'application',
-	registry.String('', _("""The BotLibre API Application String
-	(required)"""), private=True))
-conf.registerGlobalValue(BotLibre, 'instance',
-	registry.String('', _("""The BotLibre API Instance String
-	(required)"""), private=True))
+BotLibre = conf.registerPlugin("BotLibre")
+
+conf.registerChannelValue(
+    BotLibre,
+    "invalidCommand",
+    registry.Boolean(False, _("""Should I be invoked on Invalid Commands?""")),
+)
+conf.registerGlobalValue(
+    BotLibre,
+    "application",
+    registry.String(
+        "",
+        _(
+            """The BotLibre API Application String
+	(required)"""
+        ),
+        private=True,
+    ),
+)
+conf.registerGlobalValue(
+    BotLibre,
+    "instance",
+    registry.String(
+        "",
+        _(
+            """The BotLibre API Instance String
+	(required)"""
+        ),
+        private=True,
+    ),
+)
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:

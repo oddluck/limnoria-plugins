@@ -41,7 +41,8 @@ import json
 
 try:
     from supybot.i18n import PluginInternationalization
-    _ = PluginInternationalization('CFB')
+
+    _ = PluginInternationalization("CFB")
 except ImportError:
     # Placeholder that allows to run the plugin on a bot
     # without the i18n module
@@ -50,51 +51,72 @@ except ImportError:
 
 class CFB(callbacks.Plugin):
     """Fetches CFB scores"""
+
     threaded = True
 
     def __init__(self, irc):
         self.__parent = super(CFB, self)
         self.__parent.__init__(irc)
 
-        self.SCOREBOARD = ('http://site.api.espn.com/apis/site/v2/sports/'
-                           'football/college-football/scoreboard')
+        self.SCOREBOARD = (
+            "http://site.api.espn.com/apis/site/v2/sports/"
+            "football/college-football/scoreboard"
+        )
 
-        self.FUZZY_DAYS = ['yesterday', 'tonight', 'today', 'tomorrow',
-                           'sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat']
+        self.FUZZY_DAYS = [
+            "yesterday",
+            "tonight",
+            "today",
+            "tomorrow",
+            "sun",
+            "mon",
+            "tue",
+            "wed",
+            "thu",
+            "fri",
+            "sat",
+        ]
 
         self._current_week = 0
         self._cfb_byes = {}
 
-        with open("{0}/abbrv.json".format(os.path.dirname(os.path.abspath(__file__))), 'r') as json_file:
+        with open(
+            "{0}/abbrv.json".format(os.path.dirname(os.path.abspath(__file__))), "r"
+        ) as json_file:
             self.abbrv = json.load(json_file)
 
         if not self.abbrv:
             self.abbrv = requests.get(
-            'https://raw.githubusercontent.com/diagonalfish/FootballBotX2/master/abbrv.json')
+                "https://raw.githubusercontent.com/diagonalfish/FootballBotX2/master/abbrv.json"
+            )
             self.abbrv = json.loads(self.abbrv.content)
-
 
     @wrap
     def cfbbyes(self, irc, msg, args):
         """Gets teams on bye week for current week"""
 
-        url = 'https://247sports.com/Article/Schedule-of-bye-weeks-for-college-footballs-top-2018-contenders-120880121/'
-        headers = {'User-Agent': 'Mozilla/5.0 (X11; CrOS x86_64 11151.4.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.8 Safari/537.36'}
+        url = "https://247sports.com/Article/Schedule-of-bye-weeks-for-college-footballs-top-2018-contenders-120880121/"
+        headers = {
+            "User-Agent": (
+                "Mozilla/5.0 (X11; CrOS x86_64 11151.4.0) AppleWebKit/537.36 (KHTML,"
+                " like Gecko) Chrome/71.0.3578.8 Safari/537.36"
+            )
+        }
 
         if not self._cfb_byes:
             data = requests.get(url, headers=headers)
             soup = BeautifulSoup(data.content)
 
-            pattern = re.compile(r'Week')
-            section = soup.find('section', class_='article-body')
-            ps = section.find_all('p')
+            pattern = re.compile(r"Week")
+            section = soup.find("section", class_="article-body")
+            ps = section.find_all("p")
 
             output = {}
             for p in ps:
-                if p.text.startswith('Week'):
-                    week = p.text.split(':')[0]
-                    week = week.split('(')[0].strip()
-                    byes = p.text.split(':')[1].strip()
+                if p.text.startswith("Week"):
+                    week = p.text.split(":")[0]
+                    week = week.split("(")[0].strip()
+                    byes = p.text.split(":")[1].strip()
                     if byes:
                         output[week] = byes
 
@@ -104,73 +126,75 @@ class CFB(callbacks.Plugin):
             irc.reply(self._cfb_byes[self._current_week])
             return
         except:
-            irc.reply('No teams on bye this week')
+            irc.reply("No teams on bye this week")
             return
 
-    @wrap([getopts({'week': 'positiveInt'}), optional('text')])
+    @wrap([getopts({"week": "positiveInt"}), optional("text")])
     def cfbrankings(self, irc, msg, args, optlist, filter_team=None):
         """Fetches CFB Rankings"""
 
         optlist = dict(optlist)
-        week = optlist.get('week')
+        week = optlist.get("week")
 
-        url = 'http://site.api.espn.com/apis/site/v2/sports/football/college-football/rankings'
+        url = "http://site.api.espn.com/apis/site/v2/sports/football/college-football/rankings"
         if week:
-            url += '?weeks={}'.format(week)
+            url += "?weeks={}".format(week)
 
         try:
             data = requests.get(url)
             data = json.loads(data.content)
         except:
-            irc.reply('Error fetching rankings')
+            irc.reply("Error fetching rankings")
             return
 
         if not week:
-            week = ' ' + data['latestWeek']['displayValue']
+            week = " " + data["latestWeek"]["displayValue"]
         else:
-            if week > data['latestWeek']['number']:
+            if week > data["latestWeek"]["number"]:
                 irc.reply("Sorry, I cannot predict the future")
                 return
-            week = ' Week {}'.format(week)
+            week = " Week {}".format(week)
 
-        rankings = data['rankings'][0]
+        rankings = data["rankings"][0]
         self._current_week = week.strip()
-        title = data['rankings'][0]['name']
+        title = data["rankings"][0]["name"]
 
         output = []
-        for team in rankings['ranks']:
-            tmp = '#{0}{3} {1} {2}'
+        for team in rankings["ranks"]:
+            tmp = "#{0}{3} {1} {2}"
 
-            if '+' in team['trend']:
-                trend = self._green(team['trend'])
-            elif '-' in team['trend'] and team['trend'] != '-':
-                trend = self._red(team['trend'])
+            if "+" in team["trend"]:
+                trend = self._green(team["trend"])
+            elif "-" in team["trend"] and team["trend"] != "-":
+                trend = self._red(team["trend"])
             else:
-                trend = team['trend']
+                trend = team["trend"]
             tmp = tmp.format(
-                team['current'],
-                self._bold(team['team']['abbreviation']),
-                team['recordSummary'],
-                '({})'.format(trend) if trend != '-' else ''
+                team["current"],
+                self._bold(team["team"]["abbreviation"]),
+                team["recordSummary"],
+                "({})".format(trend) if trend != "-" else "",
             )
 
             if filter_team:
-                if filter_team.upper() == team['team']['abbreviation']:
-                    tmp += ' :: {} points'.format(team['points'])
+                if filter_team.upper() == team["team"]["abbreviation"]:
+                    tmp += " :: {} points".format(team["points"])
                     output.append(tmp)
                     break
             else:
                 output.append(tmp)
 
         if filter_team and len(output) == 1:
-            irc.reply('{}: {}'.format(title + week, output[0]))
+            irc.reply("{}: {}".format(title + week, output[0]))
         elif filter_team and not output:
-            irc.reply('No results found for {}'.format(filter_team))
+            irc.reply("No results found for {}".format(filter_team))
         else:
-            irc.reply('{}: {}'.format(title + week, ' | '.join(team for team in output[:11])))
-            irc.reply('{}'.format(' | '.join(team for team in output[11:])))
+            irc.reply(
+                "{}: {}".format(title + week, " | ".join(team for team in output[:11]))
+            )
+            irc.reply("{}".format(" | ".join(team for team in output[11:])))
 
-    @wrap([getopts({'week': 'positiveInt', 'conf': 'positiveInt'}), optional('text')])
+    @wrap([getopts({"week": "positiveInt", "conf": "positiveInt"}), optional("text")])
     def cfb(self, irc, msg, args, optlist, team=None):
         """[--conf #] [--week #] [<team>]
         Fetches CFB Scores. Defaults to current week and AP Top 25 teams.
@@ -179,23 +203,23 @@ class CFB(callbacks.Plugin):
         """
 
         optlist = dict(optlist)
-        week = optlist.get('week')
-        conf = optlist.get('conf')
+        week = optlist.get("week")
+        conf = optlist.get("conf")
         games = None
 
         team = self._parseInput(team)
 
-        if (conf==80 or conf==81 or conf==35) and not team:
-            irc.reply('ERROR: You must provide a team')
+        if (conf == 80 or conf == 81 or conf == 35) and not team:
+            irc.reply("ERROR: You must provide a team")
             return
 
-        if week or conf or team == 'today':
+        if week or conf or team == "today":
             games = self._fetchGames(team, conf, week)
 
         if not games:
             games = self._fetchGames(team, conf)
             if not games:
-                irc.reply('No games found')
+                irc.reply("No games found")
                 return
 
         games = self._parseGames(games, team)
@@ -203,8 +227,8 @@ class CFB(callbacks.Plugin):
 
         reply_string = self._replyAsString(team, games)
 
-        reply = ' | '.join(reply_string)
-        irc.reply(reply, prefixNick = False)
+        reply = " | ".join(reply_string)
+        irc.reply(reply, prefixNick=False)
 
     def _parseInput(self, team):
         if not team:
@@ -214,39 +238,54 @@ class CFB(callbacks.Plugin):
             return team
 
     def _fetchGames(self, team, conf="80", week=None):
-        team = 'all' if not team else team.upper()
-        date = pendulum.now('US/Pacific')
-        conf = '' if not conf else conf
+        team = "all" if not team else team.upper()
+        date = pendulum.now("US/Pacific")
+        conf = "" if not conf else conf
 
-        url = self.SCOREBOARD + '?groups={}'.format(conf)
-        if team != 'all' and team != 'TODAY' and team != 'INP':
-            url += '&limit=300'
+        url = self.SCOREBOARD + "?groups={}".format(conf)
+        if team != "all" and team != "TODAY" and team != "INP":
+            url += "&limit=300"
 
         if week:
-            url += '&week={}'.format(week)
+            url += "&week={}".format(week)
 
         games = requests.get(url)
         games = json.loads(games.content)
 
-        games = games['events']
+        games = games["events"]
 
-        if team != 'all' and team != 'TODAY' and team != 'INP':
+        if team != "all" and team != "TODAY" and team != "INP":
             ngames = []
 
             # check abbreviation first
             for game in games:
-                if team == game['competitions'][0]['competitors'][0]['team']['abbreviation'] \
-                or team == game['competitions'][0]['competitors'][1]['team']['abbreviation']:
+                if (
+                    team
+                    == game["competitions"][0]["competitors"][0]["team"]["abbreviation"]
+                    or team
+                    == game["competitions"][0]["competitors"][1]["team"]["abbreviation"]
+                ):
                     ngames.append(game)
             if not ngames:
-                if team == 'HAWAII':
+                if team == "HAWAII":
                     team = "HAWAI'I"
                 for game in games:
-                    if team == html.unescape(game['competitions'][0]['competitors'][0]['team']['location']).upper() \
-                    or team == html.unescape(game['competitions'][0]['competitors'][1]['team']['location']).upper():
+                    if (
+                        team
+                        == html.unescape(
+                            game["competitions"][0]["competitors"][0]["team"][
+                                "location"
+                            ]
+                        ).upper()
+                        or team
+                        == html.unescape(
+                            game["competitions"][0]["competitors"][1]["team"][
+                                "location"
+                            ]
+                        ).upper()
+                    ):
                         ngames.append(game)
             return ngames
-
 
         return games
 
@@ -254,74 +293,127 @@ class CFB(callbacks.Plugin):
         new_games = []
 
         if team:
-            if team.lower() != 'all' and team.lower() != 'today' and team.lower() != 'inp':
+            if (
+                team.lower() != "all"
+                and team.lower() != "today"
+                and team.lower() != "inp"
+            ):
                 for idx, game in enumerate(games):
-                    if team.upper() == game['competitions'][0]['competitors'][0]['team']['abbreviation'] \
-                    or team.upper() == game['competitions'][0]['competitors'][1]['team']['abbreviation']:
+                    if (
+                        team.upper()
+                        == game["competitions"][0]["competitors"][0]["team"][
+                            "abbreviation"
+                        ]
+                        or team.upper()
+                        == game["competitions"][0]["competitors"][1]["team"][
+                            "abbreviation"
+                        ]
+                    ):
                         games = [games.pop(idx)]
                         break
 
         for game in games:
-            date = pendulum.parse(game['date']).in_tz('US/Pacific')
-            today = pendulum.today('US/Pacific')
+            date = pendulum.parse(game["date"]).in_tz("US/Pacific")
+            today = pendulum.today("US/Pacific")
             new_game = {}
-            new_game['id'] = game['id']
-            new_game['time'] = pendulum.parse(game['date']).in_tz('US/Eastern').format('ddd h:mm A zz')
-            new_game['date'] = pendulum.parse(game['date']).in_tz('US/Eastern').format('dddd, MMMM Do, h:mm A zz')
-            new_game['home_full'] = game['competitions'][0]['competitors'][0]['team']['location']
-            new_game['home'] = game['competitions'][0]['competitors'][0]['team']['abbreviation']
-            new_game['home_id'] = game['competitions'][0]['competitors'][0]['team']['id']
-            new_game['away_full'] = game['competitions'][0]['competitors'][1]['team']['location']
-            new_game['away'] = game['competitions'][0]['competitors'][1]['team']['abbreviation']
-            new_game['away_id'] = game['competitions'][0]['competitors'][1]['team']['id']
-            new_game['status'] = game['status']['type']['state']
-            new_game['shortDetail'] = game['status']['type']['shortDetail']
-            new_game['final'] = game['status']['type']['completed']
-            new_game['in_progress'] = False
+            new_game["id"] = game["id"]
+            new_game["time"] = (
+                pendulum.parse(game["date"]).in_tz("US/Eastern").format("ddd h:mm A zz")
+            )
+            new_game["date"] = (
+                pendulum.parse(game["date"])
+                .in_tz("US/Eastern")
+                .format("dddd, MMMM Do, h:mm A zz")
+            )
+            new_game["home_full"] = game["competitions"][0]["competitors"][0]["team"][
+                "location"
+            ]
+            new_game["home"] = game["competitions"][0]["competitors"][0]["team"][
+                "abbreviation"
+            ]
+            new_game["home_id"] = game["competitions"][0]["competitors"][0]["team"][
+                "id"
+            ]
+            new_game["away_full"] = game["competitions"][0]["competitors"][1]["team"][
+                "location"
+            ]
+            new_game["away"] = game["competitions"][0]["competitors"][1]["team"][
+                "abbreviation"
+            ]
+            new_game["away_id"] = game["competitions"][0]["competitors"][1]["team"][
+                "id"
+            ]
+            new_game["status"] = game["status"]["type"]["state"]
+            new_game["shortDetail"] = game["status"]["type"]["shortDetail"]
+            new_game["final"] = game["status"]["type"]["completed"]
+            new_game["in_progress"] = False
             # Rankings
-            new_game['home_team_rank'] = game['competitions'][0]['competitors'][0]['curatedRank'].get('current')
-            new_game['away_team_rank'] = game['competitions'][0]['competitors'][1]['curatedRank'].get('current')
+            new_game["home_team_rank"] = game["competitions"][0]["competitors"][0][
+                "curatedRank"
+            ].get("current")
+            new_game["away_team_rank"] = game["competitions"][0]["competitors"][1][
+                "curatedRank"
+            ].get("current")
 
             # Odds
             try:
-                new_game['odds'] = '{} (O/U: {:.0f})'.format(game['competitions'][0]['odds'][0]['details'], game['competitions'][0]['odds'][0]['overUnder'])
+                new_game["odds"] = "{} (O/U: {:.0f})".format(
+                    game["competitions"][0]["odds"][0]["details"],
+                    game["competitions"][0]["odds"][0]["overUnder"],
+                )
             except Exception as e:
-                new_game['odds'] = ''
+                new_game["odds"] = ""
                 print(e)
 
-
-            if new_game['status'] == 'in' and not new_game['final']:
-                new_game['in_progress'] = True
+            if new_game["status"] == "in" and not new_game["final"]:
+                new_game["in_progress"] = True
                 try:
-                    new_game['last_play'] = game['competitions'][0]['situation']['lastPlay']['text']
+                    new_game["last_play"] = game["competitions"][0]["situation"][
+                        "lastPlay"
+                    ]["text"]
                 except:
-                    new_game['last_play'] = ''
-                new_game['pos'] = game['competitions'][0]['situation'].get('possession')
-                new_game['rz'] = game['competitions'][0]['situation'].get('isRedZone')
-                new_game['desc'] = game['competitions'][0]['situation'].get('downDistanceText')
-                new_game['clock'] = game['status']['type']['shortDetail']
+                    new_game["last_play"] = ""
+                new_game["pos"] = game["competitions"][0]["situation"].get("possession")
+                new_game["rz"] = game["competitions"][0]["situation"].get("isRedZone")
+                new_game["desc"] = game["competitions"][0]["situation"].get(
+                    "downDistanceText"
+                )
+                new_game["clock"] = game["status"]["type"]["shortDetail"]
                 try:
-                    new_game['clock'] = new_game['clock'].split('-')[0].strip() + ' ' + self._green(new_game['clock'].split('-')[1].strip())
+                    new_game["clock"] = (
+                        new_game["clock"].split("-")[0].strip()
+                        + " "
+                        + self._green(new_game["clock"].split("-")[1].strip())
+                    )
                 except:
-                    new_game['clock'] = new_game['clock']
-                if 'Delayed' in new_game['clock']:
-                    new_game['clock'] = self._orange('DLY')
-                if 'Halftime' in new_game['clock']:
-                    new_game['clock'] = 'HT'
-                    new_game['HT'] = True
+                    new_game["clock"] = new_game["clock"]
+                if "Delayed" in new_game["clock"]:
+                    new_game["clock"] = self._orange("DLY")
+                if "Halftime" in new_game["clock"]:
+                    new_game["clock"] = "HT"
+                    new_game["HT"] = True
                 else:
-                    new_game['HT'] = False
+                    new_game["HT"] = False
 
-            elif new_game['status'] == 'post':
-                new_game['in_progress'] = False
-            new_game['broadcasts'] = '{}'.format(', '.join(item['media']['shortName'] for item in game['competitions'][0]['geoBroadcasts']))
-            new_game['h_score'] = int(game['competitions'][0]['competitors'][0]['score'])
-            new_game['a_score'] = int(game['competitions'][0]['competitors'][1]['score'])
-            if team == 'today':
+            elif new_game["status"] == "post":
+                new_game["in_progress"] = False
+            new_game["broadcasts"] = "{}".format(
+                ", ".join(
+                    item["media"]["shortName"]
+                    for item in game["competitions"][0]["geoBroadcasts"]
+                )
+            )
+            new_game["h_score"] = int(
+                game["competitions"][0]["competitors"][0]["score"]
+            )
+            new_game["a_score"] = int(
+                game["competitions"][0]["competitors"][1]["score"]
+            )
+            if team == "today":
                 if date.day == today.day:
                     new_games.append(new_game)
-            elif team == 'inp':
-                if new_game['in_progress']:
+            elif team == "inp":
+                if new_game["in_progress"]:
                     new_games.append(new_game)
             else:
                 new_games.append(new_game)
@@ -329,166 +421,185 @@ class CFB(callbacks.Plugin):
         return new_games
 
     def _sortGames(self, games):
-        sorted_games = sorted(games, key=lambda k: k['final'])
+        sorted_games = sorted(games, key=lambda k: k["final"])
 
         return sorted_games
 
     def _replyAsString(self, team, games):
         reply_strings = []
         tmp_strings = []
-        half_point = len(games)//2
+        half_point = len(games) // 2
 
         def _parseScores(away, ascr, home, hscr, arnk, hrnk):
             print(ascr, arnk, hscr, hrnk)
             if ascr > hscr:
-                astr = '{} {}'.format(self._bold(away), self._bold(ascr))
-                hstr = '{} {}'.format(home, hscr)
+                astr = "{} {}".format(self._bold(away), self._bold(ascr))
+                hstr = "{} {}".format(home, hscr)
                 if arnk > hrnk:
                     upset = True
                 else:
                     upset = False
             elif ascr < hscr:
-                hstr = '{} {}'.format(self._bold(home), self._bold(hscr))
-                astr = '{} {}'.format(away, ascr)
+                hstr = "{} {}".format(self._bold(home), self._bold(hscr))
+                astr = "{} {}".format(away, ascr)
                 if hrnk > arnk:
                     upset = True
                 else:
                     upset = False
             else:
-                astr = '{} {}'.format(away, ascr)
-                hstr = '{} {}'.format(home, hscr)
+                astr = "{} {}".format(away, ascr)
+                hstr = "{} {}".format(home, hscr)
                 upset = False
 
             print(upset)
             return astr, hstr, upset
 
         if len(games) == 2:
-            if games[0]['away'] == games[1]['away']:
+            if games[0]["away"] == games[1]["away"]:
                 for idx, game in enumerate(games):
-                    if game['shortDetail'] == 'Postponed':
+                    if game["shortDetail"] == "Postponed":
                         games.pop(idx)
 
         single = True if len(games) == 1 else False
 
         for game in games:
-            string = ''
+            string = ""
             if single:
-                away = game['away_full']
-                home = game['home_full']
-                time = game['date']
+                away = game["away_full"]
+                home = game["home_full"]
+                time = game["date"]
             else:
-                away = game['away']
-                home = game['home']
-                time = game['time']
-            if game['status'] == 'pre':
-                string = '{} @ {} - {}'.format(away, home, time)
+                away = game["away"]
+                home = game["home"]
+                time = game["time"]
+            if game["status"] == "pre":
+                string = "{} @ {} - {}".format(away, home, time)
                 if single:
-                    string += ' - \x02TV:\x02 {}'.format(game['broadcasts'])
-                    if game['odds']:
-                        string += ' - \x02Odds:\x02 {}'.format(game['odds'])
+                    string += " - \x02TV:\x02 {}".format(game["broadcasts"])
+                    if game["odds"]:
+                        string += " - \x02Odds:\x02 {}".format(game["odds"])
                 tmp_strings.append(string)
-            elif game['in_progress']:
-                if not game['HT']:
-                    if game['pos'] == game['away_id']:
-                        if game['rz']:
-                            away = self._red('<>{}'.format(away))
+            elif game["in_progress"]:
+                if not game["HT"]:
+                    if game["pos"] == game["away_id"]:
+                        if game["rz"]:
+                            away = self._red("<>{}".format(away))
                         else:
-                            away = '<>' + away
-                    if game['pos'] == game['home_id']:
-                        if game['rz']:
-                            home = self._red('<>{}'.format(home))
+                            away = "<>" + away
+                    if game["pos"] == game["home_id"]:
+                        if game["rz"]:
+                            home = self._red("<>{}".format(home))
                         else:
-                            home = '<>' + home
-                away_str, home_str, upset = _parseScores(away, game['a_score'], home, game['h_score'], game['away_team_rank'], game['home_team_rank'])
-                if game['clock'] == 'HT':
+                            home = "<>" + home
+                away_str, home_str, upset = _parseScores(
+                    away,
+                    game["a_score"],
+                    home,
+                    game["h_score"],
+                    game["away_team_rank"],
+                    game["home_team_rank"],
+                )
+                if game["clock"] == "HT":
                     if single:
-                        game['clock'] = self._orange('Halftime')
+                        game["clock"] = self._orange("Halftime")
                     else:
-                        game['clock'] = self._orange(game['clock'])
+                        game["clock"] = self._orange(game["clock"])
                 if single:
-                    game['clock'] = '({})'.format(game['clock'])
-                string = '{} @ {} {}'.format(away_str, home_str, game['clock'])
+                    game["clock"] = "({})".format(game["clock"])
+                string = "{} @ {} {}".format(away_str, home_str, game["clock"])
                 if upset:
                     if single:
-                        string += ' :: {}'.format(self._orange('UPSET'))
+                        string += " :: {}".format(self._orange("UPSET"))
                     string = self._ul(string)
-                if not game['HT'] and single:
-                    if game['desc']:
-                        desc = ' :: {}'.format(game['desc'])
+                if not game["HT"] and single:
+                    if game["desc"]:
+                        desc = " :: {}".format(game["desc"])
                     else:
-                        desc = ''
-                    if game['last_play']:
-                        string += '{} :: \x02Last Play:\x02 {}'.format(desc, game['last_play'])
-                    if game['broadcasts']:
-                        string += ' :: \x02TV:\x02 {}'.format(game['broadcasts'])
-                if game['odds']:
-                    string += ' :: \x02Odds:\x02 {}'.format(game['odds'])
+                        desc = ""
+                    if game["last_play"]:
+                        string += "{} :: \x02Last Play:\x02 {}".format(
+                            desc, game["last_play"]
+                        )
+                    if game["broadcasts"]:
+                        string += " :: \x02TV:\x02 {}".format(game["broadcasts"])
+                if game["odds"]:
+                    string += " :: \x02Odds:\x02 {}".format(game["odds"])
                 tmp_strings.append(string)
-            elif game['status'] == 'post':
-                if game['shortDetail'] != 'Final':
-                    endCode = game['shortDetail']
-                    if 'Postponed' in endCode:
+            elif game["status"] == "post":
+                if game["shortDetail"] != "Final":
+                    endCode = game["shortDetail"]
+                    if "Postponed" in endCode:
                         if not single:
-                            endCode = self._red('PPD')
+                            endCode = self._red("PPD")
                         else:
                             endCode = self._red(endCode)
-                    elif 'Canceled' in endCode:
+                    elif "Canceled" in endCode:
                         if not single:
-                            endCode = self._red('C')
+                            endCode = self._red("C")
                         else:
                             endCode = self._red(endCode)
-                    elif 'OT' in endCode:
+                    elif "OT" in endCode:
                         if single:
                             endCode = self._red(endCode)
                         else:
-                            endCode = self._red('F/OT')
-                elif 'OT' in game['shortDetail']:
+                            endCode = self._red("F/OT")
+                elif "OT" in game["shortDetail"]:
                     if single:
                         endCode = self._red(endCode)
                     else:
-                        endCode = self._red('F/OT')
+                        endCode = self._red("F/OT")
                 else:
                     if single:
-                        endCode = self._red('Final')
+                        endCode = self._red("Final")
                     else:
-                        endCode = self._red('F')
-                away_str, home_str, upset = _parseScores(away, game['a_score'], home, game['h_score'], game['away_team_rank'], game['home_team_rank'])
-                string = '{} @ {} {}'.format(away_str, home_str, endCode)
+                        endCode = self._red("F")
+                away_str, home_str, upset = _parseScores(
+                    away,
+                    game["a_score"],
+                    home,
+                    game["h_score"],
+                    game["away_team_rank"],
+                    game["home_team_rank"],
+                )
+                string = "{} @ {} {}".format(away_str, home_str, endCode)
                 if upset and not single:
                     string = self._ul(string)
                 if single:
                     if upset:
-                        string += ' :: {}'.format(self._orange('UPSET'))
+                        string += " :: {}".format(self._orange("UPSET"))
                 tmp_strings.append(string)
 
         print(len(tmp_strings), half_point)
         if len(tmp_strings) > 1 and half_point >= 6:
-            reply_strings.append(' | '.join(string for string in tmp_strings[:half_point]))
-            reply_strings.append(' | '.join(string for string in tmp_strings[half_point:]))
+            reply_strings.append(
+                " | ".join(string for string in tmp_strings[:half_point])
+            )
+            reply_strings.append(
+                " | ".join(string for string in tmp_strings[half_point:])
+            )
         else:
-            reply_strings.append(' | '.join(string for string in tmp_strings))
-
+            reply_strings.append(" | ".join(string for string in tmp_strings))
 
         return reply_strings
 
     def _red(self, string):
         """Returns a red string."""
-        return ircutils.mircColor(string, 'red')
+        return ircutils.mircColor(string, "red")
 
     def _yellow(self, string):
         """Returns a yellow string."""
-        return ircutils.mircColor(string, 'yellow')
+        return ircutils.mircColor(string, "yellow")
 
     def _orange(self, string):
-        return ircutils.mircColor(string, 'orange')
+        return ircutils.mircColor(string, "orange")
 
     def _green(self, string):
         """Returns a green string."""
-        return ircutils.mircColor(string, 'green')
+        return ircutils.mircColor(string, "green")
 
     def _blue(self, string):
         """Returns a blue string."""
-        return ircutils.mircColor(string, 'blue')
+        return ircutils.mircColor(string, "blue")
 
     def _bold(self, string):
         """Returns a bold string."""

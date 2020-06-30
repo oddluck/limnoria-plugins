@@ -33,8 +33,9 @@ import random
 import pytest
 from collections import defaultdict
 
+
 class RollResult:
-    def __init__(self, result, lash_count=0, joie_de_vivre_target=0, suffix=''):
+    def __init__(self, result, lash_count=0, joie_de_vivre_target=0, suffix=""):
         self.result = result
         self.suffix = suffix
         if result < lash_count:
@@ -50,9 +51,12 @@ class RollResult:
         else:
             return "%d%s [%d]" % (self.value, self.suffix, self.result)
 
+
 class Raise:
     def __init__(self, raise_count=0, rolls=[]):
-        self.rolls = list(map(lambda x: x if isinstance(x, RollResult) else RollResult(x), rolls))
+        self.rolls = list(
+            map(lambda x: x if isinstance(x, RollResult) else RollResult(x), rolls)
+        )
         self.raise_count = raise_count
 
     @property
@@ -61,9 +65,10 @@ class Raise:
 
     def __str__(self):
         if self.raise_count == 0:
-            return "(%s)" % (" + ".join(map(str, self.rolls)))
+            return "(%s)" % " + ".join(map(str, self.rolls))
         else:
             return "%s(%s)" % ("*" * self.raise_count, " + ".join(map(str, self.rolls)))
+
 
 class RaiseRollResult:
     def __init__(self, raises=[], unused=[], discarded=None):
@@ -73,25 +78,25 @@ class RaiseRollResult:
 
     def __str__(self):
         total_raises = sum(x.raise_count for x in self.raises)
-        result = "0 raises" if total_raises == 0 else "%d %s: %s" % (
-            total_raises,
-            "raises" if total_raises != 1 else "raise",
-            ", ".join(map(str, self.raises))
+        result = (
+            "0 raises"
+            if total_raises == 0
+            else "%d %s: %s"
+            % (
+                total_raises,
+                "raises" if total_raises != 1 else "raise",
+                ", ".join(map(str, self.raises)),
+            )
         )
 
         if self.unused:
-            result = "%s, unused: %s" % (
-                result,
-                ", ".join(map(str, self.unused))
-            )
+            result = "%s, unused: %s" % (result, ", ".join(map(str, self.unused)))
 
         if self.discarded:
-            result = "%s, discarded: %s" % (
-                result,
-                ", ".join(map(str, self.discarded))
-            )
+            result = "%s, discarded: %s" % (result, ", ".join(map(str, self.discarded)))
 
         return result
+
 
 class RaiseAggregator:
     def __init__(self, raise_target, raises_per_target, rolls):
@@ -120,13 +125,13 @@ class RaiseAggregator:
         return None
 
     def tostr(self):
-        r = '{'
+        r = "{"
         for x in self.dices:
-            r += '%d: [' % x
+            r += "%d: [" % x
             for y in self.dices[x]:
-                r += '%s, ' % str(y)
-            r += '], '
-        return r + '}'
+                r += "%s, " % str(y)
+            r += "], "
+        return r + "}"
 
     def get_lower_dice(self, target):
         return self.get_dice(range(target, 0, -1))
@@ -142,7 +147,9 @@ class RaiseAggregator:
                 return Raise(self.raises_per_target, raise_candidate)
 
             target = self.raise_target - raise_sum
-            next_dice = self.get_lower_dice(target) if down else self.get_higher_dice(target)
+            next_dice = (
+                self.get_lower_dice(target) if down else self.get_higher_dice(target)
+            )
             if next_dice is not None:
                 raise_candidate.append(next_dice)
             elif self.dice_count > 0 and down:
@@ -213,7 +220,16 @@ class SevenSea2EdRaiseRoller:
     Raise roller for 7sea, 2ed. Spec: https://redd.it/80l7jm
     """
 
-    def __init__(self, roller, raise_target=10, raises_per_target=1, explode=False, lash_count=0, skill_rank=0, joie_de_vivre=False):
+    def __init__(
+        self,
+        roller,
+        raise_target=10,
+        raises_per_target=1,
+        explode=False,
+        lash_count=0,
+        skill_rank=0,
+        joie_de_vivre=False,
+    ):
         self.roller = roller
         self.explode = skill_rank >= 5 or explode
         self.lash_count = lash_count
@@ -223,7 +239,7 @@ class SevenSea2EdRaiseRoller:
         self.aggregator_template = lambda x: RaiseAggregator(
             15 if skill_rank >= 4 and default_roll else raise_target,
             2 if skill_rank >= 4 and default_roll else raises_per_target,
-            x
+            x,
         )
 
     def roll_and_count(self, dice_count):
@@ -234,7 +250,7 @@ class SevenSea2EdRaiseRoller:
         if not self.reroll_one_dice:
             discarded_dice = None
         else:
-            reroll = self.roll(1, 'r')
+            reroll = self.roll(1, "r")
             min_value_dice = min(rolls, key=lambda x: x.value)
             if min_value_dice.value < sum(x.value for x in reroll):
                 rolls.remove(min_value_dice)
@@ -250,12 +266,21 @@ class SevenSea2EdRaiseRoller:
             for dice in aggregator.dices[value]:
                 unused.append(dice)
 
-        return RaiseRollResult(raises, sorted(unused, key=lambda x: x.value, reverse=True), discarded_dice)
+        return RaiseRollResult(
+            raises, sorted(unused, key=lambda x: x.value, reverse=True), discarded_dice
+        )
 
-    def roll(self, dice_count, suffix=''):
+    def roll(self, dice_count, suffix=""):
         if dice_count == 0:
             return []
 
-        rolls = [RollResult(x, self.lash_count, self.joie_de_vivre_target, suffix) for x in self.roller(dice_count)]
+        rolls = [
+            RollResult(x, self.lash_count, self.joie_de_vivre_target, suffix)
+            for x in self.roller(dice_count)
+        ]
 
-        return rolls + self.roll(len([x for x in rolls if x.result == 10]), suffix + 'x') if self.explode else rolls
+        return (
+            rolls + self.roll(len([x for x in rolls if x.result == 10]), suffix + "x")
+            if self.explode
+            else rolls
+        )

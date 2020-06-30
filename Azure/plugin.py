@@ -37,9 +37,8 @@ import supybot.conf as conf
 import requests
 import json
 
+
 class Azure(callbacks.Plugin):
-
-
     def translate(self, irc, msg, args, optlist, text):
         """[--from <source>] [--to <target>] <text>
         Translate text using Microsoft Azure. Uses automatic language detection if source not
@@ -47,37 +46,45 @@ class Azure(callbacks.Plugin):
         https://docs.microsoft.com/en-us/azure/cognitive-services/translator/language-support
         """
         optlist = dict(optlist)
-        if 'from' in optlist:
-            source = optlist.get('from')
+        if "from" in optlist:
+            source = optlist.get("from")
         else:
-            source = self.registryValue('translate.source', msg.channel)
-        if 'to' in optlist:
-            target = optlist.get('to')
+            source = self.registryValue("translate.source", msg.channel)
+        if "to" in optlist:
+            target = optlist.get("to")
         else:
-            target = self.registryValue('translate.target', msg.channel)
-        if source != 'auto':
-            url = 'https://api.cognitive.microsofttranslator.com/translate?api-version=3.0&to={0}&from={1}'.format(target, source)
+            target = self.registryValue("translate.target", msg.channel)
+        if source != "auto":
+            url = "https://api.cognitive.microsofttranslator.com/translate?api-version=3.0&to={0}&from={1}".format(
+                target, source
+            )
         else:
-            url = 'https://api.cognitive.microsofttranslator.com/translate?api-version=3.0&to={0}'.format(target)
-        key = self.registryValue('translate.key')
-        headers = {
-        'Ocp-Apim-Subscription-Key': key,
-        'Content-type': 'application/json'
-        }
-        body = [{
-        'text' : text
-        }]
+            url = "https://api.cognitive.microsofttranslator.com/translate?api-version=3.0&to={0}".format(
+                target
+            )
+        key = self.registryValue("translate.key")
+        headers = {"Ocp-Apim-Subscription-Key": key, "Content-type": "application/json"}
+        body = [{"text": text}]
         response = requests.post(url, headers=headers, json=body)
         if not response.status_code == 200:
-            log.debug("Azure: Error accessing {0}: {1}".format(url, response.content.decode()))
+            log.debug(
+                "Azure: Error accessing {0}: {1}".format(url, response.content.decode())
+            )
             return
         result = json.loads(response.content)
-        if result[0].get('detectedLanguage'):
-            reply = "{0} [{1}~>{2}]".format(result[0]['translations'][0]['text'], result[0]['detectedLanguage']['language'], target)
+        if result[0].get("detectedLanguage"):
+            reply = "{0} [{1}~>{2}]".format(
+                result[0]["translations"][0]["text"],
+                result[0]["detectedLanguage"]["language"],
+                target,
+            )
         else:
-            reply = "{0} [{1}~>{2}]".format(result[0]['translations'][0]['text'], source, target)
+            reply = "{0} [{1}~>{2}]".format(
+                result[0]["translations"][0]["text"], source, target
+            )
         irc.reply(reply)
-    translate = wrap(translate, [getopts({'from':'text', 'to':'text'}), 'text'])
+
+    translate = wrap(translate, [getopts({"from": "text", "to": "text"}), "text"])
 
 
 Class = Azure

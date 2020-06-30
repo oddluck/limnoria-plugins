@@ -30,9 +30,11 @@
 
 import supybot.conf as conf
 import supybot.registry as registry
+
 try:
     from supybot.i18n import PluginInternationalization
-    _ = PluginInternationalization('NHL')
+
+    _ = PluginInternationalization("NHL")
 except:
     # Placeholder that allows to run the plugin on a bot
     # without the i18n module
@@ -45,10 +47,11 @@ def configure(advanced):
     # user or not.  You should effect your configuration by manipulating the
     # registry as appropriate.
     from supybot.questions import expect, anything, something, yn
-    conf.registerPlugin('NHL', True)
+
+    conf.registerPlugin("NHL", True)
 
 
-NHL = conf.registerPlugin('NHL')
+NHL = conf.registerPlugin("NHL")
 # This is where your configuration variables (if any) should go.  For example:
 # conf.registerGlobalValue(NBA, 'someConfigVariableName',
 #     registry.Boolean(False, _("""Help for someConfigVariableName.""")))

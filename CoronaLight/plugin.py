@@ -34,9 +34,11 @@ import csv
 import datetime
 from supybot import utils, plugins, ircutils, callbacks, log
 from supybot.commands import *
+
 try:
     from supybot.i18n import PluginInternationalization
-    _ = PluginInternationalization('CoronaLight')
+
+    _ = PluginInternationalization("CoronaLight")
 except ImportError:
     # Placeholder that allows to run the plugin on a bot
     # without the i18n module
@@ -292,71 +294,73 @@ countries = {
     "EH": "WESTERN SAHARA",
     "YE": "YEMEN",
     "ZM": "ZAMBIA",
-    "ZW": "ZIMBABWE"
+    "ZW": "ZIMBABWE",
 }
 
 states = {
-    'AK': 'ALASKA',
-    'AL': 'ALABAMA',
-    'AR': 'ARKANSAS',
-    'AS': 'AMERICAN SAMOA',
-    'AZ': 'ARIZONA',
-    'CA': 'CALIFORNIA',
-    'CO': 'COLORADO',
-    'CT': 'CONNECTICUT',
-    'DC': 'DISTRICT OF COLUMBIA',
-    'DE': 'DELAWARE',
-    'FL': 'FLORIDA',
-    'GA': 'GEORGIA',
-    'GU': 'GUAM',
-    'HI': 'HAWAII',
-    'IA': 'IOWA',
-    'ID': 'IDAHO',
-    'IL': 'ILLINOIS',
-    'IN': 'INDIANA',
-    'KS': 'KANSAS',
-    'KY': 'KENTUCKY',
-    'LA': 'LOUISIANA',
-    'MA': 'MASSACHUSETTS',
-    'MD': 'MARYLAND',
-    'ME': 'MAINE',
-    'MI': 'MICHIGAN',
-    'MN': 'MINNESOTA',
-    'MO': 'MISSOURI',
-    'MP': 'NORTHERN MARIANA ISLANDS',
-    'MS': 'MISSISSIPPI',
-    'MT': 'MONTANA',
-    'NA': 'NATIONAL',
-    'NC': 'NORTH CAROLINA',
-    'ND': 'NORTH DAKOTA',
-    'NE': 'NEBRASKA',
-    'NH': 'NEW HAMPSHIRE',
-    'NJ': 'NEW JERSEY',
-    'NM': 'NEW MEXICO',
-    'NV': 'NEVADA',
-    'NY': 'NEW YORK',
-    'OH': 'OHIO',
-    'OK': 'OKLAHOMA',
-    'OR': 'OREGON',
-    'PA': 'PENNSYLVANIA',
-    'PR': 'PUERTO RICO',
-    'RI': 'RHODE ISLAND',
-    'SC': 'SOUTH CAROLINA',
-    'SD': 'SOUTH DAKOTA',
-    'TN': 'TENNESSEE',
-    'TX': 'TEXAS',
-    'UT': 'UTAH',
-    'VA': 'VIRGINIA',
-    'VI': 'VIRGIN ISLANDS',
-    'VT': 'VERMONT',
-    'WA': 'WASHINGTON',
-    'WI': 'WISCONSIN',
-    'WV': 'WEST VIRGINIA',
-    'WY': 'WYOMING'
+    "AK": "ALASKA",
+    "AL": "ALABAMA",
+    "AR": "ARKANSAS",
+    "AS": "AMERICAN SAMOA",
+    "AZ": "ARIZONA",
+    "CA": "CALIFORNIA",
+    "CO": "COLORADO",
+    "CT": "CONNECTICUT",
+    "DC": "DISTRICT OF COLUMBIA",
+    "DE": "DELAWARE",
+    "FL": "FLORIDA",
+    "GA": "GEORGIA",
+    "GU": "GUAM",
+    "HI": "HAWAII",
+    "IA": "IOWA",
+    "ID": "IDAHO",
+    "IL": "ILLINOIS",
+    "IN": "INDIANA",
+    "KS": "KANSAS",
+    "KY": "KENTUCKY",
+    "LA": "LOUISIANA",
+    "MA": "MASSACHUSETTS",
+    "MD": "MARYLAND",
+    "ME": "MAINE",
+    "MI": "MICHIGAN",
+    "MN": "MINNESOTA",
+    "MO": "MISSOURI",
+    "MP": "NORTHERN MARIANA ISLANDS",
+    "MS": "MISSISSIPPI",
+    "MT": "MONTANA",
+    "NA": "NATIONAL",
+    "NC": "NORTH CAROLINA",
+    "ND": "NORTH DAKOTA",
+    "NE": "NEBRASKA",
+    "NH": "NEW HAMPSHIRE",
+    "NJ": "NEW JERSEY",
+    "NM": "NEW MEXICO",
+    "NV": "NEVADA",
+    "NY": "NEW YORK",
+    "OH": "OHIO",
+    "OK": "OKLAHOMA",
+    "OR": "OREGON",
+    "PA": "PENNSYLVANIA",
+    "PR": "PUERTO RICO",
+    "RI": "RHODE ISLAND",
+    "SC": "SOUTH CAROLINA",
+    "SD": "SOUTH DAKOTA",
+    "TN": "TENNESSEE",
+    "TX": "TEXAS",
+    "UT": "UTAH",
+    "VA": "VIRGINIA",
+    "VI": "VIRGIN ISLANDS",
+    "VT": "VERMONT",
+    "WA": "WASHINGTON",
+    "WI": "WISCONSIN",
+    "WV": "WEST VIRGINIA",
+    "WY": "WYOMING",
 }
+
 
 class CoronaLight(callbacks.Plugin):
     """Displays current stats of the Coronavirus outbreak"""
+
     threaded = True
 
     def __init__(self, irc):
@@ -367,24 +371,34 @@ class CoronaLight(callbacks.Plugin):
     def getCSV(self):
         data = None
         try:
-            day = datetime.date.today().strftime('%m-%d-%Y')
-            url = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/{0}.csv".format(day)
+            day = datetime.date.today().strftime("%m-%d-%Y")
+            url = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/{0}.csv".format(
+                day
+            )
             r = requests.get(url, timeout=10)
             r.raise_for_status()
-        except (requests.exceptions.RequestException, requests.exceptions.HTTPError) as e:
-            log.debug('Corona: error retrieving data for today: {0}'.format(e))
+        except (
+            requests.exceptions.RequestException,
+            requests.exceptions.HTTPError,
+        ) as e:
+            log.debug("Corona: error retrieving data for today: {0}".format(e))
             try:
                 day = datetime.date.today() - datetime.timedelta(days=1)
-                day = day.strftime('%m-%d-%Y')
-                url = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/{0}.csv".format(day)
+                day = day.strftime("%m-%d-%Y")
+                url = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/{0}.csv".format(
+                    day
+                )
                 r = requests.get(url, timeout=10)
                 r.raise_for_status()
-            except (requests.exceptions.RequestException, requests.exceptions.HTTPError) as e:
-                log.debug('Corona: error retrieving data for yesterday: {0}'.format(e))
+            except (
+                requests.exceptions.RequestException,
+                requests.exceptions.HTTPError,
+            ) as e:
+                log.debug("Corona: error retrieving data for yesterday: {0}".format(e))
             else:
-                data = csv.DictReader(r.iter_lines(decode_unicode = True))
+                data = csv.DictReader(r.iter_lines(decode_unicode=True))
         else:
-            data = csv.DictReader(r.iter_lines(decode_unicode = True))
+            data = csv.DictReader(r.iter_lines(decode_unicode=True))
         return data
 
     def getAPI(self):
@@ -393,12 +407,15 @@ class CoronaLight(callbacks.Plugin):
         try:
             r = requests.get(url, timeout=10)
             r.raise_for_status()
-        except (requests.exceptions.RequestException, requests.exceptions.HTTPError) as e:
-            log.debug('Corona: error retrieving data from API: {0}'.format(e))
+        except (
+            requests.exceptions.RequestException,
+            requests.exceptions.HTTPError,
+        ) as e:
+            log.debug("Corona: error retrieving data from API: {0}".format(e))
         else:
             try:
                 r = json.loads(r.content.decode())
-                data = r.get('features')
+                data = r.get("features")
             except:
                 data = None
             if not data:
@@ -406,19 +423,19 @@ class CoronaLight(callbacks.Plugin):
         return data
 
     def timeCreated(self, time):
-        time = datetime.datetime.fromtimestamp(time/1000.0)
+        time = datetime.datetime.fromtimestamp(time / 1000.0)
         d = datetime.datetime.now() - time
         if d.days:
             rel_time = "{:1d}d ago".format(abs(d.days))
         elif d.seconds > 3600:
-            rel_time = "{:.1f}h ago".format(round((abs(d.seconds) / 3600),1))
+            rel_time = "{:.1f}h ago".format(round((abs(d.seconds) / 3600), 1))
         elif 60 <= d.seconds < 3600:
-            rel_time = "{:.1f}m ago".format(round((abs(d.seconds) / 60),1))
+            rel_time = "{:.1f}m ago".format(round((abs(d.seconds) / 60), 1))
         else:
             rel_time = "%ss ago" % (abs(d.seconds))
         return rel_time
 
-    @wrap([optional('text')])
+    @wrap([optional("text")])
     def corona(self, irc, msg, args, search):
         """[region]
         Displays Coronavirus statistics. Add a region name to search for country/state
@@ -431,26 +448,28 @@ class CoronaLight(callbacks.Plugin):
         if len(self.cache) > 0:
             cacheLifetime = self.registryValue("cacheLifetime")
             now = datetime.datetime.now()
-            seconds = (now - self.cache['timestamp']).total_seconds()
+            seconds = (now - self.cache["timestamp"]).total_seconds()
             if seconds < cacheLifetime:
-                data = self.cache['data']
+                data = self.cache["data"]
                 api = True
                 log.debug("Corona: returning cached API data")
             else:
                 data = self.getAPI()
                 if data:
                     api = True
-                    self.cache['timestamp'] = datetime.datetime.now()
-                    self.cache['data'] = data
+                    self.cache["timestamp"] = datetime.datetime.now()
+                    self.cache["data"] = data
                     log.debug("Corona: caching API data")
                 else:
                     now = datetime.datetime.now()
                     midnight = now.replace(hour=0, minute=0, second=0, microsecond=0)
                     seconds = (now - midnight).seconds
-                    if seconds > (now - self.cache['timestamp']).total_seconds():
-                        data = self.cache['data']
+                    if seconds > (now - self.cache["timestamp"]).total_seconds():
+                        data = self.cache["data"]
                         api = True
-                        log.debug("Corona: error accessing API, returning cached API data")
+                        log.debug(
+                            "Corona: error accessing API, returning cached API data"
+                        )
                     else:
                         data = self.getCSV()
                         if data:
@@ -459,8 +478,8 @@ class CoronaLight(callbacks.Plugin):
             data = self.getAPI()
             if data:
                 api = True
-                self.cache['timestamp'] = datetime.datetime.now()
-                self.cache['data'] = data
+                self.cache["timestamp"] = datetime.datetime.now()
+                self.cache["data"] = data
                 log.debug("Corona: caching API data")
             else:
                 data = self.getCSV()
@@ -469,21 +488,23 @@ class CoronaLight(callbacks.Plugin):
         if not data:
             irc.reply("Error. Unable to access database.")
             return
-        total_confirmed = total_deaths = total_recovered = total_active = last_update = 0
+        total_confirmed = (
+            total_deaths
+        ) = total_recovered = total_active = last_update = 0
         confirmed = deaths = recovered = active = updated = 0
-        location = 'Global'
+        location = "Global"
         for region in data:
             if api:
-                r = region.get('attributes')
+                r = region.get("attributes")
             else:
                 r = region
             if search:
                 if api:
-                    region = r.get('Country_Region')
-                    state = r.get('Province_State')
+                    region = r.get("Country_Region")
+                    state = r.get("Province_State")
                 else:
-                    region = r.get('Country/Region')
-                    state = r.get('Province/State')
+                    region = r.get("Country/Region")
+                    state = r.get("Province/State")
                 if len(search) == 2:
                     if self.registryValue("countryFirst", msg.channel):
                         try:
@@ -501,52 +522,58 @@ class CoronaLight(callbacks.Plugin):
                                 search = countries[search.upper()]
                             except KeyError:
                                 pass
-                if search.lower() == 'usa' or 'united states' in search.lower():
-                    search = 'us'
-                if 'korea' in search.lower():
-                    search = 'korea, south'
+                if search.lower() == "usa" or "united states" in search.lower():
+                    search = "us"
+                if "korea" in search.lower():
+                    search = "korea, south"
                 if region and search.lower() == region.lower():
                     location = region
-                    confirmed += int(r.get('Confirmed'))
-                    deaths += int(r.get('Deaths'))
-                    recovered += int(r.get('Recovered'))
-                    active += int(r.get('Active'))
+                    confirmed += int(r.get("Confirmed"))
+                    deaths += int(r.get("Deaths"))
+                    recovered += int(r.get("Recovered"))
+                    active += int(r.get("Active"))
                     if api:
-                        time = int(r.get('Last_Update'))
+                        time = int(r.get("Last_Update"))
                     if git:
-                        time = datetime.datetime.strptime(r.get('Last Update'), "%Y-%m-%dT%H:%M:%S")
-                        time = int(time.timestamp()*1000)
+                        time = datetime.datetime.strptime(
+                            r.get("Last Update"), "%Y-%m-%dT%H:%M:%S"
+                        )
+                        time = int(time.timestamp() * 1000)
                     if time > updated:
                         updated = time
-                    local_ratio_dead = "{0:.1%}".format(deaths/confirmed)
+                    local_ratio_dead = "{0:.1%}".format(deaths / confirmed)
                 elif state and search.lower() == state.lower():
                     location = state
-                    confirmed += int(r.get('Confirmed'))
-                    deaths += int(r.get('Deaths'))
-                    recovered += int(r.get('Recovered'))
-                    active += int(r.get('Active'))
+                    confirmed += int(r.get("Confirmed"))
+                    deaths += int(r.get("Deaths"))
+                    recovered += int(r.get("Recovered"))
+                    active += int(r.get("Active"))
                     if api:
-                        time = int(r.get('Last_Update'))
+                        time = int(r.get("Last_Update"))
                     if git:
-                        time = datetime.datetime.strptime(r.get('Last Update'), "%Y-%m-%dT%H:%M:%S")
-                        time = int(time.timestamp()*1000)
+                        time = datetime.datetime.strptime(
+                            r.get("Last Update"), "%Y-%m-%dT%H:%M:%S"
+                        )
+                        time = int(time.timestamp() * 1000)
                     if time > updated:
                         updated = time
-                    local_ratio_dead = "{0:.1%}".format(deaths/confirmed)
-            total_confirmed += int(r.get('Confirmed'))
-            total_deaths += int(r.get('Deaths'))
-            total_recovered += int(r.get('Recovered'))
-            total_active += int(r.get('Active'))
+                    local_ratio_dead = "{0:.1%}".format(deaths / confirmed)
+            total_confirmed += int(r.get("Confirmed"))
+            total_deaths += int(r.get("Deaths"))
+            total_recovered += int(r.get("Recovered"))
+            total_active += int(r.get("Active"))
             if api:
-                time = int(r.get('Last_Update'))
+                time = int(r.get("Last_Update"))
             if git:
-                time = datetime.datetime.strptime(r.get('Last Update'), "%Y-%m-%dT%H:%M:%S")
-                time = int(time.timestamp()*1000)
+                time = datetime.datetime.strptime(
+                    r.get("Last Update"), "%Y-%m-%dT%H:%M:%S"
+                )
+                time = int(time.timestamp() * 1000)
             if time > last_update:
                 last_update = time
-        ratio_dead = "{0:.1%}".format(total_deaths/total_confirmed)
+        ratio_dead = "{0:.1%}".format(total_deaths / total_confirmed)
         template = self.registryValue("template", msg.channel)
-        if location == 'Global':
+        if location == "Global":
             last_update = self.timeCreated(last_update)
             template = template.replace("$location", location)
             template = template.replace("$confirmed", str(total_confirmed))
@@ -565,5 +592,6 @@ class CoronaLight(callbacks.Plugin):
             template = template.replace("$active", str(active))
             template = template.replace("$updated", updated)
         irc.reply(template)
+
 
 Class = CoronaLight

@@ -102,7 +102,7 @@ class CAH(callbacks.Plugin):
             self._notice(
                 nick,
                 "White Cards: %s  Please respond with playcard <number> [number]"
-                % (", ".join(enumeratedHand)),
+                % ", ".join(enumeratedHand),
             )
 
         def _displayPlayedCards(self):
@@ -202,7 +202,8 @@ class CAH(callbacks.Plugin):
                     self._msgHandToPlayer(nick)
                 self._msg(
                     channel,
-                    "The white cards have been sent to players, you have 60 seconds to choose.",
+                    "The white cards have been sent to players, you have 60 seconds to"
+                    " choose.",
                 )
                 self.acceptingWhiteCards = True
                 # TODO: do we need a round flag?
@@ -252,7 +253,8 @@ class CAH(callbacks.Plugin):
             game.voting = True
             self._msg(
                 channel,
-                "Please Vote on your favorite. votecard <number> to vote, the entire channel can vote.",
+                "Please Vote on your favorite. votecard <number> to vote, the entire"
+                " channel can vote.",
             )
             schedule.addEvent(self.stopcardvote, time.time() + 60, "vote_%s" % channel)
 

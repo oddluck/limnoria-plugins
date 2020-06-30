@@ -41,20 +41,23 @@ from supybot import world
 __version__ = "2020.02.24+git"
 
 # XXX Replace this with an appropriate author or supybot.Author instance.
-__author__ = supybot.Author('cottongin', 'cottongin',
-                            'cottongin@cottongin.club')
-__maintainer__ = getattr(supybot.authors, 'oddluck',
-                         supybot.Author('oddluck', 'oddluck', 'oddluck@riseup.net'))
+__author__ = supybot.Author("cottongin", "cottongin", "cottongin@cottongin.club")
+__maintainer__ = getattr(
+    supybot.authors,
+    "oddluck",
+    supybot.Author("oddluck", "oddluck", "oddluck@riseup.net"),
+)
 
 # This is a dictionary mapping supybot.Author instances to lists of
 # contributions.
 __contributors__ = {}
 
 # This is a url where the most recent plugin package can be downloaded.
-__url__ = 'https://github.com/oddluck/limnoria-plugins/'
+__url__ = "https://github.com/oddluck/limnoria-plugins/"
 
 from . import config
 from . import plugin
+
 if sys.version_info >= (3, 4):
     from importlib import reload
 else:
@@ -65,6 +68,7 @@ reload(plugin)
 # Add more reloads here if you add third-party modules and want them to be
 # reloaded when this plugin is reloaded.  Don't forget to import them as well!
 from . import accountsdb
+
 reload(accountsdb)
 
 if world.testing:

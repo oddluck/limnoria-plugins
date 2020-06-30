@@ -49,30 +49,35 @@ from functools import reduce
 
 DEBUG = False
 
-WHITE = '\x0300'
-GREEN = '\x0303'
-LRED = '\x0304'
-RED = '\x0305'
-YELLOW = '\x0307'
-LYELLOW = '\x0308'
-LGREEN = '\x0309'
-LCYAN = '\x0311'
-LBLUE = '\x0312'
-GRAY = '\x0314'
-LGRAY = '\x0315'
+WHITE = "\x0300"
+GREEN = "\x0303"
+LRED = "\x0304"
+RED = "\x0305"
+YELLOW = "\x0307"
+LYELLOW = "\x0308"
+LGREEN = "\x0309"
+LCYAN = "\x0311"
+LBLUE = "\x0312"
+GRAY = "\x0314"
+LGRAY = "\x0315"
+
 
 def debug(message):
-    log.debug('WordGames: ' + message)
+    log.debug("WordGames: " + message)
+
 
 def info(message):
-    log.info('WordGames: ' + message)
+    log.info("WordGames: " + message)
+
 
 def error(message):
-    log.error('WordGames: ' + message)
+    log.error("WordGames: " + message)
+
 
 def point_str(value):
     "Return 'point' or 'points' depending on value."
-    return 'point' if value == 1 else 'points'
+    return "point" if value == 1 else "points"
+
 
 # Ideally Supybot would do this for me. It seems that all IRC servers have
 # their own way of reporting this information...
@@ -82,22 +87,25 @@ def get_max_targets(irc):
     # Look for known maxtarget strings
     try:
         # Inspircd
-        if 'MAXTARGETS' in irc.state.supported:
-            result = int(irc.state.supported['MAXTARGETS'])
+        if "MAXTARGETS" in irc.state.supported:
+            result = int(irc.state.supported["MAXTARGETS"])
         # Freenode (ircd-seven)
-        elif 'TARGMAX' in irc.state.supported:
+        elif "TARGMAX" in irc.state.supported:
             # TARGMAX looks like "...,WHOIS:1,PRIVMSG:4,NOTICE:4,..."
-            regexp = r'.*PRIVMSG:(\d+).*'
-            match = re.match(regexp, irc.state.supported['TARGMAX'])
+            regexp = r".*PRIVMSG:(\d+).*"
+            match = re.match(regexp, irc.state.supported["TARGMAX"])
             if match:
                 result = int(match.group(1))
         else:
-            debug('Unable to find max targets, using default (1).')
+            debug("Unable to find max targets, using default (1).")
     except Exception as e:
-        error('Detecting max targets: %s. Using default (1).' % str(e))
+        error("Detecting max targets: %s. Using default (1)." % str(e))
     return result
 
-class WordGamesError(Exception): pass
+
+class WordGamesError(Exception):
+    pass
+
 
 class Difficulty:
     EASY = 0
@@ -106,7 +114,7 @@ class Difficulty:
     EVIL = 3
 
     VALUES = [EASY, MEDIUM, HARD, EVIL]
-    NAMES = ['easy', 'medium', 'hard', 'evil']
+    NAMES = ["easy", "medium", "hard", "evil"]
 
     @staticmethod
     def name(value):
@@ -117,7 +125,8 @@ class Difficulty:
         try:
             return Difficulty.VALUES[Difficulty.NAMES.index(name)]
         except ValueError:
-            raise WordGamesError('Unrecognized difficulty value: %s' % name)
+            raise WordGamesError("Unrecognized difficulty value: %s" % name)
+
 
 class WordGames(callbacks.Plugin):
     "Please see the README file to configure and use this plugin."
@@ -128,10 +137,10 @@ class WordGames(callbacks.Plugin):
         try:
             channel = msg.args[0]
             commandChars = conf.supybot.reply.whenAddressedBy.chars
-            if msg.command == 'PRIVMSG' and msg.args[1][0] not in str(commandChars):
+            if msg.command == "PRIVMSG" and msg.args[1][0] not in str(commandChars):
                 if not irc.isChannel(channel) and msg.nick:
                     game = self._find_player_game(msg.nick)
-                    if game and 'guess' in dir(game):
+                    if game and "guess" in dir(game):
                         game.guess(msg.nick, msg.args[1])
                         return None
         except:
@@ -161,14 +170,16 @@ class WordGames(callbacks.Plugin):
             game.handle_message(msg)
 
     if DEBUG:
+
         def wordsolve(self, irc, msgs, args, channel):
             "Show solution(s) for the currently running game."
             game = self.games.get(channel)
             if game and game.is_running():
                 game.solve()
             else:
-                irc.reply('No game is currently running.')
-        wordsolve = wrap(wordsolve, ['channel'])
+                irc.reply("No game is currently running.")
+
+        wordsolve = wrap(wordsolve, ["channel"])
 
     def boggle(self, irc, msgs, args, channel, command):
         """[command]
@@ -178,45 +189,51 @@ class WordGames(callbacks.Plugin):
         """
         try:
             # Allow deprecated 'join' command:
-            if not command or command == 'join' or command in Difficulty.NAMES:
-                difficulty = Difficulty.value(
-                    self.registryValue('boggleDifficulty'))
+            if not command or command == "join" or command in Difficulty.NAMES:
+                difficulty = Difficulty.value(self.registryValue("boggleDifficulty"))
                 if command in Difficulty.NAMES:
                     difficulty = Difficulty.value(command)
                 game = self.games.get(channel)
                 if game and game.is_running():
                     if game.__class__ == Boggle:
                         if command:
-                            irc.reply('Joining the game. (Ignored "%s".)' %
-                                command)
+                            irc.reply('Joining the game. (Ignored "%s".)' % command)
                         game.join(msgs.nick)
                     else:
-                        irc.reply('Current word game is not Boggle!')
+                        irc.reply("Current word game is not Boggle!")
                 else:
-                    delay = self.registryValue('boggleDelay')
-                    duration = self.registryValue('boggleDuration')
-                    self._start_game(Boggle, irc, channel, msgs.nick,
-                        delay, duration, difficulty)
-            elif command == 'stop':
+                    delay = self.registryValue("boggleDelay")
+                    duration = self.registryValue("boggleDuration")
+                    self._start_game(
+                        Boggle, irc, channel, msgs.nick, delay, duration, difficulty
+                    )
+            elif command == "stop":
                 # Alias for @wordquit
                 self._stop_game(irc, channel)
-            elif command == 'stats':
+            elif command == "stats":
                 game = self.games.get(channel)
                 if not game or game.__class__ != Boggle:
-                    irc.reply('No Boggle game available for stats.')
+                    irc.reply("No Boggle game available for stats.")
                 elif game.is_running():
-                    irc.reply('Please wait until the game finishes.')
+                    irc.reply("Please wait until the game finishes.")
                 else:
                     game.stats()
             else:
-                irc.reply('Unrecognized command to Boggle.')
+                irc.reply("Unrecognized command to Boggle.")
         except WordGamesError as e:
-            irc.reply('WordGames error: %s' % str(e))
-            irc.reply('Please check the configuration and try again. ' +
-                      'See README for help.')
-    boggle = wrap(boggle,
-        ['channel', optional(('literal',
-            Difficulty.NAMES + ['join', 'stop', 'stats']))])
+            irc.reply("WordGames error: %s" % str(e))
+            irc.reply(
+                "Please check the configuration and try again. "
+                + "See README for help."
+            )
+
+    boggle = wrap(
+        boggle,
+        [
+            "channel",
+            optional(("literal", Difficulty.NAMES + ["join", "stop", "stats"])),
+        ],
+    )
 
     def wordshrink(self, irc, msgs, args, channel, difficulty):
         """[easy|medium|hard|evil] (default: medium)
@@ -224,12 +241,14 @@ class WordGames(callbacks.Plugin):
         Start a word-shrink game. Make new words by dropping one letter from
         the previous word and rearranging the remaining letters.
         """
-        if difficulty not in ['easy', 'medium', 'hard', 'evil']:
-            irc.reply('Difficulty must be easy, medium, hard, or evil.')
+        if difficulty not in ["easy", "medium", "hard", "evil"]:
+            irc.reply("Difficulty must be easy, medium, hard, or evil.")
         else:
             self._start_game(WordShrink, irc, channel, difficulty)
-    wordshrink = wrap(wordshrink,
-        ['channel', optional('somethingWithoutSpaces', 'medium')])
+
+    wordshrink = wrap(
+        wordshrink, ["channel", optional("somethingWithoutSpaces", "medium")]
+    )
 
     def wordtwist(self, irc, msgs, args, channel, difficulty):
         """[easy|medium|hard|evil] (default: medium)
@@ -237,12 +256,14 @@ class WordGames(callbacks.Plugin):
         Start a word-twist game. Make new words by changing one letter in
         the previous word.
         """
-        if difficulty not in ['easy', 'medium', 'hard', 'evil']:
-            irc.reply('Difficulty must be easy, medium, hard, or evil.')
+        if difficulty not in ["easy", "medium", "hard", "evil"]:
+            irc.reply("Difficulty must be easy, medium, hard, or evil.")
         else:
             self._start_game(WordTwist, irc, channel, difficulty)
-    wordtwist = wrap(wordtwist,
-        ['channel', optional('somethingWithoutSpaces', 'medium')])
+
+    wordtwist = wrap(
+        wordtwist, ["channel", optional("somethingWithoutSpaces", "medium")]
+    )
 
     def wordquit(self, irc, msgs, args, channel):
         """(takes no arguments)
@@ -250,13 +271,14 @@ class WordGames(callbacks.Plugin):
         Stop any currently running word game.
         """
         self._stop_game(irc, channel)
-    wordquit = wrap(wordquit, ['channel'])
+
+    wordquit = wrap(wordquit, ["channel"])
 
     def _find_player_game(self, player):
         "Find a game (in any channel) that lists player as an active player."
         my_game = None
         for game in list(self.games.values()):
-            if game.is_running() and 'players' in dir(game):
+            if game.is_running() and "players" in dir(game):
                 if player in game.players:
                     my_game = game
                     break
@@ -264,10 +286,10 @@ class WordGames(callbacks.Plugin):
 
     def _get_words(self):
         try:
-            regexp = re.compile(self.registryValue('wordRegexp'))
+            regexp = re.compile(self.registryValue("wordRegexp"))
         except Exception as e:
             raise WordGamesError("Bad value for wordRegexp: %s" % str(e))
-        path = self.registryValue('wordFile')
+        path = self.registryValue("wordFile")
         try:
             wordFile = open(path)
         except Exception as e:
@@ -278,7 +300,7 @@ class WordGames(callbacks.Plugin):
         try:
             game = self.games.get(channel)
             if game and game.is_running():
-                irc.reply('A word game is already running here.')
+                irc.reply("A word game is already running here.")
                 game.show()
             else:
                 words = self._get_words()
@@ -286,17 +308,21 @@ class WordGames(callbacks.Plugin):
                 self.games[channel].start()
         except WordGamesError as e:
             # Get rid of the game in case it's in an indeterminate state
-            if channel in self.games: del self.games[channel]
-            irc.reply('WordGames error: %s' % str(e))
-            irc.reply('Please check the configuration and try again. ' +
-                      'See README for help.')
+            if channel in self.games:
+                del self.games[channel]
+            irc.reply("WordGames error: %s" % str(e))
+            irc.reply(
+                "Please check the configuration and try again. "
+                + "See README for help."
+            )
 
     def _stop_game(self, irc, channel):
         game = self.games.get(channel)
         if game and game.is_running():
             game.stop()
         else:
-            irc.reply('No word game currently running.')
+            irc.reply("No word game currently running.")
+
 
 class BaseGame(object):
     "Base class for the games in this plugin."
@@ -342,8 +368,7 @@ class BaseGame(object):
 
     def announce_to(self, dest, text, now=False):
         "Announce to a specific destination (nick or channel)."
-        new_text = '%s%s%s:%s %s' % (
-            LBLUE, self.__class__.__name__, WHITE, LGRAY, text)
+        new_text = "%s%s%s:%s %s" % (LBLUE, self.__class__.__name__, WHITE, LGRAY, text)
         self.send_to(dest, new_text, now)
 
     def send(self, text, now=False):
@@ -362,22 +387,23 @@ class BaseGame(object):
         "Handle incoming messages on the channel."
         pass
 
+
 class Boggle(BaseGame):
     "The Boggle game implementation."
 
     BOARD_SIZE = 4
     FREQUENCY_TABLE = {
-        19: 'E',
-        13: 'T',
-        12: 'AR',
-        11: 'INO',
-        9:  'S',
-        6:  'D',
-        5:  'CHL',
-        4:  'FMPU',
-        3:  'GY',
-        2:  'W',
-        1:  'BJKQVXZ',
+        19: "E",
+        13: "T",
+        12: "AR",
+        11: "INO",
+        9: "S",
+        6: "D",
+        5: "CHL",
+        4: "FMPU",
+        3: "GY",
+        2: "W",
+        1: "BJKQVXZ",
     }
     POINT_VALUES = {
         3: 1,
@@ -386,29 +412,33 @@ class Boggle(BaseGame):
         6: 3,
         7: 5,
     }
-    MAX_POINTS = 11 # 8 letters or longer
+    MAX_POINTS = 11  # 8 letters or longer
     MESSAGES = {
-        'chat':     '%s%%(nick)s%s says: %%(text)s' % (WHITE, LGRAY),
-        'joined':   '%s%%(nick)s%s joined the game.' % (WHITE, LGRAY),
-        'gameover': ("%s::: Time's Up :::%s Check %s%%(channel)s%s " +
-                     "for results.") %
-                    (LRED, LGRAY, WHITE, LGRAY),
-        'players':  'Current Players: %(players)s',
-        'ready':    '%sGet Ready!' % WHITE,
-        'result':   ('%s%%(nick)s%s %%(verb)s %s%%(points)d%s ' +
-                     'point%%(plural)s (%%(words)s)') %
-                    (WHITE, LGRAY, LGREEN, LGRAY),
-        'startup': ('Starting in %%(seconds)d seconds, ' +
-                     'use "%s%%(commandChar)sboggle%s" to play!') %
-                    (WHITE, LGRAY),
-        'stopped':  'Game stopped.',
-        'stopped2':  ('%s::: Game Stopped :::%s') % (LRED, LGRAY),
-        'warning':  '%s%%(seconds)d%s seconds remaining...' % (LYELLOW, LGRAY),
-        'welcome1': ('%s::: New Game :::%s (%s%%(difficulty)s%s: ' +
-                     '%s%%(min_length)d%s letters or longer)') %
-                    (LGREEN, LGRAY, WHITE, LGRAY, WHITE, LGRAY),
-        'welcome2': ('%s%%(nick)s%s, write your answers here, e.g.: ' +
-                     'cat dog ...') % (WHITE, LGRAY),
+        "chat": "%s%%(nick)s%s says: %%(text)s" % (WHITE, LGRAY),
+        "joined": "%s%%(nick)s%s joined the game." % (WHITE, LGRAY),
+        "gameover": ("%s::: Time's Up :::%s Check %s%%(channel)s%s " + "for results.")
+        % (LRED, LGRAY, WHITE, LGRAY),
+        "players": "Current Players: %(players)s",
+        "ready": "%sGet Ready!" % WHITE,
+        "result": (
+            "%s%%(nick)s%s %%(verb)s %s%%(points)d%s " + "point%%(plural)s (%%(words)s)"
+        )
+        % (WHITE, LGRAY, LGREEN, LGRAY),
+        "startup": (
+            "Starting in %%(seconds)d seconds, "
+            + 'use "%s%%(commandChar)sboggle%s" to play!'
+        )
+        % (WHITE, LGRAY),
+        "stopped": "Game stopped.",
+        "stopped2": "%s::: Game Stopped :::%s" % (LRED, LGRAY),
+        "warning": "%s%%(seconds)d%s seconds remaining..." % (LYELLOW, LGRAY),
+        "welcome1": (
+            "%s::: New Game :::%s (%s%%(difficulty)s%s: "
+            + "%s%%(min_length)d%s letters or longer)"
+        )
+        % (LGREEN, LGRAY, WHITE, LGRAY, WHITE, LGRAY),
+        "welcome2": ("%s%%(nick)s%s, write your answers here, e.g.: " + "cat dog ...")
+        % (WHITE, LGRAY),
     }
 
     class State:
@@ -426,22 +456,22 @@ class Boggle(BaseGame):
             self.dup = dup if dup else set()
 
         def __eq__(self, other):
-            return ((self.get_score()) == (other.get_score()))
+            return (self.get_score()) == (other.get_score())
 
         def __ne__(self, other):
-            return ((self.get_score()) != (other.get_score()))
+            return (self.get_score()) != (other.get_score())
 
         def __lt__(self, other):
-            return ((self.get_score()) < (other.get_score()))
+            return (self.get_score()) < (other.get_score())
 
         def __le__(self, other):
-            return ((self.get_score()) <= (other.get_score()))
+            return (self.get_score()) <= (other.get_score())
 
         def __gt__(self, other):
-            return ((self.get_score()) > (other.get_score()))
+            return (self.get_score()) > (other.get_score())
 
         def __ge__(self, other):
-            return ((self.get_score()) >= (other.get_score()))
+            return (self.get_score()) >= (other.get_score())
 
         def __repr__(self):
             return "%s %s" % (self.get_score(), other.get_score())
@@ -455,7 +485,7 @@ class Boggle(BaseGame):
         def render_words(self, longest_len=0):
             "Return the words in this result, colorized appropriately."
             words = sorted(list(self.unique) + list(self.dup))
-            words_text = ''
+            words_text = ""
             last_color = LGRAY
             for word in words:
                 color = LCYAN if word in self.unique else GRAY
@@ -463,11 +493,11 @@ class Boggle(BaseGame):
                     words_text += color
                     last_color = color
                 if len(word) == longest_len:
-                    word += LYELLOW + '*'
+                    word += LYELLOW + "*"
                     last_color = LYELLOW
-                words_text += '%s ' % word
+                words_text += "%s " % word
             if not words_text:
-                words_text = '%s-none-' % (GRAY)
+                words_text = "%s-none-" % (GRAY)
             words_text = words_text.strip() + LGRAY
             return words_text
 
@@ -493,8 +523,7 @@ class Boggle(BaseGame):
                     dup.add(word)
                 else:
                     unique.add(word)
-            self.player_results[player] = \
-                    Boggle.PlayerResult(player, unique, dup)
+            self.player_results[player] = Boggle.PlayerResult(player, unique, dup)
 
         def sorted_results(self):
             return sorted(list(self.player_results.values()), reverse=True)
@@ -509,7 +538,7 @@ class Boggle(BaseGame):
         self.max_targets = get_max_targets(irc)
         self._handle_difficulty()
         self.board = self._generate_board()
-        self.event_name = 'Boggle.%d' % id(self)
+        self.event_name = "Boggle.%d" % id(self)
         self.init_time = time.time()
         self.longest_len = len(max(self.board.solutions, key=len))
         self.starter = nick
@@ -526,60 +555,64 @@ class Boggle(BaseGame):
             self.join(nick)
         # Pre-game messages are relayed as chatter (not treated as guesses)
         if self.state < Boggle.State.ACTIVE:
-            self._broadcast('chat', self.players, nick=nick, text=text)
+            self._broadcast("chat", self.players, nick=nick, text=text)
             return
         guesses = set(map(str.lower, text.split()))
         accepted = [s for s in guesses if s in self.board.solutions]
         rejected = [s for s in guesses if s not in self.board.solutions]
         if len(accepted) > 3:
-            message = '%sGreat!%s' % (LGREEN, WHITE)
+            message = "%sGreat!%s" % (LGREEN, WHITE)
         elif len(accepted) > 0:
-            message = '%sOk!' % WHITE
+            message = "%sOk!" % WHITE
         else:
-            message = '%sOops!%s' % (RED, LGRAY)
+            message = "%sOops!%s" % (RED, LGRAY)
         if accepted:
-            message += ' You got: %s%s' % (' '.join(sorted(accepted)), LGRAY)
+            message += " You got: %s%s" % (" ".join(sorted(accepted)), LGRAY)
             self.player_answers[nick].update(accepted)
         if rejected:
-            message += ' (not accepted: %s)' % ' '.join(sorted(rejected))
+            message += " (not accepted: %s)" % " ".join(sorted(rejected))
         self.send_to(nick, message)
 
     def join(self, nick):
         assert self.is_running()
         assert self.state != Boggle.State.DONE
         if nick not in self.players:
-            self._broadcast('welcome1', [nick], now=True,
+            self._broadcast(
+                "welcome1",
+                [nick],
+                now=True,
                 difficulty=Difficulty.name(self.difficulty),
-                min_length=self.min_length)
-            self._broadcast('welcome2', [nick], now=True, nick=nick)
-            self._broadcast('joined', self.players, nick=nick)
+                min_length=self.min_length,
+            )
+            self._broadcast("welcome2", [nick], now=True, nick=nick)
+            self._broadcast("joined", self.players, nick=nick)
             self.players.append(nick)
             self.player_answers[nick] = set()
             if self.state == Boggle.State.ACTIVE:
                 self._display_board(nick)
             else:
-                self._broadcast('players', [nick])
+                self._broadcast("players", [nick])
             # Keep at least 5 seconds on the pre-game clock if someone joins
             if self.state == Boggle.State.PREGAME:
                 time_left = self.init_time + self.delay - time.time()
                 if time_left < 5:
-                    self.delay += (5 - time_left)
+                    self.delay += 5 - time_left
                 self._schedule_next_event()
         else:
-            self.send('%s: You have already joined the game.' % nick)
+            self.send("%s: You have already joined the game." % nick)
 
     def show(self):
         # Not sure if this is really useful.
-        #if self.state == Boggle.State.ACTIVE:
+        # if self.state == Boggle.State.ACTIVE:
         #    self._display_board(self.channel)
         pass
 
     def solve(self):
-        self.announce('Solutions: ' + ' '.join(sorted(self.board.solutions)))
+        self.announce("Solutions: " + " ".join(sorted(self.board.solutions)))
 
     def start(self):
         self.parent.start()
-        self._broadcast('startup', [self.channel], True, seconds=self.delay)
+        self._broadcast("startup", [self.channel], True, seconds=self.delay)
         self.join(self.starter)
         self._schedule_next_event()
 
@@ -591,8 +624,8 @@ class Boggle(BaseGame):
         except KeyError:
             pass
         if not now:
-            self._broadcast('stopped', [self.channel])
-            self._broadcast('stopped2', self.players)
+            self._broadcast("stopped", [self.channel])
+            self._broadcast("stopped2", self.players)
 
     def stats(self):
         assert self.state == Boggle.State.DONE
@@ -600,11 +633,22 @@ class Boggle(BaseGame):
         for word in self.board.solutions:
             points += Boggle.POINT_VALUES.get(len(word), Boggle.MAX_POINTS)
         longest_words = [w for w in self.board.solutions if len(w) == self.longest_len]
-        self.announce(('There were %s%d%s possible words, with total point'
-            ' value %s%d%s. The longest word%s: %s%s%s.') %
-            (WHITE, len(self.board.solutions), LGRAY, LGREEN, points, LGRAY,
-            ' was' if len(longest_words) == 1 else 's were',
-             LCYAN, (LGRAY + ', ' + LCYAN).join(longest_words), LGRAY))
+        self.announce(
+            "There were %s%d%s possible words, with total point"
+            " value %s%d%s. The longest word%s: %s%s%s."
+            % (
+                WHITE,
+                len(self.board.solutions),
+                LGRAY,
+                LGREEN,
+                points,
+                LGRAY,
+                " was" if len(longest_words) == 1 else "s were",
+                LCYAN,
+                (LGRAY + ", " + LCYAN).join(longest_words),
+                LGRAY,
+            )
+        )
 
     def _broadcast_text(self, text, recipients=None, now=False):
         """
@@ -615,7 +659,7 @@ class Boggle(BaseGame):
         if recipients is None:
             recipients = self.players
         for i in range(0, len(recipients), self.max_targets):
-            targets = ','.join(recipients[i:i+self.max_targets])
+            targets = ",".join(recipients[i : i + self.max_targets])
             self.announce_to(targets, text, now)
 
     def _broadcast(self, name, recipients=None, now=False, **kwargs):
@@ -627,26 +671,29 @@ class Boggle(BaseGame):
         particular message.
         """
         # Automatically provide some dictionary values
-        kwargs['channel'] = self.channel
-        kwargs['commandChar'] = str(conf.supybot.reply.whenAddressedBy.chars)[0]
-        kwargs['players'] = "%s%s%s" % \
-            (WHITE, (LGRAY + ', ' + WHITE).join(self.players), LGRAY)
-        if 'points' in kwargs:
-            kwargs['plural'] = '' if kwargs['points'] == 1 else 's'
+        kwargs["channel"] = self.channel
+        kwargs["commandChar"] = str(conf.supybot.reply.whenAddressedBy.chars)[0]
+        kwargs["players"] = "%s%s%s" % (
+            WHITE,
+            (LGRAY + ", " + WHITE).join(self.players),
+            LGRAY,
+        )
+        if "points" in kwargs:
+            kwargs["plural"] = "" if kwargs["points"] == 1 else "s"
         formatted = Boggle.MESSAGES[name] % kwargs
         self._broadcast_text(formatted, recipients, now)
 
     def _handle_difficulty(self):
         self.min_length = {
-            Difficulty.EASY:   3,
+            Difficulty.EASY: 3,
             Difficulty.MEDIUM: 4,
-            Difficulty.HARD:   5,
-            Difficulty.EVIL:   6,
+            Difficulty.HARD: 5,
+            Difficulty.EVIL: 6,
         }[self.difficulty]
 
     def _get_ready(self):
         self.state = Boggle.State.READY
-        self._broadcast('ready', now=True)
+        self._broadcast("ready", now=True)
         self._schedule_next_event()
 
     def _begin_game(self):
@@ -668,29 +715,29 @@ class Boggle(BaseGame):
             pass
         if self.state == Boggle.State.PREGAME:
             # Schedule "get ready" message
-            schedule.addEvent(self._get_ready,
-                self.init_time + self.delay, self.event_name)
+            schedule.addEvent(
+                self._get_ready, self.init_time + self.delay, self.event_name
+            )
         elif self.state == Boggle.State.READY:
             # Schedule game start
-            schedule.addEvent(self._begin_game,
-                self.init_time + self.delay + 3, self.event_name)
+            schedule.addEvent(
+                self._begin_game, self.init_time + self.delay + 3, self.event_name
+            )
         elif self.state == Boggle.State.ACTIVE:
             if self.warnings:
                 # Warn almost half a second early, in case there is a little
                 # latency before the event is triggered. (Otherwise a 30 second
                 # warning sometimes shows up as 29 seconds remaining.)
                 warn_time = self.end_time - self.warnings[0] - 0.499
-                schedule.addEvent(
-                    self._time_warning, warn_time, self.event_name)
+                schedule.addEvent(self._time_warning, warn_time, self.event_name)
                 self.warnings = self.warnings[1:]
             else:
                 # Schedule game end
-                schedule.addEvent(
-                    self._end_game, self.end_time, self.event_name)
+                schedule.addEvent(self._end_game, self.end_time, self.event_name)
 
     def _time_warning(self):
         seconds = round(self.start_time + self.duration - time.time())
-        self._broadcast('warning', now=True, seconds=seconds)
+        self._broadcast("warning", now=True, seconds=seconds)
         self._schedule_next_event()
 
     def _end_game(self):
@@ -704,13 +751,12 @@ class Boggle(BaseGame):
 
         # Notify players
         for result in list(results.player_results.values()):
-            self._broadcast('gameover', [result.player], now=True)
+            self._broadcast("gameover", [result.player], now=True)
 
         # Announce results
         player_results = results.sorted_results()
         high_score = player_results[0].get_score()
-        tie = len(player_results) > 1 and \
-              player_results[1].get_score() == high_score
+        tie = len(player_results) > 1 and player_results[1].get_score() == high_score
         for result in player_results:
             score = result.get_score()
             verb = "got"
@@ -720,18 +766,27 @@ class Boggle(BaseGame):
                 elif high_score > 0:
                     verb = "%swins%s with" % (LGREEN, LGRAY)
             words_text = result.render_words(longest_len=self.longest_len)
-            self._broadcast('result', [self.channel], nick=result.player,
-                    verb=verb, points=score, words=words_text)
+            self._broadcast(
+                "result",
+                [self.channel],
+                nick=result.player,
+                verb=verb,
+                points=score,
+                words=words_text,
+            )
 
     def _display_board(self, nick=None):
         "Display the board to everyone or just one nick if specified."
         commandChar = str(conf.supybot.reply.whenAddressedBy.chars)[0]
-        help_msgs = [''] * Boggle.BOARD_SIZE
-        help_msgs[1] = '%sLet\'s GO!' % (WHITE)
-        help_msgs[2] = '%s%s%s seconds left!' % \
-            (LYELLOW, int(round(self.end_time - time.time())), LGRAY)
+        help_msgs = [""] * Boggle.BOARD_SIZE
+        help_msgs[1] = "%sLet's GO!" % (WHITE)
+        help_msgs[2] = "%s%s%s seconds left!" % (
+            LYELLOW,
+            int(round(self.end_time - time.time())),
+            LGRAY,
+        )
         for row, help_msg in zip(self.board.render(), help_msgs):
-            text = '   %s     %s' % (row, help_msg)
+            text = "   %s     %s" % (row, help_msg)
             if nick:
                 self.announce_to(nick, text, now=True)
             else:
@@ -742,10 +797,13 @@ class Boggle(BaseGame):
         attempts = 5
         wordtrie = Trie()
         list(map(wordtrie.add, self.words))
-        boards = [BoggleBoard(wordtrie, Boggle.BOARD_SIZE, self.min_length)
-            for i in range(0, attempts)]
+        boards = [
+            BoggleBoard(wordtrie, Boggle.BOARD_SIZE, self.min_length)
+            for i in range(0, attempts)
+        ]
         board_quality = lambda b: len(b.solutions)
         return max(boards, key=board_quality)
+
 
 class BoggleBoard(object):
     "Represents the board in a Boggle game."
@@ -761,52 +819,75 @@ class BoggleBoard(object):
         "Render the board for display in IRC as a list of strings."
         result = []
         for row in self.rows:
-            text = LGREEN + '  '.join(row) + ' ' # Last space pad in case of Qu
-            text = text.replace('Q ', 'Qu')
+            text = LGREEN + "  ".join(row) + " "  # Last space pad in case of Qu
+            text = text.replace("Q ", "Qu")
             result.append(text)
         return result
 
-    def _find_solutions(self, wordtrie, visited=None, row=0, col=0, prefix=''):
+    def _find_solutions(self, wordtrie, visited=None, row=0, col=0, prefix=""):
         "Discover and return the set of all solutions for the current board."
         result = set()
         if visited == None:
             for row in range(0, self.size):
                 for col in range(0, self.size):
-                    result.update(
-                        self._find_solutions(wordtrie, [], row, col, ''))
+                    result.update(self._find_solutions(wordtrie, [], row, col, ""))
         else:
             visited = visited + [(row, col)]
             current = prefix + self.rows[row][col].lower()
-            if current[-1] == 'q': current += 'u'
+            if current[-1] == "q":
+                current += "u"
             node = wordtrie.find_prefix(current)
             if node:
-                if node['*'] and len(current) >= self.min_length:
+                if node["*"] and len(current) >= self.min_length:
                     result.add(current)
                 # Explore all 8 directions out from here
-                offsets = [(-1, -1), (-1, 0), (-1, 1),
-                           ( 0, -1),          ( 0, 1),
-                           ( 1, -1), ( 1, 0), ( 1, 1)]
+                offsets = [
+                    (-1, -1),
+                    (-1, 0),
+                    (-1, 1),
+                    (0, -1),
+                    (0, 1),
+                    (1, -1),
+                    (1, 0),
+                    (1, 1),
+                ]
                 for offset in offsets:
                     point = (row + offset[0], col + offset[1])
-                    if point in visited: continue
-                    if point[0] < 0 or point[0] >= self.size: continue
-                    if point[1] < 0 or point[1] >= self.size: continue
-                    result.update(self._find_solutions(
-                        wordtrie, visited, point[0], point[1], current))
+                    if point in visited:
+                        continue
+                    if point[0] < 0 or point[0] >= self.size:
+                        continue
+                    if point[1] < 0 or point[1] >= self.size:
+                        continue
+                    result.update(
+                        self._find_solutions(
+                            wordtrie, visited, point[0], point[1], current
+                        )
+                    )
         return result
 
     def _generate_rows(self):
         "Randomly generate a Boggle board (a list of lists)."
-        letters = reduce(add, (list(map(mul,
-                list(Boggle.FREQUENCY_TABLE.keys()),
-                list(Boggle.FREQUENCY_TABLE.values())))))
+        letters = reduce(
+            add,
+            (
+                list(
+                    map(
+                        mul,
+                        list(Boggle.FREQUENCY_TABLE.keys()),
+                        list(Boggle.FREQUENCY_TABLE.values()),
+                    )
+                )
+            ),
+        )
         rows = []
-        values = random.sample(letters, self.size**2)
+        values = random.sample(letters, self.size ** 2)
         for i in range(0, self.size):
             start = self.size * i
             end = start + self.size
             rows.append(values[start:end])
         return rows
+
 
 class WordChain(BaseGame):
     "Base class for word-chain games like WordShrink and WordTwist."
@@ -822,8 +903,8 @@ class WordChain(BaseGame):
            num_solutions:  A limit to the number of possible solutions, or
                            None for unlimited.
         """
-        def __init__(self, puzzle_lengths, word_lengths=None,
-                     num_solutions=None):
+
+        def __init__(self, puzzle_lengths, word_lengths=None, num_solutions=None):
             self.puzzle_lengths = puzzle_lengths
             self.word_lengths = word_lengths
             self.num_solutions = num_solutions
@@ -845,27 +926,34 @@ class WordChain(BaseGame):
 
     def start(self):
         # Build a puzzle
-        attempts = 100000 # Prevent infinite loops
+        attempts = 100000  # Prevent infinite loops
         while attempts:
             self.solution = []
             while len(self.solution) < self.solution_length:
                 attempts -= 1
                 if attempts == 0:
-                    raise WordGamesError(('Unable to generate %s puzzle. This' +
-                        ' is either a bug, or the word file is too small.') %
-                        self.__class__.__name__)
+                    raise WordGamesError(
+                        (
+                            "Unable to generate %s puzzle. This"
+                            + " is either a bug, or the word file is too small."
+                        )
+                        % self.__class__.__name__
+                    )
                 self.solution = [random.choice(self.words)]
                 for i in range(1, self.solution_length):
                     values = self.word_map[self.solution[-1]]
                     values = [w for w in values if w not in self.solution]
-                    if not values: break
+                    if not values:
+                        break
                     self.solution.append(random.choice(values))
             self.solutions = []
             self._find_solutions()
             # Enforce maximum solutions limit (difficulty parameter)
             happy = True
-            if self.settings.num_solutions and \
-                    len(self.solutions) not in self.settings.num_solutions:
+            if (
+                self.settings.num_solutions
+                and len(self.solutions) not in self.settings.num_solutions
+            ):
                 happy = False
             # Ensure no solution is trivial
             for solution in self.solutions:
@@ -875,9 +963,13 @@ class WordChain(BaseGame):
             if happy:
                 break
         if not happy:
-            raise WordGamesError(('Unable to generate %s puzzle meeting the ' +
-                'game parameters. This is probably a bug.') %
-                self.__class__.__name__)
+            raise WordGamesError(
+                (
+                    "Unable to generate %s puzzle meeting the "
+                    + "game parameters. This is probably a bug."
+                )
+                % self.__class__.__name__
+            )
 
         # Start the game
         self.show()
@@ -890,8 +982,10 @@ class WordChain(BaseGame):
         words.append(self.solution[-1])
         self.announce(self._join_words(words))
         num = len(self.solutions)
-        self.send("(%s%d%s possible solution%s)" %
-                  (WHITE, num, LGRAY, '' if num == 1 else 's'))
+        self.send(
+            "(%s%d%s possible solution%s)"
+            % (WHITE, num, LGRAY, "" if num == 1 else "s")
+        )
 
     def solve(self):
         show = 3
@@ -899,8 +993,10 @@ class WordChain(BaseGame):
             self.announce(self._join_words(solution))
         not_shown = len(self.solutions) - show
         if not_shown > 0:
-            self.announce('(%d more solution%s not shown.)' %
-                    (not_shown, 's' if not_shown > 1 else ''))
+            self.announce(
+                "(%d more solution%s not shown.)"
+                % (not_shown, "s" if not_shown > 1 else "")
+            )
 
     def stop(self, now=False):
         self.parent.stop()
@@ -908,7 +1004,7 @@ class WordChain(BaseGame):
             self.announce(self._join_words(self.solution))
 
     def handle_message(self, msg):
-        words = list(map(str.strip, msg.args[1].split('>')))
+        words = list(map(str.strip, msg.args[1].split(">")))
         for word in words:
             if not re.match(r"^[a-z]+$", word):
                 return
@@ -967,10 +1063,10 @@ class WordChain(BaseGame):
             return False
         # Check for incorrect start/end words
         if words[0] != self.solution[0]:
-            self.send('%s: %s is not the starting word.' % (nick, words[0]))
+            self.send("%s: %s is not the starting word." % (nick, words[0]))
             return False
         if words[-1] != self.solution[-1]:
-            self.send('%s: %s is not the final word.' % (nick, words[-1]))
+            self.send("%s: %s is not the final word." % (nick, words[-1]))
             return False
         # Check dictionary
         for word in words:
@@ -978,24 +1074,25 @@ class WordChain(BaseGame):
                 self.send("%s: %s is not a word I know." % (nick, word))
                 return False
         # Enforce pairwise relationships
-        for i in range(0, len(words)-1):
-            if words[i+1] not in self._get_successors(words[i]):
-                self.send("%s: %s does not follow from %s." %
-                        (nick, words[i+1], words[i]))
+        for i in range(0, len(words) - 1):
+            if words[i + 1] not in self._get_successors(words[i]):
+                self.send(
+                    "%s: %s does not follow from %s." % (nick, words[i + 1], words[i])
+                )
                 return False
         return True
 
+
 class WordShrink(WordChain):
     def __init__(self, words, irc, channel, difficulty):
-        assert difficulty in ['easy', 'medium', 'hard', 'evil'], "Bad mojo."
+        assert difficulty in ["easy", "medium", "hard", "evil"], "Bad mojo."
         settings = {
-            'easy':   WordChain.Settings([4], list(range(3, 9)), list(range(15, 100))),
-            'medium': WordChain.Settings([5], list(range(4, 10)), list(range(8, 25))),
-            'hard':   WordChain.Settings([6], list(range(4, 12)), list(range(4, 12))),
-            'evil':   WordChain.Settings([7], list(range(4, 15)), list(range(1, 10))),
+            "easy": WordChain.Settings([4], list(range(3, 9)), list(range(15, 100))),
+            "medium": WordChain.Settings([5], list(range(4, 10)), list(range(8, 25))),
+            "hard": WordChain.Settings([6], list(range(4, 12)), list(range(4, 12))),
+            "evil": WordChain.Settings([7], list(range(4, 15)), list(range(1, 10))),
         }
-        super(WordShrink, self).__init__(
-            words, irc, channel, settings[difficulty])
+        super(WordShrink, self).__init__(words, irc, channel, settings[difficulty])
 
     def build_word_map(self):
         "Build a map of word -> [word1, word2] for all valid transitions."
@@ -1015,38 +1112,38 @@ class WordShrink(WordChain):
                 self.word_map[s] = self.word_map[word1] = []
                 keys = set()
                 for i in range(0, len(s)):
-                    keys.add(s[0:i] + s[i+1:])
+                    keys.add(s[0:i] + s[i + 1 :])
                 for key in keys:
                     for word2 in keymap.get(key, []):
                         self.word_map[s].append(word2)
 
     def is_trivial_solution(self, solution):
         "Consider pure substring solutions trivial."
-        for i in range(0, len(solution)-1):
-            for j in range(i+1, len(solution)):
+        for i in range(0, len(solution) - 1):
+            for j in range(i + 1, len(solution)):
                 if solution[i].find(solution[j]) >= 0:
                     return True
         return False
 
+
 class WordTwist(WordChain):
     def __init__(self, words, irc, channel, difficulty):
-        assert difficulty in ['easy', 'medium', 'hard', 'evil'], "Bad mojo."
+        assert difficulty in ["easy", "medium", "hard", "evil"], "Bad mojo."
         settings = {
-            'easy':   WordChain.Settings([4], [3, 4], list(range(10, 100))),
-            'medium': WordChain.Settings([5], [4, 5], list(range(5, 12))),
-            'hard':   WordChain.Settings([6], [4, 5, 6], list(range(2, 5))),
-            'evil':   WordChain.Settings([7], [4, 5, 6], list(range(1, 3))),
+            "easy": WordChain.Settings([4], [3, 4], list(range(10, 100))),
+            "medium": WordChain.Settings([5], [4, 5], list(range(5, 12))),
+            "hard": WordChain.Settings([6], [4, 5, 6], list(range(2, 5))),
+            "evil": WordChain.Settings([7], [4, 5, 6], list(range(1, 3))),
         }
-        super(WordTwist, self).__init__(
-            words, irc, channel, settings[difficulty])
+        super(WordTwist, self).__init__(words, irc, channel, settings[difficulty])
 
     def build_word_map(self):
         "Build the map of word -> [word1, word2, ...] for all valid pairs."
         keymap = {}
-        wildcard = '*'
+        wildcard = "*"
         for word in self.words:
             for pos in range(0, len(word)):
-                key = word[0:pos] + wildcard + word[pos+1:]
+                key = word[0:pos] + wildcard + word[pos + 1 :]
                 if key not in keymap:
                     keymap[key] = [word]
                 else:
@@ -1055,12 +1152,13 @@ class WordTwist(WordChain):
         for word in self.words:
             self.word_map[word] = []
             for pos in range(0, len(word)):
-                key = word[0:pos] + wildcard + word[pos+1:]
+                key = word[0:pos] + wildcard + word[pos + 1 :]
                 self.word_map[word] += [w for w in keymap.get(key, []) if w != word]
 
     def is_trivial_solution(self, solution):
         "If it's possible to get there in fewer hops, this is trivial."
         return len(solution) < self.solution_length
+
 
 Class = WordGames
 

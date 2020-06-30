@@ -38,13 +38,15 @@ import requests
 
 try:
     from supybot.i18n import PluginInternationalization
-    _ = PluginInternationalization('BotLibre')
+
+    _ = PluginInternationalization("BotLibre")
 except ImportError:
     _ = lambda x: x
 
 
 class BotLibre(callbacks.Plugin):
     """BotLibre API Interface"""
+
     threaded = True
     public = True
     botNick = False
@@ -52,50 +54,52 @@ class BotLibre(callbacks.Plugin):
     def __init__(self, irc):
         self.__parent = super(BotLibre, self)
         self.__parent.__init__(irc)
-        self.url = 'https://www.botlibre.com/rest/json/chat'
+        self.url = "https://www.botlibre.com/rest/json/chat"
         self.conversation = {}
 
     def _queryBot(self, irc, channel, text):
-        text = re.sub('fuck', 'screw', text, flags=re.IGNORECASE)
-        text = re.sub('cunt', 'pussy', text, flags=re.IGNORECASE)
-        text = re.sub('bitch', '', text, flags=re.IGNORECASE)
-        text = re.sub('whore', 'slut', text, flags=re.IGNORECASE)
+        text = re.sub("fuck", "screw", text, flags=re.IGNORECASE)
+        text = re.sub("cunt", "pussy", text, flags=re.IGNORECASE)
+        text = re.sub("bitch", "", text, flags=re.IGNORECASE)
+        text = re.sub("whore", "slut", text, flags=re.IGNORECASE)
         self.conversation.setdefault(channel, None)
         if self.conversation[channel]:
             payload = {
-                'application': self.registryValue('application'),
-                'instance': self.registryValue('instance'),
-                'message': text,
-                'conversation': self.conversation[channel]
+                "application": self.registryValue("application"),
+                "instance": self.registryValue("instance"),
+                "message": text,
+                "conversation": self.conversation[channel],
             }
         else:
             payload = {
-                'application': self.registryValue('application'),
-                'instance': self.registryValue('instance'),
-                'message': text
+                "application": self.registryValue("application"),
+                "instance": self.registryValue("instance"),
+                "message": text,
             }
         try:
             r = requests.post(self.url, json=payload)
             j = json.loads(r.content)
-            response = j['message']
-            self.conversation[channel] = j['conversation']
+            response = j["message"]
+            self.conversation[channel] = j["conversation"]
             if response:
-                irc.reply(re.sub('<[^<]+?>', '', j['message']))
+                irc.reply(re.sub("<[^<]+?>", "", j["message"]))
         except:
             return
-        
+
     def botlibre(self, irc, msg, args, text):
         """Manual Call to the BotLibre API"""
         channel = msg.args[0]
         if not irc.isChannel(channel):
             channel = msg.nick
         self._queryBot(irc, channel, text)
-    botlibre = wrap(botlibre, ['text'])
+
+    botlibre = wrap(botlibre, ["text"])
 
     def invalidCommand(self, irc, msg, tokens):
         chan = msg.args[0]
-        if irc.isChannel(chan) and self.registryValue('invalidCommand', chan):
+        if irc.isChannel(chan) and self.registryValue("invalidCommand", chan):
             self._queryBot(irc, chan, msg.args[1][1:].strip())
+
 
 Class = BotLibre
 

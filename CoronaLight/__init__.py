@@ -41,7 +41,7 @@ import imp
 __version__ = "2020.02.24+git"
 
 # XXX Replace this with an appropriate author or supybot.Author instance.
-__author__ = supybot.Author('oddluck', 'oddluck', 'oddluck@riseup.net')
+__author__ = supybot.Author("oddluck", "oddluck", "oddluck@riseup.net")
 __maintainer__ = {}
 
 # This is a dictionary mapping supybot.Author instances to lists of
@@ -49,11 +49,12 @@ __maintainer__ = {}
 __contributors__ = {}
 
 # This is a url where the most recent plugin package can be downloaded.
-__url__ = 'https://github.com/oddluck/limnoria-plugins/'
+__url__ = "https://github.com/oddluck/limnoria-plugins/"
 
 from . import config
 from . import plugin
 from imp import reload
+
 reload(plugin)
 reload(config)
 # Add more reloads here if you add third-party modules and want them to be

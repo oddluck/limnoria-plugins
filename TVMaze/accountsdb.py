@@ -39,18 +39,24 @@ from supybot import ircdb, log, conf, registry
 MODES = ["accounts", "identhost", "nicks"]
 DEFAULT_MODE = MODES[2]
 
+
 class _AccountsDBAddressConfig(registry.OnlySomeStrings):
     validStrings = MODES
 
+
 CONFIG_OPTION_NAME = "DBAddressingMode"
-CONFIG_OPTION = _AccountsDBAddressConfig(DEFAULT_MODE, """Sets the DB addressing mode.
+CONFIG_OPTION = _AccountsDBAddressConfig(
+    DEFAULT_MODE,
+    """Sets the DB addressing mode.
     This requires reloading the plugin to take effect. Valid settings include accounts
     (save users by Supybot accounts and ident@host if not registered), identhost
     (save users by ident@host), and nicks (save users by nicks).
     When changing addressing modes, existing keys will be left intact, but migration between
-    addressing modes is NOT supported.""")
+    addressing modes is NOT supported.""",
+)
 
-class AccountsDB():
+
+class AccountsDB:
     """
     Abstraction to map users to third-party account names.
 
@@ -70,22 +76,25 @@ class AccountsDB():
         self.addressing_mode = addressing_mode
 
         try:
-            with open(self.filename, 'rb') as f:
-               self.db = pickle.load(f)
+            with open(self.filename, "rb") as f:
+                self.db = pickle.load(f)
         except Exception as e:
-            log.debug('%s: Unable to load database, creating '
-                      'a new one: %s', self._plugin_name, e)
+            log.debug(
+                "%s: Unable to load database, creating a new one: %s",
+                self._plugin_name,
+                e,
+            )
 
     def flush(self):
         """Exports the database to a file."""
         try:
-            with open(self.filename, 'wb') as f:
+            with open(self.filename, "wb") as f:
                 pickle.dump(self.db, f, 2)
         except Exception as e:
-            log.warning('%s: Unable to write database: %s', self._plugin_name, e)
+            log.warning("%s: Unable to write database: %s", self._plugin_name, e)
 
     def _get_key(self, prefix):
-        nick, identhost = prefix.split('!', 1)
+        nick, identhost = prefix.split("!", 1)
 
         if self.addressing_mode == "accounts":
             try:  # Try to first look up the caller as a bot account.

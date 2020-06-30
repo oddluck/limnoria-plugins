@@ -29,9 +29,11 @@
 ###
 
 from supybot import conf, registry
+
 try:
     from supybot.i18n import PluginInternationalization
-    _ = PluginInternationalization('Odds')
+
+    _ = PluginInternationalization("Odds")
 except:
     # Placeholder that allows to run the plugin on a bot
     # without the i18n module
@@ -44,10 +46,11 @@ def configure(advanced):
     # user or not.  You should effect your configuration by manipulating the
     # registry as appropriate.
     from supybot.questions import expect, anything, something, yn
-    conf.registerPlugin('Odds', True)
+
+    conf.registerPlugin("Odds", True)
 
 
-Odds = conf.registerPlugin('Odds')
+Odds = conf.registerPlugin("Odds")
 # This is where your configuration variables (if any) should go.  For example:
 # conf.registerGlobalValue(Odds, 'someConfigVariableName',
 #     registry.Boolean(False, _("""Help for someConfigVariableName.""")))

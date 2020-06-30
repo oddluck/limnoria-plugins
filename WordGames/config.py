@@ -33,37 +33,58 @@ import supybot.registry as registry
 
 import re
 
+
 def configure(advanced):
     # This will be called by supybot to configure this module.  advanced is
     # a bool that specifies whether the user identified himself as an advanced
     # user or not.  You should effect your configuration by manipulating the
     # registry as appropriate.
     from supybot.questions import expect, anything, something, yn
-    conf.registerPlugin('WordGames', True)
 
-WordGames = conf.registerPlugin('WordGames')
+    conf.registerPlugin("WordGames", True)
 
-conf.registerGlobalValue(WordGames, 'wordFile',
-    registry.String('/usr/share/dict/american-english',
-                    'Path to the dictionary file.'))
 
-conf.registerGlobalValue(WordGames, 'wordRegexp',
-    registry.String('^[a-z]+$',
-                    'Regular expression defining what a valid word looks ' +
-                    'like (i.e. ignore proper names, contractions, etc. ' +
-                    'Modify this if you need to allow non-English chars.'))
+WordGames = conf.registerPlugin("WordGames")
 
-conf.registerGlobalValue(WordGames, 'boggleDelay',
-    registry.NonNegativeInteger(15,
-                                'Delay (in seconds) before a Boggle game ' +
-                                'begins.'))
+conf.registerGlobalValue(
+    WordGames,
+    "wordFile",
+    registry.String("/usr/share/dict/american-english", "Path to the dictionary file."),
+)
 
-conf.registerGlobalValue(WordGames, 'boggleDuration',
-    registry.NonNegativeInteger(120,
-                                'Duration (in seconds) of a Boggle game ' +
-                                '(not including the initial delay).'))
+conf.registerGlobalValue(
+    WordGames,
+    "wordRegexp",
+    registry.String(
+        "^[a-z]+$",
+        "Regular expression defining what a valid word looks "
+        + "like (i.e. ignore proper names, contractions, etc. "
+        + "Modify this if you need to allow non-English chars.",
+    ),
+)
 
-conf.registerGlobalValue(WordGames, 'boggleDifficulty',
-    registry.String('easy', 'Default difficulty for Boggle games.'))
+conf.registerGlobalValue(
+    WordGames,
+    "boggleDelay",
+    registry.NonNegativeInteger(
+        15, "Delay (in seconds) before a Boggle game " + "begins."
+    ),
+)
+
+conf.registerGlobalValue(
+    WordGames,
+    "boggleDuration",
+    registry.NonNegativeInteger(
+        120,
+        "Duration (in seconds) of a Boggle game "
+        + "(not including the initial delay).",
+    ),
+)
+
+conf.registerGlobalValue(
+    WordGames,
+    "boggleDifficulty",
+    registry.String("easy", "Default difficulty for Boggle games."),
+)
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:

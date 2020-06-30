@@ -126,7 +126,8 @@ class WorldTime(callbacks.Plugin):
         location = utils.web.urlquote(location)
         url = (
             "https://maps.googleapis.com/maps/api/geocode/json?"
-            "address=%s&sensor=false&key=%s" % (location, api_key)
+            "address=%s&sensor=false&key=%s"
+            % (location, api_key)
         )
 
         # try and fetch url
@@ -158,7 +159,8 @@ class WorldTime(callbacks.Plugin):
         latlng = utils.web.urlquote(latlng)
         url = (
             "https://maps.googleapis.com/maps/api/timezone/json?location="
-            "%s&sensor=false&timestamp=%s&key=%s" % (latlng, time.time(), api_key)
+            "%s&sensor=false&timestamp=%s&key=%s"
+            % (latlng, time.time(), api_key)
         )
 
         # try and fetch url
@@ -205,7 +207,8 @@ class WorldTime(callbacks.Plugin):
                 irc.error(
                     "No location for %s is set. Use the 'set' command "
                     "to set a location for your current hostmask, or call 'worldtime' "
-                    "with <location> as an argument." % ircutils.bold("*!" + ih),
+                    "with <location> as an argument."
+                    % ircutils.bold("*!" + ih),
                     Raise=True,
                 )
         # first, grab lat and long for user location

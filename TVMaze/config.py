@@ -29,14 +29,16 @@
 ###
 
 from supybot import conf, registry
+
 try:
     from supybot.i18n import PluginInternationalization
-    _ = PluginInternationalization('TVMaze')
+
+    _ = PluginInternationalization("TVMaze")
 except:
     # Placeholder that allows to run the plugin on a bot
     # without the i18n module
     _ = lambda x: x
-    
+
 from . import accountsdb
 
 
@@ -46,17 +48,28 @@ def configure(advanced):
     # user or not.  You should effect your configuration by manipulating the
     # registry as appropriate.
     from supybot.questions import expect, anything, something, yn
-    conf.registerPlugin('TVMaze', True)
+
+    conf.registerPlugin("TVMaze", True)
 
 
-TVMaze = conf.registerPlugin('TVMaze')
+TVMaze = conf.registerPlugin("TVMaze")
 # This is where your configuration variables (if any) should go.  For example:
 # conf.registerGlobalValue(TVMaze, 'someConfigVariableName',
 #     registry.Boolean(False, _("""Help for someConfigVariableName.""")))
-conf.registerGlobalValue(TVMaze, accountsdb.CONFIG_OPTION_NAME, accountsdb.CONFIG_OPTION)
+conf.registerGlobalValue(
+    TVMaze, accountsdb.CONFIG_OPTION_NAME, accountsdb.CONFIG_OPTION
+)
 
-conf.registerChannelValue(TVMaze, 'showEpisodeTitle',
-    registry.Boolean(True, _("""Determines whether the episode title will be displayed in the schedule output.""")))
+conf.registerChannelValue(
+    TVMaze,
+    "showEpisodeTitle",
+    registry.Boolean(
+        True,
+        _(
+            """Determines whether the episode title will be displayed in the schedule output."""
+        ),
+    ),
+)
 
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:

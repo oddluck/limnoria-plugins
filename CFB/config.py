@@ -29,9 +29,11 @@
 ###
 
 from supybot import conf, registry
+
 try:
     from supybot.i18n import PluginInternationalization
-    _ = PluginInternationalization('CFB')
+
+    _ = PluginInternationalization("CFB")
 except:
     # Placeholder that allows to run the plugin on a bot
     # without the i18n module
@@ -44,10 +46,11 @@ def configure(advanced):
     # user or not.  You should effect your configuration by manipulating the
     # registry as appropriate.
     from supybot.questions import expect, anything, something, yn
-    conf.registerPlugin('CFB', True)
+
+    conf.registerPlugin("CFB", True)
 
 
-CFB = conf.registerPlugin('CFB')
+CFB = conf.registerPlugin("CFB")
 # This is where your configuration variables (if any) should go.  For example:
 # conf.registerGlobalValue(CFB, 'someConfigVariableName',
 #     registry.Boolean(False, _("""Help for someConfigVariableName.""")))

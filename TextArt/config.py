@@ -145,9 +145,12 @@ conf.registerChannelValue(
     TextArt,
     "blockWidth",
     registry.Integer(
-        80, _("""
+        80,
+        _(
+            """
         Set the default column width for 1/2 and 1/4 block art images
-        """)
+        """
+        ),
     ),
 )
 

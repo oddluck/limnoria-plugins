@@ -40,26 +40,33 @@ import supybot.world as world
 __version__ = "2020.02.24+git"
 
 # XXX Replace this with an appropriate author or supybot.Author instance.
-__author__ = supybot.Author('Santiago Gil', 'santigl', '')
-__maintainer__ = getattr(supybot.authors, 'oddluck',
-                         supybot.Author('oddluck', 'oddluck', 'oddluck@riseup.net'))
+__author__ = supybot.Author("Santiago Gil", "santigl", "")
+__maintainer__ = getattr(
+    supybot.authors,
+    "oddluck",
+    supybot.Author("oddluck", "oddluck", "oddluck@riseup.net"),
+)
 
 # This is a dictionary mapping supybot.Author instances to lists of
 # contributions.
-if not hasattr(supybot.authors, 'cottongin') or not hasattr(supybot.authors, 'santigl'):
-    supybot.authors.cottongin = supybot.Author('cottongin', 'cottongin',
-                                               'cottongin@cottongin.club')
-    supybot.authors.santigl = supybot.Author('Santiago Gil', 'santigl', '')
-    
-__contributors__ = {supybot.authors.santigl:   ['original plugin base'],
-                    supybot.authors.cottongin: ['code enhancement']}
+if not hasattr(supybot.authors, "cottongin") or not hasattr(supybot.authors, "santigl"):
+    supybot.authors.cottongin = supybot.Author(
+        "cottongin", "cottongin", "cottongin@cottongin.club"
+    )
+    supybot.authors.santigl = supybot.Author("Santiago Gil", "santigl", "")
+
+__contributors__ = {
+    supybot.authors.santigl: ["original plugin base"],
+    supybot.authors.cottongin: ["code enhancement"],
+}
 
 # This is a url where the most recent plugin package can be downloaded.
-__url__ = 'https://github.com/oddluck/limnoria-plugins/'
+__url__ = "https://github.com/oddluck/limnoria-plugins/"
 
 from . import config
 from . import plugin
 from imp import reload
+
 # In case we're being reloaded.
 reload(config)
 reload(plugin)

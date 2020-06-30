@@ -43,14 +43,17 @@ import json
 
 try:
     from supybot.i18n import PluginInternationalization
-    _ = PluginInternationalization('Weed')
+
+    _ = PluginInternationalization("Weed")
 except ImportError:
     # Placeholder that allows to run the plugin on a bot
     # without the i18n module
     _ = lambda x: x
 
+
 class Fun(callbacks.Plugin):
     """Uses API to retrieve information"""
+
     threaded = True
 
     def advice(self, irc, msg, args):
@@ -61,7 +64,7 @@ class Fun(callbacks.Plugin):
         channel = msg.args[0]
         data = requests.get("https://api.adviceslip.com/advice")
         data = json.loads(data.content)
-        irc.reply(data['slip']['advice'])
+        irc.reply(data["slip"]["advice"])
 
     advice = wrap(advice)
 
@@ -72,11 +75,11 @@ class Fun(callbacks.Plugin):
 
         channel = msg.args[0]
         headers = {
-        'Accept': 'application/json',
+            "Accept": "application/json",
         }
-        data = requests.get('https://icanhazdadjoke.com/', headers=headers)
+        data = requests.get("https://icanhazdadjoke.com/", headers=headers)
         data = json.loads(data.content)
-        irc.reply(data['joke'].replace('\n', '').replace('\r', '').replace('\t', ''))
+        irc.reply(data["joke"].replace("\n", "").replace("\r", "").replace("\t", ""))
 
     joke = wrap(joke)
 
@@ -88,7 +91,7 @@ class Fun(callbacks.Plugin):
         channel = msg.args[0]
         data = requests.get("https://catfact.ninja/fact")
         data = json.loads(data.content)
-        irc.reply(data['fact'])
+        irc.reply(data["fact"])
 
     catfact = wrap(catfact)
 
@@ -100,7 +103,7 @@ class Fun(callbacks.Plugin):
         channel = msg.args[0]
         data = requests.get("https://uselessfacts.jsph.pl/random.json?language=en")
         data = json.loads(data.content)
-        irc.reply(data['text'])
+        irc.reply(data["text"])
 
     useless = wrap(useless)
 
@@ -111,7 +114,8 @@ class Fun(callbacks.Plugin):
         channel = msg.args[0]
         data = requests.get("https://corporatebs-generator.sameerkumar.website")
         data = json.loads(data.content)
-        irc.reply(data['phrase'])
+        irc.reply(data["phrase"])
+
     buzz = wrap(buzz)
 
     def startup(self, irc, msg, args):
@@ -121,12 +125,17 @@ class Fun(callbacks.Plugin):
         channel = msg.args[0]
         data = requests.get("http://itsthisforthat.com/api.php?json")
         data = json.loads(data.content)
-        vowels = ('a','e','i','o','u','A','E','I','O','U')
-        if data['this'].startswith(vowels):
-            response = "So, Basically, It\'s Like An {0} for {1}".format(data['this'], data['that'])
+        vowels = ("a", "e", "i", "o", "u", "A", "E", "I", "O", "U")
+        if data["this"].startswith(vowels):
+            response = "So, Basically, It's Like An {0} for {1}".format(
+                data["this"], data["that"]
+            )
         else:
-            response = "So, Basically, It\'s Like A {0} for {1}".format(data['this'], data['that'])
+            response = "So, Basically, It's Like A {0} for {1}".format(
+                data["this"], data["that"]
+            )
         irc.reply(response)
+
     startup = wrap(startup)
 
     def insult(self, irc, msg, args, nick):
@@ -137,27 +146,29 @@ class Fun(callbacks.Plugin):
         data = requests.get("https://insult.mattbas.org/api/en/insult.json")
         data = json.loads(data.content)
         if nick:
-            response = "{0}: {1}".format(nick, data['insult'])
+            response = "{0}: {1}".format(nick, data["insult"])
             irc.reply(response, prefixNick=False)
         else:
-            irc.reply(data['insult'])
-    insult = wrap(insult, [additional('nickInChannel')])
+            irc.reply(data["insult"])
+
+    insult = wrap(insult, [additional("nickInChannel")])
 
     def devexcuse(self, irc, msg, args):
         """
         Returns an excuse from http://developerexcuses.com
         """
-        data = requests.get('http://developerexcuses.com')
+        data = requests.get("http://developerexcuses.com")
         if not data:  # http fetch breaks.
             irc.reply("ERROR")
             return
         soup = BeautifulSoup(data.content)
-        text = soup.find('center').getText()
+        text = soup.find("center").getText()
         irc.reply("{0}".format(text))
+
     devexcuse = wrap(devexcuse)
 
     def _pigword(self, word):
-        shouldCAP = (word[:1] == word[:1].upper())
+        shouldCAP = word[:1] == word[:1].upper()
         word = word.lower()
         letters = "qwertyuiopasdfghjklzxcvbnm"
         i = len(word) - 1
@@ -165,8 +176,8 @@ class Fun(callbacks.Plugin):
             i = i - 1
         if i == -1:
             return word
-        punctuation = word[i+1:]
-        word = word[:i+1]
+        punctuation = word[i + 1 :]
+        word = word[: i + 1]
 
         vowels = "aeiou"
         if vowels.find(word[0]) >= 0:
@@ -189,18 +200,21 @@ class Fun(callbacks.Plugin):
             l[i] = self._pigword(l[i])
 
         irc.reply(" ".join(l))
-    piglatin = wrap(piglatin, [('text')])
 
+    piglatin = wrap(piglatin, ["text"])
 
     def bofh(self, irc, msg, args):
         """
         BOFH (Bastard Operator From Hell) Excuse Generator
         """
-        data = open("{0}/excuses.txt".format(os.path.dirname(os.path.abspath(__file__))))
+        data = open(
+            "{0}/excuses.txt".format(os.path.dirname(os.path.abspath(__file__)))
+        )
         text = data.read()
         reply = text.splitlines()
         excuse = random.randrange(0, len(reply))
         irc.reply(reply[excuse])
+
     bofh = wrap(bofh)
 
     def rock(self, irc, msg, args):
@@ -222,6 +236,7 @@ class Fun(callbacks.Plugin):
             irc.reply("I chose %s. Looks like I won." % (botchoice))
         elif botchoice == "scissors" and userchoice == "rock":
             irc.reply("I chose %s. Looks like you won." % (botchoice))
+
     rock = wrap(rock)
 
     def paper(self, irc, msg, args):
@@ -243,6 +258,7 @@ class Fun(callbacks.Plugin):
             irc.reply("I chose %s. Looks like I won." % (botchoice))
         elif botchoice == "rock" and userchoice == "paper":
             irc.reply("I chose %s. Looks like you won." % (botchoice))
+
     paper = wrap(paper)
 
     def scissors(self, irc, msg, args):
@@ -264,6 +280,7 @@ class Fun(callbacks.Plugin):
             irc.reply("I chose %s. Looks like I won." % (botchoice))
         elif botchoice == "paper" and userchoice == "scissors":
             irc.reply("I chose %s. Looks like you won." % (botchoice))
+
     scissors = wrap(scissors)
 
     def catgif(self, irc, msg, args):
@@ -276,42 +293,56 @@ class Fun(callbacks.Plugin):
             if "http" in response:
                 irc.reply(response)
             else:
-                self.log.error("Received unexpected response from http://edgecats.net/random")
+                self.log.error(
+                    "Received unexpected response from http://edgecats.net/random"
+                )
         except:
             self.log.exception("Error fetching URL")
+
     catgif = wrap(catgif)
-    
+
     def mitch(self, irc, msg, args):
         """
         Mitch Hedberg Jokes
         """
-        data = open("{0}/mitch_hedberg.txt".format(os.path.dirname(os.path.abspath(__file__))))
+        data = open(
+            "{0}/mitch_hedberg.txt".format(os.path.dirname(os.path.abspath(__file__)))
+        )
         text = data.read()
         reply = text.splitlines()
         excuse = random.randrange(0, len(reply))
         irc.reply(reply[excuse])
+
     mitch = wrap(mitch)
-    
+
     def chuck(self, irc, msg, args):
         """
         Chuck Norris Jokes
         """
-        data = open("{0}/chuck_norris.txt".format(os.path.dirname(os.path.abspath(__file__))))
+        data = open(
+            "{0}/chuck_norris.txt".format(os.path.dirname(os.path.abspath(__file__)))
+        )
         text = data.read()
         reply = text.splitlines()
         excuse = random.randrange(0, len(reply))
         irc.reply(reply[excuse])
+
     chuck = wrap(chuck)
-    
+
     def rodney(self, irc, msg, args):
         """
         Rodney Dangerfield Jokes
         """
-        data = open("{0}/rodney_dangerfield.txt".format(os.path.dirname(os.path.abspath(__file__))))
+        data = open(
+            "{0}/rodney_dangerfield.txt".format(
+                os.path.dirname(os.path.abspath(__file__))
+            )
+        )
         text = data.read()
         reply = text.splitlines()
         excuse = random.randrange(0, len(reply))
         irc.reply(reply[excuse])
+
     rodney = wrap(rodney)
 
     def rot(self, irc, msg, args, text):
@@ -319,121 +350,136 @@ class Fun(callbacks.Plugin):
         Encode text with ROT13
         """
         irc.reply(codecs.encode(text, "rot_13"))
-    rot = wrap(rot, ['text'])
+
+    rot = wrap(rot, ["text"])
 
     def unrot(self, irc, msg, args, text):
         """<text>
         Decode ROT13 text
         """
         irc.reply(codecs.decode(text, "rot_13"))
-    unrot = wrap(unrot, ['text'])
+
+    unrot = wrap(unrot, ["text"])
 
     def coin(self, irc, msg, args, optcoin):
         """[coin]
         Fetches current values for a given coin
         """
-        coin_url = 'https://min-api.cryptocompare.com/data/pricemultifull?fsyms={coins}&tsyms=USD'
+        coin_url = "https://min-api.cryptocompare.com/data/pricemultifull?fsyms={coins}&tsyms=USD"
         coins = []
         coins.append(optcoin)
-        coins_str = ','.join(c.upper() for c in coins)
+        coins_str = ",".join(c.upper() for c in coins)
         data = requests.get(coin_url.format(coins=coins_str))
         data = json.loads(data.content)
-        if 'RAW' not in data:
-            irc.reply('ERROR: no coin found for {}'.format(optcoin))
+        if "RAW" not in data:
+            irc.reply("ERROR: no coin found for {}".format(optcoin))
             return
         output = []
         tmp = {}
-        data = data['RAW']
+        data = data["RAW"]
         data2 = collections.OrderedDict.fromkeys(sorted(data))
-        for k,v in data.items():
+        for k, v in data.items():
             data2.update({k: v})
         output = self._parseCoins(data2, optcoin)
-        irc.reply(' | '.join(t for t in output))
+        irc.reply(" | ".join(t for t in output))
         return
-    coin = wrap(coin, ['text'])
+
+    coin = wrap(coin, ["text"])
 
     def coins(self, irc, msg, args, optcoin):
         """
         Fetches current values for top 10 coins (+ dogecoin) trading by volume
         """
-        volm_url = 'https://min-api.cryptocompare.com/data/top/totalvol?limit=10&tsym=USD'
-        coin_url = 'https://min-api.cryptocompare.com/data/pricemultifull?fsyms={coins}&tsyms=USD'
+        volm_url = (
+            "https://min-api.cryptocompare.com/data/top/totalvol?limit=10&tsym=USD"
+        )
+        coin_url = "https://min-api.cryptocompare.com/data/pricemultifull?fsyms={coins}&tsyms=USD"
         data = requests.get(volm_url)
         data = json.loads(data.content)
         coins = []
-        for thing in data['Data']:
-            name = thing['CoinInfo']['Name']
+        for thing in data["Data"]:
+            name = thing["CoinInfo"]["Name"]
             coins.append(name)
-        coins.append('DOGE')
-        coins_str = ','.join(c for c in coins)
+        coins.append("DOGE")
+        coins_str = ",".join(c for c in coins)
         data = requests.get(coin_url.format(coins=coins_str))
         data = json.loads(data.content)
         output = []
         tmp = {}
-        data = data['RAW']
-        tmp['BTC'] = data.pop('BTC')
+        data = data["RAW"]
+        tmp["BTC"] = data.pop("BTC")
         data2 = collections.OrderedDict.fromkeys(sorted(data))
-        for k,v in data.items():
+        for k, v in data.items():
             data2.update({k: v})
         data2.update(tmp)
-        data2.move_to_end('BTC', last=False)
+        data2.move_to_end("BTC", last=False)
         output = self._parseCoins(data2, optcoin)
-        irc.reply(' | '.join(t for t in output))
+        irc.reply(" | ".join(t for t in output))
         return
-    coins = wrap(coins, [optional('somethingWithoutSpaces')])
+
+    coins = wrap(coins, [optional("somethingWithoutSpaces")])
 
     def _parseCoins(self, data, optmarket=None):
         ticker = []
+
         def _humifyCap(cap):
             if not cap:
                 return cap
             if cap > 1000000000000:
                 cap = cap / 1000000000000
-                cap = '${:.2f}T'.format(cap)
+                cap = "${:.2f}T".format(cap)
                 return cap
             elif cap > 1000000000:
                 cap = cap / 1000000000
-                cap = '${:.2f}B'.format(cap)
+                cap = "${:.2f}B".format(cap)
             elif cap > 1000000:
                 cap = cap / 1000000
-                cap = '${:.2f}M'.format(cap)
+                cap = "${:.2f}M".format(cap)
             else:
-                cap = '${:.2f}'.format(cap)
+                cap = "${:.2f}".format(cap)
                 return cap
             return cap
+
         for symbol in data:
             name = symbol
             name = ircutils.bold(name)
-            symbol = data[symbol]['USD']
-            current_price = symbol['PRICE']
-            change = symbol['CHANGEDAY']
-            pct_change = symbol['CHANGEPCTDAY']
-            high24 = '${:g}'.format(symbol['HIGH24HOUR'])
-            low24 = '${:g}'.format(symbol['LOW24HOUR'])
-            mcap = _humifyCap(symbol['MKTCAP'])
+            symbol = data[symbol]["USD"]
+            current_price = symbol["PRICE"]
+            change = symbol["CHANGEDAY"]
+            pct_change = symbol["CHANGEPCTDAY"]
+            high24 = "${:g}".format(symbol["HIGH24HOUR"])
+            low24 = "${:g}".format(symbol["LOW24HOUR"])
+            mcap = _humifyCap(symbol["MKTCAP"])
             if 0 < pct_change < 0.5:
-                change = ircutils.mircColor('+{:g}'.format(change), 'yellow')
-                pct_change = ircutils.mircColor('+{:.2g}%'.format(pct_change), 'yellow')
+                change = ircutils.mircColor("+{:g}".format(change), "yellow")
+                pct_change = ircutils.mircColor("+{:.2g}%".format(pct_change), "yellow")
             elif pct_change >= 0.5:
-                change = ircutils.mircColor('+{:g}'.format(change), 'green')
-                pct_change = ircutils.mircColor('+{:.2g}%'.format(pct_change), 'green')
+                change = ircutils.mircColor("+{:g}".format(change), "green")
+                pct_change = ircutils.mircColor("+{:.2g}%".format(pct_change), "green")
             elif 0 > pct_change > -0.5:
-                change = ircutils.mircColor('{:g}'.format(change), 'orange')
-                pct_change = ircutils.mircColor('{:.2g}%'.format(pct_change), 'orange')
+                change = ircutils.mircColor("{:g}".format(change), "orange")
+                pct_change = ircutils.mircColor("{:.2g}%".format(pct_change), "orange")
             elif pct_change <= -0.5:
-                change = ircutils.mircColor('{:g}'.format(change), 'red')
-                pct_change = ircutils.mircColor('{:.2g}%'.format(pct_change), 'red')
+                change = ircutils.mircColor("{:g}".format(change), "red")
+                pct_change = ircutils.mircColor("{:.2g}%".format(pct_change), "red")
             else:
-                change = '{:g}'.format(change)
-                pct_change = '{:g}%'.format(pct_change)
-            string = '{} ${:g} {} ({})'.format(name, current_price, change, pct_change)
+                change = "{:g}".format(change)
+                pct_change = "{:g}%".format(pct_change)
+            string = "{} ${:g} {} ({})".format(name, current_price, change, pct_change)
             if optmarket:
                 if optmarket.lower() in name.lower():
-                    string += ' :: \x02Market Cap:\x02 {} | \x0224hr High:\x02 {} | \x0224hr Low:\x02 {}'.format(
-                        mcap, ircutils.mircColor(high24, 'green'), ircutils.mircColor(low24, 'red'))
+                    string += (
+                        " :: \x02Market Cap:\x02 {} | \x0224hr High:\x02 {} | \x0224hr"
+                        " Low:\x02 {}".format(
+                            mcap,
+                            ircutils.mircColor(high24, "green"),
+                            ircutils.mircColor(low24, "red"),
+                        )
+                    )
                     ticker.append(string)
             else:
                 ticker.append(string)
         return ticker
+
 
 Class = Fun

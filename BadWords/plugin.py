@@ -40,12 +40,15 @@ from supybot.commands import *
 import supybot.ircutils as ircutils
 import supybot.callbacks as callbacks
 from supybot.i18n import PluginInternationalization, internationalizeDocstring
-_ = PluginInternationalization('BadWords')
+
+_ = PluginInternationalization("BadWords")
+
 
 class BadWords(callbacks.Privmsg):
     """Maintains a list of words that the bot is not allowed to say.
     Can also be used to kick people that say these words, if the bot
     has op."""
+
     def __init__(self, irc):
         self.__parent = super(BadWords, self)
         self.__parent.__init__(irc)
@@ -56,43 +59,54 @@ class BadWords(callbacks.Privmsg):
         self.words = conf.supybot.plugins.BadWords.words
 
     def callCommand(self, name, irc, msg, *args, **kwargs):
-        if ircdb.checkCapability(msg.prefix, 'admin'):
+        if ircdb.checkCapability(msg.prefix, "admin"):
             self.__parent.callCommand(name, irc, msg, *args, **kwargs)
         else:
-            irc.errorNoCapability('admin')
+            irc.errorNoCapability("admin")
 
     def sub(self, m):
-        replaceMethod = self.registryValue('replaceMethod')
-        if replaceMethod == 'simple':
-            return self.registryValue('simpleReplacement')
-        elif replaceMethod == 'nastyCharacters':
-            return self.registryValue('nastyChars')[:len(m.group(1))]
+        replaceMethod = self.registryValue("replaceMethod")
+        if replaceMethod == "simple":
+            return self.registryValue("simpleReplacement")
+        elif replaceMethod == "nastyCharacters":
+            return self.registryValue("nastyChars")[: len(m.group(1))]
 
     def inFilter(self, irc, msg):
         self.filtering = True
         # We need to check for bad words here rather than in doPrivmsg because
         # messages don't get to doPrivmsg if the user is ignored.
-        if msg.command == 'PRIVMSG' and self.words():
+        if msg.command == "PRIVMSG" and self.words():
             channel = msg.args[0]
             self.updateRegexp(channel)
             s = ircutils.stripFormatting(msg.args[1])
-            if ircutils.isChannel(channel) and self.registryValue('kick', channel):
+            if ircutils.isChannel(channel) and self.registryValue("kick", channel):
                 if self.regexp.search(s):
                     c = irc.state.channels[channel]
-                    cap = ircdb.makeChannelCapability(channel, 'op')
+                    cap = ircdb.makeChannelCapability(channel, "op")
                     if c.isHalfopPlus(irc.nick):
-                        if c.isHalfopPlus(msg.nick) or \
-                                ircdb.checkCapability(msg.prefix, cap):
-                            self.log.debug("Not kicking %s from %s, because "
-                                           "they are halfop+ or can't be "
-                                           "kicked.", msg.nick, channel)
+                        if c.isHalfopPlus(msg.nick) or ircdb.checkCapability(
+                            msg.prefix, cap
+                        ):
+                            self.log.debug(
+                                "Not kicking %s from %s, because "
+                                "they are halfop+ or can't be "
+                                "kicked.",
+                                msg.nick,
+                                channel,
+                            )
                         else:
-                            message = self.registryValue('kick.message', channel)
+                            message = self.registryValue("kick.message", channel)
                             irc.queueMsg(ircmsgs.kick(channel, msg.nick, message))
                     else:
-                        self.log.warning('Should kick %s from %s, but not opped.',
-                                         msg.nick, channel)
-            elif ircutils.isChannel(channel) and self.regexp.search(s) and self.registryValue('inFilter', channel) and not ircdb.checkCapability(msg.prefix, 'trusted'):
+                        self.log.warning(
+                            "Should kick %s from %s, but not opped.", msg.nick, channel
+                        )
+            elif (
+                ircutils.isChannel(channel)
+                and self.regexp.search(s)
+                and self.registryValue("inFilter", channel)
+                and not ircdb.checkCapability(msg.prefix, "trusted")
+            ):
                 return None
         return msg
 
@@ -102,11 +116,11 @@ class BadWords(callbacks.Privmsg):
             self.lastModified = time.time()
 
     def outFilter(self, irc, msg):
-        if self.filtering and msg.command == 'PRIVMSG' and self.words():
+        if self.filtering and msg.command == "PRIVMSG" and self.words():
             channel = msg.args[0]
             self.updateRegexp(channel)
             s = msg.args[1]
-            if self.registryValue('stripFormatting'):
+            if self.registryValue("stripFormatting"):
                 s = ircutils.stripFormatting(s)
             t = self.regexp.sub(self.sub, s)
             if t != s:
@@ -114,9 +128,9 @@ class BadWords(callbacks.Privmsg):
         return msg
 
     def makeRegexp(self, iterable, channel):
-        s = '(%s)' % '|'.join(map(re.escape, iterable))
-        if self.registryValue('requireWordBoundaries', channel):
-            s = r'\b%s\b' % s
+        s = "(%s)" % "|".join(map(re.escape, iterable))
+        if self.registryValue("requireWordBoundaries", channel):
+            s = r"\b%s\b" % s
         self.regexp = re.compile(s, re.I)
 
     @internationalizeDocstring
@@ -129,10 +143,11 @@ class BadWords(callbacks.Privmsg):
         if L:
             self.filtering = False
             utils.sortBy(str.lower, L)
-            irc.reply(format('%L', L))
+            irc.reply(format("%L", L))
         else:
-            irc.reply(_('I\'m not currently censoring any bad words.'))
-    list = wrap(list, ['admin'])
+            irc.reply(_("I'm not currently censoring any bad words."))
+
+    list = wrap(list, ["admin"])
 
     @internationalizeDocstring
     def add(self, irc, msg, args, words):
@@ -144,7 +159,8 @@ class BadWords(callbacks.Privmsg):
         set.update(words)
         self.words.setValue(set)
         irc.replySuccess()
-    add = wrap(add, ['admin', many('something')])
+
+    add = wrap(add, ["admin", many("something")])
 
     @internationalizeDocstring
     def remove(self, irc, msg, args, words):
@@ -157,7 +173,8 @@ class BadWords(callbacks.Privmsg):
             set.discard(word)
         self.words.setValue(set)
         irc.replySuccess()
-    remove = wrap(remove, ['admin', many('something')])
+
+    remove = wrap(remove, ["admin", many("something")])
 
 
 Class = BadWords

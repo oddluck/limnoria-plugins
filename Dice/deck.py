@@ -31,6 +31,7 @@
 
 import random
 
+
 class Deck:
     """
     54-card deck simulator.
@@ -38,17 +39,18 @@ class Deck:
     This class represents a standard 54-card deck (with 2 different Jokers)
     and supports shuffling and drawing.
     """
-    titles = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
-    suits = ['♣', '♦', '♥', '♠']
+
+    titles = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"]
+    suits = ["♣", "♦", "♥", "♠"]
 
     def __init__(self):
         """
         Initialize a new deck and shuffle it.
         """
         self.deck = []
-        self.base_deck = ['Black Joker', 'Red Joker'] + [t + s
-                                                         for t in self.titles
-                                                         for s in self.suits]
+        self.base_deck = ["Black Joker", "Red Joker"] + [
+            t + s for t in self.titles for s in self.suits
+        ]
         self.shuffle()
 
     def shuffle(self):

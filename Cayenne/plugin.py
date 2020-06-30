@@ -40,14 +40,17 @@ import json
 
 try:
     from supybot.i18n import PluginInternationalization
+
     _ = PluginInternationalization("Cayenne")
 except ImportError:
     # Placeholder that allows to run the plugin on a bot
     # without the i18n module
     _ = lambda x: x
 
+
 class Cayenne(callbacks.Plugin):
     """Displays cat facts or cat gifs based on probability"""
+
     threaded = True
     last_message_timestamp = False
     cat_facts = []
@@ -62,7 +65,7 @@ class Cayenne(callbacks.Plugin):
         """
         data = requests.get("https://catfact.ninja/fact")
         data = json.loads(data.content)
-        return data['fact']
+        return data["fact"]
 
     def message_contains_trigger_word(self, message):
         """
@@ -91,7 +94,9 @@ class Cayenne(callbacks.Plugin):
             if "http" in response:
                 return response
             else:
-                self.log.error("Received unexpected response from http://edgecats.net/random")
+                self.log.error(
+                    "Received unexpected response from http://edgecats.net/random"
+                )
         except:
             self.log.exception("Error fetching URL")
 
@@ -110,7 +115,12 @@ class Cayenne(callbacks.Plugin):
         is_message_from_self = origin_nick.lower() == bot_nick.lower()
         # Only react to messages/actions in a channel and to messages that aren't from
         # the bot itself.
-        if is_channel and not is_ctcp and not is_message_from_self and self.registryValue('enable', channel):
+        if (
+            is_channel
+            and not is_ctcp
+            and not is_message_from_self
+            and self.registryValue("enable", channel)
+        ):
             if type(message) is str and len(message):
                 fact_chance = int(self.registryValue("factChance"))
                 link_chance = int(self.registryValue("linkChance"))
@@ -124,12 +134,17 @@ class Cayenne(callbacks.Plugin):
                 else:
                     throttled = False
                 if triggered is not False:
-                    self.log.debug("Cayenne triggered because message contained %s" % (triggered))
+                    self.log.debug(
+                        "Cayenne triggered because message contained %s" % (triggered)
+                    )
                     fact_rand = random.randrange(0, 100) <= fact_chance
                     link_rand = random.randrange(0, 100) <= link_chance
                     if fact_rand or link_rand:
                         if throttled:
-                            self.log.info("Cayenne throttled. Not meowing: it has been %s seconds" % (round(seconds, 1)))
+                            self.log.info(
+                                "Cayenne throttled. Not meowing: it has been %s seconds"
+                                % (round(seconds, 1))
+                            )
                         else:
                             self.last_message_timestamp = now
                             if fact_rand:
@@ -140,5 +155,6 @@ class Cayenne(callbacks.Plugin):
                                 irc.sendMsg(ircmsgs.privmsg(channel, output))
                             else:
                                 self.log.error("Cayenne: error retrieving output")
+
 
 Class = Cayenne

@@ -33,7 +33,7 @@ import supybot.registry as registry
 import supybot.ircutils as ircutils
 from supybot.i18n import PluginInternationalization, internationalizeDocstring
 
-_ = PluginInternationalization('UndernetX')
+_ = PluginInternationalization("UndernetX")
 
 
 def configure(advanced):
@@ -42,24 +42,36 @@ def configure(advanced):
     # user or not.  You should effect your configuration by manipulating the
     # registry as appropriate.
     from supybot.questions import expect, anything, something, yn
-    conf.registerPlugin('UndernetX', True)
+
+    conf.registerPlugin("UndernetX", True)
 
 
-UndernetX = conf.registerPlugin('UndernetX')
+UndernetX = conf.registerPlugin("UndernetX")
 # This is where your configuration variables (if any) should go.  For example:
 # conf.registerGlobalValue(UndernetX, 'someConfigVariableName',
 #     registry.Boolean(False, _("""Help for someConfigVariableName.""")))
-conf.registerGlobalValue(UndernetX, 'modeXonID',
-                         registry.Boolean(True, _("""Whether or not to mode +x on ID""")))
-conf.registerGroup(UndernetX, 'auth')
+conf.registerGlobalValue(
+    UndernetX,
+    "modeXonID",
+    registry.Boolean(True, _("""Whether or not to mode +x on ID""")),
+)
+conf.registerGroup(UndernetX, "auth")
 # /msg X@channels.undernet.org login username password
-conf.registerGlobalValue(UndernetX.auth, 'username',
-                         registry.String("", _("""Username for X""")))
-conf.registerGlobalValue(UndernetX.auth, 'password',
-                         registry.String("", _("""Password for X""")))
-conf.registerGlobalValue(UndernetX.auth, 'xservice',
-                         registry.String("X@channels.undernet.org", _("""XService hostmask""")))
-conf.registerGlobalValue(UndernetX.auth, 'noJoinsUntilAuthed',
-                         registry.Boolean(True, _("""Don't join until we're authed.""")))
+conf.registerGlobalValue(
+    UndernetX.auth, "username", registry.String("", _("""Username for X"""))
+)
+conf.registerGlobalValue(
+    UndernetX.auth, "password", registry.String("", _("""Password for X"""))
+)
+conf.registerGlobalValue(
+    UndernetX.auth,
+    "xservice",
+    registry.String("X@channels.undernet.org", _("""XService hostmask""")),
+)
+conf.registerGlobalValue(
+    UndernetX.auth,
+    "noJoinsUntilAuthed",
+    registry.Boolean(True, _("""Don't join until we're authed.""")),
+)
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:

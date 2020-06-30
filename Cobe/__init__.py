@@ -40,20 +40,24 @@ import supybot.world as world
 __version__ = "2020.02.24+git"
 
 # XXX Replace this with an appropriate author or supybot.Author instance.
-__author__ = supybot.Author('waratte', 'waratte', '')
-__maintainer__ = getattr(supybot.authors, 'oddluck',
-                         supybot.Author('oddluck', 'oddluck', 'oddluck@riseup.net'))
+__author__ = supybot.Author("waratte", "waratte", "")
+__maintainer__ = getattr(
+    supybot.authors,
+    "oddluck",
+    supybot.Author("oddluck", "oddluck", "oddluck@riseup.net"),
+)
 
 # This is a dictionary mapping supybot.Author instances to lists of
 # contributions.
 __contributors__ = {}
 
 # This is a url where the most recent plugin package can be downloaded.
-__url__ = 'https://github.com/oddluck/limnoria-plugins/'
+__url__ = "https://github.com/oddluck/limnoria-plugins/"
 
 from . import config
 from . import plugin
 from imp import reload
+
 # In case we're being reloaded.
 reload(config)
 reload(plugin)

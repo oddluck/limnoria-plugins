@@ -29,9 +29,11 @@
 
 import supybot.conf as conf
 import supybot.registry as registry
+
 try:
     from supybot.i18n import PluginInternationalization
-    _ = PluginInternationalization('Fun')
+
+    _ = PluginInternationalization("Fun")
 except:
     # Placeholder that allows to run the plugin on a bot
     # without the i18n module
@@ -44,8 +46,8 @@ def configure(advanced):
     # user or not.  You should effect your configuration by manipulating the
     # registry as appropriate.
     from supybot.questions import expect, anything, something, yn
-    conf.registerPlugin('Fun', True)
+
+    conf.registerPlugin("Fun", True)
 
 
-Advice = conf.registerPlugin('Fun')
-
+Advice = conf.registerPlugin("Fun")

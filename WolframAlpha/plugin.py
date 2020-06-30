@@ -341,7 +341,9 @@ class WolframAlpha(callbacks.Plugin):
                         irc.reply("Conversion from btc to %s not available" % currency)
                     else:
                         converted_amount = plaintext.text.split("(")[0].strip()
-                        irc.reply("{}{:.2f} = {}".format("\u0e3f", amount, converted_amount))
+                        irc.reply(
+                            "{}{:.2f} = {}".format("\u0e3f", amount, converted_amount)
+                        )
 
     btc = wrap(btc, ["float", "text"])
 

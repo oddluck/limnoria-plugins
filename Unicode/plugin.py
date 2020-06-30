@@ -38,27 +38,32 @@ import json
 import supybot.utils.web as web
 from urllib.parse import urlencode, quote
 
-class Unicode(callbacks.Plugin):
 
+class Unicode(callbacks.Plugin):
     def unicode(self, irc, msg, args, query):
-      """[character]
-      Look up unicode character details
-      """
-      url = "http://unicodelookup.com/lookup?"
-      url = url + urlencode({'q' : query, 'o' : 0})
-      data = web.getUrl(url)
-      try:
-        data = json.loads(data)
-        responses = []
-        for result in data['results']:
-          ucode = result[2].replace('0x','U+')
-          name = unicodedata.name('{0}'.format(query))
-          responses.append('%s (%s): %s [HTML: %s / Decimal: %s / Hex: %s]' % (ucode, name, result[4], result[3], result[1], result[2]))
-        response = '; '.join(responses)
-        irc.reply(response)
-      except ValueError:
-        irc.reply('No unicode characters matching /' + query + '/ found.')
-    unicode = wrap(unicode, ['text'])
+        """[character]
+        Look up unicode character details
+        """
+        url = "http://unicodelookup.com/lookup?"
+        url = url + urlencode({"q": query, "o": 0})
+        data = web.getUrl(url)
+        try:
+            data = json.loads(data)
+            responses = []
+            for result in data["results"]:
+                ucode = result[2].replace("0x", "U+")
+                name = unicodedata.name("{0}".format(query))
+                responses.append(
+                    "%s (%s): %s [HTML: %s / Decimal: %s / Hex: %s]"
+                    % (ucode, name, result[4], result[3], result[1], result[2])
+                )
+            response = "; ".join(responses)
+            irc.reply(response)
+        except ValueError:
+            irc.reply("No unicode characters matching /" + query + "/ found.")
+
+    unicode = wrap(unicode, ["text"])
+
 
 Class = Unicode
 

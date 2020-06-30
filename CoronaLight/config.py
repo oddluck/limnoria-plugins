@@ -30,9 +30,11 @@
 
 import supybot.conf as conf
 import supybot.registry as registry
+
 try:
     from supybot.i18n import PluginInternationalization
-    _ = PluginInternationalization('CoronaLight')
+
+    _ = PluginInternationalization("CoronaLight")
 except:
     # Placeholder that allows to run the plugin on a bot
     # without the i18n module
@@ -45,16 +47,36 @@ def configure(advanced):
     # user or not.  You should effect your configuration by manipulating the
     # registry as appropriate.
     from supybot.questions import expect, anything, something, yn
-    conf.registerPlugin('CoronaLight', True)
+
+    conf.registerPlugin("CoronaLight", True)
 
 
-CoronaLight = conf.registerPlugin('CoronaLight')
+CoronaLight = conf.registerPlugin("CoronaLight")
 
-conf.registerChannelValue(CoronaLight, 'template',
-    registry.String("\x02\x1F$location\x1F: Cases: \x0307$confirmed\x03 | Deaths: \x0304$dead\x03 (\x0304$ratio\x03) | Recovered: \x0309$recovered\x03 | Updated: $updated", _("""Template for replies""")))
+conf.registerChannelValue(
+    CoronaLight,
+    "template",
+    registry.String(
+        "\x02\x1F$location\x1F: Cases: \x0307$confirmed\x03 | Deaths: \x0304$dead\x03"
+        " (\x0304$ratio\x03) | Recovered: \x0309$recovered\x03 | Updated: $updated",
+        _("""Template for replies"""),
+    ),
+)
 
-conf.registerChannelValue(CoronaLight, 'countryFirst',
-    registry.Boolean(False, _("Give preference to country name abbreviations over USA state name abbreviations")))
+conf.registerChannelValue(
+    CoronaLight,
+    "countryFirst",
+    registry.Boolean(
+        False,
+        _(
+            "Give preference to country name abbreviations over USA state name"
+            " abbreviations"
+        ),
+    ),
+)
 
-conf.registerGlobalValue(CoronaLight, 'cacheLifetime',
-    registry.Integer(600, _("Amount of time in seconds to cache API results")))
+conf.registerGlobalValue(
+    CoronaLight,
+    "cacheLifetime",
+    registry.Integer(600, _("Amount of time in seconds to cache API results")),
+)

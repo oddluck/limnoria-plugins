@@ -633,7 +633,11 @@ class Jeopardy(callbacks.Plugin):
                     len(str(self.timeout))
                 )
                 reply = self.hint_template.render(
-                    hint=self.currentHint, time=timeLeft, points=points, hintNum = self.hints, numHints = self.numHints
+                    hint=self.currentHint,
+                    time=timeLeft,
+                    points=points,
+                    hintNum=self.hints,
+                    numHints=self.numHints,
                 )
                 if self.showHints or self.showTime:
 
@@ -645,7 +649,11 @@ class Jeopardy(callbacks.Plugin):
                         schedule.addEvent(event, eventTime, "event_%s" % self.channel)
             else:
                 reply = self.hint_template.render(
-                    hint=self.currentHint, time=None, points=points, hintNum = self.hints, numHints = self.numHints
+                    hint=self.currentHint,
+                    time=None,
+                    points=points,
+                    hintNum=self.hints,
+                    numHints=self.numHints,
                 )
             self.reply(reply)
             self.hints += 1
