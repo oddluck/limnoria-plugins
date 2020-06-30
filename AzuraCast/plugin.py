@@ -89,14 +89,17 @@ class AzuraCast(callbacks.Plugin):
                 self.BASE_API.replace("/api/", ""), d["id"]
             )
             if self.VID_URL:
-                data_url = self.VID_URL + "stats.json.php"
-                data = self._fetchURL(data_url)
-                d = data.get("applications")[0]
-                if d:
-                    c = d.get("channelName")
-                    users = d.get("users")
-                    if users:
-                        views = users.get("online")
+                try:
+                    data_url = self.VID_URL + "stats.json.php"
+                    data = self._fetchURL(data_url)
+                    d = data.get("applications")[0]
+                    if d:
+                        c = d.get("channelName")
+                        users = d.get("users")
+                        if users:
+                            views = users.get("online")
+                except:
+                    pass
             if c and views:
                 viewers = " | Viewers: {}".format(views)
                 watch = " | Video Player: {}?c={}".format(self.VID_URL, c)
@@ -125,14 +128,17 @@ class AzuraCast(callbacks.Plugin):
                     self.BASE_API.replace("/api/", ""), d["id"]
                 )
                 if self.VID_URL:
-                    data_url = self.VID_URL + "stats.json.php"
-                    data = self._fetchURL(data_url)
-                    d = data.get("applications")[i]
-                    if d:
-                        c = d.get("channelName")
-                        users = d.get("users")
-                        if users:
-                            views = users.get("online")
+                    try:
+                        data_url = self.VID_URL + "stats.json.php"
+                        data = self._fetchURL(data_url)
+                        d = data.get("applications")[i]
+                        if d:
+                            c = d.get("channelName")
+                            users = d.get("users")
+                            if users:
+                                views = users.get("online")
+                    except:
+                        pass
                 if c and views:
                     viewers = " | Viewers: {}".format(views)
                     watch = " | Video Player: {}?c={}".format(self.VID_URL, c)
@@ -178,17 +184,20 @@ class AzuraCast(callbacks.Plugin):
                 plr = " "
             string = "There {}{}on {}".format(cur, plr, ircutils.bold(d["name"]))
             if self.VID_URL:
-                url = self.VID_URL + "stats.json.php"
-                data = self._fetchURL(url)
-                d = data.get("applications")
-                if d:
-                    d = d[0].get("users")
-                if d:
-                    views = d.get("online")
-                if views:
-                    string += " and there are \x02{}\x02 viewers on the video stream.".format(
-                        views
-                    )
+                try:
+                    url = self.VID_URL + "stats.json.php"
+                    data = self._fetchURL(url)
+                    d = data.get("applications")
+                    if d:
+                        d = d[0].get("users")
+                    if d:
+                        views = d.get("online")
+                    if views:
+                        string += " and there are \x02{}\x02 viewers on the video stream.".format(
+                            views
+                        )
+                except:
+                    pass
             output.append(string)
         else:
             # all stations?
@@ -206,17 +215,21 @@ class AzuraCast(callbacks.Plugin):
                     plr = " "
                 string = "There {}{}on {}".format(cur, plr, ircutils.bold(d["name"]))
                 if self.VID_URL:
-                    url = self.VID_URL + "stats.json.php"
-                    data = self._fetchURL(url)
-                    d = data.get("applications")
-                    if d:
-                        d = d[i].get("users")
-                    if d:
-                        views = d.get("online")
-                    if views:
-                        string += " and there are \x02{}\x02 viewers on the video stream.".format(
-                            views
-                        )
+                    try:
+                        url = self.VID_URL + "stats.json.php"
+                        data = self._fetchURL(url)
+                        d = data.get("applications")
+                        if d:
+                            d = d[i].get("users")
+                        if d:
+                            views = d.get("online")
+                        if views:
+                            string += (
+                                " and there are \x02{}\x02 viewers on the video stream."
+                                .format(views)
+                            )
+                    except:
+                        pass
                 i += 1
                 output.append(string)
         for string in output:
