@@ -41,9 +41,7 @@ conf.registerGlobalValue(
 )
 
 conf.registerGlobalValue(
-    AzuraCast,
-    "VideoURL",
-    registry.String("", _("""Video URL. Should end in /stats.json.php""")),
+    AzuraCast, "VideoURL", registry.String("", _("""Video URL for your radio"""))
 )
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:

@@ -29,7 +29,7 @@ class AzuraCast(callbacks.Plugin):
         self.__parent.__init__(irc)
         self.BASE_API = self.registryValue("AzuraAPI")
         self.PUB_URL = self.registryValue("PublicURL") + "#{name}"
-        self.VID_URL = self.registryValue("VideoURL")
+        self.VID_URL = self.registryValue("VideoURL").rstrip("stats.json.php")
 
     def _fetchURL(self, url, headers=None):
         return requests.get(url, headers=headers).json()
@@ -83,13 +83,22 @@ class AzuraCast(callbacks.Plugin):
             url = " | {}".format(d["public_url"]) if d["public_url"] else ""
             np = "{}".format(d["nowplaying"]["song"]["text"])
             listeners = " | Listeners: {}".format(d["listeners"]["current"])
-            listen = " | Audio player link: {}/public/{}/playlist/pls".format(
+            listen = " | Audio Player: {}/public/{}/playlist/pls".format(
                 self.BASE_API.replace("/api/", ""), d["id"]
             )
             string = "{} {}{}{}{}{}".format(prefix, np, album, listeners, url, listen)
+            if self.VID_URL:
+                url = self.VID_URL + "stats.json.php"
+                data = self._fetchURL(url)
+                d = data.get("applications")[0]
+                if d:
+                    c = d.get("channelName")
+                if c:
+                    string += " | Video Player: {}?c={}".format(self.VID_URL, c)
             output.append(string)
         else:
             # all stations?
+            i = 0
             for s, d in data.items():
                 prefix = ircutils.bold("Now Playing on {}:".format(d["name"]))
                 album = (
@@ -100,12 +109,21 @@ class AzuraCast(callbacks.Plugin):
                 url = " | {}".format(d["public_url"]) if d["public_url"] else ""
                 np = "{}".format(d["nowplaying"]["song"]["text"])
                 listeners = " | Listeners: {}".format(d["listeners"]["current"])
-                listen = " | Audio player link: {}/public/{}/playlist/pls".format(
+                listen = " | Audio Player: {}/public/{}/playlist/pls".format(
                     self.BASE_API.replace("/api/", ""), d["id"]
                 )
                 string = "{} {}{}{}{}{}".format(
                     prefix, np, album, listeners, url, listen
                 )
+                if self.VID_URL:
+                    url = self.VID_URL + "stats.json.php"
+                    data = self._fetchURL(url)
+                    d = data.get("applications")[i]
+                    if d:
+                        c = d.get("channelName")
+                    if c:
+                        string += " | Video Player: {}?c={}".format(self.VID_URL, c)
+                i += 1
                 output.append(string)
         for string in output:
             irc.reply(string)
@@ -139,9 +157,22 @@ class AzuraCast(callbacks.Plugin):
                 cur = "are no listeners"
                 plr = " "
             string = "There {}{}on {}".format(cur, plr, ircutils.bold(d["name"]))
+            if self.VID_URL:
+                url = self.VID_URL + "stats.json.php"
+                data = self._fetchURL(url)
+                d = data.get("applications")
+                if d:
+                    d = d[0].get("users")
+                if d:
+                    views = d.get("online")
+                if views:
+                    string += " and there are \x02{}\x02 viewers on the video stream.".format(
+                        views
+                    )
             output.append(string)
         else:
             # all stations?
+            i = 0
             for s, d in data.items():
                 count = d["listeners"]["current"]
                 if count > 1 and count != 0:
@@ -154,16 +185,19 @@ class AzuraCast(callbacks.Plugin):
                     cur = "are no listeners"
                     plr = " "
                 string = "There {}{}on {}".format(cur, plr, ircutils.bold(d["name"]))
-                output.append(string)
-        if self.VID_URL:
-            data = self._fetchURL(self.VID_URL)
-            d = data.get("applications")
-            if d:
-                d = d[0].get("users")
-            if d:
-                views = d.get("online")
-            if views:
-                string = "There are {} viewers on the video stream".format(views)
+                if self.VID_URL:
+                    url = self.VID_URL + "stats.json.php"
+                    data = self._fetchURL(url)
+                    d = data.get("applications")
+                    if d:
+                        d = d[i].get("users")
+                    if d:
+                        views = d.get("online")
+                    if views:
+                        string += " and there are \x02{}\x02 viewers on the video stream.".format(
+                            views
+                        )
+                i += 1
                 output.append(string)
         for string in output:
             irc.reply(string)
