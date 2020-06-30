@@ -71,6 +71,8 @@ class AzuraCast(callbacks.Plugin):
             return
         data = self._parseData(data)
         output = []
+        c = None
+        views = None
         if station:
             # one station only
             d = data.get(station.lower())
@@ -86,15 +88,25 @@ class AzuraCast(callbacks.Plugin):
             listen = " | Audio Player: {}/public/{}/playlist/pls".format(
                 self.BASE_API.replace("/api/", ""), d["id"]
             )
-            string = "{} {}{}{}{}{}".format(prefix, np, album, listeners, url, listen)
             if self.VID_URL:
-                url = self.VID_URL + "stats.json.php"
-                data = self._fetchURL(url)
+                data_url = self.VID_URL + "stats.json.php"
+                data = self._fetchURL(data_url)
                 d = data.get("applications")[0]
                 if d:
                     c = d.get("channelName")
-                if c:
-                    string += " | Video Player: {}?c={}".format(self.VID_URL, c)
+                    users = d.get("users")
+                    if users:
+                        views = users.get("online")
+            if c and views:
+                viewers = " | Viewers: {}".format(views)
+                watch = " | Video Player: {}?c={}".format(self.VID_URL, c)
+                string = "{} {}{}{}{}{}{}{}".format(
+                    prefix, np, album, listeners, viewers, url, listen, watch
+                )
+            else:
+                string = "{} {}{}{}{}{}".format(
+                    prefix, np, album, listeners, url, listen
+                )
             output.append(string)
         else:
             # all stations?
@@ -112,17 +124,25 @@ class AzuraCast(callbacks.Plugin):
                 listen = " | Audio Player: {}/public/{}/playlist/pls".format(
                     self.BASE_API.replace("/api/", ""), d["id"]
                 )
-                string = "{} {}{}{}{}{}".format(
-                    prefix, np, album, listeners, url, listen
-                )
                 if self.VID_URL:
-                    url = self.VID_URL + "stats.json.php"
-                    data = self._fetchURL(url)
+                    data_url = self.VID_URL + "stats.json.php"
+                    data = self._fetchURL(data_url)
                     d = data.get("applications")[i]
                     if d:
                         c = d.get("channelName")
-                    if c:
-                        string += " | Video Player: {}?c={}".format(self.VID_URL, c)
+                        users = d.get("users")
+                        if users:
+                            views = users.get("online")
+                if c and views:
+                    viewers = " | Viewers: {}".format(views)
+                    watch = " | Video Player: {}?c={}".format(self.VID_URL, c)
+                    string = "{} {}{}{}{}{}{}{}".format(
+                        prefix, np, album, listeners, viewers, url, listen, watch
+                    )
+                else:
+                    string = "{} {}{}{}{}{}".format(
+                        prefix, np, album, listeners, url, listen
+                    )
                 i += 1
                 output.append(string)
         for string in output:
