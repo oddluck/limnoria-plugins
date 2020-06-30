@@ -6,7 +6,6 @@
 ###
 
 import requests
-
 from supybot import utils, plugins, ircutils, callbacks
 from supybot.commands import *
 
@@ -28,9 +27,9 @@ class AzuraCast(callbacks.Plugin):
     def __init__(self, irc):
         self.__parent = super(AzuraCast, self)
         self.__parent.__init__(irc)
-
         self.BASE_API = self.registryValue("AzuraAPI")
         self.PUB_URL = self.registryValue("PublicURL") + "#{name}"
+        self.VID_URL = self.registryValue("VideoURL")
 
     def _fetchURL(self, url, headers=None):
         return requests.get(url, headers=headers).json()
@@ -66,15 +65,11 @@ class AzuraCast(callbacks.Plugin):
         options = dict(options)
         station = options.get("station")
         url = self.BASE_API + "nowplaying"
-
         data = self._fetchURL(url)
-
         if not data:
             irc.reply("ERROR: Something went wrong fetching data @ {}".format(url))
             return
-
         data = self._parseData(data)
-
         output = []
         if station:
             # one station only
@@ -112,10 +107,8 @@ class AzuraCast(callbacks.Plugin):
                     prefix, np, album, listeners, url, listen
                 )
                 output.append(string)
-
         for string in output:
             irc.reply(string)
-
         return
 
     @wrap([getopts({"station": "somethingWithoutSpaces"})])
@@ -126,15 +119,11 @@ class AzuraCast(callbacks.Plugin):
         options = dict(options)
         station = options.get("station")
         url = self.BASE_API + "nowplaying"
-
         data = self._fetchURL(url)
-
         if not data:
             irc.reply("ERROR: Something went wrong fetching data @ {}".format(url))
             return
-
         data = self._parseData(data)
-
         output = []
         if station:
             # one station only
@@ -166,10 +155,18 @@ class AzuraCast(callbacks.Plugin):
                     plr = " "
                 string = "There {}{}on {}".format(cur, plr, ircutils.bold(d["name"]))
                 output.append(string)
-
+        if self.VID_URL:
+            data = self._fetchURL(self.VID_URL)
+            d = data.get("applications")
+            if d:
+                d = d[0].get("users")
+            if d:
+                views = d.get("online")
+            if views:
+                string = "There are {} viewers on the video stream".format(views)
+                output.append(string)
         for string in output:
             irc.reply(string)
-
         return
 
 

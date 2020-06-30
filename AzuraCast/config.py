@@ -31,11 +31,19 @@ AzuraCast = conf.registerPlugin("AzuraCast")
 # This is where your configuration variables (if any) should go.  For example:
 # conf.registerGlobalValue(AzuraCast, 'someConfigVariableName',
 #     registry.Boolean(False, _("""Help for someConfigVariableName.""")))
+
 conf.registerGlobalValue(
     AzuraCast, "AzuraAPI", registry.String("", _("""AzuraCast local API URL"""))
 )
+
 conf.registerGlobalValue(
     AzuraCast, "PublicURL", registry.String("", _("""Public URL for your radio"""))
+)
+
+conf.registerGlobalValue(
+    AzuraCast,
+    "VideoURL",
+    registry.String("", _("""Video URL. Should end in /stats.json.php""")),
 )
 
 # vim:set shiftwidth=4 tabstop=4 expandtab textwidth=79:
