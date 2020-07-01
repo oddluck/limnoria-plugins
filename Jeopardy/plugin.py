@@ -222,6 +222,7 @@ class Jeopardy(callbacks.Plugin):
                                     and not invalid
                                     and id not in asked
                                     and id not in self.history[channel]
+                                    and answer != "="
                                 ):
                                     q = "{0}|{1}|{2}|{3}|{4}|{5}".format(
                                         id, airdate, points, category, clue, answer
@@ -238,6 +239,7 @@ class Jeopardy(callbacks.Plugin):
                                     and category
                                     and not invalid
                                     and id not in asked
+                                    and answer != "="
                                 ):
                                     q = "{0}|{1}|{2}|{3}|{4}|{5}".format(
                                         id, airdate, points, category, clue, answer
@@ -353,6 +355,7 @@ class Jeopardy(callbacks.Plugin):
                                         and not invalid
                                         and id not in asked
                                         and id not in self.history[channel]
+                                        and answer != "="
                                     ):
                                         q = "{0}|{1}|{2}|{3}|{4}|{5}".format(
                                             id, airdate, points, category, clue, answer
@@ -370,6 +373,7 @@ class Jeopardy(callbacks.Plugin):
                                         and category
                                         and not invalid
                                         and id not in asked
+                                        and answer != "="
                                     ):
                                         q = "{0}|{1}|{2}|{3}|{4}|{5}".format(
                                             id, airdate, points, category, clue, answer
