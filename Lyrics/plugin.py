@@ -132,8 +132,7 @@ class Lyrics(callbacks.Plugin):
             try:
                 lyrics = self.getlyrics(url)
                 if lyrics:
-                    irc.reply(title, prefixNick=False)
-                    irc.reply(lyrics, prefixNick=False)
+                    irc.reply(title + " | " + lyrics, prefixNick=False)
                 else:
                     irc.reply("Unable to retrieve lyrics from {0}".format(url))
                     return
