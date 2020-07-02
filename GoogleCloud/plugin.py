@@ -62,10 +62,12 @@ class GoogleCloud(callbacks.Plugin):
         url = "https://translation.googleapis.com/language/translate/v2"
         if source != "auto":
             url += "?q={0}&target={1}&source={2}&key={3}".format(
-                text, target, source, key
+                text.replace("&", "%26"), target, source, key
             )
         else:
-            url += "?q={0}&target={1}&key={2}".format(text, target, key)
+            url += "?q={0}&target={1}&key={2}".format(
+                text.replace("&", "%26"), target, key
+            )
         response = requests.get(url, timeout=10)
         if not response.status_code == 200:
             log.debug(
