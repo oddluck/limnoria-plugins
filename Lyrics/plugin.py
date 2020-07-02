@@ -70,29 +70,38 @@ class Lyrics(callbacks.Plugin):
         pattern = re.compile(r"https?://lyrics.fandom.com/wiki/.*")
         for i in range(1, 3):
             if google and self.registryValue("google", channel) == i:
-                results = google.decode(google.search(query, irc.network, channel))
-                for r in results:
-                    try:
-                        match = re.search(pattern, r["url"])
-                    except TypeError:
-                        match = re.search(pattern, r.link)
-                    if match:
+                try:
+                    results = google.decode(google.search(query, irc.network, channel))
+                    for r in results:
                         try:
-                            title = r["title"].replace(":", " - ").split("|")[0]
+                            match = re.search(pattern, r["url"])
                         except TypeError:
-                            title = r.title.replace(":", " - ").split("|")[0]
-                        log.debug("Lyrics: found link using Google search")
-                        break
+                            match = re.search(pattern, r.link)
+                        if match:
+                            try:
+                                title = r["title"].replace(":", " - ").split("|")[0]
+                            except TypeError:
+                                title = r.title.replace(":", " - ").split("|")[0]
+                            log.debug("Lyrics: found link using Google search")
+                            break
+                except:
+                    continue
             elif self.registryValue("ddg", channel) == i:
-                results = ddg.search_core(
-                    query, channel_context=channel, max_results=10, show_snippet=False
-                )
-                for r in results:
-                    match = re.search(pattern, r[2])
-                    if match:
-                        title = r[0].replace(":", " - ").split("|")[0]
-                        log.debug("Lyrics: found link using DDG")
-                        break
+                try:
+                    results = ddg.search_core(
+                        query,
+                        channel_context=channel,
+                        max_results=10,
+                        show_snippet=False,
+                    )
+                    for r in results:
+                        match = re.search(pattern, r[2])
+                        if match:
+                            title = r[0].replace(":", " - ").split("|")[0]
+                            log.debug("Lyrics: found link using DDG")
+                            break
+                except:
+                    continue
         if match and title:
             return title, match.group(0)
         else:
