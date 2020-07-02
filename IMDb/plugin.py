@@ -87,24 +87,33 @@ class IMDb(callbacks.Plugin):
         pattern = re.compile(r"https?://www.imdb.com/title/tt\d+/$")
         for i in range(1, 3):
             if google and self.registryValue("google", channel) == i:
-                results = google.decode(google.search(query, irc.network, channel))
-                for r in results:
-                    try:
-                        match = re.search(pattern, r["url"])
-                    except TypeError:
-                        match = re.search(pattern, r.link)
-                    if match:
-                        log.debug("IMDb: found link using Google search")
-                        break
+                try:
+                    results = google.decode(google.search(query, irc.network, channel))
+                    for r in results:
+                        try:
+                            match = re.search(pattern, r["url"])
+                        except TypeError:
+                            match = re.search(pattern, r.link)
+                        if match:
+                            log.debug("IMDb: found link using Google search")
+                            break
+                except:
+                    pass
             elif ddg and self.registryValue("ddg", channel) == i:
-                results = ddg.search_core(
-                    query, channel_context=channel, max_results=10, show_snippet=False
-                )
-                for r in results:
-                    match = re.search(pattern, r[2])
-                    if match:
-                        log.debug("IMDb: found link using DDG search")
-                        break
+                try:
+                    results = ddg.search_core(
+                        query,
+                        channel_context=channel,
+                        max_results=10,
+                        show_snippet=False,
+                    )
+                    for r in results:
+                        match = re.search(pattern, r[2])
+                        if match:
+                            log.debug("IMDb: found link using DDG search")
+                            break
+                except:
+                    pass
         if match:
             return match.group(0)
         else:

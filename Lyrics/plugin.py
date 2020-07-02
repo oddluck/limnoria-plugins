@@ -85,7 +85,7 @@ class Lyrics(callbacks.Plugin):
                             log.debug("Lyrics: found link using Google search")
                             break
                 except:
-                    continue
+                    pass
             elif self.registryValue("ddg", channel) == i:
                 try:
                     results = ddg.search_core(
@@ -101,7 +101,7 @@ class Lyrics(callbacks.Plugin):
                             log.debug("Lyrics: found link using DDG")
                             break
                 except:
-                    continue
+                    pass
         if match and title:
             return title, match.group(0)
         else:
