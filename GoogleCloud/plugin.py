@@ -61,14 +61,10 @@ class GoogleCloud(callbacks.Plugin):
             target = self.registryValue("translate.target", msg.channel)
         url = "https://translation.googleapis.com/language/translate/v2"
         if source != "auto":
-            url += "?q={0}&target={1}&source={2}&key={3}".format(
-                text.replace("&", "%26"), target, source, key
-            )
+            params = {"target": target, "source": source, "key": key, "q": text}
         else:
-            url += "?q={0}&target={1}&key={2}".format(
-                text.replace("&", "%26"), target, key
-            )
-        response = requests.get(url, timeout=10)
+            params = {"target": target, "key": key, "q": text}
+        response = requests.get(url, params=params, timeout=10)
         if not response.status_code == 200:
             log.debug(
                 "GoogleCloud: Error accessing {0}: {1}".format(
