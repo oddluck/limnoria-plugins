@@ -86,6 +86,8 @@ class IMDb(callbacks.Plugin):
         query = "site:www.imdb.com/title/ %s" % text
         pattern = re.compile(r"https?://www.imdb.com/title/tt\d+/$")
         for i in range(1, 3):
+            if match:
+                break
             if google and self.registryValue("google", channel) == i:
                 try:
                     results = google.decode(google.search(query, irc.network, channel))
@@ -95,7 +97,10 @@ class IMDb(callbacks.Plugin):
                         except TypeError:
                             match = re.search(pattern, r.link)
                         if match:
-                            log.debug("IMDb: found link using Google search")
+                            log.debug(
+                                "IMDb: found link using Google search: %s"
+                                % match.group(0)
+                            )
                             break
                 except:
                     pass
@@ -110,7 +115,9 @@ class IMDb(callbacks.Plugin):
                     for r in results:
                         match = re.search(pattern, r[2])
                         if match:
-                            log.debug("IMDb: found link using DDG search")
+                            log.debug(
+                                "IMDb: found link using DDG search %s" % match.group(0)
+                            )
                             break
                 except:
                     pass
