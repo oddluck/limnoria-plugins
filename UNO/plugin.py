@@ -902,6 +902,7 @@ class UNO(callbacks.Plugin):
                     "%s draws a card (%s cards in hand)." % (nick, ncards),
                     to=self.game[table]["channel"],
                 )
+                self.game[table]["players"][nick]["hasdrawn"] = False
 
                 turn = self.game[table]["turn"] + 1 * self.game[table]["direction"]
                 if turn > nplayers - 1:
