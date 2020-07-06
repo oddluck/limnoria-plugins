@@ -54,7 +54,10 @@ class Lyrics(callbacks.Plugin):
     threaded = True
 
     def dosearch(self, irc, channel, text):
-        google = ddg = title = None
+        google = None
+        ddg = None
+        title = None
+        match = None
         if self.registryValue("google", channel) > 0:
             google = irc.getCallback("google")
             if not google:
@@ -69,6 +72,8 @@ class Lyrics(callbacks.Plugin):
         query = "site:lyrics.fandom.com/wiki/ %s" % text
         pattern = re.compile(r"https?://lyrics.fandom.com/wiki/.*")
         for i in range(1, 3):
+            if match:
+                break
             if google and self.registryValue("google", channel) == i:
                 try:
                     results = google.decode(google.search(query, irc.network, channel))
@@ -82,7 +87,10 @@ class Lyrics(callbacks.Plugin):
                                 title = r["title"].replace(":", " - ").split("|")[0]
                             except TypeError:
                                 title = r.title.replace(":", " - ").split("|")[0]
-                            log.debug("Lyrics: found link using Google search")
+                            log.debug(
+                                "Lyrics: found link using Google search: %s"
+                                % match.group(0)
+                            )
                             break
                 except:
                     pass
@@ -98,7 +106,9 @@ class Lyrics(callbacks.Plugin):
                         match = re.search(pattern, r[2])
                         if match:
                             title = r[0].replace(":", " - ").split("|")[0]
-                            log.debug("Lyrics: found link using DDG")
+                            log.debug(
+                                "Lyrics: found link using DDG: %s" % match.group(0)
+                            )
                             break
                 except:
                     pass
@@ -107,28 +117,33 @@ class Lyrics(callbacks.Plugin):
         else:
             return None, None
 
-    def getlyrics(self, query):
+    def getlyrics(self, query, retries=0):
         lyrics = None
-        if "lyrics.fandom.com/wiki/" in query:
-            try:
-                log.debug("Lyrics: requesting {0}".format(query))
-                lyrics = pylyrics3.get_lyrics_from_url(query)
-            except Exception:
-                pass
+        if retries < 3:
+            if "lyrics.fandom.com/wiki/" in query:
+                try:
+                    log.debug("Lyrics: requesting {0}".format(query))
+                    lyrics = pylyrics3.get_lyrics_from_url(query)
+                except Exception:
+                    pass
+            else:
+                try:
+                    log.debug("Lyrics: requesting {0}".format(query))
+                    query = query.split(",", 1)
+                    lyrics = pylyrics3.get_song_lyrics(
+                        query[0].strip(), query[1].strip()
+                    )
+                except Exception:
+                    pass
+            if lyrics:
+                lyrics = re.sub(r"(?<!\.|\!|\?)\s+\n", ".", lyrics)
+                lyrics = re.sub(r"\s+\n", "", lyrics)
+                return lyrics
+            else:
+                self.getLyrics(query, retries + 1)
         else:
-            try:
-                log.debug("Lyrics: requesting {0}".format(query))
-                query = query.split(",", 1)
-                lyrics = pylyrics3.get_song_lyrics(query[0].strip(), query[1].strip())
-            except Exception:
-                pass
-        if lyrics:
-            lyrics = re.sub(r"(?<!\.|\!|\?)\s+\n", ".", lyrics)
-            lyrics = re.sub(r"\s+\n", "", lyrics)
-
-            return lyrics
-        else:
-            return
+            log.info("Lyrics: maximum number of retries (3) reached.")
+        return
 
     def lyric(self, irc, msg, args, lyric):
         """<query>
@@ -165,6 +180,7 @@ class Lyrics(callbacks.Plugin):
                 return
 
     lyric = wrap(lyric, ["text"])
+    lyrics = lyric
 
 
 Class = Lyrics
