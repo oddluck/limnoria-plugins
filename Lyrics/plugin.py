@@ -140,7 +140,7 @@ class Lyrics(callbacks.Plugin):
                 lyrics = re.sub(r"\s+\n", "", lyrics)
                 return lyrics
             else:
-                self.getLyrics(query, retries + 1)
+                self.getlyrics(query, retries + 1)
         else:
             log.info("Lyrics: maximum number of retries (3) reached.")
         return
@@ -153,26 +153,18 @@ class Lyrics(callbacks.Plugin):
         url = None
         title, url = self.dosearch(irc, msg.channel, lyric)
         if url and title and "lyrics.fandom.com/wiki/" in url:
-            try:
-                lyrics = self.getlyrics(url)
-                if lyrics:
-                    irc.reply(title + " | " + lyrics, prefixNick=False)
-                else:
-                    irc.reply("Unable to retrieve lyrics from {0}".format(url))
-                    return
-            except Exception:
+            lyrics = self.getlyrics(url)
+            if lyrics:
+                irc.reply(title + " | " + lyrics, prefixNick=False)
+            else:
                 irc.reply("Unable to retrieve lyrics from {0}".format(url))
                 return
         else:
             if "," in lyric:
-                try:
-                    lyrics = self.getlyrics(lyric)
-                    if lyrics:
-                        irc.reply(lyrics, prefixNick=False)
-                    else:
-                        irc.reply("Unable to retrieve lyrics for {0}".format(lyric))
-                        return
-                except Exception:
+                lyrics = self.getlyrics(lyric)
+                if lyrics:
+                    irc.reply(lyrics, prefixNick=False)
+                else:
                     irc.reply("Unable to retrieve lyrics for {0}".format(lyric))
                     return
             else:
