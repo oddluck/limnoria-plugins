@@ -474,7 +474,11 @@ class TextArt(callbacks.Plugin):
         """
         if not channel:
             channel = msg.args[0]
-        channel = msg.args[0]
+        if channel != msg.args[0] and not ircdb.checkCapability(msg.prefix, "admin"):
+            irc.errorNoCapability("admin")
+            return
+        if not irc.isChannel(channel):
+            channel = msg.nick
         if len(text) > self.registryValue("maxLength", msg.channel):
             return
         if len(text.split(" ")) > self.registryValue("maxWords", msg.channel):
@@ -656,6 +660,8 @@ class TextArt(callbacks.Plugin):
         if channel != msg.args[0] and not ircdb.checkCapability(msg.prefix, "admin"):
             irc.errorNoCapability("admin")
             return
+        if not irc.isChannel(channel):
+            channel = msg.nick
         optlist = dict(optlist)
         gscale = "\xa0"
         if "16" in optlist:
@@ -1084,6 +1090,8 @@ class TextArt(callbacks.Plugin):
         if channel != msg.args[0] and not ircdb.checkCapability(msg.prefix, "admin"):
             irc.errorNoCapability("admin")
             return
+        if not irc.isChannel(channel):
+            channel = msg.nick
         optlist = dict(optlist)
         self.stopped[msg.args[0]] = False
         if "delay" in optlist:
@@ -1125,6 +1133,8 @@ class TextArt(callbacks.Plugin):
         if channel != msg.args[0] and not ircdb.checkCapability(msg.prefix, "admin"):
             irc.errorNoCapability("admin")
             return
+        if not irc.isChannel(channel):
+            channel = msg.nick
         optlist = dict(optlist)
         opts = ""
         if "l" in optlist:
@@ -1235,6 +1245,8 @@ class TextArt(callbacks.Plugin):
         if channel != msg.args[0] and not ircdb.checkCapability(msg.prefix, "admin"):
             irc.errorNoCapability("admin")
             return
+        if not irc.isChannel(channel):
+            channel = msg.nick
         optlist = dict(optlist)
         opts = ""
         if "b" in optlist:
@@ -1352,6 +1364,8 @@ class TextArt(callbacks.Plugin):
         if channel != msg.args[0] and not ircdb.checkCapability(msg.prefix, "admin"):
             irc.errorNoCapability("admin")
             return
+        if not irc.isChannel(channel):
+            channel = msg.nick
         if len(text) > self.registryValue("maxLength", msg.channel):
             return
         if len(text.split(" ")) > self.registryValue("maxWords", msg.channel):
@@ -1439,6 +1453,8 @@ class TextArt(callbacks.Plugin):
         if channel != msg.args[0] and not ircdb.checkCapability(msg.prefix, "admin"):
             irc.errorNoCapability("admin")
             return
+        if not irc.isChannel(channel):
+            channel = msg.nick
         if len(text) > self.registryValue("maxLength", msg.channel):
             return
         if len(text.split(" ")) > self.registryValue("maxWords", msg.channel):
@@ -1563,6 +1579,8 @@ class TextArt(callbacks.Plugin):
         if channel != msg.args[0] and not ircdb.checkCapability(msg.prefix, "admin"):
             irc.errorNoCapability("admin")
             return
+        if not irc.isChannel(channel):
+            channel = msg.nick
         optlist = dict(optlist)
         if "delay" in optlist:
             delay = optlist.get("delay")
@@ -1621,6 +1639,8 @@ class TextArt(callbacks.Plugin):
         if channel != msg.args[0] and not ircdb.checkCapability(msg.prefix, "admin"):
             irc.errorNoCapability("admin")
             return
+        if not irc.isChannel(channel):
+            channel = msg.nick
         optlist = dict(optlist)
         if "delay" in optlist:
             delay = optlist.get("delay")
@@ -1691,6 +1711,8 @@ class TextArt(callbacks.Plugin):
         if channel != msg.args[0] and not ircdb.checkCapability(msg.prefix, "admin"):
             irc.errorNoCapability("admin")
             return
+        if not irc.isChannel(channel):
+            channel = msg.nick
         optlist = dict(optlist)
         if "delay" in optlist:
             delay = optlist.get("delay")
@@ -1746,6 +1768,8 @@ class TextArt(callbacks.Plugin):
         if channel != msg.args[0] and not ircdb.checkCapability(msg.prefix, "admin"):
             irc.errorNoCapability("admin")
             return
+        if not irc.isChannel(channel):
+            channel = msg.nick
         optlist = dict(optlist)
         if "delay" in optlist:
             delay = optlist.get("delay")
@@ -1777,6 +1801,8 @@ class TextArt(callbacks.Plugin):
         if channel != msg.args[0] and not ircdb.checkCapability(msg.prefix, "admin"):
             irc.errorNoCapability("admin")
             return
+        if not irc.isChannel(channel):
+            channel = msg.nick
         optlist = dict(optlist)
         if "delay" in optlist:
             delay = optlist.get("delay")
