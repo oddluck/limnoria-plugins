@@ -67,7 +67,7 @@ conf.registerChannelValue(
 )
 
 conf.registerGlobalValue(
-    TextArt, "cacheColors", registry.Boolean(True, _("""Cache color calculations""")),
+    TextArt, "cacheColors", registry.Boolean(False, _("""Cache color calculations.""")),
 )
 
 conf.registerChannelValue(
