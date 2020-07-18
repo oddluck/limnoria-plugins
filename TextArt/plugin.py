@@ -42,6 +42,7 @@ from PIL import Image, ImageOps, ImageFont, ImageDraw, ImageEnhance
 import numpy as np
 import sys, math
 import re
+import asyncio
 import pexpect
 import time
 import random
@@ -462,6 +463,10 @@ class TextArt(callbacks.Plugin):
         irc.reply(uploaded_image.link, noLengthCheck=True, private=False, notice=False)
 
     png = wrap(png, [getopts({"bg": "int", "fg": "int"}), "text"])
+
+    async def reply(self, irc, text, channel, delay):
+        irc.sendMsg(ircmsgs.privmsg(channel, text))
+        await asyncio.sleep(delay)
 
     def artii(self, irc, msg, args, channel, optlist, text):
         """[<channel>] [--font <font>] [--color <color1,color2>] [<text>]
@@ -1025,15 +1030,7 @@ class TextArt(callbacks.Plugin):
             if self.registryValue("pasteEnable", msg.args[0]):
                 paste += line + "\n"
             if not self.stopped[msg.args[0]]:
-                time.sleep(delay)
-                irc.reply(
-                    line,
-                    prefixNick=False,
-                    noLengthCheck=True,
-                    private=False,
-                    notice=False,
-                    to=channel,
-                )
+                asyncio.run(self.reply(irc, line, channel, delay))
         if self.registryValue("showStats", msg.args[0]):
             longest = len(max(output, key=len).encode("utf-8"))
             render_time = "{0:.2f}".format(end_time - start_time)
@@ -1115,15 +1112,7 @@ class TextArt(callbacks.Plugin):
             return
         for line in file.split("\n"):
             if line.strip() and not self.stopped[msg.args[0]]:
-                time.sleep(delay)
-                irc.reply(
-                    line,
-                    prefixNick=False,
-                    noLengthCheck=True,
-                    private=False,
-                    notice=False,
-                    to=channel,
-                )
+                asyncio.run(self.reply(irc, line, channel, delay))
 
     scroll = wrap(scroll, [optional("channel"), getopts({"delay": "float"}), "text"])
 
@@ -1210,25 +1199,10 @@ class TextArt(callbacks.Plugin):
             if self.registryValue("pasteEnable", msg.args[0]):
                 paste += line + "\n"
             if line.strip() and not self.stopped[msg.args[0]]:
-                time.sleep(delay)
-                irc.reply(
-                    line,
-                    prefixNick=False,
-                    noLengthCheck=True,
-                    private=False,
-                    notice=False,
-                    to=channel,
-                )
+                asyncio.run(self.reply(irc, line, channel, delay))
             elif not line.strip() and not self.stopped[msg.args[0]]:
-                time.sleep(delay)
-                irc.reply(
-                    "\xa0",
-                    prefixNick=False,
-                    noLengthCheck=True,
-                    private=False,
-                    notice=False,
-                    to=channel,
-                )
+                line = "\xa0"
+                asyncio.run(self.reply(irc, line, channel, delay))
             else:
                 return
         if self.registryValue("pasteEnable", msg.args[0]):
@@ -1336,15 +1310,7 @@ class TextArt(callbacks.Plugin):
             if self.registryValue("pasteEnable", msg.args[0]):
                 paste += line + "\n"
             if line.strip() and not self.stopped[msg.args[0]]:
-                time.sleep(delay)
-                irc.reply(
-                    line,
-                    prefixNick=False,
-                    noLengthCheck=True,
-                    private=False,
-                    notice=False,
-                    to=channel,
-                )
+                asyncio.run(self.reply(irc, line, channel, delay))
         if self.registryValue("pasteEnable", msg.args[0]):
             irc.reply(self.doPaste(url, paste), private=False, notice=False, to=channel)
         else:
@@ -1436,25 +1402,10 @@ class TextArt(callbacks.Plugin):
             if self.registryValue("pasteEnable", msg.args[0]):
                 paste += line + "\n"
             if not line.strip() and not self.stopped[msg.args[0]]:
-                time.sleep(delay)
-                irc.reply(
-                    "\xa0",
-                    prefixNick=False,
-                    noLengthCheck=True,
-                    private=False,
-                    notice=False,
-                    to=channel,
-                )
+                line = "\xa0"
+                asyncio.run(self.reply(irc, line, channel, delay))
             elif not self.stopped[msg.args[0]]:
-                time.sleep(delay)
-                irc.reply(
-                    line,
-                    prefixNick=False,
-                    noLengthCheck=True,
-                    private=False,
-                    notice=False,
-                    to=channel,
-                )
+                asyncio.run(self.reply(irc, line, channel, delay))
         if self.registryValue("pasteEnable", msg.args[0]):
             irc.reply(
                 self.doPaste(text, paste), private=False, notice=False, to=channel
@@ -1536,25 +1487,10 @@ class TextArt(callbacks.Plugin):
             if self.registryValue("pasteEnable", msg.args[0]):
                 paste += line + "\n"
             if not line.strip() and not self.stopped[msg.args[0]]:
-                time.sleep(delay)
-                irc.reply(
-                    "\xa0",
-                    prefixNick=False,
-                    noLengthCheck=True,
-                    private=False,
-                    notice=False,
-                    to=channel,
-                )
+                line = "\xa0"
+                asyncio.run(self.reply(irc, line, channel, delay))
             elif not self.stopped[msg.args[0]]:
-                time.sleep(delay)
-                irc.reply(
-                    line,
-                    prefixNick=False,
-                    noLengthCheck=True,
-                    private=False,
-                    notice=False,
-                    to=channel,
-                )
+                asyncio.run(self.reply(irc, line, channel, delay))
         if self.registryValue("pasteEnable", msg.args[0]):
             irc.reply(
                 self.doPaste(text, paste), private=False, notice=False, to=channel
@@ -1658,15 +1594,7 @@ class TextArt(callbacks.Plugin):
                 and not self.stopped[msg.args[0]]
                 and not line.startswith("Follow")
             ):
-                time.sleep(delay)
-                irc.reply(
-                    line,
-                    prefixNick=False,
-                    noLengthCheck=True,
-                    private=False,
-                    notice=False,
-                    to=channel,
-                )
+                asyncio.run(self.reply(irc, line, channel, delay))
         if self.registryValue("pasteEnable", msg.args[0]):
             irc.reply(
                 self.doPaste(location, paste), private=False, notice=False, to=channel
@@ -1721,15 +1649,8 @@ class TextArt(callbacks.Plugin):
             if not line.strip() and not self.stopped[msg.args[0]]:
                 if self.registryValue("pasteEnable", msg.args[0]):
                     paste += line + "\n"
-                time.sleep(delay)
-                irc.reply(
-                    "\xa0",
-                    prefixNick=False,
-                    noLengthCheck=True,
-                    private=False,
-                    notice=False,
-                    to=channel,
-                )
+                line = "\xa0"
+                asyncio.run(self.reply(irc, line, channel, delay))
             elif (
                 line.strip()
                 and not self.stopped[msg.args[0]]
@@ -1737,15 +1658,7 @@ class TextArt(callbacks.Plugin):
             ):
                 if self.registryValue("pasteEnable", msg.args[0]):
                     paste += line + "\n"
-                time.sleep(delay)
-                irc.reply(
-                    line,
-                    prefixNick=False,
-                    noLengthCheck=True,
-                    private=False,
-                    notice=False,
-                    to=channel,
-                )
+                asyncio.run(self.reply(irc, line, channel, delay))
         if self.registryValue("pasteEnable", msg.args[0]):
             irc.reply(
                 self.doPaste(coin, paste), private=False, notice=False, to=channel
@@ -1807,29 +1720,14 @@ class TextArt(callbacks.Plugin):
             if self.registryValue("pasteEnable", msg.args[0]):
                 paste += line + "\n"
             if not line.strip() and not self.stopped[msg.args[0]]:
-                time.sleep(delay)
-                irc.reply(
-                    "\xa0",
-                    prefixNick=False,
-                    noLengthCheck=True,
-                    private=False,
-                    notice=False,
-                    to=channel,
-                )
+                line = "\xa0"
+                asyncio.run(self.reply(irc, line, channel, delay))
             elif (
                 line.strip()
                 and not self.stopped[msg.args[0]]
                 and "Follow @igor_chubin" not in line
             ):
-                time.sleep(delay)
-                irc.reply(
-                    line,
-                    prefixNick=False,
-                    noLengthCheck=True,
-                    private=False,
-                    notice=False,
-                    to=channel,
-                )
+                asyncio.run(self.reply(irc, line, channel, delay))
         if self.registryValue("pasteEnable", msg.args[0]):
             irc.reply(
                 self.doPaste(text, paste), private=False, notice=False, to=channel
@@ -1859,29 +1757,14 @@ class TextArt(callbacks.Plugin):
         fortune = random.randrange(0, len(fortunes))
         for line in fortunes[fortune].splitlines():
             if not line.strip() and not self.stopped[msg.args[0]]:
-                time.sleep(delay)
-                irc.reply(
-                    "\xa0",
-                    prefixNick=False,
-                    noLengthCheck=True,
-                    private=False,
-                    notice=False,
-                    to=channel,
-                )
+                line = "\xa0"
+                asyncio.run(self.reply(irc, line, channel, delay))
             elif (
                 line.strip()
                 and not self.stopped[msg.args[0]]
                 and "Follow @igor_chubin" not in line
             ):
-                time.sleep(delay)
-                irc.reply(
-                    line,
-                    prefixNick=False,
-                    noLengthCheck=True,
-                    private=False,
-                    notice=False,
-                    to=channel,
-                )
+                asyncio.run(self.reply(irc, line, channel, delay))
 
     fortune = wrap(fortune, [optional("channel"), getopts({"delay": "float"})])
 
@@ -1917,29 +1800,10 @@ class TextArt(callbacks.Plugin):
         output = data.content.decode()
         for line in output.splitlines():
             if not line.strip() and not self.stopped[msg.args[0]]:
-                time.sleep(delay)
-                irc.reply(
-                    "\xa0",
-                    prefixNick=False,
-                    noLengthCheck=True,
-                    private=False,
-                    notice=False,
-                    to=channel,
-                )
-            elif (
-                line.strip()
-                and not self.stopped[msg.args[0]]
-                and "Follow @igor_chubin" not in line
-            ):
-                time.sleep(delay)
-                irc.reply(
-                    line,
-                    prefixNick=False,
-                    noLengthCheck=True,
-                    private=False,
-                    notice=False,
-                    to=channel,
-                )
+                line = "\xa0"
+                asyncio.run(self.reply(irc, line, channel, delay))
+            elif line.strip() and not self.stopped[msg.args[0]]:
+                asyncio.run(self.reply(irc, line, channel, delay))
         irc.reply(url.get("href"))
 
     mircart = wrap(mircart, [optional("channel"), getopts({"delay": "float"}), "text"])
