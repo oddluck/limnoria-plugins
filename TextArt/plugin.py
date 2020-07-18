@@ -87,6 +87,8 @@ class TextArt(callbacks.Plugin):
 
     def doPrivmsg(self, irc, msg):
         channel = msg.args[0]
+        if not irc.isChannel(channel):
+            channel = msg.nick
         self.stopped.setdefault(channel, None)
         if msg.args[1].lower().strip()[1:] == "cq":
             self.stopped[channel] = True
@@ -466,6 +468,7 @@ class TextArt(callbacks.Plugin):
     png = wrap(png, [getopts({"bg": "int", "fg": "int"}), "text"])
 
     async def reply(self, irc, output, channel, delay):
+        self.stopped.setdefault(channel, None)
         for line in output:
             if self.stopped[channel]:
                 return
@@ -1036,7 +1039,7 @@ class TextArt(callbacks.Plugin):
                     else:
                         aimg[j] += "{0}".format(gsval)
         output = aimg
-        self.stopped[msg.args[0]] = False
+        self.stopped[channel] = False
         end_time = time.time()
         asyncio.run(self.reply(irc, output, channel, delay))
         if self.registryValue("pasteEnable", msg.args[0]):
@@ -1101,7 +1104,7 @@ class TextArt(callbacks.Plugin):
         if not irc.isChannel(channel):
             channel = msg.nick
         optlist = dict(optlist)
-        self.stopped[msg.args[0]] = False
+        self.stopped[channel] = False
         if "delay" in optlist:
             delay = optlist.get("delay")
         else:
@@ -1209,7 +1212,7 @@ class TextArt(callbacks.Plugin):
         except:
             irc.reply("Invalid file type.")
             return
-        self.stopped[msg.args[0]] = False
+        self.stopped[channel] = False
         output = re.sub("(\x03(\d+).*)\x03,", "\g<1>\x03\g<2>,", output.decode())
         output = output.splitlines()
         asyncio.run(self.reply(irc, output, channel, delay))
@@ -1318,7 +1321,7 @@ class TextArt(callbacks.Plugin):
         else:
             irc.reply("Invalid file type.", private=False, notice=False)
             return
-        self.stopped[msg.args[0]] = False
+        self.stopped[channel] = False
         output = output.decode().splitlines()
         output = [re.sub("^\x03 ", " ", line) for line in output]
         asyncio.run(self.reply(irc, output, channel, delay))
@@ -1412,7 +1415,7 @@ class TextArt(callbacks.Plugin):
                 notice=False,
             )
             return
-        self.stopped[msg.args[0]] = False
+        self.stopped[channel] = False
         output = output.decode().replace("\r\r\n", "\r\n")
         output = re.sub("\x03\x03\s*", "\x0F ", output)
         output = re.sub("\x0F\s*\x03$", "", output)
@@ -1500,7 +1503,7 @@ class TextArt(callbacks.Plugin):
         except:
             irc.reply("Error. Have you installed toilet?", private=False, notice=False)
             return
-        self.stopped[msg.args[0]] = False
+        self.stopped[channel] = False
         output = output.decode().replace("\r\r\n", "\r\n")
         output = output.splitlines()
         asyncio.run(self.reply(irc, output, channel, delay))
@@ -1600,7 +1603,7 @@ class TextArt(callbacks.Plugin):
         output = self.ansi2irc(output)
         output = re.sub("⚡", "☇ ", output)
         output = re.sub("‘‘", "‘ ", output)
-        self.stopped[msg.args[0]] = False
+        self.stopped[channel] = False
         output = output.splitlines()
         output = [line.strip("\x0F") for line in output]
         asyncio.run(self.reply(irc, output, channel, delay))
@@ -1661,7 +1664,7 @@ class TextArt(callbacks.Plugin):
         output = output.replace("\x1b(B", "")
         output = output.splitlines()
         output = [line.strip("\x0F") for line in output]
-        self.stopped[msg.args[0]] = False
+        self.stopped[channel] = False
         asyncio.run(self.reply(irc, output, channel, delay))
         if self.registryValue("pasteEnable", msg.args[0]):
             paste = ""
@@ -1708,7 +1711,7 @@ class TextArt(callbacks.Plugin):
             delay = optlist.get("delay")
         else:
             delay = self.registryValue("delay", msg.args[0])
-        self.stopped[msg.args[0]] = False
+        self.stopped[channel] = False
         data = requests.get("http://www.asciiartfarts.com/fortune.txt", timeout=10)
         fortunes = data.content.decode().split("%\n")
         fortune = random.randrange(0, len(fortunes))
@@ -1733,7 +1736,7 @@ class TextArt(callbacks.Plugin):
             delay = optlist.get("delay")
         else:
             delay = self.registryValue("delay", msg.args[0])
-        self.stopped[msg.args[0]] = False
+        self.stopped[channel] = False
         ua = random.choice(self.agents)
         header = {"User-Agent": ua}
         data = requests.get(
