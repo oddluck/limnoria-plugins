@@ -66,6 +66,10 @@ conf.registerChannelValue(
     registry.Boolean(False, _("""Turns on and off paste.ee support""")),
 )
 
+conf.registerGlobalValue(
+    TextArt, "cacheColors", registry.Boolean(True, _("""Cache color calculations""")),
+)
+
 conf.registerChannelValue(
     TextArt,
     "showStats",

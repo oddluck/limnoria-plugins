@@ -83,6 +83,7 @@ class TextArt(callbacks.Plugin):
         self.old_color = None
         self.source_colors = 0
         self.agents = self.registryValue("userAgents")
+        self.matches = {}
 
     def doPrivmsg(self, irc, msg):
         channel = msg.args[0]
@@ -798,8 +799,9 @@ class TextArt(callbacks.Plugin):
                 image2 = image2.quantize(dither=None)
                 image2 = image2.convert("RGB")
             colormap = np.array(image2)
-            self.matches = {}
             self.labmatches = {}
+            if not self.registryValue("cacheColors"):
+                self.matches = {}
         # ascii image is a list of character strings
         aimg = []
         if type == "1/2":
