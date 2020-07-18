@@ -98,8 +98,13 @@ class TimeBomb(callbacks.Plugin):
             self.responded = False
             self.rng = random.Random()
             self.rng.seed()
+
+            def get(group):
+                v = group.getSpecific(channel=channel)
+                return v()
+
             try:
-                self.command_char = conf.supybot.reply.whenAddressedBy.chars()[0]
+                self.command_char = get(conf.supybot.reply.whenAddressedBy.chars)[0]
             except:
                 self.command_char = ""
             if self.debug:
