@@ -465,9 +465,14 @@ class TextArt(callbacks.Plugin):
 
     png = wrap(png, [getopts({"bg": "int", "fg": "int"}), "text"])
 
-    async def reply(self, irc, text, channel, delay):
-        irc.sendMsg(ircmsgs.privmsg(channel, text))
-        await asyncio.sleep(delay)
+    async def reply(self, irc, output, channel, delay):
+        for line in output:
+            if self.stopped[channel]:
+                return
+            if not line.strip():
+                line = "\xa0"
+            irc.sendMsg(ircmsgs.privmsg(channel, line))
+            await asyncio.sleep(delay)
 
     def artii(self, irc, msg, args, channel, optlist, text):
         """[<channel>] [--font <font>] [--color <color1,color2>] [<text>]
@@ -1031,14 +1036,15 @@ class TextArt(callbacks.Plugin):
                     else:
                         aimg[j] += "{0}".format(gsval)
         output = aimg
-        paste = ""
         self.stopped[msg.args[0]] = False
         end_time = time.time()
-        for line in output:
-            if self.registryValue("pasteEnable", msg.args[0]):
+        asyncio.run(self.reply(irc, output, channel, delay))
+        if self.registryValue("pasteEnable", msg.args[0]):
+            paste = ""
+            for line in output:
+                if not line.strip():
+                    line = "\xa0"
                 paste += line + "\n"
-            if not self.stopped[msg.args[0]]:
-                asyncio.run(self.reply(irc, line, channel, delay))
         if self.registryValue("showStats", msg.args[0]):
             longest = len(max(output, key=len).encode("utf-8"))
             render_time = "{0:.2f}".format(end_time - start_time)
@@ -1120,9 +1126,8 @@ class TextArt(callbacks.Plugin):
         else:
             irc.reply("Invalid file type.", private=False, notice=False)
             return
-        for line in file.split("\n"):
-            if line.strip() and not self.stopped[msg.args[0]]:
-                asyncio.run(self.reply(irc, line, channel, delay))
+        output = file.splitlines()
+        asyncio.run(self.reply(irc, output, channel, delay))
 
     scroll = wrap(scroll, [optional("channel"), getopts({"delay": "float"}), "text"])
 
@@ -1204,19 +1209,16 @@ class TextArt(callbacks.Plugin):
         except:
             irc.reply("Invalid file type.")
             return
-        paste = ""
         self.stopped[msg.args[0]] = False
         output = re.sub("(\x03(\d+).*)\x03,", "\g<1>\x03\g<2>,", output.decode())
-        for line in output.splitlines():
-            if self.registryValue("pasteEnable", msg.args[0]):
+        output = output.splitlines()
+        asyncio.run(self.reply(irc, output, channel, delay))
+        if self.registryValue("pasteEnable", msg.args[0]):
+            paste = ""
+            for line in output:
+                if not line.strip():
+                    line = "\xa0"
                 paste += line + "\n"
-            if line.strip() and not self.stopped[msg.args[0]]:
-                asyncio.run(self.reply(irc, line, channel, delay))
-            elif not line.strip() and not self.stopped[msg.args[0]]:
-                line = "\xa0"
-                asyncio.run(self.reply(irc, line, channel, delay))
-            else:
-                return
         if self.registryValue("pasteEnable", msg.args[0]):
             irc.reply(self.doPaste(url, paste), private=False, notice=False, to=channel)
 
@@ -1316,15 +1318,16 @@ class TextArt(callbacks.Plugin):
         else:
             irc.reply("Invalid file type.", private=False, notice=False)
             return
-        paste = ""
         self.stopped[msg.args[0]] = False
-        for line in output.splitlines():
-            line = line.decode()
-            line = re.sub("^\x03 ", " ", line)
-            if self.registryValue("pasteEnable", msg.args[0]):
+        output = output.decode().splitlines()
+        output = [re.sub("^\x03 ", " ", line) for line in output]
+        asyncio.run(self.reply(irc, output, channel, delay))
+        if self.registryValue("pasteEnable", msg.args[0]):
+            paste = ""
+            for line in output:
+                if not line.strip():
+                    line = "\xa0"
                 paste += line + "\n"
-            if line.strip() and not self.stopped[msg.args[0]]:
-                asyncio.run(self.reply(irc, line, channel, delay))
         if self.registryValue("pasteEnable", msg.args[0]):
             irc.reply(self.doPaste(url, paste), private=False, notice=False, to=channel)
         else:
@@ -1409,19 +1412,18 @@ class TextArt(callbacks.Plugin):
                 notice=False,
             )
             return
-        paste = ""
         self.stopped[msg.args[0]] = False
         output = output.decode().replace("\r\r\n", "\r\n")
-        for line in output.splitlines():
-            line = re.sub("\x03\x03\s*", "\x0F ", line)
-            line = re.sub("\x0F\s*\x03$", "", line)
-            if self.registryValue("pasteEnable", msg.args[0]):
+        output = re.sub("\x03\x03\s*", "\x0F ", output)
+        output = re.sub("\x0F\s*\x03$", "", output)
+        output = output.splitlines()
+        asyncio.run(self.reply(irc, output, channel, delay))
+        if self.registryValue("pasteEnable", msg.args[0]):
+            paste = ""
+            for line in output:
+                if not line.strip():
+                    line = "\xa0"
                 paste += line + "\n"
-            if not line.strip() and not self.stopped[msg.args[0]]:
-                line = "\xa0"
-                asyncio.run(self.reply(irc, line, channel, delay))
-            elif not self.stopped[msg.args[0]]:
-                asyncio.run(self.reply(irc, line, channel, delay))
         if self.registryValue("pasteEnable", msg.args[0]):
             irc.reply(
                 self.doPaste(text, paste), private=False, notice=False, to=channel
@@ -1498,17 +1500,16 @@ class TextArt(callbacks.Plugin):
         except:
             irc.reply("Error. Have you installed toilet?", private=False, notice=False)
             return
-        paste = ""
         self.stopped[msg.args[0]] = False
         output = output.decode().replace("\r\r\n", "\r\n")
-        for line in output.splitlines():
-            if self.registryValue("pasteEnable", msg.args[0]):
+        output = output.splitlines()
+        asyncio.run(self.reply(irc, output, channel, delay))
+        if self.registryValue("pasteEnable", msg.args[0]):
+            paste = ""
+            for line in output:
+                if not line.strip():
+                    line = "\xa0"
                 paste += line + "\n"
-            if not line.strip() and not self.stopped[msg.args[0]]:
-                line = "\xa0"
-                asyncio.run(self.reply(irc, line, channel, delay))
-            elif not self.stopped[msg.args[0]]:
-                asyncio.run(self.reply(irc, line, channel, delay))
         if self.registryValue("pasteEnable", msg.args[0]):
             irc.reply(
                 self.doPaste(text, paste), private=False, notice=False, to=channel
@@ -1599,22 +1600,16 @@ class TextArt(callbacks.Plugin):
         output = self.ansi2irc(output)
         output = re.sub("⚡", "☇ ", output)
         output = re.sub("‘‘", "‘ ", output)
-        paste = ""
         self.stopped[msg.args[0]] = False
-        for line in output.splitlines():
-            line = line.strip("\x0F")
-            if not line.strip():
-                line = "\xa0"
-            if self.registryValue("pasteEnable", msg.args[0]) and not line.startswith(
-                "Follow"
-            ):
+        output = output.splitlines()
+        output = [line.strip("\x0F") for line in output]
+        asyncio.run(self.reply(irc, output, channel, delay))
+        if self.registryValue("pasteEnable", msg.args[0]):
+            paste = ""
+            for line in output:
+                if not line.strip():
+                    line = "\xa0"
                 paste += line + "\n"
-            if (
-                line.strip()
-                and not self.stopped[msg.args[0]]
-                and not line.startswith("Follow")
-            ):
-                asyncio.run(self.reply(irc, line, channel, delay))
         if self.registryValue("pasteEnable", msg.args[0]):
             irc.reply(
                 self.doPaste(location, paste), private=False, notice=False, to=channel
@@ -1664,23 +1659,16 @@ class TextArt(callbacks.Plugin):
         output = file.content.decode()
         output = self.ansi2irc(output)
         output = output.replace("\x1b(B", "")
-        paste = ""
+        output = output.splitlines()
+        output = [line.strip("\x0F") for line in output]
         self.stopped[msg.args[0]] = False
-        for line in output.splitlines():
-            line = line.strip("\x0F")
-            if not line.strip() and not self.stopped[msg.args[0]]:
-                if self.registryValue("pasteEnable", msg.args[0]):
-                    paste += line + "\n"
-                line = "\xa0"
-                asyncio.run(self.reply(irc, line, channel, delay))
-            elif (
-                line.strip()
-                and not self.stopped[msg.args[0]]
-                and "Follow @igor_chubin" not in line
-            ):
-                if self.registryValue("pasteEnable", msg.args[0]):
-                    paste += line + "\n"
-                asyncio.run(self.reply(irc, line, channel, delay))
+        asyncio.run(self.reply(irc, output, channel, delay))
+        if self.registryValue("pasteEnable", msg.args[0]):
+            paste = ""
+            for line in output:
+                if not line.strip():
+                    line = "\xa0"
+                paste += line + "\n"
         if self.registryValue("pasteEnable", msg.args[0]):
             irc.reply(
                 self.doPaste(coin, paste), private=False, notice=False, to=channel
@@ -1704,63 +1692,6 @@ class TextArt(callbacks.Plugin):
         ],
     )
 
-    def cow(self, irc, msg, args, channel, optlist, text):
-        """[<channel>] [--delay] [--type <character>] <text>
-        Cowsay
-        """
-        if not channel:
-            channel = msg.args[0]
-        if channel != msg.args[0] and not ircdb.checkCapability(msg.prefix, "admin"):
-            irc.errorNoCapability("admin")
-            return
-        if not irc.isChannel(channel):
-            channel = msg.nick
-        optlist = dict(optlist)
-        if "delay" in optlist:
-            delay = optlist.get("delay")
-        else:
-            delay = self.registryValue("delay", msg.args[0])
-        if "type" in optlist:
-            type = optlist.get("type")
-        else:
-            type = "default"
-        try:
-            data = requests.get(
-                "https://easyapis.soue.tk/api/cowsay?text={0}&type={1}".format(
-                    text, type
-                ),
-                timeout=10,
-            )
-            data.raise_for_status()
-        except (
-            requests.exceptions.RequestException,
-            requests.exceptions.HTTPError,
-        ) as e:
-            log.debug("TextArt: error retrieving data for cowsay: {0}".format(e))
-            return
-        self.stopped[msg.args[0]] = False
-        paste = ""
-        for line in data.content.decode().splitlines():
-            if self.registryValue("pasteEnable", msg.args[0]):
-                paste += line + "\n"
-            if not line.strip() and not self.stopped[msg.args[0]]:
-                line = "\xa0"
-                asyncio.run(self.reply(irc, line, channel, delay))
-            elif (
-                line.strip()
-                and not self.stopped[msg.args[0]]
-                and "Follow @igor_chubin" not in line
-            ):
-                asyncio.run(self.reply(irc, line, channel, delay))
-        if self.registryValue("pasteEnable", msg.args[0]):
-            irc.reply(
-                self.doPaste(text, paste), private=False, notice=False, to=channel
-            )
-
-    cow = wrap(
-        cow, [optional("channel"), getopts({"delay": "float", "type": "text"}), "text"]
-    )
-
     def fortune(self, irc, msg, args, channel, optlist):
         """[<channel>]
         Returns random art fortune from http://www.asciiartfarts.com/fortune.txt
@@ -1781,16 +1712,8 @@ class TextArt(callbacks.Plugin):
         data = requests.get("http://www.asciiartfarts.com/fortune.txt", timeout=10)
         fortunes = data.content.decode().split("%\n")
         fortune = random.randrange(0, len(fortunes))
-        for line in fortunes[fortune].splitlines():
-            if not line.strip() and not self.stopped[msg.args[0]]:
-                line = "\xa0"
-                asyncio.run(self.reply(irc, line, channel, delay))
-            elif (
-                line.strip()
-                and not self.stopped[msg.args[0]]
-                and "Follow @igor_chubin" not in line
-            ):
-                asyncio.run(self.reply(irc, line, channel, delay))
+        output = fortunes[fortune].splitlines()
+        asyncio.run(self.reply(irc, output, channel, delay))
 
     fortune = wrap(fortune, [optional("channel"), getopts({"delay": "float"})])
 
@@ -1826,12 +1749,8 @@ class TextArt(callbacks.Plugin):
             return
         data = requests.get(url.get("href"), headers=header, timeout=10)
         output = data.content.decode()
-        for line in output.splitlines():
-            if not line.strip() and not self.stopped[msg.args[0]]:
-                line = "\xa0"
-                asyncio.run(self.reply(irc, line, channel, delay))
-            elif line.strip() and not self.stopped[msg.args[0]]:
-                asyncio.run(self.reply(irc, line, channel, delay))
+        output = output.splitlines()
+        asyncio.run(self.reply(irc, output, channel, delay))
         irc.reply(url.get("href"))
 
     mircart = wrap(mircart, [optional("channel"), getopts({"delay": "float"}), "text"])
