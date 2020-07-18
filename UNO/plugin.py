@@ -94,6 +94,15 @@ class UNO(callbacks.Plugin):
             irc.reply("Error: allow_game=False")
             return
 
+        def get(group):
+            v = group.getSpecific(channel=msg.args[0])
+            return v()
+
+        try:
+            prefixChar = get(conf.supybot.reply.whenAddressedBy.chars)[0]
+        except:
+            prefixChar = ""
+
         # may want to add a game variant later
         if text:
             gametype = text.lower().strip()
@@ -133,9 +142,9 @@ class UNO(callbacks.Plugin):
                     nick,
                     gametype.capitalize(),
                     table + 1,
-                    self.prefixChar,
-                    self.prefixChar,
-                    self.prefixChar,
+                    prefixChar,
+                    prefixChar,
+                    prefixChar,
                 ),
                 prefixNick=False,
             )
@@ -205,6 +214,16 @@ class UNO(callbacks.Plugin):
             irc.reply("Error: You are not playing UNO at any of the tables.")
             return
         channel = self.game[table]["channel"]
+
+        def get(group):
+            v = group.getSpecific(channel=channel)
+            return v()
+
+        try:
+            prefixChar = get(conf.supybot.reply.whenAddressedBy.chars)[0]
+        except:
+            prefixChar = ""
+
         opponents = [p for p in list(self.game[table]["players"].keys()) if p != nick]
         opponent = opponents[0]
         opponent_cards = [
@@ -268,8 +287,14 @@ class UNO(callbacks.Plugin):
                     yourhandcolor = utils.str.commaAndify(yourhandcolor)
                     txt = (
                         "It is your turn. The top card is %s. You have %s cards (%s)."
-                        ' %s. To play a card, use the "uno play" command.'
-                        % (topcardcolor, ncards, yourhandcolor, opponent_cards)
+                        ' %s. To play a card, use the "%suno play" command.'
+                        % (
+                            topcardcolor,
+                            ncards,
+                            yourhandcolor,
+                            opponent_cards,
+                            prefixChar,
+                        )
                     )
                     if self.channeloptions["use_notice"] == True:
                         self.reply(irc, txt, to=nick, notice=True, private=True)
@@ -283,8 +308,8 @@ class UNO(callbacks.Plugin):
                     turnplayer = "your"
                     txt = (
                         "It is your turn. The top card is %s. You have %s cards (%s)."
-                        ' %s. To play a card, use the "uno play" command.'
-                        % (topcard, ncards, yourhand, opponent_cards)
+                        ' %s. To play a card, use the "%suno play" command.'
+                        % (topcard, ncards, yourhand, opponent_cards, prefixChar)
                     )
                     if self.channeloptions["use_notice"] == True:
                         self.reply(irc, txt, to=nick, notice=True, private=True)
@@ -382,6 +407,15 @@ class UNO(callbacks.Plugin):
             irc.reply("Error: allow_game=False")
             return
 
+        def get(group):
+            v = group.getSpecific(channel=msg.args[0])
+            return v()
+
+        try:
+            prefixChar = get(conf.supybot.reply.whenAddressedBy.chars)[0]
+        except:
+            prefixChar = ""
+
         nick = msg.nick
         if table != None:
             table -= 1  # make tables zero based
@@ -450,7 +484,7 @@ class UNO(callbacks.Plugin):
                     irc.reply(
                         "%s has joined the %s game at table %s. Use %suno begin to"
                         " begin the game."
-                        % (nick, self.game[table]["type"], table + 1, self.prefixChar),
+                        % (nick, self.game[table]["type"], table + 1, prefixChar),
                         prefixNick=False,
                         to=self.game[table]["channel"],
                     )
@@ -784,6 +818,15 @@ class UNO(callbacks.Plugin):
 
         nick = msg.nick
 
+        def get(group):
+            v = group.getSpecific(channel=msg.args[0])
+            return v()
+
+        try:
+            prefixChar = get(conf.supybot.reply.whenAddressedBy.chars)[0]
+        except:
+            prefixChar = ""
+
         table = self._gettablefromnick(nick)
         if table == None:
             irc.reply("Error: You are not playing a game at any of the tables.")
@@ -848,7 +891,7 @@ class UNO(callbacks.Plugin):
                             irc,
                             "You draw a %s from the draw pile. You can choose not to"
                             ' play this card using "%suno play done"'
-                            % (c, self.prefixChar),
+                            % (c, prefixChar),
                             to=nick,
                             notice=True,
                             private=True,
