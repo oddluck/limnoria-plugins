@@ -138,12 +138,11 @@ class Lyrics(callbacks.Plugin):
             if lyrics:
                 lyrics = re.sub(r"(?<!\.|\!|\?)\s+\n", ".", lyrics)
                 lyrics = re.sub(r"\s+\n", "", lyrics)
-                return lyrics
             else:
                 self.getlyrics(query, retries + 1)
         else:
             log.info("Lyrics: maximum number of retries (3) reached.")
-        return
+        return lyrics
 
     def lyric(self, irc, msg, args, lyric):
         """<query>
