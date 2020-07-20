@@ -1603,6 +1603,7 @@ class TextArt(callbacks.Plugin):
         output = self.ansi2irc(output)
         output = re.sub("⚡", "☇ ", output)
         output = re.sub("‘‘", "‘ ", output)
+        output = re.sub("\n\nFollow.*$", "", output)
         self.stopped[channel] = False
         output = output.splitlines()
         output = [line.strip("\x0F") for line in output]
@@ -1662,6 +1663,7 @@ class TextArt(callbacks.Plugin):
         output = file.content.decode()
         output = self.ansi2irc(output)
         output = output.replace("\x1b(B", "")
+        output = re.sub(r"\n\x0307NEW FEATURE:.*\n.*", "", output).strip()
         output = output.splitlines()
         output = [line.strip("\x0F") for line in output]
         self.stopped[channel] = False
