@@ -1758,9 +1758,13 @@ class TextArt(callbacks.Plugin):
         """
         Stop the scroll.
         """
-        if not self.stopped[msg.args[0]]:
+        channel = msg.args[0]
+        if not irc.isChannel(channel):
+            channel = msg.nick
+        self.stopped.setdefault(channel, None)
+        if not self.stopped[channel]:
             irc.reply("Stopping.")
-        self.stopped[msg.args[0]] = True
+        self.stopped[channel] = True
 
     cq = wrap(cq)
 
