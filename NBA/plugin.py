@@ -35,6 +35,7 @@ from supybot.commands import optional, wrap
 # import supybot.plugins as plugins
 import supybot.ircutils as ircutils
 import supybot.callbacks as callbacks
+import supybot.conf as conf
 import httplib2
 import json
 import pendulum
@@ -99,8 +100,8 @@ class NBA(callbacks.Plugin):
     def __init__(self, irc):
         self.__parent = super(NBA, self)
         self.__parent.__init__(irc)
-
-        self._http = httplib2.Http(".cache")
+        directory = conf.supybot.directories.data.dirize("NBA/")
+        self._http = httplib2.Http(directory)
 
     def nba(self, irc, msg, args, optional_team, optional_date):
         """[<TTT>] [<YYYY-MM-DD>]
