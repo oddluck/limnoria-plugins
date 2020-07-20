@@ -223,7 +223,7 @@ class TextArt(callbacks.Plugin):
             XYZ[2] = round(Z, 4)
             XYZ[0] = (
                 float(XYZ[0]) / 95.047
-            )  # ref_X =  95.047   Observer= 2, Illuminant= D65
+            )  # ref_X =  95.047   Observer= 2°, Illuminant= D65
             XYZ[1] = float(XYZ[1]) / 100.0  # ref_Y = 100.000
             XYZ[2] = float(XYZ[2]) / 108.883  # ref_Z = 108.883
             num = 0
@@ -820,20 +820,20 @@ class TextArt(callbacks.Plugin):
                     if color1 == color2:
                         gsval = " "
                     else:
-                        gsval = ""
+                        gsval = "▀"
                     if color1 == old_color1 and color2 == old_color2:
                         aimg[k] += gsval
                         old_char = gsval
                     elif gsval == " " and color1 == old_color2:
                         aimg[k] += " "
                         old_char = gsval
-                    elif gsval == " " and color1 == old_color1 and old_char == "":
+                    elif gsval == " " and color1 == old_color1 and old_char == "█":
                         aimg[k] = aimg[k][:-1]
                         aimg[k] += "\x0301,{0}  ".format(color1)
                         old_color1 = "01"
                         old_color2 = color1
                         old_char = gsval
-                    elif gsval == " " and color1 == old_color1 and old_char == "^":
+                    elif gsval == " " and color1 == old_color1 and old_char == "^█":
                         aimg[k] = aimg[k][:-4]
                         aimg[k] += "\x0301,{0}  ".format(color1)
                         old_color1 = "01"
@@ -842,40 +842,40 @@ class TextArt(callbacks.Plugin):
                     elif (
                         gsval == " "
                         and color1 == old_color1
-                        and old_char == "^^"
+                        and old_char == "^^▀"
                         and "tops" not in optlist
                     ):
                         aimg[k] = aimg[k][:-7]
-                        aimg[k] += "\x03{0},{1} ".format(old_color2, color1)
+                        aimg[k] += "\x03{0},{1}▄ ".format(old_color2, color1)
                         old_color1 = old_color2
                         old_color2 = color1
                         old_char = gsval
                     elif (
                         gsval == " "
                         and color1 == old_color1
-                        and old_char != ""
+                        and old_char != "█"
                         and "tops" not in optlist
                     ):
-                        aimg[k] += ""
-                        old_char = ""
+                        aimg[k] += "█"
+                        old_char = "█"
                     elif gsval == " " and "tops" not in optlist:
-                        aimg[k] += "\x03{0}".format(color1)
+                        aimg[k] += "\x03{0}█".format(color1)
                         old_color1 = color1
-                        old_char = "^"
+                        old_char = "^█"
                     elif (
                         gsval != " "
                         and color1 == old_color1
-                        and old_char == "^"
+                        and old_char == "^█"
                         and "tops" not in optlist
                     ):
                         aimg[k] = aimg[k][:-4]
-                        aimg[k] += "\x03{0},{1} ".format(color2, color1)
+                        aimg[k] += "\x03{0},{1} ▄".format(color2, color1)
                         old_color1 = color2
                         old_color2 = color1
-                        old_char = ""
-                    elif gsval != " " and color2 == old_color1 and old_char == "^":
+                        old_char = "▄"
+                    elif gsval != " " and color2 == old_color1 and old_char == "^█":
                         aimg[k] = aimg[k][:-4]
-                        aimg[k] += "\x03{0},{1} ".format(color1, color2)
+                        aimg[k] += "\x03{0},{1} ▀".format(color1, color2)
                         old_color1 = color1
                         old_color2 = color2
                         old_char = gsval
@@ -883,11 +883,11 @@ class TextArt(callbacks.Plugin):
                         gsval != " "
                         and color1 == old_color2
                         and color2 == old_color1
-                        and old_char == "^^"
+                        and old_char == "^^▀"
                         and "tops" not in optlist
                     ):
                         aimg[k] = aimg[k][:-7]
-                        aimg[k] += "\x03{0},{1}".format(color1, color2)
+                        aimg[k] += "\x03{0},{1}▄▀".format(color1, color2)
                         old_color1 = color1
                         old_color2 = color2
                         old_char = gsval
@@ -895,51 +895,51 @@ class TextArt(callbacks.Plugin):
                         gsval != " "
                         and color1 == old_color1
                         and color2 != old_color2
-                        and old_char == "^^"
+                        and old_char == "^^▀"
                         and "tops" not in optlist
                     ):
                         aimg[k] = aimg[k][:-7]
-                        aimg[k] += "\x03{0},{1}\x03{2}".format(
+                        aimg[k] += "\x03{0},{1}▄\x03{2}▄".format(
                             old_color2, color1, color2
                         )
                         old_color1 = color2
                         old_color2 = color1
-                        old_char = ""
+                        old_char = "▄"
                     elif (
                         gsval != " "
                         and color1 == old_color1
                         and color2 != old_color2
-                        and old_char == "^"
+                        and old_char == "^▀"
                         and "tops" not in optlist
                     ):
                         aimg[k] = aimg[k][:-4]
-                        aimg[k] += "\x03{0},{1}\x03{2}".format(
+                        aimg[k] += "\x03{0},{1}▄\x03{2}▄".format(
                             old_color2, color1, color2
                         )
                         old_color1 = color2
                         old_color2 = color1
-                        old_char = ""
+                        old_char = "▄"
                     elif (
                         gsval != " "
                         and color1 == old_color2
                         and color2 == old_color1
                         and "tops" not in optlist
                     ):
-                        aimg[k] += ""
-                        old_char = ""
+                        aimg[k] += "▄"
+                        old_char = "▄"
                     elif (
                         gsval != " " and color1 == old_color2 and "tops" not in optlist
                     ):
-                        aimg[k] += "\x03{0}".format(color2)
+                        aimg[k] += "\x03{0}▄".format(color2)
                         old_color1 = color2
-                        old_char = ""
+                        old_char = "▄"
                     elif color1 != old_color1 and color2 == old_color2:
                         aimg[k] += "\x03{0}{1}".format(color1, gsval)
                         old_color1 = color1
                         if gsval == " ":
                             old_char = gsval
                         else:
-                            old_char = "^"
+                            old_char = "^▀"
                     else:
                         aimg[k] += "\x03{0},{1}{2}".format(color1, color2, gsval)
                         old_color1 = color1
@@ -947,7 +947,7 @@ class TextArt(callbacks.Plugin):
                         if gsval == " ":
                             old_char = gsval
                         else:
-                            old_char = "^^"
+                            old_char = "^^▀"
                 if "tops" in optlist:
                     aimg[k] = re.sub("\x03\d\d,(\d\d\s+\x03)", "\x0301,\g<1>", aimg[k])
                     aimg[k] = re.sub("\x03\d\d,(\d\d\s+$)", "\x0301,\g<1>", aimg[k])
@@ -1595,8 +1595,8 @@ class TextArt(callbacks.Plugin):
         file = requests.get("http://wttr.in/{0}".format(location), timeout=10)
         output = file.content.decode()
         output = self.ansi2irc(output)
-        output = re.sub("", " ", output)
-        output = re.sub("", " ", output)
+        output = re.sub("⚡", "☇ ", output)
+        output = re.sub("‘‘", "‘ ", output)
         output = re.sub("\n\nFollow.*$", "", output)
         self.stopped[channel] = False
         output = output.splitlines()
