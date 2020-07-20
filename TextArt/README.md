@@ -63,19 +63,6 @@ Return a random fortune entry from http://www.asciiartfarts.com/fortune.txt
 fortune
 ```
 
-Cowsay. Generate a cowsay ascii. choose character with --type. https://easyapis.soue.tk/api/cowsay
-```
-cow --type <type> <text> (make a cowsay message. type is optional. defaults to cow)
- ________
-< cowsay >
- --------
-        \   ^__^
-         \  (oo)\_______
-            (__)\       )\/\
-                ||----w |
-                ||     ||
-```
-
 Text-to-ASCII Art (split lines with | ex. ascii|art for large fonts):
 ```
 artii <text> (convert <text> to ascii art)
