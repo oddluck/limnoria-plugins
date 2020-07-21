@@ -117,9 +117,9 @@ class Lyrics(callbacks.Plugin):
         else:
             return None, None
 
-    def getlyrics(self, query, retries):
+    def getlyrics(self, query, retries=0):
         lyrics = None
-        if retries < 3:
+        while retries < 3:
             try:
                 if "lyrics.fandom.com/wiki/" in query:
                     log.debug("Lyrics: requesting {0}".format(query))
@@ -131,17 +131,16 @@ class Lyrics(callbacks.Plugin):
                         query[0].strip(), query[1].strip()
                     )
             except:
-                retries += 1
-                self.getlyrics(query, retries)
+                pass
             if lyrics:
                 lyrics = re.sub(r"(?<!\.|\!|\?)\s+\n", ".", lyrics)
                 lyrics = re.sub(r"\s+\n", "", lyrics)
+                break
             else:
+                log.debug("Lyrics: Failed to get lyrics. Retrying...")
                 retries += 1
-                self.getlyrics(query, retries)
-        else:
+        if not lyrics and retries > 2:
             log.info("Lyrics: maximum number of retries (3) reached.")
-            return
         return lyrics
 
     def lyric(self, irc, msg, args, lyric):
@@ -150,10 +149,9 @@ class Lyrics(callbacks.Plugin):
         """
         title = None
         url = None
-        retries = 0
         title, url = self.dosearch(irc, msg.channel, lyric)
         if url and title and "lyrics.fandom.com/wiki/" in url:
-            lyrics = self.getlyrics(url, retries)
+            lyrics = self.getlyrics(url)
             if lyrics:
                 irc.reply(title + " | " + lyrics, prefixNick=False)
             else:
@@ -161,7 +159,7 @@ class Lyrics(callbacks.Plugin):
                 return
         else:
             if "," in lyric:
-                lyrics = self.getlyrics(lyric, retries)
+                lyrics = self.getlyrics(lyric)
                 if lyrics:
                     irc.reply(lyrics, prefixNick=False)
                 else:
