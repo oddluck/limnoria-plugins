@@ -117,31 +117,31 @@ class Lyrics(callbacks.Plugin):
         else:
             return None, None
 
-    def getlyrics(self, query, retries=0):
+    def getlyrics(self, query, retries):
         lyrics = None
         if retries < 3:
-            if "lyrics.fandom.com/wiki/" in query:
-                try:
+            try:
+                if "lyrics.fandom.com/wiki/" in query:
                     log.debug("Lyrics: requesting {0}".format(query))
                     lyrics = pylyrics3.get_lyrics_from_url(query)
-                except Exception:
-                    pass
-            else:
-                try:
+                else:
                     log.debug("Lyrics: requesting {0}".format(query))
                     query = query.split(",", 1)
                     lyrics = pylyrics3.get_song_lyrics(
                         query[0].strip(), query[1].strip()
                     )
-                except Exception:
-                    pass
+            except:
+                retries += 1
+                self.getlyrics(query, retries)
             if lyrics:
                 lyrics = re.sub(r"(?<!\.|\!|\?)\s+\n", ".", lyrics)
                 lyrics = re.sub(r"\s+\n", "", lyrics)
             else:
-                self.getlyrics(query, retries + 1)
+                retries += 1
+                self.getlyrics(query, retries)
         else:
             log.info("Lyrics: maximum number of retries (3) reached.")
+            return
         return lyrics
 
     def lyric(self, irc, msg, args, lyric):
@@ -150,9 +150,10 @@ class Lyrics(callbacks.Plugin):
         """
         title = None
         url = None
+        retries = 0
         title, url = self.dosearch(irc, msg.channel, lyric)
         if url and title and "lyrics.fandom.com/wiki/" in url:
-            lyrics = self.getlyrics(url)
+            lyrics = self.getlyrics(url, retries)
             if lyrics:
                 irc.reply(title + " | " + lyrics, prefixNick=False)
             else:
@@ -160,7 +161,7 @@ class Lyrics(callbacks.Plugin):
                 return
         else:
             if "," in lyric:
-                lyrics = self.getlyrics(lyric)
+                lyrics = self.getlyrics(lyric, retries)
                 if lyrics:
                     irc.reply(lyrics, prefixNick=False)
                 else:
