@@ -306,7 +306,7 @@ titles will be shown in all channels. Default value: `""`
 
 `badLinkText` - The text to return when unable to retrieve a title from a URL. Default value: `Error retrieving title. Check the log for more details.`
 
-`urlRegularExpression` - A regular expression override used to match URLs. You shouldn't need to change this.
+`urlRegexp` - A regular expression override used to match URLs. You shouldn't need to change this.
 
 `ignoreActionLinks` (Boolean) - By default SpiffyTitles will ignore links that appear in an action, like /me.
 

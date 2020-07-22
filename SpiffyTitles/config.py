@@ -68,7 +68,7 @@ conf.registerGlobalValue(
 # URL regex
 conf.registerChannelValue(
     SpiffyTitles,
-    "urlRegularExpression",
+    "urlRegexp",
     registry.String(
         r"", _("""If set, this regular expression will be used to match URLs"""),
     ),

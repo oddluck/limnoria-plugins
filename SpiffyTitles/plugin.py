@@ -559,10 +559,7 @@ class SpiffyTitles(callbacks.Plugin):
         """
         Find the first string that looks like a URL from the message
         """
-        try:
-            url_re = self.registryValue("urlRegularExpression", channel)
-        except:
-            url_re = self.registryValue("urlRegularExpression")
+        url_re = self.registryValue("urlRegexp", channel)
         if not url_re:
             url_re = utils.web._httpUrlRe
         matches = re.findall(url_re, input)
