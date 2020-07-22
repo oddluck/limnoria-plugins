@@ -561,7 +561,7 @@ class SpiffyTitles(callbacks.Plugin):
         """
         try:
             url_re = self.registryValue("urlRegularExpression", channel)
-        except NonExistentRegistryEntry:
+        except registry.NonExistentRegistryEntry:
             url_re = self.registryValue("urlRegularExpression")
         if not url_re:
             url_re = utils.web._httpUrlRe
