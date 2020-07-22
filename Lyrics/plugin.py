@@ -153,7 +153,7 @@ class Lyrics(callbacks.Plugin):
         if url and title and "lyrics.fandom.com/wiki/" in url:
             lyrics = self.getlyrics(url)
             if lyrics:
-                irc.reply(title + " | " + lyrics, prefixNick=False)
+                irc.reply(title.strip() + " | " + lyrics.strip(), prefixNick=False)
             else:
                 irc.reply("Unable to retrieve lyrics from {0}".format(url))
                 return
