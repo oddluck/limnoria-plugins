@@ -520,11 +520,17 @@ conf.registerChannelValue(
     ),
 )
 
-# Twitch API Key
+# Twitch API Keys
 conf.registerGlobalValue(
     SpiffyTitles.twitch,
     "clientID",
     registry.String("", _("""Twitch API Client_ID"""), private=True),
+)
+
+conf.registerGlobalValue(
+    SpiffyTitles.twitch,
+    "accessToken",
+    registry.String("", _("""Twitch API Access Token"""), private=True),
 )
 
 # Twitch Logo

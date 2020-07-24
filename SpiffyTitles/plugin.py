@@ -963,6 +963,10 @@ class SpiffyTitles(callbacks.Plugin):
         if not twitch_client_id:
             log.error("SpiffyTitles: Please set your Twitch client ID")
             return self.handler_default(url, channel)
+        access_token = self.registryValue("twitch.accessToken")
+        if not access_token:
+            log.error("SpiffyTitles: Please set your Twitch Access Token")
+            return self.handler_default(url, channel)
         url = url.split("?")[0]
         self.log.debug("SpiffyTitles: calling twitch handler for %s" % (url))
         patterns = {
@@ -992,7 +996,8 @@ class SpiffyTitles(callbacks.Plugin):
         if not match:
             self.log.debug("SpiffyTitles: twitch - no title found.")
             return self.handler_default(url, channel)
-        headers = {"Client-ID": twitch_client_id}
+        bearer = "Bearer {}".format(access_token.strip())
+        headers = {"Client-ID": twitch_client_id, "Authorization": bearer}
         self.log.debug("SpiffyTitles: twitch - requesting %s" % (data_url))
         try:
             request = requests.get(data_url, timeout=self.timeout, headers=headers)
