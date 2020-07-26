@@ -1,4 +1,4 @@
-Generate text art from images, text, or scroll text art links. Requires Python 3.7+
+Generate text art from images, text, or scroll text art links.
 
 
 [![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=T8E56M6SP9JH2)
@@ -12,7 +12,7 @@ irc://irc.efnet.org/#ircart
 <b>TextArt Plugin</b><br>
 Convert text to figlet fonts or image URLs to ASCII/ANSI art. Covert IRC art to PNG. Get weather, moon phase, and cryptocurrecy rates.
 
-Requires Limnoria https://github.com/ProgVal/Limnoria and Python3
+Requires Limnoria https://github.com/ProgVal/Limnoria and Python 3.7+
 
 pip install -r requirements.txt
 
