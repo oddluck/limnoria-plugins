@@ -1056,7 +1056,7 @@ class SpiffyTitles(callbacks.Plugin):
             data = response
         elif link_type == "clip":
             data = response
-        if not data or not user_data:
+        if not data and not user_data:
             log.error("SpiffyTitles: Twitch: Failed to get data from Twitch API")
             return self.handler_default(url, channel)
         log.debug("SpiffyTitles: twitch - Got data '%s'" % (data))
