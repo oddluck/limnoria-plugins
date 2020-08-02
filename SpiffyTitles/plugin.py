@@ -34,6 +34,7 @@ import supybot.callbacks as callbacks
 import supybot.utils as utils
 import supybot.ircdb as ircdb
 import supybot.log as log
+import supybot.conf as conf
 import re, sys, random, time, json, unicodedata, datetime
 from urllib.parse import urlparse, parse_qsl
 from bs4 import BeautifulSoup
@@ -63,6 +64,13 @@ class SpiffyTitles(callbacks.Plugin):
         self.handlers = {}
         self.timeout = self.registryValue("timeout")
         self.add_handlers()
+        self.proxies = {}
+        self.proxies["http"] = None
+        self.proxies["https"] = None
+        proxy = str(conf.supybot.protocols.http.proxy)
+        if proxy:
+            self.proxies["http"] = proxy
+            self.proxies["https"] = proxy
 
     def add_handlers(self):
         """
@@ -417,6 +425,7 @@ class SpiffyTitles(callbacks.Plugin):
                 timeout=self.timeout,
                 allow_redirects=True,
                 stream=True,
+                proxies=self.proxies,
             ) as request:
                 request.raise_for_status()
                 if request.history:
@@ -629,7 +638,7 @@ class SpiffyTitles(callbacks.Plugin):
         api_url = "https://api.dailymotion.com/video/%s?fields=%s" % (video_id, fields,)
         log.debug("SpiffyTitles: looking up dailymotion info: %s", api_url)
         try:
-            request = requests.get(api_url, timeout=self.timeout)
+            request = requests.get(api_url, timeout=self.timeout, proxies=self.proxies)
             request.raise_for_status()
         except (
             requests.exceptions.RequestException,
@@ -677,7 +686,7 @@ class SpiffyTitles(callbacks.Plugin):
         api_url = "https://vimeo.com/api/v2/video/%s.json" % video_id
         log.debug("SpiffyTitles: looking up vimeo info: %s", api_url)
         try:
-            request = requests.get(api_url, timeout=self.timeout)
+            request = requests.get(api_url, timeout=self.timeout, proxies=self.proxies)
             request.raise_for_status()
         except (
             requests.exceptions.RequestException,
@@ -737,7 +746,7 @@ class SpiffyTitles(callbacks.Plugin):
             return self.handler_default(url, channel)
         api_url = "http://coub.com/api/v2/coubs/%s" % video_id
         try:
-            request = requests.get(api_url, timeout=self.timeout)
+            request = requests.get(api_url, timeout=self.timeout, proxies=self.proxies)
             request.raise_for_status()
         except (
             requests.exceptions.RequestException,
@@ -816,7 +825,9 @@ class SpiffyTitles(callbacks.Plugin):
         api_url = "https://www.googleapis.com/youtube/v3/videos"
         log.debug("SpiffyTitles: requesting %s" % (api_url))
         try:
-            request = requests.get(api_url, params=options, timeout=self.timeout)
+            request = requests.get(
+                api_url, params=options, timeout=self.timeout, proxies=self.proxies
+            )
             request.raise_for_status()
         except (
             requests.exceptions.RequestException,
@@ -1000,7 +1011,9 @@ class SpiffyTitles(callbacks.Plugin):
         headers = {"Client-ID": twitch_client_id, "Authorization": bearer}
         self.log.debug("SpiffyTitles: twitch - requesting %s" % (data_url))
         try:
-            request = requests.get(data_url, timeout=self.timeout, headers=headers)
+            request = requests.get(
+                data_url, timeout=self.timeout, headers=headers, proxies=self.proxies
+            )
             request.raise_for_status()
         except (
             requests.exceptions.RequestException,
@@ -1032,7 +1045,12 @@ class SpiffyTitles(callbacks.Plugin):
                 **link_info
             )
             try:
-                request = requests.get(data_url, timeout=self.timeout, headers=headers)
+                request = requests.get(
+                    data_url,
+                    timeout=self.timeout,
+                    headers=headers,
+                    proxies=self.proxies,
+                )
                 request.raise_for_status()
             except (
                 requests.exceptions.RequestException,
@@ -1080,6 +1098,7 @@ class SpiffyTitles(callbacks.Plugin):
                     "https://api.twitch.tv/helix/games?id={}".format(game_id),
                     timeout=self.timeout,
                     headers=headers,
+                    proxies=self.proxies,
                 )
                 game_data = json.loads(get_game.content.decode())
                 game_name = game_data["data"][0]["name"]
@@ -1098,7 +1117,12 @@ class SpiffyTitles(callbacks.Plugin):
             display_name = data["broadcaster_name"]
             data_url = "https://api.twitch.tv/helix/users?login={}".format(display_name)
             try:
-                request = requests.get(data_url, timeout=self.timeout, headers=headers)
+                request = requests.get(
+                    data_url,
+                    timeout=self.timeout,
+                    headers=headers,
+                    proxies=self.proxies,
+                )
                 request.raise_for_status()
             except (
                 requests.exceptions.RequestException,
@@ -1121,6 +1145,7 @@ class SpiffyTitles(callbacks.Plugin):
                         "https://api.twitch.tv/helix/games?id={}".format(game_id),
                         timeout=self.timeout,
                         headers=headers,
+                        proxies=self.proxies,
                     )
                     game_data = json.loads(get_game.content.decode())
                     game_name = game_data["data"][0]["name"]
@@ -1143,7 +1168,12 @@ class SpiffyTitles(callbacks.Plugin):
             display_name = data["user_name"]
             data_url = "https://api.twitch.tv/helix/users?login={}".format(display_name)
             try:
-                request = requests.get(data_url, timeout=self.timeout, headers=headers)
+                request = requests.get(
+                    data_url,
+                    timeout=self.timeout,
+                    headers=headers,
+                    proxies=self.proxies,
+                )
             except (
                 requests.exceptions.RequestException,
                 requests.exceptions.HTTPError,
@@ -1250,7 +1280,9 @@ class SpiffyTitles(callbacks.Plugin):
         omdb_url = "http://www.omdbapi.com/"
         options = {"apikey": apikey, "i": imdb_id, "r": "json", "plot": "short"}
         try:
-            request = requests.get(omdb_url, params=options, timeout=self.timeout)
+            request = requests.get(
+                omdb_url, params=options, timeout=self.timeout, proxies=self.proxies
+            )
             request.raise_for_status()
         except (
             requests.exceptions.RequestException,
@@ -1362,7 +1394,9 @@ class SpiffyTitles(callbacks.Plugin):
         extract = ""
         self.log.debug("SpiffyTitles: requesting %s" % (api_url))
         try:
-            request = requests.get(api_url, params=api_params, timeout=self.timeout)
+            request = requests.get(
+                api_url, params=api_params, timeout=self.timeout, proxies=self.proxies
+            )
             request.raise_for_status()
         except (
             requests.exceptions.RequestException,
@@ -1438,7 +1472,9 @@ class SpiffyTitles(callbacks.Plugin):
         self.log.debug("SpiffyTitles: requesting %s" % (data_url))
         headers = {"User-Agent": self.get_user_agent()}
         try:
-            request = requests.get(data_url, headers=headers, timeout=self.timeout)
+            request = requests.get(
+                data_url, headers=headers, timeout=self.timeout, proxies=self.proxies
+            )
             request.raise_for_status()
         except (
             requests.exceptions.RequestException,
@@ -1574,7 +1610,9 @@ class SpiffyTitles(callbacks.Plugin):
         headers = {"Authorization": "Client-ID {0}".format(client_id)}
         api_url = "https://api.imgur.com/3/album/{0}".format(album_id)
         try:
-            request = requests.get(api_url, headers=headers, timeout=self.timeout)
+            request = requests.get(
+                api_url, headers=headers, timeout=self.timeout, proxies=self.proxies
+            )
             request.raise_for_status()
         except (
             requests.exceptions.RequestException,
@@ -1632,7 +1670,9 @@ class SpiffyTitles(callbacks.Plugin):
         headers = {"Authorization": "Client-ID {0}".format(client_id)}
         api_url = "https://api.imgur.com/3/image/{0}".format(image_id)
         try:
-            request = requests.get(api_url, headers=headers, timeout=self.timeout)
+            request = requests.get(
+                api_url, headers=headers, timeout=self.timeout, proxies=self.proxies
+            )
             request.raise_for_status()
         except (
             requests.exceptions.RequestException,
@@ -1680,7 +1720,7 @@ class SpiffyTitles(callbacks.Plugin):
             url
         )
         try:
-            request = requests.get(api_url, timeout=self.timeout)
+            request = requests.get(api_url, timeout=self.timeout, proxies=self.proxies)
             request.raise_for_status()
         except (
             requests.exceptions.RequestException,
