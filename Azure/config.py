@@ -103,7 +103,8 @@ conf.registerChannelValue(
         _(
             """
             The default reply template for the translate command.
-            Variables are $text, $sourceISO, $sourceName, $targetISO, $targetName.
+            Variables are $text, $sourceISO, $sourceName, $sourceNativeName,
+            $targetISO, $targetName, $targetNativeName.
             """
         ),
     ),

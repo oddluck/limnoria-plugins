@@ -69,31 +69,41 @@ class Azure(callbacks.Plugin):
 
         url = "https://api.cognitive.microsofttranslator.com/translate?api-version=3.0&"
         if source != "auto":
+            if not self.languages.get(source):
+                for lang in self.languages:
+                    if (
+                        source.lower() in self.languages[lang]["name"].lower()
+                        or source.lower() in self.languages[lang]["nativeName"].lower()
+                    ):
+                        source = lang
+                        break
+            if not self.languages.get(target):
+                for lang in self.languages:
+                    if (
+                        target.lower() in self.languages[lang]["name"].lower()
+                        or target.lower() in self.languages[lang]["nativeName"].lower()
+                    ):
+                        target = lang
+                        break
             if self.languages.get(source) and self.languages.get(target):
                 url += "to={0}&from={1}".format(target, source)
             else:
-                for lang in self.languages:
-                    if source.lower() in self.languages[lang]["name"].lower():
-                        source = lang
-                    if target.lower() in self.languages[lang]["name"].lower():
-                        target = lang
-                if self.languages.get(source) and self.languages.get(target):
-                    url += "to={0}&from={1}".format(target, source)
-                else:
-                    irc.reply("Invalid language selection.")
-                    return
+                irc.reply("Invalid language selection.")
+                return
         else:
+            if not self.languages.get(target):
+                for lang in self.languages:
+                    if (
+                        target.lower() in self.languages[lang]["name"].lower()
+                        or target.lower() in self.languages[lang]["nativeName"].lower()
+                    ):
+                        target = lang
+                        break
             if self.languages.get(target):
                 url += "to={0}".format(target)
             else:
-                for lang in self.languages:
-                    if target.lower() in self.languages[lang]["name"].lower():
-                        target = lang
-                if self.languages.get(target):
-                    url += "to={0}".format(target)
-                else:
-                    irc.reply("Invalid language selection.")
-                    return
+                irc.reply("Invalid language selection.")
+                return
         key = self.registryValue("translate.key")
         headers = {"Ocp-Apim-Subscription-Key": key, "Content-type": "application/json"}
         body = [{"text": text}]
@@ -109,14 +119,19 @@ class Azure(callbacks.Plugin):
             results = {
                 "text": result[0]["translations"][0]["text"],
                 "targetName": self.languages[target]["name"],
+                "targetNativeName": self.languages[target]["nativeName"],
                 "targetISO": target,
             }
             if result[0].get("detectedLanguage"):
                 results["sourceName"] = self.languages[
                     result[0]["detectedLanguage"]["language"]
                 ]["name"]
+                results["sourceNativeName"] = self.languages[
+                    result[0]["detectedLanguage"]["language"]
+                ]["nativeName"]
             else:
                 results["sourceName"] = self.languages[source]["name"]
+                results["sourceNativeName"] = self.languages[source]["nativeName"]
             irc.reply(template.safe_substitute(results))
 
     translate = wrap(translate, [getopts({"from": "text", "to": "text"}), "text"])
