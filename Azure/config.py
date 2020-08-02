@@ -60,8 +60,9 @@ conf.registerGlobalValue(
     registry.String(
         "",
         _(
-            """The Azure API translation key
-    (required)"""
+            """
+            The Azure API translation key (required)
+            """
         ),
         private=True,
     ),
@@ -73,10 +74,10 @@ conf.registerChannelValue(
     registry.String(
         "en",
         _(
-            """The default target language for the
-    translate command."""
+            """
+            The default target language for the translate command.
+            """
         ),
-        private=True,
     ),
 )
 
@@ -86,9 +87,24 @@ conf.registerChannelValue(
     registry.String(
         "auto",
         _(
-            """The default source language for the translate
-    command. Default is 'auto' for automatic language detection."""
+            """
+            The default source language for the translate command.
+            Default is 'auto' for automatic language detection.
+            """
         ),
-        private=True,
+    ),
+)
+
+conf.registerChannelValue(
+    Azure.translate,
+    "template",
+    registry.String(
+        "$text [$sourceName to $targetName]",
+        _(
+            """
+            The default reply template for the translate command.
+            Variables are $text, $sourceISO, $sourceName, $targetISO, $targetName.
+            """
+        ),
     ),
 )

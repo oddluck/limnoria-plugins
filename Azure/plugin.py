@@ -29,16 +29,28 @@
 
 
 import supybot.utils as utils
-from supybot.commands import *
 import supybot.plugins as plugins
 import supybot.ircutils as ircutils
 import supybot.callbacks as callbacks
 import supybot.conf as conf
-import requests
+import supybot.log as log
+from supybot.commands import *
+from string import Template
 import json
+import requests
 
 
 class Azure(callbacks.Plugin):
+    def __init__(self, irc):
+        self.__parent = super(Azure, self)
+        self.__parent.__init__(irc)
+        r = requests.get(
+            "https://api.cognitive.microsofttranslator.com/languages?api-version=3.0&scope=translation",
+            timeout=10,
+        )
+        self.languages = json.loads(r.content.decode())
+        self.languages = self.languages["translation"]
+
     def translate(self, irc, msg, args, optlist, text):
         """[--from <source>] [--to <target>] <text>
         Translate text using Microsoft Azure. Uses automatic language detection if source not
@@ -54,14 +66,34 @@ class Azure(callbacks.Plugin):
             target = optlist.get("to")
         else:
             target = self.registryValue("translate.target", msg.channel)
+
+        url = "https://api.cognitive.microsofttranslator.com/translate?api-version=3.0&"
         if source != "auto":
-            url = "https://api.cognitive.microsofttranslator.com/translate?api-version=3.0&to={0}&from={1}".format(
-                target, source
-            )
+            if self.languages.get(source) and self.languages.get(target):
+                url += "to={0}&from={1}".format(target, source)
+            else:
+                for lang in self.languages:
+                    if source.lower() in self.languages[lang]["name"].lower():
+                        source = lang
+                    if target.lower() in self.languages[lang]["name"].lower():
+                        target = lang
+                if self.languages.get(source) and self.languages.get(target):
+                    url += "to={0}&from={1}".format(target, source)
+                else:
+                    irc.reply("Invalid language selection.")
+                    return
         else:
-            url = "https://api.cognitive.microsofttranslator.com/translate?api-version=3.0&to={0}".format(
-                target
-            )
+            if self.languages.get(target):
+                url += "to={0}".format(target)
+            else:
+                for lang in self.languages:
+                    if target.lower() in self.languages[lang]["name"].lower():
+                        target = lang
+                if self.languages.get(target):
+                    url += "to={0}".format(target)
+                else:
+                    irc.reply("Invalid language selection.")
+                    return
         key = self.registryValue("translate.key")
         headers = {"Ocp-Apim-Subscription-Key": key, "Content-type": "application/json"}
         body = [{"text": text}]
@@ -71,18 +103,21 @@ class Azure(callbacks.Plugin):
                 "Azure: Error accessing {0}: {1}".format(url, response.content.decode())
             )
             return
-        result = json.loads(response.content)
-        if result[0].get("detectedLanguage"):
-            reply = "{0} [{1}~>{2}]".format(
-                result[0]["translations"][0]["text"],
-                result[0]["detectedLanguage"]["language"],
-                target,
-            )
-        else:
-            reply = "{0} [{1}~>{2}]".format(
-                result[0]["translations"][0]["text"], source, target
-            )
-        irc.reply(reply)
+        result = json.loads(response.content.decode())
+        if result[0].get("translations"):
+            template = Template(self.registryValue("translate.template", msg.channel))
+            results = {
+                "text": result[0]["translations"][0]["text"],
+                "targetName": self.languages[target]["name"],
+                "targetISO": target,
+            }
+            if result[0].get("detectedLanguage"):
+                results["sourceName"] = self.languages[
+                    result[0]["detectedLanguage"]["language"]
+                ]["name"]
+            else:
+                results["sourceName"] = self.languages[source]["name"]
+            irc.reply(template.safe_substitute(results))
 
     translate = wrap(translate, [getopts({"from": "text", "to": "text"}), "text"])
 
