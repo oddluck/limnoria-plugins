@@ -250,7 +250,7 @@ class Corona(callbacks.Plugin):
                                 )
                             i += 1
                         self.states[item["USAState"]] = item
-                        rank = results.index(item) - 1
+                        rank = results.index(item)
                         self.states[item["USAState"]]["rank"] = rank
                         if rank > 0 and rank <= 10:
                             top.append(
