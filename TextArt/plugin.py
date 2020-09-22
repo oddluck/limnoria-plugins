@@ -1581,6 +1581,8 @@ class TextArt(callbacks.Plugin):
             return
         if not irc.isChannel(channel):
             channel = msg.nick
+        if "format=j" in location.lower():
+            return
         optlist = dict(optlist)
         if "delay" in optlist:
             delay = optlist.get("delay")
