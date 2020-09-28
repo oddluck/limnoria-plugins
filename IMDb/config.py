@@ -69,7 +69,7 @@ conf.registerChannelValue(
     IMDb,
     "logo",
     registry.String(
-        "\x02\x031,8 IMDb \x03", _("""Logo used with {{logo}} in template""")
+        "\x02\x031,8 IMDb \x0F", _("""Logo used with {{logo}} in template""")
     ),
 )
 
