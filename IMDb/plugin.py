@@ -36,7 +36,6 @@ import supybot.ircmsgs as ircmsgs
 import supybot.callbacks as callbacks
 import supybot.log as log
 import json, random, re
-import requests
 from string import Template
 
 try:
