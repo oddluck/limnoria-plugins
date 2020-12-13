@@ -155,7 +155,18 @@ class Odds(callbacks.Plugin):
                 # print('two')
                 url = base_url.format(league=league, date=today)
 
-                request = requests.get(headers, timeout=10, headers=headers)
+                headers = {
+                    "accept": "application/json, text/plain, */*",
+                    "accept-encoding": "gzip, deflate, br",
+                    "accept-language": "en-GB,en-US;q=0.9,en;q=0.8",
+                    "origin": "https://www.oddsshark.com/",
+                    "user-agent": (
+                        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML,"
+                        " like Gecko) Chrome/69.0.3497.100 Safari/537.36"
+                    ),
+                }
+
+                request = requests.get(url, timeout=10, headers=headers)
                 request = json.loads(request.content)
                 data.append(request)
 
