@@ -77,7 +77,7 @@ class YouTube(callbacks.Plugin):
             video_id = response["items"][0]["id"]["videoId"]
         except:
             log.error(
-                "YouTube: Error retrieving data from API: %s" % request.content.decode()
+                "YouTube: Error retrieving data from API"
             )
         return video_id
 
