@@ -1119,7 +1119,10 @@ class TextArt(callbacks.Plugin):
             log.debug("TextArt: error retrieving data for scroll: {0}".format(e))
             return
         if "text/plain" in r.headers["content-type"]:
-            file = r.content.decode().replace("\r\n", "\n")
+            try:
+                file = r.content.decode().replace("\r\n", "\n")
+            except:
+                file = r.text.replace("\r\n", "\n")
         else:
             irc.reply("Invalid file type.", private=False, notice=False)
             return
@@ -1749,7 +1752,10 @@ class TextArt(callbacks.Plugin):
             irc.reply("Error: No results found for {0}".format(search))
             return
         data = requests.get(url.get("href"), headers=header, timeout=10)
-        output = data.content.decode()
+        try:
+            output = data.content.decode()
+        except:
+            output = data.text
         output = output.splitlines()
         asyncio.run(self.reply(irc, output, channel, delay))
         irc.reply(url.get("href"))
