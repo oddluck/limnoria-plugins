@@ -290,7 +290,9 @@ class TextArt(callbacks.Plugin):
             -math.pow(36 * hh - 55 * math.pi, 2) / (25 * math.pi * math.pi)
         )
         r = -2 * trc * math.sin(2 * dt * math.pi / 180)
-        return math.sqrt(fl * fl + fc * fc + fh * fh + r * fc * fh)
+        de =  math.sqrt(fl * fl + fc * fc + fh * fh + r * fc * fh)
+        dep = 1.43 * de ** 0.70
+        return dep
 
     def distance(self, c1, c2, speed):
         if speed == "fast":
