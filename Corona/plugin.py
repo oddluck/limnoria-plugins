@@ -199,6 +199,16 @@ class Corona(callbacks.Plugin):
                     )
                 except:
                     self.countries[item]["ratio_serious"] = "N/A"
+                try:
+                    self.countries[item]["CFR"] = "{0:.1%}".format(
+                        self.countries[item]["TotalDeaths"]
+                        / (
+                            self.countries[item]["TotalDeaths"]
+                            + self.countries[item]["TotalRecovered"]
+                        )
+                    )
+                except:
+                    self.countries[item]["CFR"] = "N/A"
                 for value in self.countries[item]:
                     if isinstance(self.countries[item][value], int):
                         self.countries[item][value] = "{:,}".format(
@@ -254,8 +264,7 @@ class Corona(callbacks.Plugin):
                         self.states[item["USAState"]]["rank"] = rank
                         if rank > 0 and rank <= 10:
                             top.append(
-                                "#{0}: \x1F{1}\x1F (\x0307{2}\x03/\x0304{3}\x03)"
-                                .format(
+                                "#{0}: \x1F{1}\x1F (\x0307{2}\x03/\x0304{3}\x03)".format(
                                     rank,
                                     item["USAState"],
                                     "{:,}".format(item["TotalCases"]),
@@ -352,7 +361,7 @@ class Corona(callbacks.Plugin):
                 "\x0309{9}\x03 (\x0309{10}\x03) | Active: \x0307{11}\x03 "
                 "(\x0310{12}\x03 Mild) (\x0313{13}\x03 Serious) (\x0310{14}\x03/"
                 "\x0313{15}\x03) | Cases/1M: \x0307{16}\x03 | Deaths/1M: \x0304{17}"
-                "\x03 | Updated: {18}".format(
+                "\x03 | CFR: {18} | Updated: {19}".format(
                     self.countries[search]["Country,Other"],
                     self.countries[search]["rank"],
                     self.countries[search]["TotalCases"],
@@ -371,6 +380,7 @@ class Corona(callbacks.Plugin):
                     self.countries[search]["ratio_serious"],
                     self.countries[search]["Tot\xa0Cases/1M pop"],
                     self.countries[search]["Deaths/1M pop"],
+                    self.countries[search]["CFR"],
                     self.time_created(self.updated),
                 )
             )
@@ -406,7 +416,7 @@ class Corona(callbacks.Plugin):
                 "(\x0309{9}\x03) | Active: \x0307{10}\x03 (\x0310{11}\x03 Mild) "
                 "(\x0313{12}\x03 Serious) (\x0310{13}\x03/\x0313{14}\x03) | "
                 "Cases/1M: \x0307{15}\x03 | Deaths/1M: \x0304{16}\x03 | "
-                "Updated: {17}".format(
+                "CFR: {17} | Updated: {18}".format(
                     "Global",
                     self.countries[list(self.countries)[0]]["TotalCases"],
                     self.countries[list(self.countries)[0]]["NewCases"],
@@ -424,6 +434,7 @@ class Corona(callbacks.Plugin):
                     self.countries[list(self.countries)[0]]["ratio_serious"],
                     self.countries[list(self.countries)[0]]["Tot\xa0Cases/1M pop"],
                     self.countries[list(self.countries)[0]]["Deaths/1M pop"],
+                    self.countries[list(self.countries)[0]]["CFR"],
                     self.time_created(self.updated),
                 )
             )
