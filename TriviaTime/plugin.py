@@ -445,7 +445,7 @@ class Game:
     def getExtraHintString(self):
         charMask = self.registryValue("hints.charMask", self.channel)
         ans = self.answers[0]
-        hints = " Extra Hint: \x02\x0312"
+        hints = "Extra Hint: \x02\x0312"
         divider = 0
 
         if len(ans) < 2:
@@ -555,7 +555,7 @@ class Game:
         hints = self.getHintString(self.hintsCounter)
         self.hintsCounter += 1  # increment hints counter
         self.shownHint = False  # reset hint shown
-        self.sendMessage(" Hint %s: \x02\x0312%s" % (self.hintsCounter, hints), 1, 9)
+        self.sendMessage("Hint %s: \x02\x0312%s" % (self.hintsCounter, hints), 1, 9)
 
     def nextQuestion(self):
         """
