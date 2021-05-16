@@ -760,7 +760,7 @@ class Game:
         if self.questionType == "kaos":
             questionText += " %d possible answers" % (len(self.answers))
 
-        questionMessageString = " %s: %s" % (self.numAsked, questionText)
+        questionMessageString = "%s: %s" % (self.numAsked, questionText)
         maxLength = 400
         questionMesagePieces = [
             questionMessageString[i : i + maxLength]
