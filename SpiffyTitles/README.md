@@ -30,11 +30,8 @@ The ONLY gluten-free plugin for displaying link titles.
 Check out the [available options](#available-options)!
 
 ## Install SpiffyTitles
-- `git clone https://github.com/oddluck/limnoria-plugins.git`
-- `cd limnoria-plugins`
-- `cp -r SpiffyTitles ~/your_bot_directory/plugins`
-- `cd ~/your_bot_directory/plugins/SpiffyTitles`
-- `pip install -r requirements.txt --user --upgrade`
+- install pip if you don't have it already (eg. `apt install python3-pip`)
+- `pip3 install --user --upgrade https://github.com/oddluck/limnoria-plugins.git#subdirectory=SpiffyTitles`
 
 You should `!unload Web` and any other plugins that show link titles for best results
 
