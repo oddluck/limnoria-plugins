@@ -69,8 +69,8 @@ class SpiffyTitles(callbacks.Plugin):
         self.proxies["https"] = None
         proxy = str(conf.supybot.protocols.http.proxy)
         if proxy:
-            self.proxies["http"] = proxy
-            self.proxies["https"] = proxy
+            self.proxies["http"] = "http://{0}".format(proxy)
+            self.proxies["https"] = "https://{0}".format(proxy)
 
     def add_handlers(self):
         """
