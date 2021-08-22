@@ -156,6 +156,8 @@ class SpiffyTitles(callbacks.Plugin):
             "ignoreAddressed", channel=channel
         ):
             return
+        if ircdb.checkIgnored(msg.prefix, channel):
+            return
         """
         Check if we require a capability to acknowledge this link
         """
