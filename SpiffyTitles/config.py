@@ -168,6 +168,20 @@ conf.registerChannelValue(
 )
 
 conf.registerChannelValue(
+    SpiffyTitles, 
+    "snarfMultipleUrls",
+    registry.Boolean(
+        True,
+        _(
+            """
+            Determines whether SpiffyTitles will query all URLs in a message,
+            or only the first one.
+            """
+        ),
+    ),
+)
+
+conf.registerChannelValue(
     SpiffyTitles,
     "requireCapability",
     registry.String(

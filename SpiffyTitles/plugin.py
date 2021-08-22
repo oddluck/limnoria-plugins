@@ -184,7 +184,10 @@ class SpiffyTitles(callbacks.Plugin):
                 % (channel)
             )
             return
-        urls = self.get_urls_from_message(message, channel)
+        if self.registryValue("snarfMultipleUrls", channel=channel):
+            urls = self.get_urls_from_message(message, channel)
+        else:
+            urls = self.get_urls_from_message(message, channel)[0]
         if not urls:
             return
         for url in urls:
