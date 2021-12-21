@@ -858,6 +858,7 @@ class SpiffyTitles(callbacks.Plugin):
             dislike_count = 0
             comment_count = 0
             favorite_count = 0
+            restricted = False
             if "viewCount" in statistics:
                 view_count = "{:,}".format(int(statistics["viewCount"]))
             if "likeCount" in statistics:
@@ -878,6 +879,8 @@ class SpiffyTitles(callbacks.Plugin):
                 duration = self.get_duration_from_seconds(duration_seconds)
             else:
                 duration = "LIVE"
+            if "ytRating" in video["contentDetails"]["contentRating"]:
+                restricted = True
             published = snippet["publishedAt"].split("T")[0]
             timestamp = self.get_timestamp_from_youtube_url(url)
             yt_logo = self.get_youtube_logo(channel)
@@ -893,6 +896,7 @@ class SpiffyTitles(callbacks.Plugin):
                     "favorite_count": favorite_count,
                     "channel_title": channel_title,
                     "published": published,
+                    "restricted": restricted,
                     "yt_logo": yt_logo,
                 }
             )
