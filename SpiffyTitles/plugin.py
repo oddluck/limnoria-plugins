@@ -215,11 +215,12 @@ class SpiffyTitles(callbacks.Plugin):
                     return
                 title = self.get_title_by_url(url, channel, msg.nick)
                 if title:
+                    prefixed = self.registryValue("prefixNick", channel=channel)
                     ignore_match = self.title_matches_ignore_pattern(title, channel)
                     if ignore_match:
                         return
                     elif not is_ignored:
-                        irc.reply(title, prefixNick=False)
+                        irc.reply(title, prefixNick=prefix)
                 else:
                     if self.registryValue("default.enabled", channel):
                         log.debug("SpiffyTitles: could not get a title for %s" % (url))

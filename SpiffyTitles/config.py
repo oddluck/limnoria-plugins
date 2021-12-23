@@ -201,6 +201,19 @@ conf.registerChannelValue(
     registry.Regexp("", _("""Titles matching this pattern will be ignored.""")),
 )
 
+conf.registerChannelValue(
+    SpiffyTitles, 
+    "prefixNick",
+    registry.Boolean(
+        False,
+        _(
+            """
+            Determines whether SpiffyTitles will prefix replies with the user's nick.
+            """
+        ),
+    ),
+)
+
 
 # default configs
 conf.registerGroup(SpiffyTitles, "default")
