@@ -499,7 +499,7 @@ class TextArt(callbacks.Plugin):
         optlist = dict(optlist)
         font = None
         words = []
-        if "delay" in optlist:
+        if "delay" in optlist and ircdb.checkCapability(msg.prefix, "admin"):
             delay = optlist.get("delay")
         else:
             delay = self.registryValue("delay", msg.args[0])
@@ -683,7 +683,7 @@ class TextArt(callbacks.Plugin):
             speed = "slow"
         else:
             speed = self.registryValue("speed", msg.args[0]).lower()
-        if "delay" in optlist:
+        if "delay" in optlist and ircdb.checkCapability(msg.prefix, "admin"):
             delay = optlist.get("delay")
         else:
             delay = self.registryValue("delay", msg.args[0])
@@ -1101,7 +1101,7 @@ class TextArt(callbacks.Plugin):
             channel = msg.nick
         optlist = dict(optlist)
         self.stopped[channel] = False
-        if "delay" in optlist:
+        if "delay" in optlist and ircdb.checkCapability(msg.prefix, "admin"):
             delay = optlist.get("delay")
         else:
             delay = self.registryValue("delay", msg.args[0])
@@ -1165,7 +1165,7 @@ class TextArt(callbacks.Plugin):
             opts += "-w {0} ".format(w)
         else:
             opts += "-w 80 "
-        if "delay" in optlist:
+        if "delay" in optlist and ircdb.checkCapability(msg.prefix, "admin"):
             delay = optlist.get("delay")
         else:
             delay = self.registryValue("delay", msg.args[0])
@@ -1280,7 +1280,7 @@ class TextArt(callbacks.Plugin):
         else:
             w = self.registryValue("blockWidth", msg.args[0])
             opts += "-w {0} ".format(w)
-        if "delay" in optlist:
+        if "delay" in optlist and ircdb.checkCapability(msg.prefix, "admin"):
             delay = optlist.get("delay")
         else:
             delay = self.registryValue("delay", msg.args[0])
@@ -1397,7 +1397,7 @@ class TextArt(callbacks.Plugin):
             opts += "-e {0} ".format(e)
         if "r" in optlist:
             opts += "-r "
-        if "delay" in optlist:
+        if "delay" in optlist and ircdb.checkCapability(msg.prefix, "admin"):
             delay = optlist.get("delay")
         else:
             delay = self.registryValue("delay", msg.args[0])
@@ -1493,7 +1493,7 @@ class TextArt(callbacks.Plugin):
             opts += "-o "
         elif "S" in optlist:
             opts += "-S "
-        if "delay" in optlist:
+        if "delay" in optlist and ircdb.checkCapability(msg.prefix, "admin"):
             delay = optlist.get("delay")
         else:
             delay = self.registryValue("delay", msg.args[0])
@@ -1589,7 +1589,7 @@ class TextArt(callbacks.Plugin):
         if "format=j" in location.lower():
             return
         optlist = dict(optlist)
-        if "delay" in optlist:
+        if "delay" in optlist and ircdb.checkCapability(msg.prefix, "admin"):
             delay = optlist.get("delay")
         else:
             delay = self.registryValue("delay", msg.args[0])
@@ -1644,7 +1644,7 @@ class TextArt(callbacks.Plugin):
         if not irc.isChannel(channel):
             channel = msg.nick
         optlist = dict(optlist)
-        if "delay" in optlist:
+        if "delay" in optlist and ircdb.checkCapability(msg.prefix, "admin"):
             delay = optlist.get("delay")
         else:
             delay = self.registryValue("delay", msg.args[0])
@@ -1710,7 +1710,7 @@ class TextArt(callbacks.Plugin):
         if not irc.isChannel(channel):
             channel = msg.nick
         optlist = dict(optlist)
-        if "delay" in optlist:
+        if "delay" in optlist and ircdb.checkCapability(msg.prefix, "admin"):
             delay = optlist.get("delay")
         else:
             delay = self.registryValue("delay", msg.args[0])
@@ -1735,7 +1735,7 @@ class TextArt(callbacks.Plugin):
         if not irc.isChannel(channel):
             channel = msg.nick
         optlist = dict(optlist)
-        if "delay" in optlist:
+        if "delay" in optlist and ircdb.checkCapability(msg.prefix, "admin"):
             delay = optlist.get("delay")
         else:
             delay = self.registryValue("delay", msg.args[0])
@@ -1786,7 +1786,7 @@ class TextArt(callbacks.Plugin):
         if not irc.isChannel(channel):
             channel = msg.nick
         optlist = dict(optlist)
-        if "delay" in optlist:
+        if "delay" in optlist and ircdb.checkCapability(msg.prefix, "admin"):
             delay = optlist.get("delay")
         else:
             delay = self.registryValue("delay", msg.args[0])
