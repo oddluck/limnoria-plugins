@@ -49,8 +49,6 @@ class DuckHunt(callbacks.Plugin):
     when there is no duck launched costs a point.
     """
 
-    threaded = True
-
     # Those parameters are per-channel parameters
     started = {}  # Has the hunt started?
     duck = {}  # Is there currently a duck to shoot?
