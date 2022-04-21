@@ -266,7 +266,9 @@ class SpiffyTitles(callbacks.Plugin):
         """
         if self.registryValue("cacheGlobal"):
             channel = "global"
-        cached_link = self.get_link_from_cache(url, channel)
+        # cached_link = self.get_link_from_cache(url, channel)
+        log.info("Skipping cache check")
+        cached_link = None
         if cached_link:
             title = cached_link["title"]
         else:
@@ -420,6 +422,9 @@ class SpiffyTitles(callbacks.Plugin):
         Get the HTML of a website based on a URL
         """
         max_retries = self.registryValue("maxRetries")
+        size = conf.supybot.protocols.http.peekSize()
+        generic_error = self.registryValue("badLinkText", channel=channel)
+        response_size = 0
         if retries >= max_retries:
             log.debug("SpiffyTitles: hit maximum retries for %s" % url)
             return (None, False)
@@ -436,76 +441,87 @@ class SpiffyTitles(callbacks.Plugin):
                 stream=True,
                 proxies=self.proxies,
             ) as request:
-                request.raise_for_status()
-                if request.history:
-                    # check the top two domain levels
-                    link_domain = self.get_base_domain(request.history[0].url)
-                    real_domain = self.get_base_domain(request.url)
-                    if link_domain != real_domain:
-                        is_redirect = True
-                        for redir in request.history:
-                            log.debug(
-                                "SpiffyTitles: Redirect %s from %s"
-                                % (redir.status_code, redir.url)
+                for chunk in request.iter_content(chunk_size=1024):
+                    if response_size > size:
+                        request.close()
+                        return (generic_error, False)
+                    if 'content-length' in request.headers:
+                        if int(request.headers['content-length']) > size:
+                            log.debug("SpiffyTitles: URL ignored due to exceeding content size")
+                            return (generic_error, False)
+                    request.raise_for_status()
+                    if request.history:
+                        # check the top two domain levels
+                        link_domain = self.get_base_domain(request.history[0].url)
+                        real_domain = self.get_base_domain(request.url)
+                        if link_domain != real_domain:
+                            is_redirect = True
+                            for redir in request.history:
+                                log.debug(
+                                    "SpiffyTitles: Redirect %s from %s"
+                                    % (redir.status_code, redir.url)
+                                )
+                            log.debug("SpiffyTitles: Final url %s" % (request.url))
+                            info = urlparse(request.url)
+                            domain = info.netloc
+                            is_ignored = self.is_ignored_domain(domain, channel)
+                            if is_ignored:
+                                log.debug(
+                                    "SpiffyTitles: URL ignored due to domain blacklist"
+                                    " match: %s"
+                                    % url
+                                )
+                                return (None, False)
+                            whitelist_pattern = self.registryValue(
+                                "whitelistDomainPattern", channel=channel
                             )
-                        log.debug("SpiffyTitles: Final url %s" % (request.url))
-                        info = urlparse(request.url)
-                        domain = info.netloc
-                        is_ignored = self.is_ignored_domain(domain, channel)
-                        if is_ignored:
-                            log.debug(
-                                "SpiffyTitles: URL ignored due to domain blacklist"
-                                " match: %s"
-                                % url
+                            is_whitelisted_domain = self.is_whitelisted_domain(
+                                domain, channel
                             )
-                            return
-                        whitelist_pattern = self.registryValue(
-                            "whitelistDomainPattern", channel=channel
-                        )
-                        is_whitelisted_domain = self.is_whitelisted_domain(
-                            domain, channel
-                        )
-                        if whitelist_pattern and not is_whitelisted_domain:
-                            log.debug(
-                                "SpiffyTitles: URL ignored due to domain whitelist"
-                                " mismatch: %s"
-                                % url
-                            )
-                            return
-                        text = self.get_title_by_url(request.url, channel)
-                        text = text.lstrip("\x02").lstrip("^").strip()
-                        return (text, is_redirect)
-                # Check the content type
-                content_type = request.headers.get("content-type").split(";")[0].strip()
-                acceptable_types = self.registryValue("default.mimeTypes")
-                log.debug("SpiffyTitles: content type %s" % (content_type))
-                if content_type in acceptable_types:
-                    text = request.content
-                    if text:
-                        return (self.get_title_from_html(text, channel), is_redirect)
+                            if whitelist_pattern and not is_whitelisted_domain:
+                                log.debug(
+                                    "SpiffyTitles: URL ignored due to domain whitelist"
+                                    " mismatch: %s"
+                                    % url
+                                )
+                                return (None, False)
+                            text = self.get_title_by_url(request.url, channel)
+                            text = text.lstrip("\x02").lstrip("^").strip()
+                            return (text, is_redirect)
+                    # Check the content type
+                    content_type = request.headers.get("content-type").split(";")[0].strip()
+                    acceptable_types = self.registryValue("default.mimeTypes")
+                    log.debug("SpiffyTitles: content type %s" % (content_type))
+                    if content_type in acceptable_types:
+                        if chunk:
+                            title = self.get_title_from_html(chunk, channel)
+                            if not title:
+                                continue
+                            return (title, is_redirect)
+                        else:
+                            log.debug("SpiffyTitles: empty content from %s" % (url))
                     else:
-                        log.debug("SpiffyTitles: empty content from %s" % (url))
-                else:
-                    log.debug(
-                        "SpiffyTitles: unacceptable mime type %s for url %s"
-                        % (content_type, url)
-                    )
-                    size = request.headers.get("content-length")
-                    if size:
-                        size = self.get_readable_file_size(int(size))
-                    file_template = self.registryValue(
-                        "default.fileTemplate", channel=channel
-                    )
-                    text = Template(file_template).render(
-                        {"type": content_type, "size": size}
-                    )
-                    return (text, is_redirect)
+                        log.debug(
+                            "SpiffyTitles: unacceptable mime type %s for url %s"
+                            % (content_type, url)
+                        )
+                        size = request.headers.get("content-length")
+                        if size:
+                            size = self.get_readable_file_size(int(size))
+                        file_template = self.registryValue(
+                            "default.fileTemplate", channel=channel
+                        )
+                        text = Template(file_template).render(
+                            {"type": content_type, "size": size}
+                        )
+                        return (text, is_redirect)
+                    response_size += len(chunk)
         except requests.exceptions.MissingSchema as e:
             url_wschema = "http://%s" % (url)
             log.error("SpiffyTitles missing schema. Retrying with %s" % (url_wschema))
             info = urlparse(url_wschema)
             if self.is_ignored_domain(info.netloc, channel):
-                return
+                return (None, False)
             else:
                 return self.get_source_by_url(url_wschema, channel)
         except requests.exceptions.Timeout as e:
