@@ -266,9 +266,7 @@ class SpiffyTitles(callbacks.Plugin):
         """
         if self.registryValue("cacheGlobal"):
             channel = "global"
-        # cached_link = self.get_link_from_cache(url, channel)
-        log.info("Skipping cache check")
-        cached_link = None
+        cached_link = self.get_link_from_cache(url, channel)
         if cached_link:
             title = cached_link["title"]
         else:
