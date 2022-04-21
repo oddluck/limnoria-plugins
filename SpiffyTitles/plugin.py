@@ -411,7 +411,12 @@ class SpiffyTitles(callbacks.Plugin):
         if soup:
             try:
                 title = soup.title.string.strip()
-            except:
+            except AttributeError as err:
+                # handle this further down the pipeline
+                pass
+            except Exception as err:
+                # TODO: even better error handling
+                log.debug(err)
                 title = self.registryValue("badLinkText", channel=channel)
         return title
 
@@ -422,7 +427,6 @@ class SpiffyTitles(callbacks.Plugin):
         max_retries = self.registryValue("maxRetries")
         size = conf.supybot.protocols.http.peekSize()
         generic_error = self.registryValue("badLinkText", channel=channel)
-        response_size = 0
         if retries >= max_retries:
             log.debug("SpiffyTitles: hit maximum retries for %s" % url)
             return (None, False)
@@ -439,8 +443,10 @@ class SpiffyTitles(callbacks.Plugin):
                 stream=True,
                 proxies=self.proxies,
             ) as request:
+                response_size = 0
                 for chunk in request.iter_content(chunk_size=1024):
                     if response_size > size:
+                        print("too big bailing")
                         request.close()
                         return (generic_error, False)
                     if 'content-length' in request.headers:
@@ -494,8 +500,10 @@ class SpiffyTitles(callbacks.Plugin):
                         if chunk:
                             title = self.get_title_from_html(chunk, channel)
                             if not title:
+                                response_size += len(chunk)
                                 continue
-                            return (title, is_redirect)
+                            else:
+                                return (title, is_redirect)
                         else:
                             log.debug("SpiffyTitles: empty content from %s" % (url))
                     else:
