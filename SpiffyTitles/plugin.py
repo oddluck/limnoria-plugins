@@ -449,7 +449,7 @@ class SpiffyTitles(callbacks.Plugin):
                         print("too big bailing")
                         request.close()
                         return (generic_error, False)
-                    if 'content-length' in request.headers:
+                    if 'content-length' in request.headers and request.get('content-type', '') == "text/html":
                         if int(request.headers['content-length']) > size:
                             log.debug("SpiffyTitles: URL ignored due to exceeding content size")
                             return (generic_error, False)
