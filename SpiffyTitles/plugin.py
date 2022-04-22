@@ -446,10 +446,9 @@ class SpiffyTitles(callbacks.Plugin):
                 response_size = 0
                 for chunk in request.iter_content(chunk_size=1024):
                     if response_size > size:
-                        print("too big bailing")
                         request.close()
                         return (generic_error, False)
-                    if 'content-length' in request.headers and request.get('content-type', '') == "text/html":
+                    if 'content-length' in request.headers and request.headers.get('content-type', '') == "text/html":
                         if int(request.headers['content-length']) > size:
                             log.debug("SpiffyTitles: URL ignored due to exceeding content size")
                             return (generic_error, False)
@@ -538,7 +537,14 @@ class SpiffyTitles(callbacks.Plugin):
             self.get_source_by_url(url, channel, retries + 1)
         except requests.exceptions.HTTPError as e:
             log.error("SpiffyTitles HTTPError: %s" % (str(e)))
-            text = self.registryValue("badLinkText", channel=channel)
+            if hasattr(e, 'reason'):
+                text = f"HTTP {e.reason}"
+            elif hasattr(e, 'code'):
+                text = f"HTTP {e.code}"
+            elif hasattr(e, 'response'):
+                text = f"HTTP {e.response.status_code}"
+            else:
+                text = self.registryValue("badLinkText", channel=channel)
             return (text, is_redirect)
         except requests.exceptions.InvalidURL as e:
             log.error("SpiffyTitles InvalidURL: %s" % (str(e)))
