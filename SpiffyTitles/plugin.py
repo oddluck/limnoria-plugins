@@ -448,10 +448,6 @@ class SpiffyTitles(callbacks.Plugin):
                     if response_size > size:
                         request.close()
                         return (generic_error, False)
-                    if 'content-length' in request.headers and request.headers.get('content-type', '') == "text/html":
-                        if int(request.headers['content-length']) > size:
-                            log.debug("SpiffyTitles: URL ignored due to exceeding content size")
-                            return (generic_error, False)
                     request.raise_for_status()
                     if request.history:
                         # check the top two domain levels
