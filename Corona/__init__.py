@@ -42,7 +42,7 @@ __version__ = "2020.02.24+git"
 
 # XXX Replace this with an appropriate author or supybot.Author instance.
 __author__ = supybot.Author("oddluck", "oddluck", "oddluck@riseup.net")
-__maintainer__ = {}
+__maintainer__ = supybot.authors.unknown
 
 # This is a dictionary mapping supybot.Author instances to lists of
 # contributions.
