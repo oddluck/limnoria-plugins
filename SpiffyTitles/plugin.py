@@ -785,8 +785,8 @@ class SpiffyTitles(callbacks.Plugin):
             path = info.path
             domain = info.netloc
             video_id = ""
-            if domain == "youtu.be":
-                video_id = path.split("/")[1]
+            if domain == "youtu.be" or "/shorts/" in path:
+                video_id = path.split("/")[-1]
             else:
                 parsed = parse_qsl(info.query)
                 params = dict(parsed)
