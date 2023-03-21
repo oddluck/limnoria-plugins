@@ -80,7 +80,7 @@ conf.registerChannelValue(
 conf.registerChannelValue(
     ChatGPT,
     "temperature",
-    registry.Integer(
+    registry.Float(
         1,
         _(
             """
@@ -93,7 +93,7 @@ conf.registerChannelValue(
 conf.registerChannelValue(
     ChatGPT,
     "top_p",
-    registry.Integer(
+    registry.Float(
         1,
         _(
             """
