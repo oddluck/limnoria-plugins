@@ -79,6 +79,32 @@ conf.registerChannelValue(
 
 conf.registerChannelValue(
     ChatGPT,
+    "reply_intact",
+    registry.Boolean(
+        False,
+        _(
+            """
+            Get spammy and enable line per line reply...
+            """
+        ),
+    ),
+)
+
+conf.registerChannelValue(
+    ChatGPT,
+    "nick_prefix",
+    registry.Boolean(
+        True,
+        _(
+            """
+            Prefix nick on replies true/false...
+            """
+        ),
+    ),
+)
+
+conf.registerChannelValue(
+    ChatGPT,
     "temperature",
     registry.Float(
         1,

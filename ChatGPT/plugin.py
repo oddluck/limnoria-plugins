@@ -59,8 +59,14 @@ class ChatGPT(callbacks.Plugin):
             frequency_penalty=self.registryValue("frequency_penalty", msg.channel),
             user=msg.nick,
         )
-        response = " ".join(completion.choices[0].message.content.splitlines())
-        irc.reply(response)
+        prefix = self.registryValue("nick_prefix", msg.channel)
+        if self.registryValue("reply_intact", msg.channel):
+            for line in completion.choices[0].message.content.splitlines():
+                if line:
+                    irc.reply(line, prefixNick=prefix)
+        else:
+            response = " ".join(completion.choices[0].message.content.splitlines())
+            irc.reply(response, prefixNick=prefix)
 
     chat = wrap(chat, ["text"])
 
