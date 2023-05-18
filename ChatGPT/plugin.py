@@ -45,9 +45,9 @@ class ChatGPT(callbacks.Plugin):
     def chat(self, irc, msg, args, text):
         """Manual Call to the ChatGPT API"""
         openai.api_key = self.registryValue("api_key")
-        prompt = self.registryValue("prompt", msg.channel)
+        prompt = self.registryValue("prompt", msg.channel).replace("$botnick", irc.nick)
         completion = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
+            model=self.registryValue("model", msg.channel),
             messages=[
                 {"role": "system", "content": prompt},
                 {"role": "user", "content": text},

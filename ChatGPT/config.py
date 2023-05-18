@@ -68,10 +68,23 @@ conf.registerChannelValue(
     ChatGPT,
     "prompt",
     registry.String(
-        "You are a helpful IRC bot that responds in 400 characters or less",
+        "You are $botnick the IRC bot. Be brief, helpful",
         _(
             """
             The prompt defining your bot's personality.
+            """
+        ),
+    ),
+)
+
+conf.registerChannelValue(
+    ChatGPT,
+    "model",
+    registry.String(
+        "gpt-3.5-turbo",
+        _(
+            """
+            OpenAI endpoint model, default: "gpt-3.5-turbo"
             """
         ),
     ),
