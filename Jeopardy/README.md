@@ -6,9 +6,7 @@ A fully-featured and customizable IRC trivia game using an archive of Jeopardy! 
 
 ## This... is... Jeopardy!
 
-Uses [jService](http://jservice.io) (150K+ Jeopardy! questions, more if run locally) as a trivia source.
-
-To run a local instance (190K+ questions, can add more questions as episodes continue to air) install [my jService fork](https://github.com/oddluck/jService) then point `plugins.jeopardy.jserviceUrl` to your own URL.
+Uses [jService](http://jservice.io)
 
 To configure replies, see the [templates](#templates) section.
 
