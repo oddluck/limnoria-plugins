@@ -11,6 +11,5 @@ pillow
 pyimgur
 pytest
 requests
-requests_oauthlib
 textdistance[extras]
 unidecode
