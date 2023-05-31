@@ -1,15 +1,10 @@
 A fully-featured and customizable IRC trivia game using an archive of Jeopardy! questions.
 
-**Come play in ##Jeopardy on Freenode.**
-
-[irc://chat.freenode.net/##jeopardy](irc://chat.freenode.net/##jeopardy)</br>
-
 ## This... is... Jeopardy!
 
 Uses [jService](http://jservice.io)
 
 To configure replies, see the [templates](#templates) section.
-
 
 ## Commands
 
