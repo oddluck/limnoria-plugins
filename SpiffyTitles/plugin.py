@@ -148,6 +148,8 @@ class SpiffyTitles(callbacks.Plugin):
         channel = msg.args[0]
         message = msg.args[1]
         title = None
+        if not ircutils.isUserHostmask(msg.prefix):
+            return
         if not irc.isChannel(channel):
             return
         if msg.nick.lower() == irc.nick.lower():
