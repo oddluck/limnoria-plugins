@@ -93,6 +93,8 @@ class SpiffyTitles(callbacks.Plugin):
     def add_twitter_handlers(self):
         self.handlers["twitter.com"] = self.handler_twitter
         self.handlers["www.twitter.com"] = self.handler_twitter
+        self.handlers["x.com"] = self.handler_twitter
+        self.handlers["www.x.com"] = self.handler_twitter
 
     def add_dailymotion_handlers(self):
         self.handlers["www.dailymotion.com"] = self.handler_dailymotion
@@ -1751,7 +1753,7 @@ class SpiffyTitles(callbacks.Plugin):
             return self.handler_default(url, channel)
         results = {}
         soup = BeautifulSoup(response["html"])
-        results["text"] = soup.text.replace("—", " - ").strip()
+        results["text"] = soup.get_text(" ").strip()
         template = Template(self.registryValue("twitter.template", channel))
         title = template.render(results).strip()
         if title:
