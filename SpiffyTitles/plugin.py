@@ -1754,6 +1754,12 @@ class SpiffyTitles(callbacks.Plugin):
         results = {}
         soup = BeautifulSoup(response["html"])
         results["text"] = soup.get_text(" ").strip()
+        match = re.match(r"(.*)—(.*) \((.*)\) (.*)", results["text"])
+        if match:
+            results["content"] = match.group(1)
+            results["name"] = match.group(2)
+            results["nick"] = match.group(3)
+            results["date"] = match.group(4)
         template = Template(self.registryValue("twitter.template", channel))
         title = template.render(results).strip()
         if title:
