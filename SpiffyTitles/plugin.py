@@ -1754,7 +1754,7 @@ class SpiffyTitles(callbacks.Plugin):
         results = {}
         soup = BeautifulSoup(response["html"])
         results["text"] = soup.get_text(" ").strip()
-        match = re.match(r"(.*)—(.*) \((.*)\) (.*)", results["text"])
+        match = re.match(r"(.*) — (.*) \((.*)\) (.*)", results["text"])
         if match:
             results["content"] = match.group(1)
             results["name"] = match.group(2)
