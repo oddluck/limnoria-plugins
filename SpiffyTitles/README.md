@@ -86,6 +86,24 @@ Example output:
 
 Default value: `{% if type %}[{{type}}] {% endif %}{% if size %}({{size}}){% endif %}`
 
+### Twitter/X handler
+
+`twitter.enabled` - Whether to show additional information about Twitter/X links
+
+`twitter.template` - This is the template used when showing the title of a Twitter/X link
+
+Default value: `^ {{text}}`
+
+### Available variables for the Twitter template ###
+
+Variable       | Description
+---------------|------------
+text           | Full tweet text, all inclusive of available variables
+name           | User name
+nick           | User nick (aka @)
+content        | Tweet content
+date           | Date of tweet
+
 ### Youtube handler
 
 Note: as of April 20 2015 version 2 of the Youtube API was deprecated. As a result, this feature now
