@@ -31,7 +31,7 @@
 from supybot import utils, plugins, ircutils, callbacks
 from supybot.commands import *
 from supybot.i18n import PluginInternationalization
-import openai
+from openai import OpenAI
 
 
 _ = PluginInternationalization("ChatGPT")
@@ -44,9 +44,9 @@ class ChatGPT(callbacks.Plugin):
 
     def chat(self, irc, msg, args, text):
         """Manual Call to the ChatGPT API"""
-        openai.api_key = self.registryValue("api_key")
+        client = OpenAI(api_key=self.registryValue("api_key"))
         prompt = self.registryValue("prompt", msg.channel).replace("$botnick", irc.nick)
-        completion = openai.ChatCompletion.create(
+        completion = client.chat.completions.create(
             model=self.registryValue("model", msg.channel),
             messages=[
                 {"role": "system", "content": prompt},
