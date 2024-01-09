@@ -61,7 +61,7 @@ __url__ = "https://github.com/oddluck/limnoria-plugins/"
 
 from . import config
 from . import plugin
-from imp import reload
+from importlib import reload
 
 # In case we're being reloaded.
 reload(config)

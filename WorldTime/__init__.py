@@ -57,7 +57,7 @@ __url__ = ""  # 'http://supybot.com/Members/yourname/WorldTime/download'
 
 from . import config
 from . import plugin
-from imp import reload
+from importlib import reload
 
 # In case we're being reloaded.
 importlib.reload(config)
