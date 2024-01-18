@@ -805,11 +805,53 @@ class SpiffyTitles(callbacks.Plugin):
                 "SpiffyTitles: error getting video id from %s (%s)" % (url, str(e))
             )
 
+    def get_channel_id_from_url(self, url, info, api_key):
+        """
+        Get YouTube channel ID from URL
+        """
+        try:
+            parsed_url = urlparse(url)
+            if 'youtube.com' in parsed_url.netloc:
+                path_parts = parsed_url.path.split('/')
+                # URL of the form https://www.youtube.com/user/username or https://www.youtube.com/@username:
+                if 'user' in path_parts:
+                    username = path_parts[path_parts.index('user') + 1]
+                    api_url = 'https://www.googleapis.com/youtube/v3/channels'
+                    log.debug("SpiffyTitles: requesting %s" % (api_url))
+                    try:
+                        request = requests.get(
+                            api_url, timeout=self.timeout, proxies=self.proxies,
+                            params={
+                                'part': 'id',
+                                'forUsername': username,
+                                'key': api_key
+                            }
+                         )
+                        request.raise_for_status()
+                        data = json.loads(request.content.decode())
+                        if data['items']:
+                            return data['items'][0]['id']
+                    except (
+                        requests.exceptions.RequestException,
+                        requests.exceptions.HTTPError,
+                    ) as e:
+                        log.error("SpiffyTitles: YouTube Error: {0}".format(e))
+                # URL of the form https://www.youtube.com/channel/UC_x5XG1OV2P6uZZ5FSM9Ttw:
+                elif 'channel' in path_parts:
+                    return path_parts[path_parts.index('channel') + 1]
+                # TODO: figure out a way to handle https://www.youtube.com/@GoogleDevelopers style URLs
+                return None
+        except Exception as e:
+            log.error(
+                "SpiffyTitles: error getting channel id from %s (%s)" % (url, str(e))
+            )
+ 
     def handler_youtube(self, url, domain, channel):
         """
         Uses the Youtube API to provide additional meta data about
         Youtube Video links posted.
         """
+        type = "video"
         youtube_handler_enabled = self.registryValue("youtube.enabled", channel)
         if not youtube_handler_enabled:
             return self.handler_default(url, channel)
@@ -826,90 +868,142 @@ class SpiffyTitles(callbacks.Plugin):
             log.debug(
                 "SpiffyTitles: Failed to get YouTube video ID for URL: {0}".format(url)
             )
-            return self.handler_default(url, channel)
+            channel_id = self.get_channel_id_from_url(url, domain, developer_key)
+            if not channel_id:
+                return self.handler_default(url, channel)
+            else:
+                type = "channel"
+        else:
+            type = "video"
         yt_template = Template(self.registryValue("youtube.template", channel))
         title = ""
-        options = {
-            "part": "snippet,statistics,contentDetails",
-            "maxResults": 1,
-            "key": developer_key,
-            "id": video_id,
-        }
-        api_url = "https://www.googleapis.com/youtube/v3/videos"
-        log.debug("SpiffyTitles: requesting %s" % (api_url))
-        try:
-            request = requests.get(
-                api_url, params=options, timeout=self.timeout, proxies=self.proxies
-            )
-            request.raise_for_status()
-        except (
-            requests.exceptions.RequestException,
-            requests.exceptions.HTTPError,
-        ) as e:
-            log.error("SpiffyTitiles: YouTube Error: {0}".format(e))
-            return self.handler_default(url, channel)
-        response = json.loads(request.content.decode())
-        if not response or not response.get("items"):
-            log.error("SpiffyTitles: Failed to parse YouTube JSON response")
-            return self.handler_default(url, channel)
-        try:
-            items = response["items"]
-            video = items[0]
-            snippet = video["snippet"]
-            title = snippet["title"]
-            statistics = video["statistics"]
-            view_count = 0
-            like_count = 0
-            dislike_count = 0
-            comment_count = 0
-            favorite_count = 0
-            restricted = False
-            if "viewCount" in statistics:
-                view_count = "{:,}".format(int(statistics["viewCount"]))
-            if "likeCount" in statistics:
-                like_count = "{:,}".format(int(statistics["likeCount"]))
-            if "dislikeCount" in statistics:
-                dislike_count = "{:,}".format(int(statistics["dislikeCount"]))
-            if "favoriteCount" in statistics:
-                favorite_count = "{:,}".format(int(statistics["favoriteCount"]))
-            if "commentCount" in statistics:
-                comment_count = "{:,}".format(int(statistics["commentCount"]))
-            channel_title = snippet["channelTitle"]
-            video_duration = video["contentDetails"]["duration"]
-            duration_seconds = self.get_total_seconds_from_duration(video_duration)
-            """
-            #23 - If duration is zero, then it"s a LIVE video
-            """
-            if duration_seconds > 0:
-                duration = self.get_duration_from_seconds(duration_seconds)
-            else:
-                duration = "LIVE"
-            if "ytRating" in video["contentDetails"]["contentRating"]:
-                restricted = True
-            published = snippet["publishedAt"].split("T")[0]
-            timestamp = self.get_timestamp_from_youtube_url(url)
-            yt_logo = self.get_youtube_logo(channel)
-            compiled_template = yt_template.render(
-                {
-                    "title": title,
-                    "duration": duration,
-                    "timestamp": timestamp,
-                    "view_count": view_count,
-                    "like_count": like_count,
-                    "dislike_count": dislike_count,
-                    "comment_count": comment_count,
-                    "favorite_count": favorite_count,
-                    "channel_title": channel_title,
-                    "published": published,
-                    "restricted": restricted,
-                    "yt_logo": yt_logo,
-                }
-            )
-            title = compiled_template
-        except IndexError as e:
-            log.error(
-                "SpiffyTitles: IndexError. Youtube API JSON response: %s" % (str(e))
-            )
+        if type == "video":
+            options = {
+                "part": "snippet,statistics,contentDetails",
+                "maxResults": 1,
+                "key": developer_key,
+                "id": video_id,
+            }
+            api_url = "https://www.googleapis.com/youtube/v3/videos"
+            log.debug("SpiffyTitles: requesting %s" % (api_url))
+            try:
+                request = requests.get(
+                    api_url, params=options, timeout=self.timeout, proxies=self.proxies
+                )
+                request.raise_for_status()
+            except (
+                requests.exceptions.RequestException,
+                requests.exceptions.HTTPError,
+            ) as e:
+                log.error("SpiffyTitles: YouTube Error: {0}".format(e))
+                return self.handler_default(url, channel)
+            response = json.loads(request.content.decode())
+            if not response or not response.get("items"):
+                log.error("SpiffyTitles: Failed to parse YouTube JSON response")
+                return self.handler_default(url, channel)
+            try:
+                items = response["items"]
+                video = items[0]
+                snippet = video["snippet"]
+                title = snippet["title"]
+                statistics = video["statistics"]
+                view_count = 0
+                like_count = 0
+                dislike_count = 0
+                comment_count = 0
+                favorite_count = 0
+                restricted = False
+                if "viewCount" in statistics:
+                    view_count = "{:,}".format(int(statistics["viewCount"]))
+                if "likeCount" in statistics:
+                    like_count = "{:,}".format(int(statistics["likeCount"]))
+                if "dislikeCount" in statistics:
+                    dislike_count = "{:,}".format(int(statistics["dislikeCount"]))
+                if "favoriteCount" in statistics:
+                    favorite_count = "{:,}".format(int(statistics["favoriteCount"]))
+                if "commentCount" in statistics:
+                    comment_count = "{:,}".format(int(statistics["commentCount"]))
+                channel_title = snippet["channelTitle"]
+                video_duration = video["contentDetails"]["duration"]
+                duration_seconds = self.get_total_seconds_from_duration(video_duration)
+                """
+                #23 - If duration is zero, then it"s a LIVE video
+                """
+                if duration_seconds > 0:
+                    duration = self.get_duration_from_seconds(duration_seconds)
+                else:
+                    duration = "LIVE"
+                if "ytRating" in video["contentDetails"]["contentRating"]:
+                    restricted = True
+                published = snippet["publishedAt"].split("T")[0]
+                timestamp = self.get_timestamp_from_youtube_url(url)
+                yt_logo = self.get_youtube_logo(channel)
+                compiled_template = yt_template.render(
+                    {
+                        "title": title,
+                        "duration": duration,
+                        "timestamp": timestamp,
+                        "view_count": view_count,
+                        "like_count": like_count,
+                        "dislike_count": dislike_count,
+                        "comment_count": comment_count,
+                        "favorite_count": favorite_count,
+                        "channel_title": channel_title,
+                        "published": published,
+                        "restricted": restricted,
+                        "yt_logo": yt_logo,
+                    }
+                )
+                title = compiled_template
+            except IndexError as e:
+                log.error(
+                    "SpiffyTitles: IndexError. Youtube API JSON response: %s" % (str(e))
+                )
+        elif type == "channel":
+            options = {
+                "part": "snippet,statistics,contentDetails",
+                "maxResults": 1,
+                "key": developer_key,
+                "id": channel_id,
+            }
+            api_url = "https://www.googleapis.com/youtube/v3/channels"
+            log.debug("SpiffyTitles: requesting %s" % (api_url))
+            try:
+                request = requests.get(
+                    api_url, params=options, timeout=self.timeout, proxies=self.proxies
+                )
+                request.raise_for_status()
+            except (
+                requests.exceptions.RequestException,
+                requests.exceptions.HTTPError,
+            ) as e:
+                log.error("SpiffyTitles: YouTube Error: {0}".format(e))
+                return self.handler_default(url, channel)
+            response = json.loads(request.content.decode())
+            if not response or not response.get("items"):
+                log.error("SpiffyTitles: Failed to parse YouTube JSON response")
+                return self.handler_default(url, channel)
+            try:
+                items = response["items"]
+                channel = items[0]
+                snippet = channel["snippet"]
+                title = snippet["title"]
+                statistics = channel["statistics"]
+                view_count = 0
+                subscriber_count = 0
+                video_count = 0
+                if "viewCount" in statistics:
+                    view_count = "{:,}".format(int(statistics["viewCount"]))
+                if "subscriberCount" in statistics:
+                    subscriber_count = "{:,}".format(int(statistics["subscriberCount"]))
+                if "videoCount" in statistics:
+                    video_count = "{:,}".format(int(statistics["videoCount"]))
+                yt_logo = "YouTube" #self.get_youtube_logo(channel) #FIXME: why doesn't work here?
+                title = yt_logo + " :: " + "Channel: " + title + " :: Views: " + view_count + " :: Subscribers: " + subscriber_count + " :: Videos: " + video_count
+            except IndexError as e:
+                log.error(
+                    "SpiffyTitles: IndexError. Youtube API JSON response: %s" % (str(e))
+                )
         # If we found a title, return that. otherwise, use default handler
         if title:
             return title
