@@ -813,7 +813,7 @@ class SpiffyTitles(callbacks.Plugin):
             parsed_url = urlparse(url)
             if 'youtube.com' in parsed_url.netloc:
                 path_parts = parsed_url.path.split('/')
-                # URL of the form https://www.youtube.com/user/username or https://www.youtube.com/@username:
+                # URL of the form https://www.youtube.com/user/username: 
                 if 'user' in path_parts:
                     username = path_parts[path_parts.index('user') + 1]
                     api_url = 'https://www.googleapis.com/youtube/v3/channels'
@@ -839,7 +839,29 @@ class SpiffyTitles(callbacks.Plugin):
                 # URL of the form https://www.youtube.com/channel/UC_x5XG1OV2P6uZZ5FSM9Ttw:
                 elif 'channel' in path_parts:
                     return path_parts[path_parts.index('channel') + 1]
-                # TODO: figure out a way to handle https://www.youtube.com/@GoogleDevelopers style URLs
+                # handle https://www.youtube.com/@GoogleDevelopers style URLs:
+                elif "@" in parsed_url.path:
+                    username = parsed_url.path.split("@")[1]
+                    api_url = 'https://www.googleapis.com/youtube/v3/channels'
+                    log.debug("SpiffyTitles: requesting %s" % (api_url))
+                    try:
+                        request = requests.get(
+                            api_url, timeout=self.timeout, proxies=self.proxies,
+                            params={
+                                'part': 'id',
+                                'forUsername': username,
+                                'key': api_key
+                            }
+                        )
+                        request.raise_for_status()
+                        data = json.loads(request.content.decode())
+                        if data['items']:
+                            return data['items'][0]['id']
+                    except (
+                        requests.exceptions.RequestException,
+                        requests.exceptions.HTTPError,
+                    ) as e:
+                        log.error("SpiffyTitles: YouTube Error: {0}".format(e))
                 return None
         except Exception as e:
             log.error(
@@ -866,10 +888,13 @@ class SpiffyTitles(callbacks.Plugin):
         video_id = self.get_video_id_from_url(url, domain)
         if not video_id:
             log.debug(
-                "SpiffyTitles: Failed to get YouTube video ID for URL: {0}".format(url)
+                "SpiffyTitles: Failed to get YouTube video ID for URL: {0}, trying channel ID...".format(url)
             )
             channel_id = self.get_channel_id_from_url(url, domain, developer_key)
             if not channel_id:
+                log.debug(
+                    "SpiffyTitles: Failed to get Youtube Channel ID for URL: {0}".format(url)
+                )
                 return self.handler_default(url, channel)
             else:
                 type = "channel"
