@@ -817,7 +817,7 @@ class SpiffyTitles(callbacks.Plugin):
                 if 'user' in path_parts:
                     username = path_parts[path_parts.index('user') + 1]
                     api_url = 'https://www.googleapis.com/youtube/v3/channels'
-                    log.debug("SpiffyTitles: requesting %s" % (api_url))
+                    log.debug("SpiffyTitles: requesting %s for channel type 1" % (api_url))
                     try:
                         request = requests.get(
                             api_url, timeout=self.timeout, proxies=self.proxies,
@@ -843,7 +843,7 @@ class SpiffyTitles(callbacks.Plugin):
                 elif "@" in parsed_url.path:
                     username = parsed_url.path.split("@")[1]
                     api_url = 'https://www.googleapis.com/youtube/v3/channels'
-                    log.debug("SpiffyTitles: requesting %s" % (api_url))
+                    log.debug("SpiffyTitles: requesting %s for channel name %s" % (api_url, username))
                     try:
                         request = requests.get(
                             api_url, timeout=self.timeout, proxies=self.proxies,
@@ -1010,10 +1010,10 @@ class SpiffyTitles(callbacks.Plugin):
                 return self.handler_default(url, channel)
             try:
                 items = response["items"]
-                channel = items[0]
-                snippet = channel["snippet"]
+                yt_channel = items[0]
+                snippet = yt_channel["snippet"]
                 title = snippet["title"]
-                statistics = channel["statistics"]
+                statistics = yt_channel["statistics"]
                 view_count = 0
                 subscriber_count = 0
                 video_count = 0
@@ -1023,7 +1023,7 @@ class SpiffyTitles(callbacks.Plugin):
                     subscriber_count = "{:,}".format(int(statistics["subscriberCount"]))
                 if "videoCount" in statistics:
                     video_count = "{:,}".format(int(statistics["videoCount"]))
-                yt_logo = "YouTube" #self.get_youtube_logo(channel) #FIXME: why doesn't work here?
+                yt_logo = self.get_youtube_logo(channel)
                 title = yt_logo + " :: " + "Channel: " + title + " :: Views: " + view_count + " :: Subscribers: " + subscriber_count + " :: Videos: " + video_count
             except IndexError as e:
                 log.error(
