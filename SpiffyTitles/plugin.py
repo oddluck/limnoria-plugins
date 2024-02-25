@@ -1460,19 +1460,19 @@ class SpiffyTitles(callbacks.Plugin):
             "thread": {
                 "pattern": r"^/r/(?P<subreddit>[^/]+)/comments/(?P<thread>[^/]+)"
                 r"(?:/[^/]+/?)?$",
-                "url": "https://www.reddit.com/r/{subreddit}/comments/{thread}.json",
+                "url": "https://old.reddit.com/r/{subreddit}/comments/{thread}.json",
             },
             "comment": {
                 "pattern": r"^/r/(?P<subreddit>[^/]+)/comments/(?P<thread>[^/]+)/"
                 r"[^/]+/(?P<comment>\w+/?)$",
                 "url": (
-                    "https://www.reddit.com/r/{subreddit}/comments/{thread}/x/"
+                    "https://old.reddit.com/r/{subreddit}/comments/{thread}/x/"
                     "{comment}.json"
                 ),
             },
             "user": {
                 "pattern": r"^/u(?:ser)?/(?P<user>[^/]+)/?$",
-                "url": "https://www.reddit.com/user/{user}/about.json",
+                "url": "https://old.reddit.com/user/{user}/about.json",
             },
         }
         info = urlparse(url)
