@@ -31,7 +31,7 @@ Check out the [available options](#available-options)!
 
 ## Install SpiffyTitles
 - install pip if you don't have it already (eg. `apt install python3-pip`)
-- `pip3 install --user --upgrade https://github.com/oddluck/limnoria-plugins.git#subdirectory=SpiffyTitles`
+- `pip3 install --user --upgrade git+https://github.com/oddluck/limnoria-plugins.git#subdirectory=SpiffyTitles`
 
 You should `!unload Web` and any other plugins that show link titles for best results
 
