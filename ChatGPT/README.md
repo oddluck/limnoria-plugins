@@ -17,6 +17,6 @@ system prompt:
 ^^ Command to send text to the chatgpt API
 
 ```
-@messageparser add "(?i)(.*BOT_NICK_HERE.*)" "chat $1"
+@messageparser add "(?i)(.*BOT_NICK_HERE)(?:[:])(.*)" "chat $1$2"
 ```
 ^^ replace BOT_NICK_HERE with your bot nick and add automatic replies to nick mentions
