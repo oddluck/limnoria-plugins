@@ -68,8 +68,6 @@ class Gemini(callbacks.Plugin):
         self.history.setdefault(channel, None)
         if not self.history[channel]:
             self.history[channel] = []
-        if len(self.history[channel]) > max_history:
-            self.history[channel] = []
         chat = model.start_chat(history=self.history[channel][-max_history:])
         if include:
             response = chat.send_message("%s: %s" % (msg.nick, text))
