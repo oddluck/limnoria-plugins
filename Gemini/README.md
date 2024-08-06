@@ -6,6 +6,7 @@ Get an API key from https://aistudio.google.com/app/apikey
 ```
 @config plugins.gemini.api_key YOUR_KEY_HERE
 ```
+
 system prompt:
 ```
 @config plugins.gemini.prompt "You are $botnick the IRC bot. Be brief, helpful"
@@ -23,6 +24,6 @@ system prompt:
 ^^ Command to send text to the chatgpt API
 
 ```
-@messageparser add "(?i)(.*BOT_NICK_HERE)(?:[:]*)(.*)" "chat $1$2"
+@messageparser add "(?i)(.*BOT_NICK_HERE.*)" "chat $1"
 ```
 ^^ replace BOT_NICK_HERE with your bot nick and add automatic replies to nick mentions
