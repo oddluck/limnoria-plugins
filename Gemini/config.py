@@ -111,7 +111,7 @@ conf.registerChannelValue(
         50,
         _(
             """
-            The maximum number of messages to keep in conversation history.
+            The maximum number of messages to keep in conversation history. 0 to disable.
             """
         ),
     ),
@@ -138,6 +138,19 @@ conf.registerChannelValue(
         _(
             """
             Prefix nick on replies true/false...
+            """
+        ),
+    ),
+)
+
+conf.registerChannelValue(
+    Gemini,
+    "nick_strip",
+    registry.Boolean(
+        True,
+        _(
+            """
+            Prevent the bot from starting replies with its own nick.
             """
         ),
     ),

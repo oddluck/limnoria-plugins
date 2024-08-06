@@ -31,6 +31,7 @@
 from supybot import utils, plugins, ircutils, callbacks
 from supybot.commands import *
 from supybot.i18n import PluginInternationalization
+import re
 import google.generativeai as genai
 
 _ = PluginInternationalization("Gemini")
@@ -51,29 +52,29 @@ class Gemini(callbacks.Plugin):
         channel = msg.channel
         if not irc.isChannel(channel):
             channel = msg.nick
-        api_key = self.registryValue("api_key", msg.channel)
-        genai.configure(api_key=api_key)
-        max_tokens = self.registryValue("max_tokens", msg.channel)
-        max_history = self.registryValue("max_history", msg.channel)
-        generation_config = {"max_output_tokens": max_tokens}
+        genai.configure(api_key=self.registryValue("api_key", msg.channel))
         prompt = self.registryValue("prompt", msg.channel).replace("$botnick", irc.nick)
-        ai_model = self.registryValue("model", msg.channel)
-        prefix = self.registryValue("nick_prefix", msg.channel)
-        include = self.registryValue("nick_include", msg.channel)
+        max_tokens = self.registryValue("max_tokens", msg.channel)
         model = genai.GenerativeModel(
-            ai_model,
-            generation_config=generation_config,
+            self.registryValue("model", msg.channel),
+            generation_config={"max_output_tokens": max_tokens},
             system_instruction=prompt,
         )
+        max_history = self.registryValue("max_history", msg.channel)
         self.history.setdefault(channel, None)
-        if not self.history[channel]:
+        if not self.history[channel] or max_history < 1:
             self.history[channel] = []
         chat = model.start_chat(history=self.history[channel][-max_history:])
-        if include:
+        if self.registryValue("nick_include", msg.channel):
             response = chat.send_message("%s: %s" % (msg.nick, text))
         else:
             response = chat.send_message(text)
-        for line in response.text.splitlines():
+        if self.registryValue("nick_strip", msg.channel):
+            content = re.sub(r"^%s: " % (irc.nick), "", response.text)
+        else:
+            content = response.text
+        prefix = self.registryValue("nick_prefix", msg.channel)
+        for line in content.splitlines():
             if line:
                 irc.reply(line, prefixNick=prefix)
         self.history[channel] = chat.history
