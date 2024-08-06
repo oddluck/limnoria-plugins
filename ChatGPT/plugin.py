@@ -31,6 +31,7 @@
 from supybot import utils, plugins, ircutils, callbacks
 from supybot.commands import *
 from supybot.i18n import PluginInternationalization
+import re
 import openai
 
 
@@ -42,13 +43,28 @@ class ChatGPT(callbacks.Plugin):
 
     threaded = True
 
+    def __init__(self, irc):
+        self.__parent = super(ChatGPT, self)
+        self.__parent.__init__(irc)
+        self.history = {}
+
     def chat(self, irc, msg, args, text):
         """Manual Call to the ChatGPT API"""
-        openai.api_key = self.registryValue("api_key")
+        channel = msg.channel
+        if not irc.isChannel(channel):
+            channel = msg.nick
+        if self.registryValue("nick_include", msg.channel):
+            text = "%s: %s" % (msg.nick, text)
+        self.history.setdefault(channel, None)
+        max_history = self.registryValue("max_history", msg.channel)
         prompt = self.registryValue("prompt", msg.channel).replace("$botnick", irc.nick)
+        if not self.history[channel] or max_history < 1:
+            self.history[channel] = []
+        openai.api_key = self.registryValue("api_key")
         completion = openai.chat.completions.create(
             model=self.registryValue("model", msg.channel),
-            messages=[
+            messages=self.history[channel][-max_history:]
+            + [
                 {"role": "system", "content": prompt},
                 {"role": "user", "content": text},
             ],
@@ -59,16 +75,25 @@ class ChatGPT(callbacks.Plugin):
             frequency_penalty=self.registryValue("frequency_penalty", msg.channel),
             user=msg.nick,
         )
+        if self.registryValue("nick_strip", msg.channel):
+            content = re.sub(
+                r"^%s: " % (irc.nick), "", completion.choices[0].message.content
+            )
+        else:
+            content = completion.choices[0].message.content
         prefix = self.registryValue("nick_prefix", msg.channel)
         if self.registryValue("reply_intact", msg.channel):
-            for line in completion.choices[0].message.content.splitlines():
+            for line in content.splitlines():
                 if line:
                     irc.reply(line, prefixNick=prefix)
         else:
-            response = " ".join(completion.choices[0].message.content.splitlines())
+            response = " ".join(content.splitlines())
             irc.reply(response, prefixNick=prefix)
+        self.history[channel].append({"role": "user", "content": text})
+        self.history[channel].append({"role": "assistant", "content": content})
 
     chat = wrap(chat, ["text"])
+
 
 Class = ChatGPT
 

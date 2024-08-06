@@ -107,7 +107,7 @@ conf.registerChannelValue(
     ChatGPT,
     "nick_prefix",
     registry.Boolean(
-        True,
+        False,
         _(
             """
             Prefix nick on replies true/false...
@@ -176,6 +176,45 @@ conf.registerChannelValue(
         _(
             """
             Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.
+            """
+        ),
+    ),
+)
+
+conf.registerChannelValue(
+    ChatGPT,
+    "max_history",
+    registry.Integer(
+        10,
+        _(
+            """
+            The maximum number of messages to keep in conversation history. 0 to disable.
+            """
+        ),
+    ),
+)
+
+conf.registerChannelValue(
+    ChatGPT,
+    "nick_include",
+    registry.Boolean(
+        True,
+        _(
+            """
+            Include user nicks in history/queries. Disabled will treat conversation as if from a single user.
+            """
+        ),
+    ),
+)
+
+conf.registerChannelValue(
+    ChatGPT,
+    "nick_strip",
+    registry.Boolean(
+        True,
+        _(
+            """
+            Prevent the bot from starting replies with its own nick.
             """
         ),
     ),
