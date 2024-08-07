@@ -31,6 +31,7 @@
 from supybot import utils, plugins, ircutils, callbacks
 from supybot.commands import *
 from supybot.i18n import PluginInternationalization
+import supybot.log as log
 import re
 import google.generativeai as genai
 
@@ -65,10 +66,14 @@ class Gemini(callbacks.Plugin):
         if not self.history[channel] or max_history < 1:
             self.history[channel] = []
         chat = model.start_chat(history=self.history[channel][-max_history:])
-        if self.registryValue("nick_include", msg.channel):
-            response = chat.send_message("%s: %s" % (msg.nick, text))
-        else:
-            response = chat.send_message(text)
+        try:
+            if self.registryValue("nick_include", msg.channel):
+                response = chat.send_message("%s: %s" % (msg.nick, text))
+            else:
+                response = chat.send_message(text)
+        except Exception as e:
+            log.error("Gemini failed to fetch response: %s", e)
+            return
         if self.registryValue("nick_strip", msg.channel):
             content = re.sub(r"^%s: " % (irc.nick), "", response.text)
         else:
