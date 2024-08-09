@@ -81,7 +81,7 @@ conf.registerChannelValue(
     ChatGPT,
     "model",
     registry.String(
-        "gpt-3.5-turbo",
+        "gpt-4o-mini",
         _(
             """
             OpenAI endpoint model, default: "gpt-3.5-turbo"
