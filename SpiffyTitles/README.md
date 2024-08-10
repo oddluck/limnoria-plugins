@@ -53,6 +53,7 @@ Så you need to creat yourself a oauth `client_id` and `client_secret` this can 
 [Reddit Oauth](https://www.reddit.com/prefs/apps) 
 
 When you have made these keys you need to activate it like:
+
 `@config supybot.plugins.SpiffyTitles.reddit.clientid "YOUR CLIENT_ID HERE"`
 
 `@config supybot.plugins.SpiffyTitles.reddit.clientsecret "YOUR CLIENT_SECRET HERE"`
