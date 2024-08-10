@@ -46,6 +46,14 @@ You can increase the verbosity of the logging in SpiffyTitles by issuing the fol
 
 `!config supybot.log.level DEBUG`
 
+## Reddit Oauth
+For the Reddit to work probably. So you won't get the `Httperror 403` blocked URL`
+
+Så you need to creat yourself a oauth `client_id` and `client_secret` this can be done from here:
+[Reddit Oauth](https://www.reddit.com/prefs/apps) 
+When you have made these keys you need to activate it like:
+`@config supybot.plugins.SpiffyTitles.reddit.clientid "YOUR CLIENT_ID HERE"`
+`@config supybot.plugins.SpiffyTitles.reddit.clientsecret "YOUR CLIENT_SECRET HERE"`
 
 ## On-Demand Titles
 You can retrieve titles on demand using the `t` command. If something goes wrong, `badLinkText`
