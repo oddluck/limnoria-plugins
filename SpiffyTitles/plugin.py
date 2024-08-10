@@ -67,6 +67,12 @@ class SpiffyTitles(callbacks.Plugin):
         self.proxies = {}
         self.proxies["http"] = None
         self.proxies["https"] = None
+        # Initialize the Reddit client
+        self.reddit = praw.Reddit(
+        client_id=self.registryValue("reddit.clientid"),
+        client_secret=self.registryValue("reddit.clientsecret"),
+        user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:75.0) Gecko/20100101 Firefox/75.0'
+        )    
         proxy = str(conf.supybot.protocols.http.proxy)
         if proxy:
             match = re.match(r"https?:\/\/", proxy, re.IGNORECASE)
@@ -1450,11 +1456,12 @@ class SpiffyTitles(callbacks.Plugin):
 
     def handler_reddit(self, url, domain, channel):
         """
-        Queries wikipedia API for article extracts.
+        Queries Reddit API for article extracts using PRAW.
         """
         reddit_handler_enabled = self.registryValue("reddit.enabled", channel=channel)
         if not reddit_handler_enabled:
             return self.handler_default(url, channel)
+        
         self.log.debug("SpiffyTitles: calling reddit handler for %s" % (url))
         patterns = {
             "thread": {
@@ -1476,50 +1483,53 @@ class SpiffyTitles(callbacks.Plugin):
             },
         }
         info = urlparse(url)
+        link_type = None
+        link_info = {}
         for name in patterns:
             match = re.search(patterns[name]["pattern"], info.path)
             if match:
                 link_type = name
                 link_info = match.groupdict()
-                data_url = patterns[name]["url"].format(**link_info)
                 break
         if not match:
             self.log.debug("SpiffyTitles: no title found.")
             return self.handler_default(url, channel)
-        self.log.debug("SpiffyTitles: requesting %s" % (data_url))
-        headers = {"User-Agent": self.get_user_agent()}
-        try:
-            request = requests.get(
-                data_url, headers=headers, timeout=self.timeout, proxies=self.proxies
-            )
-            request.raise_for_status()
-        except (
-            requests.exceptions.RequestException,
-            requests.exceptions.HTTPError,
-        ) as e:
-            log.error("SpiffyTitles: Reddit Error: {0}".format(e))
-            return self.handler_default(url, channel)
-        data = {}
+        
+        self.log.debug("SpiffyTitles: requesting %s" % (url))
+        
         extract = ""
-        response = json.loads(request.content.decode())
-        if response:
-            try:
-                if link_type == "thread":
-                    data = response[0]["data"]["children"][0]["data"]
-                if link_type == "comment":
-                    data = response[1]["data"]["children"][0]["data"]
-                    data["title"] = response[0]["data"]["children"][0]["data"]["title"]
-                if link_type == "user":
-                    data = response["data"]
-            except KeyError as e:
-                self.log.error(
-                    "SpiffyTitles: KeyError parsing Reddit JSON response: %s" % (str(e))
-                )
-        else:
-            self.log.error("SpiffyTitles: Error parsing Reddit JSON response")
+        try:
+            if link_type == "thread":
+                submission = self.reddit.submission(id=link_info["thread"])
+                created_utc = getattr(submission, "created_utc", None)
+                if created_utc is None:
+                    self.log.error("SpiffyTitles: 'created_utc' not found in submission object")
+                    return self.handler_default(url, channel)
+                data = vars(submission)
+            elif link_type == "comment":
+                comment = self.reddit.comment(id=link_info["comment"])
+                created_utc = getattr(comment, "created_utc", None)
+                if created_utc is None:
+                    self.log.error("SpiffyTitles: 'created_utc' not found in comment object")
+                    return self.handler_default(url, channel)
+                data = vars(comment)
+                submission = comment.submission
+                data["title"] = submission.title
+            elif link_type == "user":
+                user = self.reddit.redditor(link_info["user"])
+                data = vars(user)
+            else:
+                return self.handler_default(url, channel)
+        except KeyError as e:
+            self.log.error(f"SpiffyTitles: KeyError - {e}")
+            return self.handler_default(url, channel)
+        except Exception as e:
+            self.log.error(f"SpiffyTitles: Reddit Error: {e}")
+            return self.handler_default(url, channel)
+        
         if data:
             today = datetime.datetime.now().date()
-            created = datetime.datetime.fromtimestamp(data["created_utc"]).date()
+            created = datetime.datetime.fromtimestamp(data.get("created_utc", 0)).date()
             age_days = (today - created).days
             if age_days == 0:
                 age = "today"
@@ -1532,7 +1542,7 @@ class SpiffyTitles(callbacks.Plugin):
                 age = age + " ago"
             if link_type == "thread":
                 link_type = "linkThread"
-                if data["is_self"]:
+                if data.get("is_self"):
                     link_type = "textThread"
                     data["url"] = ""
                     extract = data.get("selftext", "")
