@@ -370,6 +370,24 @@ conf.registerChannelValue(
     registry.Boolean(True, _("""Whether to add additional info about Reddit links.""")),
 )
 
+# Reddit oauth
+conf.registerGlobalValue(
+    SpiffyTitles.reddit,
+    "clientid",
+    registry.String(
+        "", _("""Reddit oauth client_key - required for Reddit handler."""), private=True
+    ),
+)
+
+conf.registerGlobalValue(
+    SpiffyTitles.reddit,
+    "clientsecret",
+    registry.String(
+        "", _("""Reddit oauth client_secret - required for Reddit handler."""), private=True
+    ),
+)
+# End
+
 # Reddit templates
 conf.registerChannelValue(
     SpiffyTitles.reddit,
@@ -674,7 +692,6 @@ conf.registerChannelValue(
         _("""IMDB title template"""),
     ),
 )
-
 
 # coub configs
 conf.registerGroup(SpiffyTitles, "coub")
