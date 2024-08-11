@@ -40,6 +40,9 @@ from urllib.parse import urlparse, parse_qsl
 from bs4 import BeautifulSoup
 from jinja2 import Template
 import requests
+import praw
+import urllib
+
 
 try:
     from supybot.i18n import PluginInternationalization
@@ -73,6 +76,7 @@ class SpiffyTitles(callbacks.Plugin):
         client_secret=self.registryValue("reddit.clientsecret"),
         user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:75.0) Gecko/20100101 Firefox/75.0'
         )    
+    
         proxy = str(conf.supybot.protocols.http.proxy)
         if proxy:
             match = re.match(r"https?:\/\/", proxy, re.IGNORECASE)
@@ -80,6 +84,8 @@ class SpiffyTitles(callbacks.Plugin):
                 proxy = "http://{0}".format(proxy)
             self.proxies["http"] = proxy
             self.proxies["https"] = proxy
+
+        
 
     def add_handlers(self):
         """
@@ -247,13 +253,22 @@ class SpiffyTitles(callbacks.Plugin):
         """
         if self.registryValue("default.enabled", channel):
             log.debug("SpiffyTitles: calling default handler for %s" % (url))
+            
+            # Extract the domain from the URL
+            parsed_url = urllib.parse.urlparse(url)
+            domain = parsed_url.netloc
+            
+            # Format the domain with the title
             default_template = Template(
                 self.registryValue("default.template", channel=channel)
             )
             (title, is_redirect) = self.get_source_by_url(url, channel)
             if title:
+                # Adding the domain part to the title template
+                formatted_domain = format(_(' (at %s)'), domain)
                 title_template = default_template.render(
-                    title=title, redirect=is_redirect
+                    title=title + formatted_domain,  # Append the domain to the title
+                    redirect=is_redirect
                 )
                 return title_template
             else:
@@ -417,7 +432,7 @@ class SpiffyTitles(callbacks.Plugin):
         Retrieves value of <title> tag from HTML
         """
         title = None
-        soup = BeautifulSoup(html)
+        soup = BeautifulSoup(html, "html.parser")
         if soup:
             try:
                 title = soup.title.string.strip()
@@ -1326,10 +1341,10 @@ class SpiffyTitles(callbacks.Plugin):
         if response:
             imdb_template = Template(self.registryValue("imdb.template"))
             meta = None
-            tomato = None
+            tomatometer = None
             for rating in response["Ratings"]:
                 if rating["Source"] == "Rotten Tomatoes":
-                    tomato = rating["Value"]
+                    tomatometer = rating["Value"]
                 if rating["Source"] == "Metacritic":
                     meta = "{0}%".format(rating["Value"].split("/")[0])
             template_vars = {
@@ -1339,8 +1354,8 @@ class SpiffyTitles(callbacks.Plugin):
                 "director": response.get("Director"),
                 "plot": response.get("Plot"),
                 "imdb_id": response.get("imdbID"),
-                "imdb_rating": response.get("imdbRating"),
-                "tomatoMeter": tomato,
+                "rating": response.get("imdbRating"),
+                "tomato": tomatometer,
                 "metascore": meta,
                 "released": response.get("Released"),
                 "genre": response.get("Genre"),
@@ -1461,7 +1476,7 @@ class SpiffyTitles(callbacks.Plugin):
         reddit_handler_enabled = self.registryValue("reddit.enabled", channel=channel)
         if not reddit_handler_enabled:
             return self.handler_default(url, channel)
-        
+
         self.log.debug("SpiffyTitles: calling reddit handler for %s" % (url))
         patterns = {
             "thread": {
@@ -1478,8 +1493,8 @@ class SpiffyTitles(callbacks.Plugin):
                 ),
             },
             "user": {
-                "pattern": r"^/u(?:ser)?/(?P<user>[^/]+)/?$",
-                "url": "https://www.reddit.com/user/{user}/about.json",
+                "pattern": r"^/r(?:ser)?/(?P<user>[^/]+)/?$",
+                # No URL needed since PRAW handles this internally
             },
         }
         info = urlparse(url)
@@ -1494,9 +1509,9 @@ class SpiffyTitles(callbacks.Plugin):
         if not match:
             self.log.debug("SpiffyTitles: no title found.")
             return self.handler_default(url, channel)
-        
+
         self.log.debug("SpiffyTitles: requesting %s" % (url))
-        
+
         extract = ""
         try:
             if link_type == "thread":
@@ -1517,7 +1532,15 @@ class SpiffyTitles(callbacks.Plugin):
                 data["title"] = submission.title
             elif link_type == "user":
                 user = self.reddit.redditor(link_info["user"])
-                data = vars(user)
+                data = {
+                    "id": user.id,
+                    "name": user.name,
+                    "link_karma": user.link_karma,
+                    "comment_karma": user.comment_karma,
+                    "created_utc": user.created_utc,
+                    "is_mod": user.is_mod,
+                    "is_gold": user.is_gold
+                }
             else:
                 return self.handler_default(url, channel)
         except KeyError as e:
@@ -1526,7 +1549,7 @@ class SpiffyTitles(callbacks.Plugin):
         except Exception as e:
             self.log.error(f"SpiffyTitles: Reddit Error: {e}")
             return self.handler_default(url, channel)
-        
+
         if data:
             today = datetime.datetime.now().date()
             created = datetime.datetime.fromtimestamp(data.get("created_utc", 0)).date()
@@ -1567,8 +1590,8 @@ class SpiffyTitles(callbacks.Plugin):
                 "comments": "{:,}".format(data.get("num_comments", 0)),
                 "created": created.strftime("%Y-%m-%d"),
                 "age": age,
-                "link_karma": "{:,}".format(data.get("link_karma", 0)),
-                "comment_karma": "{:,}".format(data.get("comment_karma", 0)),
+                "link_karma": "{:,}".format(data.get("link_karma", 0)),  # User-specific
+                "comment_karma": "{:,}".format(data.get("comment_karma", 0)),  # User-specific
                 "extract": "%%extract%%",
             }
             reply = reddit_template.render(template_vars)
@@ -1586,7 +1609,7 @@ class SpiffyTitles(callbacks.Plugin):
         else:
             self.log.debug("SpiffyTitles: falling back to default handler")
             return self.handler_default(url, channel)
-
+        
     def is_valid_imgur_id(self, input):
         """
         Tests if input matches the typical imgur id, which seems to be alphanumeric.
@@ -1776,7 +1799,7 @@ class SpiffyTitles(callbacks.Plugin):
             return title
         else:
             return self.handler_default(url, channel)
-
+        
     def t(self, irc, msg, args, query):
         """
         Retrieves title for a URL on demand
