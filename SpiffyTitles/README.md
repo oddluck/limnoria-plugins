@@ -49,6 +49,9 @@ You can increase the verbosity of the logging in SpiffyTitles by issuing the fol
 ## Reddit Oauth
 For the Reddit to work probably. So you won't get the `Httperror 403` blocked URL`
 
+And you need to do:
+`pip3 install -r requirements.txt`
+
 Så you need to creat yourself a oauth `client_id` and `client_secret` this can be done from here:
 [Reddit Oauth](https://www.reddit.com/prefs/apps) 
 
