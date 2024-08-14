@@ -53,6 +53,8 @@ class Gemini(callbacks.Plugin):
         channel = msg.channel
         if not irc.isChannel(channel):
             channel = msg.nick
+        if not self.registryValue("enabled", msg.channel):
+            return
         genai.configure(api_key=self.registryValue("api_key", msg.channel))
         prompt = self.registryValue("prompt", msg.channel).replace("$botnick", irc.nick)
         max_tokens = self.registryValue("max_tokens", msg.channel)

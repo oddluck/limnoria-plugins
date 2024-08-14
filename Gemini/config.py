@@ -57,6 +57,15 @@ Gemini = conf.registerPlugin("Gemini")
 
 conf.registerChannelValue(
     Gemini,
+    "enabled",
+    registry.Boolean(
+        True,
+        _("""Set False to disable the plugin, True to enable."""),
+    ),
+)
+
+conf.registerChannelValue(
+    Gemini,
     "api_key",
     registry.String(
         "",
