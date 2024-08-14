@@ -53,6 +53,8 @@ class ChatGPT(callbacks.Plugin):
         channel = msg.channel
         if not irc.isChannel(channel):
             channel = msg.nick
+        if not self.registryValue("enabled", msg.channel):
+            return
         if self.registryValue("nick_include", msg.channel):
             text = "%s: %s" % (msg.nick, text)
         self.history.setdefault(channel, None)
