@@ -1,3 +1,5 @@
+Spiffytitles is no longer supported... By me... Please feel free to fork!
+
 Highly customizable and fully-featured link title snarfer with many URL handlers.
 
 Forked from https://github.com/butterscotchstallion/limnoria-plugins/tree/master/SpiffyTitles
