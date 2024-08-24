@@ -21,7 +21,7 @@ system prompt:
 ```
 @chat <text>
 ```
-^^ Command to send text to the chatgpt API
+^^ Command to send text to the Gemini API
 
 ```
 @messageparser add "(?i)(.*BOT_NICK_HERE.*)" "chat $1"
