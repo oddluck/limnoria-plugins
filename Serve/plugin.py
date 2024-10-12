@@ -8,7 +8,7 @@ class Serve(callbacks.Plugin):
     def __init__(self, irc):
         self.__parent = super(Serve, self)
         self.__parent.__init__(irc)
-        self.db = sqlite3.connect("/home/ubuntu/limnoria/plugins/Serve/servestats.db")
+        self.db = sqlite3.connect("/path/to/servestats.db")
         self.init_db()
 
         # Settings for spam replies and date format
