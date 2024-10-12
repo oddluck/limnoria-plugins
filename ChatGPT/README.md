@@ -11,7 +11,7 @@ Model:
 ```
 @config plugins.chatgpt.model gpt-4o-mini
 ```
-^^ Use this config to set the language model. Current recommendation: gpt-40-mini
+^^ Use this config to set the language model. Current recommendation: gpt-4o-mini
 
 History:
 ```

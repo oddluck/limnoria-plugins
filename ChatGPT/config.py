@@ -54,6 +54,16 @@ ChatGPT = conf.registerPlugin("ChatGPT")
 # This is where your configuration variables (if any) should go.  For example:
 # conf.registerGlobalValue(ChatGPT, 'someConfigVariableName',
 #     registry.Boolean(False, _("""Help for someConfigVariableName.""")))
+
+conf.registerChannelValue(
+    ChatGPT,
+    "enabled",
+    registry.Boolean(
+        True,
+        _("""Set False to disable the plugin, True to enable."""),
+    ),
+)
+
 conf.registerGlobalValue(
     ChatGPT,
     "api_key",
