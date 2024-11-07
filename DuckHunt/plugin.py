@@ -141,10 +141,32 @@ class DuckHunt(callbacks.Plugin):
                 if self.worsttimes[channel][player] > value:
                     self.channelworsttimes[channel][player] = value
 
+        # # week scores
+        # for player, value in self.scores[channel].items():
+        #     # FIXME: If the hunt starts a day and ends the day after, this will produce an error:
+        #     if not player in self.channelweek[channel][self.woy][self.dow]:
+        #         # It's a new player
+        #         self.channelweek[channel][self.woy][self.dow][player] = value
+        #     else:
+        #         # It's a player that already has a saved score
+        #         self.channelweek[channel][self.woy][self.dow][player] += value
+
         # week scores
         for player, value in self.scores[channel].items():
-            # FIXME: If the hunt starts a day and ends the day after, this will produce an error:
-            if not player in self.channelweek[channel][self.woy][self.dow]:
+            # Ensure that the channel exists
+            if channel not in self.channelweek:
+                self.channelweek[channel] = {}
+
+            # Ensure that the week of year (self.woy) exists for the channel
+            if self.woy not in self.channelweek[channel]:
+                self.channelweek[channel][self.woy] = {}
+
+            # Ensure that the day of week (self.dow) exists for the week
+            if self.dow not in self.channelweek[channel][self.woy]:
+                self.channelweek[channel][self.woy][self.dow] = {}
+
+            # Now it's safe to check for the player
+            if player not in self.channelweek[channel][self.woy][self.dow]:
                 # It's a new player
                 self.channelweek[channel][self.woy][self.dow][player] = value
             else:
