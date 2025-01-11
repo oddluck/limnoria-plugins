@@ -1,7 +1,4 @@
-Generate text art from images, text, or scroll text art links.
-
-
-[![paypal](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=T8E56M6SP9JH2)
+Generate text art from images, text, or scroll text art links. Don't use this...
 
 
 ## Try the plugin out in #ircart on EFnet. 
