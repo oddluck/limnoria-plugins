@@ -1,6 +1,0 @@
-requests
-ftfy
-beautifulsoup4
-textdistance[extras]
-jinja2
-unidecode
