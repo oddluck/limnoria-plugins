@@ -13,52 +13,33 @@ WA's API also has some input options that can be handy, along with some verbose 
 the user, which the other plugins do not utilize. I wanted to use the getopts power and make some configuration
 options to display the data in a more friendly manner.
 
-## Install
-
-You will need a working Limnoria bot on Python 2.7 for this to work.
-
-Go into your Limnoria plugin dir, usually ~/supybot/plugins and run:
+Load the plugin:
 
 ```
-git clone https://github.com/reticulatingspline/WolframAlpha
+@load WolframAlpha
 ```
 
-To install additional requirements, run:
+[Create a 'Full Results' API key for WA](https://developer.wolframalpha.com/access) (free with signup)
+
+Hit the 'Get an App ID' Button. Enter Name, Description, API: "Full Results API". Once getting this 'App ID', you will need to set it on your bot before things will work. See below:
+
 
 ```
-pip install -r requirements.txt 
+@config plugins.WolframAlpha.apiKey APPID
 ```
 
-or if you don't have or don't want to use root, 
+Replace APPID with your 'App ID' created above and then reload the plugin:
 
 ```
-pip install -r requirements.txt --user
+@reload WolframAlpha
 ```
 
-Next, load the plugin:
-
-```
-/msg bot load WolframAlpha
-```
-
-[Fetch an API key for WA](http://products.wolframalpha.com/developers/) by signing up (free).
-Once getting this key, you will need to set it on your bot before things will work.
-Reload once you perform this operation to start using it.
-
-```
-/msg bot config plugins.WolframAlpha.apiKey APIKEY
-```
-
-Now, reload the bot and you should be good to go:
-
-```
-/msg bot reload WolframAlpha
-```
+You should now be good to go...
 
 Optional: There are some config variables that can be set for the bot. They mainly control output stuff.
 
 ```
-/msg bot config search WolframAlpha
+@config search WolframAlpha
 ```
 
 ## Example Usage
@@ -72,12 +53,3 @@ Optional: There are some config variables that can be set for the bot. They main
 <spline> @wolframalpha --shortest 2+2
 <myybot> 2+2 :: 4
 ```
-
-## About
-
-All of my plugins are free and open source. When I first started out, one of the main reasons I was
-able to learn was due to other code out there. If you find a bug or would like an improvement, feel
-free to give me a message on IRC or fork and submit a pull request. Many hours do go into each plugin,
-so, if you're feeling generous, I do accept donations via Amazon or browse my [wish list](http://amzn.com/w/380JKXY7P5IKE).
-
-I'm always looking for work, so if you are in need of a custom feature, plugin or something bigger, contact me via GitHub or IRC.
