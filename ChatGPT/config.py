@@ -74,6 +74,19 @@ conf.registerGlobalValue(
     ),
 )
 
+conf.registerGlobalValue(
+    ChatGPT,
+    "base_url",
+    registry.String(
+        "https://api.openai.com/v1/",
+        _(
+            """
+            API server, for using a non-OpenAI model which has a compatible API, default: "https://api.openai.com/v1/"
+            """
+        ),
+    ),
+)
+
 conf.registerChannelValue(
     ChatGPT,
     "prompt",
@@ -99,6 +112,7 @@ conf.registerChannelValue(
         ),
     ),
 )
+
 
 conf.registerChannelValue(
     ChatGPT,
